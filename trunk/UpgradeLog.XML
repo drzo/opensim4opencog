@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
+<Properties><Property Name="Solution" Value="textsl">
+</Property><Property Name="Solution File" Value="C:\dev\textsl\textsl.sln">
+</Property><Property Name="Date" Value="Friday, July 25, 2008">
+</Property><Property Name="Time" Value="17:55 PM">
+</Property></Properties><Event ErrorLevel="0" Project="" Source="textsl.sln" Description="File successfully backed up as C:\dev\textsl\Backup\textsl.sln">
+</Event><Event ErrorLevel="0" Project="textsl" Source="textsl.csproj" Description="Project file successfully backed up as C:\dev\textsl\Backup\textsl.csproj">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Actions\Action.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Actions\Action.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Actions\Crouch.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Actions\Crouch.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Actions\Follow.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Actions\Follow.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Actions\Help.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Actions\Help.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Actions\Jump.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Actions\Jump.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Actions\Move.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Actions\Move.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Actions\Mute.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Actions\Mute.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Actions\Parser.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Actions\Parser.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Actions\Say.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Actions\Say.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Actions\Describe.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Actions\Describe.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Actions\Sit.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Actions\Sit.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Actions\Stand.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Actions\Stand.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Actions\Teleport.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Actions\Teleport.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Actions\Whisper.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Actions\Whisper.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Listeners\Avatars.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Listeners\Avatars.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Listeners\Bump.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Listeners\Bump.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Listeners\Chat.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Listeners\Chat.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Listeners\Listener.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Listeners\Listener.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Listeners\Objects.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Listeners\Objects.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Listeners\Sound.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Listeners\Sound.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Listeners\Teleport.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Listeners\Teleport.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Listeners\Whisper.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Listeners\Whisper.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="LoginForm.cs" Description="File successfully backed up as C:\dev\textsl\Backup\LoginForm.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="LoginForm.Designer.cs" Description="File successfully backed up as C:\dev\textsl\Backup\LoginForm.Designer.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="TextForm.cs" Description="File successfully backed up as C:\dev\textsl\Backup\TextForm.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="TextForm.Designer.cs" Description="File successfully backed up as C:\dev\textsl\Backup\TextForm.Designer.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Program.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Program.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Properties\AssemblyInfo.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Properties\AssemblyInfo.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Properties\Resources.Designer.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Properties\Resources.Designer.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Properties\Settings.Designer.cs" Description="File successfully backed up as C:\dev\textsl\Backup\Properties\Settings.Designer.cs">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Properties\Settings.settings" Description="File successfully backed up as C:\dev\textsl\Backup\Properties\Settings.settings">
+</Event><Event ErrorLevel="0" Project="textsl" Source="LoginForm.resx" Description="File successfully backed up as C:\dev\textsl\Backup\LoginForm.resx">
+</Event><Event ErrorLevel="0" Project="textsl" Source="Properties\Resources.resx" Description="File successfully backed up as C:\dev\textsl\Backup\Properties\Resources.resx">
+</Event><Event ErrorLevel="0" Project="textsl" Source="TextForm.resx" Description="File successfully backed up as C:\dev\textsl\Backup\TextForm.resx">
+</Event><Event ErrorLevel="0" Project="textsl" Source="textsl.csproj" Description="Project converted successfully">
+</Event><Event ErrorLevel="3" Project="textsl" Source="textsl.csproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\libsecondlife.csproj" Description="Project file successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\libsecondlife.csproj">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\AgentManager.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\AgentManager.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\AgentManagerCamera.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\AgentManagerCamera.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\AgentManagerMovement.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\AgentManagerMovement.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\AgentThrottle.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\AgentThrottle.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\Animations.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\Animations.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\AppearanceManager.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\AppearanceManager.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\AssemblyInfo.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\AssemblyInfo.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\AssetManager.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\AssetManager.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\AssetTypes.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\AssetTypes.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\Avatar.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\Avatar.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\AvatarManager.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\AvatarManager.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\BakeLayer.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\BakeLayer.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\BitPack.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\BitPack.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\BlockingQueue.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\BlockingQueue.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\Capabilities\CapsClient.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\Capabilities\CapsClient.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\Capabilities\CapsListener.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\Capabilities\CapsListener.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\Capabilities\CapsBase.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\Capabilities\CapsBase.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\Capabilities\EventQueueClient.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\Capabilities\EventQueueClient.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\Capabilities\EventQueueListener.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\Capabilities\EventQueueListener.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\Caps.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\Caps.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\CapsToPacket.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\CapsToPacket.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\CoordinateFrame.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\CoordinateFrame.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\EventDictionary.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\EventDictionary.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\DirectoryManager.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\DirectoryManager.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\FriendsManager.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\FriendsManager.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\Image.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\Image.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\Inventory.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\Inventory.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\InventoryManager.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\InventoryManager.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\LLObject.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\LLObject.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\LLSD\BinaryLLSD.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\LLSD\BinaryLLSD.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\LLSD\LLSD.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\LLSD\LLSD.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\LLSD\NotationLLSD.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\LLSD\NotationLLSD.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\LLSD\XmlLLSD.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\LLSD\XmlLLSD.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\Login.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\Login.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\EstateTools.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\EstateTools.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\GridManager.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\GridManager.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\GroupManager.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\GroupManager.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\Helpers.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\Helpers.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\NameValue.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\NameValue.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\NetworkManager.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\NetworkManager.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\ObjectManager.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\ObjectManager.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\ObjectPoolBase.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\ObjectPoolBase.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\OpenJPEG.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\OpenJPEG.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\ParcelManager.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\ParcelManager.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\ParticleSystem.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\ParticleSystem.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\Permissions.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\Permissions.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\Prims.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\Prims.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\ProtocolManager.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\ProtocolManager.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\ReaderWriterLock.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\ReaderWriterLock.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\InternalDictionary.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\InternalDictionary.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\SecondLife.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\SecondLife.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\Settings.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\Settings.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\Simulator.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\Simulator.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\SoundManager.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\SoundManager.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\TerrainManager.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\TerrainManager.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\TextureEntry.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\TextureEntry.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\TGALoader.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\TGALoader.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\ThreadUtil.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\ThreadUtil.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\InventoryNode.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\InventoryNode.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\InventoryNodeDictionary.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\InventoryNodeDictionary.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\Types.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\Types.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\UDPBase.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\UDPBase.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\_Packets_.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\_Packets_.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\_VisualParam_.cs" Description="File successfully backed up as C:\dev\textsl\Backup\libsl\libsecondlife\_VisualParam_.cs">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\libsecondlife.csproj" Description="Project converted successfully">
+</Event><Event ErrorLevel="3" Project="libsecondlife" Source="libsl\libsecondlife\libsecondlife.csproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="" Source="textsl.sln" Description="Solution converted successfully">
+</Event><Event ErrorLevel="3" Project="" Source="textsl.sln" Description="Converted">
+</Event><Event ErrorLevel="0" Project="textsl" Source="textsl.csproj" Description="Scan complete: Upgrade not required for project files.">
+</Event><Event ErrorLevel="0" Project="libsecondlife" Source="libsl\libsecondlife\libsecondlife.csproj" Description="Scan complete: Upgrade not required for project files.">
+</Event></UpgradeLog>

@@ -1,0 +1,4 @@
+C:\dev\dotlisp\DotLispREPL\bin\Release\DotLispRepl.exe
+C:\dev\dotlisp\DotLispREPL\bin\Release\DotLisp.dll
+C:\dev\dotlisp\DotLispREPL\obj\Release\ResolveAssemblyReference.cache
+C:\dev\dotlisp\DotLispREPL\obj\Release\DotLispRepl.exe

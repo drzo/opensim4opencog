@@ -1,0 +1,5 @@
+C:\dev\dotlisp\bin\Debug\DotLisp.dll
+C:\dev\dotlisp\bin\Debug\DotLisp.pdb
+C:\dev\dotlisp\obj\Debug\ResolveAssemblyReference.cache
+C:\dev\dotlisp\obj\Debug\DotLisp.dll
+C:\dev\dotlisp\obj\Debug\DotLisp.pdb
