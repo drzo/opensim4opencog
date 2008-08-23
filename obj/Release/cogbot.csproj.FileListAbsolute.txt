@@ -1,0 +1,17 @@
+C:\dev\cogbot\bin\Release\textsl.exe
+C:\dev\cogbot\bin\Release\textsl.pdb
+C:\dev\cogbot\bin\Release\DotLisp.dll
+C:\dev\cogbot\bin\Release\OpenMetaverse.dll
+C:\dev\cogbot\bin\Release\OpenMetaverseTypes.dll
+C:\dev\cogbot\bin\Release\log4net.dll
+C:\dev\cogbot\bin\Release\OpenMetaverse.pdb
+C:\dev\cogbot\bin\Release\OpenMetaverse.xml
+C:\dev\cogbot\bin\Release\OpenMetaverseTypes.pdb
+C:\dev\cogbot\bin\Release\OpenMetaverseTypes.xml
+C:\dev\cogbot\obj\Release\ResolveAssemblyReference.cache
+C:\dev\cogbot\obj\Release\cogbot.LoginForm.resources
+C:\dev\cogbot\obj\Release\textsl.Properties.Resources.resources
+C:\dev\cogbot\obj\Release\cogbot.TextForm.resources
+C:\dev\cogbot\obj\Release\cogbot.csproj.GenerateResource.Cache
+C:\dev\cogbot\obj\Release\textsl.exe
+C:\dev\cogbot\obj\Release\textsl.pdb

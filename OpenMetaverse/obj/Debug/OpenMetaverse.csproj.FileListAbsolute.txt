@@ -1,0 +1,10 @@
+C:\dev\libsecondlife_200807a\bin\OpenMetaverse.dll
+C:\dev\libsecondlife_200807a\bin\OpenMetaverse.pdb
+C:\dev\libsecondlife_200807a\OpenMetaverse\obj\Debug\ResolveAssemblyReference.cache
+C:\dev\libsecondlife_200807a\OpenMetaverse\obj\Debug\OpenMetaverse.dll
+C:\dev\libsecondlife_200807a\OpenMetaverse\obj\Debug\OpenMetaverse.pdb
+C:\dev\cogbot\bin\OpenMetaverse.dll
+C:\dev\cogbot\bin\OpenMetaverse.pdb
+C:\dev\cogbot\OpenMetaverse\obj\Debug\ResolveAssemblyReference.cache
+C:\dev\cogbot\OpenMetaverse\obj\Debug\OpenMetaverse.dll
+C:\dev\cogbot\OpenMetaverse\obj\Debug\OpenMetaverse.pdb

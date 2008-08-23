@@ -1,0 +1,42 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+using OpenMetaverse; //using libsecondlife;
+
+namespace textsl.Actions
+{
+    class Mute : Action
+    {
+        public Mute(TextForm parent)
+            : base(parent)
+        {
+            helpString = "Mute or unmute a user.";
+        }
+
+        public override void acceptInput(string verb, Parser args)
+        {
+            base.acceptInput(verb, args);
+
+            Avatar avatar;
+            if (((Listeners.Avatars)parent.listeners["avatars"]).tryGetAvatar(args.str, out avatar))
+            {
+                Listeners.Chat chat = (Listeners.Chat)parent.listeners["chat"];
+                if (chat.muteList.Contains(avatar.Name))
+                {
+                    parent.output("Unmuted " + avatar.Name + ".");
+                    chat.muteList.Remove(avatar.Name);
+                }
+                else
+                {
+                    parent.output("Muted " + avatar.Name + ".");
+                    chat.muteList.Add(avatar.Name);
+                }
+            }
+            else
+            {
+                parent.output("I don't know who " + args.str + " is.");
+            }
+        }
+    }
+}
