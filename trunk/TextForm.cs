@@ -852,7 +852,13 @@ namespace cogbot
 
         public void output(string str)
         {
-            this.Invoke(outputDelegate, str);
+            try
+            {
+                this.Invoke(outputDelegate, str);
+            }
+            catch (Exception e)
+            {
+            }
         }
 
         public void doOutput(string str)
@@ -1017,7 +1023,7 @@ namespace cogbot
                 tcpStreamReader = new StreamReader(ns);
                 tcpStreamWriter = new StreamWriter(ns);
 
-                string welcome = "<comment>Welcome to Avatacron</comment>";
+                string welcome = "<comment>Welcome to Cogbot</comment>";
                 data = Encoding.ASCII.GetBytes(welcome);
                 ns.Write(data, 0, data.Length);
 
@@ -1025,7 +1031,7 @@ namespace cogbot
                 while (!_quitRequested)
                 {
                     clientMessage = tcpStreamReader.ReadLine();
-                    Console.WriteLine("SockClient:" + clientMessage);
+                    output("SockClient:" + clientMessage);
                     tcpStreamWriter.WriteLine();
                     if (clientMessage.Contains("xml") || clientMessage.Contains("http:"))
                     {
@@ -1068,11 +1074,28 @@ namespace cogbot
             if (thrJobQueue !=null ) thrJobQueue.Abort();
 
         }
+
+        public void msgClient(string serverMessage)
+        {
+            if ((ns!=null)&&(tcpStreamWriter!=null))
+            {
+                lock (tcpStreamWriter)
+                {
+                    if (serverMessage != "")
+                        tcpStreamWriter.WriteLine(serverMessage);
+
+                    tcpStreamWriter.WriteLine();
+                    ns.Write(Encoding.ASCII.GetBytes(serverMessage.ToCharArray()), 
+                             0, serverMessage.Length);
+                }
+            }
+
+        }
         public void overwrite2Hash(Hashtable hashTable, string key, string value)
         {
             if (hashTable.ContainsKey(key)) hashTable.Remove(key);
             hashTable.Add(key, value);
-            Console.WriteLine("  +Hash :('" + key + "' , " + value + ")");
+            //output("  +Hash :('" + key + "' , " + value + ")");
         }
 
         public string getWithDefault(Hashtable hashTable, string key, string defaultValue)
@@ -1086,7 +1109,7 @@ namespace cogbot
         }
         public string EvaluateXmlCommand(string xcmd)
         {
-            Console.WriteLine("EvaluateXmlCommand :" + xcmd);
+            output("EvaluateXmlCommand :" + xcmd);
 
             string response = "<request>\r\n <cmd>" + xcmd + "</cmd>\r\n <response>null</response>\r\n</request>";
             try
@@ -1182,7 +1205,7 @@ namespace cogbot
 
                         case XmlNodeType.Text:
                             // Todo
-                            Console.WriteLine(" TextNode: depth=" + depth.ToString() + "  path = " + strPath[depth - 1]); ;
+                            output(" TextNode: depth=" + depth.ToString() + "  path = " + strPath[depth - 1]); ;
                             if (reader.Name == "param")
                             {
                                 overwrite2Hash(attributeStack[depth], strPath[depth - 1] + ".param." + strName[depth] + ".InnerText", reader.Value);
@@ -1211,22 +1234,22 @@ namespace cogbot
             } //try
             catch (Exception e)
             {
-                Console.WriteLine("error occured: " + e.Message);
-                Console.WriteLine("        Stack: " + e.StackTrace.ToString());
+                output("error occured: " + e.Message);
+                output("        Stack: " + e.StackTrace.ToString());
                 return "<error><response>" + response + "</response><errormsg>" + e.Message.ToString() + "</errormsg> </error>";
             }
         }
 
         public void xStartElement(string strURI, string strName, Hashtable attributes, int depth, Hashtable[] attributeStack)
         {
-            Console.WriteLine("   xStartElement: strURI =(" + strURI + ") strName=(" + strName + ") depth=(" + depth + ")");
+            output("   xStartElement: strURI =(" + strURI + ") strName=(" + strName + ") depth=(" + depth + ")");
         }
 
         public string xEndElement(string strURI, string strName, Hashtable attributes, int depth, Hashtable[] attributeStack)
         {
             try
             {
-                Console.WriteLine("   xEndElement: strURI =(" + strURI + ") strName=(" + strName + ") depth=(" + depth + ")");
+                output("   xEndElement: strURI =(" + strURI + ") strName=(" + strName + ") depth=(" + depth + ")");
                 if (strName == "action")
                 {
                     string act = attributes["name"].ToString();
@@ -1272,8 +1295,8 @@ namespace cogbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("error occured: " + e.Message);
-                Console.WriteLine("        Stack: " + e.StackTrace.ToString());
+                output("error occured: " + e.Message);
+                output("        Stack: " + e.StackTrace.ToString());
                 return "<error>" + e.Message + "</error>";
             }
         }
@@ -1289,7 +1312,7 @@ namespace cogbot
                                        + "' sequence='" + seqID
                                        + "' name='" + act
                                        + "' status='" + status + "'/>";
-            Console.WriteLine("actReport:" + actReport);
+            output("actReport:" + actReport);
             return actReport;
         }
 
@@ -1341,7 +1364,7 @@ namespace cogbot
                                     overwrite2Hash(attributeStack[depth], attributeName, attributeValue);
                                 }
                             }
-                            Console.WriteLine(" X2L Begin(" + depth.ToString() + ") " + attributeStack[depth]["name"].ToString());
+                           // output(" X2L Begin(" + depth.ToString() + ") " + attributeStack[depth]["name"].ToString());
                             if (tagname == "op")
                             {
                                 lispCodeString += "(" + getWithDefault(attributeStack[depth], "name", " ");
@@ -1357,7 +1380,7 @@ namespace cogbot
                         //
 
                         case XmlNodeType.Text:
-                            Console.WriteLine(" X2L TEXT(" + depth.ToString() + ") " + reader.Name);
+                            //output(" X2L TEXT(" + depth.ToString() + ") " + reader.Name);
 
                             // Todo
                             lispCodeString += " " + reader.Value.ToString();
@@ -1382,7 +1405,7 @@ namespace cogbot
                             break;
                     } //switch
                 } //while
-                Console.WriteLine("XML2Lisp =>'" + lispCodeString + "'");
+                output("XML2Lisp =>'" + lispCodeString + "'");
                 //string results = evalLispString(lispCodeString);
                 string results = "'(enqueued)";
                 enqueueLispTask(lispCodeString);
@@ -1390,8 +1413,8 @@ namespace cogbot
             } //try
             catch (Exception e)
             {
-                Console.WriteLine("error occured: " + e.Message);
-                Console.WriteLine("        Stack: " + e.StackTrace.ToString());
+                output("error occured: " + e.Message);
+                output("        Stack: " + e.StackTrace.ToString());
                 return "()";
             }
 
@@ -1419,12 +1442,17 @@ namespace cogbot
                 taskInterperter = new Interpreter();
                 taskInterperter.LoadFile("boot.lisp");
                 taskInterperter.LoadFile("extra.lisp");
+                // load the initialization string
+                if (config.startupLisp.Length > 1)
+                {
+                    enqueueLispTask(config.startupLisp);
+                }
             }
             catch (Exception e)
             {
-                Console.WriteLine("!Exception: " + e.GetBaseException().Message);
-                Console.WriteLine("error occured: " + e.Message);
-                Console.WriteLine("        Stack: " + e.StackTrace.ToString());
+                output("!Exception: " + e.GetBaseException().Message);
+                output("error occured: " + e.Message);
+                output("        Stack: " + e.StackTrace.ToString());
             }
 
         }
@@ -1461,9 +1489,9 @@ namespace cogbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("!Exception: " + e.GetBaseException().Message);
-                Console.WriteLine("error occured: " + e.Message);
-                Console.WriteLine("        Stack: " + e.StackTrace.ToString());
+                output("!Exception: " + e.GetBaseException().Message);
+                output("error occured: " + e.Message);
+                output("        Stack: " + e.StackTrace.ToString());
             }
         }
 
@@ -1480,9 +1508,9 @@ namespace cogbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("!Exception: " + e.GetBaseException().Message);
-                Console.WriteLine("error occured: " + e.Message);
-                Console.WriteLine("        Stack: " + e.StackTrace.ToString());
+                output("!Exception: " + e.GetBaseException().Message);
+                output("error occured: " + e.Message);
+                output("        Stack: " + e.StackTrace.ToString());
             }
         }
 
@@ -1529,8 +1557,8 @@ namespace cogbot
                         ns.Write(Encoding.ASCII.GetBytes(serverMessage.ToCharArray()), 0, serverMessage.Length);
                     }
                 }
-                Console.WriteLine(" taskTick Results>" + thisTask.results);
-                Console.WriteLine(" taskTick continueTask=" + thisTask.requeue.ToString());
+                output(" taskTick Results>" + thisTask.results);
+                output(" taskTick continueTask=" + thisTask.requeue.ToString());
 
                 // Should we do again ?
                 if (thisTask.requeue == true)
@@ -1549,9 +1577,9 @@ namespace cogbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("!Exception: " + e.GetBaseException().Message);
-                Console.WriteLine("error occured: " + e.Message);
-                Console.WriteLine("        Stack: " + e.StackTrace.ToString());
+                output("!Exception: " + e.GetBaseException().Message);
+                output("error occured: " + e.Message);
+                output("        Stack: " + e.StackTrace.ToString());
             }
 
         }
@@ -1566,8 +1594,8 @@ namespace cogbot
 
             try
             {
-                Console.WriteLine("Load Boot:" + interpreter.LoadFile("boot.lisp").ToString());
-                Console.WriteLine("Load Boot:" + interpreter.LoadFile("extra.lisp").ToString());
+                output("Load Boot:" + interpreter.LoadFile("boot.lisp").ToString());
+                output("Load Boot:" + interpreter.LoadFile("extra.lisp").ToString());
                 interpreter.Intern("thisClient", this);
                 interpreter.Intern("thisTask", thisTask);
 
@@ -1580,7 +1608,7 @@ namespace cogbot
             {
                 //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;
 
-                Console.WriteLine("Eval> " + lispCode);
+                output("Eval> " + lispCode);
                 Object r = null;
                 try
                 {
@@ -1594,15 +1622,15 @@ namespace cogbot
                 }
                 Object x = interpreter.Eval(r);
                 results = interpreter.Str(x);
-                Console.WriteLine("Results>" + results);
-                Console.WriteLine("continueTask=" + thisTask.requeue.ToString());
+                output("Results>" + results);
+                output("continueTask=" + thisTask.requeue.ToString());
                 return results;
             }
             catch (Exception e)
             {
-                Console.WriteLine("!Exception: " + e.GetBaseException().Message);
-                Console.WriteLine("error occured: " + e.Message);
-                Console.WriteLine("        Stack: " + e.StackTrace.ToString());
+                output("!Exception: " + e.GetBaseException().Message);
+                output("error occured: " + e.Message);
+                output("        Stack: " + e.StackTrace.ToString());
                 return results;
             }
 // TODO's
@@ -1648,6 +1676,7 @@ namespace cogbot
         string _LastName;
         string _Password;
         string _SimURL;
+        string _startupLisp;
 
         public Configuration()
         {
@@ -1658,6 +1687,7 @@ namespace cogbot
             _SimURL = "http://127.0.0.1:8002/"; // The sim server we talk to
             _TcpPort = 5555; // The TCP port WE provide
             _TcpIpAddress = "127.0.0.1"; // The IPAddress WE Listen on
+            _startupLisp = "";
         }
 
         public static void Serialize(string file, Configuration c)
@@ -1691,6 +1721,7 @@ namespace cogbot
                 this.simURL = c2.simURL;
                 this.tcpPort = c2.tcpPort;
                 this.tcpIPAddress = c2.tcpIPAddress;
+                this.startupLisp = c2.startupLisp;
 
             }
             catch (Exception e)
@@ -1746,7 +1777,11 @@ namespace cogbot
             get { return _SimURL; }
             set { _SimURL = value; }
         }
-
+        public string startupLisp
+        {
+            get { return _startupLisp; }
+            set { _startupLisp = value; }
+        }
     }
     #endregion
 

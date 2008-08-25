@@ -178,7 +178,9 @@ internal class SymbolTable
                     foreach (Type type in tlist)
                     {
                         string typeString = type.ToString();
+                        if (typeString == "System.Type") return (Type)type;
                         if (typeString == "System.Enum") return (Type)type;
+                        if (typeString == "System.IO.Path") return (Type)type;
                         if (typeString == "System.Collections.IEnumerable") return (Type)type;
                         if (typeString == "System.Collections.IEnumerator") return (Type)type;
                         if (typeString == "System.Windows.Forms.IDataObject") return (Type)type;
@@ -188,7 +190,7 @@ internal class SymbolTable
 										 ("Ambiguous Type name: " + name + " ->");
 				foreach(Type type in tlist)
 					{
-					sb.Append(" " + type.FullName);
+					sb.Append("\n " + type.FullName);
 					}
 				throw new Exception(sb.ToString());
 				}

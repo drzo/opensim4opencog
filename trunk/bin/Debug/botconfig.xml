@@ -7,4 +7,6 @@
   <lastName>Bot</lastName>
   <password>MyBotPassword</password>
   <simURL>http://localhost:8002/</simURL>
+  <startupLisp>(thisClient.ExecuteCommand "login")</startupLisp>
+
 </Configuration>

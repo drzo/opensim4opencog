@@ -6,7 +6,7 @@ namespace cogbot.Actions
 {
     class Login : Action
     {
-		protected string firstName = "Eelke";
+        protected string firstName = "Eelke";
 		protected string lastName = "Forder";
 		protected string password = "geheim";
         
@@ -22,18 +22,29 @@ namespace cogbot.Actions
 			base.acceptInput(verb, args);
             string[] tokens = args.objectPhrase.Split(null);
 
-            if (tokens.Length != 3)
+            if ((tokens.Length!=1)&& (tokens.Length != 3))
             {
                 parent.output("Please enter login FirstName LastName and Password to login to the SL");
+                return;
             }
             else
             {
-                firstName = tokens[0];
-                lastName = tokens[1];
-                password = tokens[2];
+                if (tokens.Length == 3)
+                {
+                    firstName = tokens[0];
+                    lastName = tokens[1];
+                    password = tokens[2];
+                }
+                else
+                {
+                 firstName = parent.config.firstName;// "Eelke";
+		         lastName = parent.config.lastName; //"Forder";
+		         password = parent.config.password; //"geheim";
 
+                }
                 if (!client.Network.Connected)
                 {
+                    client.Settings.LOGIN_SERVER = parent.config.simURL; // "http://127.0.0.1:8002/";
                     client.Network.Login(firstName, lastName, password, "TextSL", "UNR");
                 }
                 else

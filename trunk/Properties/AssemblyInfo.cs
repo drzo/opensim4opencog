@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("textsl")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Cogbot")]
+[assembly: AssemblyDescription("Cogbot avatar bridge for external AI's")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("textsl")]
+[assembly: AssemblyCompany("OpenSim 4 OpenCog Project")]
+[assembly: AssemblyProduct("Cogbot")]
 [assembly: AssemblyCopyright("Copyright ©  2008")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
