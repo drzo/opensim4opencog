@@ -360,3 +360,37 @@ provide a method to let AI's script objects...
 * Connecting up OpenCog. In general create the set of "mapping files" in lisp
 described above for any set of external AI programs.
 
+NOTES:
+· Simply affordable: With the general ability to evaluate lisp functions in strings or
+use the strings as URL’s to functions, one can implement a form of affordance
+processing similar to The Sims. In The Sims new objects transmitted to passing
+agents code fragments which included conditions checked against the agents
+internal state blackboard. A message from a refrigerator might in effect say “if
+your hunger is high and you like fruit then open me by grasping handle 3234” or
+some such. While most learning AI systems might consider it “cheating” it might
+be used to simulate extra perceptions like smell.
+
+Links:
+ Initial CogBot at Google Code
+ http://code.google.com/p/opensim4opencog/
+
+ TextSL at Google Code
+ http://code.google.com/p/textsl/
+
+ DotLisp
+ http://dotlisp.sourceforge.net/dotlisp.htm
+
+ OpenMetaverse
+ http://openmv.org/wiki/Main_Page
+ http://www.libsecondlife.org/wiki/Main_Page
+
+ OpenSimulator
+ http://www.opensimulator.org
+ http://osgrid.org/forums/
+
+ Second Life
+ http://secondlife.com/
+
+ RealXtend
+ http://www.realxtend.org/
+ http://www.rexdeveloper.org/forum/
