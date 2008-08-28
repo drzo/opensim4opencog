@@ -18,6 +18,7 @@ namespace cogbot.Listeners
             if (im.Message.Length > 0 && im.Dialog == InstantMessageDialog.MessageFromAgent)
             {
                 parent.output(im.FromAgentName + " whispers, \"" + im.Message + "\".");
+                parent.enqueueLispTask("(on-instantmessage (@\"" + im.FromAgentName + "\") (@\"" + im.Message + "\") )");
 
                 Actions.Whisper whisper = (Actions.Whisper)parent.actions["whisper"];
                 whisper.currentAvatar = im.FromAgentID;

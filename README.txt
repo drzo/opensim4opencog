@@ -275,6 +275,58 @@ To find out more about the lisp system see \cogbot\dotlisp\dotlisp.html
 The system should automatically load 
  \cogbot\bin\boot.lisp
  \cogbot\bin\extra.lisp
+ \cogbot\bin\cogbot.lisp
+ 
++-------------------------+
+| Cogbot.lisp and events  |
++-------------------------+
+The simulator sends update messages to clients like TextSL or the
+Second Life viewer. Cogbot hooks reception of these messages
+and updates the appropriate structures. The system can also add
+lisp code fragements to the queue for processing. The defintion
+of these functions/methods are in the cogbot.lisp file. The
+initial version simply maps the parameters into an appropriate
+message sent to the client AI.  
+
+ (on-chat agent message)
+ (on-instantmessage agent message)
+ (on-avatar-dist agent dist)
+ (on-avatar-pos agent vector)
+ (on-avatar-posture agent sitstand)
+ (on-meanCollision perp victim)
+ (on-prim-description  obj description)
+
+Extra sensory input simply require adding more hooks and defining
+the functions. Note that reflexes could be implemented at this
+level as well as filtering. 
+
+Event log of Cogbot seeing "Daxxon Kinoc" logging in:
+ TextForm Objects_OnNewAvatar: 
+ taskcode =(on-avatar-dist (@"Daxxon Kinoc") 2.217624 )
+ taskTick Results>nil
+ taskTick continueTask=False
+ taskcode =(on-avatar-pos (@"Daxxon Kinoc") (@"<127.2048, 129.4689, 21.47487>") )
+ taskTick Results>nil
+ taskTick continueTask=False
+ taskcode =(on-avatar-posture (@"Daxxon Kinoc") (@"standing") )
+ taskTick Results>nil
+ taskTick continueTask=False
+ TextForm Avatars_OnLookAt: 7dbd61c6-90cf-49df-bf77-94f5a7223c19 
+  to 7dbd61c6-90cf-49df-bf77-94f5a7223c19 at 7dbd61c6-90cf-49df-bf77-94f5a7223c19 
+  with type FreeLook duration 2
+ Daxxon Kinoc says, "How are you ?".
+ taskcode =(on-chat (@"Daxxon Kinoc") (@"How are you ?") )
+ taskTick Results>nil
+ taskTick continueTask=False
+
+What was sent to the AI socket:
+ (distance-from ("Daxxon Kinoc") 2.217624)
+ (position ("Daxxon Kinoc") '"<127.2048, 129.4689, 21.47487>"')
+ (posture ("Daxxon Kinoc") '"standing"')
+ (heard ("Daxxon Kinoc") '"How are you ?"')
+
+The Avatars_OnLookAt need to be captured and transformed. Then the 
+system would be able to track objects being pointed to, like itself.
  
 +-------------------------+
 |   TODO: 2008-08-24      |
@@ -304,6 +356,9 @@ This could of course be changed into calls like "(on_chat (fromName) message)"
  In general define all the events that occur, map them to function calls,
  then have a file for each type of message each type of client AI expects.
  So OpenCog would have one, OpenCyc its own, Soar its own, etc...
+ 
+ - Progress (2008-08-27): implemented outline of the above idea.
+  see "Cogbot.lisp and events" above
 
 * (SEMI-DONE) Set the system up for auto-login. The command line does have 
 login and logout. However setting the other parameters would be nice. Also 
