@@ -23,7 +23,8 @@ namespace cogbot.Listeners
             if (message.Length > 0 && sourceType == ChatSourceType.Agent && !muteList.Contains(fromName))
             {
                 parent.output(fromName + " says, \"" + message + "\".");
-                parent.enqueueLispTask("(thisClient.msgClient \"(heard (" + fromName + ") '" + message + "' )\" )");
+                //parent.enqueueLispTask("(thisClient.msgClient \"(heard (" + fromName + ") '" + message + "' )\" )");
+                parent.enqueueLispTask("(on-chat (@\"" + fromName + "\") (@\"" + message + "\") )");
             }
         }
     }

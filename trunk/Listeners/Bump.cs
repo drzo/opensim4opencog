@@ -23,6 +23,9 @@ namespace cogbot.Listeners
                     parent.output(perpAv.Name + " bumped into you.");
                 else if (perpAv.Name == client.Self.Name)
                     parent.output("You bumped into " + victimAv.Name + ".");
+
+                parent.enqueueLispTask("(on-meanCollision '(" + perpAv.Name + ") '(" + victimAv.Name + ") )");
+
             }
         }
     }

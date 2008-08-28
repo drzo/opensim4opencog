@@ -37,12 +37,12 @@ namespace cogbot.Listeners
                         }
                     }
                 }
+            describeAvatarToAI(avatar);
             }
             catch(Exception e)
                 {
                     parent.output("err :" + e.StackTrace);
                 }
-
         }
 
         public int numAvatars()
@@ -174,6 +174,38 @@ namespace cogbot.Listeners
             if (avatar.ProfileInterests.WantToText != null)
                 parent.output("Wants to: " + avatar.ProfileInterests.WantToText);
         }
+
+        public void describeAvatarToAI(Avatar avatar)
+        {
+            string verb;
+            if (avatar.SittingOn == 0)
+                verb = "standing";
+            else
+                verb = "sitting";
+            //parent.output(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
+            //parent.output(avatar.Name + " is " + Vector3.Distance(client.Self.SimPosition, avatar.Position).ToString() + " distant.");
+
+            parent.enqueueLispTask("(on-avatar-dist (@\"" + avatar.Name + "\") " + Vector3.Distance(client.Self.SimPosition, avatar.Position).ToString() + " )");
+            parent.enqueueLispTask("(on-avatar-pos (@\"" + avatar.Name + "\") (@\"" + avatar.Position.ToString() + "\") )");
+            parent.enqueueLispTask("(on-avatar-posture (@\"" + avatar.Name + "\") (@\"" + verb + "\") )");
+            
+            /*
+            if (avatar.ProfileProperties.BornOn != null)
+                parent.output("Born on: " + avatar.ProfileProperties.BornOn);
+            if (avatar.ProfileProperties.AboutText != null)
+                parent.output("About their second life: " + avatar.ProfileProperties.AboutText);
+            if (avatar.ProfileProperties.FirstLifeText != null)
+                parent.output("About their first life: " + avatar.ProfileProperties.FirstLifeText);
+            if (avatar.ProfileInterests.LanguagesText != null)
+                parent.output("Languages spoken: " + avatar.ProfileInterests.LanguagesText);
+            if (avatar.ProfileInterests.SkillsText != null)
+                parent.output("Skills: " + avatar.ProfileInterests.SkillsText);
+            if (avatar.ProfileInterests.WantToText != null)
+                parent.output("Wants to: " + avatar.ProfileInterests.WantToText);
+            */
+        
+        }
+
     }
 #pragma warning restore 0168
 }

@@ -106,6 +106,7 @@ namespace cogbot.Listeners
                         //newPrims.Clear();
                     }
                 }
+                describePrimToAI(prim);
             }
             catch (Exception e)
             {
@@ -159,6 +160,18 @@ namespace cogbot.Listeners
                 parent.output("This object makes sound.");
             if (prim.Properties.SalePrice != 0)
                 parent.output("This object is for sale for L" + prim.Properties.SalePrice);
+        }
+
+        public void describePrimToAI(Primitive prim)
+        {
+
+            //parent.enqueueLispTask("(on-prim-description '(" + prim.Properties.Name + ") '" + prim.Properties.Description + "' )");
+            
+            //parent.output(prim.Properties.Name + ": " + prim.Properties.Description);
+            //if (prim.Sound != UUID.Zero)
+            //    parent.output("This object makes sound.");
+            //if (prim.Properties.SalePrice != 0)
+            //    parent.output("This object is for sale for L" + prim.Properties.SalePrice);
         }
 
         public int comp(Primitive p1, Primitive p2)

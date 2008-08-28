@@ -1442,6 +1442,7 @@ namespace cogbot
                 taskInterperter = new Interpreter();
                 taskInterperter.LoadFile("boot.lisp");
                 taskInterperter.LoadFile("extra.lisp");
+                taskInterperter.LoadFile("cogbot.lisp");
                 // load the initialization string
                 if (config.startupLisp.Length > 1)
                 {
@@ -1473,6 +1474,7 @@ namespace cogbot
             }
             return codeTree;
         }
+
         public void enqueueLispTask(string lispCode)
         {
             try
@@ -1492,6 +1494,7 @@ namespace cogbot
                 output("!Exception: " + e.GetBaseException().Message);
                 output("error occured: " + e.Message);
                 output("        Stack: " + e.StackTrace.ToString());
+                output("     LispCode: " + lispCode);
             }
         }
 
@@ -1516,6 +1519,7 @@ namespace cogbot
 
         public void taskTick()
         {
+            string lastcode="";
             try
             {
                 // see if there is anything to process
@@ -1529,7 +1533,7 @@ namespace cogbot
                     thisTask = (subtask)taskQueue.Dequeue();
                 }
                 // setup the local context
-                string lastcode = thisTask.code;
+                lastcode = thisTask.code;
                 string serverMessage = "";
                 thisTask.results = "'(unevaluated)";
                 taskInterperter.Intern("thisClient", this);
@@ -1557,6 +1561,7 @@ namespace cogbot
                         ns.Write(Encoding.ASCII.GetBytes(serverMessage.ToCharArray()), 0, serverMessage.Length);
                     }
                 }
+                output(" taskcode =" + lastcode);
                 output(" taskTick Results>" + thisTask.results);
                 output(" taskTick continueTask=" + thisTask.requeue.ToString());
 
@@ -1580,6 +1585,7 @@ namespace cogbot
                 output("!Exception: " + e.GetBaseException().Message);
                 output("error occured: " + e.Message);
                 output("        Stack: " + e.StackTrace.ToString());
+                output("     LispCode: " + lastcode);
             }
 
         }

@@ -184,6 +184,7 @@
       <SubType>Code</SubType>
     </Compile>
     <None Include="boot.lisp" />
+    <None Include="cogbot.lisp" />
     <None Include="extra.lisp" />
     <None Include="util.lisp" />
   </ItemGroup>
