@@ -1,0 +1,93 @@
+<?xml version="1.0" ?>
+<project name="cogbot" default="build">
+    <target name="build">
+        <echo message="Build Directory is ${project::get-base-directory()}/${build.dir}" />
+        <mkdir dir="${project::get-base-directory()}/${build.dir}" />
+        <copy todir="${project::get-base-directory()}/${build.dir}" flatten="true">
+            <fileset basedir="${project::get-base-directory()}">
+                <include name="./bin/log4net.dll" />
+            </fileset>
+        </copy>
+        <copy todir="${project::get-base-directory()}/${build.dir}">
+            <fileset basedir=".">
+            </fileset>
+        </copy>
+        <csc target="exe" debug="${build.debug}" unsafe="True" warnaserror="False" define="TRACE;DEBUG" main="" output="${project::get-base-directory()}/${build.dir}/${project::get-name()}.exe">
+            <resources prefix="cogbot" dynamicprefix="true" >
+            </resources>
+            <sources failonempty="true">
+                <include name="Actions/Action.cs" />
+                <include name="Actions/Crouch.cs" />
+                <include name="Actions/Describe.cs" />
+                <include name="Actions/Fly.cs" />
+                <include name="Actions/Follow.cs" />
+                <include name="Actions/Help.cs" />
+                <include name="Actions/Jump.cs" />
+                <include name="Actions/Locate.cs" />
+                <include name="Actions/Login.cs" />
+                <include name="Actions/Logout.cs" />
+                <include name="Actions/Move.cs" />
+                <include name="Actions/Mute.cs" />
+                <include name="Actions/Parser.cs" />
+                <include name="Actions/Say.cs" />
+                <include name="Actions/Sit.cs" />
+                <include name="Actions/Stand.cs" />
+                <include name="Actions/Stop.cs" />
+                <include name="Actions/StopFlying.cs" />
+                <include name="Actions/Teleport.cs" />
+                <include name="Actions/Use.cs" />
+                <include name="Actions/Where.cs" />
+                <include name="Actions/Whisper.cs" />
+                <include name="Listeners/Avatars.cs" />
+                <include name="Listeners/Bump.cs" />
+                <include name="Listeners/Chat.cs" />
+                <include name="Listeners/Listener.cs" />
+                <include name="Listeners/Objects.cs" />
+                <include name="Listeners/Sound.cs" />
+                <include name="Listeners/Teleport.cs" />
+                <include name="Listeners/Whisper.cs" />
+                <include name="Properties/AssemblyInfo.cs" />
+                <include name="Properties/Resources.Designer.cs" />
+                <include name="Properties/Settings.Designer.cs" />
+                <include name="Tutorials/Tutorial.cs" />
+                <include name="Tutorials/Tutorial1.cs" />
+                <include name="Utilities/XMLInterpreter.cs" />
+                <include name="LoginForm.Designer.cs" />
+                <include name="LoginForm.cs" />
+                <include name="Program.cs" />
+                <include name="TextForm.Designer.cs" />
+                <include name="TextForm.cs" />
+            </sources>
+            <references basedir="${project::get-base-directory()}">
+                <lib>
+                    <include name="${project::get-base-directory()}" />
+                    <include name="${project::get-base-directory()}/${build.dir}" />
+                </lib>
+                <include name="./bin/DotLisp.dll" />
+                <include name="./bin/log4net.dll" />
+                <include name="./bin/OpenMetaverse.dll" />
+                <include name="System.dll" />
+                <include name="System.Data.dll" />
+                <include name="System.Drawing.dll" />
+                <include name="System.Text.dll" />
+                <include name="System.Windows.Forms.dll" />
+                <include name="System.Xml.dll" />
+            </references>
+        </csc>
+        <echo message="Copying from [${project::get-base-directory()}/${build.dir}/] to [${project::get-base-directory()}/./bin/" />
+        <mkdir dir="${project::get-base-directory()}/./bin/"/>
+        <copy todir="${project::get-base-directory()}/./bin/">
+            <fileset basedir="${project::get-base-directory()}/${build.dir}/" >
+                <include name="*.dll"/>
+                <include name="*.exe"/>
+                <include name="*.mdb"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="${obj.dir}" failonerror="false" />
+        <delete dir="${bin.dir}" failonerror="false" />
+    </target>
+    <target name="doc" description="Creates documentation.">
+    </target>
+</project>
