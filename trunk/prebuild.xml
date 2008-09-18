@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Prebuild xmlns="http://dnpb.sourceforge.net/schemas/prebuild-1.7.xsd" version="1.7">
+  <Solution name="default" activeConfig="Debug" path="./" version="0.5.0-$Rev: 5161 $">
+    <Configuration name="Debug">
+      <Options>
+        <CompilerDefines>TRACE;DEBUG</CompilerDefines>
+        <OptimizeCode>false</OptimizeCode>
+        <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
+        <AllowUnsafe>true</AllowUnsafe>
+        <WarningLevel>4</WarningLevel>
+        <WarningsAsErrors>false</WarningsAsErrors>
+        <SuppressWarnings></SuppressWarnings>
+        <OutputPath>bin\Debug\</OutputPath>
+        <DebugInformation>true</DebugInformation>
+        <IncrementalBuild>true</IncrementalBuild>
+        <NoStdLib>false</NoStdLib>
+      </Options>
+    </Configuration>
+    <Configuration name="Release">
+      <Options>
+        <CompilerDefines>TRACE</CompilerDefines>
+        <OptimizeCode>true</OptimizeCode>
+        <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
+        <AllowUnsafe>true</AllowUnsafe>
+        <WarningLevel>4</WarningLevel>
+        <WarningsAsErrors>false</WarningsAsErrors>
+        <SuppressWarnings></SuppressWarnings>
+        <OutputPath>bin\Release</OutputPath>
+        <DebugInformation>false</DebugInformation>
+        <IncrementalBuild>true</IncrementalBuild>
+        <NoStdLib>false</NoStdLib>
+      </Options>
+    </Configuration>
+
+        <Project name="OpenMetaverse" path="OpenMetaverse" type="Library">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>./bin/</ReferencePath>
+      <ReferencePath>/opensim/bin/</ReferencePath>
+      <Reference name="log4net" localCopy="false"/>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Drawing" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Files>
+        <Match pattern="*.cs" recurse="true"/>
+      </Files>
+    </Project>
+
+
+   <Project name="OpenMetaverseTypes" path="OpenMetaverse/Types" type="Library">
+      <Configuration name="Debug">
+        <Options>
+            <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+            <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../bin/</ReferencePath>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Files>
+        <Match pattern="*.cs" recurse="true"/>
+      </Files>
+    </Project>
+
+
+    <Project name="DotLisp" path="dotlisp" type="Library">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../bin/</ReferencePath>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Files>
+        <Match pattern="*.cs" recurse="false"/>
+      </Files>
+    </Project>
+
+   <Project name="cogbot" path="." type="Exe">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>./bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>./bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>./bin/</ReferencePath>
+      <ReferencePath>/opensim/bin/</ReferencePath>
+      <Reference name="log4net.dll" localCopy="true"/>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="DotLisp" localCopy="false"/>
+      <Reference name="System.Drawing" localCopy="false"/>
+      <Reference name="System.Windows.Forms" localCopy="false"/>
+      <Reference name="System.Text" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="OpenMetaverse" localCopy="false"/>
+      <Files>
+          <Match path="Actions" pattern="*.cs" recurse="true"/>
+          <Match path="Listeners" pattern="*.cs" recurse="true"/>
+          <Match path="Properties" pattern="*.cs" recurse="true"/>
+          <Match path="Tutorials" pattern="*.cs" recurse="true"/>
+          <Match path="Utilities" pattern="*.cs" recurse="true"/>
+          <Match path="." pattern="*.cs" recurse="false"/>
+      </Files>
+    </Project>
+
+  </Solution>
+</Prebuild>

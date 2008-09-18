@@ -1459,7 +1459,7 @@
    utxt (StringBuilder. text)
   )
   (for-each r qpr
-   (utxt.Replace r (String. (Char. (0 (Hex:DecodeHexString (r.Substring 1)))) 1))
+  ;; (utxt.Replace r (String. (Char. (0 (Hex:DecodeHexString (r.Substring 1)))) 1))
   )
   (utxt.Replace "=\r\n" "" )
   (utxt.Replace "=3D"   "=")
