@@ -44,8 +44,6 @@
         </Options>
       </Configuration>
 
-      <ReferencePath>./bin/</ReferencePath>
-      <ReferencePath>/opensim/bin/</ReferencePath>
       <Reference name="log4net" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Drawing" localCopy="false"/>
@@ -103,16 +101,16 @@
    <Project name="cogbot" path="." type="Exe">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>./bin/</OutputPath>
+          <OutputPath>bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>./bin/</OutputPath>
+          <OutputPath>bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>./bin/</ReferencePath>
+      <ReferencePath>bin/</ReferencePath>
       <ReferencePath>/opensim/bin/</ReferencePath>
       <Reference name="log4net.dll" localCopy="true"/>
       <Reference name="System" localCopy="false"/>

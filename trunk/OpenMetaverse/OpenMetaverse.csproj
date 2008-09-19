@@ -1,334 +1,526 @@
-﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
-  <PropertyGroup>
-    <ProjectType>Local</ProjectType>
-    <ProductVersion>9.0.21022</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{03176337-200E-41E1-A6B7-FCCB1EF3DB02}</ProjectGuid>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ApplicationIcon>
-    </ApplicationIcon>
-    <AssemblyKeyContainerName>
-    </AssemblyKeyContainerName>
-    <AssemblyName>OpenMetaverse</AssemblyName>
-    <DefaultClientScript>JScript</DefaultClientScript>
-    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
-    <DefaultTargetSchema>IE50</DefaultTargetSchema>
-    <DelaySign>false</DelaySign>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>
-    </AppDesignerFolder>
-    <RootNamespace>OpenMetaverse</RootNamespace>
-    <StartupObject>
-    </StartupObject>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <BaseAddress>285212672</BaseAddress>
-    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
-    <ConfigurationOverrideFile>
-    </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <DocumentationFile>
-    </DocumentationFile>
-    <DebugSymbols>True</DebugSymbols>
-    <FileAlignment>4096</FileAlignment>
-    <Optimize>False</Optimize>
-    <OutputPath>..\bin\</OutputPath>
-    <RegisterForComInterop>False</RegisterForComInterop>
-    <RemoveIntegerChecks>False</RemoveIntegerChecks>
-    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
-    <WarningLevel>4</WarningLevel>
-    <NoWarn>1591,1574,0419,0618</NoWarn>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <BaseAddress>285212672</BaseAddress>
-    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
-    <ConfigurationOverrideFile>
-    </ConfigurationOverrideFile>
-    <DefineConstants>TRACE</DefineConstants>
-    <DocumentationFile>OpenMetaverse.XML</DocumentationFile>
-    <DebugSymbols>False</DebugSymbols>
-    <FileAlignment>4096</FileAlignment>
-    <Optimize>True</Optimize>
-    <OutputPath>..\bin\</OutputPath>
-    <RegisterForComInterop>False</RegisterForComInterop>
-    <RemoveIntegerChecks>False</RemoveIntegerChecks>
-    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
-    <WarningLevel>4</WarningLevel>
-    <NoWarn>1591,1574,0419,0618</NoWarn>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL" />
-    <Reference Include="System">
-      <Name>System</Name>
-      <HintPath>\System.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml">
-      <Name>System.Xml</Name>
-      <HintPath>\System.Xml.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Data">
-      <Name>System.Data</Name>
-      <HintPath>\System.Data.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
-      <HintPath>\System.Drawing.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\OpenMetaverse\Types\OpenMetaverseTypes.csproj">
-      <Name>OpenMetaverseTypes</Name>
-      <Project>{61B624D4-60EE-41EA-BA54-6F405ED8938F}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AgentManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AgentManagerCamera.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AgentManagerMovement.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AgentThrottle.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Animations.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AppearanceManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AssetManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AssetTypes.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Avatar.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AvatarManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="BitPack.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="BlockingQueue.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Caps.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="CapsToPacket.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="CoordinateFrame.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="DirectoryManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="EstateTools.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="EventDictionary.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="FriendsManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GridClient.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GridManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GroupManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Helpers.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="InternalDictionary.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Inventory.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="InventoryManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="InventoryNode.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="InventoryNodeDictionary.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="LLObject.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Logger.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Login.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="NameValue.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="NetworkManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ObjectManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ObjectPool.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ObjectPoolBase.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ParcelManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ParticleSystem.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Permissions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Prims.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ProtocolManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Settings.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Simulator.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SoundManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="TerrainCompressor.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="TerrainManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="TextureEntry.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ThreadUtil.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UDPBase.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="_Packets_.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="_VisualParam_.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Capabilities\CapsBase.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Capabilities\CapsClient.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Capabilities\EventQueueClient.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Capabilities\EventQueueServer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Capabilities\HttpRequestSignature.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Capabilities\HttpServer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Imaging\BakeLayer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Imaging\ManagedImage.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Imaging\OpenJPEG.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Imaging\TGALoader.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Interfaces\INetworkManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Interfaces\IRendering.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="LLSD\BinaryLLSD.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="LLSD\LLSD.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="LLSD\NotationLLSD.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="LLSD\XmlLLSD.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Rendering\LindenMesh.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Rendering\Rendering.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\TCPPipe.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceAccount.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceAux.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceConnector.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceDefinitions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceGateway.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceSession.cs">
-      <SubType>Code</SubType>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="log4net.dll" />
-  </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
-  <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
-</Project>
+<VisualStudioProject>
+    <CSHARP
+				ProjectType = "Local"
+				ProductVersion = "7.0.9254"
+				SchemaVersion = "1.0"
+				ProjectGuid = "{3164F259-0000-0000-0000-000000000000}"
+		>
+				<Build>
+            <Settings
+				  ApplicationIcon = ""
+				  AssemblyKeyContainerName = ""
+				  AssemblyName = "OpenMetaverse"
+				  AssemblyOriginatorKeyFile = ""
+				  DefaultClientScript = "JScript"
+				  DefaultHTMLPageLayout = "Grid"
+				  DefaultTargetSchema = "IE50"
+				  DelaySign = "false"
+				  NoStandardLibraries = "false"
+				  OutputType = "Library"
+				  PreBuildEvent = ""
+				  PostBuildEvent = ""
+				  RunPostBuildEvent = "OnBuildSuccess"
+				  RootNamespace = "OpenMetaverse"
+				  StartupObject = ""
+		     >
+				  <Config
+				      Name = "Debug"
+				      AllowUnsafeBlocks = "true"
+				      BaseAddress = "285212672"
+				      CheckForOverflowUnderflow = "false"
+				      ConfigurationOverrideFile = ""
+				      DefineConstants = "TRACE;DEBUG"
+				      DocumentationFile = ""
+				      DebugSymbols = "true"
+				      FileAlignment = "4096"
+				      IncrementalBuild = "true"
+				      Optimize = "false"
+                    OutputPath = "..\bin\"
+                    RegisterForComInterop = "false"
+                    RemoveIntegerChecks = "false"
+                    TreatWarningsAsErrors = "false"
+                    WarningLevel = "4"
+                />
+				  <Config
+				      Name = "Release"
+				      AllowUnsafeBlocks = "true"
+				      BaseAddress = "285212672"
+				      CheckForOverflowUnderflow = "false"
+				      ConfigurationOverrideFile = ""
+				      DefineConstants = "TRACE"
+				      DocumentationFile = ""
+				      DebugSymbols = "false"
+				      FileAlignment = "4096"
+				      IncrementalBuild = "true"
+				      Optimize = "true"
+                    OutputPath = "..\bin\"
+                    RegisterForComInterop = "false"
+                    RemoveIntegerChecks = "false"
+                    TreatWarningsAsErrors = "false"
+                    WarningLevel = "4"
+                />
+            </Settings>
+            <References>
+                <Reference
+                    Name = "log4net"
+                    AssemblyName = "log4net"
+                />
+                <Reference
+                    Name = "System"
+                    AssemblyName = "System"
+                />
+                <Reference
+                    Name = "System.Data"
+                    AssemblyName = "System.Data"
+                />
+                <Reference
+                    Name = "System.Drawing"
+                    AssemblyName = "System.Drawing"
+                />
+                <Reference
+                    Name = "System.Xml"
+                    AssemblyName = "System.Xml"
+                />
+            </References>
+        </Build>
+        <Files>
+            <Include>
+                <File
+                    RelPath = "NetworkManager.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Permissions.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "BitPack.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Avatar.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "_VisualParam_.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "AgentManagerCamera.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "FriendsManager.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "InventoryManager.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "AppearanceManager.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "ObjectPoolBase.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "ObjectPool.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "ParcelManager.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "CoordinateFrame.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "InventoryNode.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "LLObject.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Prims.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "AvatarManager.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Simulator.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "GridManager.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "GridClient.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "_Packets_.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "AgentManager.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "TerrainManager.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "AssemblyInfo.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "ObjectManager.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Settings.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "EventDictionary.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "ThreadUtil.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "ParticleSystem.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Login.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Logger.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Inventory.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "TextureEntry.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "SoundManager.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "GroupManager.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "ProtocolManager.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "DirectoryManager.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Animations.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "InternalDictionary.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "AgentManagerMovement.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "AssetTypes.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Helpers.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Caps.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "AssetManager.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "NameValue.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "CapsToPacket.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "TerrainCompressor.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "UDPBase.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "AgentThrottle.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "InventoryNodeDictionary.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "BlockingQueue.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "EstateTools.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Capabilities\HttpRequestSignature.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Capabilities\EventQueueServer.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Capabilities\CapsBase.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Capabilities\CapsClient.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Capabilities\EventQueueClient.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Capabilities\HttpServer.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "LLSD\XmlLLSD.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "LLSD\LLSD.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "LLSD\BinaryLLSD.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "LLSD\NotationLLSD.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Types\Color4.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Types\Ray.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Types\Utils.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Types\Quaternion.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Types\Vector2.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Types\Vector3.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Types\Vector4.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Types\UUID.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Types\Matrix4.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Types\Vector3d.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Voice\VoiceConnector.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Voice\VoiceDefinitions.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Voice\VoiceAccount.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Voice\VoiceAux.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Voice\TCPPipe.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Voice\VoiceGateway.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Voice\VoiceSession.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Imaging\ManagedImage.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Imaging\BakeLayer.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Imaging\TGALoader.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Imaging\OpenJPEG.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Rendering\LindenMesh.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Rendering\Rendering.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Interfaces\INetworkManager.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Interfaces\IRendering.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+            </Include>
+        </Files>
+    </CSHARP>
+</VisualStudioProject>
