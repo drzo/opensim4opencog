@@ -166,6 +166,8 @@ namespace cogbot.Listeners
         {
 
             //parent.enqueueLispTask("(on-prim-description '(" + prim.Properties.Name + ") '" + prim.Properties.Description + "' )");
+            parent.enqueueLispTask("(on-prim-dist (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() +"\") " + Vector3.Distance(client.Self.SimPosition, prim.Position).ToString() + " )");
+            parent.enqueueLispTask("(on-prim-pos (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() + "\") (@\"" + prim.Position.ToString() + "\") )");
             
             //parent.output(prim.Properties.Name + ": " + prim.Properties.Description);
             //if (prim.Sound != UUID.Zero)

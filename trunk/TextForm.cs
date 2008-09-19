@@ -220,6 +220,8 @@ namespace cogbot
                 output("Disconnected from server. Reason is " + message + ". " + reason);
             else
                 output("Disconnected from server. " + reason);
+            
+            enqueueLispTask("(on-network-disconnected (@\"" + reason + "\") (@\"" + message + "\") )");
 
             output("Bad Names: " + BoringNamesCount);
             output("Good Names: " + GoodNamesCount);
@@ -248,6 +250,8 @@ namespace cogbot
 
                 describeAll();
                 describeSituation();
+                enqueueLispTask("(on-network-connected )");
+
             }
             catch (Exception e)
             {
@@ -259,9 +263,15 @@ namespace cogbot
             output("TextForm Network_OnLogin : [" + login.ToString() + "] " + message);
             EnableIt();
             if (login == LoginStatus.Failed)
+            {
                 output("Not able to login");
+                enqueueLispTask("(on-login-fail (@\"" + login.ToString() + "\") (@\"" + message + "\") )");
+            }
             else if (login == LoginStatus.Success)
+            {
                 output("Logged in successfully");
+                enqueueLispTask("(on-login-success (@\"" + login.ToString() + "\") (@\"" + message + "\") )");
+            }
         }
 
 
@@ -319,18 +329,22 @@ namespace cogbot
             // Handled by Object Listener
             //throw new NotImplementedException();
 //            output("TextForm Objects_OnNewPrim: "+simulator.ToString()+" "+prim.ToString());
+            enqueueLispTask("(on-new-prim (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() + "\") (@\"" + prim.Properties.Description + "\") )");
+            
         }
 
         void Objects_OnNewFoliage(Simulator simulator, Primitive foliage, ulong regionHandle, ushort timeDilation)
         {
             //throw new NotImplementedException();
 //            output("TextForm Objects_OnNewFoliage: ");
+            enqueueLispTask("(on-new-foliage (@\"" + foliage.Properties.Name + "\") (@\"" + foliage.Properties.ObjectID.ToString() + "\") (@\"" + foliage.Properties.Description + "\") )");
         }
 
         void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
         {
             //throw new NotImplementedException();
             output("TextForm Objects_OnNewAvatar: ");
+            enqueueLispTask("(on-new-avatar (@\"" + avatar.Name + "\") (@\"" + avatar.ID.ToString() + "\") )");
         }
 
         void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)
@@ -342,6 +356,12 @@ namespace cogbot
         void Avatars_OnPointAt(UUID sourceID, UUID targetID, Vector3d targetPos, PointAtType pointType, float duration, UUID id)
         {
             output("TextForm Avatars_OnPointAt: " + sourceID.ToString() + " to " + targetID.ToString() + " at " + targetID.ToString() + " with type " + pointType.ToString()+" duration "+duration.ToString());
+            if (targetID == client.Self.AgentID)
+            {
+                output("  (TARGET IS SELF)");
+                enqueueLispTask("(on-self-point-target (@\"" + sourceID.ToString() + "\") (@\"" + pointType.ToString() + "\") )");
+            }
+            enqueueLispTask("(on-avatar-point (@\"" + sourceID.ToString() + "\") (@\"" + targetID.ToString() + "\") (@\"" + pointType.ToString() + "\") )");
         }
 
         void Avatars_OnLookAt(UUID sourceID, UUID targetID, Vector3d targetPos, LookAtType lookType, float duration, UUID id)
@@ -351,7 +371,9 @@ namespace cogbot
             if (targetID == client.Self.AgentID)
             {
                 output("  (TARGET IS SELF)");
+                enqueueLispTask("(on-self-look-target (@\"" + sourceID.ToString() + "\") (@\"" + lookType.ToString() + "\") )");
             }
+            enqueueLispTask("(on-avatar-look (@\"" + sourceID.ToString() + "\") (@\""+targetID.ToString() + "\") (@\"" + lookType.ToString() + "\") )");
         }
 
         void Appearance_OnAppearanceUpdated(LLObject.TextureEntry te)
@@ -375,11 +397,14 @@ namespace cogbot
         void Network_OnEventQueueRunning(Simulator simulator)
         {
             output("TextForm Network_OnEventQueueRunning: " + simulator.ToString());
+
         }
 
         void Network_OnSimConnected(Simulator simulator)
         {
             output("TextForm Network_OnSimConnected: " + simulator.ToString());
+            enqueueLispTask("(on-sim-connected (@\"" + simulator.ToString() + "\") )");
+
         }
 
         bool Network_OnSimConnecting(Simulator simulator)

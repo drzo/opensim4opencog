@@ -290,11 +290,27 @@ message sent to the client AI.
 
  (on-chat agent message)
  (on-instantmessage agent message)
+ (on-meanCollision perp victim)
  (on-avatar-dist agent dist)
  (on-avatar-pos agent vector)
  (on-avatar-posture agent sitstand)
- (on-meanCollision perp victim)
  (on-prim-description  obj description)
+
+EXPANDED SET 2008-09-18
+ (on-login-fail  login description)
+ (on-login-success  login description)
+ (on-network-disconnected reason message)
+ (on-network-connected reason message)
+ (on-simulator-connected simulator)
+ (on-new-avatar  avatar-name avatar-uuid)
+ (on-new-prim  prim-name prim-uuid prim-description)
+ (on-new-foliage  foliage-name foliage-uuid foliage-description)
+ (on-self-look-target  source description)
+ (on-self-point-target  source description)
+ (on-avatar-point  source  dest description)
+ (on-avatar-look  source  dest description)
+ (on-prim-dist prim-name prim-ID dist)
+ (on-prim-pos prim-name prim-ID vector)
 
 Extra sensory input simply require adding more hooks and defining
 the functions. Note that reflexes could be implemented at this
