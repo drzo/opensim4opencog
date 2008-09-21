@@ -73,9 +73,8 @@ namespace cogbot
             config = new Configuration();
             config.loadConfig();
             client.Settings.LOGIN_SERVER = config.simURL;
-
             extraSettings();
-            extraHooks();
+
 
             client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
             client.Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
@@ -116,6 +115,7 @@ namespace cogbot
             actions["mute"] = new Actions.Mute(this);
             actions["move"] = new Actions.Move(this);
             actions["use"] = new Actions.Use(this);
+            actions["eval"] = new Actions.Eval(this);
 
             actions["fly"] = new Actions.Fly(this);
             actions["stop-flying"] = new Actions.StopFlying(this);
@@ -134,9 +134,10 @@ namespace cogbot
 
             consoleInputText.Enabled = true;
             consoleInputText.Focus();
-
             // Start the server
             startSocketListener();
+            extraHooks();
+
 
         }
 
@@ -329,7 +330,8 @@ namespace cogbot
             // Handled by Object Listener
             //throw new NotImplementedException();
 //            output("TextForm Objects_OnNewPrim: "+simulator.ToString()+" "+prim.ToString());
-            enqueueLispTask("(on-new-prim (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() + "\") (@\"" + prim.Properties.Description + "\") )");
+            if (prim.Properties.Name != null)
+                enqueueLispTask("(on-new-prim (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() + "\") (@\"" + prim.Properties.Description + "\") )");
             
         }
 
@@ -337,7 +339,8 @@ namespace cogbot
         {
             //throw new NotImplementedException();
 //            output("TextForm Objects_OnNewFoliage: ");
-            enqueueLispTask("(on-new-foliage (@\"" + foliage.Properties.Name + "\") (@\"" + foliage.Properties.ObjectID.ToString() + "\") (@\"" + foliage.Properties.Description + "\") )");
+            if (foliage.Properties.Name != null)
+                enqueueLispTask("(on-new-foliage (@\"" + foliage.Properties.Name + "\") (@\"" + foliage.Properties.ObjectID.ToString() + "\") (@\"" + foliage.Properties.Description + "\") )");
         }
 
         void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
@@ -403,7 +406,7 @@ namespace cogbot
         void Network_OnSimConnected(Simulator simulator)
         {
             output("TextForm Network_OnSimConnected: " + simulator.ToString());
-            enqueueLispTask("(on-sim-connected (@\"" + simulator.ToString() + "\") )");
+            enqueueLispTask("(on-simulator-connected (@\"" + simulator.ToString() + "\") )");
 
         }
 
@@ -1586,9 +1589,9 @@ namespace cogbot
                         ns.Write(Encoding.ASCII.GetBytes(serverMessage.ToCharArray()), 0, serverMessage.Length);
                     }
                 }
-                output(" taskcode =" + lastcode);
-                output(" taskTick Results>" + thisTask.results);
-                output(" taskTick continueTask=" + thisTask.requeue.ToString());
+                //output(" taskcode =" + lastcode);
+                //output(" taskTick Results>" + thisTask.results);
+                //output(" taskTick continueTask=" + thisTask.requeue.ToString());
 
                 // Should we do again ?
                 if (thisTask.requeue == true)

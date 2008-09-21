@@ -141,22 +141,22 @@
 ;---------------------------------
 ; prim descriptions
 ;---------------------------------
-;  (on-prim-description obj description) -> "(prim-description (obj) 'description' )";
-(def (on-prim-description  obj description)
+;  (on-prim-description obj primID description) -> "(prim-description (obj) 'description' )";
+(def (on-prim-description  obj primID description)
   (block
-    (thisClient.msgClient (@"(prim-description ({0}) ({1}))" (str obj)(str description)) )
+    (thisClient.msgClient (@"(prim-description ({0}) ({1}) ({2}))" (str obj)(str primID)(str description)) )
     )
  )
 
-;  (on-prim-dist prim-name prim-ID dist) -> "(distance-from-prim (prim-name) (primID) distance)";
-(def (on-prim-dist prim-name prim-ID dist)
+;  (on-prim-dist prim-name primID dist) -> "(distance-from-prim (prim-name) (primID) distance)";
+(def (on-prim-dist prim-name primID dist)
   (block
     (thisClient.msgClient (@"(distance-from-prim ({0})({1}) {2})" (str prim-name)(str primID)(str dist)) )
     )
  )
 
-;  (on-prim-pos prim-name prim-ID vector) -> "(prim-position (prim-name) (primID) vector)";
-(def (on-prim-pos prim-name prim-ID vector)
+;  (on-prim-pos prim-name primID vector) -> "(prim-position (prim-name) (primID) vector)";
+(def (on-prim-pos prim-name primID vector)
   (block
     (thisClient.msgClient (@"(prim-position ({0})({1}) '{2}')" (str prim-name)(str primID)(str vector)) )
     )

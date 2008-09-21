@@ -60,6 +60,7 @@ namespace cogbot.Listeners
                     lock (prims)
                     {
                         prims[properties.Name] = pendingPrims[properties.ObjectID];
+                        describePrimToAI(pendingPrims[properties.ObjectID]);
                         pendingPrims.Remove(properties.ObjectID);
 
                         UUID groupId = properties.GroupID;
@@ -164,17 +165,20 @@ namespace cogbot.Listeners
 
         public void describePrimToAI(Primitive prim)
         {
+            if (prim.Properties.Name != null)
+               {
+                 //parent.enqueueLispTask("(on-prim-description '(" + prim.Properties.Name + ") '" + prim.Properties.Description + "' )");
+                 parent.enqueueLispTask("(on-prim-dist (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() +"\") " + Vector3.Distance(client.Self.SimPosition, prim.Position).ToString() + " )");
+                 parent.enqueueLispTask("(on-prim-pos (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() + "\") (@\"" + prim.Position.ToString() + "\") )");
+                 parent.enqueueLispTask("(on-prim-description  (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() + "\") (@\"" + prim.Properties.Description + "\") )");
 
-            //parent.enqueueLispTask("(on-prim-description '(" + prim.Properties.Name + ") '" + prim.Properties.Description + "' )");
-            parent.enqueueLispTask("(on-prim-dist (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() +"\") " + Vector3.Distance(client.Self.SimPosition, prim.Position).ToString() + " )");
-            parent.enqueueLispTask("(on-prim-pos (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() + "\") (@\"" + prim.Position.ToString() + "\") )");
-            
-            //parent.output(prim.Properties.Name + ": " + prim.Properties.Description);
-            //if (prim.Sound != UUID.Zero)
-            //    parent.output("This object makes sound.");
-            //if (prim.Properties.SalePrice != 0)
-            //    parent.output("This object is for sale for L" + prim.Properties.SalePrice);
-        }
+                //parent.output(prim.Properties.Name + ": " + prim.Properties.Description);
+                //if (prim.Sound != UUID.Zero)
+                //    parent.output("This object makes sound.");
+                //if (prim.Properties.SalePrice != 0)
+                //    parent.output("This object is for sale for L" + prim.Properties.SalePrice);
+              }
+            }
 
         public int comp(Primitive p1, Primitive p2)
         {
