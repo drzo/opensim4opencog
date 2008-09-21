@@ -32,6 +32,28 @@
       </Options>
     </Configuration>
 
+
+    <Project name="OpenMetaverseTypes" path="OpenMetaverse/Types" type="Library">
+       <Configuration name="Debug">
+         <Options>
+             <OutputPath>../../bin/</OutputPath>
+         </Options>
+       </Configuration>
+       <Configuration name="Release">
+         <Options>
+             <OutputPath>../../bin/</OutputPath>
+         </Options>
+       </Configuration>
+
+       <ReferencePath>../../bin/</ReferencePath>
+       <Reference name="System" localCopy="false"/>
+       <Reference name="System.Data" localCopy="false"/>
+       <Reference name="System.Xml" localCopy="false"/>
+       <Files>
+         <Match pattern="*.cs" recurse="true"/>
+       </Files>
+     </Project>
+
         <Project name="OpenMetaverse" path="OpenMetaverse" type="Library">
       <Configuration name="Debug">
         <Options>
@@ -44,37 +66,25 @@
         </Options>
       </Configuration>
 
+      <ReferencePath>../bin/</ReferencePath>
       <Reference name="log4net" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Drawing" localCopy="false"/>
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="OpenMetaverseTypes" localCopy="false"/>
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+       <Match pattern="*.cs" recurse="false"/>
+     <Match path="Capabilities" pattern="*.cs" recurse="true"/>
+     <Match path="Imaging" pattern="*.cs" recurse="true"/>
+     <Match path="Interfaces" pattern="*.cs" recurse="true"/>
+     <Match path="LLSD" pattern="*.cs" recurse="true"/>
+     <Match path="Rendering" pattern="*.cs" recurse="true"/>
+     <Match path="Voice" pattern="*.cs" recurse="true"/>
       </Files>
     </Project>
 
 
-   <Project name="OpenMetaverseTypes" path="OpenMetaverse/Types" type="Library">
-      <Configuration name="Debug">
-        <Options>
-            <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-            <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../bin/</ReferencePath>
-      <Reference name="System" localCopy="false"/>
-      <Reference name="System.Data" localCopy="false"/>
-      <Reference name="System.Xml" localCopy="false"/>
-      <Files>
-        <Match pattern="*.cs" recurse="true"/>
-      </Files>
-    </Project>
 
 
     <Project name="DotLisp" path="dotlisp" type="Library">
@@ -111,16 +121,16 @@
       </Configuration>
 
       <ReferencePath>bin/</ReferencePath>
-      <ReferencePath>/opensim/bin/</ReferencePath>
       <Reference name="log4net.dll" localCopy="true"/>
       <Reference name="System" localCopy="false"/>
-      <Reference name="DotLisp" localCopy="false"/>
+      <Reference name="DotLisp.dll" localCopy="false"/>
       <Reference name="System.Drawing" localCopy="false"/>
       <Reference name="System.Windows.Forms" localCopy="false"/>
-      <Reference name="System.Text" localCopy="false"/>
+     <!-- <Reference name="System.Text" localCopy="false"/> -->
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
-      <Reference name="OpenMetaverse" localCopy="false"/>
+      <Reference name="OpenMetaverseTypes" localCopy="false"/>
+      <Reference name="OpenMetaverse.dll" localCopy="false"/>
       <Files>
           <Match path="Actions" pattern="*.cs" recurse="true"/>
           <Match path="Listeners" pattern="*.cs" recurse="true"/>
