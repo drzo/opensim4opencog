@@ -37,6 +37,8 @@ namespace cogbot
             this.submitButton = new System.Windows.Forms.Button();
             this.consoleInputText = new System.Windows.Forms.TextBox();
             this.consoleText = new System.Windows.Forms.TextBox();
+            this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.cycConnectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -44,7 +46,8 @@ namespace cogbot
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.clientToolStripMenuItem});
+            this.clientToolStripMenuItem,
+            this.toolsToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(596, 24);
@@ -62,7 +65,7 @@ namespace cogbot
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(92, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -78,7 +81,7 @@ namespace cogbot
             // loginToolStripMenuItem
             // 
             this.loginToolStripMenuItem.Name = "loginToolStripMenuItem";
-            this.loginToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
+            this.loginToolStripMenuItem.Size = new System.Drawing.Size(118, 22);
             this.loginToolStripMenuItem.Text = "Login";
             this.loginToolStripMenuItem.Click += new System.EventHandler(this.loginToolStripMenuItem_Click);
             // 
@@ -86,7 +89,7 @@ namespace cogbot
             // 
             this.logoutToolStripMenuItem.Enabled = false;
             this.logoutToolStripMenuItem.Name = "logoutToolStripMenuItem";
-            this.logoutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
+            this.logoutToolStripMenuItem.Size = new System.Drawing.Size(118, 22);
             this.logoutToolStripMenuItem.Text = "Logout";
             this.logoutToolStripMenuItem.Click += new System.EventHandler(this.logoutToolStripMenuItem_Click);
             // 
@@ -119,6 +122,22 @@ namespace cogbot
             this.consoleText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.consoleText.Size = new System.Drawing.Size(572, 321);
             this.consoleText.TabIndex = 11;
+            this.consoleText.TextChanged += new System.EventHandler(this.consoleText_TextChanged);
+            // 
+            // toolsToolStripMenuItem
+            // 
+            this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.cycConnectionToolStripMenuItem});
+            this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.toolsToolStripMenuItem.Text = "Tools";
+            // 
+            // cycConnectionToolStripMenuItem
+            // 
+            this.cycConnectionToolStripMenuItem.Name = "cycConnectionToolStripMenuItem";
+            this.cycConnectionToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.cycConnectionToolStripMenuItem.Text = "Cyc Connection..";
+            this.cycConnectionToolStripMenuItem.Click += new System.EventHandler(this.cycConnectionToolStripMenuItem_Click);
             // 
             // TextForm
             // 
@@ -152,6 +171,8 @@ namespace cogbot
         private System.Windows.Forms.Button submitButton;
         private System.Windows.Forms.TextBox consoleInputText;
         private System.Windows.Forms.TextBox consoleText;
+        private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem cycConnectionToolStripMenuItem;
     }
 }
 

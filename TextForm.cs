@@ -32,7 +32,7 @@ namespace cogbot
     {
         public GridClient client;
         public OutputDelegate outputDelegate;
-
+        DotCYC.CycConnectionForm cycConnection;
         public Dictionary<string, DescribeDelegate> describers;
 
         public Dictionary<string, Listeners.Listener> listeners;
@@ -1686,6 +1686,19 @@ namespace cogbot
 
         private void TextForm_Load(object sender, EventArgs e)
         {
+            cycConnection = new DotCYC.CycConnectionForm();
+        }
+
+        private void consoleText_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void cycConnectionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (cycConnection == null) cycConnection = new DotCYC.CycConnectionForm();
+            cycConnection.Show();
+
 
         }
 
