@@ -38,13 +38,14 @@ namespace cogbot.DotCYC
             // 
             // btnConnect
             // 
+            this.btnConnect.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnConnect.Location = new System.Drawing.Point(158, 12);
             this.btnConnect.Name = "btnConnect";
             this.btnConnect.Size = new System.Drawing.Size(84, 22);
             this.btnConnect.TabIndex = 0;
             this.btnConnect.Text = "Connect";
             this.btnConnect.UseVisualStyleBackColor = true;
-            this.btnConnect.Click += new System.EventHandler(this.button1_Click);
+            this.btnConnect.Click += new System.EventHandler(this.btnConnect_Click);
             // 
             // cycServerAddress
             // 
@@ -96,6 +97,7 @@ namespace cogbot.DotCYC
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(254, 252);
             this.Controls.Add(this.cycBasePort);
             this.Controls.Add(this.btnEval);
@@ -106,8 +108,12 @@ namespace cogbot.DotCYC
             this.Name = "CycConnectionForm";
             this.Text = "CycConnectionForm";
             this.Load += new System.EventHandler(this.CycConnectionForm_Load);
+            this.Paint += new System.Windows.Forms.PaintEventHandler(this.CycConnectionForm_NoClose);
+            this.Resize += new System.EventHandler(this.CycConnectionForm_NoClose);
+            //this.Closed = new System.EventHandler(this.CycConnectionForm_Close);
             this.ResumeLayout(false);
             this.PerformLayout();
+
         }
 
         #endregion

@@ -32,7 +32,7 @@ namespace cogbot
     {
         public GridClient client;
         public OutputDelegate outputDelegate;
-        DotCYC.CycConnectionForm cycConnection;
+        public DotCYC.CycConnectionForm cycConnection;
         public Dictionary<string, DescribeDelegate> describers;
 
         public Dictionary<string, Listeners.Listener> listeners;
@@ -1105,6 +1105,7 @@ namespace cogbot
 
         public void msgClient(string serverMessage)
         {
+            System.Console.Out.WriteLine("msgClient: " + serverMessage);
             if ((ns!=null)&&(tcpStreamWriter!=null))
             {
                 lock (tcpStreamWriter)
@@ -1589,9 +1590,13 @@ namespace cogbot
                         ns.Write(Encoding.ASCII.GetBytes(serverMessage.ToCharArray()), 0, serverMessage.Length);
                     }
                 }
-                //output(" taskcode =" + lastcode);
-                //output(" taskTick Results>" + thisTask.results);
-                //output(" taskTick continueTask=" + thisTask.requeue.ToString());
+
+                if (true)
+                {
+                    output(" taskcode: " + lastcode + " --> " + thisTask.results);
+                    //output(" taskTick Results>" + thisTask.results);
+                    //output(" taskTick continueTask=" + thisTask.requeue.ToString());
+                }
 
                 // Should we do again ?
                 if (thisTask.requeue == true)
@@ -1696,10 +1701,8 @@ namespace cogbot
 
         private void cycConnectionToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (cycConnection == null) cycConnection = new DotCYC.CycConnectionForm();
-            cycConnection.Show();
-
-
+            if (cycConnection == null || cycConnection.IsDisposed) cycConnection = new DotCYC.CycConnectionForm();           
+            cycConnection.Reactivate();
         }
 
 

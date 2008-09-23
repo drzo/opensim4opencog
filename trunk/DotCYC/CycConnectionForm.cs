@@ -10,28 +10,40 @@ namespace cogbot.DotCYC
 {
     using org.opencyc.api;
     using org.opencyc.cycobject;
+    using System.Runtime.InteropServices;
     public partial class CycConnectionForm : Form
     {
-        public CycAccess cycAccess = null;
-        public bool wasConnected = false;       
+        private CycAccess m_cycAccess = null;
+        public CycAccess cycAccess
+        {
+            get
+            {
+                return getCycAccess();
+            }
+        }
+        public bool wasConnected = false;
         public CycConnectionForm()
         {
             InitializeComponent();
+            // add this line to the form's constructor after InitializeComponent() 
+            hMenu = GetSystemMenu(this.Handle, false);
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void btnConnect_Click(object sender, EventArgs e)
         {
-            btnConnect.Enabled = false;
+            try { btnConnect.Enabled = false; }
+            catch (Exception) { }
             if (!IsConnected())
                 connect();
             else
                 disconnect();
-            btnConnect.Enabled = true;
+            try { btnConnect.Enabled = true; }
+            catch (Exception) { }
         }
 
         private bool IsConnected()
         {
-            if (cycAccess != null) wasConnected = !cycAccess.isClosed();
+            if (m_cycAccess != null) wasConnected = !m_cycAccess.isClosed();
             else wasConnected = false;
             if (wasConnected) btnConnect.Text = "Disconnect";
             else btnConnect.Text = "Connect";
@@ -42,8 +54,9 @@ namespace cogbot.DotCYC
         {
             try
             {
-                txtCycOutput.Text = "" + getCycAccess().converseObject(txtEvalString.Text);
-            } catch (Exception ee)
+                txtCycOutput.Text = "" + cycAccess.converseObject(txtEvalString.Text);
+            }
+            catch (Exception ee)
             {
                 txtCycOutput.Text = ee.ToString();
             }
@@ -52,32 +65,59 @@ namespace cogbot.DotCYC
         public CycAccess getCycAccess()
         {
             if (!IsConnected()) connect();
-            return cycAccess;
+            return m_cycAccess;
         }
 
         private void connect()
         {
-            btnConnect.Text = "Disconnect";
             if (IsConnected()) return;
-            cycAccess = new CycAccess(cycServerAddress.Text, Int16.Parse(cycBasePort.Text));
-            IsConnected();
+            try
+            {
+                m_cycAccess = new CycAccess(cycServerAddress.Text, Int16.Parse(cycBasePort.Text));
+            }
+            catch (Exception ee)
+            {
+                txtCycOutput.Text = ee.ToString();
+            }
+            wasConnected = IsConnected();
         }
         private void disconnect()
         {
-            btnConnect.Text = "Connect";
-            if (!IsConnected()) return;
-            if (cycAccess != null)
+            if (m_cycAccess != null)
             {
-                cycAccess.getCycConnection().close();
-                cycAccess = null;
+                m_cycAccess.getCycConnection().close();
+                m_cycAccess = null;
             }
-            wasConnected = false;
+            wasConnected = IsConnected();
         }
 
         private void CycConnectionForm_Load(object sender, EventArgs e)
         {
-
+            wasConnected = IsConnected();
         }
 
+        private const uint SC_CLOSE = 0xf060;
+        private const uint MF_GRAYED = 0x01;
+        private IntPtr hMenu;
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
+
+        [DllImport("user32.dll")]
+        private static extern int EnableMenuItem(IntPtr hMenu, uint wIDEnableItem, uint wEnable);
+
+        private void CycConnectionForm_NoClose(object sender, EventArgs e)
+        {
+            EnableMenuItem(hMenu, SC_CLOSE, MF_GRAYED);
+        }
+
+        public void Reactivate()
+        {
+            this.Show();
+            //if (this.WindowState == FormWindowState.Minimized)              
+            this.WindowState = FormWindowState.Normal;
+            this.Visible = true;
+            this.Activate();
+        }
     }
 }
