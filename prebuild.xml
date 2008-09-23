@@ -140,7 +140,7 @@
           <Match path="Properties" pattern="*.cs" recurse="true"/>
           <Match path="Tutorials" pattern="*.cs" recurse="true"/>
           <Match path="Utilities" pattern="*.cs" recurse="true"/>
-          <Match path="DotCyc" pattern="*.cs" recurse="true"/>
+          <Match path="DotCYC" pattern="CycConnectionForm*.cs" recurse="true"/>
           <Match path="." pattern="*.cs" recurse="false"/>
       </Files>
     </Project>
