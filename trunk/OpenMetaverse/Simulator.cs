@@ -33,103 +33,103 @@ using OpenMetaverse.Packets;
 
 namespace OpenMetaverse
 {
+    #region Enums
+
+    /// <summary>
+    /// Simulator (region) properties
+    /// </summary>
+    [Flags]
+    public enum RegionFlags
+    {
+        /// <summary>No flags set</summary>
+        None = 0,
+        /// <summary>Agents can take damage and be killed</summary>
+        AllowDamage = 1 << 0,
+        /// <summary>Landmarks can be created here</summary>
+        AllowLandmark = 1 << 1,
+        /// <summary>Home position can be set in this sim</summary>
+        AllowSetHome = 1 << 2,
+        /// <summary>Home position is reset when an agent teleports away</summary>
+        ResetHomeOnTeleport = 1 << 3,
+        /// <summary>Sun does not move</summary>
+        SunFixed = 1 << 4,
+        /// <summary>No object, land, etc. taxes</summary>
+        TaxFree = 1 << 5,
+        /// <summary>Disable heightmap alterations (agents can still plant
+        /// foliage)</summary>
+        BlockTerraform = 1 << 6,
+        /// <summary>Land cannot be released, sold, or purchased</summary>
+        BlockLandResell = 1 << 7,
+        /// <summary>All content is wiped nightly</summary>
+        Sandbox = 1 << 8,
+        /// <summary></summary>
+        NullLayer = 1 << 9,
+        /// <summary></summary>
+        SkipAgentAction = 1 << 10,
+        /// <summary></summary>
+        SkipUpdateInterestList = 1 << 11,
+        /// <summary>No collision detection for non-agent objects</summary>
+        SkipCollisions = 1 << 12,
+        /// <summary>No scripts are ran</summary>
+        SkipScripts = 1 << 13,
+        /// <summary>All physics processing is turned off</summary>
+        SkipPhysics = 1 << 14,
+        /// <summary></summary>
+        ExternallyVisible = 1 << 15,
+        /// <summary></summary>
+        MainlandVisible = 1 << 16,
+        /// <summary></summary>
+        PublicAllowed = 1 << 17,
+        /// <summary></summary>
+        BlockDwell = 1 << 18,
+        /// <summary>Flight is disabled (not currently enforced by the sim)</summary>
+        NoFly = 1 << 19,
+        /// <summary>Allow direct (p2p) teleporting</summary>
+        AllowDirectTeleport = 1 << 20,
+        /// <summary>Estate owner has temporarily disabled scripting</summary>
+        EstateSkipScripts = 1 << 21,
+        /// <summary></summary>
+        RestrictPushObject = 1 << 22,
+        /// <summary>Deny agents with no payment info on file</summary>
+        DenyAnonymous = 1 << 23,
+        /// <summary>Deny agents with payment info on file</summary>
+        DenyIdentified = 1 << 24,
+        /// <summary>Deny agents who have made a monetary transaction</summary>
+        DenyTransacted = 1 << 25,
+        /// <summary></summary>
+        AllowParcelChanges = 1 << 26,
+        /// <summary></summary>
+        AbuseEmailToEstateOwner = 1 << 27,
+        /// <summary>Region is Voice Enabled</summary>
+        AllowVoice = 1 << 28
+    }
+
+    /// <summary>
+    /// Access level for a simulator
+    /// </summary>
+    public enum SimAccess : byte
+    {
+        /// <summary>Minimum access level, no additional checks</summary>
+        Min = 0,
+        /// <summary>Trial accounts allowed</summary>
+        Trial = 7,
+        /// <summary>PG rating</summary>
+        PG = 13,
+        /// <summary>Mature rating</summary>
+        Mature = 21,
+        /// <summary>Simulator is offline</summary>
+        Down = 254,
+        /// <summary>Simulator does not exist</summary>
+        NonExistent = 255
+    }
+
+    #endregion Enums
+
     /// <summary>
     /// 
     /// </summary>
     public class Simulator : UDPBase, IDisposable
     {
-        #region Enums
-
-        /// <summary>
-        /// Simulator (region) properties
-        /// </summary>
-        [Flags]
-        public enum RegionFlags
-        {
-            /// <summary>No flags set</summary>
-            None = 0,
-            /// <summary>Agents can take damage and be killed</summary>
-            AllowDamage = 1 << 0,
-            /// <summary>Landmarks can be created here</summary>
-            AllowLandmark = 1 << 1,
-            /// <summary>Home position can be set in this sim</summary>
-            AllowSetHome = 1 << 2,
-            /// <summary>Home position is reset when an agent teleports away</summary>
-            ResetHomeOnTeleport = 1 << 3,
-            /// <summary>Sun does not move</summary>
-            SunFixed = 1 << 4,
-            /// <summary>No object, land, etc. taxes</summary>
-            TaxFree = 1 << 5,
-            /// <summary>Disable heightmap alterations (agents can still plant
-            /// foliage)</summary>
-            BlockTerraform = 1 << 6,
-            /// <summary>Land cannot be released, sold, or purchased</summary>
-            BlockLandResell = 1 << 7,
-            /// <summary>All content is wiped nightly</summary>
-            Sandbox = 1 << 8,
-            /// <summary></summary>
-            NullLayer = 1 << 9,
-            /// <summary></summary>
-            SkipAgentAction = 1 << 10,
-            /// <summary></summary>
-            SkipUpdateInterestList = 1 << 11,
-            /// <summary>No collision detection for non-agent objects</summary>
-            SkipCollisions = 1 << 12,
-            /// <summary>No scripts are ran</summary>
-            SkipScripts = 1 << 13,
-            /// <summary>All physics processing is turned off</summary>
-            SkipPhysics = 1 << 14,
-            /// <summary></summary>
-            ExternallyVisible = 1 << 15,
-            /// <summary></summary>
-            MainlandVisible = 1 << 16,
-            /// <summary></summary>
-            PublicAllowed = 1 << 17,
-            /// <summary></summary>
-            BlockDwell = 1 << 18,
-            /// <summary>Flight is disabled (not currently enforced by the sim)</summary>
-            NoFly = 1 << 19,
-            /// <summary>Allow direct (p2p) teleporting</summary>
-            AllowDirectTeleport = 1 << 20,
-            /// <summary>Estate owner has temporarily disabled scripting</summary>
-            EstateSkipScripts = 1 << 21,
-            /// <summary></summary>
-            RestrictPushObject = 1 << 22,
-            /// <summary>Deny agents with no payment info on file</summary>
-            DenyAnonymous = 1 << 23,
-            /// <summary>Deny agents with payment info on file</summary>
-            DenyIdentified = 1 << 24,
-            /// <summary>Deny agents who have made a monetary transaction</summary>
-            DenyTransacted = 1 << 25,
-            /// <summary></summary>
-            AllowParcelChanges = 1 << 26,
-            /// <summary></summary>
-            AbuseEmailToEstateOwner = 1 << 27,
-            /// <summary>Region is Voice Enabled</summary>
-            AllowVoice = 1 << 28
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public enum SimAccess : byte
-        {
-            /// <summary></summary>
-            Min = 0,
-            /// <summary></summary>
-            Trial = 7,
-            /// <summary></summary>
-            PG = 13,
-            /// <summary></summary>
-            Mature = 21,
-            /// <summary></summary>
-            Down = 254,
-            /// <summary></summary>
-            NonExistent = 255
-        }
-
-        #endregion Enums
-
         #region Structs
         /// <summary>
         /// Simulator Statistics
@@ -243,7 +243,8 @@ namespace OpenMetaverse
         public string SimVersion = String.Empty;
         /// <summary></summary>
         public string Name = String.Empty;
-        /// <summary></summary>
+        /// <summary>A 64x64 grid of parcel coloring values. The values stored 
+        /// in this array are of the <seealso cref="ParcelArrayType"/> type</summary>
         public byte[] ParcelOverlay = new byte[4096];
         /// <summary></summary>
         public int ParcelOverlaysReceived;
@@ -341,8 +342,8 @@ namespace OpenMetaverse
         /// <returns>true if map is full (contains no 0's)</returns>
         public bool IsParcelMapFull()
         {
-            int ny = this.ParcelMap.GetLength(0);
-            int nx = this.ParcelMap.GetLength(1);
+            //int ny = this.ParcelMap.GetLength(0);
+            //int nx = this.ParcelMap.GetLength(1);
             for (int y = 0; y < 64; y++)
             {
                 for (int x = 0; x < 64; x++)
@@ -391,7 +392,9 @@ namespace OpenMetaverse
         /// (for duplicate checking)</summary>
         internal Queue<uint> PacketArchive;
         /// <summary>Packets we sent out that need ACKs from the simulator</summary>
-        internal Dictionary<uint, Packet> NeedAck = new Dictionary<uint, Packet>();
+        internal Dictionary<uint, NetworkManager.OutgoingPacket> NeedAck = new Dictionary<uint, NetworkManager.OutgoingPacket>();
+        /// <summary>Sequence number for pause/resume</summary>
+        internal int pauseSerial;
 
         private NetworkManager Network;
         private Queue<ulong> InBytes, OutBytes;
@@ -403,6 +406,8 @@ namespace OpenMetaverse
         private Timer StatsTimer;
         // simulator <> parcel LocalID Map
         private int[,] _ParcelMap = new int[64, 64];
+        internal bool DownloadingParcelMap = false;
+
         #endregion Internal/Private Members
 
         /// <summary>
@@ -574,6 +579,32 @@ namespace OpenMetaverse
         }
 
         /// <summary>
+        /// Instructs the simulator to stop sending update (and possibly other) packets
+        /// </summary>
+        public void Pause()
+        {
+            AgentPausePacket pause = new AgentPausePacket();
+            pause.AgentData.AgentID = Client.Self.AgentID;
+            pause.AgentData.SessionID = Client.Self.SessionID;
+            pause.AgentData.SerialNum = (uint)Interlocked.Exchange(ref pauseSerial, pauseSerial + 1);
+
+            Client.Network.SendPacket(pause, this);
+        }
+
+        /// <summary>
+        /// Instructs the simulator to resume sending update packets (unpause)
+        /// </summary>
+        public void Resume()
+        {
+            AgentResumePacket resume = new AgentResumePacket();
+            resume.AgentData.AgentID = Client.Self.AgentID;
+            resume.AgentData.SessionID = Client.Self.SessionID;
+            resume.AgentData.SerialNum = (uint)Interlocked.Exchange(ref pauseSerial, pauseSerial + 1);
+
+            Client.Network.SendPacket(resume, this);
+        }
+
+        /// <summary>
         /// Sends a packet
         /// </summary>
         /// <param name="packet">Packet to be sent</param>
@@ -606,9 +637,7 @@ namespace OpenMetaverse
             byte[] buffer;
             int bytes;
 
-            // Keep track of when this packet was sent out
-            packet.TickCount = Environment.TickCount;
-
+            // Set sequence implies that this is not a resent packet
             if (setSequence)
             {
                 // Reset to zero if we've hit the upper sequence number limit
@@ -618,10 +647,15 @@ namespace OpenMetaverse
 
                 if (packet.Header.Reliable)
                 {
+                    // Wrap this packet in a struct to track timeouts and resends
+                    NetworkManager.OutgoingPacket outgoing = new NetworkManager.OutgoingPacket(this, packet, true);
+                    // Keep track of when this packet was first sent out (right now)
+                    outgoing.TickCount = Environment.TickCount;
+
                     // Add this packet to the list of ACK responses we are waiting on from the server
                     lock (NeedAck)
                     {
-                        NeedAck[packet.Header.Sequence] = packet;
+                        NeedAck[packet.Header.Sequence] = outgoing;
                     }
 
                     if (packet.Header.Resent)
@@ -647,6 +681,9 @@ namespace OpenMetaverse
                             packet.Header.AppendedAcks = false;
                             packet.Header.AckList = new uint[0];
                         }
+
+                        // Update the sent time for this packet
+                        SetResentTime(packet.Header.Sequence);
                     }
                     else
                     {
@@ -888,6 +925,13 @@ namespace OpenMetaverse
         {
         }
 
+        private void SetResentTime(uint sequence)
+        {
+            NetworkManager.OutgoingPacket outgoing;
+            if (NeedAck.TryGetValue(sequence, out outgoing))
+                outgoing.SetTickCount();
+        }
+
         /// <summary>
         /// Sends out pending acknowledgements
         /// </summary>
@@ -931,26 +975,26 @@ namespace OpenMetaverse
                 int now = Environment.TickCount;
 
                 // Resend packets
-                foreach (Packet packet in NeedAck.Values)
+                foreach (NetworkManager.OutgoingPacket outgoing in NeedAck.Values)
                 {
-                    if (packet.TickCount != 0 && now - packet.TickCount > Client.Settings.RESEND_TIMEOUT)
+                    if (outgoing.TickCount != 0 && now - outgoing.TickCount > Client.Settings.RESEND_TIMEOUT)
                     {
-                        if (packet.ResendCount < Client.Settings.MAX_RESEND_COUNT)
+                        if (outgoing.ResendCount < Client.Settings.MAX_RESEND_COUNT)
                         {
                             try
                             {
                                 if (Client.Settings.LOG_RESENDS)
                                 {
                                     Logger.DebugLog(String.Format("Resending packet #{0} ({1}), {2}ms have passed",
-                                        packet.Header.Sequence, packet.GetType(), now - packet.TickCount), Client);
+                                        outgoing.Packet.Header.Sequence, outgoing.Packet.GetType(), now - outgoing.TickCount), Client);
                                 }
 
-                                packet.TickCount = 0;
-                                packet.Header.Resent = true;
+                                outgoing.ZeroTickCount();
+                                outgoing.Packet.Header.Resent = true;
                                 ++Stats.ResentPackets;
-                                ++packet.ResendCount;
+                                outgoing.IncrementResendCount();
 
-                                SendPacket(packet, false);
+                                SendPacket(outgoing.Packet, false);
                             }
                             catch (Exception ex)
                             {
@@ -962,10 +1006,10 @@ namespace OpenMetaverse
                             if (Client.Settings.LOG_RESENDS)
                             {
                                 Logger.DebugLog(String.Format("Dropping packet #{0} ({1}) after {2} failed attempts",
-                                    packet.Header.Sequence, packet.GetType(), packet.ResendCount));
+                                    outgoing.Packet.Header.Sequence, outgoing.Packet.GetType(), outgoing.ResendCount));
                             }
 
-                            dropAck.Add(packet.Header.Sequence);
+                            dropAck.Add(outgoing.Packet.Header.Sequence);
                         }
                     }
                 }

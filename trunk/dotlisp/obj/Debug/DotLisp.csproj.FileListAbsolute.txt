@@ -8,3 +8,5 @@ C:\dev\cogbot\dotlisp\bin\Debug\DotLisp.pdb
 C:\dev\cogbot\dotlisp\obj\Debug\ResolveAssemblyReference.cache
 C:\dev\cogbot\dotlisp\obj\Debug\DotLisp.dll
 C:\dev\cogbot\dotlisp\obj\Debug\DotLisp.pdb
+C:\dev\cogbot\bin\DotLisp.dll
+C:\dev\cogbot\bin\DotLisp.pdb

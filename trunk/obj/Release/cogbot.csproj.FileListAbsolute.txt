@@ -1,16 +1,5 @@
 C:\dev\cogbot\obj\Release\ResolveAssemblyReference.cache
-C:\dev\cogbot\obj\Release\cogbot.LoginForm.resources
-C:\dev\cogbot\obj\Release\cogbot.TextForm.resources
-C:\dev\cogbot\obj\Release\cogbot.csproj.GenerateResource.Cache
-C:\dev\cogbot\obj\Release\cogbot.Properties.Resources.resources
 C:\dev\cogbot\obj\Release\cogbot.exe
-C:\dev\cogbot\obj\Release\cogbot.pdb
 C:\dev\cogbot\bin\cogbot.exe
-C:\dev\cogbot\bin\cogbot.pdb
-C:\dev\cogbot\bin\xmldocs.xml
-C:\dev\cogbot\bin\DotLisp.dll
-C:\dev\cogbot\bin\log4net.dll
 C:\dev\cogbot\bin\OpenMetaverse.pdb
 C:\dev\cogbot\bin\OpenMetaverse.xml
-C:\dev\cogbot\bin\OpenMetaverseTypes.pdb
-C:\dev\cogbot\bin\OpenMetaverseTypes.xml

@@ -7,3 +7,4 @@ L:\dev\dotlisp\obj\Release\DotLisp.dll
 C:\dev\cogbot\dotlisp\bin\Release\DotLisp.dll
 C:\dev\cogbot\dotlisp\obj\Release\ResolveAssemblyReference.cache
 C:\dev\cogbot\dotlisp\obj\Release\DotLisp.dll
+C:\dev\cogbot\bin\DotLisp.dll

@@ -2920,11 +2920,8 @@ namespace OpenMetaverse
 
             if (reply.AgentData.Descendents > 0)
             {
-
-                InventoryDescendentsPacket reply = (InventoryDescendentsPacket)packet;
-                ItemData[] items = null;
-                FolderData[] folders = null;
-                if (reply.AgentData.Descendents > 0)
+                // InventoryDescendantsReply sends a null folder if the parent doesnt contain any folders
+                if ((reply.FolderData.GetUpperBound(0) >= 0) && (reply.FolderData[0].FolderID != UUID.Zero))
                 {
                     // Iterate folders in this packet
                       for (int i = 0; i < reply.FolderData.Length; i++)
@@ -2936,13 +2933,8 @@ namespace OpenMetaverse
                         folder.OwnerID = reply.AgentData.OwnerID;
 
                         _Store[folder.UUID] = folder;
-                            Logger.Log("  - fld[" + folder.Name + "]", Helpers.LogLevel.Info);
-                      }
                     }
-                    else
-                    {
-                       // folders[0] = new FolderData(UUID.Zero); 
-                    }
+                }
 
                 // InventoryDescendantsReply sends a null item if the parent doesnt contain any items.
                     if ((reply.ItemData != null) && (reply.ItemData.GetUpperBound(0) >= 0) && (reply.ItemData[0].ItemID != UUID.Zero))

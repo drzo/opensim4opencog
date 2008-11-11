@@ -100,7 +100,7 @@ namespace OpenMetaverse
         /// 
         /// </summary>
         /// <param name="te"></param>
-        public delegate void AppearanceUpdatedCallback(LLObject.TextureEntry te);
+        public delegate void AppearanceUpdatedCallback(Primitive.TextureEntry te);
 
         /// <summary></summary>
         public event AgentWearablesCallback OnAgentWearables;
@@ -122,7 +122,7 @@ namespace OpenMetaverse
             new WearableType[] { WearableType.Shape, WearableType.Skin,    WearableType.Shirt,   WearableType.Jacket,  WearableType.Gloves,  WearableType.Undershirt, WearableType.Invalid    },
             new WearableType[] { WearableType.Shape, WearableType.Skin,    WearableType.Pants,   WearableType.Shoes,   WearableType.Socks,   WearableType.Jacket,     WearableType.Underpants },
             new WearableType[] { WearableType.Eyes,  WearableType.Invalid, WearableType.Invalid, WearableType.Invalid, WearableType.Invalid, WearableType.Invalid,    WearableType.Invalid    },
-            new WearableType[] { WearableType.Skin,  WearableType.Invalid, WearableType.Invalid, WearableType.Invalid, WearableType.Invalid, WearableType.Invalid,    WearableType.Invalid    }
+            new WearableType[] { WearableType.Skirt, WearableType.Invalid, WearableType.Invalid, WearableType.Invalid, WearableType.Invalid, WearableType.Invalid, WearableType.Invalid } 
         };
         /// <summary>Secret values to finalize the cache check hashes for each
         /// bake</summary>
@@ -477,7 +477,7 @@ namespace OpenMetaverse
         public void AddAttachments(List<InventoryBase> attachments, bool removeExistingFirst)
         {
             // FIXME: Obey this
-            const int OBJECTS_PER_PACKET = 4;
+            //const int OBJECTS_PER_PACKET = 4;
 
             // Use RezMultipleAttachmentsFromInv  to clear out current attachments, and attach new ones
             RezMultipleAttachmentsFromInvPacket attachmentsPacket = new RezMultipleAttachmentsFromInvPacket();
@@ -639,7 +639,7 @@ namespace OpenMetaverse
 
             #region Send Appearance
 
-            LLObject.TextureEntry te = null;
+            Primitive.TextureEntry te = null;
 
             ObjectManager.NewAvatarCallback updateCallback =
                 delegate(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
@@ -652,7 +652,7 @@ namespace OpenMetaverse
 
                             for (uint i = 0; i < AgentTextures.Length; i++)
                             {
-                                LLObject.TextureEntryFace face = avatar.Textures.FaceTextures[i];
+                                Primitive.TextureEntryFace face = avatar.Textures.FaceTextures[i];
 
                                 if (face == null)
                                 {
@@ -852,7 +852,7 @@ namespace OpenMetaverse
                         {
                             if (data.Asset != null && data.Asset.Params.ContainsKey(vp.ParamID))
                             {
-                                set.VisualParam[vpIndex].ParamValue = Helpers.FloatToByte(data.Asset.Params[vp.ParamID], vp.MinValue, vp.MaxValue);
+                                set.VisualParam[vpIndex].ParamValue = Utils.FloatToByte(data.Asset.Params[vp.ParamID], vp.MinValue, vp.MaxValue);
                                 count++;
 
                                 switch (vp.ParamID)
@@ -888,7 +888,7 @@ namespace OpenMetaverse
                 }
 
                 // Build the texture entry for our agent
-                LLObject.TextureEntry te = new LLObject.TextureEntry(DEFAULT_AVATAR_TEXTURE);
+                Primitive.TextureEntry te = new Primitive.TextureEntry(DEFAULT_AVATAR_TEXTURE);
 
                 // Put our AgentTextures array in to TextureEntry
                 lock (AgentTextures)
@@ -897,7 +897,7 @@ namespace OpenMetaverse
                     {
                         if (AgentTextures[i] != UUID.Zero)
                         {
-                            LLObject.TextureEntryFace face = te.CreateFace(i);
+                            Primitive.TextureEntryFace face = te.CreateFace(i);
                             face.TextureID = AgentTextures[i];
                         }
                     }
@@ -909,7 +909,7 @@ namespace OpenMetaverse
                     {
                         foreach (KeyValuePair<TextureIndex, UUID> texture in data.Asset.Textures)
                         {
-                            LLObject.TextureEntryFace face = te.CreateFace((uint)texture.Key);
+                            Primitive.TextureEntryFace face = te.CreateFace((uint)texture.Key);
                             face.TextureID = texture.Value;
 
                             Logger.DebugLog("Setting agent texture " + ((TextureIndex)texture.Key).ToString() + " to " +
@@ -924,7 +924,7 @@ namespace OpenMetaverse
 
             // FIXME: Our hackish algorithm is making squished avatars. See
             // http://www.OpenMetaverse.org/wiki/Agent_Size for discussion of the correct algorithm
-            //float height = Helpers.ByteToFloat(set.VisualParam[33].ParamValue, VisualParams.Params[33].MinValue,
+            //float height = Utils.ByteToFloat(set.VisualParam[33].ParamValue, VisualParams.Params[33].MinValue,
             //    VisualParams.Params[33].MaxValue);
 
             // Takes into account the Shoe Heel/Platform offsets but not the Head Size Offset.  But seems to work.
@@ -1032,7 +1032,7 @@ namespace OpenMetaverse
         private void UploadBake(Baker bake)
         {
             // Upload the completed layer data
-            UUID transactionID = Assets.RequestUpload(bake.BakedTexture, true);
+            Assets.RequestUpload(bake.BakedTexture, true);
 
             Logger.DebugLog(String.Format("Bake {0} completed. Uploading asset {1}", bake.BakeType,
                 bake.BakedTexture.AssetID.ToString()), Client);
@@ -1206,7 +1206,7 @@ namespace OpenMetaverse
                     foreach (UUID image in imgKeys)
                     {
                         // Download all the images we need for baking
-                        Assets.RequestImage(image, ImageType.Normal, 1013000.0f, 0);
+                        Assets.RequestImage(image, ImageType.Normal, 1013000.0f, 0, 0);
                     }
                 }
             }

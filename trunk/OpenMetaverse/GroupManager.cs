@@ -56,6 +56,8 @@ namespace OpenMetaverse
     /// </summary>
     public struct GroupRole
     {
+        /// <summary>Key of the group</summary>
+        public UUID GroupID;
         /// <summary>Key of Role</summary>
         public UUID ID;
         /// <summary>Name of Role</summary>
@@ -79,6 +81,8 @@ namespace OpenMetaverse
     /// </summary>
     public struct GroupTitle
     {
+        /// <summary>Key of the group</summary>
+        public UUID GroupID;
         /// <summary>Group Title</summary>
         public string Title;
         /// <summary>Whether title is Active</summary>
@@ -232,11 +236,57 @@ namespace OpenMetaverse
         {
             if (OwnerID == UUID.Zero || AttachmentID == UUID.Zero)
                 return new byte[0];
+            
+            OpenMetaverse.StructuredData.OSDMap att = new OpenMetaverse.StructuredData.OSDMap();
+            att.Add("item_id", OpenMetaverse.StructuredData.OSD.FromUUID(AttachmentID));
+            att.Add("owner_id", OpenMetaverse.StructuredData.OSD.FromUUID(OwnerID));
+
+            return OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlBytes(att);
+
+            /*
             //I guess this is how this works, no gaurentees
             string lsd = "<llsd><item_id>" + AttachmentID.ToString() + "</item_id><owner_id>"
                 + OwnerID.ToString() + "</owner_id></llsd>";
             return Utils.StringToBytes(lsd);
+             */
         }
+    }
+
+    /// <summary>
+    /// Struct representing a group notice list entry
+    /// </summary>
+    public struct GroupNoticeList
+    {
+        /// <summary>Notice ID</summary>
+        public UUID NoticeID;
+        /// <summary>Creation timestamp of notice</summary>
+        public uint Timestamp;
+        /// <summary>Agent name who created notice</summary>
+        public string FromName;
+        /// <summary>Notice subject</summary>
+        public string Subject;
+        /// <summary>Is there an attachment?</summary>
+        public bool HasAttachment;
+        /// <summary>Attachment Type</summary>
+        public AssetType AssetType;
+
+    }
+
+    /// <summary>
+    /// Struct representing a member of a group chat session and their settings
+    /// </summary>
+    public struct ChatSessionMember
+    {
+        /// <summary>The <see cref="UUID"/> of the Avatar</summary>
+        public UUID AvatarKey;
+        /// <summary>True if user has voice chat enabled</summary>
+        public bool CanVoiceChat;
+        /// <summary>True of Avatar has moderator abilities</summary>
+        public bool IsModerator;
+        /// <summary>True if a moderator has muted this avatars chat</summary>
+        public bool MuteText;
+        /// <summary>True if a moderator has muted this avatars voice</summary>
+        public bool MuteVoice;
     }
 
     #endregion Structs
@@ -248,11 +298,17 @@ namespace OpenMetaverse
     /// </summary>
     public enum GroupRoleUpdate : uint
     {
+        /// <summary></summary>
         NoUpdate,
+        /// <summary></summary>
         UpdateData,
+        /// <summary></summary>
         UpdatePowers,
+        /// <summary></summary>
         UpdateAll,
+        /// <summary></summary>
         Create,
+        /// <summary></summary>
         Delete
     }
 
@@ -260,100 +316,102 @@ namespace OpenMetaverse
     /// Group role powers flags
     /// </summary>
     [Flags]
-    public enum GroupRolePowers : long
+    public enum GroupPowers : long
     {
+        /// <summary></summary>
         None = 0,
+        /// <summary>Can send invitations to groups default role</summary>
         Invite = 1 << 1,
+        /// <summary>Can eject members from group</summary>
         Eject = 1 << 2,
+        /// <summary>Can toggle 'Open Enrollment' and change 'Signup fee'</summary>
         ChangeOptions = 1 << 3,
+        /// <summary>Can create new roles</summary>
         CreateRole = 1 << 4,
+        /// <summary>Can delete existing roles</summary>
         DeleteRole = 1 << 5,
+        /// <summary>Can change Role names, titles and descriptions</summary>
         RoleProperties = 1 << 6,
+        /// <summary>Can assign other members to assigners role</summary>
         AssignMemberLimited = 1 << 7,
+        /// <summary>Can assign other members to any role</summary>
         AssignMember = 1 << 8,
+        /// <summary>Can remove members from roles</summary>
         RemoveMember = 1 << 9,
+        /// <summary>Can assign and remove abilities in roles</summary>
         ChangeActions = 1 << 10,
+        /// <summary>Can change group Charter, Insignia, 'Publish on the web' and which
+        /// members are publicly visible in group member listings</summary>
         ChangeIdentity = 1 << 11,
+        /// <summary>Can buy land or deed land to group</summary>
         LandDeed = 1 << 12,
+        /// <summary>Can abandon group owned land to Governor Linden on mainland, or Estate owner for
+        /// private estates</summary>
         LandRelease = 1 << 13,
+        /// <summary>Can set land for-sale information on group owned parcels</summary>
         LandSetSale = 1 << 14,
-        LandDevideJoin = 1 << 15,
+        /// <summary>Can subdivide and join parcels</summary>
+        LandDivideJoin = 1 << 15,
+        /// <summary>Can join group chat sessions</summary>
+        JoinChat = 1 << 16,
+        /// <summary>Can toggle "Show in Find Places" and set search category</summary>
         FindPlaces = 1 << 17,
+        /// <summary>Can change parcel name, description, and 'Publish on web' settings</summary>
         LandChangeIdentity = 1 << 18,
+        /// <summary>Can set the landing point and teleport routing on group land</summary>
         SetLandingPoint = 1 << 19,
+        /// <summary>Can change music and media settings</summary>
         ChangeMedia = 1 << 20,
+        /// <summary>Can toggle 'Edit Terrain' option in Land settings</summary>
         LandEdit = 1 << 21,
+        /// <summary>Can toggle various About Land > Options settings</summary>
         LandOptions = 1 << 22,
+        /// <summary>Can always terraform land, even if parcel settings have it turned off</summary>
         AllowEditLand = 1 << 23,
+        /// <summary>Can always fly while over group owned land</summary>
         AllowFly = 1 << 24,
+        /// <summary>Can always rez objects on group owned land</summary>
         AllowRez = 1 << 25,
+        /// <summary>Can always create landmarks for group owned parcels</summary>
         AllowLandmark = 1 << 26,
+        /// <summary>Can use voice chat in Group Chat sessions</summary>
+        AllowVoiceChat = 1 << 27,
+        /// <summary>Can set home location on any group owned parcel</summary>
         AllowSetHome = 1 << 28,
+        /// <summary>Can modify public access settings for group owned parcels</summary>
         LandManageAllowed = 1 << 29,
+        /// <summary>Can manager parcel ban lists on group owned land</summary>
         LandManageBanned = 1 << 30,
+        /// <summary>Can manage pass list sales information</summary>
         LandManagePasses = 1 << 31,
+        /// <summary>Can eject and freeze other avatars on group owned land</summary>
         LandEjectAndFreeze = 1 << 32,
-        ReturnGroupOwned = 1 << 48,
+        /// <summary>Can return objects set to group</summary>
         ReturnGroupSet = 1 << 33,
+        /// <summary>Can return non-group owned/set objects</summary>
         ReturnNonGroup = 1 << 34,
+        /// <summary>Can landscape using Linden plants</summary>
         LandGardening = 1 << 35,
+        /// <summary>Can deed objects to group</summary>
         DeedObject = 1 << 36,
+        /// <summary>Can moderate group chat sessions</summary>
+        ModerateChat = 1 << 37,
+        /// <summary>Can move group owned objects</summary>
         ObjectManipulate = 1 << 38,
+        /// <summary>Can set group owned objects for-sale</summary>
         ObjectSetForSale = 1 << 39,
+        /// <summary>Pay group liabilities and receive group dividends</summary>
         Accountable = 1 << 40,
+        /// <summary>Can send group notices</summary>
         SendNotices = 1 << 42,
+        /// <summary>Can receive group notices</summary>
         ReceiveNotices = 1 << 43,
+        /// <summary>Can create group proposals</summary>
         StartProposal = 1 << 44,
-        VoteOnProposal = 1 << 45
-    }
-
-    [Flags]
-    public enum GroupPowers : ulong
-    {
-        MemberInvite = 2,
-        MemberEject = 4,
-        MemberOptions = 8,
-        MemberVisibleInDir = 140737488355328,
-        RoleCreate = 16,
-        RoleDelete = 32,
-        RoleProperties = 64,
-        RoleAssignMemberLimited = 128,
-        RoleAssignMember = 256,
-        RoleRemoveMember = 512,
-        RoleChangeActions = 1024,
-        GroupChangeIdentity = 2048,
-        LandDeed = 4096,
-        LandRelease = 8192,
-        LandSetSaleInfo = 16384,
-        LandDivideJoin = 32768,
-        LandFindPlaces = 131072,
-        LandChangeIdentity = 262144,
-        LandSetLandingPoint = 524288,
-        LandChangeMedia = 1048576,
-        LandEdit = 2097152,
-        LandOptions = 4194304,
-        LandAllowEditLand = 8388608,
-        LandAllowFly = 16777216,
-        LandAllowCreate = 33554432,
-        LandAllowLandmark = 67108864,
-        LandAllowSetHome = 268435456,
-        LandManageAllowed = 536870912,
-        LandManageBanned = 1073741824,
-        LandManagePasses = 2147483648,
-        LandAdmin = 4294967296,
-        LandReturnGroupOwned = 281474976710656,
-        LandReturnGroupSet = 8589934592,
-        LandReturnNonGroup = 17179869184,
-        LandReturn = LandReturnGroupOwned | LandReturnGroupSet | LandReturnNonGroup,
-        LandGardening = 34359738368,
-        ObjectDeed = 68719476736,
-        ObjectManipulate = 274877906944,
-        ObjectSetSale = 549755813888,
-        AccountingAccountable = 1099511627776,
-        NoticesSend = 4398046511104,
-        NoticesReceive = 8796093022208,
-        ProposalStart = 17592186044416,
-        ProposalVote = 35184372088832
+        /// <summary>Can vote on group proposals</summary>
+        VoteOnProposal = 1 << 45,
+        /// <summary>Can return group owned objects</summary>
+        ReturnGroupOwned = 1 << 48
     }
 
     #endregion Enums
@@ -369,66 +427,84 @@ namespace OpenMetaverse
         /// <summary>
         /// Callback for the list of groups the avatar is currently a member of
         /// </summary>
-        /// <param name="groups"></param>
+        /// <param name="groups">A dictionary containing the groups an avatar is a member of,
+        /// where the Key is the group <seealso cref="UUID"/>, and the values are the groups</param>
         public delegate void CurrentGroupsCallback(Dictionary<UUID, Group> groups);
+
         /// <summary>
         /// Callback for a list of group names
         /// </summary>
-        /// <param name="groupNames"></param>
+        /// <param name="groupNames">A dictionary containing the the group names requested
+        /// where the Key is the group <seealso cref="UUID"/>, and the values are the names</param>
         public delegate void GroupNamesCallback(Dictionary<UUID, string> groupNames);
+
         /// <summary>
         /// Callback for the profile of a group
         /// </summary>
-        /// <param name="group"></param>
+        /// <param name="group">The group profile</param>
         public delegate void GroupProfileCallback(Group group);
+
         /// <summary>
         /// Callback for the member list of a group
         /// </summary>
-        /// <param name="members"></param>
+        /// <param name="members">A dictionary containing the members of a group
+        /// where the Key is the group <seealso cref="UUID"/>, and the values are the members</param>
         public delegate void GroupMembersCallback(Dictionary<UUID, GroupMember> members);
+
         /// <summary>
         /// Callback for the role list of a group
         /// </summary>
-        /// <param name="roles"></param>
+        /// <param name="roles">A dictionary containing the roles of a group
+        /// where the Key is the group <seealso cref="UUID"/>, and the values are the roles</param>
         public delegate void GroupRolesCallback(Dictionary<UUID, GroupRole> roles);
+
         /// <summary>
         /// Callback for a pairing of roles to members
         /// </summary>
-        /// <param name="rolesMembers"></param>
+        /// <param name="rolesMembers">A List of Keyvalue pairs containing the role ID and the members assigned to 
+        /// that role</param>
         public delegate void GroupRolesMembersCallback(List<KeyValuePair<UUID, UUID>> rolesMembers);
+
         /// <summary>
         /// Callback for the title list of a group
         /// </summary>
-        /// <param name="titles"></param>
+        /// <param name="titles">A dictionary containing the titles of a group
+        /// where the Key is the group <seealso cref="UUID"/>, and the values are the title details</param>
         public delegate void GroupTitlesCallback(Dictionary<UUID, GroupTitle> titles);
+
         /// <summary>
-        /// 
+        /// Callback fired when group account summary information is received
         /// </summary>
-        /// <param name="summary"></param>
+        /// <param name="summary">The group account summary information</param>
         public delegate void GroupAccountSummaryCallback(GroupAccountSummary summary);
+
         /// <summary>
-        /// 
+        /// Callback fired after an attempt to create a group
         /// </summary>
-        /// <param name="groupID"></param>
-        /// <param name="success"></param>
-        /// <param name="message"></param>
+        /// <param name="groupID">The new groups <seealso cref="UUID"/></param>
+        /// <param name="success">True of creation was successful</param>
+        /// <param name="message">A string, containing a message from the simulator</param>
         public delegate void GroupCreatedCallback(UUID groupID, bool success, string message);
+
         /// <summary>
-        /// 
+        /// Callback fired when the avatar has joined a group
         /// </summary>
-        /// <param name="groupID"></param>
-        /// <param name="success"></param>
+        /// <param name="groupID">The <see cref="UUID"/> of the group joined</param>
+        /// <param name="success">True if the join was successful</param>
         public delegate void GroupJoinedCallback(UUID groupID, bool success);
+
         /// <summary>
-        /// 
+        /// Callback fired when the avatar leaves a group
         /// </summary>
-        /// <param name="groupID"></param>
-        /// <param name="success"></param>
+        /// <param name="groupID">The <see cref="UUID"/> of the group joined</param>
+        /// <param name="success">True if the part was successful</param>
         public delegate void GroupLeftCallback(UUID groupID, bool success);
+
         /// <summary>
-        /// 
+        /// Fired when a group is dropped, likely because it did not keep the required (2) avatar
+        /// minimum
         /// </summary>
-        /// <param name="groupID"></param>
+        /// <param name="groupID">The <see cref="UUID"/> of the group which was dropped</param>
         public delegate void GroupDroppedCallback(UUID groupID);
 
         /// <summary>
@@ -439,6 +515,13 @@ namespace OpenMetaverse
         /// <param name="groupID">The Group UUID the member was ejected from</param>
         /// <param name="success">true of member was successfully ejected</param>
         public delegate void GroupMemberEjectedCallback(UUID groupID, bool success);
+
+        /// <summary>
+        /// Fired when the list of group notices is recievied
+        /// </summary>
+        /// <param name="groupID">The <see cref="UUID"/> of the group for which the notice list entry was recievied</param>
+        /// <param name="notice">The Notice list entry</param>
+        public delegate void GroupNoticesListCallback(UUID groupID, GroupNoticeList notice);
 
         #endregion Delegates
 
@@ -485,20 +568,27 @@ namespace OpenMetaverse
         /// <summary>Fired when a GroupMemberEjected packet is received,
         /// indicates a member of a group has been ejected</summary>
         public event GroupMemberEjectedCallback OnGroupMemberEjected;
+        /// <summary>Fired when the list of group notices is recievied</summary>
+        public event GroupNoticesListCallback OnGroupNoticesList;
 
         #endregion Events
 
         /// <summary>A reference to the current <seealso cref="GridClient"/> instance</summary>
         private GridClient Client;
-        /// <summary>A list of all the lists of group members, indexed by the request ID</summary>
-        private Dictionary<UUID, Dictionary<UUID, GroupMember>> GroupMembersCaches;
-        /// <summary>A list of all the lists of group roles, indexed by the request ID</summary>
-        private Dictionary<UUID, Dictionary<UUID, GroupRole>> GroupRolesCaches;
-        /// <summary>A list of all the role to member mappings</summary>
-        private Dictionary<UUID, List<KeyValuePair<UUID, UUID>>> GroupRolesMembersCaches;
+        /// <summary>Currently-active group members requests</summary>
+        private List<UUID> GroupMembersRequests;
+        /// <summary>Currently-active group roles requests</summary>
+        private List<UUID> GroupRolesRequests;
+        /// <summary>Currently-active group role-member requests</summary>
+        private List<UUID> GroupRolesMembersRequests;
+        /// <summary>A list of all the lists of group members, indexed by the group ID</summary>
+        public InternalDictionary<UUID, Dictionary<UUID, GroupMember>> GroupMembersCaches;
+        /// <summary>A list of all the lists of group roles, indexed by the group ID</summary>
+        public InternalDictionary<UUID, Dictionary<UUID, GroupRole>> GroupRolesCaches;
+        /// <summary>A list of all the role to member mappings, indexed by the group ID</summary>
+        public InternalDictionary<UUID, List<KeyValuePair<UUID, UUID>>> GroupRolesMembersCaches;
         /// <summary>Caches group name lookups</summary>
         public InternalDictionary<UUID, string> GroupName2KeyCache;
-
         /// <summary>
         /// Group Management Routines, Methods and Packet Handlers
         /// </summary>
@@ -507,9 +597,12 @@ namespace OpenMetaverse
         {
             Client = client;
 
-            GroupMembersCaches = new Dictionary<UUID, Dictionary<UUID, GroupMember>>();
-            GroupRolesCaches = new Dictionary<UUID, Dictionary<UUID, GroupRole>>();
-            GroupRolesMembersCaches = new Dictionary<UUID, List<KeyValuePair<UUID, UUID>>>();
+            GroupMembersCaches = new InternalDictionary<UUID, Dictionary<UUID, GroupMember>>();
+            GroupMembersRequests = new List<UUID>();
+            GroupRolesCaches = new InternalDictionary<UUID, Dictionary<UUID, GroupRole>>();
+            GroupRolesRequests = new List<UUID>();
+            GroupRolesMembersCaches = new InternalDictionary<UUID, List<KeyValuePair<UUID, UUID>>>();
+            GroupRolesMembersRequests = new List<UUID>();
             GroupName2KeyCache  = new InternalDictionary<UUID, string>();
 
             Client.Network.RegisterCallback(PacketType.AgentGroupDataUpdate, new NetworkManager.PacketCallback(GroupDataHandler));
@@ -527,6 +620,7 @@ namespace OpenMetaverse
             Client.Network.RegisterCallback(PacketType.LeaveGroupReply, new NetworkManager.PacketCallback(LeaveGroupReplyHandler));
             Client.Network.RegisterCallback(PacketType.UUIDGroupNameReply, new NetworkManager.PacketCallback(UUIDGroupNameReplyHandler));
             Client.Network.RegisterCallback(PacketType.EjectGroupMemberReply, new NetworkManager.PacketCallback(EjectGroupMemberReplyHandler));
+            Client.Network.RegisterCallback(PacketType.GroupNoticesListReply, new NetworkManager.PacketCallback(GroupNoticesListReplyHandler));
         }
 
         /// <summary>
@@ -629,10 +723,11 @@ namespace OpenMetaverse
         /// <summary>Request a list of group members.</summary>
         /// <remarks>Subscribe to <code>OnGroupMembers</code> event to receive the results.</remarks>
         /// <param name="group">group ID (UUID)</param>
-        public void RequestGroupMembers(UUID group)
+        /// <returns>UUID of the request, use to index into cache</returns>
+        public UUID RequestGroupMembers(UUID group)
         {
             UUID requestID = UUID.Random();
-            lock (GroupMembersCaches) GroupMembersCaches[requestID] = new Dictionary<UUID, GroupMember>();
+            lock (GroupMembersRequests) GroupMembersRequests.Add(requestID);
 
             GroupMembersRequestPacket request = new GroupMembersRequestPacket();
 
@@ -642,15 +737,17 @@ namespace OpenMetaverse
             request.GroupData.RequestID = requestID;
 
             Client.Network.SendPacket(request);
+            return requestID;
         }
 
         /// <summary>Request group roles</summary>
         /// <remarks>Subscribe to <code>OnGroupRoles</code> event to receive the results.</remarks>
         /// <param name="group">group ID (UUID)</param>
-        public void RequestGroupRoles(UUID group)
+        /// <returns>UUID of the request, use to index into cache</returns>
+        public UUID RequestGroupRoles(UUID group)
         {
             UUID requestID = UUID.Random();
-            lock (GroupRolesCaches) GroupRolesCaches[requestID] = new Dictionary<UUID, GroupRole>();
+            lock (GroupRolesRequests) GroupRolesRequests.Add(requestID);
 
             GroupRoleDataRequestPacket request = new GroupRoleDataRequestPacket();
 
@@ -660,18 +757,17 @@ namespace OpenMetaverse
             request.GroupData.RequestID = requestID;
 
             Client.Network.SendPacket(request);
+            return requestID;
         }
 
         /// <summary>Request members (members,role) role mapping for a group.</summary>
         /// <remarks>Subscribe to <code>OnGroupRolesMembers</code> event to receive the results.</remarks>
         /// <param name="group">group ID (UUID)</param>
-        public void RequestGroupRoleMembers(UUID group)
+        /// <returns>UUID of the request, use to index into cache</returns>
+        public UUID RequestGroupRoleMembers(UUID group)
         {
             UUID requestID = UUID.Random();
-            lock (GroupRolesMembersCaches)
-            {
-                GroupRolesMembersCaches[requestID] = new List<KeyValuePair<UUID, UUID>>();
-            }
+            lock (GroupRolesRequests) GroupRolesMembersRequests.Add(requestID);
 
             GroupRoleMembersRequestPacket request = new GroupRoleMembersRequestPacket();
             request.AgentData.AgentID = Client.Self.AgentID;
@@ -679,12 +775,14 @@ namespace OpenMetaverse
             request.GroupData.GroupID = group;
             request.GroupData.RequestID = requestID;
             Client.Network.SendPacket(request);
+            return requestID;
         }
 
         /// <summary>Request a groups Titles</summary>
         /// <remarks>Subscribe to <code>OnGroupTitles</code> event to receive the results.</remarks>
         /// <param name="group">group ID (UUID)</param>
-        public void RequestGroupTitles(UUID group)
+        /// <returns>UUID of the request, use to index into cache</returns>
+        public UUID RequestGroupTitles(UUID group)
         {
             UUID requestID = UUID.Random();
 
@@ -696,6 +794,7 @@ namespace OpenMetaverse
             request.AgentData.RequestID = requestID;
 
             Client.Network.SendPacket(request);
+            return requestID;
         }
 
         /// <summary>Begin to get the group account summary</summary>
@@ -805,11 +904,10 @@ namespace OpenMetaverse
         public void RequestCreateGroup(Group group)
         {
             OpenMetaverse.Packets.CreateGroupRequestPacket cgrp = new CreateGroupRequestPacket();
-            //Fill in agent data
             cgrp.AgentData = new CreateGroupRequestPacket.AgentDataBlock();
             cgrp.AgentData.AgentID = Client.Self.AgentID;
             cgrp.AgentData.SessionID = Client.Self.SessionID;
-            //Fill in group data
+
             cgrp.GroupData = new CreateGroupRequestPacket.GroupDataBlock();
             cgrp.GroupData.AllowPublish = group.AllowPublish;
             cgrp.GroupData.Charter = Utils.StringToBytes(group.Charter);
@@ -819,7 +917,7 @@ namespace OpenMetaverse
             cgrp.GroupData.Name = Utils.StringToBytes(group.Name);
             cgrp.GroupData.OpenEnrollment = group.OpenEnrollment;
             cgrp.GroupData.ShowInList = group.ShowInList;
-            //Send it
+
             Client.Network.SendPacket(cgrp);
         }
 
@@ -829,11 +927,10 @@ namespace OpenMetaverse
         public void UpdateGroup(UUID id, Group group)
         {
             OpenMetaverse.Packets.UpdateGroupInfoPacket cgrp = new UpdateGroupInfoPacket();
-            //Fill in agent data
             cgrp.AgentData = new UpdateGroupInfoPacket.AgentDataBlock();
             cgrp.AgentData.AgentID = Client.Self.AgentID;
             cgrp.AgentData.SessionID = Client.Self.SessionID;
-            //Fill in group data
+            
             cgrp.GroupData = new UpdateGroupInfoPacket.GroupDataBlock();
             cgrp.GroupData.GroupID = id;
             cgrp.GroupData.AllowPublish = group.AllowPublish;
@@ -843,7 +940,7 @@ namespace OpenMetaverse
             cgrp.GroupData.MembershipFee = group.MembershipFee;
             cgrp.GroupData.OpenEnrollment = group.OpenEnrollment;
             cgrp.GroupData.ShowInList = group.ShowInList;
-            //Send it
+            
             Client.Network.SendPacket(cgrp);
         }
 
@@ -856,30 +953,31 @@ namespace OpenMetaverse
             eject.AgentData = new EjectGroupMemberRequestPacket.AgentDataBlock();
             eject.AgentData.AgentID = Client.Self.AgentID;
             eject.AgentData.SessionID = Client.Self.SessionID;
-            //Group
+            
             eject.GroupData = new EjectGroupMemberRequestPacket.GroupDataBlock();
             eject.GroupData.GroupID = group;
-            //People to eject
+            
             eject.EjectData = new EjectGroupMemberRequestPacket.EjectDataBlock[1];
             eject.EjectData[0] = new EjectGroupMemberRequestPacket.EjectDataBlock();
             eject.EjectData[0].EjecteeID = member;
-            //send it
+            
             Client.Network.SendPacket(eject);
         }
 
         /// <summary>Update role information</summary>
-        /// <param name="group">Group to update</param>
-        /// <param name="role">Role to update</param>
-        public void UpdateRole(UUID group, GroupRole role)
+        /// <param name="role">Modified role to be updated</param>
+        public void UpdateRole(GroupRole role)
         {
             OpenMetaverse.Packets.GroupRoleUpdatePacket gru = new GroupRoleUpdatePacket();
             gru.AgentData.AgentID = Client.Self.AgentID;
             gru.AgentData.SessionID = Client.Self.SessionID;
-            gru.AgentData.GroupID = group;
+            gru.AgentData.GroupID = role.GroupID;
             gru.RoleData = new GroupRoleUpdatePacket.RoleDataBlock[1];
+            gru.RoleData[0] = new GroupRoleUpdatePacket.RoleDataBlock();
             gru.RoleData[0].Name = Utils.StringToBytes(role.Name);
             gru.RoleData[0].Description = Utils.StringToBytes(role.Description);
             gru.RoleData[0].Powers = (ulong)role.Powers;
+            gru.RoleData[0].RoleID = role.ID;
             gru.RoleData[0].Title = Utils.StringToBytes(role.Title);
             gru.RoleData[0].UpdateType = (byte)GroupRoleUpdate.UpdateAll;
             Client.Network.SendPacket(gru);
@@ -918,7 +1016,7 @@ namespace OpenMetaverse
             //Add to members and role
             grc.RoleChange[0].MemberID = member;
             grc.RoleChange[0].RoleID = role;
-            //1 = Remove From Role
+            //1 = Remove From Role TODO: this should be in an enum
             grc.RoleChange[0].Change = 1;
             Client.Network.SendPacket(grc);
         }
@@ -938,9 +1036,54 @@ namespace OpenMetaverse
             //Add to members and role
             grc.RoleChange[0].MemberID = member;
             grc.RoleChange[0].RoleID = role;
-            //0 = Add to Role
+            //0 = Add to Role TODO: this should be in an enum
             grc.RoleChange[0].Change = 0;
             Client.Network.SendPacket(grc);
+        }
+
+        /// <summary>Request the group notices list</summary>
+        /// <param name="group">Group ID to fetch notices for</param>
+        public void RequestGroupNoticeList(UUID group)
+        {
+            OpenMetaverse.Packets.GroupNoticesListRequestPacket gnl = new GroupNoticesListRequestPacket();
+            gnl.AgentData.AgentID = Client.Self.AgentID;
+            gnl.AgentData.SessionID = Client.Self.SessionID;
+            gnl.Data.GroupID = group;
+            Client.Network.SendPacket(gnl);
+        }
+
+        /// <summary>Request a group notice by key</summary>
+        /// <param name="noticeID">ID of group notice</param>
+        public void RequestGroupNotice(UUID noticeID)
+        {
+            OpenMetaverse.Packets.GroupNoticeRequestPacket gnr = new GroupNoticeRequestPacket();
+            gnr.AgentData.AgentID = Client.Self.AgentID;
+            gnr.AgentData.SessionID = Client.Self.SessionID;
+            gnr.Data.GroupNoticeID = noticeID;
+            Client.Network.SendPacket(gnr);
+        }
+
+
+        private void GroupNoticesListReplyHandler(Packet packet, Simulator simulator)
+        {
+            GroupNoticesListReplyPacket reply = (GroupNoticesListReplyPacket)packet;
+           
+            foreach (GroupNoticesListReplyPacket.DataBlock entry in reply.Data)
+            {
+                GroupNoticeList notice = new GroupNoticeList();
+                notice.FromName = Utils.BytesToString(entry.FromName);
+                notice.Subject = Utils.BytesToString(entry.Subject);
+                notice.NoticeID = entry.NoticeID;
+                notice.Timestamp = entry.Timestamp;
+                notice.HasAttachment = entry.HasAttachment;
+                notice.AssetType = (AssetType)entry.AssetType;
+
+                if (OnGroupNoticesList != null)
+                {
+                    try { OnGroupNoticesList(reply.AgentData.GroupID, notice); }
+                    catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                } 
+            } 
         }
 
         /// <summary>Send out a group notice</summary>
@@ -1062,6 +1205,7 @@ namespace OpenMetaverse
                 {
                     GroupTitle groupTitle = new GroupTitle();
 
+                    groupTitle.GroupID = titles.AgentData.GroupID;
                     groupTitle.Title = Utils.BytesToString(block.Title);
                     groupTitle.Selected = block.Selected;
 
@@ -1078,25 +1222,34 @@ namespace OpenMetaverse
             GroupMembersReplyPacket members = (GroupMembersReplyPacket)packet;
             Dictionary<UUID, GroupMember> groupMemberCache = null;
 
-            lock (GroupMembersCaches)
+            lock (GroupMembersRequests)
             {
                 // If nothing is registered to receive this RequestID drop the data
-                if (GroupMembersCaches.ContainsKey(members.GroupData.RequestID))
+                if (GroupMembersRequests.Contains(members.GroupData.RequestID))
                 {
-                    groupMemberCache = GroupMembersCaches[members.GroupData.RequestID];
+                    GroupMembersRequests.Remove(members.GroupData.RequestID);
 
-                    foreach (GroupMembersReplyPacket.MemberDataBlock block in members.MemberData)
+                    lock (GroupMembersCaches)
                     {
-                        GroupMember groupMember = new GroupMember();
+                        if (!GroupMembersCaches.TryGetValue(members.GroupData.RequestID, out groupMemberCache))
+                        {
+                            groupMemberCache = new Dictionary<UUID, GroupMember>();
+                            GroupMembersCaches[members.GroupData.RequestID] = groupMemberCache;
+                        }
 
-                        groupMember.ID = block.AgentID;
-                        groupMember.Contribution = block.Contribution;
-                        groupMember.IsOwner = block.IsOwner;
-                        groupMember.OnlineStatus = Utils.BytesToString(block.OnlineStatus);
-                        groupMember.Powers = (GroupPowers)block.AgentPowers;
-                        groupMember.Title = Utils.BytesToString(block.Title);
+                        foreach (GroupMembersReplyPacket.MemberDataBlock block in members.MemberData)
+                        {
+                            GroupMember groupMember = new GroupMember();
 
-                        groupMemberCache[block.AgentID] = groupMember;
+                            groupMember.ID = block.AgentID;
+                            groupMember.Contribution = block.Contribution;
+                            groupMember.IsOwner = block.IsOwner;
+                            groupMember.OnlineStatus = Utils.BytesToString(block.OnlineStatus);
+                            groupMember.Powers = (GroupPowers)block.AgentPowers;
+                            groupMember.Title = Utils.BytesToString(block.Title);
+
+                            groupMemberCache[block.AgentID] = groupMember;
+                        }
                     }
                 }
             }
@@ -1114,24 +1267,34 @@ namespace OpenMetaverse
             GroupRoleDataReplyPacket roles = (GroupRoleDataReplyPacket)packet;
             Dictionary<UUID, GroupRole> groupRoleCache = null;
 
-            lock (GroupRolesCaches)
+            lock (GroupRolesRequests)
             {
                 // If nothing is registered to receive this RequestID drop the data
-                if (GroupRolesCaches.ContainsKey(roles.GroupData.RequestID))
+                if (GroupRolesRequests.Contains(roles.GroupData.RequestID))
                 {
-                    groupRoleCache = GroupRolesCaches[roles.GroupData.RequestID];
+                    GroupRolesRequests.Remove(roles.GroupData.RequestID);
 
-                    foreach (GroupRoleDataReplyPacket.RoleDataBlock block in roles.RoleData)
+                    lock (GroupRolesCaches)
                     {
-                        GroupRole groupRole = new GroupRole();
+                        if (!GroupRolesCaches.TryGetValue(roles.GroupData.GroupID, out groupRoleCache))
+                        {
+                            groupRoleCache = new Dictionary<UUID, GroupRole>();
+                            GroupRolesCaches[roles.GroupData.GroupID] = groupRoleCache;
+                        }
 
-                        groupRole.ID = block.RoleID;
-                        groupRole.Description = Utils.BytesToString(block.Description);
-                        groupRole.Name = Utils.BytesToString(block.Name);
-                        groupRole.Powers = (GroupPowers)block.Powers;
-                        groupRole.Title = Utils.BytesToString(block.Title);
+                        foreach (GroupRoleDataReplyPacket.RoleDataBlock block in roles.RoleData)
+                        {
+                            GroupRole groupRole = new GroupRole();
 
-                        groupRoleCache[block.RoleID] = groupRole;
+                            groupRole.GroupID = roles.GroupData.GroupID;
+                            groupRole.ID = block.RoleID;
+                            groupRole.Description = Utils.BytesToString(block.Description);
+                            groupRole.Name = Utils.BytesToString(block.Name);
+                            groupRole.Powers = (GroupPowers)block.Powers;
+                            groupRole.Title = Utils.BytesToString(block.Title);
+
+                            groupRoleCache[block.RoleID] = groupRole;
+                        }
                     }
                 }
             }
@@ -1151,13 +1314,23 @@ namespace OpenMetaverse
 
             try
             {
-                lock (GroupRolesMembersCaches)
+                lock (GroupRolesMembersRequests)
                 {
                     // If nothing is registered to receive this RequestID drop the data
-                    if (GroupRolesMembersCaches.ContainsKey(members.AgentData.RequestID))
+                    if (GroupRolesMembersRequests.Contains(members.AgentData.RequestID))
                     {
-                        groupRoleMemberCache = GroupRolesMembersCaches[members.AgentData.RequestID];
+                        GroupRolesMembersRequests.Remove(members.AgentData.RequestID);
 
+                        if (!GroupRolesMembersRequests.Contains(members.AgentData.RequestID))
+                        {
+                            GroupRolesMembersRequests.Remove(members.AgentData.RequestID);
+
+                            if (!GroupRolesMembersCaches.TryGetValue(members.AgentData.GroupID, out groupRoleMemberCache))
+                            {
+                                groupRoleMemberCache = new List<KeyValuePair<UUID, UUID>>();
+                                GroupRolesMembersCaches[members.AgentData.GroupID] = groupRoleMemberCache;
+                            }
+                        }
                         foreach (GroupRoleMembersReplyPacket.MemberDataBlock block in members.MemberData)
                         {
                             KeyValuePair<UUID, UUID> rolemember =

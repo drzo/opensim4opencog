@@ -177,6 +177,21 @@ namespace OpenMetaverse
         Baked = 1
     }
 
+    /// <summary>
+    /// Image file format
+    /// </summary>
+    public enum ImageCodec : byte
+    {
+        Invalid = 0,
+        RGB = 1,
+        J2C = 2,
+        BMP = 3,
+        TGA = 4,
+        JPEG = 5,
+        DXT = 6,
+        PNG = 7
+    }
+
     public enum TransferError : int
     {
         None = 0,
@@ -294,10 +309,13 @@ namespace OpenMetaverse
     public class ImageDownload : Transfer
     {
         public ushort PacketCount;
-        public int Codec;
+        public ImageCodec Codec;
         public bool NotFound;
         public Simulator Simulator;
         public SortedList<ushort, ushort> PacketsSeen;
+        public ImageType ImageType;
+        public int DiscardLevel;
+        public float Priority;
 
         internal int InitialDataSize;
         internal AutoResetEvent HeaderReceivedEvent = new AutoResetEvent(false);
@@ -356,7 +374,7 @@ namespace OpenMetaverse
         /// <summary>
         /// 
         /// </summary>
-        public delegate void ImageReceiveProgressCallback(UUID image, int recieved, int total);
+        public delegate void ImageReceiveProgressCallback(UUID image, int lastPacket, int recieved, int total);
         /// <summary>
         /// 
         /// </summary>
@@ -438,11 +456,44 @@ namespace OpenMetaverse
                     {
                         ImageDownload download = (ImageDownload)transfer;
 
+                        uint packet = 0;
+                        
+                        if (download.PacketsSeen != null && download.PacketsSeen.Count > 0)
+                        {
+                            lock (download.PacketsSeen)
+                            {
+                                bool first = true;
+                                foreach (KeyValuePair<ushort, ushort> packetSeen in download.PacketsSeen)
+                                {
+                                    if (first)
+                                    {
+                                        // Initially set this to the earliest packet received in the transfer
+                                        packet = packetSeen.Value;
+                                        first = false;
+                                    }
+                                    else
+                                    {
+                                        ++packet;
+
+                                        // If there is a missing packet in the list, break and request the download
+                                        // resume here
+                                        if (packetSeen.Value != packet)
+                                        {
+                                            --packet;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                ++packet;
+                            }
+                        }
+
                         if (download.TimeSinceLastPacket > 5000)
                         {
-                            // FIXME: This will probably break on baked textures and doesn't preserve the originally requested discardlevel
+                            --download.DiscardLevel;
                             download.TimeSinceLastPacket = 0;
-                            RequestImage(download.ID, ImageType.Normal, 1013010.0f, 0);
+                            RequestImage(download.ID, download.ImageType, download.Priority, download.DiscardLevel, packet);
                         }
                     }
                 }
@@ -478,8 +529,8 @@ namespace OpenMetaverse
             request.TransferInfo.TransferID = transfer.ID;
 
             byte[] paramField = new byte[20];
-            Array.Copy(assetID.GetBytes(), 0, paramField, 0, 16);
-            Array.Copy(Helpers.IntToBytes((int)type), 0, paramField, 16, 4);
+            Buffer.BlockCopy(assetID.GetBytes(), 0, paramField, 0, 16);
+            Buffer.BlockCopy(Utils.IntToBytes((int)type), 0, paramField, 16, 4);
             request.TransferInfo.Params = paramField;
 
             Client.Network.SendPacket(request, transfer.Simulator);
@@ -567,7 +618,7 @@ namespace OpenMetaverse
             Buffer.BlockCopy(taskID.GetBytes(), 0, paramField, 48, 16);
             Buffer.BlockCopy(itemID.GetBytes(), 0, paramField, 64, 16);
             Buffer.BlockCopy(assetID.GetBytes(), 0, paramField, 80, 16);
-            Buffer.BlockCopy(Helpers.IntToBytes((int)type), 0, paramField, 96, 4);
+            Buffer.BlockCopy(Utils.IntToBytes((int)type), 0, paramField, 96, 4);
             request.TransferInfo.Params = paramField;
 
             Client.Network.SendPacket(request, transfer.Simulator);
@@ -592,7 +643,7 @@ namespace OpenMetaverse
         /// avatar texture or a normal texture</param>
         public void RequestImage(UUID imageID, ImageType type)
         {
-            RequestImage(imageID, type, 1013000.0f, 0);
+            RequestImage(imageID, type, 1013000.0f, 0, 0);
         }
 
         /// <summary>
@@ -603,14 +654,18 @@ namespace OpenMetaverse
         /// avatar texture or a normal texture</param>
         /// <param name="priority">Priority level of the download. Default is
         /// <c>1,013,000.0f</c></param>
-        /// <param name="discardLevel">Number of quality layers to discard</param>
-        /// <remarks>Sending a priority of 0, and a discardlevel of -1 aborts
+        /// <param name="discardLevel">Number of quality layers to discard.
+        /// This controls the end marker of the data sent</param>
+        /// <param name="packetNum">Packet number to start the download at.
+        /// This controls the start marker of the data sent</param>
+        /// <remarks>Sending a priority of 0 and a discardlevel of -1 aborts
         /// download</remarks>
-        public void RequestImage(UUID imageID, ImageType type, float priority, int discardLevel)
+        public void RequestImage(UUID imageID, ImageType type, float priority, int discardLevel, uint packetNum)
         {
             if (Cache.HasImage(imageID))
             {
                 ImageDownload transfer = Cache.GetCachedImage(imageID);
+                transfer.ImageType = type;
 
                 if (null != transfer)
                 {
@@ -650,9 +705,11 @@ namespace OpenMetaverse
                 {
                     // New download
                     ImageDownload transfer = new ImageDownload();
-                    //transfer.AssetType = AssetType.Texture // Handled in ImageDataHandler.
                     transfer.ID = imageID;
                     transfer.Simulator = currentSim;
+                    transfer.ImageType = type;
+                    transfer.DiscardLevel = discardLevel;
+                    transfer.Priority = priority;
 
                     // Add this transfer to the dictionary
                     lock (Transfers) Transfers[transfer.ID] = transfer;
@@ -663,7 +720,7 @@ namespace OpenMetaverse
                 {
                     // Already downloading, just updating the priority
                     Transfer transfer = Transfers[imageID];
-                    float percentComplete = (float)transfer.Transferred / (float)transfer.Size;
+                    float percentComplete = ((float)transfer.Transferred / (float)transfer.Size) * 100f;
                     if (Single.IsNaN(percentComplete))
                         percentComplete = 0f;
 
@@ -679,7 +736,7 @@ namespace OpenMetaverse
                 request.RequestImage[0] = new RequestImagePacket.RequestImageBlock();
                 request.RequestImage[0].DiscardLevel = (sbyte)discardLevel;
                 request.RequestImage[0].DownloadPriority = priority;
-                request.RequestImage[0].Packet = 0;
+                request.RequestImage[0].Packet = packetNum;
                 request.RequestImage[0].Image = imageID;
                 request.RequestImage[0].Type = (byte)type;
 
@@ -732,6 +789,9 @@ namespace OpenMetaverse
                     //transfer.AssetType = AssetType.Texture // Handled in ImageDataHandler.
                     transfer.ID = Images[iru].ImageID;
                     transfer.Simulator = Client.Network.CurrentSim;
+                    transfer.ImageType = Images[iru].Type;
+                    transfer.DiscardLevel = Images[iru].DiscardLevel;
+                    transfer.Priority = Images[iru].Priority;
 
                     // Add this transfer to the dictionary
                     lock (Transfers) Transfers[transfer.ID] = transfer;
@@ -873,6 +933,9 @@ namespace OpenMetaverse
                 case AssetType.Bodypart:
                     asset = new AssetBodypart();
                     break;
+                case AssetType.Animation:
+                    asset = new AssetAnimation();
+                    break;
                 default:
                     Logger.Log("Unimplemented asset type: " + type, Helpers.LogLevel.Error, Client);
                     return null;
@@ -901,7 +964,7 @@ namespace OpenMetaverse
                 // The first packet reserves the first four bytes of the data for the
                 // total length of the asset and appends 1000 bytes of data after that
                 send.DataPacket.Data = new byte[1004];
-                Buffer.BlockCopy(Helpers.IntToBytes(upload.Size), 0, send.DataPacket.Data, 0, 4);
+                Buffer.BlockCopy(Utils.IntToBytes(upload.Size), 0, send.DataPacket.Data, 0, 4);
                 Buffer.BlockCopy(upload.AssetData, 0, send.DataPacket.Data, 4, 1000);
                 upload.Transferred += 1000;
 
@@ -992,11 +1055,11 @@ namespace OpenMetaverse
                         else if (download.Source == SourceType.SimInventoryItem && info.TransferInfo.Params.Length == 100)
                         {
                             // TODO: Can we use these?
-                            UUID agentID = new UUID(info.TransferInfo.Params, 0);
-                            UUID sessionID = new UUID(info.TransferInfo.Params, 16);
-                            UUID ownerID = new UUID(info.TransferInfo.Params, 32);
-                            UUID taskID = new UUID(info.TransferInfo.Params, 48);
-                            UUID itemID = new UUID(info.TransferInfo.Params, 64);
+                            //UUID agentID = new UUID(info.TransferInfo.Params, 0);
+                            //UUID sessionID = new UUID(info.TransferInfo.Params, 16);
+                            //UUID ownerID = new UUID(info.TransferInfo.Params, 32);
+                            //UUID taskID = new UUID(info.TransferInfo.Params, 48);
+                            //UUID itemID = new UUID(info.TransferInfo.Params, 64);
                             download.AssetID = new UUID(info.TransferInfo.Params, 80);
                             download.AssetType = (AssetType)(sbyte)info.TransferInfo.Params[96];
 
@@ -1284,6 +1347,8 @@ namespace OpenMetaverse
             ImageDataPacket data = (ImageDataPacket)packet;
             ImageDownload transfer = null;
 
+            Logger.DebugLog(String.Format("ImageData: Size={0}, Packets={1}", data.ImageID.Size, data.ImageID.Packets));
+
             lock (Transfers)
             {
                 if (Transfers.ContainsKey(data.ImageID.ID))
@@ -1299,11 +1364,11 @@ namespace OpenMetaverse
 
                         if (OnImageReceiveProgress != null)
                         {
-                            try { OnImageReceiveProgress(data.ImageID.ID, data.ImageData.Data.Length, transfer.Size); }
+                            try { OnImageReceiveProgress(data.ImageID.ID, 0, data.ImageData.Data.Length, transfer.Size); }
                             catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
                         }
 
-                        transfer.Codec = data.ImageID.Codec;
+                        transfer.Codec = (ImageCodec)data.ImageID.Codec;
                         transfer.PacketCount = data.ImageID.Packets;
                         transfer.Size = (int)data.ImageID.Size;
                         transfer.AssetData = new byte[transfer.Size];
@@ -1370,13 +1435,16 @@ namespace OpenMetaverse
 
                     // The header is downloaded, we can insert this data in to the proper position
                     // Only insert if we haven't seen this packet before
-                    if (!transfer.PacketsSeen.ContainsKey(image.ImageID.Packet))
+                    lock (transfer.PacketsSeen)
                     {
-                        transfer.PacketsSeen[image.ImageID.Packet] = image.ImageID.Packet;
-                        Array.Copy(image.ImageData.Data, 0, transfer.AssetData,
-                            transfer.InitialDataSize + (1000 * (image.ImageID.Packet - 1)),
-                            image.ImageData.Data.Length);
-                        transfer.Transferred += image.ImageData.Data.Length;
+                        if (!transfer.PacketsSeen.ContainsKey(image.ImageID.Packet))
+                        {
+                            transfer.PacketsSeen[image.ImageID.Packet] = image.ImageID.Packet;
+                            Buffer.BlockCopy(image.ImageData.Data, 0, transfer.AssetData,
+                                transfer.InitialDataSize + (1000 * (image.ImageID.Packet - 1)),
+                                image.ImageData.Data.Length);
+                            transfer.Transferred += image.ImageData.Data.Length;
+                        }
                     }
 
                     //Client.DebugLog("Received " + image.ImageData.Data.Length + "/" + transfer.Transferred +
@@ -1386,7 +1454,7 @@ namespace OpenMetaverse
                     
                     if (OnImageReceiveProgress != null)
                     {
-                        try { OnImageReceiveProgress(image.ImageID.ID, transfer.Transferred, transfer.Size); }
+                        try { OnImageReceiveProgress(image.ImageID.ID, image.ImageID.Packet, transfer.Transferred, transfer.Size); }
                         catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
                     }
 

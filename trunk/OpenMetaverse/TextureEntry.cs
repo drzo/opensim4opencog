@@ -688,12 +688,12 @@ namespace OpenMetaverse
                 #endregion Color
 
                 #region RepeatU
-                DefaultTexture.RepeatU = Helpers.BytesToFloat(data, i);
+                DefaultTexture.RepeatU = Utils.BytesToFloat(data, i);
                 i += 4;
 
                 while (ReadFaceBitfield(data, ref i, ref faceBits, ref bitfieldSize))
                 {
-                    float tmpFloat = Helpers.BytesToFloat(data, i);
+                    float tmpFloat = Utils.BytesToFloat(data, i);
                     i += 4;
 
                     for (uint face = 0, bit = 1; face < bitfieldSize; face++, bit <<= 1)
@@ -703,12 +703,12 @@ namespace OpenMetaverse
                 #endregion RepeatU
 
                 #region RepeatV
-                DefaultTexture.RepeatV = Helpers.BytesToFloat(data, i);
+                DefaultTexture.RepeatV = Utils.BytesToFloat(data, i);
                 i += 4;
 
                 while (ReadFaceBitfield(data, ref i, ref faceBits, ref bitfieldSize))
                 {
-                    float tmpFloat = Helpers.BytesToFloat(data, i);
+                    float tmpFloat = Utils.BytesToFloat(data, i);
                     i += 4;
 
                     for (uint face = 0, bit = 1; face < bitfieldSize; face++, bit <<= 1)

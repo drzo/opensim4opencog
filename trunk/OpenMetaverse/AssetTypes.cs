@@ -99,6 +99,7 @@ namespace OpenMetaverse
     public abstract class Asset
     {
         public byte[] AssetData;
+        public bool Temporary;
 
         private UUID _AssetID;
         public UUID AssetID
@@ -132,6 +133,22 @@ namespace OpenMetaverse
         /// </summary>
         /// <returns>True if the asset decoding succeeded, otherwise false</returns>
         public abstract bool Decode();
+    }
+
+    public class AssetAnimation : Asset
+    {
+        public override AssetType AssetType { get { return AssetType.Animation; } }
+
+        public AssetAnimation() { }
+
+        public AssetAnimation(UUID assetID, byte[] assetData)
+            : base(assetID, assetData)
+        {
+            AssetData = assetData;
+        }
+
+        public override void Encode() { }
+        public override bool Decode() { return true; }
     }
 
     public class AssetNotecard : Asset
@@ -201,18 +218,32 @@ namespace OpenMetaverse
     {
         public override AssetType AssetType { get { return AssetType.LSLBytecode; } }
 
-        public byte[] Bytecode;
-
         public AssetScriptBinary() { }
 
         public AssetScriptBinary(UUID assetID, byte[] assetData)
             : base(assetID, assetData)
         {
-            Bytecode = assetData;
+            AssetData = assetData;
         }
 
-        public override void Encode() { AssetData = Bytecode; }
-        public override bool Decode() { Bytecode = AssetData; return true; }
+        public override void Encode() { }
+        public override bool Decode() { return true; }
+    }
+
+    public class AssetSound : Asset
+    {
+        public override AssetType AssetType { get { return AssetType.Sound; } }
+
+        public AssetSound() { }
+
+        public AssetSound(UUID assetID, byte[] assetData)
+            : base(assetID, assetData)
+        {
+            AssetData = assetData;
+        }
+
+        public override void Encode() { }
+        public override bool Decode() { return true; }
     }
 
     public class AssetTexture : Asset
@@ -220,6 +251,8 @@ namespace OpenMetaverse
         public override AssetType AssetType { get { return AssetType.Texture; } }
 
         public ManagedImage Image;
+        public OpenJPEG.J2KLayerInfo[] LayerInfo;
+        public int Components;
         
         public AssetTexture() { }
 
@@ -228,33 +261,62 @@ namespace OpenMetaverse
         public AssetTexture(ManagedImage image)
         {
             Image = image;
+            Components = 0;
+            if ((Image.Channels & ManagedImage.ImageChannels.Color) != 0)
+                Components += 3;
+            if ((Image.Channels & ManagedImage.ImageChannels.Gray) != 0)
+                ++Components;
+            if ((Image.Channels & ManagedImage.ImageChannels.Bump) != 0)
+                ++Components;
+            if ((Image.Channels & ManagedImage.ImageChannels.Alpha) != 0)
+                ++Components;
         }
 
         /// <summary>
-        /// Populates the <code>AssetData</code> byte array with a JPEG2000
-        /// encoded image created from the data in <code>Image</code>
+        /// Populates the <seealso cref="AssetData"/> byte array with a JPEG2000
+        /// encoded image created from the data in <seealso cref="Image"/>
         /// </summary>
         public override void Encode()
         {
-#if PocketPC
-            throw new Exception("OpenJPEG encoding is not supported on the PocketPC");
-#else
             AssetData = OpenJPEG.Encode(Image);
-#endif
         }
         
         /// <summary>
         /// Decodes the JPEG2000 data in <code>AssetData</code> to the
-        /// <code>ManagedImage</code> object <code>Image</code>
+        /// <seealso cref="ManagedImage"/> object <seealso cref="Image"/>
         /// </summary>
         /// <returns>True if the decoding was successful, otherwise false</returns>
         public override bool Decode()
         {
-#if PocketPC
-            throw new Exception("OpenJPEG decoding is not supported on the PocketPC");
-#else
-            return OpenJPEG.DecodeToImage(AssetData, out Image);
-#endif
+            Components = 0;
+
+            if (OpenJPEG.DecodeToImage(AssetData, out Image))
+            {
+                if ((Image.Channels & ManagedImage.ImageChannels.Color) != 0)
+                    Components += 3;
+                if ((Image.Channels & ManagedImage.ImageChannels.Gray) != 0)
+                    ++Components;
+                if ((Image.Channels & ManagedImage.ImageChannels.Bump) != 0)
+                    ++Components;
+                if ((Image.Channels & ManagedImage.ImageChannels.Alpha) != 0)
+                    ++Components;
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Decodes the begin and end byte positions for each quality layer in
+        /// the image
+        /// </summary>
+        /// <returns></returns>
+        public bool DecodeLayerBoundaries()
+        {
+            return OpenJPEG.DecodeLayerBoundaries(AssetData, out LayerInfo, out Components);
         }
     }
 
@@ -265,18 +327,7 @@ namespace OpenMetaverse
         public AssetPrim() { }
 
         public override void Encode() { }
-        public override bool Decode() { return false; }
-    }
-
-    public class AssetSound : Asset
-    {
-        public override AssetType AssetType { get { return AssetType.Sound; } }
-
-        public AssetSound() { }
-
-        // TODO: Sometime we could add OGG encoding/decoding?
-        public override void Encode() { }
-        public override bool Decode() { return false; }
+        public override bool Decode() { return true; }
     }
 
     public abstract class AssetWearable : Asset
@@ -443,11 +494,11 @@ namespace OpenMetaverse
             StringBuilder data = new StringBuilder("LLWearable version 22\n");
             data.Append(Name); data.Append(NL); data.Append(NL);
             data.Append("\tpermissions 0\n\t{\n");
-            data.Append("\t\tbase_mask\t"); data.Append(Helpers.UIntToHexString((uint)Permissions.BaseMask)); data.Append(NL);
-            data.Append("\t\towner_mask\t"); data.Append(Helpers.UIntToHexString((uint)Permissions.OwnerMask)); data.Append(NL);
-            data.Append("\t\tgroup_mask\t"); data.Append(Helpers.UIntToHexString((uint)Permissions.GroupMask)); data.Append(NL);
-            data.Append("\t\teveryone_mask\t"); data.Append(Helpers.UIntToHexString((uint)Permissions.EveryoneMask)); data.Append(NL);
-            data.Append("\t\tnext_owner_mask\t"); data.Append(Helpers.UIntToHexString((uint)Permissions.NextOwnerMask)); data.Append(NL);
+            data.Append("\t\tbase_mask\t"); data.Append(Utils.UIntToHexString((uint)Permissions.BaseMask)); data.Append(NL);
+            data.Append("\t\towner_mask\t"); data.Append(Utils.UIntToHexString((uint)Permissions.OwnerMask)); data.Append(NL);
+            data.Append("\t\tgroup_mask\t"); data.Append(Utils.UIntToHexString((uint)Permissions.GroupMask)); data.Append(NL);
+            data.Append("\t\teveryone_mask\t"); data.Append(Utils.UIntToHexString((uint)Permissions.EveryoneMask)); data.Append(NL);
+            data.Append("\t\tnext_owner_mask\t"); data.Append(Utils.UIntToHexString((uint)Permissions.NextOwnerMask)); data.Append(NL);
             data.Append("\t\tcreator_id\t"); data.Append(Creator.ToString()); data.Append(NL);
             data.Append("\t\towner_id\t"); data.Append(Owner.ToString()); data.Append(NL);
             data.Append("\t\tlast_owner_id\t"); data.Append(LastOwner.ToString()); data.Append(NL);

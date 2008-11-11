@@ -123,6 +123,7 @@ namespace cogbot
             actions["locate"] = new Actions.Locate(this);
             Actions.Follow follow = new Actions.Follow(this);
             actions["follow"] = follow;
+            actions["wear"] = new Actions.Wear(this);
             actions["stop following"] = follow;
             actions["stop-following"] = follow;
             tutorials = new Dictionary<string, cogbot.Tutorials.Tutorial>();
@@ -189,7 +190,7 @@ namespace cogbot
             client.Network.OnSimDisconnected += new NetworkManager.SimDisconnectedCallback(Network_OnSimDisconnected);
             client.Network.OnEventQueueRunning += new NetworkManager.EventQueueRunningCallback(Network_OnEventQueueRunning);
 
-            client.Appearance.OnAppearanceUpdated += new AppearanceManager.AppearanceUpdatedCallback(Appearance_OnAppearanceUpdated);
+            //client.Appearance.OnAppearanceUpdated += new AppearanceManager.AppearanceUpdatedCallback(Appearance_OnAppearanceUpdated);
             
             client.Avatars.OnLookAt += new AvatarManager.LookAtCallback(Avatars_OnLookAt);
             client.Avatars.OnPointAt += new AvatarManager.PointAtCallback(Avatars_OnPointAt);
@@ -306,7 +307,7 @@ namespace cogbot
  //           output("TextForm Self_OnAnimationsChanged: ");
         }
 
-        void Objects_OnObjectProperties(Simulator simulator, LLObject.ObjectProperties properties)
+        void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties properties)
         {
             // Handled by Object Listener
             //throw new NotImplementedException();
@@ -1105,7 +1106,7 @@ namespace cogbot
 
         public void msgClient(string serverMessage)
         {
-            System.Console.Out.WriteLine("msgClient: " + serverMessage);
+         //   System.Console.Out.WriteLine("msgClient: " + serverMessage);
             if ((ns!=null)&&(tcpStreamWriter!=null))
             {
                 lock (tcpStreamWriter)
@@ -1591,7 +1592,7 @@ namespace cogbot
                     }
                 }
 
-                if (true)
+                if (false)
                 {
                     output(" taskcode: " + lastcode + " --> " + thisTask.results);
                     //output(" taskTick Results>" + thisTask.results);
