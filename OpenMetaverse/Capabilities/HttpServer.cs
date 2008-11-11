@@ -63,16 +63,17 @@ namespace OpenMetaverse.Capabilities
 
         HttpListener server;
         AsyncCallback serverCallback;
-        int serverPort;
-        bool sslEnabled;
+        //int serverPort;
+        //bool sslEnabled;
+        // TODO: Replace this with an immutable list to avoid locking
         List<HttpRequestHandler> requestHandlers;
 
         bool isRunning;
 
         public HttpServer(int port, bool ssl)
         {
-            serverPort = port;
-            sslEnabled = ssl;
+            //serverPort = port;
+            //sslEnabled = ssl;
             server = new HttpListener();
             serverCallback = new AsyncCallback(BeginGetContextCallback);
 
@@ -86,20 +87,23 @@ namespace OpenMetaverse.Capabilities
             isRunning = false;
         }
 
+        public void AddHandler(string method, string contentType, string path, HttpRequestCallback callback)
+        {
+            HttpRequestSignature signature = new HttpRequestSignature();
+            signature.Method = method;
+            signature.ContentType = contentType;
+            signature.Path = path;
+            AddHandler(new HttpRequestHandler(signature, callback));
+        }
+
         public void AddHandler(HttpRequestHandler handler)
         {
-            if (!isRunning)
-                requestHandlers.Add(handler);
-            else
-                throw new InvalidOperationException("Cannot add HTTP request handlers while the server is running");
+            lock (requestHandlers) requestHandlers.Add(handler);
         }
 
         public void RemoveHandler(HttpRequestHandler handler)
         {
-            if (!isRunning)
-                requestHandlers.Remove(handler);
-            else
-                throw new InvalidOperationException("Cannot add HTTP request handlers while the server is running");
+            lock (requestHandlers) requestHandlers.Remove(handler);
         }
 
         public void Start()
@@ -144,25 +148,18 @@ namespace OpenMetaverse.Capabilities
                     HttpRequestSignature signature = new HttpRequestSignature(context);
 
                     // Look for a signature match in our handlers
-                    for (int i = 0; i < requestHandlers.Count; i++)
+                    lock (requestHandlers)
                     {
-                        HttpRequestHandler handler = requestHandlers[i];
-
-                        if (handler.Signature == signature)
+                        for (int i = 0; i < requestHandlers.Count; i++)
                         {
-                            // Request signature matched, handle it
-                            try
-                            {
-                                handler.Callback(signature, ref context);
-                            }
-                            catch (Exception e)
-                            {
-                                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                                context.Response.StatusDescription = e.ToString();
-                            }
+                            HttpRequestHandler handler = requestHandlers[i];
 
-                            context.Response.Close();
-                            return;
+                            if (signature == handler.Signature)
+                            {
+                                // Request signature matched, handle it
+                                handler.Callback(signature, ref context);
+                                return;
+                            }
                         }
                     }
 

@@ -380,11 +380,9 @@ namespace OpenMetaverse
             /// <summary>The current value of the agent control flags</summary>
             public uint AgentControls
             {
-                get
-                {
-                    return agentControls;
-                }
+                get { return agentControls; }
             }
+
             /// <summary>Gets or sets the interval in milliseconds at which
             /// AgentUpdate packets are sent to the current simulator. Setting
             /// this to a non-zero value will also enable the packet sending if
@@ -462,7 +460,7 @@ namespace OpenMetaverse
             /// <summary>Timer for sending AgentUpdate packets</summary>
             private Timer updateTimer;
             private int updateInterval;
-            private bool autoResetControls = true;
+            private bool autoResetControls;
 
             /// <summary>Default constructor</summary>
             public AgentMovement(GridClient client)
@@ -503,13 +501,24 @@ namespace OpenMetaverse
             {
                 if (Client.Settings.SEND_AGENT_UPDATES)
                 {
-                    Vector3 myPos = Client.Self.SimPosition;
-                    Vector3 offset = Vector3.Normalize(target - myPos);
-                    Quaternion newRot = Vector3.RotationBetween(Vector3.UnitX, offset);
+                    Quaternion parentRot = Quaternion.Identity;
 
-                    BodyRotation = newRot;
-                    HeadRotation = newRot;
-                    Camera.LookAt(myPos, target);
+                    if (Client.Self.SittingOn > 0)
+                    {
+                        if (!Client.Network.CurrentSim.ObjectsPrimitives.ContainsKey(Client.Self.SittingOn))
+                        {
+                            Logger.Log("Attempted TurnToward but parent prim is not in dictionary", Helpers.LogLevel.Warning, Client);
+                            return false;
+                        }
+                        else parentRot = Client.Network.CurrentSim.ObjectsPrimitives[Client.Self.SittingOn].Rotation;
+                    }
+
+                    Quaternion between = Vector3.RotationBetween(Vector3.UnitX, Vector3.Normalize(target - Client.Self.SimPosition));
+                    Quaternion rot = between * (Quaternion.Identity / parentRot);
+
+                    BodyRotation = rot;
+                    HeadRotation = rot;
+                    Camera.LookAt(Client.Self.SimPosition, target);
 
                     SendUpdate();
 

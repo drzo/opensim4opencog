@@ -51,11 +51,13 @@ namespace OpenMetaverse
         CallingCard = 2,
         /// <summary>Landmark</summary>
         Landmark = 3,
+        /*
         /// <summary>Script</summary>
         //[Obsolete("See LSL")] Script = 4,
         /// <summary>Clothing</summary>
         //[Obsolete("See Wearable")] Clothing = 5,
         /// <summary>Object, both single and coalesced</summary>
+         */
         Object = 6,
         /// <summary>Notecard</summary>
         Notecard = 7,
@@ -67,6 +69,7 @@ namespace OpenMetaverse
         RootCategory = 9,
         /// <summary>an LSL Script</summary>
         LSL = 10,
+        /*
         /// <summary></summary>
         //[Obsolete("See LSL")] LSLBytecode = 11,
         /// <summary></summary>
@@ -75,10 +78,13 @@ namespace OpenMetaverse
         //[Obsolete] Bodypart = 13,
         /// <summary></summary>
         //[Obsolete] Trash = 14,
+         */
         /// <summary></summary>
         Snapshot = 15,
+        /*
         /// <summary></summary>
         //[Obsolete] LostAndFound = 16,
+         */
         /// <summary></summary>
         Attachment = 17,
         /// <summary></summary>
@@ -123,12 +129,28 @@ namespace OpenMetaverse
     /// </summary>
     public enum DeRezDestination : byte
     {
+        /// <summary></summary>
+        AgentInventorySave = 0,
+        /// <summary>Copy from in-world to agent inventory</summary>
+        AgentInventoryCopy = 1,
         /// <summary>Derez to TaskInventory</summary>
         TaskInventory = 2,
+        /// <summary></summary>
+        Attachment = 3,
         /// <summary>Take Object</summary>
-        ObjectsFolder = 4,
+        AgentInventoryTake = 4,
+        /// <summary></summary>
+        ForceToGodInventory = 5,
         /// <summary>Delete Object</summary>
-        TrashFolder = 6
+        TrashFolder = 6,
+        /// <summary>Put an avatar attachment into agent inventory</summary>
+        AttachmentToInventory = 7,
+        /// <summary></summary>
+        AttachmentExists = 8,
+        /// <summary>Return an object back to the owner's inventory</summary>
+        ReturnToOwner = 9,
+        /// <summary>Return a deeded object back to the last owner's inventory</summary>
+        ReturnToLastOwner = 10
     }
 
     #endregion Enums
@@ -654,7 +676,7 @@ namespace OpenMetaverse
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="items"></param>
+        /// <param name="item"></param>
         public delegate void ItemCopiedCallback(InventoryBase item);
 
         /// <summary>
@@ -686,10 +708,11 @@ namespace OpenMetaverse
         /// the ItemID, as in ObjectOfferedCallback it is null when received
         /// from a task.
         /// </summary>
-        /// <param name="ItemID"></param>
-        /// <param name="FolderID"></param>
-        /// <param name="CreatorID"></param>
-        /// <param name="AssetID"></param>
+        /// <param name="itemID"></param>
+        /// <param name="folderID"></param>
+        /// <param name="creatorID"></param>
+        /// <param name="assetID"></param>
+        /// <param name="type"></param>
         public delegate void TaskItemReceivedCallback(UUID itemID, UUID folderID, UUID creatorID, 
             UUID assetID, InventoryType type);
 
@@ -765,7 +788,7 @@ namespace OpenMetaverse
 
         private GridClient _Client;
         private Inventory _Store;
-        private Random _RandNumbers = new Random();
+        //private Random _RandNumbers = new Random();
         private object _CallbacksLock = new object();
         private uint _CallbackPos;
         private Dictionary<uint, ItemCreatedCallback> _ItemCreatedCallbacks = new Dictionary<uint, ItemCreatedCallback>();
@@ -1012,7 +1035,6 @@ namespace OpenMetaverse
                             
                             fetchEvent.Set();
                         }
-                       // Logger.Log(" callback FolderContents " + folder.ToString(), Helpers.LogLevel.Info);
                     }
                     else
                     {
@@ -1054,8 +1076,6 @@ namespace OpenMetaverse
             fetch.InventoryData.SortOrder = (int)order;
 
             _Client.Network.SendPacket(fetch);
-            //Logger.Log(" exit RequestFolderContents " + folder.ToString(), Helpers.LogLevel.Info);
-
         }
 
         #endregion Fetch
@@ -1581,10 +1601,18 @@ namespace OpenMetaverse
         #endregion Remove
 
         #region Create
+        
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="parentFolder"></param>
+        /// <param name="name"></param>
+        /// <param name="description"></param>
+        /// <param name="type"></param>
         /// <param name="assetTransactionID">Proper use is to upload the inventory's asset first, then provide the Asset's TransactionID here.</param>
+        /// <param name="invType"></param>
+        /// <param name="nextOwnerMask"></param>
+        /// <param name="callback"></param>
         public void RequestCreateItem(UUID parentFolder, string name, string description, AssetType type, UUID assetTransactionID,
             InventoryType invType, PermissionMask nextOwnerMask, ItemCreatedCallback callback)
         {
@@ -1596,7 +1624,15 @@ namespace OpenMetaverse
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="parentFolder"></param>
+        /// <param name="name"></param>
+        /// <param name="description"></param>
+        /// <param name="type"></param>
         /// <param name="assetTransactionID">Proper use is to upload the inventory's asset first, then provide the Asset's TransactionID here.</param>
+        /// <param name="invType"></param>
+        /// <param name="wearableType"></param>
+        /// <param name="nextOwnerMask"></param>
+        /// <param name="callback"></param>
         public void RequestCreateItem(UUID parentFolder, string name, string description, AssetType type, UUID assetTransactionID,
             InventoryType invType, WearableType wearableType, PermissionMask nextOwnerMask, ItemCreatedCallback callback)
         {
@@ -1696,12 +1732,12 @@ namespace OpenMetaverse
 
             if (url != null)
             {
-                LLSDMap query = new LLSDMap();
-                query.Add("folder_id", LLSD.FromUUID(folderID));
-                query.Add("asset_type", LLSD.FromString(AssetTypeToString(assetType)));
-                query.Add("inventory_type", LLSD.FromString(InventoryTypeToString(invType)));
-                query.Add("name", LLSD.FromString(name));
-                query.Add("description", LLSD.FromString(description));
+                OSDMap query = new OSDMap();
+                query.Add("folder_id", OSD.FromUUID(folderID));
+                query.Add("asset_type", OSD.FromString(AssetTypeToString(assetType)));
+                query.Add("inventory_type", OSD.FromString(InventoryTypeToString(invType)));
+                query.Add("name", OSD.FromString(name));
+                query.Add("description", OSD.FromString(description));
 
                 // Make the request
                 CapsClient request = new CapsClient(url);
@@ -1903,10 +1939,10 @@ namespace OpenMetaverse
 
             if (url != null)
             {
-                LLSDMap query = new LLSDMap();
-                query.Add("item_id", LLSD.FromUUID(notecardID));
+                OSDMap query = new OSDMap();
+                query.Add("item_id", OSD.FromUUID(notecardID));
 
-                byte[] postData = StructuredData.LLSDParser.SerializeXmlBytes(query);
+                byte[] postData = StructuredData.OSDParser.SerializeLLSDXmlBytes(query);
 
                 // Make the request
                 CapsClient request = new CapsClient(url);
@@ -2016,7 +2052,7 @@ namespace OpenMetaverse
         /// <param name="objectLocalID">The simulator Local ID of the object</param>
         public void RequestDeRezToInventory(uint objectLocalID)
         {
-            RequestDeRezToInventory(objectLocalID, DeRezDestination.ObjectsFolder, 
+            RequestDeRezToInventory(objectLocalID, DeRezDestination.AgentInventoryTake, 
                 _Client.Inventory.FindFolderForType(AssetType.Object), UUID.Random());
         }
 
@@ -2513,8 +2549,6 @@ namespace OpenMetaverse
 
         private static bool ParseLine(string line, out string key, out string value)
         {
-            string origLine = line;
-
             // Clean up and convert tabs to spaces
             line = line.Trim();
             line = line.Replace('\t', ' ');
@@ -2850,7 +2884,7 @@ namespace OpenMetaverse
 
         #region Callbacks
 
-        private void CreateItemFromAssetResponse(CapsClient client, LLSD result, Exception error)
+        private void CreateItemFromAssetResponse(CapsClient client, OSD result, Exception error)
         {
             object[] args = (object[])client.UserData;
             CapsClient.ProgressCallback progCallback = (CapsClient.ProgressCallback)args[0];
@@ -2864,7 +2898,7 @@ namespace OpenMetaverse
                 return;
             }
 
-            LLSDMap contents = (LLSDMap)result;
+            OSDMap contents = (OSDMap)result;
 
             string status = contents["state"].AsString().ToLower();
 
@@ -2907,7 +2941,7 @@ namespace OpenMetaverse
 
         private void SaveAssetIntoInventoryHandler(Packet packet, Simulator simulator)
         {
-            SaveAssetIntoInventoryPacket save = (SaveAssetIntoInventoryPacket)packet;
+            //SaveAssetIntoInventoryPacket save = (SaveAssetIntoInventoryPacket)packet;
 
             // FIXME: Find this item in the inventory structure and mark the parent as needing an update
             //save.InventoryData.ItemID;
@@ -2921,11 +2955,11 @@ namespace OpenMetaverse
             if (reply.AgentData.Descendents > 0)
             {
                 // InventoryDescendantsReply sends a null folder if the parent doesnt contain any folders
-                if ((reply.FolderData.GetUpperBound(0) >= 0) && (reply.FolderData[0].FolderID != UUID.Zero))
+                if (reply.FolderData[0].FolderID != UUID.Zero)
                 {
                     // Iterate folders in this packet
-                      for (int i = 0; i < reply.FolderData.Length; i++)
-                      {
+                    for (int i = 0; i < reply.FolderData.Length; i++)
+                    {
                         InventoryFolder folder = new InventoryFolder(reply.FolderData[i].FolderID);
                         folder.ParentUUID = reply.FolderData[i].ParentID;
                         folder.Name = Utils.BytesToString(reply.FolderData[i].Name);
@@ -2937,8 +2971,7 @@ namespace OpenMetaverse
                 }
 
                 // InventoryDescendantsReply sends a null item if the parent doesnt contain any items.
-                    if ((reply.ItemData != null) && (reply.ItemData.GetUpperBound(0) >= 0) && (reply.ItemData[0].ItemID != UUID.Zero))
-                    //    if ((reply.ItemData != null)&& (reply.ItemData[0].ItemID != UUID.Zero))
+                if (reply.ItemData[0].ItemID != UUID.Zero)
                 {
                     // Iterate items in this packet
                     for (int i = 0; i < reply.ItemData.Length; i++)
@@ -3069,7 +3102,7 @@ namespace OpenMetaverse
                                 }
                             }
                         }
-                }
+                    }
                 }
             }
 
@@ -3122,6 +3155,21 @@ namespace OpenMetaverse
                         dataBlock.OwnerMask);
                 item.SalePrice = dataBlock.SalePrice;
                 item.SaleType = (SaleType)dataBlock.SaleType;
+
+                /* 
+                 * When attaching new objects, an UpdateCreateInventoryItem packet will be
+                 * returned by the server that has a FolderID/ParentUUID of zero. It is up
+                 * to the client to make sure that the item gets a good folder, otherwise
+                 * it will end up inaccesible in inventory.
+                 */
+                if (item.ParentUUID == UUID.Zero)
+                {
+                    // assign default folder for type
+                    item.ParentUUID = FindFolderForType(item.AssetType);
+
+                    // send update to the sim
+                    RequestUpdateItem(item);
+                }
 
                 // Update the local copy
                 _Store[item.UUID] = item;
@@ -3442,9 +3490,9 @@ namespace OpenMetaverse
             }
         }
 
-        private void UploadNotecardAssetResponse(CapsClient client, LLSD result, Exception error)
+        private void UploadNotecardAssetResponse(CapsClient client, OSD result, Exception error)
         {
-            LLSDMap contents = (LLSDMap)result;
+            OSDMap contents = (OSDMap)result;
             KeyValuePair<NotecardUploadedAssetCallback, byte[]> kvp = (KeyValuePair<NotecardUploadedAssetCallback, byte[]>)(((object[])client.UserData)[0]);
             NotecardUploadedAssetCallback callback = kvp.Key;
             byte[] itemData = (byte[])kvp.Value;

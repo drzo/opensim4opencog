@@ -144,7 +144,7 @@ namespace OpenMetaverse
         private UUID _Owner;
 
         private GridClient Client;
-        private InventoryManager Manager;
+        //private InventoryManager Manager;
         private Dictionary<UUID, InventoryNode> Items = new Dictionary<UUID, InventoryNode>();
 
         public Inventory(GridClient client, InventoryManager manager)
@@ -153,7 +153,7 @@ namespace OpenMetaverse
         public Inventory(GridClient client, InventoryManager manager, UUID owner)
         {
             Client = client;
-            Manager = manager;
+            //Manager = manager;
             _Owner = owner;
             if (owner == UUID.Zero)
                 Logger.Log("Inventory owned by nobody!", Helpers.LogLevel.Warning, Client);
@@ -347,51 +347,6 @@ namespace OpenMetaverse
                 }
             }
         }
-        /*
-        public bool DownloadContentsOpenSim(TimeSpan timeout)
-        {
-            List<ItemData> items;
-            List<FolderData> folders;
-            //bool success = Manager.FolderContents(UUID, Data.OwnerID, true, true, InventorySortOrder.ByName,
-            //    timeout, out items, out folders);
-            bool success = Manager.FolderContents(UUID, Data.OwnerID, false, true, InventorySortOrder.ByName,
-                timeout, out items, out folders);
-           // if ((success) || ((items != null) && (folders != null)))
-           // {
-           //     ContentsFromData(items, folders);
-           //     Data.DescendentCount = Contents.Count;
-           // }
-           // else
-           // {
-                int dictCapacity=0;
-                if (items != null) dictCapacity += items.Count;
-                if (folders != null) dictCapacity += folders.Count;
-                if (dictCapacity == 0) return success; // really nothing
-                Dictionary<UUID, InventoryBase> contents = new Dictionary<UUID, InventoryBase>(dictCapacity);
-                if (items != null)
-                {
-                    foreach (ItemData item in items)
-                    {
-                        contents.Add(item.UUID, Inventory.Manage(item));
-                    }
-                }
-                if (folders != null)
-                {
-                    foreach (FolderData folder in folders)
-                    {
-                        contents.Add(folder.UUID, Inventory.Manage(folder));
-                    }
-                }
-                lock (_Contents)
-                {
-                    _Contents = contents;
-                }
-                Data.DescendentCount = Contents.Count;
-
-            //}
-            return success;
-        }
-         */
 
         #endregion Operators
 
@@ -408,8 +363,6 @@ namespace OpenMetaverse
 
         protected void FireOnInventoryObjectRemoved(InventoryBase obj)
         {
-
-            //return DownloadContentsOpenSim(timeout);
             if (OnInventoryObjectRemoved != null)
             {
                 try { OnInventoryObjectRemoved(obj); }

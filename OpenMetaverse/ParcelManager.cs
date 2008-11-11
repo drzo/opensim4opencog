@@ -33,6 +33,170 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenMetaverse
 {
+    #region Enums
+
+    /// <summary>
+    /// Type of return to use when returning objects from a parcel
+    /// </summary>
+    public enum ObjectReturnType : uint
+    {
+        /// <summary></summary>
+        None = 0,
+        /// <summary>Return objects owned by parcel owner</summary>
+        Owner = 1 << 1,
+        /// <summary>Return objects set to group</summary>
+        Group = 1 << 2,
+        /// <summary>Return objects not owned by parcel owner or set to group</summary>
+        Other = 1 << 3,
+        /// <summary>Return a specific list of objects on parcel</summary>
+        List = 1 << 4,
+        /// <summary>Return objects that are marked for-sale</summary>
+        Sell = 1 << 5
+    }
+
+    /// <summary>
+    /// Blacklist/Whitelist flags used in parcels Access List
+    /// </summary>
+    public enum ParcelAccessFlags : uint
+    {
+        /// <summary>Agent is denied access</summary>
+        NoAccess = 0,
+        /// <summary>Agent is granted access</summary>
+        Access = 1
+    }
+
+    /// <summary>
+    /// The result of a request for parcel properties
+    /// </summary>
+    public enum ParcelResult : int
+    {
+        /// <summary>No matches were found for the request</summary>
+        NoData = -1,
+        /// <summary>Request matched a single parcel</summary>
+        Single = 0,
+        /// <summary>Request matched multiple parcels</summary>
+        Multiple = 1
+    }
+
+    /// <summary>
+    /// Flags used in the ParcelAccessListRequest packet to specify whether
+    /// we want the access list (whitelist), ban list (blacklist), or both
+    /// </summary>
+    [Flags]
+    public enum AccessList : uint
+    {
+        /// <summary>Request the access list</summary>
+        Access = 1 << 0,
+        /// <summary>Request the ban list</summary>
+        Ban = 1 << 1,
+        /// <summary>Request both White and Black lists</summary>
+        Both = Access | Ban
+    }
+
+    /// <summary>
+    /// Sequence ID in ParcelPropertiesReply packets (sent when avatar
+    /// tries to cross a parcel border)
+    /// </summary>
+    public enum ParcelStatus : int
+    {
+        /// <summary>Parcel is currently selected</summary>
+        ParcelSelected = -10000,
+        /// <summary>Parcel restricted to a group the avatar is not a
+        /// member of</summary>
+        CollisionNotInGroup = -20000,
+        /// <summary>Avatar is banned from the parcel</summary>
+        CollisionBanned = -30000,
+        /// <summary>Parcel is restricted to an access list that the
+        /// avatar is not on</summary>
+        CollisionNotOnAccessList = -40000,
+        /// <summary>Response to hovering over a parcel</summary>
+        HoveredOverParcel = -50000
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public enum TerraformAction : byte
+    {
+        /// <summary></summary>
+        Level = 0,
+        /// <summary></summary>
+        Raise = 1,
+        /// <summary></summary>
+        Lower = 2,
+        /// <summary></summary>
+        Smooth = 3,
+        /// <summary></summary>
+        Noise = 4,
+        /// <summary></summary>
+        Revert = 5
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public enum TerraformBrushSize : byte
+    {
+        /// <summary></summary>
+        Small = 1,
+        /// <summary></summary>
+        Medium = 2,
+        /// <summary></summary>
+        Large = 4
+    }
+
+    /// <summary>
+    /// Reasons agent is denied access to a parcel on the simulator
+    /// </summary>
+    public enum AccessDeniedReason : byte
+    {
+        /// <summary>Agent is not denied, access is granted</summary>
+        NotDenied = 0,
+        /// <summary>Agent is not a member of the group set for the parcel, or which owns the parcel</summary>
+        NotInGroup = 1,
+        /// <summary>Agent is not on the parcels specific allow list</summary>
+        NotOnAllowList = 2,
+        /// <summary>Agent is on the parcels ban list</summary>
+        BannedFromParcel = 3,
+        /// <summary>Unknown</summary>
+        NoAccess = 4,
+        /// <summary>Agent is not age verified and parcel settings deny access to non age verified avatars</summary>
+        NotAgeVerified = 5
+    }
+
+    /// <summary>
+    /// Parcel overlay type. This is used primarily for highlighting and
+    /// coloring which is why it is a single integer instead of a set of
+    /// flags
+    /// </summary>
+    /// <remarks>These values seem to be poorly thought out. The first three
+    /// bits represent a single value, not flags. For example Auction (0x05) is
+    /// not a combination of OwnedByOther (0x01) and ForSale(0x04). However,
+    /// the BorderWest and BorderSouth values are bit flags that get attached
+    /// to the value stored in the first three bits. Bits four, five, and six
+    /// are unused</remarks>
+    public enum ParcelOverlayType : byte
+    {
+        /// <summary>Public land</summary>
+        Public = 0,
+        /// <summary>Land is owned by another avatar</summary>
+        OwnedByOther = 1,
+        /// <summary>Land is owned by a group</summary>
+        OwnedByGroup = 2,
+        /// <summary>Land is owned by the current avatar</summary>
+        OwnedBySelf = 3,
+        /// <summary>Land is for sale</summary>
+        ForSale = 4,
+        /// <summary>Land is being auctioned</summary>
+        Auction = 5,
+        /// <summary>To the west of this area is a parcel border</summary>
+        BorderWest = 64,
+        /// <summary>To the south of this area is a parcel border</summary>
+        BorderSouth = 128
+    }
+
+    #endregion Enums
+
     #region Structs
 
     /// <summary>
@@ -95,6 +259,7 @@ namespace OpenMetaverse
         /// <summary>A string which contains the mime type of the media</summary>
         public string MediaType;
     }
+
     #endregion Structs
 
     #region Parcel Class
@@ -175,7 +340,7 @@ namespace OpenMetaverse
             /// objects</summary>
             CreateGroupObjects = 1 << 26,
             /// <summary>Allow all objects to enter this parcel</summary>
-            AllowAllObjectEntry = 1 << 27,
+            AllowAPrimitiveEntry = 1 << 27,
             /// <summary>Only allow group and owner objects to enter this parcel</summary>
             AllowGroupObjectEntry = 1 << 28,
             /// <summary>Voice Enabled on this parcel</summary>
@@ -238,15 +403,22 @@ namespace OpenMetaverse
             Any = -1
         }
 
+        /// <summary>
+        /// Type of teleport landing for a parcel
+        /// </summary>
+        public enum LandingType : byte
+        {
+            /// <summary>Unset, simulator default</summary>
+            None = 0,
+            /// <summary>Specific landing point set for this parcel</summary>
+            LandingPoint = 1,
+            /// <summary>No landing point set, direct teleports enabled for
+            /// this parcel</summary>
+            Direct = 2
+        }
+
         #endregion Enums
 
-        /// <summary></summary>
-        public int RequestResult;
-        /// <summary></summary>
-        public int SequenceID;
-        /// <summary>Used by the viewer in conjunction with the BitMap 
-        /// for highlighting the borders of a parcel</summary>
-        public bool SnapSelection;
         /// <summary></summary>
         public int SelfCount;
         /// <summary></summary>
@@ -296,9 +468,6 @@ namespace OpenMetaverse
         public int GroupPrims;
         /// <summary>Total number of other primitives on this parcel</summary>
         public int OtherPrims;
-        /// <summary>Total number of primitives you are currently selecting and
-        /// sitting on</summary>
-        public int SelectedPrims;
         /// <summary></summary>
         public float ParcelPrimBonus;
         /// <summary>Autoreturn value in minutes for others' objects</summary>
@@ -333,18 +502,19 @@ namespace OpenMetaverse
         /// <summary></summary>
         public Vector3 UserLookAt;
         /// <summary></summary>
-        public byte LandingType;
+        public LandingType Landing;
         /// <summary></summary>
         public float Dwell;
         /// <summary></summary>
         public bool RegionDenyAnonymous;
         /// <summary></summary>
         public bool RegionPushOverride;
-        /// <summary>Simulator Object, containing details from Simulator class</summary>
-        public Simulator Simulator;
-        /// <summary>Access list of who is whitelisted or blacklisted on this
+        /// <summary>Access list of who is whitelisted on this
         /// parcel</summary>
-        public List<ParcelManager.ParcelAccessEntry> AccessList;
+        public List<ParcelManager.ParcelAccessEntry> AccessWhiteList;
+        /// <summary>Access list of who is blacklisted on this
+        /// parcel</summary>
+        public List<ParcelManager.ParcelAccessEntry> AccessBlackList;
         /// <summary>TRUE of region denies access to age unverified users</summary>
         public bool RegionDenyAgeUnverified;
         /// <summary>true to obscure (hide) media url</summary>
@@ -372,15 +542,10 @@ namespace OpenMetaverse
         /// <summary>
         /// Defalt constructor
         /// </summary>
-        /// <param name="simulator">Simulator this parcel resides in</param>
         /// <param name="localID">Local ID of this parcel</param>
-        public Parcel(Simulator simulator, int localID)
+        public Parcel(int localID)
         {
-            Simulator = simulator;
             LocalID = localID;
-            RequestResult = 0;
-            SequenceID = 0;
-            SnapSelection = false;
             SelfCount = 0;
             OtherCount = 0;
             PublicCount = 0;
@@ -402,7 +567,6 @@ namespace OpenMetaverse
             OwnerPrims = 0;
             GroupPrims = 0;
             OtherPrims = 0;
-            SelectedPrims = 0;
             ParcelPrimBonus = 0;
             OtherCleanTime = 0;
             Flags = ParcelFlags.None;
@@ -418,11 +582,12 @@ namespace OpenMetaverse
             SnapshotID = UUID.Zero;
             UserLocation = Vector3.Zero;
             UserLookAt = Vector3.Zero;
-            LandingType = 0x0;
+            Landing = LandingType.None;
             Dwell = 0;
             RegionDenyAnonymous = false;
             RegionPushOverride = false;
-            AccessList = new List<ParcelManager.ParcelAccessEntry>(0);
+            AccessWhiteList = new List<ParcelManager.ParcelAccessEntry>();
+            AccessBlackList = new List<ParcelManager.ParcelAccessEntry>(0);
             RegionDenyAgeUnverified = false;
             Media = new ParcelMedia();
             ObscureMedia = false;
@@ -432,14 +597,15 @@ namespace OpenMetaverse
         /// <summary>
         /// Update the simulator with any local changes to this Parcel object
         /// </summary>
+        /// <param name="simulator">Simulator to send updates to</param>
         /// <param name="wantReply">Whether we want the simulator to confirm
         /// the update with a reply packet or not</param>
-        public void Update(bool wantReply)
+        public void Update(Simulator simulator, bool wantReply)
         {
             ParcelPropertiesUpdatePacket request = new ParcelPropertiesUpdatePacket();
 
-            request.AgentData.AgentID = Simulator.Client.Self.AgentID;
-            request.AgentData.SessionID = Simulator.Client.Self.SessionID;
+            request.AgentData.AgentID = simulator.Client.Self.AgentID;
+            request.AgentData.SessionID = simulator.Client.Self.SessionID;
 
             request.ParcelData.LocalID = this.LocalID;
 
@@ -447,7 +613,7 @@ namespace OpenMetaverse
             request.ParcelData.Category = (byte)this.Category;
             request.ParcelData.Desc = Utils.StringToBytes(this.Desc);
             request.ParcelData.GroupID = this.GroupID;
-            request.ParcelData.LandingType = this.LandingType;
+            request.ParcelData.LandingType = (byte)this.Landing;
 
             request.ParcelData.MediaAutoScale = this.Media.MediaAutoScale;
             request.ParcelData.MediaID = this.Media.MediaID;
@@ -463,23 +629,24 @@ namespace OpenMetaverse
             request.ParcelData.UserLocation = this.UserLocation;
             request.ParcelData.UserLookAt = this.UserLookAt;
 
-            Simulator.Client.Network.SendPacket(request, Simulator);
+            simulator.SendPacket(request, true);
 
-            UpdateOtherCleanTime();
+            UpdateOtherCleanTime(simulator);
         }
 
         /// <summary>
         /// Set Autoreturn time
         /// </summary>
-        public void UpdateOtherCleanTime()
+        /// <param name="simulator">Simulator to send the update to</param>
+        public void UpdateOtherCleanTime(Simulator simulator)
         {
             ParcelSetOtherCleanTimePacket request = new ParcelSetOtherCleanTimePacket();
-            request.AgentData.AgentID = Simulator.Client.Self.AgentID;
-            request.AgentData.SessionID = Simulator.Client.Self.SessionID;
+            request.AgentData.AgentID = simulator.Client.Self.AgentID;
+            request.AgentData.SessionID = simulator.Client.Self.SessionID;
             request.ParcelData.LocalID = this.LocalID;
             request.ParcelData.OtherCleanTime = this.OtherCleanTime;
 
-            Simulator.Client.Network.SendPacket(request, Simulator);
+            simulator.SendPacket(request, true);
         }
     }
 
@@ -490,136 +657,6 @@ namespace OpenMetaverse
     /// </summary>
     public class ParcelManager
     {
-        #region Enums
-
-        /// <summary>
-        /// Type of return to use when returning objects from a parcel
-        /// </summary>
-        public enum ObjectReturnType : uint
-        {
-            /// <summary></summary>
-            None = 0,
-            /// <summary>Return objects owned by parcel owner</summary>
-            Owner = 1 << 1,
-            /// <summary>Return objects set to group</summary>
-            Group = 1 << 2,
-            /// <summary>Return objects not owned by parcel owner or set to group</summary>
-            Other = 1 << 3,
-            /// <summary>Return a specific list of objects on parcel</summary>
-            List = 1 << 4,
-            /// <summary>Return objects that are marked for-sale</summary>
-            Sell = 1 << 5
-        }
-
-        /// <summary>
-        /// Blacklist/Whitelist flags used in parcels Access List
-        /// </summary>
-        public enum ParcelAccessFlags : uint
-        {
-            /// <summary>Agent is denied access</summary>
-            NoAccess = 0,
-            /// <summary>Agent is granted access</summary>
-            Access = 1
-        }
-
-        /// <summary>
-        /// The result of a request for parcel properties
-        /// </summary>
-        public enum ParcelResult : int
-        {
-            /// <summary>No matches were found for the request</summary>
-            NoData = -1,
-            /// <summary>Request matched a single parcel</summary>
-            Single = 0,
-            /// <summary>Request matched multiple parcels</summary>
-            Multiple = 1
-        }
-
-        /// <summary>
-        /// Flags used in the ParcelAccessListRequest packet to specify whether
-        /// we want the access list (whitelist), ban list (blacklist), or both
-        /// </summary>
-        [Flags]
-        public enum AccessList : uint
-        {
-            /// <summary>Request the access list</summary>
-            Access = 1 << 0,
-            /// <summary>Request the ban list</summary>
-            Ban = 1 << 1,
-            /// <summary>Request both the access list and ban list</summary>
-            Both = Access | Ban
-        }
-
-        /// <summary>
-        /// Simulator sent Sequence IDs for ParcelPropertiesReply packets (sent when avatar tries to cross
-        /// parcel border)
-        /// </summary>
-        public enum SequenceStatus : int
-        {
-            /// <summary>Parcel currently selected</summary>
-            ParcelSelected = -10000,
-            /// <summary>Parcel restricted to group avatar not member of</summary>
-            Collision_Not_In_Group = -20000,
-            /// <summary>Avatar banned from parcel</summary>
-            Collision_Banned = -30000,
-            /// <summary>Parcel restricted to access list in which avatar is not on.</summary>
-            Collision_Not_On_AccessList = -40000,
-            /// <summary>response to hovered over parcel</summary>
-            Hovered_Over_Parcel = -50000
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public enum TerraformAction : byte
-        {
-            /// <summary></summary>
-            Level = 0,
-            /// <summary></summary>
-            Raise = 1,
-            /// <summary></summary>
-            Lower = 2,
-            /// <summary></summary>
-            Smooth = 3,
-            /// <summary></summary>
-            Noise = 4,
-            /// <summary></summary>
-            Revert = 5
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public enum TerraformBrushSize : byte
-        {
-            /// <summary></summary>
-            Small = 1,
-            /// <summary></summary>
-            Medium = 2,
-            /// <summary></summary>
-            Large = 4
-        }
-
-        /// <summary>
-        /// Reasons agent is denied access to a parcel on the simulator
-        /// </summary>
-        public enum AccessDeniedReason : byte
-        {
-            /// <summary>Agent is not denied, access is granted</summary>
-            NotDenied = 0,
-            /// <summary>Agent is not a member of the group set for the parcel, or which owns the parcel</summary>
-            NotInGroup = 1,
-            /// <summary>Agent is not on the parcels specific allow list</summary>
-            NotOnAllowList = 2,
-            /// <summary>Agent is on the parcels ban list</summary>
-            BannedFromParcel = 3,
-            /// <summary>Unknown</summary>
-            NoAccess = 4,
-            /// <summary>Agent is not age verified and parcel settings deny access to non age verified avatars</summary>
-            NotAgeVerified = 5
-        }
-        #endregion Enums
-
         #region Structs
 
         /// <summary>
@@ -631,8 +668,8 @@ namespace OpenMetaverse
             public UUID AgentID;
             /// <summary></summary>
             public DateTime Time;
-            /// <summary>Flag to Permit access to agent, or ban agent from parcel</summary>
-            public AccessList Flags;
+            /// <summary>Flags for specific entry in white/black lists</summary>
+            public uint Flags;
         }
 
         /// <summary>
@@ -648,6 +685,8 @@ namespace OpenMetaverse
             public int Count;
             /// <summary>true of OwnerID is currently online and is not a group</summary>
             public bool OnlineStatus;
+            /// <summary>The date of the most recent prim left by OwnerID</summary>
+            public DateTime NewestPrim;
         }
 
         
@@ -671,21 +710,26 @@ namespace OpenMetaverse
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="simulator">Simulator the parcel is in</param>
         /// <param name="parcel">Full properties for a single parcel. If result
         /// is NoData this will be incomplete or incorrect data</param>
         /// <param name="result">Success of the query</param>
+        /// <param name="selectedPrims">Number of primitives your avatar is currently
+        /// selecting and sitting on in this parcel</param>
         /// <param name="sequenceID">User-assigned identifier for the query</param>
         /// <param name="snapSelection">User-assigned boolean for the query</param>
-        public delegate void ParcelPropertiesCallback(Parcel parcel, ParcelResult result, int sequenceID, bool snapSelection);
+        public delegate void ParcelPropertiesCallback(Simulator simulator, Parcel parcel, ParcelResult result, int selectedPrims,
+            int sequenceID, bool snapSelection);
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="simulator">simulator parcel is in</param>
+        /// <param name="simulator">Simulator the parcel is in</param>
         /// <param name="sequenceID"></param>
         /// <param name="localID"></param>
         /// <param name="flags"></param>
         /// <param name="accessEntries"></param>
-        public delegate void ParcelAccessListReplyCallback(Simulator simulator, int sequenceID, int localID, uint flags, List<ParcelAccessEntry> accessEntries);
+        public delegate void ParcelAccessListReplyCallback(Simulator simulator, int sequenceID, int localID, uint flags,
+            List<ParcelAccessEntry> accessEntries);
 
         /// <summary>
         /// Responses to a request for prim owners on a parcel
@@ -751,6 +795,7 @@ namespace OpenMetaverse
 
         private GridClient Client;
 
+        private AutoResetEvent WaitForSimParcel;
         #region Public Methods
 
         /// <summary>
@@ -762,15 +807,14 @@ namespace OpenMetaverse
             Client = client;
             // Setup the callbacks
             Client.Network.RegisterCallback(PacketType.ParcelInfoReply, new NetworkManager.PacketCallback(ParcelInfoReplyHandler));
-            // UDP packet handler
-            Client.Network.RegisterCallback(PacketType.ParcelProperties, new NetworkManager.PacketCallback(ParcelPropertiesHandler));
+            Client.Network.RegisterEventCallback("ParcelObjectOwnersReply", new Caps.EventQueueCallback(ParcelObjectOwnersReplyHandler));
             // CAPS packet handler, to allow for Media Data not contained in the message template
             Client.Network.RegisterEventCallback("ParcelProperties", new Caps.EventQueueCallback(ParcelPropertiesReplyHandler));
             Client.Network.RegisterCallback(PacketType.ParcelDwellReply, new NetworkManager.PacketCallback(ParcelDwellReplyHandler));
             Client.Network.RegisterCallback(PacketType.ParcelAccessListReply, new NetworkManager.PacketCallback(ParcelAccessListReplyHandler));
-            Client.Network.RegisterCallback(PacketType.ParcelObjectOwnersReply, new NetworkManager.PacketCallback(ParcelObjectOwnersReplyHandler));
             Client.Network.RegisterCallback(PacketType.ForceObjectSelect, new NetworkManager.PacketCallback(SelectParcelObjectsReplyHandler));
             Client.Network.RegisterCallback(PacketType.ParcelMediaUpdate, new NetworkManager.PacketCallback(ParcelMediaUpdateHandler));
+            Client.Network.RegisterCallback(PacketType.ParcelOverlay, new NetworkManager.PacketCallback(ParcelOverlayHandler));
         }
 
         /// <summary>
@@ -868,7 +912,7 @@ namespace OpenMetaverse
         /// <param name="simulator">Simulator to request parcels from (must be connected)</param>
         public void RequestAllSimParcels(Simulator simulator)
         {
-            RequestAllSimParcels(simulator, false, 200);
+            RequestAllSimParcels(simulator, false, 750);
         }
 
         /// <summary>
@@ -880,9 +924,21 @@ namespace OpenMetaverse
         /// <param name="msDelay">Number of milliseconds to pause in between each request</param>
         public void RequestAllSimParcels(Simulator simulator, bool refresh, int msDelay)
         {
+            if (simulator.DownloadingParcelMap)
+            {
+                Logger.Log("Already downloading parcels in " + simulator.Name, Helpers.LogLevel.Info, Client);
+                return;
+            }
+            else
+            {
+                simulator.DownloadingParcelMap = true;
+                WaitForSimParcel = new AutoResetEvent(false);
+            }
+
+            
+
             if (refresh)
             {
-                //lock (simulator.ParcelMap)
                     for (int y = 0; y < 64; y++)
                         for (int x = 0; x < 64; x++)
                             simulator.ParcelMap[y, x] = 0;
@@ -890,7 +946,7 @@ namespace OpenMetaverse
 
             Thread th = new Thread(delegate()
             {
-                int count = 0, y, x;
+                int count = 0, timeouts = 0, y, x;
 
                 for (y = 0; y < 64; y++)
                 {
@@ -903,14 +959,11 @@ namespace OpenMetaverse
                         {
                             Client.Parcels.PropertiesRequest(simulator,
                                                              (y + 1) * 4.0f, (x + 1) * 4.0f,
-                                                             y * 4.0f, x * 4.0f, 0, false);
+                                                             y * 4.0f, x * 4.0f, int.MaxValue, false);
 
-                            // Simulators can be sliced up in 4x4 chunks, but even the smallest
-                            // parcel is 16x16. There's no reason to send out 4096 packets. If
-                            // we sleep for a little while here it is likely the response 
-                            // packet will come back and nearby parcel information is filled in
-                            // so we can skip a lot of unnecessary sends
-                            Thread.Sleep(100);
+                            // Wait the given amount of time for a reply before sending the next request
+                            if (!WaitForSimParcel.WaitOne(msDelay, false))
+                                ++timeouts;
 
                             ++count;
                         }
@@ -918,8 +971,10 @@ namespace OpenMetaverse
                 }
 
                 Logger.Log(String.Format(
-                    "Requested full simulator parcel information. Sent {0} parcel requests. Current outgoing queue: {1}",
-                    count, Client.Network.OutboxCount), Helpers.LogLevel.Info);
+                    "Full simulator parcel information retrieved. Sent {0} parcel requests. Current outgoing queue: {1}, Retry Count {2}",
+                    count, Client.Network.OutboxCount, timeouts), Helpers.LogLevel.Info, Client);
+
+                simulator.DownloadingParcelMap = false;
             });
 
             th.Start();
@@ -1225,7 +1280,8 @@ namespace OpenMetaverse
             land.ModifyBlock.Seconds = seconds;
             land.ModifyBlock.Height = height;
 
-            land.ParcelData[0] = new ModifyLandPacket.ParcelDataBlock(); 
+            land.ParcelData = new ModifyLandPacket.ParcelDataBlock[1];
+            land.ParcelData[0] = new ModifyLandPacket.ParcelDataBlock();
             land.ParcelData[0].LocalID = localID;
             land.ParcelData[0].West = west;
             land.ParcelData[0].South = south;
@@ -1371,21 +1427,19 @@ namespace OpenMetaverse
         /// <param name="capsKey">Not used (will always be ParcelProperties)</param>
         /// <param name="llsd">LLSD Structured data</param>
         /// <param name="simulator">Object representing simulator</param>
-        private void ParcelPropertiesReplyHandler(string capsKey, LLSD llsd, Simulator simulator)
+        private void ParcelPropertiesReplyHandler(string capsKey, OSD llsd, Simulator simulator)
         {
-
             if (OnParcelProperties != null || Client.Settings.PARCEL_TRACKING == true)
             {
+                OSDMap map = (OSDMap)llsd;
+                OSDMap parcelDataBlock = (OSDMap)(((OSDArray)map["ParcelData"])[0]);
+                OSDMap ageVerifyBlock = (OSDMap)(((OSDArray)map["AgeVerificationBlock"])[0]);
+                OSDMap mediaDataBlock = (OSDMap)(((OSDArray)map["MediaData"])[0]);
 
-                LLSDMap map = (LLSDMap)llsd;
-                LLSDMap parcelDataBlock = (LLSDMap)(((LLSDArray)map["ParcelData"])[0]);
-                LLSDMap ageVerifyBlock = (LLSDMap)(((LLSDArray)map["AgeVerificationBlock"])[0]);
-                LLSDMap mediaDataBlock = (LLSDMap)(((LLSDArray)map["MediaData"])[0]);
+                Parcel parcel = new Parcel(parcelDataBlock["LocalID"].AsInteger());
 
-                Parcel parcel = new Parcel(simulator, parcelDataBlock["LocalID"].AsInteger());
-
-                parcel.AABBMax = ((LLSDArray)parcelDataBlock["AABBMax"]).AsVector3();
-                parcel.AABBMin = ((LLSDArray)parcelDataBlock["AABBMin"]).AsVector3();
+                parcel.AABBMax = ((OSDArray)parcelDataBlock["AABBMax"]).AsVector3();
+                parcel.AABBMin = ((OSDArray)parcelDataBlock["AABBMin"]).AsVector3();
                 parcel.Area = parcelDataBlock["Area"].AsInteger();
                 parcel.AuctionID = (uint)parcelDataBlock["AuctionID"].AsInteger();
                 parcel.AuthBuyerID = parcelDataBlock["AuthBuyerID"].AsUUID();
@@ -1403,7 +1457,7 @@ namespace OpenMetaverse
                 parcel.GroupID = parcelDataBlock["GroupID"].AsUUID();
                 parcel.GroupPrims = parcelDataBlock["GroupPrims"].AsInteger();
                 parcel.IsGroupOwned = parcelDataBlock["IsGroupOwned"].AsBoolean();
-                parcel.LandingType = (byte)parcelDataBlock["LandingType"].AsInteger();
+                parcel.Landing = (Parcel.LandingType)(byte)parcelDataBlock["LandingType"].AsInteger();
                 parcel.LocalID = parcelDataBlock["LocalID"].AsInteger();
                 parcel.MaxPrims = parcelDataBlock["MaxPrims"].AsInteger();
                 parcel.Media.MediaAutoScale = (byte)parcelDataBlock["MediaAutoScale"].AsInteger(); 
@@ -1424,20 +1478,19 @@ namespace OpenMetaverse
                 parcel.RegionDenyAnonymous = parcelDataBlock["RegionDenyAnonymous"].AsBoolean();
                 parcel.RegionPushOverride = parcelDataBlock["RegionPushOverride"].AsBoolean();
                 parcel.RentPrice = parcelDataBlock["RentPrice"].AsInteger();
-                parcel.RequestResult = parcelDataBlock["RequestResult"].AsInteger();
+                ParcelResult result = (ParcelResult)parcelDataBlock["RequestResult"].AsInteger();
                 parcel.SalePrice = parcelDataBlock["SalePrice"].AsInteger();
-                parcel.SelectedPrims = parcelDataBlock["SelectedPrims"].AsInteger();
+                int selectedPrims = parcelDataBlock["SelectedPrims"].AsInteger();
                 parcel.SelfCount = parcelDataBlock["SelfCount"].AsInteger();
-                parcel.SequenceID = parcelDataBlock["SequenceID"].AsInteger();
-                parcel.Simulator = simulator;
+                int sequenceID = parcelDataBlock["SequenceID"].AsInteger();
                 parcel.SimWideMaxPrims = parcelDataBlock["SimWideMaxPrims"].AsInteger();
                 parcel.SimWideTotalPrims = parcelDataBlock["SimWideTotalPrims"].AsInteger();
-                parcel.SnapSelection = parcelDataBlock["SnapSelection"].AsBoolean();
+                bool snapSelection = parcelDataBlock["SnapSelection"].AsBoolean();
                 parcel.SnapshotID = parcelDataBlock["SnapshotID"].AsUUID();
                 parcel.Status = (Parcel.ParcelStatus)parcelDataBlock["Status"].AsInteger();
                 parcel.TotalPrims = parcelDataBlock["TotalPrims"].AsInteger();
-                parcel.UserLocation = ((LLSDArray)parcelDataBlock["UserLocation"]).AsVector3();
-                parcel.UserLookAt = ((LLSDArray)parcelDataBlock["UserLookAt"]).AsVector3();
+                parcel.UserLocation = ((OSDArray)parcelDataBlock["UserLocation"]).AsVector3();
+                parcel.UserLookAt = ((OSDArray)parcelDataBlock["UserLookAt"]).AsVector3();
                 parcel.Media.MediaDesc = mediaDataBlock["MediaDesc"].AsString();
                 parcel.Media.MediaHeight = mediaDataBlock["MediaHeight"].AsInteger();
                 parcel.Media.MediaWidth = mediaDataBlock["MediaWidth"].AsInteger();
@@ -1448,6 +1501,9 @@ namespace OpenMetaverse
 
                 if (Client.Settings.PARCEL_TRACKING)
                 {
+                    if(sequenceID.Equals(int.MaxValue))
+                        WaitForSimParcel.Set();
+
                     lock (simulator.Parcels.Dictionary)
                         simulator.Parcels.Dictionary[parcel.LocalID] = parcel;
 
@@ -1466,14 +1522,13 @@ namespace OpenMetaverse
                                     simulator.ParcelMap[y, x] = parcel.LocalID;
                             }
                         }
-
                     }
                 }
 
                 // auto request acl, will be stored in parcel tracking dictionary if enabled
                 if (Client.Settings.ALWAYS_REQUEST_PARCEL_ACL)
                     Client.Parcels.AccessListRequest(simulator, parcel.LocalID,
-                        AccessList.Both, parcel.SequenceID);
+                        AccessList.Both, sequenceID);
 
                 // auto request dwell, will be stored in parcel tracking dictionary if enables
                 if (Client.Settings.ALWAYS_REQUEST_PARCEL_DWELL)
@@ -1482,128 +1537,12 @@ namespace OpenMetaverse
                 // Fire the callback for parcel properties being received
                 if (OnParcelProperties != null)
                 {
-                    try
-                    {
-                        OnParcelProperties(parcel, (ParcelResult)parcel.RequestResult,
-                          parcel.SequenceID, parcel.SnapSelection);
-                    }
+                    try { OnParcelProperties(simulator, parcel, result, selectedPrims, sequenceID, snapSelection); }
                     catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
                 }
 
                 // Check if all of the simulator parcels have been retrieved, if so fire another callback
                 if (simulator.IsParcelMapFull() && OnSimParcelsDownloaded != null)
-                {
-                    try { OnSimParcelsDownloaded(simulator, simulator.Parcels, simulator.ParcelMap); }
-                    catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Parcel Properties reply handler for data that comes in over udp (deprecated)
-        /// </summary>
-        /// <param name="packet"></param>
-        /// <param name="simulator"></param>
-        private void ParcelPropertiesHandler(Packet packet, Simulator simulator)
-        {
-            if (OnParcelProperties != null || Client.Settings.PARCEL_TRACKING == true)
-            {
-                ParcelPropertiesPacket properties = (ParcelPropertiesPacket)packet;
-
-                Parcel parcel = new Parcel(simulator, properties.ParcelData.LocalID);
-
-                parcel.AABBMax = properties.ParcelData.AABBMax;
-                parcel.AABBMin = properties.ParcelData.AABBMin;
-                parcel.Area = properties.ParcelData.Area;
-                parcel.AuctionID = properties.ParcelData.AuctionID;
-                parcel.AuthBuyerID = properties.ParcelData.AuthBuyerID;
-                parcel.Bitmap = properties.ParcelData.Bitmap;
-                parcel.Category = (Parcel.ParcelCategory)(sbyte)properties.ParcelData.Category;
-                parcel.ClaimDate = Utils.UnixTimeToDateTime((uint)properties.ParcelData.ClaimDate);
-                // ClaimPrice seems to always be zero?
-                parcel.ClaimPrice = properties.ParcelData.ClaimPrice;
-                parcel.Desc = Utils.BytesToString(properties.ParcelData.Desc);
-                parcel.GroupID = properties.ParcelData.GroupID;
-                parcel.GroupPrims = properties.ParcelData.GroupPrims;
-                parcel.IsGroupOwned = properties.ParcelData.IsGroupOwned;
-                parcel.LandingType = properties.ParcelData.LandingType;
-                parcel.MaxPrims = properties.ParcelData.MaxPrims;
-                parcel.Media.MediaAutoScale = properties.ParcelData.MediaAutoScale;
-                parcel.Media.MediaID = properties.ParcelData.MediaID;
-                parcel.Media.MediaURL = Utils.BytesToString(properties.ParcelData.MediaURL);
-                parcel.MusicURL = Utils.BytesToString(properties.ParcelData.MusicURL);
-                parcel.Name = Utils.BytesToString(properties.ParcelData.Name);
-                parcel.OtherCleanTime = properties.ParcelData.OtherCleanTime;
-                parcel.OtherCount = properties.ParcelData.OtherCount;
-                parcel.OtherPrims = properties.ParcelData.OtherPrims;
-                parcel.OwnerID = properties.ParcelData.OwnerID;
-                parcel.OwnerPrims = properties.ParcelData.OwnerPrims;
-                parcel.Flags = (Parcel.ParcelFlags)properties.ParcelData.ParcelFlags;
-                parcel.ParcelPrimBonus = properties.ParcelData.ParcelPrimBonus;
-                parcel.PassHours = properties.ParcelData.PassHours;
-                parcel.PassPrice = properties.ParcelData.PassPrice;
-                parcel.PublicCount = properties.ParcelData.PublicCount;
-                parcel.RegionDenyAnonymous = properties.ParcelData.RegionDenyAnonymous;
-                parcel.RegionPushOverride = properties.ParcelData.RegionPushOverride;
-                parcel.RentPrice = properties.ParcelData.RentPrice;
-                parcel.SalePrice = properties.ParcelData.SalePrice;
-                parcel.SelectedPrims = properties.ParcelData.SelectedPrims;
-                parcel.SelfCount = properties.ParcelData.SelfCount;
-                parcel.SimWideMaxPrims = properties.ParcelData.SimWideMaxPrims;
-                parcel.SimWideTotalPrims = properties.ParcelData.SimWideTotalPrims;
-                parcel.SnapshotID = properties.ParcelData.SnapshotID;
-                parcel.Status = (Parcel.ParcelStatus)(sbyte)properties.ParcelData.Status;
-                parcel.TotalPrims = properties.ParcelData.TotalPrims;
-                parcel.UserLocation = properties.ParcelData.UserLocation;
-                parcel.UserLookAt = properties.ParcelData.UserLookAt;
-                parcel.RegionDenyAgeUnverified = properties.AgeVerificationBlock.RegionDenyAgeUnverified;
-
-                // store parcel in dictionary
-                if (Client.Settings.PARCEL_TRACKING)
-                {
-                    lock (simulator.Parcels.Dictionary)
-                        simulator.Parcels.Dictionary[parcel.LocalID] = parcel;
-
-                    int y, x, index, bit;
-                    for (y = 0; y < simulator.ParcelMap.GetLength(0); y++)
-                    {
-                        for (x = 0; x < simulator.ParcelMap.GetLength(1); x++)
-                        {
-                            if (simulator.ParcelMap[y, x] == 0)
-                            {
-                                index = (y * 64) + x;
-                                bit = index % 8;
-                                index >>= 3;
-
-                                if ((parcel.Bitmap[index] & (1 << bit)) != 0)
-                                    simulator.ParcelMap[y, x] = parcel.LocalID;
-                            }
-                        }
-                    }
-                }
-
-                // auto request acl, will be stored in parcel tracking dictionary if enabled
-                if (Client.Settings.ALWAYS_REQUEST_PARCEL_ACL)
-                    Client.Parcels.AccessListRequest(simulator, properties.ParcelData.LocalID,
-                        AccessList.Both, properties.ParcelData.SequenceID);
-
-                // auto request dwell, will be stored in parcel tracking dictionary if enables
-                if (Client.Settings.ALWAYS_REQUEST_PARCEL_DWELL)
-                    Client.Parcels.DwellRequest(simulator, properties.ParcelData.LocalID);
-
-                // Fire the callback for parcel properties being received
-                if (OnParcelProperties != null)
-                {
-                    try
-                    {
-                        OnParcelProperties(parcel, (ParcelResult)properties.ParcelData.RequestResult,
-                            properties.ParcelData.SequenceID, properties.ParcelData.SnapSelection);
-                    }
-                    catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
-                }
-
-                // Check if all of the simulator parcels have been retrieved, if so fire another callback
-                if (OnSimParcelsDownloaded != null && simulator.IsParcelMapFull())
                 {
                     try { OnSimParcelsDownloaded(simulator, simulator.Parcels, simulator.ParcelMap); }
                     catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
@@ -1621,27 +1560,33 @@ namespace OpenMetaverse
             if (OnAccessListReply != null || Client.Settings.ALWAYS_REQUEST_PARCEL_ACL == true)
             {
                 ParcelAccessListReplyPacket reply = (ParcelAccessListReplyPacket)packet;
+
                 List<ParcelAccessEntry> accessList = new List<ParcelAccessEntry>(reply.List.Length);
-
-                for (int i = 0; i < reply.List.Length; i++)
-                {
-                    ParcelAccessEntry pae = new ParcelAccessEntry();
-                    pae.AgentID = reply.List[i].ID;
-                    pae.Flags = (AccessList)reply.List[i].Flags;
-                    pae.Time = Utils.UnixTimeToDateTime((uint)reply.List[i].Time);
-
-                    accessList.Add(pae);
-                }
-
-                lock (simulator.Parcels.Dictionary)
-                {
-                    if (simulator.Parcels.Dictionary.ContainsKey(reply.Data.LocalID))
+                   
+                    for (int i = 0; i < reply.List.Length; i++)
                     {
-                        Parcel parcel = simulator.Parcels.Dictionary[reply.Data.LocalID];
-                        parcel.AccessList = accessList;
-                        simulator.Parcels.Dictionary[reply.Data.LocalID] = parcel;
+                        ParcelAccessEntry pae = new ParcelAccessEntry();
+                        pae.AgentID = reply.List[i].ID;
+                        pae.Time = Utils.UnixTimeToDateTime((uint)reply.List[i].Time);
+                        pae.Flags = reply.List[i].Flags;
+
+                        accessList.Add(pae);
                     }
-                }
+
+                    lock (simulator.Parcels.Dictionary)
+                    {
+                        if (simulator.Parcels.Dictionary.ContainsKey(reply.Data.LocalID))
+                        {
+                            Parcel parcel = simulator.Parcels.Dictionary[reply.Data.LocalID];
+                            if ((AccessList)reply.Data.Flags == AccessList.Ban)
+                                parcel.AccessBlackList = accessList;
+                            else
+                                parcel.AccessWhiteList = accessList;
+
+                            simulator.Parcels.Dictionary[reply.Data.LocalID] = parcel;
+                        }
+                    }
+                
 
                 if (OnAccessListReply != null)
                 {
@@ -1655,29 +1600,69 @@ namespace OpenMetaverse
             }
         }
 
-        private void ParcelObjectOwnersReplyHandler(Packet packet, Simulator simulator)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="capsKey"></param>
+        /// <param name="llsd"></param>
+        /// <param name="simulator"></param>
+        private void ParcelObjectOwnersReplyHandler(string capsKey, OSD llsd, Simulator simulator)
         {
             if (OnPrimOwnersListReply != null)
             {
-                ParcelObjectOwnersReplyPacket reply = (ParcelObjectOwnersReplyPacket)packet;
+
+                OSDMap map = (OSDMap)llsd;
                 List<ParcelPrimOwners> primOwners = new List<ParcelPrimOwners>();
 
-                for (int i = 0; i < reply.Data.Length; i++)
+                if (map.ContainsKey("Data") && map.ContainsKey("DataExtended"))
                 {
-                    ParcelPrimOwners poe = new ParcelPrimOwners();
 
-                    poe.OwnerID = reply.Data[i].OwnerID;
-                    poe.IsGroupOwned = reply.Data[i].IsGroupOwned;
-                    poe.Count = reply.Data[i].Count;
-                    poe.OnlineStatus = reply.Data[i].OnlineStatus;
-                    primOwners.Add(poe);
+                    OSDArray dataBlock = (OSDArray)map["Data"];
+                    OSDArray dataExtendedBlock = (OSDArray)map["DataExtended"];
+
+                    for (int i = 0; i < dataBlock.Count; i++)
+                    {
+                        ParcelPrimOwners poe = new ParcelPrimOwners();
+                        poe.OwnerID = ((OSDMap)dataBlock[i])["OwnerID"].AsUUID();
+                        poe.Count = ((OSDMap)dataBlock[i])["Count"].AsInteger();
+                        poe.IsGroupOwned = ((OSDMap)dataBlock[i])["IsGroupOwned"].AsBoolean();
+                        poe.OnlineStatus = ((OSDMap)dataBlock[i])["OnlineStatus"].AsBoolean();
+                        if (((OSDMap)dataExtendedBlock[i]).ContainsKey("TimeStamp"))
+                        {
+                            byte[] bytes = (((OSDMap)dataExtendedBlock[i])["TimeStamp"].AsBinary());
+
+                            if (BitConverter.IsLittleEndian)
+                                Array.Reverse(bytes);
+
+                            uint value = Utils.BytesToUInt(bytes);
+
+                            poe.NewestPrim = Utils.UnixTimeToDateTime(value);
+                        }
+
+                        primOwners.Add(poe);
+                    }
+
+                   
                 }
-                try { OnPrimOwnersListReply(simulator, primOwners); }
-                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
-            }
+                else
+                {
+                    // the server will send back a response even when there are no prims
+                    primOwners.Add(new ParcelPrimOwners());    
+                }
 
+                if (OnPrimOwnersListReply != null)
+                {
+                    try { OnPrimOwnersListReply(simulator, primOwners); }
+                    catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                }
+            }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="packet"></param>
+        /// <param name="simulator"></param>
         private void SelectParcelObjectsReplyHandler(Packet packet, Simulator simulator)
         {
             ForceObjectSelectPacket reply = (ForceObjectSelectPacket)packet;
@@ -1713,6 +1698,33 @@ namespace OpenMetaverse
             {
                 try { OnParcelMediaUpdate(simulator, media); }
                 catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+            }
+        }
+
+        private void ParcelOverlayHandler(Packet packet, Simulator simulator)
+        {
+            const int OVERLAY_COUNT = 4;
+
+            ParcelOverlayPacket overlay = (ParcelOverlayPacket)packet;
+
+            if (overlay.ParcelData.SequenceID >= 0 && overlay.ParcelData.SequenceID < OVERLAY_COUNT)
+            {
+                int length = overlay.ParcelData.Data.Length;
+
+                Buffer.BlockCopy(overlay.ParcelData.Data, 0, simulator.ParcelOverlay,
+                    overlay.ParcelData.SequenceID * length, length);
+                simulator.ParcelOverlaysReceived++;
+
+                if (simulator.ParcelOverlaysReceived >= OVERLAY_COUNT)
+                {
+                    // TODO: ParcelOverlaysReceived should become internal, and reset to zero every 
+                    // time it hits four. Also need a callback here
+                }
+            }
+            else
+            {
+                Logger.Log("Parcel overlay with sequence ID of " + overlay.ParcelData.SequenceID +
+                    " received from " + simulator.ToString(), Helpers.LogLevel.Warning, Client);
             }
         }
 

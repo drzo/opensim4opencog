@@ -16,8 +16,8 @@ namespace cogbot.Actions
             helpString = "Whisper a message to a user.";
             usageString = "To whisper a message to an avatar, type \"whisper to <avatar name>\"";
 
-            currentAvatar = null;
-            currentSession = null;
+            currentAvatar = UUID.Zero;
+            currentSession = UUID.Zero;
         }
 
         public override void acceptInput(string verb, Parser args)
@@ -36,13 +36,13 @@ namespace cogbot.Actions
                 }
                 currentAvatar = avatar.ID;
             }
-            else if (currentAvatar == null)
+            else if (currentAvatar == UUID.Zero)
             {
                 parent.output("Please provide a name to whisper to.");
                 return;
             }
 
-            if (currentSession != null)
+            if (currentSession != UUID.Zero)
                 client.Self.InstantMessage(currentAvatar, args.objectPhrase, currentSession);
             else
                 client.Self.InstantMessage(currentAvatar, args.objectPhrase);

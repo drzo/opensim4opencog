@@ -155,11 +155,11 @@ namespace cogbot.Listeners
         public void describeAvatar(Avatar avatar)
         {
             string verb;
-            if (avatar.SittingOn == 0)
-                verb = "standing";
-            else
-                verb = "sitting";
-            parent.output(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
+            //if (avatar.SittingOn == 0)
+            //    verb = "standing";
+            //else
+            //    verb = "sitting";
+            //parent.output(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
             parent.output(avatar.Name + " is " + Vector3.Distance(client.Self.SimPosition, avatar.Position).ToString() + " distant.");
             if (avatar.ProfileProperties.BornOn != null)
                 parent.output("Born on: " + avatar.ProfileProperties.BornOn);
@@ -178,16 +178,16 @@ namespace cogbot.Listeners
         public void describeAvatarToAI(Avatar avatar)
         {
             string verb;
-            if (avatar.SittingOn == 0)
-                verb = "standing";
-            else
-                verb = "sitting";
+           // if (avatar.SittingOn == 0)
+           //     verb = "standing";
+           // else
+           //     verb = "sitting";
             //parent.output(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
             //parent.output(avatar.Name + " is " + Vector3.Distance(client.Self.SimPosition, avatar.Position).ToString() + " distant.");
 
             parent.enqueueLispTask("(on-avatar-dist (@\"" + avatar.Name + "\") " + Vector3.Distance(client.Self.SimPosition, avatar.Position).ToString() + " )");
             parent.enqueueLispTask("(on-avatar-pos (@\"" + avatar.Name + "\") (@\"" + avatar.Position.ToString() + "\") )");
-            parent.enqueueLispTask("(on-avatar-posture (@\"" + avatar.Name + "\") (@\"" + verb + "\") )");
+          //  parent.enqueueLispTask("(on-avatar-posture (@\"" + avatar.Name + "\") (@\"" + verb + "\") )");
             
             /*
             if (avatar.ProfileProperties.BornOn != null)

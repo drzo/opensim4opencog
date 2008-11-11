@@ -25,6 +25,7 @@
  */
 
 using System;
+using OpenMetaverse.StructuredData;
 
 namespace OpenMetaverse
 {
@@ -89,12 +90,72 @@ namespace OpenMetaverse
             OwnerMask = (PermissionMask)ownerMask;
         }
 
+        public OSD GetOSD()
+        {
+            OSDMap permissions = new OSDMap(5);
+            permissions["BaseMask"] = OSD.FromUInteger((uint)BaseMask);
+            permissions["EveryoneMask"] = OSD.FromUInteger((uint)EveryoneMask);
+            permissions["GroupMask"] = OSD.FromUInteger((uint)GroupMask);
+            permissions["NextOwnerMask"] = OSD.FromUInteger((uint)NextOwnerMask);
+            permissions["OwnerMask"] = OSD.FromUInteger((uint)OwnerMask);
+            return permissions;
+        }
+
+        public static Permissions FromOSD(OSD llsd)
+        {
+            Permissions permissions = new Permissions();
+            OSDMap map = (OSDMap)llsd;
+
+            byte[] bytes = map["BaseMask"].AsBinary();
+            permissions.BaseMask = (PermissionMask)Utils.BytesToUInt(bytes);
+            bytes = map["EveryoneMask"].AsBinary();
+            permissions.EveryoneMask = (PermissionMask)Utils.BytesToUInt(bytes);
+            bytes = map["GroupMask"].AsBinary();
+            permissions.GroupMask = (PermissionMask)Utils.BytesToUInt(bytes);
+            bytes = map["NextOwnerMask"].AsBinary();
+            permissions.NextOwnerMask = (PermissionMask)Utils.BytesToUInt(bytes);
+            bytes = map["OwnerMask"].AsBinary();
+            permissions.OwnerMask = (PermissionMask)Utils.BytesToUInt(bytes);
+
+            return permissions;
+        }
+
         public override string ToString()
         {
             return String.Format("Base: {0}, Everyone: {1}, Group: {2}, NextOwner: {3}, Owner: {4}",
                 BaseMask, EveryoneMask, GroupMask, NextOwnerMask, OwnerMask);
         }
 
-        public static Permissions NoPermissions = new Permissions();
+        public override int GetHashCode()
+        {
+            return BaseMask.GetHashCode() ^ EveryoneMask.GetHashCode() ^ GroupMask.GetHashCode() ^
+                NextOwnerMask.GetHashCode() ^ OwnerMask.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            return (obj is Permissions) ? this == (Permissions)obj : false;
+        }
+
+        public bool Equals(Permissions other)
+        {
+            return this == other;
+        }
+
+        public static bool operator ==(Permissions lhs, Permissions rhs)
+        {
+            return (lhs.BaseMask == rhs.BaseMask) && (lhs.EveryoneMask == rhs.EveryoneMask) &&
+                (lhs.GroupMask == rhs.GroupMask) && (lhs.NextOwnerMask == rhs.NextOwnerMask) &&
+                (lhs.OwnerMask == rhs.OwnerMask);
+        }
+
+        public static bool operator !=(Permissions lhs, Permissions rhs)
+        {
+            return !(lhs == rhs);
+        }
+
+        public static readonly Permissions NoPermissions = new Permissions();
+        public static readonly Permissions FullPermissions = new Permissions(UInt32.MaxValue, UInt32.MaxValue,
+            UInt32.MaxValue, UInt32.MaxValue, UInt32.MaxValue);
     }
 }

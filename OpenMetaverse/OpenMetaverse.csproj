@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{03176337-200E-41E1-A6B7-FCCB1EF3DB02}</ProjectGuid>
+    <ProjectGuid>{3164F259-0000-0000-0000-000000000000}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
@@ -182,9 +182,10 @@
     <Compile Include="InventoryNodeDictionary.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="LLObject.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="LLSD\BinaryLLSD.cs" />
+    <Compile Include="LLSD\LLSD.cs" />
+    <Compile Include="LLSD\NotationLLSD.cs" />
+    <Compile Include="LLSD\XmlLLSD.cs" />
     <Compile Include="Logger.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -209,15 +210,12 @@
     <Compile Include="ParcelManager.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ParticleSystem.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Permissions.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Prims.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Primitives\ParticleSystem.cs" />
+    <Compile Include="Primitives\Primitive.cs" />
+    <Compile Include="Primitives\TextureEntry.cs" />
     <Compile Include="ProtocolManager.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -230,6 +228,10 @@
     <Compile Include="SoundManager.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="StructuredData\BinaryLLSD.cs" />
+    <Compile Include="StructuredData\NotationLLSD.cs" />
+    <Compile Include="StructuredData\StructuredData.cs" />
+    <Compile Include="StructuredData\XmlLLSD.cs" />
     <Compile Include="TerrainCompressor.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -287,18 +289,6 @@
     <Compile Include="Interfaces\IRendering.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="LLSD\BinaryLLSD.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="LLSD\LLSD.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="LLSD\NotationLLSD.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="LLSD\XmlLLSD.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Rendering\LindenMesh.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -326,6 +316,10 @@
     <Compile Include="Voice\VoiceSession.cs">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LLSD\xml-llsd.dtd" />
+    <None Include="LLSD\xml-llsd.xsd" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual C# Express 2008
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cogbot", "cogbot.csproj", "{40A8FCD4-2301-4496-8B7B-832EC791563C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cogbot", "cogbot.csproj", "{B95B6315-0000-0000-0000-000000000000}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotLisp", "dotlisp\DotLisp.csproj", "{CA411BCB-272F-4417-9168-66DC4C1995BE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotLisp", "dotlisp\DotLisp.csproj", "{5B1B186D-0000-0000-0000-000000000000}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenMetaverse", "OpenMetaverse\OpenMetaverse.csproj", "{03176337-200E-41E1-A6B7-FCCB1EF3DB02}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenMetaverse", "OpenMetaverse\OpenMetaverse.csproj", "{3164F259-0000-0000-0000-000000000000}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenMetaverseTypes", "OpenMetaverse\Types\OpenMetaverseTypes.csproj", "{6FDF7CD6-8ECC-42BB-B8ED-036371CD164F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenMetaverseTypes", "OpenMetaverse\Types\OpenMetaverseTypes.csproj", "{29DCFE14-0000-0000-0000-000000000000}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,22 +15,22 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{40A8FCD4-2301-4496-8B7B-832EC791563C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{40A8FCD4-2301-4496-8B7B-832EC791563C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{40A8FCD4-2301-4496-8B7B-832EC791563C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{40A8FCD4-2301-4496-8B7B-832EC791563C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CA411BCB-272F-4417-9168-66DC4C1995BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CA411BCB-272F-4417-9168-66DC4C1995BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CA411BCB-272F-4417-9168-66DC4C1995BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CA411BCB-272F-4417-9168-66DC4C1995BE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{03176337-200E-41E1-A6B7-FCCB1EF3DB02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{03176337-200E-41E1-A6B7-FCCB1EF3DB02}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{03176337-200E-41E1-A6B7-FCCB1EF3DB02}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{03176337-200E-41E1-A6B7-FCCB1EF3DB02}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6FDF7CD6-8ECC-42BB-B8ED-036371CD164F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6FDF7CD6-8ECC-42BB-B8ED-036371CD164F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6FDF7CD6-8ECC-42BB-B8ED-036371CD164F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6FDF7CD6-8ECC-42BB-B8ED-036371CD164F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B95B6315-0000-0000-0000-000000000000}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B95B6315-0000-0000-0000-000000000000}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B95B6315-0000-0000-0000-000000000000}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B95B6315-0000-0000-0000-000000000000}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B1B186D-0000-0000-0000-000000000000}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B1B186D-0000-0000-0000-000000000000}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B1B186D-0000-0000-0000-000000000000}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B1B186D-0000-0000-0000-000000000000}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3164F259-0000-0000-0000-000000000000}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3164F259-0000-0000-0000-000000000000}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3164F259-0000-0000-0000-000000000000}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3164F259-0000-0000-0000-000000000000}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29DCFE14-0000-0000-0000-000000000000}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29DCFE14-0000-0000-0000-000000000000}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29DCFE14-0000-0000-0000-000000000000}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29DCFE14-0000-0000-0000-000000000000}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

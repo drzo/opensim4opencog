@@ -51,7 +51,7 @@ namespace cogbot.Listeners
             burstInterval = new TimeSpan(0, 0, 0, 0, (int)(burstTime * 1000));
         }
 
-        void Objects_OnObjectProperties(Simulator simulator, LLObject.ObjectProperties properties)
+        void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties properties)
         {
             lock (pendingPrims)
             {

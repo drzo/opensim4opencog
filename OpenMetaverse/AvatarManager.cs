@@ -90,7 +90,7 @@ namespace OpenMetaverse
         /// <param name="avatarID"></param>
         /// <param name="isTrial"></param>
         /// <param name="visualParams"></param>
-        public delegate void AvatarAppearanceCallback(UUID avatarID, bool isTrial, LLObject.TextureEntryFace defaultTexture, LLObject.TextureEntryFace[] faceTextures, List<byte> visualParams);
+        public delegate void AvatarAppearanceCallback(UUID avatarID, bool isTrial, Primitive.TextureEntryFace defaultTexture, Primitive.TextureEntryFace[] faceTextures, List<byte> visualParams);
         /// <summary>
         /// Triggered when a UUIDNameReply is received
         /// </summary>
@@ -239,6 +239,7 @@ namespace OpenMetaverse
         /// <param name="id">The avatar key to retrieve a name for</param>
         public void RequestAvatarName(UUID id)
         {
+            Console.WriteLine("AvatarManager requesting UUID for {0}", id);
             UUIDNameRequestPacket request = new UUIDNameRequestPacket();
             request.UUIDNameBlock = new UUIDNameRequestPacket.UUIDNameBlockBlock[1];
             request.UUIDNameBlock[0] = new UUIDNameRequestPacket.UUIDNameBlockBlock();
@@ -253,16 +254,25 @@ namespace OpenMetaverse
         /// <param name="ids">The avatar keys to retrieve names for</param>
         public void RequestAvatarNames(List<UUID> ids)
         {
-            UUIDNameRequestPacket request = new UUIDNameRequestPacket();
-            request.UUIDNameBlock = new UUIDNameRequestPacket.UUIDNameBlockBlock[ids.Count];
-
-            for (int i = 0; i < ids.Count; i++)
+            Logger.Log("AvatarManager requesting UUIDs count " + ids.Count, Helpers.LogLevel.Debug);
+            if (ids.Count > 0)
             {
-                request.UUIDNameBlock[i] = new UUIDNameRequestPacket.UUIDNameBlockBlock();
-                request.UUIDNameBlock[i].ID = ids[i];
+                UUIDNameRequestPacket request = new UUIDNameRequestPacket();
+                request.UUIDNameBlock = new UUIDNameRequestPacket.UUIDNameBlockBlock[ids.Count];
+
+                for (int i = 0; i < ids.Count; i++)
+                {
+                    request.UUIDNameBlock[i] = new UUIDNameRequestPacket.UUIDNameBlockBlock();
+                    request.UUIDNameBlock[i].ID = ids[i];
+                }
+
+                Client.Network.SendPacket(request);
+            }
+            else
+            {
+                // not sending request, no ids!
             }
 
-            Client.Network.SendPacket(request);
         }
 
         /// <summary>
@@ -386,11 +396,11 @@ namespace OpenMetaverse
                             visualParams.Add(block.ParamValue);
                         }
 
-                        LLObject.TextureEntry textureEntry = new Primitive.TextureEntry(appearance.ObjectData.TextureEntry, 0,
+                        Primitive.TextureEntry textureEntry = new Primitive.TextureEntry(appearance.ObjectData.TextureEntry, 0,
                                 appearance.ObjectData.TextureEntry.Length);
 
-                        LLObject.TextureEntryFace defaultTexture = textureEntry.DefaultTexture;
-                        LLObject.TextureEntryFace[] faceTextures = textureEntry.FaceTextures;
+                        Primitive.TextureEntryFace defaultTexture = textureEntry.DefaultTexture;
+                        Primitive.TextureEntryFace[] faceTextures = textureEntry.FaceTextures;
 
                         try { OnAvatarAppearance(appearance.Sender.ID, appearance.Sender.IsTrial, defaultTexture, faceTextures, visualParams); }
                         catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
@@ -418,7 +428,7 @@ namespace OpenMetaverse
                 properties.FirstLifeText = Utils.BytesToString(reply.PropertiesData.FLAboutText);
                 properties.BornOn = Utils.BytesToString(reply.PropertiesData.BornOn);
                 //properties.CharterMember = Utils.BytesToString(reply.PropertiesData.CharterMember);
-                uint charter = Helpers.BytesToUInt(reply.PropertiesData.CharterMember);
+                uint charter = Utils.BytesToUInt(reply.PropertiesData.CharterMember);
                 if ( charter == 0 ) {
                     properties.CharterMember = "Resident";
                 } else if ( charter == 2 ) {
@@ -428,7 +438,7 @@ namespace OpenMetaverse
                 } else {
                     properties.CharterMember = Utils.BytesToString(reply.PropertiesData.CharterMember);
                 }
-                properties.Flags = (Avatar.ProfileFlags)reply.PropertiesData.Flags;
+                properties.Flags = (ProfileFlags)reply.PropertiesData.Flags;
                 properties.ProfileURL = Utils.BytesToString(reply.PropertiesData.ProfileURL);
 
                 OnAvatarProperties(reply.AgentData.AvatarID, properties);

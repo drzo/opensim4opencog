@@ -14,7 +14,7 @@ Global
     Release|Any CPU = Release|Any CPU
   EndGlobalSection
   GlobalSection(ProjectDependencies) = postSolution
-    ({B95B6315-0000-0000-0000-000000000000}).3 = ({29DCFE14-0000-0000-0000-000000000000})
+    ({B95B6315-0000-0000-0000-000000000000}).6 = ({29DCFE14-0000-0000-0000-000000000000})
     ({3164F259-0000-0000-0000-000000000000}).1 = ({29DCFE14-0000-0000-0000-000000000000})
   EndGlobalSection
   GlobalSection(ProjectConfigurationPlatforms) = postSolution
