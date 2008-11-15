@@ -2458,6 +2458,50 @@ namespace OpenMetaverse
 
             Client.Network.SendPacket(request, sim);
         }
+
+        /// <summary>
+        /// Create or update profile pick
+        /// </summary>
+        /// <param name="pickID">UUID of the pick to update, or random UUID to create a new pick</param>
+        /// <param name="topPick">Is this a top pick? (typically false)</param>
+        /// <param name="parcelID">UUID of the parcel (UUID.Zero for the current parcel)</param>
+        /// <param name="name">Name of the pick</param>
+        /// <param name="globalPosition">Global position of the pick landmark</param>
+        /// <param name="textureID">UUID of the image displayed with the pick</param>
+        /// <param name="description">Long description of the pick</param>
+        public void PickInfoUpdate(UUID pickID, bool topPick, UUID parcelID, string name, Vector3d globalPosition, UUID textureID, string description)
+        {
+            PickInfoUpdatePacket pick = new PickInfoUpdatePacket();
+            pick.AgentData.AgentID = Client.Self.AgentID;
+            pick.AgentData.SessionID = Client.Self.SessionID;
+            pick.Data.PickID = pickID;
+            pick.Data.Desc = Utils.StringToBytes(description);
+            pick.Data.CreatorID = Client.Self.AgentID;
+            pick.Data.TopPick = topPick;
+            pick.Data.ParcelID = parcelID;
+            pick.Data.Name = Utils.StringToBytes(name);
+            pick.Data.SnapshotID = textureID;
+            pick.Data.PosGlobal = Client.Self.GlobalPosition;
+            pick.Data.SortOrder = 0;
+            pick.Data.Enabled = false;
+
+            Client.Network.SendPacket(pick);
+        }
+
+        /// <summary>
+        /// Delete profile pick
+        /// </summary>
+        /// <param name="pickID">UUID of the pick to delete</param>
+        public void PickDelete(UUID pickID)
+        {
+            PickDeletePacket delete = new PickDeletePacket();
+            delete.AgentData.AgentID = Client.Self.AgentID;
+            delete.AgentData.SessionID = Client.Self.sessionID;
+            delete.Data.PickID = pickID;
+
+            Client.Network.SendPacket(delete);
+        }
+
         #endregion Misc
 
         #region Packet Handlers

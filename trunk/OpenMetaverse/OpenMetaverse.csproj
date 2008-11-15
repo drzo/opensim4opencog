@@ -182,10 +182,6 @@
     <Compile Include="InventoryNodeDictionary.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="LLSD\BinaryLLSD.cs" />
-    <Compile Include="LLSD\LLSD.cs" />
-    <Compile Include="LLSD\NotationLLSD.cs" />
-    <Compile Include="LLSD\XmlLLSD.cs" />
     <Compile Include="Logger.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -236,9 +232,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="TerrainManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="TextureEntry.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ThreadUtil.cs">
@@ -316,10 +309,6 @@
     <Compile Include="Voice\VoiceSession.cs">
       <SubType>Code</SubType>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="LLSD\xml-llsd.dtd" />
-    <None Include="LLSD\xml-llsd.xsd" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

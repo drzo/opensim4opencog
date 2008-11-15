@@ -548,8 +548,11 @@ namespace OpenMetaverse
         /// left empty</param>
         /// <param name="vFileType">Asset type of <code>vFileID</code>, or
         /// <code>AssetType.Unknown</code> if filename is not empty</param>
+        /// <param name="fromCache">Sets the FilePath in the request to Cache
+        /// (4) if true, otherwise Unknown (0) is used</param>
         /// <returns></returns>
-        public ulong RequestAssetXfer(string filename, bool deleteOnCompletion, bool useBigPackets, UUID vFileID, AssetType vFileType)
+        public ulong RequestAssetXfer(string filename, bool deleteOnCompletion, bool useBigPackets, UUID vFileID, AssetType vFileType,
+            bool fromCache)
         {
             UUID uuid = UUID.Random();
             ulong id = uuid.GetULong();
@@ -567,8 +570,7 @@ namespace OpenMetaverse
             RequestXferPacket request = new RequestXferPacket();
             request.XferID.ID = id;
             request.XferID.Filename = Utils.StringToBytes(filename);
-            request.XferID.FilePath = 4; // "Cache". This is a horrible thing that hardcodes a file path enumeration in to the
-                                         // protocol. For asset downloads we should only ever need this value
+            request.XferID.FilePath = fromCache ? (byte)4 : (byte)0;
             request.XferID.DeleteOnCompletion = deleteOnCompletion;
             request.XferID.UseBigPackets = useBigPackets;
             request.XferID.VFileID = vFileID;
@@ -1285,6 +1287,8 @@ namespace OpenMetaverse
                     {
                         Logger.Log("Out of order Xfer packet in a download, got " + packetNum + " expecting " + download.PacketNum,
                             Helpers.LogLevel.Warning, Client);
+                        // Re-confirm the last packet we actually received
+                        SendConfirmXferPacket(download.XferID, download.PacketNum - 1);
                     }
 
                     return;
@@ -1292,11 +1296,13 @@ namespace OpenMetaverse
 
                 if (packetNum == 0)
                 {
-                    // This is the first packet received in the download, the first four bytes are a network order size integer
-                    // FIXME: Is this actually true?
+                    // This is the first packet received in the download, the first four bytes are a size integer
+                    // in little endian ordering
                     byte[] bytes = xfer.DataPacket.Data;
-                    download.Size = (bytes[3] + (bytes[2] << 8) + (bytes[1] << 16) + (bytes[0] << 24));
+                    download.Size = (bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24));
                     download.AssetData = new byte[download.Size];
+
+                    Logger.DebugLog("Received first packet in an Xfer download of size " + download.Size);
 
                     Buffer.BlockCopy(xfer.DataPacket.Data, 4, download.AssetData, 0, xfer.DataPacket.Data.Length - 4);
                     download.Transferred += xfer.DataPacket.Data.Length - 4;

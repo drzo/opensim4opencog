@@ -380,7 +380,7 @@ namespace cogbot
             enqueueLispTask("(on-avatar-look (@\"" + sourceID.ToString() + "\") (@\""+targetID.ToString() + "\") (@\"" + lookType.ToString() + "\") )");
         }
 
-        void Appearance_OnAppearanceUpdated(LLObject.TextureEntry te)
+        void Appearance_OnAppearanceUpdated(Primitive.TextureEntry te)
         {
             output("TextForm Appearance_OnAppearanceUpdated: " + te.ToString());
         }
