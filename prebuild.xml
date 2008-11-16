@@ -74,15 +74,22 @@
       <Reference name="System.Xml" localCopy="false"/>
       <Reference name="OpenMetaverseTypes" localCopy="false"/>
       <Files>
-       <Match pattern="*.cs" recurse="false"/>
-     <Match path="Capabilities" pattern="*.cs" recurse="true"/>
-     <Match path="Imaging" pattern="*.cs" recurse="true"/>
-     <Match path="Interfaces" pattern="*.cs" recurse="true"/>
-     <Match path="LLSD" pattern="*.cs" recurse="true"/>
-     <Match path="Rendering" pattern="*.cs" recurse="true"/>
-     <Match path="Voice" pattern="*.cs" recurse="true"/>
+
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="Color4.cs"/>
+          <Exclude name="Matrix4.cs"/>
+          <Exclude name="Quaternion.cs"/>
+          <Exclude name="Ray.cs"/>
+          <Exclude name="Utils.cs"/>
+          <Exclude name="UtilsConversions.cs"/>
+          <Exclude name="UUID.cs"/>
+          <Exclude name="Vector2.cs"/>
+          <Exclude name="Vector3.cs"/>
+          <Exclude name="Vector3d.cs"/>
+          <Exclude name="Vector4.cs"/>
+        </Match>
       </Files>
-    </Project>
+      </Project>
 
 
 
