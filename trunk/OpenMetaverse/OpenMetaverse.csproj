@@ -1,4 +1,4 @@
-﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
@@ -6,8 +6,7 @@
     <ProjectGuid>{3164F259-0000-0000-0000-000000000000}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ApplicationIcon>
-    </ApplicationIcon>
+    <ApplicationIcon></ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
     <AssemblyName>OpenMetaverse</AssemblyName>
@@ -16,11 +15,9 @@
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <DelaySign>false</DelaySign>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>
-    </AppDesignerFolder>
+    <AppDesignerFolder></AppDesignerFolder>
     <RootNamespace>OpenMetaverse</RootNamespace>
-    <StartupObject>
-    </StartupObject>
+    <StartupObject></StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
   </PropertyGroup>
@@ -31,8 +28,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <DocumentationFile>
-    </DocumentationFile>
+    <DocumentationFile></DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
@@ -41,8 +37,7 @@
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
-    <NoWarn>
-    </NoWarn>
+    <NoWarn></NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -51,8 +46,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE</DefineConstants>
-    <DocumentationFile>
-    </DocumentationFile>
+    <DocumentationFile></DocumentationFile>
     <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
@@ -61,27 +55,26 @@
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
-    <NoWarn>
-    </NoWarn>
+    <NoWarn></NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net">
+    <Reference Include="log4net" >
       <HintPath>log4net.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System">
+    <Reference Include="System" >
       <HintPath>System.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Data">
+    <Reference Include="System.Data" >
       <HintPath>System.Data.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Drawing">
+    <Reference Include="System.Drawing" >
       <HintPath>System.Drawing.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Xml">
+    <Reference Include="System.Xml" >
       <HintPath>System.Xml.dll</HintPath>
       <Private>False</Private>
     </Reference>
@@ -91,7 +84,7 @@
       <Name>OpenMetaverseTypes</Name>
       <Project>{29DCFE14-0000-0000-0000-000000000000}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-      <Private>False</Private>
+			<Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -209,9 +202,6 @@
     <Compile Include="Permissions.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Primitives\ParticleSystem.cs" />
-    <Compile Include="Primitives\Primitive.cs" />
-    <Compile Include="Primitives\TextureEntry.cs" />
     <Compile Include="ProtocolManager.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -224,10 +214,6 @@
     <Compile Include="SoundManager.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="StructuredData\BinaryLLSD.cs" />
-    <Compile Include="StructuredData\NotationLLSD.cs" />
-    <Compile Include="StructuredData\StructuredData.cs" />
-    <Compile Include="StructuredData\XmlLLSD.cs" />
     <Compile Include="TerrainCompressor.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -282,10 +268,31 @@
     <Compile Include="Interfaces\IRendering.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Primitives\ParticleSystem.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Primitives\Primitive.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Primitives\TextureEntry.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Rendering\LindenMesh.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Rendering\Rendering.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="StructuredData\BinaryLLSD.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="StructuredData\NotationLLSD.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="StructuredData\StructuredData.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="StructuredData\XmlLLSD.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Voice\TCPPipe.cs">
