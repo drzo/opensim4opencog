@@ -68,7 +68,34 @@
 (def (on-chat agent message)
   (block
     (thisClient.msgClient (@"(heard ({0}) '{1}')" (str agent)(str message)) )
+    ;(thisClient.ExecuteCommand (@"say I heard ({0}) '{1}')" (str agent)(str message)) )
+    ;(thisClient.ExecuteCommand (@"say I heard ({0}) '{1}')" (str agent)(str message)) )
+    ; (thisClient.ExecuteCommand (@"{0}" (str message)) )
     )
+     (set mymsg (str message))
+    ; (set mymsgList (into nil (mymsg.Split(" ") )))
+     
+    ; (when (member mymsgList wamo )
+    ;  (thisClient.ExecuteCommand "say I just saw wamo")
+    ;  )
+      
+     (when (>= (mymsg.IndexOf "hello" ) 0) 
+        (thisClient.ExecuteCommand (@"say Hello there {0} !!!" (str agent) ) )
+     )
+      (when (>= (mymsg.IndexOf "use" ) 0) 
+        (thisClient.ExecuteCommand (@"{0}" (str message)) )
+     )
+     (when (>= (mymsg.IndexOf "follow" ) 0) 
+        (thisClient.ExecuteCommand (@"{0}" (str message)) )
+     )
+     (when (>= (mymsg.IndexOf "cogbot" ) 0)
+       (block 
+        (set mycommand (str message))
+        (set mycommand1 (mycommand.Replace "cogbot " ""))
+        (thisClient.ExecuteCommand  mycommand1 )
+        )
+     )
+    
  )
  
  ;  (on-instantmessage agent message) -> "(heard (agent) message)";
