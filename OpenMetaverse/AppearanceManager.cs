@@ -1016,6 +1016,8 @@ namespace OpenMetaverse
 
         private void DownloadWearableAssets()
         {
+            try {  
+
             foreach (KeyValuePair<WearableType, WearableData> kvp in Wearables.Dictionary)
             {
                 Logger.DebugLog("Requesting asset for wearable item " + kvp.Value.Item.WearableType + " (" + kvp.Value.Item.AssetUUID + ")", Client);
@@ -1027,6 +1029,9 @@ namespace OpenMetaverse
                 PendingAssetDownload pad = AssetDownloads.Dequeue();
                 Assets.RequestAsset(pad.Id, pad.Type, true);
             }
+
+            }
+            catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
         }
 
         private void UploadBake(Baker bake)

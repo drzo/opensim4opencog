@@ -715,7 +715,7 @@ namespace cogbot
                                  }
 
 
-                                 if (ii.Name == itemName)
+                                 if (String.Compare(ii.Name,itemName,true)==0)
                                  {
                                      // we found a matcher so lets do our ops
                                      if (operation == "wear") client.Appearance.WearOutfit(ii.UUID, false);

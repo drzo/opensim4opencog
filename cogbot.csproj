@@ -1,316 +1,270 @@
-<VisualStudioProject>
-    <CSHARP
-				ProjectType = "Local"
-				ProductVersion = "7.0.9254"
-				SchemaVersion = "1.0"
-				ProjectGuid = "{B95B6315-0000-0000-0000-000000000000}"
-		>
-				<Build>
-            <Settings
-				  ApplicationIcon = ""
-				  AssemblyKeyContainerName = ""
-				  AssemblyName = "cogbot"
-				  AssemblyOriginatorKeyFile = ""
-				  DefaultClientScript = "JScript"
-				  DefaultHTMLPageLayout = "Grid"
-				  DefaultTargetSchema = "IE50"
-				  DelaySign = "false"
-				  NoStandardLibraries = "false"
-				  OutputType = "Exe"
-				  PreBuildEvent = ""
-				  PostBuildEvent = ""
-				  RunPostBuildEvent = "OnBuildSuccess"
-				  RootNamespace = "cogbot"
-				  StartupObject = ""
-		     >
-				  <Config
-				      Name = "Debug"
-				      AllowUnsafeBlocks = "true"
-				      BaseAddress = "285212672"
-				      CheckForOverflowUnderflow = "false"
-				      ConfigurationOverrideFile = ""
-				      DefineConstants = "TRACE;DEBUG"
-				      DocumentationFile = ""
-				      DebugSymbols = "true"
-				      FileAlignment = "4096"
-				      IncrementalBuild = "true"
-				      Optimize = "false"
-                    OutputPath = "bin\"
-                    RegisterForComInterop = "false"
-                    RemoveIntegerChecks = "false"
-                    TreatWarningsAsErrors = "false"
-                    WarningLevel = "4"
-                />
-				  <Config
-				      Name = "Release"
-				      AllowUnsafeBlocks = "true"
-				      BaseAddress = "285212672"
-				      CheckForOverflowUnderflow = "false"
-				      ConfigurationOverrideFile = ""
-				      DefineConstants = "TRACE"
-				      DocumentationFile = ""
-				      DebugSymbols = "false"
-				      FileAlignment = "4096"
-				      IncrementalBuild = "true"
-				      Optimize = "true"
-                    OutputPath = "bin\"
-                    RegisterForComInterop = "false"
-                    RemoveIntegerChecks = "false"
-                    TreatWarningsAsErrors = "false"
-                    WarningLevel = "4"
-                />
-            </Settings>
-            <References>
-                <Reference
-                    Name = "DotLisp"
-                    AssemblyName = "DotLisp"
-                    Project = "{5B1B186D-0000-0000-0000-000000000000}"
-                    Package = "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"
-                />
-                <Reference
-                    Name = "log4net.dll"
-                    AssemblyName = "log4net.dll"
-                />
-                <Reference
-                    Name = "OpenMetaverse"
-                    AssemblyName = "OpenMetaverse"
-                    Project = "{3164F259-0000-0000-0000-000000000000}"
-                    Package = "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"
-                />
-                <Reference
-                    Name = "System"
-                    AssemblyName = "System"
-                />
-                <Reference
-                    Name = "System.Data"
-                    AssemblyName = "System.Data"
-                />
-                <Reference
-                    Name = "System.Drawing"
-                    AssemblyName = "System.Drawing"
-                />
-                <Reference
-                    Name = "System.Text"
-                    AssemblyName = "System.Text"
-                />
-                <Reference
-                    Name = "System.Windows.Forms"
-                    AssemblyName = "System.Windows.Forms"
-                />
-                <Reference
-                    Name = "System.Xml"
-                    AssemblyName = "System.Xml"
-                />
-            </References>
-        </Build>
-        <Files>
-            <Include>
-                <File
-                    RelPath = "Actions\Action.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Describe.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Whisper.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Stop.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Help.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Parser.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Say.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Use.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Teleport.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Follow.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Locate.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Stand.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Logout.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Jump.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Crouch.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Fly.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\StopFlying.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Sit.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Move.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Login.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Where.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Actions\Mute.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Listeners\Teleport.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Listeners\Chat.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Listeners\Avatars.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Listeners\Whisper.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Listeners\Bump.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Listeners\Listener.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Listeners\Sound.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Listeners\Objects.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Properties\AssemblyInfo.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Properties\Resources.Designer.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Properties\Settings.Designer.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Tutorials\Tutorial.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Tutorials\Tutorial1.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Utilities\XMLInterpreter.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "LoginForm.Designer.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "LoginForm.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Program.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "TextForm.Designer.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "TextForm.cs"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-            </Include>
-        </Files>
-    </CSHARP>
-</VisualStudioProject>
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{B95B6315-0000-0000-0000-000000000000}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ApplicationIcon>
+    </ApplicationIcon>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>cogbot</AssemblyName>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>
+    </AppDesignerFolder>
+    <RootNamespace>cogbot</RootNamespace>
+    <StartupObject>
+    </StartupObject>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>True</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>False</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <NoWarn>
+    </NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>False</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>True</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <NoWarn>
+    </NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DotLisp.dll">
+      <HintPath>bin\DotLisp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.ClassLibrary.dll">
+      <HintPath>bin\IKVM.OpenJDK.ClassLibrary.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="IKVM.Runtime.dll">
+      <HintPath>bin\IKVM.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="log4net.dll">
+      <HintPath>bin\log4net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="OpenCyc.dll">
+      <HintPath>bin\OpenCyc.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="OpenMetaverse.dll">
+      <HintPath>bin\OpenMetaverse.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>System.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Data">
+      <HintPath>System.Data.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <HintPath>System.Drawing.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <HintPath>System.Windows.Forms.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml">
+      <HintPath>System.Xml.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FreshCogbot\OpenMetaverse\Types\OpenMetaverseTypes.csproj">
+      <Name>OpenMetaverseTypes</Name>
+      <Project>{29DCFE14-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Actions\Action.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Crouch.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Describe.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Eval.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Fly.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Follow.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Help.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Jump.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Locate.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Login.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Logout.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Move.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Mute.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Parser.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Say.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Sit.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Stand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Stop.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\StopFlying.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Teleport.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Use.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Wear.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Where.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Whisper.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Listeners\Avatars.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Listeners\Bump.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Listeners\Chat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Listeners\Listener.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Listeners\Objects.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Listeners\Sound.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Listeners\Teleport.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Listeners\Whisper.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <DependentUpon>Resources.cs</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <DependentUpon>Settings.cs</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tutorials\Tutorial.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tutorials\Tutorial1.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Utilities\XMLInterpreter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DotCYC\CycConnectionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DotCYC\CycConnectionForm.Designer.cs">
+      <DependentUpon>CycConnectionForm.cs</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="LoginForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="LoginForm.Designer.cs">
+      <DependentUpon>LoginForm.cs</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Program.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TextForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TextForm.Designer.cs">
+      <DependentUpon>TextForm.cs</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>

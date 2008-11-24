@@ -341,9 +341,8 @@ namespace OpenMetaverse.Imaging
                         offset += 4;
                         packet.end_pos = Marshal.ReadInt32(marshalled.packets, offset);
                         offset += 4;
-                        // Skip the distortion field. WARNING: It looks like there is alignment
-                        // padding in here as well, this needs to be tested on different platforms
-                        offset += 12;
+                        //double distortion = (double)Marshal.ReadInt64(marshalled.packets, offset);
+                        offset += 8;
 
                         packets[i] = packet;
                     }
@@ -359,7 +358,27 @@ namespace OpenMetaverse.Imaging
                         layerInfo[i].End = endPacket.end_pos;
                     }
 
+                    // More sanity checking
+                    if (layerInfo[layerInfo.Length - 1].End <= encoded.Length - 1)
+                    {
                     success = true;
+
+                        for (int i = 0; i < layerInfo.Length; i++)
+                        {
+                            if (layerInfo[i].Start >= layerInfo[i].End ||
+                                (i > 0 && layerInfo[i].Start <= layerInfo[i - 1].End))
+                            {
+                                success = false;
+                                Logger.Log("Inconsistent packet data in JPEG2000 stream", Helpers.LogLevel.Warning);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Logger.Log(String.Format(
+                            "Last packet end in JPEG2000 stream extends beyond the end of the file. filesize={0} layerend={1}",
+                            encoded.Length, layerInfo[layerInfo.Length - 1].End), Helpers.LogLevel.Warning);
+                    }
                 }
                 else
                 {
