@@ -455,8 +455,8 @@ namespace cogbot
         }
         public bool ExecuteCommand(string text)
         {
-            string verb = text.Split(null)[0];
-
+           text = text.Replace("\"", "");
+           string verb = text.Split(null)[0];
             if (actions.ContainsKey(verb))
             {
                 if (text.Length > verb.Length)
@@ -1469,6 +1469,7 @@ namespace cogbot
             try
             {
                 taskQueue = new Queue();
+                output("Start Loading TaskInterperter ... \n");
                 taskInterperter = new Interpreter();
                 taskInterperter.LoadFile("boot.lisp");
                 taskInterperter.LoadFile("extra.lisp");
@@ -1478,6 +1479,7 @@ namespace cogbot
                 {
                     enqueueLispTask(config.startupLisp);
                 }
+                output("Completed Loading TaskInterperter \n");
             }
             catch (Exception e)
             {
@@ -1535,7 +1537,11 @@ namespace cogbot
                 initTaskInterperter();
                 while (true)
                 {
-                    taskTick();
+                    while (taskQueue.Count > 0)
+                    {
+                        taskTick();
+                        Thread.Sleep(1);
+                    }
                     Thread.Sleep(50);
                 }
             }
