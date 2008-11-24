@@ -4,28 +4,18 @@
         <name>OpenMetaverseTypes</name>
     </assembly>
     <members>
-        <member name="T:OpenMetaverse.Vector3d">
+        <member name="T:OpenMetaverse.Vector2">
             <summary>
-            A three-dimensional vector with doubleing-point values
+            A two-dimensional vector with floating-point values
             </summary>
         </member>
-        <member name="F:OpenMetaverse.Vector3d.X">
+        <member name="F:OpenMetaverse.Vector2.X">
             <summary>X value</summary>
         </member>
-        <member name="F:OpenMetaverse.Vector3d.Y">
+        <member name="F:OpenMetaverse.Vector2.Y">
             <summary>Y value</summary>
         </member>
-        <member name="F:OpenMetaverse.Vector3d.Z">
-            <summary>Z value</summary>
-        </member>
-        <member name="M:OpenMetaverse.Vector3d.#ctor(System.Byte[],System.Int32)">
-            <summary>
-            Constructor, builds a vector from a byte array
-            </summary>
-            <param name="byteArray">Byte array containing three eight-byte doubles</param>
-            <param name="pos">Beginning position in the byte array</param>
-        </member>
-        <member name="M:OpenMetaverse.Vector3d.ApproxEquals(OpenMetaverse.Vector3d,System.Double)">
+        <member name="M:OpenMetaverse.Vector2.ApproxEquals(OpenMetaverse.Vector2,System.Single)">
             <summary>
             Test if this vector is equal to another vector, within a given
             tolerance range
@@ -36,73 +26,155 @@
             <returns>True if the magnitude of difference between the two vectors
             is less than the given tolerance, otherwise false</returns>
         </member>
-        <member name="M:OpenMetaverse.Vector3d.CompareTo(OpenMetaverse.Vector3d)">
-            <summary>
-            IComparable.CompareTo implementation
-            </summary>
-        </member>
-        <member name="M:OpenMetaverse.Vector3d.IsFinite">
+        <member name="M:OpenMetaverse.Vector2.IsFinite">
             <summary>
             Test if this vector is composed of all finite numbers
             </summary>
         </member>
-        <member name="M:OpenMetaverse.Vector3d.FromBytes(System.Byte[],System.Int32)">
+        <member name="M:OpenMetaverse.Vector2.CompareTo(OpenMetaverse.Vector2)">
+            <summary>
+            IComparable.CompareTo implementation
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.Vector2.FromBytes(System.Byte[],System.Int32)">
             <summary>
             Builds a vector from a byte array
             </summary>
-            <param name="byteArray">Byte array containing a 24 byte vector</param>
+            <param name="byteArray">Byte array containing two four-byte floats</param>
             <param name="pos">Beginning position in the byte array</param>
         </member>
-        <member name="M:OpenMetaverse.Vector3d.GetBytes">
+        <member name="M:OpenMetaverse.Vector2.GetBytes">
             <summary>
             Returns the raw bytes for this vector
             </summary>
-            <returns>A 24 byte array containing X, Y, and Z</returns>
+            <returns>An eight-byte array containing X and Y</returns>
         </member>
-        <member name="M:OpenMetaverse.Vector3d.Parse(System.String)">
+        <member name="M:OpenMetaverse.Vector2.Parse(System.String)">
             <summary>
             Parse a vector from a string
             </summary>
-            <param name="val">A string representation of a 3D vector, enclosed 
+            <param name="val">A string representation of a 2D vector, enclosed 
             in arrow brackets and separated by commas</param>
         </member>
-        <member name="M:OpenMetaverse.Vector3d.SmoothStep(OpenMetaverse.Vector3d,OpenMetaverse.Vector3d,System.Double)">
+        <member name="M:OpenMetaverse.Vector2.SmoothStep(OpenMetaverse.Vector2,OpenMetaverse.Vector2,System.Single)">
             <summary>
             Interpolates between two vectors using a cubic equation
             </summary>
         </member>
-        <member name="M:OpenMetaverse.Vector3d.ToString">
+        <member name="M:OpenMetaverse.Vector2.ToString">
             <summary>
             Get a formatted string representation of the vector
             </summary>
             <returns>A string representation of the vector</returns>
         </member>
-        <member name="M:OpenMetaverse.Vector3d.ToRawString">
+        <member name="M:OpenMetaverse.Vector2.ToRawString">
             <summary>
             Get a string representation of the vector elements with up to three
             decimal digits and separated by spaces only
             </summary>
             <returns>Raw string representation of the vector</returns>
         </member>
-        <member name="M:OpenMetaverse.Vector3d.op_Modulus(OpenMetaverse.Vector3d,OpenMetaverse.Vector3d)">
+        <member name="F:OpenMetaverse.Vector2.Zero">
+            <summary>A vector with a value of 0,0</summary>
+        </member>
+        <member name="F:OpenMetaverse.Vector2.One">
+            <summary>A vector with a value of 1,1</summary>
+        </member>
+        <member name="F:OpenMetaverse.Vector2.UnitX">
+            <summary>A vector with a value of 1,0</summary>
+        </member>
+        <member name="F:OpenMetaverse.Vector2.UnitY">
+            <summary>A vector with a value of 0,1</summary>
+        </member>
+        <member name="T:OpenMetaverse.Color4">
             <summary>
-            Cross product between two vectors
+            An 8-bit color structure including an alpha channel
             </summary>
         </member>
-        <member name="F:OpenMetaverse.Vector3d.Zero">
-            <summary>A vector with a value of 0,0,0</summary>
+        <member name="F:OpenMetaverse.Color4.R">
+            <summary>Red</summary>
         </member>
-        <member name="F:OpenMetaverse.Vector3d.One">
-            <summary>A vector with a value of 1,1,1</summary>
+        <member name="F:OpenMetaverse.Color4.G">
+            <summary>Green</summary>
         </member>
-        <member name="F:OpenMetaverse.Vector3d.UnitX">
-            <summary>A unit vector facing forward (X axis), value of 1,0,0</summary>
+        <member name="F:OpenMetaverse.Color4.B">
+            <summary>Blue</summary>
         </member>
-        <member name="F:OpenMetaverse.Vector3d.UnitY">
-            <summary>A unit vector facing left (Y axis), value of 0,1,0</summary>
+        <member name="F:OpenMetaverse.Color4.A">
+            <summary>Alpha</summary>
         </member>
-        <member name="F:OpenMetaverse.Vector3d.UnitZ">
-            <summary>A unit vector facing up (Z axis), value of 0,0,1</summary>
+        <member name="M:OpenMetaverse.Color4.#ctor(System.Byte,System.Byte,System.Byte,System.Byte)">
+            <summary>
+            
+            </summary>
+            <param name="r"></param>
+            <param name="g"></param>
+            <param name="b"></param>
+            <param name="a"></param>
+        </member>
+        <member name="M:OpenMetaverse.Color4.#ctor(System.Byte[],System.Int32,System.Boolean)">
+            <summary>
+            Builds a color from a byte array
+            </summary>
+            <param name="byteArray">Byte array containing a 16 byte color</param>
+            <param name="pos">Beginning position in the byte array</param>
+            <param name="inverted">True if the byte array stores inverted values,
+            otherwise false. For example the color black (fully opaque) inverted
+            would be 0xFF 0xFF 0xFF 0x00</param>
+        </member>
+        <member name="M:OpenMetaverse.Color4.#ctor(System.Byte[],System.Int32,System.Boolean,System.Boolean)">
+            <summary>
+            Returns the raw bytes for this vector
+            </summary>
+            <param name="byteArray">Byte array containing a 16 byte color</param>
+            <param name="pos">Beginning position in the byte array</param>
+            <param name="inverted">True if the byte array stores inverted values,
+            otherwise false. For example the color black (fully opaque) inverted
+            would be 0xFF 0xFF 0xFF 0x00</param>
+            <param name="alphaInverted">True if the alpha value is inverted in
+            addition to whatever the inverted parameter is. Setting inverted true
+            and alphaInverted true will flip the alpha value back to non-inverted,
+            but keep the other color bytes inverted</param>
+            <returns>A 16 byte array containing R, G, B, and A</returns>
+        </member>
+        <member name="M:OpenMetaverse.Color4.#ctor(OpenMetaverse.Color4)">
+            <summary>
+            Copy constructor
+            </summary>
+            <param name="color">Color to copy</param>
+        </member>
+        <member name="M:OpenMetaverse.Color4.CompareTo(OpenMetaverse.Color4)">
+            <summary>
+            IComparable.CompareTo implementation
+            </summary>
+            <remarks>Sorting ends up like this: |--Grayscale--||--Color--|.
+            Alpha is only used when the colors are otherwise equivalent</remarks>
+        </member>
+        <member name="M:OpenMetaverse.Color4.FromBytes(System.Byte[],System.Int32,System.Boolean,System.Boolean)">
+            <summary>
+            Builds a color from a byte array
+            </summary>
+            <param name="byteArray">Byte array containing a 16 byte color</param>
+            <param name="pos">Beginning position in the byte array</param>
+            <param name="inverted">True if the byte array stores inverted values,
+            otherwise false. For example the color black (fully opaque) inverted
+            would be 0xFF 0xFF 0xFF 0x00</param>
+            <param name="alphaInverted">True if the alpha value is inverted in
+            addition to whatever the inverted parameter is. Setting inverted true
+            and alphaInverted true will flip the alpha value back to non-inverted,
+            but keep the other color bytes inverted</param>
+        </member>
+        <member name="M:OpenMetaverse.Color4.GetBytes(System.Boolean)">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="F:OpenMetaverse.Color4.Black">
+            <summary>A Color4 with zero RGB values and full alpha (1.0)</summary>
+        </member>
+        <member name="F:OpenMetaverse.Color4.White">
+            <summary>A Color4 with full RGB values (1.0) and full alpha (1.0)</summary>
         </member>
         <member name="F:OpenMetaverse.Utils.DEG_TO_RAD">
             <summary>Used for converting degrees to radians</summary>
@@ -110,86 +182,70 @@
         <member name="F:OpenMetaverse.Utils.RAD_TO_DEG">
             <summary>Used for converting radians to degrees</summary>
         </member>
-        <member name="F:OpenMetaverse.Utils.EnUsCulture">
-            <summary>Provide a single instance of the CultureInfo class to
-            help parsing in situations where the grid assumes an en-us 
-            culture</summary>
-        </member>
-        <member name="F:OpenMetaverse.Utils.Epoch">
-            <summary>UNIX epoch in DateTime format</summary>
-        </member>
-        <member name="F:OpenMetaverse.Utils.MD5Builder">
-            <summary>Provide a single instance of the MD5 class to avoid making
-            duplicate copies</summary>
-        </member>
-        <member name="M:OpenMetaverse.Utils.Clamp(System.Single,System.Single,System.Single)">
+        <member name="M:OpenMetaverse.Utils.BytesToInt(System.Byte[],System.Int32)">
             <summary>
-            Clamp a given value between a range
+            Convert the first four bytes starting at the given position in
+            little endian ordering to a signed integer
             </summary>
-            <param name="value">Value to clamp</param>
-            <param name="min">Minimum allowable value</param>
-            <param name="max">Maximum allowable value</param>
-            <returns>A value inclusively between lower and upper</returns>
+            <param name="bytes">Byte array containing the int</param>
+            <param name="pos">Position to start reading the int from</param>
+            <returns>A signed integer, will be zero if an int can't be read
+            at the given position</returns>
         </member>
-        <member name="M:OpenMetaverse.Utils.Clamp(System.Double,System.Double,System.Double)">
+        <member name="M:OpenMetaverse.Utils.BytesToInt(System.Byte[])">
             <summary>
-            Clamp a given value between a range
+            Convert the first four bytes of the given array in little endian
+            ordering to a signed integer
             </summary>
-            <param name="value">Value to clamp</param>
-            <param name="min">Minimum allowable value</param>
-            <param name="max">Maximum allowable value</param>
-            <returns>A value inclusively between lower and upper</returns>
+            <param name="bytes">An array four bytes or longer</param>
+            <returns>A signed integer, will be zero if the array contains
+            less than four bytes</returns>
         </member>
-        <member name="M:OpenMetaverse.Utils.Round(System.Single)">
+        <member name="M:OpenMetaverse.Utils.BytesToUInt16(System.Byte[],System.Int32)">
             <summary>
-            Round a floating-point value to the nearest integer
+            Convert the first two bytes starting at the given position in
+            little endian ordering to an unsigned short
             </summary>
-            <param name="val">Floating point number to round</param>
-            <returns>Integer</returns>
+            <param name="bytes">Byte array containing the ushort</param>
+            <param name="pos">Position to start reading the ushort from</param>
+            <returns>An unsigned short, will be zero if a ushort can't be read
+            at the given position</returns>
         </member>
-        <member name="M:OpenMetaverse.Utils.IsFinite(System.Single)">
+        <member name="M:OpenMetaverse.Utils.BytesToUInt16(System.Byte[])">
             <summary>
-            Test if a single precision float is a finite number
+            Convert two bytes in little endian ordering to an unsigned short
             </summary>
+            <param name="bytes">Byte array containing the ushort</param>
+            <returns>An unsigned short, will be zero if a ushort can't be
+            read</returns>
         </member>
-        <member name="M:OpenMetaverse.Utils.IsFinite(System.Double)">
+        <member name="M:OpenMetaverse.Utils.BytesToUInt(System.Byte[],System.Int32)">
             <summary>
-            Test if a double precision float is a finite number
+            Convert the first four bytes starting at the given position in
+            little endian ordering to an unsigned integer
             </summary>
+            <param name="bytes">Byte array containing the uint</param>
+            <param name="pos">Position to start reading the uint from</param>
+            <returns>An unsigned integer, will be zero if a uint can't be read
+            at the given position</returns>
         </member>
-        <member name="M:OpenMetaverse.Utils.Distance(System.Single,System.Single)">
+        <member name="M:OpenMetaverse.Utils.BytesToUInt(System.Byte[])">
             <summary>
-            Get the distance between two floating-point values
+            Convert the first four bytes of the given array in little endian
+            ordering to an unsigned integer
             </summary>
-            <param name="value1">First value</param>
-            <param name="value2">Second value</param>
-            <returns>The distance between the two values</returns>
+            <param name="bytes">An array four bytes or longer</param>
+            <returns>An unsigned integer, will be zero if the array contains
+            less than four bytes</returns>
         </member>
-        <member name="M:OpenMetaverse.Utils.MD5(System.Byte[])">
+        <member name="M:OpenMetaverse.Utils.BytesToUInt64(System.Byte[])">
             <summary>
-            Compute the MD5 hash for a byte array
+            Convert the first eight bytes of the given array in little endian
+            ordering to an unsigned 64-bit integer
             </summary>
-            <param name="data">Byte array to compute the hash for</param>
-            <returns>MD5 hash of the input data</returns>
-        </member>
-        <member name="M:OpenMetaverse.Utils.MD5(System.String)">
-            <summary>
-            Calculate the MD5 hash of a given string
-            </summary>
-            <param name="password">The password to hash</param>
-            <returns>An MD5 hash in string format, with $1$ prepended</returns>
-        </member>
-        <member name="M:OpenMetaverse.Utils.GetRunningPlatform">
-            <summary>
-            Get the current running platform
-            </summary>
-            <returns>Enumeration of the current platform we are running on</returns>
-        </member>
-        <member name="M:OpenMetaverse.Utils.GetRunningRuntime">
-            <summary>
-            Get the current running runtime
-            </summary>
-            <returns>Enumeration of the current runtime we are running on</returns>
+            <param name="bytes">An array eight bytes or longer</param>
+            <returns>An unsigned 64-bit integer, will be zero if the array
+            contains less than eight bytes</returns>
         </member>
         <member name="M:OpenMetaverse.Utils.BytesToFloat(System.Byte[],System.Int32)">
             <summary>
@@ -202,14 +258,27 @@
             the byte array</param>
             <returns>Single precision value</returns>
         </member>
-        <member name="M:OpenMetaverse.Utils.FloatToByte(System.Single,System.Single,System.Single)">
+        <member name="M:OpenMetaverse.Utils.IntToBytes(System.Int32)">
             <summary>
-            Convert a float value to a byte given a minimum and maximum range
+            Convert an integer to a byte array in little endian format
             </summary>
-            <param name="val">Value to convert to a byte</param>
-            <param name="lower">Minimum value range</param>
-            <param name="upper">Maximum value range</param>
-            <returns>A single byte representing the original float value</returns>
+            <param name="value">The integer to convert</param>
+            <returns>A four byte little endian array</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.Int64ToBytes(System.Int64)">
+            <summary>
+            Convert a 64-bit integer to a byte array in little endian format
+            </summary>
+            <param name="value">The value to convert</param>
+            <returns>An 8 byte little endian array</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.UInt64ToBytes(System.UInt64)">
+            <summary>
+            Convert a 64-bit unsigned integer to a byte array in little endian
+            format
+            </summary>
+            <param name="value">The value to convert</param>
+            <returns>An 8 byte little endian array</returns>
         </member>
         <member name="M:OpenMetaverse.Utils.FloatToBytes(System.Single)">
             <summary>
@@ -220,12 +289,13 @@
             <returns>A four byte array containing the value in little endian
             ordering</returns>
         </member>
-        <member name="M:OpenMetaverse.Utils.IPToUInt(System.Net.IPAddress)">
+        <member name="M:OpenMetaverse.Utils.UIntToHexString(System.UInt32)">
             <summary>
-            Convert an IP address object to an unsigned 32-bit integer
+            Converts an unsigned integer to a hexadecimal string
             </summary>
-            <param name="address">IP address to convert</param>
-            <returns>32-bit unsigned integer holding the IP address bits</returns>
+            <param name="i">An unsigned integer to convert to a string</param>
+            <returns>A hexadecimal string 10 characters long</returns>
+            <example>0x7fffffff</example>
         </member>
         <member name="M:OpenMetaverse.Utils.BytesToString(System.Byte[])">
             <summary>
@@ -262,6 +332,15 @@
             <param name="str">The string to convert</param>
             <returns>A null-terminated UTF8 byte array</returns>
         </member>
+        <member name="M:OpenMetaverse.Utils.HexStringToBytes(System.String,System.Boolean)">
+            <summary>
+            Converts a string containing hexadecimal characters to a byte array
+            </summary>
+            <param name="hexString">String containing hexadecimal characters</param>
+            <param name="handleDirty">If true, gracefully handles null, empty and
+            uneven strings as well as stripping unconvertable characters</param>
+            <returns>The converted byte array</returns>
+        </member>
         <member name="M:OpenMetaverse.Utils.IsHexDigit(System.Char)">
             <summary>
             Returns true is c is a hexadecimal digit (A-F, a-f, 0-9)
@@ -275,6 +354,90 @@
             </summary>
             <param name="hex">1 or 2 character string</param>
             <returns>byte</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.FloatToByte(System.Single,System.Single,System.Single)">
+            <summary>
+            Convert a float value to a byte given a minimum and maximum range
+            </summary>
+            <param name="val">Value to convert to a byte</param>
+            <param name="lower">Minimum value range</param>
+            <param name="upper">Maximum value range</param>
+            <returns>A single byte representing the original float value</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.ByteToFloat(System.Byte[],System.Int32,System.Single,System.Single)">
+            <summary>
+            Convert a byte to a float value given a minimum and maximum range
+            </summary>
+            <param name="bytes">Byte array to get the byte from</param>
+            <param name="pos">Position in the byte array the desired byte is at</param>
+            <param name="lower">Minimum value range</param>
+            <param name="upper">Maximum value range</param>
+            <returns>A float value inclusively between lower and upper</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.ByteToFloat(System.Byte,System.Single,System.Single)">
+            <summary>
+            Convert a byte to a float value given a minimum and maximum range
+            </summary>
+            <param name="val">Byte to convert to a float value</param>
+            <param name="lower">Minimum value range</param>
+            <param name="upper">Maximum value range</param>
+            <returns>A float value inclusively between lower and upper</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.TryParseSingle(System.String,System.Single@)">
+            <summary>
+            Attempts to parse a floating point value from a string, using an
+            EN-US number format
+            </summary>
+            <param name="s">String to parse</param>
+            <param name="result">Resulting floating point number</param>
+            <returns>True if the parse was successful, otherwise false</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.TryParseDouble(System.String,System.Double@)">
+            <summary>
+            Attempts to parse a floating point value from a string, using an
+            EN-US number format
+            </summary>
+            <param name="s">String to parse</param>
+            <param name="result">Resulting floating point number</param>
+            <returns>True if the parse was successful, otherwise false</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.TryParseHex(System.String,System.UInt32@)">
+            <summary>
+            Tries to parse an unsigned 32-bit integer from a hexadecimal string
+            </summary>
+            <param name="s">String to parse</param>
+            <param name="result">Resulting integer</param>
+            <returns>True if the parse was successful, otherwise false</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.CopyBytes(System.Byte[])">
+            <summary>
+            Copy a byte array
+            </summary>
+            <param name="bytes">Byte array to copy</param>
+            <returns>A copy of the given byte array</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.UIntsToLong(System.UInt32,System.UInt32)">
+            <summary>
+            Packs to 32-bit unsigned integers in to a 64-bit unsigned integer
+            </summary>
+            <param name="a">The left-hand (or X) value</param>
+            <param name="b">The right-hand (or Y) value</param>
+            <returns>A 64-bit integer containing the two 32-bit input values</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.LongToUInts(System.UInt64,System.UInt32@,System.UInt32@)">
+            <summary>
+            Unpacks two 32-bit unsigned integers from a 64-bit unsigned integer
+            </summary>
+            <param name="a">The 64-bit input integer</param>
+            <param name="b">The left-hand (or X) output value</param>
+            <param name="c">The right-hand (or Y) output value</param>
+        </member>
+        <member name="M:OpenMetaverse.Utils.IPToUInt(System.Net.IPAddress)">
+            <summary>
+            Convert an IP address object to an unsigned 32-bit integer
+            </summary>
+            <param name="address">IP address to convert</param>
+            <returns>32-bit unsigned integer holding the IP address bits</returns>
         </member>
         <member name="M:OpenMetaverse.Utils.GetUnixTime">
             <summary>
@@ -316,31 +479,115 @@
             <param name="lhs">First value</param>
             <param name="rhs">Second value</param>
         </member>
-        <member name="M:OpenMetaverse.Utils.TryParseSingle(System.String,System.Single@)">
+        <member name="M:OpenMetaverse.Utils.EnumTryParse``1(System.String,``0@)">
             <summary>
-            Attempts to parse a floating point value from a string, using an
-            EN-US number format
+            Try to parse an enumeration value from a string
             </summary>
-            <param name="s">String to parse</param>
-            <param name="result">Resulting floating point number</param>
-            <returns>True if the parse was successful, otherwise false</returns>
+            <typeparam name="T">Enumeration type</typeparam>
+            <param name="strType">String value to parse</param>
+            <param name="result">Enumeration value on success</param>
+            <returns>True if the parsing succeeded, otherwise false</returns>
         </member>
-        <member name="M:OpenMetaverse.Utils.TryParseDouble(System.String,System.Double@)">
-            <summary>
-            Attempts to parse a floating point value from a string, using an
-            EN-US number format
-            </summary>
-            <param name="s">String to parse</param>
-            <param name="result">Resulting floating point number</param>
-            <returns>True if the parse was successful, otherwise false</returns>
+        <member name="F:OpenMetaverse.Utils.EnUsCulture">
+            <summary>Provide a single instance of the CultureInfo class to
+            help parsing in situations where the grid assumes an en-us 
+            culture</summary>
         </member>
-        <member name="M:OpenMetaverse.Utils.TryParseHex(System.String,System.UInt32@)">
+        <member name="F:OpenMetaverse.Utils.Epoch">
+            <summary>UNIX epoch in DateTime format</summary>
+        </member>
+        <member name="F:OpenMetaverse.Utils.MD5Builder">
+            <summary>Provide a single instance of the MD5 class to avoid making
+            duplicate copies</summary>
+        </member>
+        <member name="F:OpenMetaverse.Utils.SHA1Builder">
+            <summary>Provide a single instance of the SHA-1 class to avoid
+            making duplicate copies</summary>
+        </member>
+        <member name="M:OpenMetaverse.Utils.Clamp(System.Single,System.Single,System.Single)">
             <summary>
-            Tries to parse an unsigned 32-bit integer from a hexadecimal string
+            Clamp a given value between a range
             </summary>
-            <param name="s">String to parse</param>
-            <param name="result">Resulting integer</param>
-            <returns>True if the parse was successful, otherwise false</returns>
+            <param name="value">Value to clamp</param>
+            <param name="min">Minimum allowable value</param>
+            <param name="max">Maximum allowable value</param>
+            <returns>A value inclusively between lower and upper</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.Clamp(System.Double,System.Double,System.Double)">
+            <summary>
+            Clamp a given value between a range
+            </summary>
+            <param name="value">Value to clamp</param>
+            <param name="min">Minimum allowable value</param>
+            <param name="max">Maximum allowable value</param>
+            <returns>A value inclusively between lower and upper</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.Clamp(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Clamp a given value between a range
+            </summary>
+            <param name="value">Value to clamp</param>
+            <param name="min">Minimum allowable value</param>
+            <param name="max">Maximum allowable value</param>
+            <returns>A value inclusively between lower and upper</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.Round(System.Single)">
+            <summary>
+            Round a floating-point value to the nearest integer
+            </summary>
+            <param name="val">Floating point number to round</param>
+            <returns>Integer</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.IsFinite(System.Single)">
+            <summary>
+            Test if a single precision float is a finite number
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.Utils.IsFinite(System.Double)">
+            <summary>
+            Test if a double precision float is a finite number
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.Utils.Distance(System.Single,System.Single)">
+            <summary>
+            Get the distance between two floating-point values
+            </summary>
+            <param name="value1">First value</param>
+            <param name="value2">Second value</param>
+            <returns>The distance between the two values</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.MD5(System.Byte[])">
+            <summary>
+            Compute the MD5 hash for a byte array
+            </summary>
+            <param name="data">Byte array to compute the hash for</param>
+            <returns>MD5 hash of the input data</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.SHA1(System.Byte[])">
+            <summary>
+            Compute the SHA-1 hash for a byte array
+            </summary>
+            <param name="data">Byte array to compute the hash for</param>
+            <returns>SHA-1 hash of the input data</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.MD5(System.String)">
+            <summary>
+            Calculate the MD5 hash of a given string
+            </summary>
+            <param name="password">The password to hash</param>
+            <returns>An MD5 hash in string format, with $1$ prepended</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.GetRunningPlatform">
+            <summary>
+            Get the current running platform
+            </summary>
+            <returns>Enumeration of the current platform we are running on</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.GetRunningRuntime">
+            <summary>
+            Get the current running runtime
+            </summary>
+            <returns>Enumeration of the current runtime we are running on</returns>
         </member>
         <member name="T:OpenMetaverse.Utils.Platform">
             <summary>
@@ -533,7 +780,7 @@
             <param name="rhs">Second UUID</param>
             <returns>A UUID that is a XOR combination of the two input UUIDs</returns>
         </member>
-        <member name="M:OpenMetaverse.UUID.op_Implicit(System.String)~OpenMetaverse.UUID">
+        <member name="M:OpenMetaverse.UUID.op_Explicit(System.String)~OpenMetaverse.UUID">
             <summary>
             String typecasting operator
             </summary>
@@ -543,96 +790,6 @@
         </member>
         <member name="F:OpenMetaverse.UUID.Zero">
             <summary>An UUID with a value of all zeroes</summary>
-        </member>
-        <member name="T:OpenMetaverse.Color4">
-            <summary>
-            An 8-bit color structure including an alpha channel
-            </summary>
-        </member>
-        <member name="F:OpenMetaverse.Color4.R">
-            <summary>Red</summary>
-        </member>
-        <member name="F:OpenMetaverse.Color4.G">
-            <summary>Green</summary>
-        </member>
-        <member name="F:OpenMetaverse.Color4.B">
-            <summary>Blue</summary>
-        </member>
-        <member name="F:OpenMetaverse.Color4.A">
-            <summary>Alpha</summary>
-        </member>
-        <member name="M:OpenMetaverse.Color4.#ctor(System.Byte,System.Byte,System.Byte,System.Byte)">
-            <summary>
-            
-            </summary>
-            <param name="r"></param>
-            <param name="g"></param>
-            <param name="b"></param>
-            <param name="a"></param>
-        </member>
-        <member name="M:OpenMetaverse.Color4.#ctor(System.Byte[],System.Int32,System.Boolean)">
-            <summary>
-            Builds a color from a byte array
-            </summary>
-            <param name="byteArray">Byte array containing a 16 byte color</param>
-            <param name="pos">Beginning position in the byte array</param>
-            <param name="inverted">True if the byte array stores inverted values,
-            otherwise false. For example the color black (fully opaque) inverted
-            would be 0xFF 0xFF 0xFF 0x00</param>
-        </member>
-        <member name="M:OpenMetaverse.Color4.#ctor(System.Byte[],System.Int32,System.Boolean,System.Boolean)">
-            <summary>
-            Returns the raw bytes for this vector
-            </summary>
-            <param name="byteArray">Byte array containing a 16 byte color</param>
-            <param name="pos">Beginning position in the byte array</param>
-            <param name="inverted">True if the byte array stores inverted values,
-            otherwise false. For example the color black (fully opaque) inverted
-            would be 0xFF 0xFF 0xFF 0x00</param>
-            <param name="alphaInverted">True if the alpha value is inverted in
-            addition to whatever the inverted parameter is. Setting inverted true
-            and alphaInverted true will flip the alpha value back to non-inverted,
-            but keep the other color bytes inverted</param>
-            <returns>A 16 byte array containing R, G, B, and A</returns>
-        </member>
-        <member name="M:OpenMetaverse.Color4.#ctor(OpenMetaverse.Color4)">
-            <summary>
-            Copy constructor
-            </summary>
-            <param name="color">Color to copy</param>
-        </member>
-        <member name="M:OpenMetaverse.Color4.CompareTo(OpenMetaverse.Color4)">
-            <summary>
-            IComparable.CompareTo implementation
-            </summary>
-            <remarks>Sorting ends up like this: |--Grayscale--||--Color--|.
-            Alpha is only used when the colors are otherwise equivalent</remarks>
-        </member>
-        <member name="M:OpenMetaverse.Color4.FromBytes(System.Byte[],System.Int32,System.Boolean,System.Boolean)">
-            <summary>
-            Builds a color from a byte array
-            </summary>
-            <param name="byteArray">Byte array containing a 16 byte color</param>
-            <param name="pos">Beginning position in the byte array</param>
-            <param name="inverted">True if the byte array stores inverted values,
-            otherwise false. For example the color black (fully opaque) inverted
-            would be 0xFF 0xFF 0xFF 0x00</param>
-            <param name="alphaInverted">True if the alpha value is inverted in
-            addition to whatever the inverted parameter is. Setting inverted true
-            and alphaInverted true will flip the alpha value back to non-inverted,
-            but keep the other color bytes inverted</param>
-        </member>
-        <member name="M:OpenMetaverse.Color4.GetBytes(System.Boolean)">
-            <summary>
-            
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="F:OpenMetaverse.Color4.Black">
-            <summary>A Color4 with zero RGB values and full alpha (1.0)</summary>
-        </member>
-        <member name="F:OpenMetaverse.Color4.White">
-            <summary>A Color4 with full RGB values (1.0) and full alpha (1.0)</summary>
         </member>
         <member name="M:OpenMetaverse.Matrix4.GetEulerAngles(System.Single@,System.Single@,System.Single@)">
             <summary>
@@ -661,6 +818,112 @@
             Get a formatted string representation of the vector
             </summary>
             <returns>A string representation of the vector</returns>
+        </member>
+        <member name="F:OpenMetaverse.Matrix4.Zero">
+            <summary>A 4x4 matrix containing all zeroes</summary>
+        </member>
+        <member name="F:OpenMetaverse.Matrix4.Identity">
+            <summary>A 4x4 identity matrix</summary>
+        </member>
+        <member name="T:OpenMetaverse.Vector3d">
+            <summary>
+            A three-dimensional vector with doubleing-point values
+            </summary>
+        </member>
+        <member name="F:OpenMetaverse.Vector3d.X">
+            <summary>X value</summary>
+        </member>
+        <member name="F:OpenMetaverse.Vector3d.Y">
+            <summary>Y value</summary>
+        </member>
+        <member name="F:OpenMetaverse.Vector3d.Z">
+            <summary>Z value</summary>
+        </member>
+        <member name="M:OpenMetaverse.Vector3d.#ctor(System.Byte[],System.Int32)">
+            <summary>
+            Constructor, builds a vector from a byte array
+            </summary>
+            <param name="byteArray">Byte array containing three eight-byte doubles</param>
+            <param name="pos">Beginning position in the byte array</param>
+        </member>
+        <member name="M:OpenMetaverse.Vector3d.ApproxEquals(OpenMetaverse.Vector3d,System.Double)">
+            <summary>
+            Test if this vector is equal to another vector, within a given
+            tolerance range
+            </summary>
+            <param name="vec">Vector to test against</param>
+            <param name="tolerance">The acceptable magnitude of difference
+            between the two vectors</param>
+            <returns>True if the magnitude of difference between the two vectors
+            is less than the given tolerance, otherwise false</returns>
+        </member>
+        <member name="M:OpenMetaverse.Vector3d.CompareTo(OpenMetaverse.Vector3d)">
+            <summary>
+            IComparable.CompareTo implementation
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.Vector3d.IsFinite">
+            <summary>
+            Test if this vector is composed of all finite numbers
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.Vector3d.FromBytes(System.Byte[],System.Int32)">
+            <summary>
+            Builds a vector from a byte array
+            </summary>
+            <param name="byteArray">Byte array containing a 24 byte vector</param>
+            <param name="pos">Beginning position in the byte array</param>
+        </member>
+        <member name="M:OpenMetaverse.Vector3d.GetBytes">
+            <summary>
+            Returns the raw bytes for this vector
+            </summary>
+            <returns>A 24 byte array containing X, Y, and Z</returns>
+        </member>
+        <member name="M:OpenMetaverse.Vector3d.Parse(System.String)">
+            <summary>
+            Parse a vector from a string
+            </summary>
+            <param name="val">A string representation of a 3D vector, enclosed 
+            in arrow brackets and separated by commas</param>
+        </member>
+        <member name="M:OpenMetaverse.Vector3d.SmoothStep(OpenMetaverse.Vector3d,OpenMetaverse.Vector3d,System.Double)">
+            <summary>
+            Interpolates between two vectors using a cubic equation
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.Vector3d.ToString">
+            <summary>
+            Get a formatted string representation of the vector
+            </summary>
+            <returns>A string representation of the vector</returns>
+        </member>
+        <member name="M:OpenMetaverse.Vector3d.ToRawString">
+            <summary>
+            Get a string representation of the vector elements with up to three
+            decimal digits and separated by spaces only
+            </summary>
+            <returns>Raw string representation of the vector</returns>
+        </member>
+        <member name="M:OpenMetaverse.Vector3d.op_Modulus(OpenMetaverse.Vector3d,OpenMetaverse.Vector3d)">
+            <summary>
+            Cross product between two vectors
+            </summary>
+        </member>
+        <member name="F:OpenMetaverse.Vector3d.Zero">
+            <summary>A vector with a value of 0,0,0</summary>
+        </member>
+        <member name="F:OpenMetaverse.Vector3d.One">
+            <summary>A vector with a value of 1,1,1</summary>
+        </member>
+        <member name="F:OpenMetaverse.Vector3d.UnitX">
+            <summary>A unit vector facing forward (X axis), value of 1,0,0</summary>
+        </member>
+        <member name="F:OpenMetaverse.Vector3d.UnitY">
+            <summary>A unit vector facing left (Y axis), value of 0,1,0</summary>
+        </member>
+        <member name="F:OpenMetaverse.Vector3d.UnitZ">
+            <summary>A unit vector facing up (Z axis), value of 0,0,1</summary>
         </member>
         <member name="F:OpenMetaverse.Vector4.X">
             <summary>X value</summary>
@@ -886,18 +1149,6 @@
             <param name="byteArray">Byte array containing three four-byte floats</param>
             <param name="pos">Beginning position in the byte array</param>
         </member>
-        <member name="M:OpenMetaverse.Vector3.Mag(OpenMetaverse.Vector3)">
-            <summary>
-            Calculate the magnitude of the supplied vector
-            </summary>
-        </member>
-        <member name="M:OpenMetaverse.Vector3.Norm(OpenMetaverse.Vector3)">
-            <summary>
-            Returns a normalized version of the supplied vector
-            </summary>
-            <param name="vector">The vector to normalize</param>
-            <returns>A normalized version of the vector</returns>
-        </member>
         <member name="M:OpenMetaverse.Vector3.ApproxEquals(OpenMetaverse.Vector3,System.Single)">
             <summary>
             Test if this vector is equal to another vector, within a given
@@ -983,88 +1234,6 @@
         </member>
         <member name="F:OpenMetaverse.Vector3.UnitZ">
             <summary>A unit vector facing up (Z axis), value 0,0,1</summary>
-        </member>
-        <member name="T:OpenMetaverse.Vector2">
-            <summary>
-            A two-dimensional vector with floating-point values
-            </summary>
-        </member>
-        <member name="F:OpenMetaverse.Vector2.X">
-            <summary>X value</summary>
-        </member>
-        <member name="F:OpenMetaverse.Vector2.Y">
-            <summary>Y value</summary>
-        </member>
-        <member name="M:OpenMetaverse.Vector2.ApproxEquals(OpenMetaverse.Vector2,System.Single)">
-            <summary>
-            Test if this vector is equal to another vector, within a given
-            tolerance range
-            </summary>
-            <param name="vec">Vector to test against</param>
-            <param name="tolerance">The acceptable magnitude of difference
-            between the two vectors</param>
-            <returns>True if the magnitude of difference between the two vectors
-            is less than the given tolerance, otherwise false</returns>
-        </member>
-        <member name="M:OpenMetaverse.Vector2.IsFinite">
-            <summary>
-            Test if this vector is composed of all finite numbers
-            </summary>
-        </member>
-        <member name="M:OpenMetaverse.Vector2.CompareTo(OpenMetaverse.Vector2)">
-            <summary>
-            IComparable.CompareTo implementation
-            </summary>
-        </member>
-        <member name="M:OpenMetaverse.Vector2.FromBytes(System.Byte[],System.Int32)">
-            <summary>
-            Builds a vector from a byte array
-            </summary>
-            <param name="byteArray">Byte array containing two four-byte floats</param>
-            <param name="pos">Beginning position in the byte array</param>
-        </member>
-        <member name="M:OpenMetaverse.Vector2.GetBytes">
-            <summary>
-            Returns the raw bytes for this vector
-            </summary>
-            <returns>An eight-byte array containing X and Y</returns>
-        </member>
-        <member name="M:OpenMetaverse.Vector2.Parse(System.String)">
-            <summary>
-            Parse a vector from a string
-            </summary>
-            <param name="val">A string representation of a 2D vector, enclosed 
-            in arrow brackets and separated by commas</param>
-        </member>
-        <member name="M:OpenMetaverse.Vector2.SmoothStep(OpenMetaverse.Vector2,OpenMetaverse.Vector2,System.Single)">
-            <summary>
-            Interpolates between two vectors using a cubic equation
-            </summary>
-        </member>
-        <member name="M:OpenMetaverse.Vector2.ToString">
-            <summary>
-            Get a formatted string representation of the vector
-            </summary>
-            <returns>A string representation of the vector</returns>
-        </member>
-        <member name="M:OpenMetaverse.Vector2.ToRawString">
-            <summary>
-            Get a string representation of the vector elements with up to three
-            decimal digits and separated by spaces only
-            </summary>
-            <returns>Raw string representation of the vector</returns>
-        </member>
-        <member name="F:OpenMetaverse.Vector2.Zero">
-            <summary>A vector with a value of 0,0</summary>
-        </member>
-        <member name="F:OpenMetaverse.Vector2.One">
-            <summary>A vector with a value of 1,1</summary>
-        </member>
-        <member name="F:OpenMetaverse.Vector2.UnitX">
-            <summary>A vector with a value of 1,0</summary>
-        </member>
-        <member name="F:OpenMetaverse.Vector2.UnitY">
-            <summary>A vector with a value of 0,1</summary>
         </member>
     </members>
 </doc>
