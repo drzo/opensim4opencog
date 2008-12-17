@@ -9,7 +9,7 @@
 ; The Xml assembly is already loaded -- inform DotLisp.
 ; Let's not: it defines 3 types named "Type"! So further references to Type
 ; need to be fully qualified.
-;(load-assembly "System.Xml")
+(load-assembly "System.Xml")
 
 ; lists as sets:
 
@@ -1442,6 +1442,14 @@
  (Encoding:ASCII.GetString (Convert:FromBase64String (.Replace text "!" "")))
 )
 
+
+; Decoding HEX text Win32
+;;(def (Hex-DecodeHexString text)(0 (Hex:DecodeHexString text)))
+; Decoding HEX text MONO and Win32  maybe  (Int64:Parse (text System.Globalization.NumberStyles:HexNumber))
+(def (Hex-DecodeHexString text) (Int64:Parse (text System.Globalization.NumberStyles:HexNumber)))
+
+
+
 ; Decoding quoted-printable
 (def (decode-qp text)
  (lets
@@ -1459,7 +1467,7 @@
    utxt (StringBuilder. text)
   )
   (for-each r qpr
-   (utxt.Replace r (String. (Char. (0 (Hex:DecodeHexString (r.Substring 1)))) 1))
+   (utxt.Replace r (String. (Char. (Hex-DecodeHexString (r.Substring 1))) 1))
   )
   (utxt.Replace "=\r\n" "" )
   (utxt.Replace "=3D"   "=")
