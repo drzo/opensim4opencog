@@ -1,3 +1,7 @@
+#if MONO
+#else
+// #define MICROSOFT
+#endif
 namespace cogbot.DotCYC
 {
     partial class CycConnectionForm
@@ -66,6 +70,7 @@ namespace cogbot.DotCYC
             this.txtCycOutput.Text = "Set the CycServer to the IP of your Instance\r\nor edit \r\nC:\\WINDOWS\\system32\\drive" +
                 "rs\\etc\\hosts\r\nAdding a lines like:\r\n10.10.10.198   CycServer\r\n10.10.10.197   Ope" +
                 "nSimServer";
+            this.txtCycOutput.TextChanged += new System.EventHandler(this.txtCycOutput_TextChanged);
             // 
             // txtEvalString
             // 
@@ -108,9 +113,10 @@ namespace cogbot.DotCYC
             this.Name = "CycConnectionForm";
             this.Text = "CycConnectionForm";
             this.Load += new System.EventHandler(this.CycConnectionForm_Load);
+#if MICROSOFT
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.CycConnectionForm_NoClose);
             this.Resize += new System.EventHandler(this.CycConnectionForm_NoClose);
-            //this.Closed = new System.EventHandler(this.CycConnectionForm_Close);
+#endif
             this.ResumeLayout(false);
             this.PerformLayout();
 

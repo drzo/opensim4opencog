@@ -1,3 +1,7 @@
+#if MONO
+#else
+//#define MICROSOFT
+#endif
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,8 +15,10 @@ namespace cogbot.DotCYC
     using org.opencyc.api;
     using org.opencyc.cycobject;
     using System.Runtime.InteropServices;
+    using System.Reflection;
     public partial class CycConnectionForm : Form
     {
+    //  WinformREPL.REPLForm replForm = null;
         private CycAccess m_cycAccess = null;
         public CycAccess cycAccess
         {
@@ -25,12 +31,16 @@ namespace cogbot.DotCYC
         public CycConnectionForm()
         {
             InitializeComponent();
+#if MICROSOFT
             // add this line to the form's constructor after InitializeComponent() 
-            hMenu = GetSystemMenu(this.Handle, false);
+          hMenu = GetSystemMenu(this.Handle, false);
+#endif
+          // replForm = new WinformREPL.REPLForm();
+          // replForm.Show(); 
         }
 
         private void btnConnect_Click(object sender, EventArgs e)
-        {
+        {          
             try { btnConnect.Enabled = false; }
             catch (Exception) { }
             if (!IsConnected())
@@ -96,6 +106,7 @@ namespace cogbot.DotCYC
             wasConnected = IsConnected();
         }
 
+#if MICROSOFT
         private const uint SC_CLOSE = 0xf060;
         private const uint MF_GRAYED = 0x01;
         private IntPtr hMenu;
@@ -106,9 +117,12 @@ namespace cogbot.DotCYC
         [DllImport("user32.dll")]
         private static extern int EnableMenuItem(IntPtr hMenu, uint wIDEnableItem, uint wEnable);
 
+#endif
         private void CycConnectionForm_NoClose(object sender, EventArgs e)
         {
+#if MICROSOFT
             EnableMenuItem(hMenu, SC_CLOSE, MF_GRAYED);
+#endif
         }
 
         public void Reactivate()
@@ -118,6 +132,37 @@ namespace cogbot.DotCYC
             this.WindowState = FormWindowState.Normal;
             this.Visible = true;
             this.Activate();
+        }
+
+        private void txtCycOutput_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private String objToStrimg(object o) {
+            Type t =  o.GetType();
+            if (t.IsEnum)
+            {
+               //System.Reflection.MemberInfo[] mi = t.GetMembers();
+               return Enum.GetName(t, o);
+            }
+            if (t.IsValueType)
+            {
+                return o.ToString();
+                //
+                //return ValueType GetName(t, o);
+            }
+            System.Reflection.MemberInfo[] mi = t.GetMembers();
+            for (int i = 0; i < mi.Length; i++)
+            {
+                System.Reflection.MemberInfo m = mi[i];
+                if (m.MemberType == MemberTypes.Field)
+                {
+                    t.GetField(m.Name).GetValue(o);
+
+                }
+            }
+            return o.ToString();
         }
     }
 }
