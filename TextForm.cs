@@ -17,7 +17,8 @@ using System.Net.Sockets;
 using System.Threading;
 using System.IO;
 using System.Collections;
-using DotLisp;
+using cogbot.ScriptEngines;
+//using DotLisp;
 
 
 namespace cogbot
@@ -58,7 +59,8 @@ namespace cogbot
         public Inventory Inventory;
         public InventoryManager Manager;
         public Configuration config;
-
+        public String taskInterperterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
+        public static int debugLevel = 1;
         public TextForm()
         {
             client = new GridClient();
@@ -1106,6 +1108,12 @@ namespace cogbot
 
         public void msgClient(string serverMessage)
         {
+            if (debugLevel>1)
+            {
+                output("msgClient: " + serverMessage);                
+            } // if
+              
+           
          //   System.Console.Out.WriteLine("msgClient: " + serverMessage);
             if ((ns!=null)&&(tcpStreamWriter!=null))
             {
@@ -1462,15 +1470,15 @@ namespace cogbot
             public Object codeTree; // the lisp code as an evaluatable object
 
         }
-        Interpreter taskInterperter;
+        ScriptInterpreter taskInterperter;
 
         public void initTaskInterperter()
         {
             try
             {
                 taskQueue = new Queue();
-                output("Start Loading TaskInterperter ... \n");
-                taskInterperter = new Interpreter();
+                output("Start Loading TaskInterperter ... " + taskInterperterType + " \n");
+                taskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
                 taskInterperter.LoadFile("boot.lisp");
                 taskInterperter.LoadFile("extra.lisp");
                 taskInterperter.LoadFile("cogbot.lisp");
@@ -1632,7 +1640,7 @@ namespace cogbot
 
         public string evalLispString(string lispCode)
         {
-            Interpreter interpreter = new Interpreter();
+            ScriptInterpreter interpreter = taskInterperter.newInterpreter();
             StringReader stringCodeReader = new System.IO.StringReader(lispCode);
             string results = "'(unevaluated)";
             subtask thisTask = new subtask();
