@@ -31,7 +31,7 @@ namespace cogbot.Actions
                     //client.Self.Movement.Camera.AtAxis
                     Vector3 myPos = client.Self.SimPosition;
                     Vector3 forward = new Vector3(1, 0, 0);
-                    Vector3 offset = Vector3.Norm(avatar.Position - myPos);
+                    Vector3 offset = Vector3.Normalize(avatar.Position - myPos);
                     Quaternion newRot2 = Vector3.RotationBetween(forward, offset);
 
                     Quaternion newRot1 = Vector3.RotationBetween(avatar.Position, client.Self.RelativePosition);
