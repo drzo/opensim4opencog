@@ -1016,8 +1016,6 @@ namespace OpenMetaverse
 
         private void DownloadWearableAssets()
         {
-            try {  
-
             foreach (KeyValuePair<WearableType, WearableData> kvp in Wearables.Dictionary)
             {
                 Logger.DebugLog("Requesting asset for wearable item " + kvp.Value.Item.WearableType + " (" + kvp.Value.Item.AssetUUID + ")", Client);
@@ -1029,21 +1027,34 @@ namespace OpenMetaverse
                 PendingAssetDownload pad = AssetDownloads.Dequeue();
                 Assets.RequestAsset(pad.Id, pad.Type, true);
             }
-
-            }
-            catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
         }
 
         private void UploadBake(Baker bake)
         {
+            if(bake.BakedTexture.AssetID==UUID.Zero)
+            {
+                Logger.Log("UploadBake(): Warning possible Linden Default textures in use, skipping this baked upload",Helpers.LogLevel.Warning, Client);
+                return;
+            }
+
+            lock (PendingUploads)
+            {
+                if(PendingUploads.ContainsKey(bake.BakedTexture.AssetID))
+                {
+                    Logger.Log("UploadBake(): Skipping Asset id "+bake.BakedTexture.AssetID.ToString()+" Already in progress",Helpers.LogLevel.Info, Client);
+                    return;
+                }
+
+             // Add it to a pending uploads list
+             PendingUploads.Add(bake.BakedTexture.AssetID, BakeTypeToAgentTextureIndex(bake.BakeType));
+             }
+
             // Upload the completed layer data
             Assets.RequestUpload(bake.BakedTexture, true);
 
             Logger.DebugLog(String.Format("Bake {0} completed. Uploading asset {1}", bake.BakeType,
                 bake.BakedTexture.AssetID.ToString()), Client);
 
-            // Add it to a pending uploads list
-            lock (PendingUploads) PendingUploads.Add(bake.BakedTexture.AssetID, BakeTypeToAgentTextureIndex(bake.BakeType));
         }
 
         private int AddImageDownload(TextureIndex index)

@@ -1,3 +1,0 @@
-C:\dev\dotlisp\bin\Release\DotLisp.dll
-C:\dev\dotlisp\obj\Release\ResolveAssemblyReference.cache
-C:\dev\dotlisp\obj\Release\DotLisp.dll

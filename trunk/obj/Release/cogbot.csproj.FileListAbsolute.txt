@@ -1,5 +1,0 @@
-C:\dev\cogbot\obj\Release\ResolveAssemblyReference.cache
-C:\dev\cogbot\obj\Release\cogbot.exe
-C:\dev\cogbot\bin\cogbot.exe
-C:\dev\cogbot\bin\OpenMetaverse.pdb
-C:\dev\cogbot\bin\OpenMetaverse.xml

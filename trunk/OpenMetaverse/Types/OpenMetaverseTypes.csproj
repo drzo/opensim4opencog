@@ -16,7 +16,7 @@
     <DelaySign>false</DelaySign>
     <OutputType>Library</OutputType>
     <AppDesignerFolder></AppDesignerFolder>
-    <RootNamespace>OpenMetaverseTypes</RootNamespace>
+    <RootNamespace>OpenMetaverse</RootNamespace>
     <StartupObject></StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -37,7 +37,7 @@
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
-    <NoWarn></NoWarn>
+    <NoWarn>1591,1574,0419,0618</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -46,7 +46,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE</DefineConstants>
-    <DocumentationFile></DocumentationFile>
+    <DocumentationFile>OpenMetaverseTypes.XML</DocumentationFile>
     <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
@@ -55,19 +55,11 @@
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
-    <NoWarn></NoWarn>
+    <NoWarn>1591,1574,0419,0618</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" >
       <HintPath>System.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Data" >
-      <HintPath>System.Data.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Xml" >
-      <HintPath>System.Xml.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
@@ -77,34 +69,43 @@
     <Compile Include="Color4.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Matrix4.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Quaternion.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Ray.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DoubleDictionary.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="BlockingQueue.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Utils.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="UtilsConversions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UUID.cs">
+    <Compile Include="Quaternion.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Vector2.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ExpiringCache.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Vector3.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="UUID.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Vector4.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Matrix4.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Vector3d.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Vector4.cs">
+    <Compile Include="UtilsConversions.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

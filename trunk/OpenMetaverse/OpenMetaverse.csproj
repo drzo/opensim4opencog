@@ -37,7 +37,7 @@
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
-    <NoWarn></NoWarn>
+    <NoWarn>1591,1574,0419,0618</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -46,7 +46,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE</DefineConstants>
-    <DocumentationFile></DocumentationFile>
+    <DocumentationFile>OpenMetaverse.XML</DocumentationFile>
     <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
@@ -55,7 +55,7 @@
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
-    <NoWarn></NoWarn>
+    <NoWarn>1591,1574,0419,0618</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="log4net" >
@@ -80,6 +80,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj">
+      <Name>OpenMetaverse.StructuredData</Name>
+      <Project>{D923C11D-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+			<Private>False</Private>
+    </ProjectReference>
     <ProjectReference Include="..\OpenMetaverse\Types\OpenMetaverseTypes.csproj">
       <Name>OpenMetaverseTypes</Name>
       <Project>{29DCFE14-0000-0000-0000-000000000000}</Project>
@@ -88,10 +94,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AgentManager.cs">
+    <Compile Include="AgentManagerCamera.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AgentManagerCamera.cs">
+    <Compile Include="AgentManager.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AgentManagerMovement.cs">
@@ -122,9 +128,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="BitPack.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="BlockingQueue.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Caps.cs">
@@ -190,10 +193,13 @@
     <Compile Include="ObjectManager.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ObjectPoolBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ObjectPool.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ObjectPoolBase.cs">
+    <Compile Include="_Packets_.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ParcelManager.cs">
@@ -202,13 +208,16 @@
     <Compile Include="Permissions.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ProtocolManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Settings.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ProtocolManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Simulator.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="UDPBase.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SoundManager.cs">
@@ -220,46 +229,76 @@
     <Compile Include="TerrainManager.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="TextureCache.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TexturePipeline.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ThreadUtil.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UDPBase.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="_Packets_.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="_VisualParam_.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Capabilities\CapsBase.cs">
+    <Compile Include="Capabilities\EventQueueServer.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Capabilities\CapsServer.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Capabilities\CapsClient.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Capabilities\EventQueueClient.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Capabilities\EventQueueServer.cs">
+    <Compile Include="Capabilities\CapsBase.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Capabilities\HttpRequestSignature.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Capabilities\EventQueueClient.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Capabilities\HttpServer.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Imaging\BakeLayer.cs">
+    <Compile Include="Voice\VoiceConnector.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Voice\VoiceDefinitions.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Voice\VoiceAccount.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Voice\VoiceAux.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Voice\TCPPipe.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Voice\VoiceGateway.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Voice\VoiceSession.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Imaging\ManagedImage.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Imaging\OpenJPEG.cs">
+    <Compile Include="Imaging\BakeLayer.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Imaging\TGALoader.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Imaging\OpenJPEG.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Rendering\LindenMesh.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Rendering\Rendering.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Interfaces\INetworkManager.cs">
@@ -271,49 +310,10 @@
     <Compile Include="Primitives\ParticleSystem.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Primitives\Primitive.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Primitives\TextureEntry.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Rendering\LindenMesh.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Rendering\Rendering.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="StructuredData\BinaryLLSD.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="StructuredData\NotationLLSD.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="StructuredData\StructuredData.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="StructuredData\XmlLLSD.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\TCPPipe.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceAccount.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceAux.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceConnector.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceDefinitions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceGateway.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceSession.cs">
+    <Compile Include="Primitives\Primitive.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
