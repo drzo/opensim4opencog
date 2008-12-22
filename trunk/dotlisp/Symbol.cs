@@ -179,11 +179,20 @@ internal class SymbolTable
                     {
                         string typeString = type.ToString();
                         if (typeString == "System.Type") return (Type)type;
+                        if (typeString == "System.String") return (Type)type;
                         if (typeString == "System.Enum") return (Type)type;
                         if (typeString == "System.IO.Path") return (Type)type;
                         if (typeString == "System.Collections.IEnumerable") return (Type)type;
                         if (typeString == "System.Collections.IEnumerator") return (Type)type;
                         if (typeString == "System.Windows.Forms.IDataObject") return (Type)type;
+                    }
+                    foreach (Type type in tlist)
+                    {
+                        string typeString = type.ToString();
+                        if (typeString.StartsWith("System.")) return (Type)type;
+                        if (typeString.StartsWith("DotLisp.")) return (Type)type;
+                        if (typeString.StartsWith("Microsoft.")) return (Type)type;
+                        if (typeString.StartsWith("Mono.")) return (Type)type;
                     }
 				//todo tell them which names conflict
 				StringBuilder sb = new StringBuilder
