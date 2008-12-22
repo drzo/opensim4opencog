@@ -165,20 +165,23 @@ namespace cogbot.Listeners
 
         public void describePrimToAI(Primitive prim)
         {
-            if (prim.Properties.Name != null)
-               {
-                 //parent.enqueueLispTask("(on-prim-description '(" + prim.Properties.Name + ") '" + prim.Properties.Description + "' )");
-                 parent.enqueueLispTask("(on-prim-dist (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() +"\") " + Vector3.Distance(client.Self.SimPosition, prim.Position).ToString() + " )");
-                 parent.enqueueLispTask("(on-prim-pos (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() + "\") (@\"" + prim.Position.ToString() + "\") )");
-                 parent.enqueueLispTask("(on-prim-description  (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() + "\") (@\"" + prim.Properties.Description + "\") )");
+            if (prim != null && prim.Properties != null)
+            {
+                if (prim.Properties.Name != null)
+                {
+                    //parent.enqueueLispTask("(on-prim-description '(" + prim.Properties.Name + ") '" + prim.Properties.Description + "' )");
+                    parent.enqueueLispTask("(on-prim-dist (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() + "\") " + Vector3.Distance(client.Self.SimPosition, prim.Position).ToString() + " )");
+                    parent.enqueueLispTask("(on-prim-pos (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() + "\") (@\"" + prim.Position.ToString() + "\") )");
+                    parent.enqueueLispTask("(on-prim-description  (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() + "\") (@\"" + prim.Properties.Description + "\") )");
 
-                //parent.output(prim.Properties.Name + ": " + prim.Properties.Description);
-                //if (prim.Sound != UUID.Zero)
-                //    parent.output("This object makes sound.");
-                //if (prim.Properties.SalePrice != 0)
-                //    parent.output("This object is for sale for L" + prim.Properties.SalePrice);
-              }
+                    //parent.output(prim.Properties.Name + ": " + prim.Properties.Description);
+                    //if (prim.Sound != UUID.Zero)
+                    //    parent.output("This object makes sound.");
+                    //if (prim.Properties.SalePrice != 0)
+                    //    parent.output("This object is for sale for L" + prim.Properties.SalePrice);
+                }
             }
+        }
 
         public int comp(Primitive p1, Primitive p2)
         {
@@ -245,6 +248,7 @@ namespace cogbot.Listeners
 
         float boringNamesHeuristic(Primitive prim)
         {
+            if (prim == null || prim.Properties == null) return (float)0.0;
             string name = prim.Properties.Name;
             if (name == "Object" || name == "Component" || name == null)
                 return (float)0.1;
