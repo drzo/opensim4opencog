@@ -199,7 +199,8 @@ namespace cogbot
             client.Avatars.OnAvatarProperties += new AvatarManager.AvatarPropertiesCallback(Avatars_OnAvatarProperties);
             
             client.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
-            client.Objects.OnNewFoliage += new ObjectManager.NewFoliageCallback(Objects_OnNewFoliage);
+            // need to decide if we want to capture based on  <Teravus> just use NewPrim and check the ConstructionData.Pcode
+            //client.Objects.OnNewFoliage += new ObjectManager.NewFoliageCallback(Objects_OnNewFoliage);
             client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
             client.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
             client.Objects.OnObjectUpdated += new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
@@ -333,7 +334,7 @@ namespace cogbot
             // Handled by Object Listener
             //throw new NotImplementedException();
 //            output("TextForm Objects_OnNewPrim: "+simulator.ToString()+" "+prim.ToString());
-            if (prim.Properties.Name != null)
+            if (prim.Properties!=null && prim.Properties.Name != null)
                 enqueueLispTask("(on-new-prim (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() + "\") (@\"" + prim.Properties.Description + "\") )");
             
         }

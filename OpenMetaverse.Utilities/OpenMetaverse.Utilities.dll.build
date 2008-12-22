@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<project name="OpenMetaverse.StructuredData" default="build">
+<project name="OpenMetaverse.Utilities" default="build">
     <target name="build">
         <echo message="Build Directory is ${project::get-base-directory()}/${build.dir}" />
         <mkdir dir="${project::get-base-directory()}/${build.dir}" />
@@ -12,30 +12,25 @@
             </fileset>
         </copy>
         <csc target="library" debug="${build.debug}" unsafe="True" warnaserror="False" define="TRACE;DEBUG" main="" output="${project::get-base-directory()}/${build.dir}/${project::get-name()}.dll">
-            <resources prefix="OpenMetaverse.StructuredData" dynamicprefix="true" >
+            <resources prefix="OpenMetaverse.Utilities" dynamicprefix="true" >
             </resources>
             <sources failonempty="true">
-                <include name="StructuredData.cs" />
-                <include name="JSON/IJsonWrapper.cs" />
-                <include name="JSON/JsonData.cs" />
-                <include name="JSON/JsonException.cs" />
-                <include name="JSON/JsonMapper.cs" />
-                <include name="JSON/JsonReader.cs" />
-                <include name="JSON/JsonWriter.cs" />
-                <include name="JSON/Lexer.cs" />
-                <include name="JSON/OSDJson.cs" />
-                <include name="JSON/ParserToken.cs" />
-                <include name="LLSD/BinaryLLSD.cs" />
-                <include name="LLSD/NotationLLSD.cs" />
-                <include name="LLSD/XmlLLSD.cs" />
+                <include name="RegistrationApi.cs" />
+                <include name="Utilities.cs" />
+                <include name="VoiceManager.cs" />
+                <include name="VoiceManagerBlocking.cs" />
+                <include name="Properties/AssemblyInfo.cs" />
             </sources>
             <references basedir="${project::get-base-directory()}">
                 <lib>
                     <include name="${project::get-base-directory()}" />
                     <include name="${project::get-base-directory()}/${build.dir}" />
                 </lib>
+                <include name="../bin/OpenMetaverse.dll" />
+                <include name="../bin/OpenMetaverse.StructuredData.dll" />
                 <include name="../bin/OpenMetaverseTypes.dll" />
                 <include name="System.dll" />
+                <include name="System.Data.dll" />
                 <include name="System.Xml.dll" />
             </references>
         </csc>
