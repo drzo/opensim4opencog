@@ -342,6 +342,8 @@ namespace OpenMetaverse
         /// <returns>true if map is full (contains no 0's)</returns>
         public bool IsParcelMapFull()
         {
+            //int ny = this.ParcelMap.GetLength(0);
+            //int nx = this.ParcelMap.GetLength(1);
             for (int y = 0; y < 64; y++)
             {
                 for (int x = 0; x < 64; x++)
@@ -977,8 +979,8 @@ namespace OpenMetaverse
             {
                 NetworkManager.OutgoingPacket[] array;
 
-                lock (NeedAck)
-                {
+            lock (NeedAck)
+            {
                     // Create a temporary copy of the outgoing packets array to iterate over
                     array = new NetworkManager.OutgoingPacket[NeedAck.Count];
                     NeedAck.Values.CopyTo(array, 0);
@@ -995,32 +997,32 @@ namespace OpenMetaverse
                     {
                         if (outgoing.ResendCount < Client.Settings.MAX_RESEND_COUNT)
                         {
-                            if (Client.Settings.LOG_RESENDS)
-                            {
-                                Logger.DebugLog(String.Format("Resending packet #{0} ({1}), {2}ms have passed",
+                                if (Client.Settings.LOG_RESENDS)
+                                {
+                                    Logger.DebugLog(String.Format("Resending packet #{0} ({1}), {2}ms have passed",
                                     outgoing.Packet.Header.Sequence, outgoing.Packet.GetType(),
                                     now - outgoing.TickCount), Client);
-                            }
+                                }
 
                             // The TickCount will be set to the current time when the packet
                             // is actually sent out again
                             outgoing.TickCount = 0;
                             outgoing.SetSequence = false;
-                            outgoing.Packet.Header.Resent = true;
+                                outgoing.Packet.Header.Resent = true;
                             ++outgoing.ResendCount;
 
-                            ++Stats.ResentPackets;
+                                ++Stats.ResentPackets;
 
                             SendPacket(outgoing);
                         }
                         else
                         {
-                            Logger.DebugLog(String.Format("Dropping packet #{0} ({1}) after {2} failed attempts",
-                                outgoing.Packet.Header.Sequence, outgoing.Packet.GetType(), outgoing.ResendCount));
+                                Logger.DebugLog(String.Format("Dropping packet #{0} ({1}) after {2} failed attempts",
+                                    outgoing.Packet.Header.Sequence, outgoing.Packet.GetType(), outgoing.ResendCount));
 
                             lock (NeedAck) NeedAck.Remove(outgoing.Packet.Header.Sequence);
-                        }
                     }
+                }
                 }
             }
         }

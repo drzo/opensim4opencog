@@ -1,7 +1,0 @@
-C:\dev\libsecondlife_200807a\bin\OpenMetaverseTypes.dll
-C:\dev\libsecondlife_200807a\bin\OpenMetaverseTypes.XML
-C:\dev\libsecondlife_200807a\OpenMetaverse\Types\obj\Release\ResolveAssemblyReference.cache
-C:\dev\libsecondlife_200807a\OpenMetaverse\Types\obj\Release\OpenMetaverseTypes.dll
-C:\dev\cogbot\bin\OpenMetaverseTypes.dll
-C:\dev\cogbot\OpenMetaverse\Types\obj\Release\ResolveAssemblyReference.cache
-C:\dev\cogbot\OpenMetaverse\Types\obj\Release\OpenMetaverseTypes.dll

@@ -2095,6 +2095,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Test1, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TestBlock1 --");
+                output.Append(String.Format("Test1: {0}", Test1));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -2139,6 +2146,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Test2, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- NeighborBlock --");
+                output.AppendLine(String.Format("Test0: {0}", Test0));
+                output.AppendLine(String.Format("Test1: {0}", Test1));
+                output.Append(String.Format("Test2: {0}", Test2));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -2218,6 +2234,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- TestMessage ---" + Environment.NewLine;
+                output += TestBlock1.ToString() + Environment.NewLine;
+            for (int j = 0; j < 4; j++)
+            {
+                output += NeighborBlock[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -2265,6 +2292,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- CircuitCode --");
+                output.AppendLine(String.Format("Code: {0}", Code));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("ID: {0}", ID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -2327,6 +2363,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- UseCircuitCode ---" + Environment.NewLine;
+                output += CircuitCode.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -2387,12 +2430,24 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(ObjectName == null) { Console.WriteLine("Warning: ObjectName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)ObjectName.Length;
                 Buffer.BlockCopy(ObjectName, 0, bytes, i, ObjectName.Length); i += ObjectName.Length;
                 Buffer.BlockCopy(TelehubPos.GetBytes(), 0, bytes, i, 12); i += 12;
                 Buffer.BlockCopy(TelehubRot.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TelehubBlock --");
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                Helpers.FieldToString(output, ObjectName, "ObjectName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("TelehubPos: {0}", TelehubPos));
+                output.Append(String.Format("TelehubRot: {0}", TelehubRot));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -2431,6 +2486,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SpawnPointPos.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- SpawnPointBlock --");
+                output.Append(String.Format("SpawnPointPos: {0}", SpawnPointPos));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -2513,6 +2575,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- TelehubInfo ---" + Environment.NewLine;
+                output += TelehubBlock.ToString() + Environment.NewLine;
+            for (int j = 0; j < SpawnPointBlock.Length; j++)
+            {
+                output += SpawnPointBlock[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -2571,6 +2644,12 @@ namespace OpenMetaverse.Packets
             header.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- EconomyDataRequest ---" + Environment.NewLine;
+            return output;
         }
 
     }
@@ -2662,6 +2741,29 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(PriceGroupCreate, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Info --");
+                output.AppendLine(String.Format("ObjectCapacity: {0}", ObjectCapacity));
+                output.AppendLine(String.Format("ObjectCount: {0}", ObjectCount));
+                output.AppendLine(String.Format("PriceEnergyUnit: {0}", PriceEnergyUnit));
+                output.AppendLine(String.Format("PriceObjectClaim: {0}", PriceObjectClaim));
+                output.AppendLine(String.Format("PricePublicObjectDecay: {0}", PricePublicObjectDecay));
+                output.AppendLine(String.Format("PricePublicObjectDelete: {0}", PricePublicObjectDelete));
+                output.AppendLine(String.Format("PriceParcelClaim: {0}", PriceParcelClaim));
+                output.AppendLine(String.Format("PriceParcelClaimFactor: {0}", PriceParcelClaimFactor));
+                output.AppendLine(String.Format("PriceUpload: {0}", PriceUpload));
+                output.AppendLine(String.Format("PriceRentLight: {0}", PriceRentLight));
+                output.AppendLine(String.Format("TeleportMinPrice: {0}", TeleportMinPrice));
+                output.AppendLine(String.Format("TeleportPriceExponent: {0}", TeleportPriceExponent));
+                output.AppendLine(String.Format("EnergyEfficiency: {0}", EnergyEfficiency));
+                output.AppendLine(String.Format("PriceObjectRent: {0}", PriceObjectRent));
+                output.AppendLine(String.Format("PriceObjectScaleFactor: {0}", PriceObjectScaleFactor));
+                output.AppendLine(String.Format("PriceParcelRent: {0}", PriceParcelRent));
+                output.Append(String.Format("PriceGroupCreate: {0}", PriceGroupCreate));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -2725,6 +2827,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- EconomyData ---" + Environment.NewLine;
+                output += Info.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -2772,6 +2881,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(QueryID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("QueryID: {0}", QueryID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -2822,10 +2940,18 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                Helpers.FieldToString(output, Name, "Name");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -2893,6 +3019,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AvatarPickerRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -2937,6 +3071,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(QueryID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("QueryID: {0}", QueryID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -3005,12 +3147,24 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(AvatarID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(FirstName == null) { Console.WriteLine("Warning: FirstName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)FirstName.Length;
                 Buffer.BlockCopy(FirstName, 0, bytes, i, FirstName.Length); i += FirstName.Length;
+                if(LastName == null) { Console.WriteLine("Warning: LastName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)LastName.Length;
                 Buffer.BlockCopy(LastName, 0, bytes, i, LastName.Length); i += LastName.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("AvatarID: {0}", AvatarID));
+                Helpers.FieldToString(output, FirstName, "FirstName");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, LastName, "LastName");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -3093,6 +3247,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AvatarPickerReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < Data.Length; j++)
+            {
+                output += Data[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -3140,6 +3305,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(QueryID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("QueryID: {0}", QueryID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -3178,6 +3352,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TransactionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TransactionData --");
+                output.Append(String.Format("TransactionID: {0}", TransactionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -3247,14 +3428,27 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(QueryText == null) { Console.WriteLine("Warning: QueryText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)QueryText.Length;
                 Buffer.BlockCopy(QueryText, 0, bytes, i, QueryText.Length); i += QueryText.Length;
                 Utils.UIntToBytes(QueryFlags, bytes, i); i += 4;
                 bytes[i++] = (byte)Category;
+                if(SimName == null) { Console.WriteLine("Warning: SimName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SimName.Length;
                 Buffer.BlockCopy(SimName, 0, bytes, i, SimName.Length); i += SimName.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryData --");
+                Helpers.FieldToString(output, QueryText, "QueryText");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("QueryFlags: {0}", QueryFlags));
+                output.AppendLine(String.Format("Category: {0}", Category));
+                Helpers.FieldToString(output, SimName, "SimName");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -3328,6 +3522,15 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- PlacesQuery ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += TransactionData.ToString() + Environment.NewLine;
+                output += QueryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -3372,6 +3575,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(QueryID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("QueryID: {0}", QueryID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -3410,6 +3621,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TransactionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TransactionData --");
+                output.Append(String.Format("TransactionID: {0}", TransactionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -3511,8 +3729,10 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(OwnerID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Desc == null) { Console.WriteLine("Warning: Desc is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Desc.Length;
                 Buffer.BlockCopy(Desc, 0, bytes, i, Desc.Length); i += Desc.Length;
                 Utils.IntToBytes(ActualArea, bytes, i); i += 4;
@@ -3521,6 +3741,7 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(GlobalX, bytes, i); i += 4;
                 Utils.FloatToBytes(GlobalY, bytes, i); i += 4;
                 Utils.FloatToBytes(GlobalZ, bytes, i); i += 4;
+                if(SimName == null) { Console.WriteLine("Warning: SimName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SimName.Length;
                 Buffer.BlockCopy(SimName, 0, bytes, i, SimName.Length); i += SimName.Length;
                 Buffer.BlockCopy(SnapshotID.GetBytes(), 0, bytes, i, 16); i += 16;
@@ -3528,6 +3749,28 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(Price, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryData --");
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Desc, "Desc");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("ActualArea: {0}", ActualArea));
+                output.AppendLine(String.Format("BillableArea: {0}", BillableArea));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("GlobalX: {0}", GlobalX));
+                output.AppendLine(String.Format("GlobalY: {0}", GlobalY));
+                output.AppendLine(String.Format("GlobalZ: {0}", GlobalZ));
+                Helpers.FieldToString(output, SimName, "SimName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("SnapshotID: {0}", SnapshotID));
+                output.AppendLine(String.Format("Dwell: {0}", Dwell));
+                output.Append(String.Format("Price: {0}", Price));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -3616,6 +3859,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- PlacesReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += TransactionData.ToString() + Environment.NewLine;
+            for (int j = 0; j < QueryData.Length; j++)
+            {
+                output += QueryData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -3660,6 +3915,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -3717,12 +3980,24 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(QueryID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(QueryText == null) { Console.WriteLine("Warning: QueryText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)QueryText.Length;
                 Buffer.BlockCopy(QueryText, 0, bytes, i, QueryText.Length); i += QueryText.Length;
                 Utils.UIntToBytes(QueryFlags, bytes, i); i += 4;
                 Utils.IntToBytes(QueryStart, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryData --");
+                output.AppendLine(String.Format("QueryID: {0}", QueryID));
+                Helpers.FieldToString(output, QueryText, "QueryText");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("QueryFlags: {0}", QueryFlags));
+                output.Append(String.Format("QueryStart: {0}", QueryStart));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -3791,6 +4066,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DirFindQuery ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += QueryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -3835,6 +4118,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -3909,15 +4200,31 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(QueryID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(QueryText == null) { Console.WriteLine("Warning: QueryText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)QueryText.Length;
                 Buffer.BlockCopy(QueryText, 0, bytes, i, QueryText.Length); i += QueryText.Length;
                 Utils.UIntToBytes(QueryFlags, bytes, i); i += 4;
                 bytes[i++] = (byte)Category;
+                if(SimName == null) { Console.WriteLine("Warning: SimName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SimName.Length;
                 Buffer.BlockCopy(SimName, 0, bytes, i, SimName.Length); i += SimName.Length;
                 Utils.IntToBytes(QueryStart, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryData --");
+                output.AppendLine(String.Format("QueryID: {0}", QueryID));
+                Helpers.FieldToString(output, QueryText, "QueryText");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("QueryFlags: {0}", QueryFlags));
+                output.AppendLine(String.Format("Category: {0}", Category));
+                Helpers.FieldToString(output, SimName, "SimName");
+                output.Append(Environment.NewLine);
+                output.Append(String.Format("QueryStart: {0}", QueryStart));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -3986,6 +4293,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DirPlacesQuery ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += QueryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -4027,6 +4342,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -4065,6 +4387,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(QueryID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryData --");
+                output.Append(String.Format("QueryID: {0}", QueryID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -4124,6 +4453,7 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(ParcelID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
                 bytes[i++] = (byte)((ForSale) ? 1 : 0);
@@ -4131,6 +4461,18 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(Dwell, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryReplies --");
+                output.AppendLine(String.Format("ParcelID: {0}", ParcelID));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("ForSale: {0}", ForSale));
+                output.AppendLine(String.Format("Auction: {0}", Auction));
+                output.Append(String.Format("Dwell: {0}", Dwell));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -4234,6 +4576,21 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DirPlacesReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < QueryData.Length; j++)
+            {
+                output += QueryData[j].ToString() + Environment.NewLine;
+            }
+            for (int j = 0; j < QueryReplies.Length; j++)
+            {
+                output += QueryReplies[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -4275,6 +4632,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -4313,6 +4677,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(QueryID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryData --");
+                output.Append(String.Format("QueryID: {0}", QueryID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -4400,16 +4771,34 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(FirstName == null) { Console.WriteLine("Warning: FirstName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)FirstName.Length;
                 Buffer.BlockCopy(FirstName, 0, bytes, i, FirstName.Length); i += FirstName.Length;
+                if(LastName == null) { Console.WriteLine("Warning: LastName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)LastName.Length;
                 Buffer.BlockCopy(LastName, 0, bytes, i, LastName.Length); i += LastName.Length;
+                if(Group == null) { Console.WriteLine("Warning: Group is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Group.Length;
                 Buffer.BlockCopy(Group, 0, bytes, i, Group.Length); i += Group.Length;
                 bytes[i++] = (byte)((Online) ? 1 : 0);
                 Utils.IntToBytes(Reputation, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryReplies --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                Helpers.FieldToString(output, FirstName, "FirstName");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, LastName, "LastName");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Group, "Group");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("Online: {0}", Online));
+                output.Append(String.Format("Reputation: {0}", Reputation));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -4498,6 +4887,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DirPeopleReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += QueryData.ToString() + Environment.NewLine;
+            for (int j = 0; j < QueryReplies.Length; j++)
+            {
+                output += QueryReplies[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -4539,6 +4940,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -4577,6 +4985,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(QueryID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryData --");
+                output.Append(String.Format("QueryID: {0}", QueryID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -4651,15 +5066,31 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(OwnerID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
                 Utils.UIntToBytes(EventID, bytes, i); i += 4;
+                if(Date == null) { Console.WriteLine("Warning: Date is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Date.Length;
                 Buffer.BlockCopy(Date, 0, bytes, i, Date.Length); i += Date.Length;
                 Utils.UIntToBytes(UnixTime, bytes, i); i += 4;
                 Utils.UIntToBytes(EventFlags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryReplies --");
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("EventID: {0}", EventID));
+                Helpers.FieldToString(output, Date, "Date");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("UnixTime: {0}", UnixTime));
+                output.Append(String.Format("EventFlags: {0}", EventFlags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -4748,6 +5179,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DirEventsReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += QueryData.ToString() + Environment.NewLine;
+            for (int j = 0; j < QueryReplies.Length; j++)
+            {
+                output += QueryReplies[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -4789,6 +5232,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -4827,6 +5277,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(QueryID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryData --");
+                output.Append(String.Format("QueryID: {0}", QueryID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -4884,12 +5341,24 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(GroupName == null) { Console.WriteLine("Warning: GroupName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)GroupName.Length;
                 Buffer.BlockCopy(GroupName, 0, bytes, i, GroupName.Length); i += GroupName.Length;
                 Utils.IntToBytes(Members, bytes, i); i += 4;
                 Utils.FloatToBytes(SearchOrder, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryReplies --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                Helpers.FieldToString(output, GroupName, "GroupName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("Members: {0}", Members));
+                output.Append(String.Format("SearchOrder: {0}", SearchOrder));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -4978,6 +5447,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DirGroupsReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += QueryData.ToString() + Environment.NewLine;
+            for (int j = 0; j < QueryReplies.Length; j++)
+            {
+                output += QueryReplies[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -5022,6 +5503,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -5081,6 +5570,7 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(QueryID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(QueryText == null) { Console.WriteLine("Warning: QueryText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)QueryText.Length;
                 Buffer.BlockCopy(QueryText, 0, bytes, i, QueryText.Length); i += QueryText.Length;
                 Utils.UIntToBytes(QueryFlags, bytes, i); i += 4;
@@ -5088,6 +5578,18 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(QueryStart, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryData --");
+                output.AppendLine(String.Format("QueryID: {0}", QueryID));
+                Helpers.FieldToString(output, QueryText, "QueryText");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("QueryFlags: {0}", QueryFlags));
+                output.AppendLine(String.Format("Category: {0}", Category));
+                output.Append(String.Format("QueryStart: {0}", QueryStart));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -5156,6 +5658,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DirClassifiedQuery ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += QueryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -5197,6 +5707,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -5235,6 +5752,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(QueryID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryData --");
+                output.Append(String.Format("QueryID: {0}", QueryID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -5296,6 +5820,7 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(ClassifiedID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
                 bytes[i++] = ClassifiedFlags;
@@ -5304,6 +5829,19 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(PriceForListing, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryReplies --");
+                output.AppendLine(String.Format("ClassifiedID: {0}", ClassifiedID));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("ClassifiedFlags: {0}", ClassifiedFlags));
+                output.AppendLine(String.Format("CreationDate: {0}", CreationDate));
+                output.AppendLine(String.Format("ExpirationDate: {0}", ExpirationDate));
+                output.Append(String.Format("PriceForListing: {0}", PriceForListing));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -5392,6 +5930,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DirClassifiedReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += QueryData.ToString() + Environment.NewLine;
+            for (int j = 0; j < QueryReplies.Length; j++)
+            {
+                output += QueryReplies[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -5436,6 +5986,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TargetID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("TargetID: {0}", TargetID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -5489,10 +6047,19 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(ClassifiedID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("ClassifiedID: {0}", ClassifiedID));
+                Helpers.FieldToString(output, Name, "Name");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -5575,6 +6142,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AvatarClassifiedReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < Data.Length; j++)
+            {
+                output += Data[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -5619,6 +6197,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -5657,6 +6243,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ClassifiedID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.Append(String.Format("ClassifiedID: {0}", ClassifiedID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -5725,6 +6318,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ClassifiedInfoRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -5766,6 +6367,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -5888,23 +6496,52 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(CreationDate, bytes, i); i += 4;
                 Utils.UIntToBytes(ExpirationDate, bytes, i); i += 4;
                 Utils.UIntToBytes(Category, bytes, i); i += 4;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Desc == null) { Console.WriteLine("Warning: Desc is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Desc.Length % 256);
                 bytes[i++] = (byte)((Desc.Length >> 8) % 256);
                 Buffer.BlockCopy(Desc, 0, bytes, i, Desc.Length); i += Desc.Length;
                 Buffer.BlockCopy(ParcelID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Utils.UIntToBytes(ParentEstate, bytes, i); i += 4;
                 Buffer.BlockCopy(SnapshotID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(SimName == null) { Console.WriteLine("Warning: SimName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SimName.Length;
                 Buffer.BlockCopy(SimName, 0, bytes, i, SimName.Length); i += SimName.Length;
                 Buffer.BlockCopy(PosGlobal.GetBytes(), 0, bytes, i, 24); i += 24;
+                if(ParcelName == null) { Console.WriteLine("Warning: ParcelName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)ParcelName.Length;
                 Buffer.BlockCopy(ParcelName, 0, bytes, i, ParcelName.Length); i += ParcelName.Length;
                 bytes[i++] = ClassifiedFlags;
                 Utils.IntToBytes(PriceForListing, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("ClassifiedID: {0}", ClassifiedID));
+                output.AppendLine(String.Format("CreatorID: {0}", CreatorID));
+                output.AppendLine(String.Format("CreationDate: {0}", CreationDate));
+                output.AppendLine(String.Format("ExpirationDate: {0}", ExpirationDate));
+                output.AppendLine(String.Format("Category: {0}", Category));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Desc, "Desc");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("ParcelID: {0}", ParcelID));
+                output.AppendLine(String.Format("ParentEstate: {0}", ParentEstate));
+                output.AppendLine(String.Format("SnapshotID: {0}", SnapshotID));
+                Helpers.FieldToString(output, SimName, "SimName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("PosGlobal: {0}", PosGlobal));
+                Helpers.FieldToString(output, ParcelName, "ParcelName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("ClassifiedFlags: {0}", ClassifiedFlags));
+                output.Append(String.Format("PriceForListing: {0}", PriceForListing));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -5972,6 +6609,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ClassifiedInfoReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -6016,6 +6661,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -6099,8 +6752,10 @@ namespace OpenMetaverse.Packets
             {
                 Buffer.BlockCopy(ClassifiedID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Utils.UIntToBytes(Category, bytes, i); i += 4;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Desc == null) { Console.WriteLine("Warning: Desc is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Desc.Length % 256);
                 bytes[i++] = (byte)((Desc.Length >> 8) % 256);
                 Buffer.BlockCopy(Desc, 0, bytes, i, Desc.Length); i += Desc.Length;
@@ -6112,6 +6767,24 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(PriceForListing, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("ClassifiedID: {0}", ClassifiedID));
+                output.AppendLine(String.Format("Category: {0}", Category));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Desc, "Desc");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("ParcelID: {0}", ParcelID));
+                output.AppendLine(String.Format("ParentEstate: {0}", ParentEstate));
+                output.AppendLine(String.Format("SnapshotID: {0}", SnapshotID));
+                output.AppendLine(String.Format("PosGlobal: {0}", PosGlobal));
+                output.AppendLine(String.Format("ClassifiedFlags: {0}", ClassifiedFlags));
+                output.Append(String.Format("PriceForListing: {0}", PriceForListing));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -6179,6 +6852,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ClassifiedInfoUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -6223,6 +6904,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -6261,6 +6950,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ClassifiedID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.Append(String.Format("ClassifiedID: {0}", ClassifiedID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -6328,6 +7024,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ClassifiedDelete ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -6372,6 +7076,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -6413,6 +7125,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(QueryID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("ClassifiedID: {0}", ClassifiedID));
+                output.Append(String.Format("QueryID: {0}", QueryID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -6480,6 +7200,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ClassifiedGodDelete ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -6524,6 +7252,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -6577,6 +7313,18 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(QueryStart, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryData --");
+                output.AppendLine(String.Format("QueryID: {0}", QueryID));
+                output.AppendLine(String.Format("QueryFlags: {0}", QueryFlags));
+                output.AppendLine(String.Format("SearchType: {0}", SearchType));
+                output.AppendLine(String.Format("Price: {0}", Price));
+                output.AppendLine(String.Format("Area: {0}", Area));
+                output.Append(String.Format("QueryStart: {0}", QueryStart));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -6645,6 +7393,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DirLandQuery ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += QueryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -6686,6 +7442,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -6724,6 +7487,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(QueryID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryData --");
+                output.Append(String.Format("QueryID: {0}", QueryID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -6785,6 +7555,7 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(ParcelID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
                 bytes[i++] = (byte)((Auction) ? 1 : 0);
@@ -6793,6 +7564,19 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(ActualArea, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryReplies --");
+                output.AppendLine(String.Format("ParcelID: {0}", ParcelID));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("Auction: {0}", Auction));
+                output.AppendLine(String.Format("ForSale: {0}", ForSale));
+                output.AppendLine(String.Format("SalePrice: {0}", SalePrice));
+                output.Append(String.Format("ActualArea: {0}", ActualArea));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -6881,6 +7665,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DirLandReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += QueryData.ToString() + Environment.NewLine;
+            for (int j = 0; j < QueryReplies.Length; j++)
+            {
+                output += QueryReplies[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -6925,6 +7721,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -6966,6 +7770,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(QueryFlags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryData --");
+                output.AppendLine(String.Format("QueryID: {0}", QueryID));
+                output.Append(String.Format("QueryFlags: {0}", QueryFlags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -7034,6 +7846,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DirPopularQuery ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += QueryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -7075,6 +7895,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -7113,6 +7940,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(QueryID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryData --");
+                output.Append(String.Format("QueryID: {0}", QueryID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -7168,11 +8002,22 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(ParcelID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
                 Utils.FloatToBytes(Dwell, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryReplies --");
+                output.AppendLine(String.Format("ParcelID: {0}", ParcelID));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                output.Append(String.Format("Dwell: {0}", Dwell));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -7261,6 +8106,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DirPopularReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += QueryData.ToString() + Environment.NewLine;
+            for (int j = 0; j < QueryReplies.Length; j++)
+            {
+                output += QueryReplies[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -7305,6 +8162,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -7343,6 +8208,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ParcelID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.Append(String.Format("ParcelID: {0}", ParcelID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -7410,6 +8282,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelInfoRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -7451,6 +8331,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -7557,8 +8444,10 @@ namespace OpenMetaverse.Packets
             {
                 Buffer.BlockCopy(ParcelID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(OwnerID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Desc == null) { Console.WriteLine("Warning: Desc is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Desc.Length;
                 Buffer.BlockCopy(Desc, 0, bytes, i, Desc.Length); i += Desc.Length;
                 Utils.IntToBytes(ActualArea, bytes, i); i += 4;
@@ -7567,6 +8456,7 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(GlobalX, bytes, i); i += 4;
                 Utils.FloatToBytes(GlobalY, bytes, i); i += 4;
                 Utils.FloatToBytes(GlobalZ, bytes, i); i += 4;
+                if(SimName == null) { Console.WriteLine("Warning: SimName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SimName.Length;
                 Buffer.BlockCopy(SimName, 0, bytes, i, SimName.Length); i += SimName.Length;
                 Buffer.BlockCopy(SnapshotID.GetBytes(), 0, bytes, i, 16); i += 16;
@@ -7575,6 +8465,30 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(AuctionID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("ParcelID: {0}", ParcelID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Desc, "Desc");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("ActualArea: {0}", ActualArea));
+                output.AppendLine(String.Format("BillableArea: {0}", BillableArea));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("GlobalX: {0}", GlobalX));
+                output.AppendLine(String.Format("GlobalY: {0}", GlobalY));
+                output.AppendLine(String.Format("GlobalZ: {0}", GlobalZ));
+                Helpers.FieldToString(output, SimName, "SimName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("SnapshotID: {0}", SnapshotID));
+                output.AppendLine(String.Format("Dwell: {0}", Dwell));
+                output.AppendLine(String.Format("SalePrice: {0}", SalePrice));
+                output.Append(String.Format("AuctionID: {0}", AuctionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -7643,6 +8557,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelInfoReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -7687,6 +8609,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -7725,6 +8655,13 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(LocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.Append(String.Format("LocalID: {0}", LocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -7792,6 +8729,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelObjectOwnersRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ParcelData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -7842,6 +8787,16 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((OnlineStatus) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("IsGroupOwned: {0}", IsGroupOwned));
+                output.AppendLine(String.Format("Count: {0}", Count));
+                output.Append(String.Format("OnlineStatus: {0}", OnlineStatus));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -7920,6 +8875,16 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelObjectOwnersReply ---" + Environment.NewLine;
+            for (int j = 0; j < Data.Length; j++)
+            {
+                output += Data[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -7964,6 +8929,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -8002,6 +8975,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -8069,6 +9049,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupNoticesListRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -8113,6 +9101,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -8188,9 +9184,11 @@ namespace OpenMetaverse.Packets
             {
                 Buffer.BlockCopy(NoticeID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Utils.UIntToBytes(Timestamp, bytes, i); i += 4;
+                if(FromName == null) { Console.WriteLine("Warning: FromName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(FromName.Length % 256);
                 bytes[i++] = (byte)((FromName.Length >> 8) % 256);
                 Buffer.BlockCopy(FromName, 0, bytes, i, FromName.Length); i += FromName.Length;
+                if(Subject == null) { Console.WriteLine("Warning: Subject is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Subject.Length % 256);
                 bytes[i++] = (byte)((Subject.Length >> 8) % 256);
                 Buffer.BlockCopy(Subject, 0, bytes, i, Subject.Length); i += Subject.Length;
@@ -8198,6 +9196,20 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = AssetType;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("NoticeID: {0}", NoticeID));
+                output.AppendLine(String.Format("Timestamp: {0}", Timestamp));
+                Helpers.FieldToString(output, FromName, "FromName");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Subject, "Subject");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("HasAttachment: {0}", HasAttachment));
+                output.Append(String.Format("AssetType: {0}", AssetType));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -8280,6 +9292,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupNoticesListReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < Data.Length; j++)
+            {
+                output += Data[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -8324,6 +9347,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -8362,6 +9393,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupNoticeID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.Append(String.Format("GroupNoticeID: {0}", GroupNoticeID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -8429,6 +9467,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupNoticeRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -8473,6 +9519,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -8517,6 +9571,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(LookAt.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Info --");
+                output.AppendLine(String.Format("RegionID: {0}", RegionID));
+                output.AppendLine(String.Format("Position: {0}", Position));
+                output.Append(String.Format("LookAt: {0}", LookAt));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -8584,6 +9647,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- TeleportRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Info.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -8628,6 +9699,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -8672,6 +9751,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(LookAt.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Info --");
+                output.AppendLine(String.Format("RegionHandle: {0}", RegionHandle));
+                output.AppendLine(String.Format("Position: {0}", Position));
+                output.Append(String.Format("LookAt: {0}", LookAt));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -8739,6 +9827,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- TeleportLocationRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Info.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -8792,6 +9888,17 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(TeleportFlags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Info --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("LocationID: {0}", LocationID));
+                output.AppendLine(String.Format("Position: {0}", Position));
+                output.AppendLine(String.Format("LookAt: {0}", LookAt));
+                output.Append(String.Format("TeleportFlags: {0}", TeleportFlags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -8854,6 +9961,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- TeleportLocal ---" + Environment.NewLine;
+                output += Info.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -8901,6 +10015,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(LandmarkID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Info --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("LandmarkID: {0}", LandmarkID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -8964,6 +10087,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- TeleportLandmarkRequest ---" + Environment.NewLine;
+                output += Info.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -9005,6 +10135,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -9058,10 +10195,19 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Utils.UIntToBytes(TeleportFlags, bytes, i); i += 4;
+                if(Message == null) { Console.WriteLine("Warning: Message is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Message.Length;
                 Buffer.BlockCopy(Message, 0, bytes, i, Message.Length); i += Message.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Info --");
+                output.AppendLine(String.Format("TeleportFlags: {0}", TeleportFlags));
+                Helpers.FieldToString(output, Message, "Message");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -9127,6 +10273,14 @@ namespace OpenMetaverse.Packets
             Info.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- TeleportProgress ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Info.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -9202,6 +10356,7 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((SimPort >> 8) % 256);
                 bytes[i++] = (byte)(SimPort % 256);
                 Utils.UInt64ToBytes(RegionHandle, bytes, i); i += 8;
+                if(SeedCapability == null) { Console.WriteLine("Warning: SeedCapability is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(SeedCapability.Length % 256);
                 bytes[i++] = (byte)((SeedCapability.Length >> 8) % 256);
                 Buffer.BlockCopy(SeedCapability, 0, bytes, i, SeedCapability.Length); i += SeedCapability.Length;
@@ -9209,6 +10364,21 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(TeleportFlags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Info --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("LocationID: {0}", LocationID));
+                output.AppendLine(String.Format("SimIP: {0}", SimIP));
+                output.AppendLine(String.Format("SimPort: {0}", SimPort));
+                output.AppendLine(String.Format("RegionHandle: {0}", RegionHandle));
+                Helpers.FieldToString(output, SeedCapability, "SeedCapability");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("SimAccess: {0}", SimAccess));
+                output.Append(String.Format("TeleportFlags: {0}", TeleportFlags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -9271,6 +10441,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- TeleportFinish ---" + Environment.NewLine;
+                output += Info.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -9315,6 +10492,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -9368,10 +10553,19 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 bytes[i++] = LureType;
+                if(Message == null) { Console.WriteLine("Warning: Message is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Message.Length;
                 Buffer.BlockCopy(Message, 0, bytes, i, Message.Length); i += Message.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Info --");
+                output.AppendLine(String.Format("LureType: {0}", LureType));
+                Helpers.FieldToString(output, Message, "Message");
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -9410,6 +10604,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TargetID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TargetData --");
+                output.Append(String.Format("TargetID: {0}", TargetID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -9497,6 +10698,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- StartLure ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Info.ToString() + Environment.NewLine;
+            for (int j = 0; j < TargetData.Length; j++)
+            {
+                output += TargetData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -9547,6 +10760,16 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(TeleportFlags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Info --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.AppendLine(String.Format("LureID: {0}", LureID));
+                output.Append(String.Format("TeleportFlags: {0}", TeleportFlags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -9609,6 +10832,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- TeleportLureRequest ---" + Environment.NewLine;
+                output += Info.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -9653,6 +10883,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Info --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -9715,6 +10953,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- TeleportCancel ---" + Environment.NewLine;
+                output += Info.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -9756,6 +11001,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(TeleportFlags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Info --");
+                output.Append(String.Format("TeleportFlags: {0}", TeleportFlags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -9818,6 +11070,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- TeleportStart ---" + Environment.NewLine;
+                output += Info.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -9874,10 +11133,19 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Reason == null) { Console.WriteLine("Warning: Reason is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Reason.Length;
                 Buffer.BlockCopy(Reason, 0, bytes, i, Reason.Length); i += Reason.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Info --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                Helpers.FieldToString(output, Reason, "Reason");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -9940,6 +11208,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- TeleportFailed ---" + Environment.NewLine;
+                output += Info.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -9987,6 +11262,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -10025,6 +11309,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectID: {0}", ObjectID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -10107,6 +11398,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- Undo ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -10154,6 +11456,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -10192,6 +11503,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectID: {0}", ObjectID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -10274,6 +11592,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- Redo ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -10318,6 +11647,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -10380,6 +11717,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- UndoLand ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -10427,6 +11771,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(SerialNum, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("SerialNum: {0}", SerialNum));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -10489,6 +11842,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentPause ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -10536,6 +11896,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(SerialNum, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("SerialNum: {0}", SerialNum));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -10598,6 +11967,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentResume ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -10642,6 +12018,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -10696,6 +12080,7 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Message == null) { Console.WriteLine("Warning: Message is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Message.Length % 256);
                 bytes[i++] = (byte)((Message.Length >> 8) % 256);
                 Buffer.BlockCopy(Message, 0, bytes, i, Message.Length); i += Message.Length;
@@ -10703,6 +12088,16 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(Channel, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ChatData --");
+                Helpers.FieldToString(output, Message, "Message");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("Type: {0}", Type));
+                output.Append(String.Format("Channel: {0}", Channel));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -10771,6 +12166,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ChatFromViewer ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ChatData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -10818,6 +12221,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(CircuitCode, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("CircuitCode: {0}", CircuitCode));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -10871,10 +12283,19 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Utils.UIntToBytes(GenCounter, bytes, i); i += 4;
+                if(Throttles == null) { Console.WriteLine("Warning: Throttles is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Throttles.Length;
                 Buffer.BlockCopy(Throttles, 0, bytes, i, Throttles.Length); i += Throttles.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Throttle --");
+                output.AppendLine(String.Format("GenCounter: {0}", GenCounter));
+                Helpers.FieldToString(output, Throttles, "Throttles");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -10943,6 +12364,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentThrottle ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Throttle.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -10990,6 +12419,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(CircuitCode, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("CircuitCode: {0}", CircuitCode));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -11031,6 +12469,14 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(VerticalAngle, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- FOVBlock --");
+                output.AppendLine(String.Format("GenCounter: {0}", GenCounter));
+                output.Append(String.Format("VerticalAngle: {0}", VerticalAngle));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -11098,6 +12544,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentFOV ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += FOVBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -11145,6 +12599,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(CircuitCode, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("CircuitCode: {0}", CircuitCode));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -11191,6 +12654,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Width >> 8) % 256);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- HeightWidthBlock --");
+                output.AppendLine(String.Format("GenCounter: {0}", GenCounter));
+                output.AppendLine(String.Format("Height: {0}", Height));
+                output.Append(String.Format("Width: {0}", Width));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -11258,6 +12730,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentHeightWidth ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += HeightWidthBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -11308,6 +12788,16 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(Size.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.AppendLine(String.Format("SerialNum: {0}", SerialNum));
+                output.Append(String.Format("Size: {0}", Size));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -11349,6 +12839,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = TextureIndex;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- WearableData --");
+                output.AppendLine(String.Format("CacheID: {0}", CacheID));
+                output.Append(String.Format("TextureIndex: {0}", TextureIndex));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -11399,11 +12897,19 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(TextureEntry == null) { Console.WriteLine("Warning: TextureEntry is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(TextureEntry.Length % 256);
                 bytes[i++] = (byte)((TextureEntry.Length >> 8) % 256);
                 Buffer.BlockCopy(TextureEntry, 0, bytes, i, TextureEntry.Length); i += TextureEntry.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                Helpers.FieldToString(output, TextureEntry, "TextureEntry");
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -11442,6 +12948,13 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = ParamValue;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- VisualParam --");
+                output.Append(String.Format("ParamValue: {0}", ParamValue));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -11550,6 +13063,22 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentSetAppearance ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < WearableData.Length; j++)
+            {
+                output += WearableData[j].ToString() + Environment.NewLine;
+            }
+                output += ObjectData.ToString() + Environment.NewLine;
+            for (int j = 0; j < VisualParam.Length; j++)
+            {
+                output += VisualParam[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -11594,6 +13123,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -11632,6 +13169,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ViewerCircuitCode, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- FuseBlock --");
+                output.Append(String.Format("ViewerCircuitCode: {0}", ViewerCircuitCode));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -11699,6 +13243,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentQuitCopy ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += FuseBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -11740,6 +13292,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ImageID --");
+                output.Append(String.Format("ID: {0}", ID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -11802,6 +13361,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ImageNotInDatabase ---" + Environment.NewLine;
+                output += ImageID.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -11843,6 +13409,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TextureID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TextureData --");
+                output.Append(String.Format("TextureID: {0}", TextureID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -11905,6 +13478,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RebakeAvatarTextures ---" + Environment.NewLine;
+                output += TextureData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -11952,6 +13532,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((AlwaysRun) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("AlwaysRun: {0}", AlwaysRun));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -12014,6 +13603,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- SetAlwaysRun ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -12061,6 +13657,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Force) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("Force: {0}", Force));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -12099,6 +13704,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ObjectLocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -12182,6 +13794,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectDelete ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -12229,6 +13852,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -12270,6 +13902,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(DuplicateFlags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- SharedData --");
+                output.AppendLine(String.Format("Offset: {0}", Offset));
+                output.Append(String.Format("DuplicateFlags: {0}", DuplicateFlags));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -12308,6 +13948,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ObjectLocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -12396,6 +14043,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectDuplicate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += SharedData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -12467,6 +14126,23 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(DuplicateFlags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("RayStart: {0}", RayStart));
+                output.AppendLine(String.Format("RayEnd: {0}", RayEnd));
+                output.AppendLine(String.Format("BypassRaycast: {0}", BypassRaycast));
+                output.AppendLine(String.Format("RayEndIsIntersection: {0}", RayEndIsIntersection));
+                output.AppendLine(String.Format("CopyCenters: {0}", CopyCenters));
+                output.AppendLine(String.Format("CopyRotates: {0}", CopyRotates));
+                output.AppendLine(String.Format("RayTargetID: {0}", RayTargetID));
+                output.Append(String.Format("DuplicateFlags: {0}", DuplicateFlags));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -12505,6 +14181,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ObjectLocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -12588,6 +14271,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectDuplicateOnRay ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -12632,6 +14326,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -12673,6 +14375,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(Scale.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                output.Append(String.Format("Scale: {0}", Scale));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -12756,6 +14466,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectScale ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -12800,6 +14521,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -12841,6 +14570,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(Rotation.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                output.Append(String.Format("Rotation: {0}", Rotation));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -12924,6 +14661,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectRotation ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -12983,6 +14731,19 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((CastsShadows) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.AppendLine(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                output.AppendLine(String.Format("UsePhysics: {0}", UsePhysics));
+                output.AppendLine(String.Format("IsTemporary: {0}", IsTemporary));
+                output.AppendLine(String.Format("IsPhantom: {0}", IsPhantom));
+                output.Append(String.Format("CastsShadows: {0}", CastsShadows));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -13046,6 +14807,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectFlagUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -13090,6 +14858,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -13131,6 +14907,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = ClickAction;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                output.Append(String.Format("ClickAction: {0}", ClickAction));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -13214,6 +14998,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectClickAction ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -13258,6 +15053,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -13326,13 +15129,25 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Utils.UIntToBytes(ObjectLocalID, bytes, i); i += 4;
+                if(MediaURL == null) { Console.WriteLine("Warning: MediaURL is null, in " + this.GetType()); }
                 bytes[i++] = (byte)MediaURL.Length;
                 Buffer.BlockCopy(MediaURL, 0, bytes, i, MediaURL.Length); i += MediaURL.Length;
+                if(TextureEntry == null) { Console.WriteLine("Warning: TextureEntry is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(TextureEntry.Length % 256);
                 bytes[i++] = (byte)((TextureEntry.Length >> 8) % 256);
                 Buffer.BlockCopy(TextureEntry, 0, bytes, i, TextureEntry.Length); i += TextureEntry.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                Helpers.FieldToString(output, MediaURL, "MediaURL");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, TextureEntry, "TextureEntry");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -13416,6 +15231,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectImage ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -13460,6 +15286,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -13501,6 +15335,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = Material;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                output.Append(String.Format("Material: {0}", Material));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -13584,6 +15426,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectMaterial ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -13628,6 +15481,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -13725,6 +15586,31 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((ProfileHollow >> 8) % 256);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                output.AppendLine(String.Format("PathCurve: {0}", PathCurve));
+                output.AppendLine(String.Format("ProfileCurve: {0}", ProfileCurve));
+                output.AppendLine(String.Format("PathBegin: {0}", PathBegin));
+                output.AppendLine(String.Format("PathEnd: {0}", PathEnd));
+                output.AppendLine(String.Format("PathScaleX: {0}", PathScaleX));
+                output.AppendLine(String.Format("PathScaleY: {0}", PathScaleY));
+                output.AppendLine(String.Format("PathShearX: {0}", PathShearX));
+                output.AppendLine(String.Format("PathShearY: {0}", PathShearY));
+                output.AppendLine(String.Format("PathTwist: {0}", PathTwist));
+                output.AppendLine(String.Format("PathTwistBegin: {0}", PathTwistBegin));
+                output.AppendLine(String.Format("PathRadiusOffset: {0}", PathRadiusOffset));
+                output.AppendLine(String.Format("PathTaperX: {0}", PathTaperX));
+                output.AppendLine(String.Format("PathTaperY: {0}", PathTaperY));
+                output.AppendLine(String.Format("PathRevolutions: {0}", PathRevolutions));
+                output.AppendLine(String.Format("PathSkew: {0}", PathSkew));
+                output.AppendLine(String.Format("ProfileBegin: {0}", ProfileBegin));
+                output.AppendLine(String.Format("ProfileEnd: {0}", ProfileEnd));
+                output.Append(String.Format("ProfileHollow: {0}", ProfileHollow));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -13808,6 +15694,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectShape ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -13852,6 +15749,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -13915,10 +15820,22 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((ParamType >> 8) % 256);
                 bytes[i++] = (byte)((ParamInUse) ? 1 : 0);
                 Utils.UIntToBytes(ParamSize, bytes, i); i += 4;
+                if(ParamData == null) { Console.WriteLine("Warning: ParamData is null, in " + this.GetType()); }
                 bytes[i++] = (byte)ParamData.Length;
                 Buffer.BlockCopy(ParamData, 0, bytes, i, ParamData.Length); i += ParamData.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                output.AppendLine(String.Format("ParamType: {0}", ParamType));
+                output.AppendLine(String.Format("ParamInUse: {0}", ParamInUse));
+                output.AppendLine(String.Format("ParamSize: {0}", ParamSize));
+                Helpers.FieldToString(output, ParamData, "ParamData");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -14002,6 +15919,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectExtraParams ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -14046,6 +15974,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -14090,6 +16026,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- HeaderData --");
+                output.AppendLine(String.Format("Override: {0}", Override));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -14128,6 +16073,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ObjectLocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -14216,6 +16168,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectOwner ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += HeaderData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -14263,6 +16227,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -14301,6 +16274,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ObjectLocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -14384,6 +16364,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectGroup ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -14434,6 +16425,16 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(CategoryID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.Append(String.Format("CategoryID: {0}", CategoryID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -14478,6 +16479,15 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(SalePrice, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                output.AppendLine(String.Format("SaleType: {0}", SaleType));
+                output.Append(String.Format("SalePrice: {0}", SalePrice));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -14561,6 +16571,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectBuy ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -14605,6 +16626,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -14649,6 +16678,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(FolderID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.Append(String.Format("FolderID: {0}", FolderID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -14717,6 +16755,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- BuyObjectInventory ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -14761,6 +16807,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Delete) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.Append(String.Format("Delete: {0}", Delete));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -14824,6 +16878,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DerezContainer ---" + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -14868,6 +16929,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -14906,6 +16975,13 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Override) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- HeaderData --");
+                output.Append(String.Format("Override: {0}", Override));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -14953,6 +17029,16 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Mask, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                output.AppendLine(String.Format("Field: {0}", Field));
+                output.AppendLine(String.Format("Set: {0}", Set));
+                output.Append(String.Format("Mask: {0}", Mask));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -15041,6 +17127,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectPermissions ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += HeaderData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -15085,6 +17183,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -15129,6 +17235,15 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(SalePrice, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.AppendLine(String.Format("SaleType: {0}", SaleType));
+                output.Append(String.Format("SalePrice: {0}", SalePrice));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -15212,6 +17327,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectSaleInfo ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -15256,6 +17382,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -15309,10 +17443,19 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Utils.UIntToBytes(LocalID, bytes, i); i += 4;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                Helpers.FieldToString(output, Name, "Name");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -15396,6 +17539,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectName ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -15440,6 +17594,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -15493,10 +17655,19 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Utils.UIntToBytes(LocalID, bytes, i); i += 4;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                Helpers.FieldToString(output, Description, "Description");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -15580,6 +17751,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectDescription ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -15624,6 +17806,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -15665,6 +17855,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Category, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.Append(String.Format("Category: {0}", Category));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -15748,6 +17946,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectCategory ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -15792,6 +18001,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -15830,6 +18047,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ObjectLocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -15913,6 +18137,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectSelect ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -15957,6 +18192,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -15995,6 +18238,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ObjectLocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -16078,6 +18328,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectDeselect ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -16125,6 +18386,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = AttachmentPoint;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("AttachmentPoint: {0}", AttachmentPoint));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -16166,6 +18436,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(Rotation.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                output.Append(String.Format("Rotation: {0}", Rotation));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -16249,6 +18527,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectAttach ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -16293,6 +18582,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -16331,6 +18628,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ObjectLocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -16413,6 +18717,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectDetach ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -16457,6 +18772,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -16495,6 +18818,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ObjectLocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -16577,6 +18907,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectDrop ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -16621,6 +18962,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -16659,6 +19008,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ObjectLocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -16741,6 +19097,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectLink ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -16785,6 +19152,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -16823,6 +19198,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ObjectLocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -16905,6 +19287,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectDelink ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -16949,6 +19342,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -16990,6 +19391,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GrabOffset.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.Append(String.Format("GrabOffset: {0}", GrabOffset));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -17043,6 +19452,18 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(Binormal.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- SurfaceInfo --");
+                output.AppendLine(String.Format("UVCoord: {0}", UVCoord));
+                output.AppendLine(String.Format("STCoord: {0}", STCoord));
+                output.AppendLine(String.Format("FaceIndex: {0}", FaceIndex));
+                output.AppendLine(String.Format("Position: {0}", Position));
+                output.AppendLine(String.Format("Normal: {0}", Normal));
+                output.Append(String.Format("Binormal: {0}", Binormal));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -17131,6 +19552,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectGrab ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ObjectData.ToString() + Environment.NewLine;
+            for (int j = 0; j < SurfaceInfo.Length; j++)
+            {
+                output += SurfaceInfo[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -17175,6 +19608,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -17222,6 +19663,16 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(TimeSinceLast, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.AppendLine(String.Format("GrabOffsetInitial: {0}", GrabOffsetInitial));
+                output.AppendLine(String.Format("GrabPosition: {0}", GrabPosition));
+                output.Append(String.Format("TimeSinceLast: {0}", TimeSinceLast));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -17275,6 +19726,18 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(Binormal.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- SurfaceInfo --");
+                output.AppendLine(String.Format("UVCoord: {0}", UVCoord));
+                output.AppendLine(String.Format("STCoord: {0}", STCoord));
+                output.AppendLine(String.Format("FaceIndex: {0}", FaceIndex));
+                output.AppendLine(String.Format("Position: {0}", Position));
+                output.AppendLine(String.Format("Normal: {0}", Normal));
+                output.Append(String.Format("Binormal: {0}", Binormal));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -17363,6 +19826,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectGrabUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ObjectData.ToString() + Environment.NewLine;
+            for (int j = 0; j < SurfaceInfo.Length; j++)
+            {
+                output += SurfaceInfo[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -17407,6 +19882,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -17445,6 +19928,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(LocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("LocalID: {0}", LocalID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -17498,6 +19988,18 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(Binormal.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- SurfaceInfo --");
+                output.AppendLine(String.Format("UVCoord: {0}", UVCoord));
+                output.AppendLine(String.Format("STCoord: {0}", STCoord));
+                output.AppendLine(String.Format("FaceIndex: {0}", FaceIndex));
+                output.AppendLine(String.Format("Position: {0}", Position));
+                output.AppendLine(String.Format("Normal: {0}", Normal));
+                output.Append(String.Format("Binormal: {0}", Binormal));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -17585,6 +20087,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectDeGrab ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ObjectData.ToString() + Environment.NewLine;
+            for (int j = 0; j < SurfaceInfo.Length; j++)
+            {
+                output += SurfaceInfo[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -17629,6 +20143,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -17667,6 +20189,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectID: {0}", ObjectID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -17735,6 +20264,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectSpinStart ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ObjectData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -17779,6 +20316,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -17820,6 +20365,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(Rotation.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.Append(String.Format("Rotation: {0}", Rotation));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -17888,6 +20441,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectSpinUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ObjectData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -17932,6 +20493,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -17970,6 +20539,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectID: {0}", ObjectID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -18038,6 +20614,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectSpinStop ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ObjectData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -18086,6 +20670,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((VolumeDetail >> 8) % 256);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("RequestID: {0}", RequestID));
+                output.Append(String.Format("VolumeDetail: {0}", VolumeDetail));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -18124,6 +20717,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectID: {0}", ObjectID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -18207,6 +20807,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectExportSelected ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -18251,6 +20862,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -18298,6 +20917,16 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(Height, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ModifyBlock --");
+                output.AppendLine(String.Format("Action: {0}", Action));
+                output.AppendLine(String.Format("BrushSize: {0}", BrushSize));
+                output.AppendLine(String.Format("Seconds: {0}", Seconds));
+                output.Append(String.Format("Height: {0}", Height));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -18348,6 +20977,17 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(North, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.AppendLine(String.Format("West: {0}", West));
+                output.AppendLine(String.Format("South: {0}", South));
+                output.AppendLine(String.Format("East: {0}", East));
+                output.Append(String.Format("North: {0}", North));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -18436,6 +21076,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ModifyLand ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ModifyBlock.ToString() + Environment.NewLine;
+            for (int j = 0; j < ParcelData.Length; j++)
+            {
+                output += ParcelData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -18480,6 +21132,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -18542,6 +21202,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- VelocityInterpolateOn ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -18586,6 +21253,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -18648,6 +21323,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- VelocityInterpolateOff ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -18692,6 +21374,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -18742,10 +21432,18 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Filename == null) { Console.WriteLine("Warning: Filename is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Filename.Length;
                 Buffer.BlockCopy(Filename, 0, bytes, i, Filename.Length); i += Filename.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- DataBlock --");
+                Helpers.FieldToString(output, Filename, "Filename");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -18813,6 +21511,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- StateSave ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += DataBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -18857,6 +21563,14 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(Status, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AutosaveData --");
+                output.AppendLine(String.Format("PID: {0}", PID));
+                output.Append(String.Format("Status: {0}", Status));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -18919,6 +21633,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ReportAutosaveCrash ---" + Environment.NewLine;
+                output += AutosaveData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -18963,6 +21684,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -19004,6 +21733,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- DataBlock --");
+                output.AppendLine(String.Format("TargetID: {0}", TargetID));
+                output.Append(String.Format("Flags: {0}", Flags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -19071,6 +21808,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- SimWideDeletes ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += DataBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -19115,6 +21860,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -19153,6 +21906,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(PreyID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TargetData --");
+                output.Append(String.Format("PreyID: {0}", PreyID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -19218,6 +21978,14 @@ namespace OpenMetaverse.Packets
             TargetData.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- TrackAgent ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += TargetData.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -19339,14 +22107,40 @@ namespace OpenMetaverse.Packets
                 Utils.DoubleToBytes(MetersTraveled, bytes, i); i += 8;
                 Utils.IntToBytes(RegionsVisited, bytes, i); i += 4;
                 Utils.UIntToBytes(SysRAM, bytes, i); i += 4;
+                if(SysOS == null) { Console.WriteLine("Warning: SysOS is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SysOS.Length;
                 Buffer.BlockCopy(SysOS, 0, bytes, i, SysOS.Length); i += SysOS.Length;
+                if(SysCPU == null) { Console.WriteLine("Warning: SysCPU is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SysCPU.Length;
                 Buffer.BlockCopy(SysCPU, 0, bytes, i, SysCPU.Length); i += SysCPU.Length;
+                if(SysGPU == null) { Console.WriteLine("Warning: SysGPU is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SysGPU.Length;
                 Buffer.BlockCopy(SysGPU, 0, bytes, i, SysGPU.Length); i += SysGPU.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.AppendLine(String.Format("IP: {0}", IP));
+                output.AppendLine(String.Format("StartTime: {0}", StartTime));
+                output.AppendLine(String.Format("RunTime: {0}", RunTime));
+                output.AppendLine(String.Format("SimFPS: {0}", SimFPS));
+                output.AppendLine(String.Format("FPS: {0}", FPS));
+                output.AppendLine(String.Format("AgentsInView: {0}", AgentsInView));
+                output.AppendLine(String.Format("Ping: {0}", Ping));
+                output.AppendLine(String.Format("MetersTraveled: {0}", MetersTraveled));
+                output.AppendLine(String.Format("RegionsVisited: {0}", RegionsVisited));
+                output.AppendLine(String.Format("SysRAM: {0}", SysRAM));
+                Helpers.FieldToString(output, SysOS, "SysOS");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, SysCPU, "SysCPU");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, SysGPU, "SysGPU");
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -19391,6 +22185,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Textures, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- DownloadTotals --");
+                output.AppendLine(String.Format("World: {0}", World));
+                output.AppendLine(String.Format("Objects: {0}", Objects));
+                output.Append(String.Format("Textures: {0}", Textures));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -19438,6 +22241,16 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Savings, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- NetStats --");
+                output.AppendLine(String.Format("Bytes: {0}", Bytes));
+                output.AppendLine(String.Format("Packets: {0}", Packets));
+                output.AppendLine(String.Format("Compressed: {0}", Compressed));
+                output.Append(String.Format("Savings: {0}", Savings));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -19491,6 +22304,18 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Invalid, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- FailStats --");
+                output.AppendLine(String.Format("SendPacket: {0}", SendPacket));
+                output.AppendLine(String.Format("Dropped: {0}", Dropped));
+                output.AppendLine(String.Format("Resent: {0}", Resent));
+                output.AppendLine(String.Format("FailedResends: {0}", FailedResends));
+                output.AppendLine(String.Format("OffCircuit: {0}", OffCircuit));
+                output.Append(String.Format("Invalid: {0}", Invalid));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -19532,6 +22357,14 @@ namespace OpenMetaverse.Packets
                 Utils.DoubleToBytes(Value, bytes, i); i += 8;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MiscStats --");
+                output.AppendLine(String.Format("Type: {0}", Type));
+                output.Append(String.Format("Value: {0}", Value));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -19641,6 +22474,23 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ViewerStats ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += DownloadTotals.ToString() + Environment.NewLine;
+            for (int j = 0; j < 2; j++)
+            {
+                output += NetStats[j].ToString() + Environment.NewLine;
+            }
+                output += FailStats.ToString() + Environment.NewLine;
+            for (int j = 0; j < MiscStats.Length; j++)
+            {
+                output += MiscStats[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -19685,6 +22535,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -19729,6 +22587,15 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(Questions, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("TaskID: {0}", TaskID));
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.Append(String.Format("Questions: {0}", Questions));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -19796,6 +22663,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ScriptAnswerYes ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -19840,6 +22715,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -19958,18 +22841,43 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ScreenshotID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(AbuserID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(AbuseRegionName == null) { Console.WriteLine("Warning: AbuseRegionName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)AbuseRegionName.Length;
                 Buffer.BlockCopy(AbuseRegionName, 0, bytes, i, AbuseRegionName.Length); i += AbuseRegionName.Length;
                 Buffer.BlockCopy(AbuseRegionID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Summary == null) { Console.WriteLine("Warning: Summary is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Summary.Length;
                 Buffer.BlockCopy(Summary, 0, bytes, i, Summary.Length); i += Summary.Length;
+                if(Details == null) { Console.WriteLine("Warning: Details is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Details.Length % 256);
                 bytes[i++] = (byte)((Details.Length >> 8) % 256);
                 Buffer.BlockCopy(Details, 0, bytes, i, Details.Length); i += Details.Length;
+                if(VersionString == null) { Console.WriteLine("Warning: VersionString is null, in " + this.GetType()); }
                 bytes[i++] = (byte)VersionString.Length;
                 Buffer.BlockCopy(VersionString, 0, bytes, i, VersionString.Length); i += VersionString.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ReportData --");
+                output.AppendLine(String.Format("ReportType: {0}", ReportType));
+                output.AppendLine(String.Format("Category: {0}", Category));
+                output.AppendLine(String.Format("Position: {0}", Position));
+                output.AppendLine(String.Format("CheckFlags: {0}", CheckFlags));
+                output.AppendLine(String.Format("ScreenshotID: {0}", ScreenshotID));
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.AppendLine(String.Format("AbuserID: {0}", AbuserID));
+                Helpers.FieldToString(output, AbuseRegionName, "AbuseRegionName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("AbuseRegionID: {0}", AbuseRegionID));
+                Helpers.FieldToString(output, Summary, "Summary");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Details, "Details");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, VersionString, "VersionString");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -20038,6 +22946,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- UserReport ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ReportData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -20091,10 +23007,18 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Message == null) { Console.WriteLine("Warning: Message is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Message.Length;
                 Buffer.BlockCopy(Message, 0, bytes, i, Message.Length); i += Message.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AlertData --");
+                Helpers.FieldToString(output, Message, "Message");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -20157,6 +23081,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AlertMessage ---" + Environment.NewLine;
+                output += AlertData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -20198,6 +23129,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -20251,10 +23189,19 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 bytes[i++] = (byte)((Modal) ? 1 : 0);
+                if(Message == null) { Console.WriteLine("Warning: Message is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Message.Length;
                 Buffer.BlockCopy(Message, 0, bytes, i, Message.Length); i += Message.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AlertData --");
+                output.AppendLine(String.Format("Modal: {0}", Modal));
+                Helpers.FieldToString(output, Message, "Message");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -20322,6 +23269,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentAlertMessage ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += AlertData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -20375,6 +23330,17 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = Type;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MeanCollision --");
+                output.AppendLine(String.Format("Victim: {0}", Victim));
+                output.AppendLine(String.Format("Perp: {0}", Perp));
+                output.AppendLine(String.Format("Time: {0}", Time));
+                output.AppendLine(String.Format("Mag: {0}", Mag));
+                output.Append(String.Format("Type: {0}", Type));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -20453,6 +23419,16 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- MeanCollisionAlert ---" + Environment.NewLine;
+            for (int j = 0; j < MeanCollision.Length; j++)
+            {
+                output += MeanCollision[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -20494,6 +23470,13 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Data) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- FrozenData --");
+                output.Append(String.Format("Data: {0}", Data));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -20556,6 +23539,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ViewerFrozenMessage ---" + Environment.NewLine;
+                output += FrozenData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -20597,6 +23587,13 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(Health, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- HealthData --");
+                output.Append(String.Format("Health: {0}", Health));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -20658,6 +23655,13 @@ namespace OpenMetaverse.Packets
             HealthData.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- HealthMessage ---" + Environment.NewLine;
+                output += HealthData.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -20740,6 +23744,7 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(FromName == null) { Console.WriteLine("Warning: FromName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)FromName.Length;
                 Buffer.BlockCopy(FromName, 0, bytes, i, FromName.Length); i += FromName.Length;
                 Buffer.BlockCopy(SourceID.GetBytes(), 0, bytes, i, 16); i += 16;
@@ -20748,11 +23753,27 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = ChatType;
                 bytes[i++] = Audible;
                 Buffer.BlockCopy(Position.GetBytes(), 0, bytes, i, 12); i += 12;
+                if(Message == null) { Console.WriteLine("Warning: Message is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Message.Length % 256);
                 bytes[i++] = (byte)((Message.Length >> 8) % 256);
                 Buffer.BlockCopy(Message, 0, bytes, i, Message.Length); i += Message.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ChatData --");
+                Helpers.FieldToString(output, FromName, "FromName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("SourceID: {0}", SourceID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("SourceType: {0}", SourceType));
+                output.AppendLine(String.Format("ChatType: {0}", ChatType));
+                output.AppendLine(String.Format("Audible: {0}", Audible));
+                output.AppendLine(String.Format("Position: {0}", Position));
+                Helpers.FieldToString(output, Message, "Message");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -20815,6 +23836,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ChatFromSimulator ---" + Environment.NewLine;
+                output += ChatData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -20865,6 +23893,16 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ObjectCapacity, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Region --");
+                output.AppendLine(String.Format("RegionX: {0}", RegionX));
+                output.AppendLine(String.Format("RegionY: {0}", RegionY));
+                output.AppendLine(String.Format("RegionFlags: {0}", RegionFlags));
+                output.Append(String.Format("ObjectCapacity: {0}", ObjectCapacity));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -20906,6 +23944,14 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(StatValue, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Stat --");
+                output.AppendLine(String.Format("StatID: {0}", StatID));
+                output.Append(String.Format("StatValue: {0}", StatValue));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -20944,6 +23990,13 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(PID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- PidStat --");
+                output.Append(String.Format("PID: {0}", PID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -21031,6 +24084,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- SimStats ---" + Environment.NewLine;
+                output += Region.ToString() + Environment.NewLine;
+            for (int j = 0; j < Stat.Length; j++)
+            {
+                output += Stat[j].ToString() + Environment.NewLine;
+            }
+                output += PidStat.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -21075,6 +24140,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -21137,6 +24210,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RequestRegionInfo ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -21181,6 +24261,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -21261,6 +24349,7 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(SimName == null) { Console.WriteLine("Warning: SimName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SimName.Length;
                 Buffer.BlockCopy(SimName, 0, bytes, i, SimName.Length); i += SimName.Length;
                 Utils.UIntToBytes(EstateID, bytes, i); i += 4;
@@ -21280,6 +24369,29 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(SunHour, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RegionInfo --");
+                Helpers.FieldToString(output, SimName, "SimName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("EstateID: {0}", EstateID));
+                output.AppendLine(String.Format("ParentEstateID: {0}", ParentEstateID));
+                output.AppendLine(String.Format("RegionFlags: {0}", RegionFlags));
+                output.AppendLine(String.Format("SimAccess: {0}", SimAccess));
+                output.AppendLine(String.Format("MaxAgents: {0}", MaxAgents));
+                output.AppendLine(String.Format("BillableFactor: {0}", BillableFactor));
+                output.AppendLine(String.Format("ObjectBonusFactor: {0}", ObjectBonusFactor));
+                output.AppendLine(String.Format("WaterHeight: {0}", WaterHeight));
+                output.AppendLine(String.Format("TerrainRaiseLimit: {0}", TerrainRaiseLimit));
+                output.AppendLine(String.Format("TerrainLowerLimit: {0}", TerrainLowerLimit));
+                output.AppendLine(String.Format("PricePerMeter: {0}", PricePerMeter));
+                output.AppendLine(String.Format("RedirectGridX: {0}", RedirectGridX));
+                output.AppendLine(String.Format("RedirectGridY: {0}", RedirectGridY));
+                output.AppendLine(String.Format("UseEstateSun: {0}", UseEstateSun));
+                output.Append(String.Format("SunHour: {0}", SunHour));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -21348,6 +24460,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RegionInfo ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += RegionInfo.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -21392,6 +24512,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -21456,6 +24584,7 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(SimName == null) { Console.WriteLine("Warning: SimName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SimName.Length;
                 Buffer.BlockCopy(SimName, 0, bytes, i, SimName.Length); i += SimName.Length;
                 Utils.UIntToBytes(EstateID, bytes, i); i += 4;
@@ -21467,6 +24596,21 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(RedirectGridY, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RegionInfo --");
+                Helpers.FieldToString(output, SimName, "SimName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("EstateID: {0}", EstateID));
+                output.AppendLine(String.Format("ParentEstateID: {0}", ParentEstateID));
+                output.AppendLine(String.Format("RegionFlags: {0}", RegionFlags));
+                output.AppendLine(String.Format("BillableFactor: {0}", BillableFactor));
+                output.AppendLine(String.Format("PricePerMeter: {0}", PricePerMeter));
+                output.AppendLine(String.Format("RedirectGridX: {0}", RedirectGridX));
+                output.Append(String.Format("RedirectGridY: {0}", RedirectGridY));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -21535,6 +24679,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GodUpdateRegionInfo ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += RegionInfo.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -21576,6 +24728,13 @@ namespace OpenMetaverse.Packets
                 Utils.UInt64ToBytes(RegionHandle, bytes, i); i += 8;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RegionData --");
+                output.Append(String.Format("RegionHandle: {0}", RegionHandle));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -21636,6 +24795,13 @@ namespace OpenMetaverse.Packets
             RegionData.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- NearestLandingRegionUpdated ---" + Environment.NewLine;
+                output += RegionData.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -21739,6 +24905,7 @@ namespace OpenMetaverse.Packets
             {
                 Utils.UIntToBytes(RegionFlags, bytes, i); i += 4;
                 bytes[i++] = SimAccess;
+                if(SimName == null) { Console.WriteLine("Warning: SimName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SimName.Length;
                 Buffer.BlockCopy(SimName, 0, bytes, i, SimName.Length); i += SimName.Length;
                 Buffer.BlockCopy(SimOwner.GetBytes(), 0, bytes, i, 16); i += 16;
@@ -21764,6 +24931,37 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(TerrainHeightRange11, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RegionInfo --");
+                output.AppendLine(String.Format("RegionFlags: {0}", RegionFlags));
+                output.AppendLine(String.Format("SimAccess: {0}", SimAccess));
+                Helpers.FieldToString(output, SimName, "SimName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("SimOwner: {0}", SimOwner));
+                output.AppendLine(String.Format("IsEstateManager: {0}", IsEstateManager));
+                output.AppendLine(String.Format("WaterHeight: {0}", WaterHeight));
+                output.AppendLine(String.Format("BillableFactor: {0}", BillableFactor));
+                output.AppendLine(String.Format("CacheID: {0}", CacheID));
+                output.AppendLine(String.Format("TerrainBase0: {0}", TerrainBase0));
+                output.AppendLine(String.Format("TerrainBase1: {0}", TerrainBase1));
+                output.AppendLine(String.Format("TerrainBase2: {0}", TerrainBase2));
+                output.AppendLine(String.Format("TerrainBase3: {0}", TerrainBase3));
+                output.AppendLine(String.Format("TerrainDetail0: {0}", TerrainDetail0));
+                output.AppendLine(String.Format("TerrainDetail1: {0}", TerrainDetail1));
+                output.AppendLine(String.Format("TerrainDetail2: {0}", TerrainDetail2));
+                output.AppendLine(String.Format("TerrainDetail3: {0}", TerrainDetail3));
+                output.AppendLine(String.Format("TerrainStartHeight00: {0}", TerrainStartHeight00));
+                output.AppendLine(String.Format("TerrainStartHeight01: {0}", TerrainStartHeight01));
+                output.AppendLine(String.Format("TerrainStartHeight10: {0}", TerrainStartHeight10));
+                output.AppendLine(String.Format("TerrainStartHeight11: {0}", TerrainStartHeight11));
+                output.AppendLine(String.Format("TerrainHeightRange00: {0}", TerrainHeightRange00));
+                output.AppendLine(String.Format("TerrainHeightRange01: {0}", TerrainHeightRange01));
+                output.AppendLine(String.Format("TerrainHeightRange10: {0}", TerrainHeightRange10));
+                output.Append(String.Format("TerrainHeightRange11: {0}", TerrainHeightRange11));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -21802,6 +25000,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(RegionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RegionInfo2 --");
+                output.Append(String.Format("RegionID: {0}", RegionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -21870,6 +25075,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RegionHandshake ---" + Environment.NewLine;
+                output += RegionInfo.ToString() + Environment.NewLine;
+                output += RegionInfo2.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -21914,6 +25127,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -21952,6 +25173,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RegionInfo --");
+                output.Append(String.Format("Flags: {0}", Flags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -22020,6 +25248,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RegionHandshakeReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += RegionInfo.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -22076,6 +25312,18 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SunAngVelocity.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TimeInfo --");
+                output.AppendLine(String.Format("UsecSinceStart: {0}", UsecSinceStart));
+                output.AppendLine(String.Format("SecPerDay: {0}", SecPerDay));
+                output.AppendLine(String.Format("SecPerYear: {0}", SecPerYear));
+                output.AppendLine(String.Format("SunDirection: {0}", SunDirection));
+                output.AppendLine(String.Format("SunPhase: {0}", SunPhase));
+                output.Append(String.Format("SunAngVelocity: {0}", SunAngVelocity));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -22138,6 +25386,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- SimulatorViewerTimeMessage ---" + Environment.NewLine;
+                output += TimeInfo.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -22186,6 +25441,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)(Port % 256);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- SimulatorInfo --");
+                output.AppendLine(String.Format("Handle: {0}", Handle));
+                output.AppendLine(String.Format("IP: {0}", IP));
+                output.Append(String.Format("Port: {0}", Port));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -22248,6 +25512,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- EnableSimulator ---" + Environment.NewLine;
+                output += SimulatorInfo.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -22306,6 +25577,12 @@ namespace OpenMetaverse.Packets
             header.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- DisableSimulator ---" + Environment.NewLine;
+            return output;
         }
 
     }
@@ -22373,11 +25650,23 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(ChannelType, bytes, i); i += 4;
                 Utils.IntToBytes(SourceType, bytes, i); i += 4;
                 Utils.FloatToBytes(Priority, bytes, i); i += 4;
+                if(Params == null) { Console.WriteLine("Warning: Params is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Params.Length % 256);
                 bytes[i++] = (byte)((Params.Length >> 8) % 256);
                 Buffer.BlockCopy(Params, 0, bytes, i, Params.Length); i += Params.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TransferInfo --");
+                output.AppendLine(String.Format("TransferID: {0}", TransferID));
+                output.AppendLine(String.Format("ChannelType: {0}", ChannelType));
+                output.AppendLine(String.Format("SourceType: {0}", SourceType));
+                output.AppendLine(String.Format("Priority: {0}", Priority));
+                Helpers.FieldToString(output, Params, "Params");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -22439,6 +25728,13 @@ namespace OpenMetaverse.Packets
             TransferInfo.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- TransferRequest ---" + Environment.NewLine;
+                output += TransferInfo.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -22509,11 +25805,24 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(TargetType, bytes, i); i += 4;
                 Utils.IntToBytes(Status, bytes, i); i += 4;
                 Utils.IntToBytes(Size, bytes, i); i += 4;
+                if(Params == null) { Console.WriteLine("Warning: Params is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Params.Length % 256);
                 bytes[i++] = (byte)((Params.Length >> 8) % 256);
                 Buffer.BlockCopy(Params, 0, bytes, i, Params.Length); i += Params.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TransferInfo --");
+                output.AppendLine(String.Format("TransferID: {0}", TransferID));
+                output.AppendLine(String.Format("ChannelType: {0}", ChannelType));
+                output.AppendLine(String.Format("TargetType: {0}", TargetType));
+                output.AppendLine(String.Format("Status: {0}", Status));
+                output.AppendLine(String.Format("Size: {0}", Size));
+                Helpers.FieldToString(output, Params, "Params");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -22577,6 +25886,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- TransferInfo ---" + Environment.NewLine;
+                output += TransferInfo.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -22621,6 +25937,14 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(ChannelType, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TransferInfo --");
+                output.AppendLine(String.Format("TransferID: {0}", TransferID));
+                output.Append(String.Format("ChannelType: {0}", ChannelType));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -22682,6 +26006,13 @@ namespace OpenMetaverse.Packets
             TransferInfo.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- TransferAbort ---" + Environment.NewLine;
+                output += TransferInfo.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -22750,6 +26081,7 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Utils.UInt64ToBytes(ID, bytes, i); i += 8;
+                if(Filename == null) { Console.WriteLine("Warning: Filename is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Filename.Length;
                 Buffer.BlockCopy(Filename, 0, bytes, i, Filename.Length); i += Filename.Length;
                 bytes[i++] = FilePath;
@@ -22760,6 +26092,20 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((VFileType >> 8) % 256);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- XferID --");
+                output.AppendLine(String.Format("ID: {0}", ID));
+                Helpers.FieldToString(output, Filename, "Filename");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("FilePath: {0}", FilePath));
+                output.AppendLine(String.Format("DeleteOnCompletion: {0}", DeleteOnCompletion));
+                output.AppendLine(String.Format("UseBigPackets: {0}", UseBigPackets));
+                output.AppendLine(String.Format("VFileID: {0}", VFileID));
+                output.Append(String.Format("VFileType: {0}", VFileType));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -22823,6 +26169,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RequestXfer ---" + Environment.NewLine;
+                output += XferID.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -22867,6 +26220,14 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(Result, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- XferID --");
+                output.AppendLine(String.Format("ID: {0}", ID));
+                output.Append(String.Format("Result: {0}", Result));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -22929,6 +26290,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AbortXfer ---" + Environment.NewLine;
+                output += XferID.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -22973,6 +26341,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((IsTrial) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Sender --");
+                output.AppendLine(String.Format("ID: {0}", ID));
+                output.Append(String.Format("IsTrial: {0}", IsTrial));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -23023,11 +26399,19 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(TextureEntry == null) { Console.WriteLine("Warning: TextureEntry is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(TextureEntry.Length % 256);
                 bytes[i++] = (byte)((TextureEntry.Length >> 8) % 256);
                 Buffer.BlockCopy(TextureEntry, 0, bytes, i, TextureEntry.Length); i += TextureEntry.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                Helpers.FieldToString(output, TextureEntry, "TextureEntry");
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -23066,6 +26450,13 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = ParamValue;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- VisualParam --");
+                output.Append(String.Format("ParamValue: {0}", ParamValue));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -23154,6 +26545,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AvatarAppearance ---" + Environment.NewLine;
+                output += Sender.ToString() + Environment.NewLine;
+                output += ObjectData.ToString() + Environment.NewLine;
+            for (int j = 0; j < VisualParam.Length; j++)
+            {
+                output += VisualParam[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -23195,6 +26598,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectID: {0}", ObjectID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -23236,6 +26646,14 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(Value, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- CameraProperty --");
+                output.AppendLine(String.Format("Type: {0}", Type));
+                output.Append(String.Format("Value: {0}", Value));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -23318,6 +26736,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- SetFollowCamProperties ---" + Environment.NewLine;
+                output += ObjectData.ToString() + Environment.NewLine;
+            for (int j = 0; j < CameraProperty.Length; j++)
+            {
+                output += CameraProperty[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -23359,6 +26788,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectID: {0}", ObjectID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -23421,6 +26857,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ClearFollowCamProperties ---" + Environment.NewLine;
+                output += ObjectData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -23462,6 +26905,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectID: {0}", ObjectID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -23524,6 +26974,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RequestPayPrice ---" + Environment.NewLine;
+                output += ObjectData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -23568,6 +27025,14 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(DefaultPayPrice, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.Append(String.Format("DefaultPayPrice: {0}", DefaultPayPrice));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -23606,6 +27071,13 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(PayButton, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ButtonData --");
+                output.Append(String.Format("PayButton: {0}", PayButton));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -23688,6 +27160,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- PayPriceReply ---" + Environment.NewLine;
+                output += ObjectData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ButtonData.Length; j++)
+            {
+                output += ButtonData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -23733,6 +27216,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)(TargetPort % 256);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TargetBlock --");
+                output.AppendLine(String.Format("TargetIP: {0}", TargetIP));
+                output.Append(String.Format("TargetPort: {0}", TargetPort));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -23789,11 +27280,21 @@ namespace OpenMetaverse.Packets
             {
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Reason == null) { Console.WriteLine("Warning: Reason is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Reason.Length % 256);
                 bytes[i++] = (byte)((Reason.Length >> 8) % 256);
                 Buffer.BlockCopy(Reason, 0, bytes, i, Reason.Length); i += Reason.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- UserInfo --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                Helpers.FieldToString(output, Reason, "Reason");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -23861,6 +27362,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- KickUser ---" + Environment.NewLine;
+                output += TargetBlock.ToString() + Environment.NewLine;
+                output += UserInfo.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -23905,6 +27414,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- UserInfo --");
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("Flags: {0}", Flags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -23965,6 +27482,13 @@ namespace OpenMetaverse.Packets
             UserInfo.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- KickUserAck ---" + Environment.NewLine;
+                output += UserInfo.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -24032,11 +27556,23 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GodSessionID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Utils.UIntToBytes(KickFlags, bytes, i); i += 4;
+                if(Reason == null) { Console.WriteLine("Warning: Reason is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Reason.Length % 256);
                 bytes[i++] = (byte)((Reason.Length >> 8) % 256);
                 Buffer.BlockCopy(Reason, 0, bytes, i, Reason.Length); i += Reason.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- UserInfo --");
+                output.AppendLine(String.Format("GodID: {0}", GodID));
+                output.AppendLine(String.Format("GodSessionID: {0}", GodSessionID));
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("KickFlags: {0}", KickFlags));
+                Helpers.FieldToString(output, Reason, "Reason");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -24099,6 +27635,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GodKickUser ---" + Environment.NewLine;
+                output += UserInfo.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -24143,6 +27686,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -24184,6 +27735,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("TargetID: {0}", TargetID));
+                output.Append(String.Format("Flags: {0}", Flags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -24251,6 +27810,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- EjectUser ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -24295,6 +27862,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -24336,6 +27911,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("TargetID: {0}", TargetID));
+                output.Append(String.Format("Flags: {0}", Flags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -24403,6 +27986,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- FreezeUser ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -24450,6 +28041,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AvatarID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("AvatarID: {0}", AvatarID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -24512,6 +28112,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AvatarPropertiesRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -24556,6 +28163,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AvatarID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("AvatarID: {0}", AvatarID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -24677,20 +28292,45 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ImageID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(FLImageID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(PartnerID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(AboutText == null) { Console.WriteLine("Warning: AboutText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(AboutText.Length % 256);
                 bytes[i++] = (byte)((AboutText.Length >> 8) % 256);
                 Buffer.BlockCopy(AboutText, 0, bytes, i, AboutText.Length); i += AboutText.Length;
+                if(FLAboutText == null) { Console.WriteLine("Warning: FLAboutText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)FLAboutText.Length;
                 Buffer.BlockCopy(FLAboutText, 0, bytes, i, FLAboutText.Length); i += FLAboutText.Length;
+                if(BornOn == null) { Console.WriteLine("Warning: BornOn is null, in " + this.GetType()); }
                 bytes[i++] = (byte)BornOn.Length;
                 Buffer.BlockCopy(BornOn, 0, bytes, i, BornOn.Length); i += BornOn.Length;
+                if(ProfileURL == null) { Console.WriteLine("Warning: ProfileURL is null, in " + this.GetType()); }
                 bytes[i++] = (byte)ProfileURL.Length;
                 Buffer.BlockCopy(ProfileURL, 0, bytes, i, ProfileURL.Length); i += ProfileURL.Length;
+                if(CharterMember == null) { Console.WriteLine("Warning: CharterMember is null, in " + this.GetType()); }
                 bytes[i++] = (byte)CharterMember.Length;
                 Buffer.BlockCopy(CharterMember, 0, bytes, i, CharterMember.Length); i += CharterMember.Length;
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- PropertiesData --");
+                output.AppendLine(String.Format("ImageID: {0}", ImageID));
+                output.AppendLine(String.Format("FLImageID: {0}", FLImageID));
+                output.AppendLine(String.Format("PartnerID: {0}", PartnerID));
+                Helpers.FieldToString(output, AboutText, "AboutText");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, FLAboutText, "FLAboutText");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, BornOn, "BornOn");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, ProfileURL, "ProfileURL");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, CharterMember, "CharterMember");
+                output.Append(Environment.NewLine);
+                output.Append(String.Format("Flags: {0}", Flags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -24759,6 +28399,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AvatarPropertiesReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += PropertiesData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -24803,6 +28451,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AvatarID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("AvatarID: {0}", AvatarID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -24888,15 +28544,31 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Utils.UIntToBytes(WantToMask, bytes, i); i += 4;
+                if(WantToText == null) { Console.WriteLine("Warning: WantToText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)WantToText.Length;
                 Buffer.BlockCopy(WantToText, 0, bytes, i, WantToText.Length); i += WantToText.Length;
                 Utils.UIntToBytes(SkillsMask, bytes, i); i += 4;
+                if(SkillsText == null) { Console.WriteLine("Warning: SkillsText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SkillsText.Length;
                 Buffer.BlockCopy(SkillsText, 0, bytes, i, SkillsText.Length); i += SkillsText.Length;
+                if(LanguagesText == null) { Console.WriteLine("Warning: LanguagesText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)LanguagesText.Length;
                 Buffer.BlockCopy(LanguagesText, 0, bytes, i, LanguagesText.Length); i += LanguagesText.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- PropertiesData --");
+                output.AppendLine(String.Format("WantToMask: {0}", WantToMask));
+                Helpers.FieldToString(output, WantToText, "WantToText");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("SkillsMask: {0}", SkillsMask));
+                Helpers.FieldToString(output, SkillsText, "SkillsText");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, LanguagesText, "LanguagesText");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -24965,6 +28637,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AvatarInterestsReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += PropertiesData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -25009,6 +28689,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AvatarID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("AvatarID: {0}", AvatarID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -25084,14 +28772,30 @@ namespace OpenMetaverse.Packets
             {
                 Utils.UInt64ToBytes(GroupPowers, bytes, i); i += 8;
                 bytes[i++] = (byte)((AcceptNotices) ? 1 : 0);
+                if(GroupTitle == null) { Console.WriteLine("Warning: GroupTitle is null, in " + this.GetType()); }
                 bytes[i++] = (byte)GroupTitle.Length;
                 Buffer.BlockCopy(GroupTitle, 0, bytes, i, GroupTitle.Length); i += GroupTitle.Length;
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(GroupName == null) { Console.WriteLine("Warning: GroupName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)GroupName.Length;
                 Buffer.BlockCopy(GroupName, 0, bytes, i, GroupName.Length); i += GroupName.Length;
                 Buffer.BlockCopy(GroupInsigniaID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.AppendLine(String.Format("GroupPowers: {0}", GroupPowers));
+                output.AppendLine(String.Format("AcceptNotices: {0}", AcceptNotices));
+                Helpers.FieldToString(output, GroupTitle, "GroupTitle");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                Helpers.FieldToString(output, GroupName, "GroupName");
+                output.Append(Environment.NewLine);
+                output.Append(String.Format("GroupInsigniaID: {0}", GroupInsigniaID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -25130,6 +28834,13 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((ListInProfile) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- NewGroupData --");
+                output.Append(String.Format("ListInProfile: {0}", ListInProfile));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -25218,6 +28929,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AvatarGroupsReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < GroupData.Length; j++)
+            {
+                output += GroupData[j].ToString() + Environment.NewLine;
+            }
+                output += NewGroupData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -25262,6 +28985,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -25352,17 +29083,35 @@ namespace OpenMetaverse.Packets
             {
                 Buffer.BlockCopy(ImageID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(FLImageID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(AboutText == null) { Console.WriteLine("Warning: AboutText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(AboutText.Length % 256);
                 bytes[i++] = (byte)((AboutText.Length >> 8) % 256);
                 Buffer.BlockCopy(AboutText, 0, bytes, i, AboutText.Length); i += AboutText.Length;
+                if(FLAboutText == null) { Console.WriteLine("Warning: FLAboutText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)FLAboutText.Length;
                 Buffer.BlockCopy(FLAboutText, 0, bytes, i, FLAboutText.Length); i += FLAboutText.Length;
                 bytes[i++] = (byte)((AllowPublish) ? 1 : 0);
                 bytes[i++] = (byte)((MaturePublish) ? 1 : 0);
+                if(ProfileURL == null) { Console.WriteLine("Warning: ProfileURL is null, in " + this.GetType()); }
                 bytes[i++] = (byte)ProfileURL.Length;
                 Buffer.BlockCopy(ProfileURL, 0, bytes, i, ProfileURL.Length); i += ProfileURL.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- PropertiesData --");
+                output.AppendLine(String.Format("ImageID: {0}", ImageID));
+                output.AppendLine(String.Format("FLImageID: {0}", FLImageID));
+                Helpers.FieldToString(output, AboutText, "AboutText");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, FLAboutText, "FLAboutText");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("AllowPublish: {0}", AllowPublish));
+                output.AppendLine(String.Format("MaturePublish: {0}", MaturePublish));
+                Helpers.FieldToString(output, ProfileURL, "ProfileURL");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -25431,6 +29180,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AvatarPropertiesUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += PropertiesData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -25475,6 +29232,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -25560,15 +29325,31 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Utils.UIntToBytes(WantToMask, bytes, i); i += 4;
+                if(WantToText == null) { Console.WriteLine("Warning: WantToText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)WantToText.Length;
                 Buffer.BlockCopy(WantToText, 0, bytes, i, WantToText.Length); i += WantToText.Length;
                 Utils.UIntToBytes(SkillsMask, bytes, i); i += 4;
+                if(SkillsText == null) { Console.WriteLine("Warning: SkillsText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SkillsText.Length;
                 Buffer.BlockCopy(SkillsText, 0, bytes, i, SkillsText.Length); i += SkillsText.Length;
+                if(LanguagesText == null) { Console.WriteLine("Warning: LanguagesText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)LanguagesText.Length;
                 Buffer.BlockCopy(LanguagesText, 0, bytes, i, LanguagesText.Length); i += LanguagesText.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- PropertiesData --");
+                output.AppendLine(String.Format("WantToMask: {0}", WantToMask));
+                Helpers.FieldToString(output, WantToText, "WantToText");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("SkillsMask: {0}", SkillsMask));
+                Helpers.FieldToString(output, SkillsText, "SkillsText");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, LanguagesText, "LanguagesText");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -25637,6 +29418,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AvatarInterestsUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += PropertiesData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -25678,6 +29467,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -25731,11 +29527,20 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(TargetID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Notes == null) { Console.WriteLine("Warning: Notes is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Notes.Length % 256);
                 bytes[i++] = (byte)((Notes.Length >> 8) % 256);
                 Buffer.BlockCopy(Notes, 0, bytes, i, Notes.Length); i += Notes.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("TargetID: {0}", TargetID));
+                Helpers.FieldToString(output, Notes, "Notes");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -25803,6 +29608,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AvatarNotesReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -25847,6 +29660,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -25900,11 +29721,20 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(TargetID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Notes == null) { Console.WriteLine("Warning: Notes is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Notes.Length % 256);
                 bytes[i++] = (byte)((Notes.Length >> 8) % 256);
                 Buffer.BlockCopy(Notes, 0, bytes, i, Notes.Length); i += Notes.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("TargetID: {0}", TargetID));
+                Helpers.FieldToString(output, Notes, "Notes");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -25972,6 +29802,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AvatarNotesUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -26016,6 +29854,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TargetID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("TargetID: {0}", TargetID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -26069,10 +29915,19 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(PickID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(PickName == null) { Console.WriteLine("Warning: PickName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)PickName.Length;
                 Buffer.BlockCopy(PickName, 0, bytes, i, PickName.Length); i += PickName.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("PickID: {0}", PickID));
+                Helpers.FieldToString(output, PickName, "PickName");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -26155,6 +30010,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AvatarPicksReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < Data.Length; j++)
+            {
+                output += Data[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -26199,6 +30065,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -26237,6 +30111,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(EventID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- EventData --");
+                output.Append(String.Format("EventID: {0}", EventID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -26304,6 +30185,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- EventInfoRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += EventData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -26345,6 +30234,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -26485,27 +30381,58 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Utils.UIntToBytes(EventID, bytes, i); i += 4;
+                if(Creator == null) { Console.WriteLine("Warning: Creator is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Creator.Length;
                 Buffer.BlockCopy(Creator, 0, bytes, i, Creator.Length); i += Creator.Length;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Category == null) { Console.WriteLine("Warning: Category is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Category.Length;
                 Buffer.BlockCopy(Category, 0, bytes, i, Category.Length); i += Category.Length;
+                if(Desc == null) { Console.WriteLine("Warning: Desc is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Desc.Length % 256);
                 bytes[i++] = (byte)((Desc.Length >> 8) % 256);
                 Buffer.BlockCopy(Desc, 0, bytes, i, Desc.Length); i += Desc.Length;
+                if(Date == null) { Console.WriteLine("Warning: Date is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Date.Length;
                 Buffer.BlockCopy(Date, 0, bytes, i, Date.Length); i += Date.Length;
                 Utils.UIntToBytes(DateUTC, bytes, i); i += 4;
                 Utils.UIntToBytes(Duration, bytes, i); i += 4;
                 Utils.UIntToBytes(Cover, bytes, i); i += 4;
                 Utils.UIntToBytes(Amount, bytes, i); i += 4;
+                if(SimName == null) { Console.WriteLine("Warning: SimName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SimName.Length;
                 Buffer.BlockCopy(SimName, 0, bytes, i, SimName.Length); i += SimName.Length;
                 Buffer.BlockCopy(GlobalPos.GetBytes(), 0, bytes, i, 24); i += 24;
                 Utils.UIntToBytes(EventFlags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- EventData --");
+                output.AppendLine(String.Format("EventID: {0}", EventID));
+                Helpers.FieldToString(output, Creator, "Creator");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Category, "Category");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Desc, "Desc");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Date, "Date");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("DateUTC: {0}", DateUTC));
+                output.AppendLine(String.Format("Duration: {0}", Duration));
+                output.AppendLine(String.Format("Cover: {0}", Cover));
+                output.AppendLine(String.Format("Amount: {0}", Amount));
+                Helpers.FieldToString(output, SimName, "SimName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("GlobalPos: {0}", GlobalPos));
+                output.Append(String.Format("EventFlags: {0}", EventFlags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -26573,6 +30500,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- EventInfoReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += EventData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -26617,6 +30552,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -26655,6 +30598,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(EventID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- EventData --");
+                output.Append(String.Format("EventID: {0}", EventID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -26722,6 +30672,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- EventNotificationAddRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += EventData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -26766,6 +30724,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -26804,6 +30770,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(EventID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- EventData --");
+                output.Append(String.Format("EventID: {0}", EventID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -26871,6 +30844,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- EventNotificationRemoveRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += EventData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -26915,6 +30896,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -26953,6 +30942,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(EventID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- EventData --");
+                output.Append(String.Format("EventID: {0}", EventID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -27010,12 +31006,24 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(QueryID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(QueryText == null) { Console.WriteLine("Warning: QueryText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)QueryText.Length;
                 Buffer.BlockCopy(QueryText, 0, bytes, i, QueryText.Length); i += QueryText.Length;
                 Utils.UIntToBytes(QueryFlags, bytes, i); i += 4;
                 Utils.IntToBytes(QueryStart, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryData --");
+                output.AppendLine(String.Format("QueryID: {0}", QueryID));
+                Helpers.FieldToString(output, QueryText, "QueryText");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("QueryFlags: {0}", QueryFlags));
+                output.Append(String.Format("QueryStart: {0}", QueryStart));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -27088,6 +31096,15 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- EventGodDelete ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += EventData.ToString() + Environment.NewLine;
+                output += QueryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -27129,6 +31146,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -27259,16 +31283,21 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(CreatorID.GetBytes(), 0, bytes, i, 16); i += 16;
                 bytes[i++] = (byte)((TopPick) ? 1 : 0);
                 Buffer.BlockCopy(ParcelID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Desc == null) { Console.WriteLine("Warning: Desc is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Desc.Length % 256);
                 bytes[i++] = (byte)((Desc.Length >> 8) % 256);
                 Buffer.BlockCopy(Desc, 0, bytes, i, Desc.Length); i += Desc.Length;
                 Buffer.BlockCopy(SnapshotID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(User == null) { Console.WriteLine("Warning: User is null, in " + this.GetType()); }
                 bytes[i++] = (byte)User.Length;
                 Buffer.BlockCopy(User, 0, bytes, i, User.Length); i += User.Length;
+                if(OriginalName == null) { Console.WriteLine("Warning: OriginalName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)OriginalName.Length;
                 Buffer.BlockCopy(OriginalName, 0, bytes, i, OriginalName.Length); i += OriginalName.Length;
+                if(SimName == null) { Console.WriteLine("Warning: SimName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SimName.Length;
                 Buffer.BlockCopy(SimName, 0, bytes, i, SimName.Length); i += SimName.Length;
                 Buffer.BlockCopy(PosGlobal.GetBytes(), 0, bytes, i, 24); i += 24;
@@ -27276,6 +31305,30 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Enabled) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("PickID: {0}", PickID));
+                output.AppendLine(String.Format("CreatorID: {0}", CreatorID));
+                output.AppendLine(String.Format("TopPick: {0}", TopPick));
+                output.AppendLine(String.Format("ParcelID: {0}", ParcelID));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Desc, "Desc");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("SnapshotID: {0}", SnapshotID));
+                Helpers.FieldToString(output, User, "User");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, OriginalName, "OriginalName");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, SimName, "SimName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("PosGlobal: {0}", PosGlobal));
+                output.AppendLine(String.Format("SortOrder: {0}", SortOrder));
+                output.Append(String.Format("Enabled: {0}", Enabled));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -27343,6 +31396,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- PickInfoReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -27387,6 +31448,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -27472,8 +31541,10 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(CreatorID.GetBytes(), 0, bytes, i, 16); i += 16;
                 bytes[i++] = (byte)((TopPick) ? 1 : 0);
                 Buffer.BlockCopy(ParcelID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Desc == null) { Console.WriteLine("Warning: Desc is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Desc.Length % 256);
                 bytes[i++] = (byte)((Desc.Length >> 8) % 256);
                 Buffer.BlockCopy(Desc, 0, bytes, i, Desc.Length); i += Desc.Length;
@@ -27483,6 +31554,24 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Enabled) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("PickID: {0}", PickID));
+                output.AppendLine(String.Format("CreatorID: {0}", CreatorID));
+                output.AppendLine(String.Format("TopPick: {0}", TopPick));
+                output.AppendLine(String.Format("ParcelID: {0}", ParcelID));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Desc, "Desc");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("SnapshotID: {0}", SnapshotID));
+                output.AppendLine(String.Format("PosGlobal: {0}", PosGlobal));
+                output.AppendLine(String.Format("SortOrder: {0}", SortOrder));
+                output.Append(String.Format("Enabled: {0}", Enabled));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -27550,6 +31639,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- PickInfoUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -27594,6 +31691,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -27632,6 +31737,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(PickID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.Append(String.Format("PickID: {0}", PickID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -27699,6 +31811,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- PickDelete ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -27743,6 +31863,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -27784,6 +31912,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(QueryID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("PickID: {0}", PickID));
+                output.Append(String.Format("QueryID: {0}", QueryID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -27849,6 +31985,14 @@ namespace OpenMetaverse.Packets
             Data.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- PickGodDelete ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -27927,13 +32071,28 @@ namespace OpenMetaverse.Packets
             {
                 Buffer.BlockCopy(TaskID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(ItemID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(ObjectName == null) { Console.WriteLine("Warning: ObjectName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)ObjectName.Length;
                 Buffer.BlockCopy(ObjectName, 0, bytes, i, ObjectName.Length); i += ObjectName.Length;
+                if(ObjectOwner == null) { Console.WriteLine("Warning: ObjectOwner is null, in " + this.GetType()); }
                 bytes[i++] = (byte)ObjectOwner.Length;
                 Buffer.BlockCopy(ObjectOwner, 0, bytes, i, ObjectOwner.Length); i += ObjectOwner.Length;
                 Utils.IntToBytes(Questions, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("TaskID: {0}", TaskID));
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                Helpers.FieldToString(output, ObjectName, "ObjectName");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, ObjectOwner, "ObjectOwner");
+                output.Append(Environment.NewLine);
+                output.Append(String.Format("Questions: {0}", Questions));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -27996,6 +32155,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ScriptQuestion ---" + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -28043,6 +32209,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((PassToAgent) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("TakeControls: {0}", TakeControls));
+                output.AppendLine(String.Format("Controls: {0}", Controls));
+                output.Append(String.Format("PassToAgent: {0}", PassToAgent));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -28118,6 +32293,16 @@ namespace OpenMetaverse.Packets
             for (int j = 0; j < Data.Length; j++) { Data[j].ToBytes(bytes, ref i); }
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- ScriptControlChange ---" + Environment.NewLine;
+            for (int j = 0; j < Data.Length; j++)
+            {
+                output += Data[j].ToString() + Environment.NewLine;
+            }
+            return output;
         }
 
     }
@@ -28225,12 +32410,16 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(FirstName == null) { Console.WriteLine("Warning: FirstName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)FirstName.Length;
                 Buffer.BlockCopy(FirstName, 0, bytes, i, FirstName.Length); i += FirstName.Length;
+                if(LastName == null) { Console.WriteLine("Warning: LastName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)LastName.Length;
                 Buffer.BlockCopy(LastName, 0, bytes, i, LastName.Length); i += LastName.Length;
+                if(ObjectName == null) { Console.WriteLine("Warning: ObjectName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)ObjectName.Length;
                 Buffer.BlockCopy(ObjectName, 0, bytes, i, ObjectName.Length); i += ObjectName.Length;
+                if(Message == null) { Console.WriteLine("Warning: Message is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Message.Length % 256);
                 bytes[i++] = (byte)((Message.Length >> 8) % 256);
                 Buffer.BlockCopy(Message, 0, bytes, i, Message.Length); i += Message.Length;
@@ -28238,6 +32427,23 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ImageID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                Helpers.FieldToString(output, FirstName, "FirstName");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, LastName, "LastName");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, ObjectName, "ObjectName");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Message, "Message");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("ChatChannel: {0}", ChatChannel));
+                output.Append(String.Format("ImageID: {0}", ImageID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -28288,10 +32494,18 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(ButtonLabel == null) { Console.WriteLine("Warning: ButtonLabel is null, in " + this.GetType()); }
                 bytes[i++] = (byte)ButtonLabel.Length;
                 Buffer.BlockCopy(ButtonLabel, 0, bytes, i, ButtonLabel.Length); i += ButtonLabel.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Buttons --");
+                Helpers.FieldToString(output, ButtonLabel, "ButtonLabel");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -28375,6 +32589,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ScriptDialog ---" + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            for (int j = 0; j < Buttons.Length; j++)
+            {
+                output += Buttons[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -28419,6 +32644,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -28478,10 +32711,21 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Utils.IntToBytes(ChatChannel, bytes, i); i += 4;
                 Utils.IntToBytes(ButtonIndex, bytes, i); i += 4;
+                if(ButtonLabel == null) { Console.WriteLine("Warning: ButtonLabel is null, in " + this.GetType()); }
                 bytes[i++] = (byte)ButtonLabel.Length;
                 Buffer.BlockCopy(ButtonLabel, 0, bytes, i, ButtonLabel.Length); i += ButtonLabel.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.AppendLine(String.Format("ChatChannel: {0}", ChatChannel));
+                output.AppendLine(String.Format("ButtonIndex: {0}", ButtonIndex));
+                Helpers.FieldToString(output, ButtonLabel, "ButtonLabel");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -28550,6 +32794,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ScriptDialogReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -28594,6 +32846,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -28656,6 +32916,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ForceScriptControlRelease ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -28700,6 +32967,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -28741,6 +33016,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ObjectPermissions, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.Append(String.Format("ObjectPermissions: {0}", ObjectPermissions));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -28806,6 +33089,14 @@ namespace OpenMetaverse.Packets
             Data.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- RevokePermissions ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -28897,17 +33188,34 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(ObjectName == null) { Console.WriteLine("Warning: ObjectName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)ObjectName.Length;
                 Buffer.BlockCopy(ObjectName, 0, bytes, i, ObjectName.Length); i += ObjectName.Length;
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(OwnerID.GetBytes(), 0, bytes, i, 16); i += 16;
                 bytes[i++] = (byte)((OwnerIsGroup) ? 1 : 0);
+                if(Message == null) { Console.WriteLine("Warning: Message is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Message.Length;
                 Buffer.BlockCopy(Message, 0, bytes, i, Message.Length); i += Message.Length;
+                if(URL == null) { Console.WriteLine("Warning: URL is null, in " + this.GetType()); }
                 bytes[i++] = (byte)URL.Length;
                 Buffer.BlockCopy(URL, 0, bytes, i, URL.Length); i += URL.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                Helpers.FieldToString(output, ObjectName, "ObjectName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("OwnerIsGroup: {0}", OwnerIsGroup));
+                Helpers.FieldToString(output, Message, "Message");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, URL, "URL");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -28968,6 +33276,13 @@ namespace OpenMetaverse.Packets
             Data.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- LoadURL ---" + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -29042,14 +33357,28 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(ObjectName == null) { Console.WriteLine("Warning: ObjectName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)ObjectName.Length;
                 Buffer.BlockCopy(ObjectName, 0, bytes, i, ObjectName.Length); i += ObjectName.Length;
+                if(SimName == null) { Console.WriteLine("Warning: SimName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SimName.Length;
                 Buffer.BlockCopy(SimName, 0, bytes, i, SimName.Length); i += SimName.Length;
                 Buffer.BlockCopy(SimPosition.GetBytes(), 0, bytes, i, 12); i += 12;
                 Buffer.BlockCopy(LookAt.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                Helpers.FieldToString(output, ObjectName, "ObjectName");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, SimName, "SimName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("SimPosition: {0}", SimPosition));
+                output.Append(String.Format("LookAt: {0}", LookAt));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -29112,6 +33441,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ScriptTeleportRequest ---" + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -29168,11 +33504,20 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Utils.IntToBytes(SequenceID, bytes, i); i += 4;
+                if(Data == null) { Console.WriteLine("Warning: Data is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Data.Length % 256);
                 bytes[i++] = (byte)((Data.Length >> 8) % 256);
                 Buffer.BlockCopy(Data, 0, bytes, i, Data.Length); i += Data.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.AppendLine(String.Format("SequenceID: {0}", SequenceID));
+                Helpers.FieldToString(output, Data, "Data");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -29236,6 +33581,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelOverlay ---" + Environment.NewLine;
+                output += ParcelData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -29280,6 +33632,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -29321,6 +33681,14 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(LocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.AppendLine(String.Format("SequenceID: {0}", SequenceID));
+                output.Append(String.Format("LocalID: {0}", LocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -29389,6 +33757,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelPropertiesRequestByID ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ParcelData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -29433,6 +33809,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -29562,12 +33946,16 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
                 Utils.UIntToBytes(ParcelFlags, bytes, i); i += 4;
                 Utils.IntToBytes(SalePrice, bytes, i); i += 4;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Desc == null) { Console.WriteLine("Warning: Desc is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Desc.Length;
                 Buffer.BlockCopy(Desc, 0, bytes, i, Desc.Length); i += Desc.Length;
+                if(MusicURL == null) { Console.WriteLine("Warning: MusicURL is null, in " + this.GetType()); }
                 bytes[i++] = (byte)MusicURL.Length;
                 Buffer.BlockCopy(MusicURL, 0, bytes, i, MusicURL.Length); i += MusicURL.Length;
+                if(MediaURL == null) { Console.WriteLine("Warning: MediaURL is null, in " + this.GetType()); }
                 bytes[i++] = (byte)MediaURL.Length;
                 Buffer.BlockCopy(MediaURL, 0, bytes, i, MediaURL.Length); i += MediaURL.Length;
                 Buffer.BlockCopy(MediaID.GetBytes(), 0, bytes, i, 16); i += 16;
@@ -29583,6 +33971,35 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = LandingType;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("ParcelFlags: {0}", ParcelFlags));
+                output.AppendLine(String.Format("SalePrice: {0}", SalePrice));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Desc, "Desc");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, MusicURL, "MusicURL");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, MediaURL, "MediaURL");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("MediaID: {0}", MediaID));
+                output.AppendLine(String.Format("MediaAutoScale: {0}", MediaAutoScale));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("PassPrice: {0}", PassPrice));
+                output.AppendLine(String.Format("PassHours: {0}", PassHours));
+                output.AppendLine(String.Format("Category: {0}", Category));
+                output.AppendLine(String.Format("AuthBuyerID: {0}", AuthBuyerID));
+                output.AppendLine(String.Format("SnapshotID: {0}", SnapshotID));
+                output.AppendLine(String.Format("UserLocation: {0}", UserLocation));
+                output.AppendLine(String.Format("UserLookAt: {0}", UserLookAt));
+                output.Append(String.Format("LandingType: {0}", LandingType));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -29651,6 +34068,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelPropertiesUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ParcelData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -29695,6 +34120,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -29736,6 +34169,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ReturnType, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.Append(String.Format("ReturnType: {0}", ReturnType));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -29774,6 +34215,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TaskID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TaskIDs --");
+                output.Append(String.Format("TaskID: {0}", TaskID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -29812,6 +34260,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(OwnerID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- OwnerIDs --");
+                output.Append(String.Format("OwnerID: {0}", OwnerID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -29920,6 +34375,22 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelReturnObjects ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ParcelData.ToString() + Environment.NewLine;
+            for (int j = 0; j < TaskIDs.Length; j++)
+            {
+                output += TaskIDs[j].ToString() + Environment.NewLine;
+            }
+            for (int j = 0; j < OwnerIDs.Length; j++)
+            {
+                output += OwnerIDs[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -29964,6 +34435,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -30005,6 +34484,14 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(OtherCleanTime, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.Append(String.Format("OtherCleanTime: {0}", OtherCleanTime));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -30073,6 +34560,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelSetOtherCleanTime ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ParcelData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -30117,6 +34612,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -30158,6 +34661,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ReturnType, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.Append(String.Format("ReturnType: {0}", ReturnType));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -30196,6 +34707,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TaskID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TaskIDs --");
+                output.Append(String.Format("TaskID: {0}", TaskID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -30234,6 +34752,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(OwnerID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- OwnerIDs --");
+                output.Append(String.Format("OwnerID: {0}", OwnerID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -30342,6 +34867,22 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelDisableObjects ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ParcelData.ToString() + Environment.NewLine;
+            for (int j = 0; j < TaskIDs.Length; j++)
+            {
+                output += TaskIDs[j].ToString() + Environment.NewLine;
+            }
+            for (int j = 0; j < OwnerIDs.Length; j++)
+            {
+                output += OwnerIDs[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -30386,6 +34927,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -30427,6 +34976,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ReturnType, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.Append(String.Format("ReturnType: {0}", ReturnType));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -30465,6 +35022,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ReturnID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ReturnIDs --");
+                output.Append(String.Format("ReturnID: {0}", ReturnID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -30553,6 +35117,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelSelectObjects ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ParcelData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ReturnIDs.Length; j++)
+            {
+                output += ReturnIDs[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -30597,6 +35173,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -30657,6 +35241,13 @@ namespace OpenMetaverse.Packets
             AgentData.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- EstateCovenantRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -30720,11 +35311,23 @@ namespace OpenMetaverse.Packets
             {
                 Buffer.BlockCopy(CovenantID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Utils.UIntToBytes(CovenantTimestamp, bytes, i); i += 4;
+                if(EstateName == null) { Console.WriteLine("Warning: EstateName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)EstateName.Length;
                 Buffer.BlockCopy(EstateName, 0, bytes, i, EstateName.Length); i += EstateName.Length;
                 Buffer.BlockCopy(EstateOwnerID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("CovenantID: {0}", CovenantID));
+                output.AppendLine(String.Format("CovenantTimestamp: {0}", CovenantTimestamp));
+                Helpers.FieldToString(output, EstateName, "EstateName");
+                output.Append(Environment.NewLine);
+                output.Append(String.Format("EstateOwnerID: {0}", EstateOwnerID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -30787,6 +35390,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- EstateCovenantReply ---" + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -30828,6 +35438,13 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((ResetList) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Header --");
+                output.Append(String.Format("ResetList: {0}", ResetList));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -30866,6 +35483,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(LocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.Append(String.Format("LocalID: {0}", LocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -30948,6 +35572,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ForceObjectSelect ---" + Environment.NewLine;
+                output += _Header.ToString() + Environment.NewLine;
+            for (int j = 0; j < Data.Length; j++)
+            {
+                output += Data[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -30992,6 +35627,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -31030,6 +35673,13 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(LocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.Append(String.Format("LocalID: {0}", LocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -31097,6 +35747,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelBuyPass ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ParcelData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -31141,6 +35799,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -31182,6 +35848,14 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(LocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.Append(String.Format("LocalID: {0}", LocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -31249,6 +35923,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelDeedToGroup ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -31293,6 +35975,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -31331,6 +36021,13 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(LocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.Append(String.Format("LocalID: {0}", LocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -31398,6 +36095,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelReclaim ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -31442,6 +36147,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -31486,6 +36199,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Final) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("IsGroupOwned: {0}", IsGroupOwned));
+                output.Append(String.Format("Final: {0}", Final));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -31533,6 +36255,16 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(North, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.AppendLine(String.Format("West: {0}", West));
+                output.AppendLine(String.Format("South: {0}", South));
+                output.AppendLine(String.Format("East: {0}", East));
+                output.Append(String.Format("North: {0}", North));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -31621,6 +36353,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelClaim ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            for (int j = 0; j < ParcelData.Length; j++)
+            {
+                output += ParcelData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -31665,6 +36409,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -31712,6 +36464,16 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(North, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.AppendLine(String.Format("West: {0}", West));
+                output.AppendLine(String.Format("South: {0}", South));
+                output.AppendLine(String.Format("East: {0}", East));
+                output.Append(String.Format("North: {0}", North));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -31779,6 +36541,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelJoin ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ParcelData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -31823,6 +36593,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -31870,6 +36648,16 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(North, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.AppendLine(String.Format("West: {0}", West));
+                output.AppendLine(String.Format("South: {0}", South));
+                output.AppendLine(String.Format("East: {0}", East));
+                output.Append(String.Format("North: {0}", North));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -31937,6 +36725,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelDivide ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ParcelData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -31981,6 +36777,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -32019,6 +36823,13 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(LocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.Append(String.Format("LocalID: {0}", LocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -32086,6 +36897,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelRelease ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -32130,6 +36949,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -32180,6 +37007,17 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Final) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("IsGroupOwned: {0}", IsGroupOwned));
+                output.AppendLine(String.Format("RemoveContribution: {0}", RemoveContribution));
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.Append(String.Format("Final: {0}", Final));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -32221,6 +37059,14 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(Area, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.AppendLine(String.Format("Price: {0}", Price));
+                output.Append(String.Format("Area: {0}", Area));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -32294,6 +37140,15 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelBuy ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+                output += ParcelData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -32338,6 +37193,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -32379,6 +37242,14 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(LocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.Append(String.Format("LocalID: {0}", LocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -32447,6 +37318,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelGodForceOwner ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -32491,6 +37370,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -32535,6 +37422,15 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(LocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("SequenceID: {0}", SequenceID));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.Append(String.Format("LocalID: {0}", LocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -32603,6 +37499,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelAccessListRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -32653,6 +37557,16 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(LocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SequenceID: {0}", SequenceID));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.Append(String.Format("LocalID: {0}", LocalID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -32697,6 +37611,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- List --");
+                output.AppendLine(String.Format("ID: {0}", ID));
+                output.AppendLine(String.Format("Time: {0}", Time));
+                output.Append(String.Format("Flags: {0}", Flags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -32780,6 +37703,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelAccessListReply ---" + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            for (int j = 0; j < List.Length; j++)
+            {
+                output += List[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -32824,6 +37758,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -32874,6 +37816,17 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(Sections, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.AppendLine(String.Format("TransactionID: {0}", TransactionID));
+                output.AppendLine(String.Format("SequenceID: {0}", SequenceID));
+                output.Append(String.Format("Sections: {0}", Sections));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -32918,6 +37871,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- List --");
+                output.AppendLine(String.Format("ID: {0}", ID));
+                output.AppendLine(String.Format("Time: {0}", Time));
+                output.Append(String.Format("Flags: {0}", Flags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -33006,6 +37968,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelAccessListUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            for (int j = 0; j < List.Length; j++)
+            {
+                output += List[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -33050,6 +38024,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -33091,6 +38073,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ParcelID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.Append(String.Format("ParcelID: {0}", ParcelID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -33158,6 +38148,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelDwellRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -33199,6 +38197,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -33243,6 +38248,15 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(Dwell, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.AppendLine(String.Format("ParcelID: {0}", ParcelID));
+                output.Append(String.Format("Dwell: {0}", Dwell));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -33310,6 +38324,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelDwellReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -33354,6 +38376,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -33392,6 +38422,13 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(LocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.Append(String.Format("LocalID: {0}", LocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -33459,6 +38496,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelGodMarkAsContent ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ParcelData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -33503,6 +38548,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -33544,6 +38597,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SnapshotID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.Append(String.Format("SnapshotID: {0}", SnapshotID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -33611,6 +38672,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ViewerStartAuction ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ParcelData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -33652,6 +38721,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- UUIDNameBlock --");
+                output.Append(String.Format("ID: {0}", ID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -33729,6 +38805,16 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- UUIDNameRequest ---" + Environment.NewLine;
+            for (int j = 0; j < UUIDNameBlock.Length; j++)
+            {
+                output += UUIDNameBlock[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -33800,12 +38886,24 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(ID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(FirstName == null) { Console.WriteLine("Warning: FirstName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)FirstName.Length;
                 Buffer.BlockCopy(FirstName, 0, bytes, i, FirstName.Length); i += FirstName.Length;
+                if(LastName == null) { Console.WriteLine("Warning: LastName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)LastName.Length;
                 Buffer.BlockCopy(LastName, 0, bytes, i, LastName.Length); i += LastName.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- UUIDNameBlock --");
+                output.AppendLine(String.Format("ID: {0}", ID));
+                Helpers.FieldToString(output, FirstName, "FirstName");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, LastName, "LastName");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -33883,6 +38981,16 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- UUIDNameReply ---" + Environment.NewLine;
+            for (int j = 0; j < UUIDNameBlock.Length; j++)
+            {
+                output += UUIDNameBlock[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -33924,6 +39032,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- UUIDNameBlock --");
+                output.Append(String.Format("ID: {0}", ID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -34001,6 +39116,16 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- UUIDGroupNameRequest ---" + Environment.NewLine;
+            for (int j = 0; j < UUIDNameBlock.Length; j++)
+            {
+                output += UUIDNameBlock[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -34057,10 +39182,19 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(ID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(GroupName == null) { Console.WriteLine("Warning: GroupName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)GroupName.Length;
                 Buffer.BlockCopy(GroupName, 0, bytes, i, GroupName.Length); i += GroupName.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- UUIDNameBlock --");
+                output.AppendLine(String.Format("ID: {0}", ID));
+                Helpers.FieldToString(output, GroupName, "GroupName");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -34138,6 +39272,16 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- UUIDGroupNameReply ---" + Environment.NewLine;
+            for (int j = 0; j < UUIDNameBlock.Length; j++)
+            {
+                output += UUIDNameBlock[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -34182,6 +39326,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -34245,6 +39397,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ChildAgentDying ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -34289,6 +39448,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -34351,6 +39518,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ChildAgentUnknown ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -34395,6 +39569,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ItemID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Script --");
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.Append(String.Format("ItemID: {0}", ItemID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -34457,6 +39639,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GetScriptRunning ---" + Environment.NewLine;
+                output += Script.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -34504,6 +39693,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Running) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Script --");
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.Append(String.Format("Running: {0}", Running));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -34566,6 +39764,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ScriptRunningReply ---" + Environment.NewLine;
+                output += Script.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -34610,6 +39815,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -34654,6 +39867,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Running) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Script --");
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.Append(String.Format("Running: {0}", Running));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -34721,6 +39943,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- SetScriptRunning ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Script.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -34765,6 +39995,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -34806,6 +40044,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ItemID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Script --");
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.Append(String.Format("ItemID: {0}", ItemID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -34871,6 +40117,14 @@ namespace OpenMetaverse.Packets
             Script.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- ScriptReset ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Script.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -34951,6 +40205,7 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SearchID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(SearchPos.GetBytes(), 0, bytes, i, 12); i += 12;
                 Buffer.BlockCopy(SearchDir.GetBytes(), 0, bytes, i, 12); i += 12;
+                if(SearchName == null) { Console.WriteLine("Warning: SearchName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SearchName.Length;
                 Buffer.BlockCopy(SearchName, 0, bytes, i, SearchName.Length); i += SearchName.Length;
                 Utils.IntToBytes(Type, bytes, i); i += 4;
@@ -34960,6 +40215,24 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = SearchRegions;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Requester --");
+                output.AppendLine(String.Format("SourceID: {0}", SourceID));
+                output.AppendLine(String.Format("RequestID: {0}", RequestID));
+                output.AppendLine(String.Format("SearchID: {0}", SearchID));
+                output.AppendLine(String.Format("SearchPos: {0}", SearchPos));
+                output.AppendLine(String.Format("SearchDir: {0}", SearchDir));
+                Helpers.FieldToString(output, SearchName, "SearchName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("Type: {0}", Type));
+                output.AppendLine(String.Format("Range: {0}", Range));
+                output.AppendLine(String.Format("Arc: {0}", Arc));
+                output.AppendLine(String.Format("RegionHandle: {0}", RegionHandle));
+                output.Append(String.Format("SearchRegions: {0}", SearchRegions));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -35023,6 +40296,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ScriptSensorRequest ---" + Environment.NewLine;
+                output += Requester.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -35064,6 +40344,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SourceID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Requester --");
+                output.Append(String.Format("SourceID: {0}", SourceID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -35136,12 +40423,29 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(Position.GetBytes(), 0, bytes, i, 12); i += 12;
                 Buffer.BlockCopy(Velocity.GetBytes(), 0, bytes, i, 12); i += 12;
                 Buffer.BlockCopy(Rotation.GetBytes(), 0, bytes, i, 12); i += 12;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
                 Utils.IntToBytes(Type, bytes, i); i += 4;
                 Utils.FloatToBytes(Range, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- SensedData --");
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("Position: {0}", Position));
+                output.AppendLine(String.Format("Velocity: {0}", Velocity));
+                output.AppendLine(String.Format("Rotation: {0}", Rotation));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("Type: {0}", Type));
+                output.Append(String.Format("Range: {0}", Range));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -35225,6 +40529,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ScriptSensorReply ---" + Environment.NewLine;
+                output += Requester.ToString() + Environment.NewLine;
+            for (int j = 0; j < SensedData.Length; j++)
+            {
+                output += SensedData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -35272,6 +40587,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(CircuitCode, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("CircuitCode: {0}", CircuitCode));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -35334,6 +40658,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- CompleteAgentMovement ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -35378,6 +40709,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -35425,6 +40764,16 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Timestamp, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("Position: {0}", Position));
+                output.AppendLine(String.Format("LookAt: {0}", LookAt));
+                output.AppendLine(String.Format("RegionHandle: {0}", RegionHandle));
+                output.Append(String.Format("Timestamp: {0}", Timestamp));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -35475,11 +40824,19 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(ChannelVersion == null) { Console.WriteLine("Warning: ChannelVersion is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(ChannelVersion.Length % 256);
                 bytes[i++] = (byte)((ChannelVersion.Length >> 8) % 256);
                 Buffer.BlockCopy(ChannelVersion, 0, bytes, i, ChannelVersion.Length); i += ChannelVersion.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- SimData --");
+                Helpers.FieldToString(output, ChannelVersion, "ChannelVersion");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -35552,6 +40909,15 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentMovementComplete ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+                output += SimData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -35596,6 +40962,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -35658,6 +41032,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- LogoutRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -35702,6 +41083,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -35740,6 +41129,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ItemID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.Append(String.Format("ItemID: {0}", ItemID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -35823,6 +41219,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- LogoutReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < InventoryData.Length; j++)
+            {
+                output += InventoryData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -35867,6 +41274,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -35974,16 +41389,39 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = Dialog;
                 Buffer.BlockCopy(ID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Utils.UIntToBytes(Timestamp, bytes, i); i += 4;
+                if(FromAgentName == null) { Console.WriteLine("Warning: FromAgentName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)FromAgentName.Length;
                 Buffer.BlockCopy(FromAgentName, 0, bytes, i, FromAgentName.Length); i += FromAgentName.Length;
+                if(Message == null) { Console.WriteLine("Warning: Message is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Message.Length % 256);
                 bytes[i++] = (byte)((Message.Length >> 8) % 256);
                 Buffer.BlockCopy(Message, 0, bytes, i, Message.Length); i += Message.Length;
+                if(BinaryBucket == null) { Console.WriteLine("Warning: BinaryBucket is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(BinaryBucket.Length % 256);
                 bytes[i++] = (byte)((BinaryBucket.Length >> 8) % 256);
                 Buffer.BlockCopy(BinaryBucket, 0, bytes, i, BinaryBucket.Length); i += BinaryBucket.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MessageBlock --");
+                output.AppendLine(String.Format("FromGroup: {0}", FromGroup));
+                output.AppendLine(String.Format("ToAgentID: {0}", ToAgentID));
+                output.AppendLine(String.Format("ParentEstateID: {0}", ParentEstateID));
+                output.AppendLine(String.Format("RegionID: {0}", RegionID));
+                output.AppendLine(String.Format("Position: {0}", Position));
+                output.AppendLine(String.Format("Offline: {0}", Offline));
+                output.AppendLine(String.Format("Dialog: {0}", Dialog));
+                output.AppendLine(String.Format("ID: {0}", ID));
+                output.AppendLine(String.Format("Timestamp: {0}", Timestamp));
+                Helpers.FieldToString(output, FromAgentName, "FromAgentName");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Message, "Message");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, BinaryBucket, "BinaryBucket");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -36052,6 +41490,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ImprovedInstantMessage ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += MessageBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -36096,6 +41542,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -36158,6 +41612,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RetrieveInstantMessages ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -36205,6 +41666,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(SpaceIP, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentBlock --");
+                output.AppendLine(String.Format("Hunter: {0}", Hunter));
+                output.AppendLine(String.Format("Prey: {0}", Prey));
+                output.Append(String.Format("SpaceIP: {0}", SpaceIP));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -36246,6 +41716,14 @@ namespace OpenMetaverse.Packets
                 Utils.DoubleToBytes(GlobalY, bytes, i); i += 8;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- LocationBlock --");
+                output.AppendLine(String.Format("GlobalX: {0}", GlobalX));
+                output.Append(String.Format("GlobalY: {0}", GlobalY));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -36328,6 +41806,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- FindAgent ---" + Environment.NewLine;
+                output += AgentBlock.ToString() + Environment.NewLine;
+            for (int j = 0; j < LocationBlock.Length; j++)
+            {
+                output += LocationBlock[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -36372,6 +41861,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -36413,6 +41910,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(Token.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RequestBlock --");
+                output.AppendLine(String.Format("Godlike: {0}", Godlike));
+                output.Append(String.Format("Token: {0}", Token));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -36480,6 +41985,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RequestGodlikePowers ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += RequestBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -36524,6 +42037,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -36565,6 +42086,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(Token.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GrantData --");
+                output.AppendLine(String.Format("GodLevel: {0}", GodLevel));
+                output.Append(String.Format("Token: {0}", Token));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -36632,6 +42161,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GrantGodlikePowers ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GrantData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -36679,6 +42216,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TransactionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("TransactionID: {0}", TransactionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -36731,11 +42277,21 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Method == null) { Console.WriteLine("Warning: Method is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Method.Length;
                 Buffer.BlockCopy(Method, 0, bytes, i, Method.Length); i += Method.Length;
                 Buffer.BlockCopy(Invoice.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MethodData --");
+                Helpers.FieldToString(output, Method, "Method");
+                output.Append(Environment.NewLine);
+                output.Append(String.Format("Invoice: {0}", Invoice));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -36786,10 +42342,18 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Parameter == null) { Console.WriteLine("Warning: Parameter is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Parameter.Length;
                 Buffer.BlockCopy(Parameter, 0, bytes, i, Parameter.Length); i += Parameter.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParamList --");
+                Helpers.FieldToString(output, Parameter, "Parameter");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -36878,6 +42442,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GodlikeMessage ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += MethodData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ParamList.Length; j++)
+            {
+                output += ParamList[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -36925,6 +42501,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TransactionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("TransactionID: {0}", TransactionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -36977,11 +42562,21 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Method == null) { Console.WriteLine("Warning: Method is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Method.Length;
                 Buffer.BlockCopy(Method, 0, bytes, i, Method.Length); i += Method.Length;
                 Buffer.BlockCopy(Invoice.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MethodData --");
+                Helpers.FieldToString(output, Method, "Method");
+                output.Append(Environment.NewLine);
+                output.Append(String.Format("Invoice: {0}", Invoice));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -37032,10 +42627,18 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Parameter == null) { Console.WriteLine("Warning: Parameter is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Parameter.Length;
                 Buffer.BlockCopy(Parameter, 0, bytes, i, Parameter.Length); i += Parameter.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParamList --");
+                Helpers.FieldToString(output, Parameter, "Parameter");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -37124,6 +42727,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- EstateOwnerMessage ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += MethodData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ParamList.Length; j++)
+            {
+                output += ParamList[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -37171,6 +42786,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TransactionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("TransactionID: {0}", TransactionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -37223,11 +42847,21 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Method == null) { Console.WriteLine("Warning: Method is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Method.Length;
                 Buffer.BlockCopy(Method, 0, bytes, i, Method.Length); i += Method.Length;
                 Buffer.BlockCopy(Invoice.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MethodData --");
+                Helpers.FieldToString(output, Method, "Method");
+                output.Append(Environment.NewLine);
+                output.Append(String.Format("Invoice: {0}", Invoice));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -37278,10 +42912,18 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Parameter == null) { Console.WriteLine("Warning: Parameter is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Parameter.Length;
                 Buffer.BlockCopy(Parameter, 0, bytes, i, Parameter.Length); i += Parameter.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParamList --");
+                Helpers.FieldToString(output, Parameter, "Parameter");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -37370,6 +43012,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GenericMessage ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += MethodData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ParamList.Length; j++)
+            {
+                output += ParamList[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -37414,6 +43068,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -37452,6 +43114,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(MuteCRC, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MuteData --");
+                output.Append(String.Format("MuteCRC: {0}", MuteCRC));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -37519,6 +43188,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- MuteListRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += MuteData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -37563,6 +43240,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -37620,12 +43305,24 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(MuteID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(MuteName == null) { Console.WriteLine("Warning: MuteName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)MuteName.Length;
                 Buffer.BlockCopy(MuteName, 0, bytes, i, MuteName.Length); i += MuteName.Length;
                 Utils.IntToBytes(MuteType, bytes, i); i += 4;
                 Utils.UIntToBytes(MuteFlags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MuteData --");
+                output.AppendLine(String.Format("MuteID: {0}", MuteID));
+                Helpers.FieldToString(output, MuteName, "MuteName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("MuteType: {0}", MuteType));
+                output.Append(String.Format("MuteFlags: {0}", MuteFlags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -37693,6 +43390,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- UpdateMuteListEntry ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += MuteData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -37737,6 +43442,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -37790,10 +43503,19 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(MuteID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(MuteName == null) { Console.WriteLine("Warning: MuteName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)MuteName.Length;
                 Buffer.BlockCopy(MuteName, 0, bytes, i, MuteName.Length); i += MuteName.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MuteData --");
+                output.AppendLine(String.Format("MuteID: {0}", MuteID));
+                Helpers.FieldToString(output, MuteName, "MuteName");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -37861,6 +43583,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RemoveMuteListEntry ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += MuteData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -37905,6 +43635,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -37946,6 +43684,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- NotecardData --");
+                output.AppendLine(String.Format("NotecardItemID: {0}", NotecardItemID));
+                output.Append(String.Format("ObjectID: {0}", ObjectID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -37987,6 +43733,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(FolderID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.Append(String.Format("FolderID: {0}", FolderID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -38075,6 +43829,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- CopyInventoryFromNotecard ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += NotecardData.ToString() + Environment.NewLine;
+            for (int j = 0; j < InventoryData.Length; j++)
+            {
+                output += InventoryData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -38122,6 +43888,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TransactionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("TransactionID: {0}", TransactionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -38245,14 +44020,46 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
                 bytes[i++] = SaleType;
                 Utils.IntToBytes(SalePrice, bytes, i); i += 4;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
                 Utils.IntToBytes(CreationDate, bytes, i); i += 4;
                 Utils.UIntToBytes(CRC, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                output.AppendLine(String.Format("CallbackID: {0}", CallbackID));
+                output.AppendLine(String.Format("CreatorID: {0}", CreatorID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("BaseMask: {0}", BaseMask));
+                output.AppendLine(String.Format("OwnerMask: {0}", OwnerMask));
+                output.AppendLine(String.Format("GroupMask: {0}", GroupMask));
+                output.AppendLine(String.Format("EveryoneMask: {0}", EveryoneMask));
+                output.AppendLine(String.Format("NextOwnerMask: {0}", NextOwnerMask));
+                output.AppendLine(String.Format("GroupOwned: {0}", GroupOwned));
+                output.AppendLine(String.Format("TransactionID: {0}", TransactionID));
+                output.AppendLine(String.Format("Type: {0}", Type));
+                output.AppendLine(String.Format("InvType: {0}", InvType));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("SaleType: {0}", SaleType));
+                output.AppendLine(String.Format("SalePrice: {0}", SalePrice));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Description, "Description");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("CreationDate: {0}", CreationDate));
+                output.Append(String.Format("CRC: {0}", CRC));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -38336,6 +44143,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- UpdateInventoryItem ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < InventoryData.Length; j++)
+            {
+                output += InventoryData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -38383,6 +44201,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TransactionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SimApproved: {0}", SimApproved));
+                output.Append(String.Format("TransactionID: {0}", TransactionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -38506,14 +44333,46 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
                 bytes[i++] = SaleType;
                 Utils.IntToBytes(SalePrice, bytes, i); i += 4;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
                 Utils.IntToBytes(CreationDate, bytes, i); i += 4;
                 Utils.UIntToBytes(CRC, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                output.AppendLine(String.Format("CallbackID: {0}", CallbackID));
+                output.AppendLine(String.Format("CreatorID: {0}", CreatorID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("BaseMask: {0}", BaseMask));
+                output.AppendLine(String.Format("OwnerMask: {0}", OwnerMask));
+                output.AppendLine(String.Format("GroupMask: {0}", GroupMask));
+                output.AppendLine(String.Format("EveryoneMask: {0}", EveryoneMask));
+                output.AppendLine(String.Format("NextOwnerMask: {0}", NextOwnerMask));
+                output.AppendLine(String.Format("GroupOwned: {0}", GroupOwned));
+                output.AppendLine(String.Format("AssetID: {0}", AssetID));
+                output.AppendLine(String.Format("Type: {0}", Type));
+                output.AppendLine(String.Format("InvType: {0}", InvType));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("SaleType: {0}", SaleType));
+                output.AppendLine(String.Format("SalePrice: {0}", SalePrice));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Description, "Description");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("CreationDate: {0}", CreationDate));
+                output.Append(String.Format("CRC: {0}", CRC));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -38597,6 +44456,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- UpdateCreateInventoryItem ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < InventoryData.Length; j++)
+            {
+                output += InventoryData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -38644,6 +44514,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Stamp) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("Stamp: {0}", Stamp));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -38700,10 +44579,20 @@ namespace OpenMetaverse.Packets
             {
                 Buffer.BlockCopy(ItemID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(FolderID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(NewName == null) { Console.WriteLine("Warning: NewName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)NewName.Length;
                 Buffer.BlockCopy(NewName, 0, bytes, i, NewName.Length); i += NewName.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                Helpers.FieldToString(output, NewName, "NewName");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -38787,6 +44676,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- MoveInventoryItem ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < InventoryData.Length; j++)
+            {
+                output += InventoryData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -38831,6 +44731,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -38893,10 +44801,22 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(OldAgentID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(OldItemID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(NewFolderID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(NewName == null) { Console.WriteLine("Warning: NewName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)NewName.Length;
                 Buffer.BlockCopy(NewName, 0, bytes, i, NewName.Length); i += NewName.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.AppendLine(String.Format("CallbackID: {0}", CallbackID));
+                output.AppendLine(String.Format("OldAgentID: {0}", OldAgentID));
+                output.AppendLine(String.Format("OldItemID: {0}", OldItemID));
+                output.AppendLine(String.Format("NewFolderID: {0}", NewFolderID));
+                Helpers.FieldToString(output, NewName, "NewName");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -38980,6 +44900,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- CopyInventoryItem ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < InventoryData.Length; j++)
+            {
+                output += InventoryData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -39024,6 +44955,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -39062,6 +45001,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ItemID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.Append(String.Format("ItemID: {0}", ItemID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -39144,6 +45090,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RemoveInventoryItem ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < InventoryData.Length; j++)
+            {
+                output += InventoryData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -39188,6 +45145,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -39229,6 +45194,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.Append(String.Format("Flags: {0}", Flags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -39311,6 +45284,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ChangeInventoryItemFlags ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < InventoryData.Length; j++)
+            {
+                output += InventoryData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -39352,6 +45336,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -39393,6 +45384,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(NewAssetID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.Append(String.Format("NewAssetID: {0}", NewAssetID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -39460,6 +45459,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- SaveAssetIntoInventory ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += InventoryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -39504,6 +45511,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -39563,10 +45578,21 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(FolderID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(ParentID.GetBytes(), 0, bytes, i, 16); i += 16;
                 bytes[i++] = (byte)Type;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- FolderData --");
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                output.AppendLine(String.Format("ParentID: {0}", ParentID));
+                output.AppendLine(String.Format("Type: {0}", Type));
+                Helpers.FieldToString(output, Name, "Name");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -39634,6 +45660,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- CreateInventoryFolder ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += FolderData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -39678,6 +45712,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -39737,10 +45779,21 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(FolderID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(ParentID.GetBytes(), 0, bytes, i, 16); i += 16;
                 bytes[i++] = (byte)Type;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- FolderData --");
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                output.AppendLine(String.Format("ParentID: {0}", ParentID));
+                output.AppendLine(String.Format("Type: {0}", Type));
+                Helpers.FieldToString(output, Name, "Name");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -39823,6 +45876,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- UpdateInventoryFolder ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < FolderData.Length; j++)
+            {
+                output += FolderData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -39870,6 +45934,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Stamp) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("Stamp: {0}", Stamp));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -39911,6 +45984,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ParentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                output.Append(String.Format("ParentID: {0}", ParentID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -39994,6 +46075,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- MoveInventoryFolder ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < InventoryData.Length; j++)
+            {
+                output += InventoryData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -40038,6 +46130,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -40076,6 +46176,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(FolderID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- FolderData --");
+                output.Append(String.Format("FolderID: {0}", FolderID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -40158,6 +46265,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RemoveInventoryFolder ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < FolderData.Length; j++)
+            {
+                output += FolderData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -40202,6 +46320,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -40252,6 +46378,17 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((FetchItems) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("SortOrder: {0}", SortOrder));
+                output.AppendLine(String.Format("FetchFolders: {0}", FetchFolders));
+                output.Append(String.Format("FetchItems: {0}", FetchItems));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -40320,6 +46457,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- FetchInventoryDescendents ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += InventoryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -40373,6 +46518,17 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(Descendents, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("Version: {0}", Version));
+                output.Append(String.Format("Descendents: {0}", Descendents));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -40432,10 +46588,21 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(FolderID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(ParentID.GetBytes(), 0, bytes, i, 16); i += 16;
                 bytes[i++] = (byte)Type;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- FolderData --");
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                output.AppendLine(String.Format("ParentID: {0}", ParentID));
+                output.AppendLine(String.Format("Type: {0}", Type));
+                Helpers.FieldToString(output, Name, "Name");
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -40556,14 +46723,45 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
                 bytes[i++] = SaleType;
                 Utils.IntToBytes(SalePrice, bytes, i); i += 4;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
                 Utils.IntToBytes(CreationDate, bytes, i); i += 4;
                 Utils.UIntToBytes(CRC, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ItemData --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                output.AppendLine(String.Format("CreatorID: {0}", CreatorID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("BaseMask: {0}", BaseMask));
+                output.AppendLine(String.Format("OwnerMask: {0}", OwnerMask));
+                output.AppendLine(String.Format("GroupMask: {0}", GroupMask));
+                output.AppendLine(String.Format("EveryoneMask: {0}", EveryoneMask));
+                output.AppendLine(String.Format("NextOwnerMask: {0}", NextOwnerMask));
+                output.AppendLine(String.Format("GroupOwned: {0}", GroupOwned));
+                output.AppendLine(String.Format("AssetID: {0}", AssetID));
+                output.AppendLine(String.Format("Type: {0}", Type));
+                output.AppendLine(String.Format("InvType: {0}", InvType));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("SaleType: {0}", SaleType));
+                output.AppendLine(String.Format("SalePrice: {0}", SalePrice));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Description, "Description");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("CreationDate: {0}", CreationDate));
+                output.Append(String.Format("CRC: {0}", CRC));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -40667,6 +46865,21 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- InventoryDescendents ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < FolderData.Length; j++)
+            {
+                output += FolderData[j].ToString() + Environment.NewLine;
+            }
+            for (int j = 0; j < ItemData.Length; j++)
+            {
+                output += ItemData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -40711,6 +46924,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -40752,6 +46973,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ItemID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.Append(String.Format("ItemID: {0}", ItemID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -40835,6 +47064,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- FetchInventory ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < InventoryData.Length; j++)
+            {
+                output += InventoryData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -40876,6 +47116,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -40996,14 +47243,45 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
                 bytes[i++] = SaleType;
                 Utils.IntToBytes(SalePrice, bytes, i); i += 4;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
                 Utils.IntToBytes(CreationDate, bytes, i); i += 4;
                 Utils.UIntToBytes(CRC, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                output.AppendLine(String.Format("CreatorID: {0}", CreatorID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("BaseMask: {0}", BaseMask));
+                output.AppendLine(String.Format("OwnerMask: {0}", OwnerMask));
+                output.AppendLine(String.Format("GroupMask: {0}", GroupMask));
+                output.AppendLine(String.Format("EveryoneMask: {0}", EveryoneMask));
+                output.AppendLine(String.Format("NextOwnerMask: {0}", NextOwnerMask));
+                output.AppendLine(String.Format("GroupOwned: {0}", GroupOwned));
+                output.AppendLine(String.Format("AssetID: {0}", AssetID));
+                output.AppendLine(String.Format("Type: {0}", Type));
+                output.AppendLine(String.Format("InvType: {0}", InvType));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("SaleType: {0}", SaleType));
+                output.AppendLine(String.Format("SalePrice: {0}", SalePrice));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Description, "Description");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("CreationDate: {0}", CreationDate));
+                output.Append(String.Format("CRC: {0}", CRC));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -41087,6 +47365,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- FetchInventoryReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < InventoryData.Length; j++)
+            {
+                output += InventoryData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -41131,6 +47420,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TransactionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("TransactionID: {0}", TransactionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -41190,10 +47487,21 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(FolderID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(ParentID.GetBytes(), 0, bytes, i, 16); i += 16;
                 bytes[i++] = (byte)Type;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- FolderData --");
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                output.AppendLine(String.Format("ParentID: {0}", ParentID));
+                output.AppendLine(String.Format("Type: {0}", Type));
+                Helpers.FieldToString(output, Name, "Name");
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -41317,14 +47625,46 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
                 bytes[i++] = SaleType;
                 Utils.IntToBytes(SalePrice, bytes, i); i += 4;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
                 Utils.IntToBytes(CreationDate, bytes, i); i += 4;
                 Utils.UIntToBytes(CRC, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ItemData --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.AppendLine(String.Format("CallbackID: {0}", CallbackID));
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                output.AppendLine(String.Format("CreatorID: {0}", CreatorID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("BaseMask: {0}", BaseMask));
+                output.AppendLine(String.Format("OwnerMask: {0}", OwnerMask));
+                output.AppendLine(String.Format("GroupMask: {0}", GroupMask));
+                output.AppendLine(String.Format("EveryoneMask: {0}", EveryoneMask));
+                output.AppendLine(String.Format("NextOwnerMask: {0}", NextOwnerMask));
+                output.AppendLine(String.Format("GroupOwned: {0}", GroupOwned));
+                output.AppendLine(String.Format("AssetID: {0}", AssetID));
+                output.AppendLine(String.Format("Type: {0}", Type));
+                output.AppendLine(String.Format("InvType: {0}", InvType));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("SaleType: {0}", SaleType));
+                output.AppendLine(String.Format("SalePrice: {0}", SalePrice));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Description, "Description");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("CreationDate: {0}", CreationDate));
+                output.Append(String.Format("CRC: {0}", CRC));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -41428,6 +47768,21 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- BulkUpdateInventory ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < FolderData.Length; j++)
+            {
+                output += FolderData[j].ToString() + Environment.NewLine;
+            }
+            for (int j = 0; j < ItemData.Length; j++)
+            {
+                output += ItemData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -41478,6 +47833,16 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ItemID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryData --");
+                output.AppendLine(String.Format("QueryID: {0}", QueryID));
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.Append(String.Format("ItemID: {0}", ItemID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -41540,6 +47905,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RequestInventoryAsset ---" + Environment.NewLine;
+                output += QueryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -41587,6 +47959,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((IsReadable) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- QueryData --");
+                output.AppendLine(String.Format("QueryID: {0}", QueryID));
+                output.AppendLine(String.Format("AssetID: {0}", AssetID));
+                output.Append(String.Format("IsReadable: {0}", IsReadable));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -41649,6 +48030,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- InventoryAssetResponse ---" + Environment.NewLine;
+                output += QueryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -41693,6 +48081,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -41731,6 +48127,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(FolderID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- FolderData --");
+                output.Append(String.Format("FolderID: {0}", FolderID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -41769,6 +48172,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ItemID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ItemData --");
+                output.Append(String.Format("ItemID: {0}", ItemID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -41871,6 +48281,21 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RemoveInventoryObjects ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < FolderData.Length; j++)
+            {
+                output += FolderData[j].ToString() + Environment.NewLine;
+            }
+            for (int j = 0; j < ItemData.Length; j++)
+            {
+                output += ItemData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -41915,6 +48340,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -41953,6 +48386,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(FolderID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.Append(String.Format("FolderID: {0}", FolderID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -42021,6 +48461,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- PurgeInventoryDescendents ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += InventoryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -42065,6 +48513,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -42106,6 +48562,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = Key;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- UpdateData --");
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.Append(String.Format("Key: {0}", Key));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -42226,14 +48690,45 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
                 bytes[i++] = SaleType;
                 Utils.IntToBytes(SalePrice, bytes, i); i += 4;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
                 Utils.IntToBytes(CreationDate, bytes, i); i += 4;
                 Utils.UIntToBytes(CRC, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                output.AppendLine(String.Format("CreatorID: {0}", CreatorID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("BaseMask: {0}", BaseMask));
+                output.AppendLine(String.Format("OwnerMask: {0}", OwnerMask));
+                output.AppendLine(String.Format("GroupMask: {0}", GroupMask));
+                output.AppendLine(String.Format("EveryoneMask: {0}", EveryoneMask));
+                output.AppendLine(String.Format("NextOwnerMask: {0}", NextOwnerMask));
+                output.AppendLine(String.Format("GroupOwned: {0}", GroupOwned));
+                output.AppendLine(String.Format("TransactionID: {0}", TransactionID));
+                output.AppendLine(String.Format("Type: {0}", Type));
+                output.AppendLine(String.Format("InvType: {0}", InvType));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("SaleType: {0}", SaleType));
+                output.AppendLine(String.Format("SalePrice: {0}", SalePrice));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Description, "Description");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("CreationDate: {0}", CreationDate));
+                output.Append(String.Format("CRC: {0}", CRC));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -42307,6 +48802,15 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- UpdateTaskInventory ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += UpdateData.ToString() + Environment.NewLine;
+                output += InventoryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -42351,6 +48855,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -42392,6 +48904,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ItemID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.Append(String.Format("ItemID: {0}", ItemID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -42460,6 +48980,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RemoveTaskInventory ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += InventoryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -42507,6 +49035,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(FolderID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("FolderID: {0}", FolderID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -42548,6 +49085,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ItemID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.Append(String.Format("ItemID: {0}", ItemID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -42615,6 +49160,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- MoveTaskInventory ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += InventoryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -42659,6 +49212,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -42697,6 +49258,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(LocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.Append(String.Format("LocalID: {0}", LocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -42764,6 +49332,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RequestTaskInventory ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += InventoryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -42824,10 +49400,20 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TaskID.GetBytes(), 0, bytes, i, 16); i += 16;
                 bytes[i++] = (byte)(Serial % 256);
                 bytes[i++] = (byte)((Serial >> 8) % 256);
+                if(Filename == null) { Console.WriteLine("Warning: Filename is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Filename.Length;
                 Buffer.BlockCopy(Filename, 0, bytes, i, Filename.Length); i += Filename.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.AppendLine(String.Format("TaskID: {0}", TaskID));
+                output.AppendLine(String.Format("Serial: {0}", Serial));
+                Helpers.FieldToString(output, Filename, "Filename");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -42891,6 +49477,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ReplyTaskInventory ---" + Environment.NewLine;
+                output += InventoryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -42935,6 +49528,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -42988,6 +49589,18 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = PacketNumber;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentBlock --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("Destination: {0}", Destination));
+                output.AppendLine(String.Format("DestinationID: {0}", DestinationID));
+                output.AppendLine(String.Format("TransactionID: {0}", TransactionID));
+                output.AppendLine(String.Format("PacketCount: {0}", PacketCount));
+                output.Append(String.Format("PacketNumber: {0}", PacketNumber));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -43026,6 +49639,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ObjectLocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -43114,6 +49734,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DeRezObject ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += AgentBlock.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -43158,6 +49790,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Success) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TransactionData --");
+                output.AppendLine(String.Format("TransactionID: {0}", TransactionID));
+                output.Append(String.Format("Success: {0}", Success));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -43220,6 +49860,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DeRezAck ---" + Environment.NewLine;
+                output += TransactionData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -43267,6 +49914,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -43338,6 +49994,24 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(NextOwnerMask, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RezData --");
+                output.AppendLine(String.Format("FromTaskID: {0}", FromTaskID));
+                output.AppendLine(String.Format("BypassRaycast: {0}", BypassRaycast));
+                output.AppendLine(String.Format("RayStart: {0}", RayStart));
+                output.AppendLine(String.Format("RayEnd: {0}", RayEnd));
+                output.AppendLine(String.Format("RayTargetID: {0}", RayTargetID));
+                output.AppendLine(String.Format("RayEndIsIntersection: {0}", RayEndIsIntersection));
+                output.AppendLine(String.Format("RezSelected: {0}", RezSelected));
+                output.AppendLine(String.Format("RemoveItem: {0}", RemoveItem));
+                output.AppendLine(String.Format("ItemFlags: {0}", ItemFlags));
+                output.AppendLine(String.Format("GroupMask: {0}", GroupMask));
+                output.AppendLine(String.Format("EveryoneMask: {0}", EveryoneMask));
+                output.Append(String.Format("NextOwnerMask: {0}", NextOwnerMask));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -43458,14 +50132,45 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
                 bytes[i++] = SaleType;
                 Utils.IntToBytes(SalePrice, bytes, i); i += 4;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
                 Utils.IntToBytes(CreationDate, bytes, i); i += 4;
                 Utils.UIntToBytes(CRC, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                output.AppendLine(String.Format("CreatorID: {0}", CreatorID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("BaseMask: {0}", BaseMask));
+                output.AppendLine(String.Format("OwnerMask: {0}", OwnerMask));
+                output.AppendLine(String.Format("GroupMask: {0}", GroupMask));
+                output.AppendLine(String.Format("EveryoneMask: {0}", EveryoneMask));
+                output.AppendLine(String.Format("NextOwnerMask: {0}", NextOwnerMask));
+                output.AppendLine(String.Format("GroupOwned: {0}", GroupOwned));
+                output.AppendLine(String.Format("TransactionID: {0}", TransactionID));
+                output.AppendLine(String.Format("Type: {0}", Type));
+                output.AppendLine(String.Format("InvType: {0}", InvType));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("SaleType: {0}", SaleType));
+                output.AppendLine(String.Format("SalePrice: {0}", SalePrice));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Description, "Description");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("CreationDate: {0}", CreationDate));
+                output.Append(String.Format("CRC: {0}", CRC));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -43539,6 +50244,15 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RezObject ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += RezData.ToString() + Environment.NewLine;
+                output += InventoryData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -43586,6 +50300,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -43657,6 +50380,24 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(NextOwnerMask, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RezData --");
+                output.AppendLine(String.Format("FromTaskID: {0}", FromTaskID));
+                output.AppendLine(String.Format("BypassRaycast: {0}", BypassRaycast));
+                output.AppendLine(String.Format("RayStart: {0}", RayStart));
+                output.AppendLine(String.Format("RayEnd: {0}", RayEnd));
+                output.AppendLine(String.Format("RayTargetID: {0}", RayTargetID));
+                output.AppendLine(String.Format("RayEndIsIntersection: {0}", RayEndIsIntersection));
+                output.AppendLine(String.Format("RezSelected: {0}", RezSelected));
+                output.AppendLine(String.Format("RemoveItem: {0}", RemoveItem));
+                output.AppendLine(String.Format("ItemFlags: {0}", ItemFlags));
+                output.AppendLine(String.Format("GroupMask: {0}", GroupMask));
+                output.AppendLine(String.Format("EveryoneMask: {0}", EveryoneMask));
+                output.Append(String.Format("NextOwnerMask: {0}", NextOwnerMask));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -43698,6 +50439,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- NotecardData --");
+                output.AppendLine(String.Format("NotecardItemID: {0}", NotecardItemID));
+                output.Append(String.Format("ObjectID: {0}", ObjectID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -43736,6 +50485,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ItemID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryData --");
+                output.Append(String.Format("ItemID: {0}", ItemID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -43829,6 +50585,19 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RezObjectFromNotecard ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += RezData.ToString() + Environment.NewLine;
+                output += NotecardData.ToString() + Environment.NewLine;
+            for (int j = 0; j < InventoryData.Length; j++)
+            {
+                output += InventoryData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -43873,6 +50642,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -43911,6 +50688,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TransactionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TransactionBlock --");
+                output.Append(String.Format("TransactionID: {0}", TransactionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -43949,6 +50733,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(FolderID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- FolderData --");
+                output.Append(String.Format("FolderID: {0}", FolderID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -44036,6 +50827,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AcceptFriendship ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += TransactionBlock.ToString() + Environment.NewLine;
+            for (int j = 0; j < FolderData.Length; j++)
+            {
+                output += FolderData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -44080,6 +50883,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -44118,6 +50929,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TransactionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TransactionBlock --");
+                output.Append(String.Format("TransactionID: {0}", TransactionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -44185,6 +51003,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DeclineFriendship ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += TransactionBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -44229,6 +51055,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(DestID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentBlock --");
+                output.AppendLine(String.Format("SourceID: {0}", SourceID));
+                output.Append(String.Format("DestID: {0}", DestID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -44291,6 +51125,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- FormFriendship ---" + Environment.NewLine;
+                output += AgentBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -44335,6 +51176,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -44373,6 +51222,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(OtherID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ExBlock --");
+                output.Append(String.Format("OtherID: {0}", OtherID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -44440,6 +51296,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- TerminateFriendship ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ExBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -44484,6 +51348,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -44525,6 +51397,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TransactionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentBlock --");
+                output.AppendLine(String.Format("DestID: {0}", DestID));
+                output.Append(String.Format("TransactionID: {0}", TransactionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -44592,6 +51472,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- OfferCallingCard ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += AgentBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -44636,6 +51524,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -44674,6 +51570,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TransactionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TransactionBlock --");
+                output.Append(String.Format("TransactionID: {0}", TransactionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -44712,6 +51615,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(FolderID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- FolderData --");
+                output.Append(String.Format("FolderID: {0}", FolderID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -44799,6 +51709,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AcceptCallingCard ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += TransactionBlock.ToString() + Environment.NewLine;
+            for (int j = 0; j < FolderData.Length; j++)
+            {
+                output += FolderData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -44843,6 +51765,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -44881,6 +51811,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TransactionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TransactionBlock --");
+                output.Append(String.Format("TransactionID: {0}", TransactionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -44948,6 +51885,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DeclineCallingCard ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += TransactionBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -44995,6 +51940,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -45036,6 +51990,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Enabled) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- UpdateBlock --");
+                output.AppendLine(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                output.Append(String.Format("Enabled: {0}", Enabled));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -45156,14 +52118,45 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
                 bytes[i++] = SaleType;
                 Utils.IntToBytes(SalePrice, bytes, i); i += 4;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
                 Utils.IntToBytes(CreationDate, bytes, i); i += 4;
                 Utils.UIntToBytes(CRC, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryBlock --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                output.AppendLine(String.Format("CreatorID: {0}", CreatorID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("BaseMask: {0}", BaseMask));
+                output.AppendLine(String.Format("OwnerMask: {0}", OwnerMask));
+                output.AppendLine(String.Format("GroupMask: {0}", GroupMask));
+                output.AppendLine(String.Format("EveryoneMask: {0}", EveryoneMask));
+                output.AppendLine(String.Format("NextOwnerMask: {0}", NextOwnerMask));
+                output.AppendLine(String.Format("GroupOwned: {0}", GroupOwned));
+                output.AppendLine(String.Format("TransactionID: {0}", TransactionID));
+                output.AppendLine(String.Format("Type: {0}", Type));
+                output.AppendLine(String.Format("InvType: {0}", InvType));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("SaleType: {0}", SaleType));
+                output.AppendLine(String.Format("SalePrice: {0}", SalePrice));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Description, "Description");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("CreationDate: {0}", CreationDate));
+                output.Append(String.Format("CRC: {0}", CRC));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -45237,6 +52230,15 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RezScript ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += UpdateBlock.ToString() + Environment.NewLine;
+                output += InventoryBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -45281,6 +52283,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -45367,12 +52377,30 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)Type;
                 bytes[i++] = (byte)InvType;
                 bytes[i++] = WearableType;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryBlock --");
+                output.AppendLine(String.Format("CallbackID: {0}", CallbackID));
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                output.AppendLine(String.Format("TransactionID: {0}", TransactionID));
+                output.AppendLine(String.Format("NextOwnerMask: {0}", NextOwnerMask));
+                output.AppendLine(String.Format("Type: {0}", Type));
+                output.AppendLine(String.Format("InvType: {0}", InvType));
+                output.AppendLine(String.Format("WearableType: {0}", WearableType));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Description, "Description");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -45441,6 +52469,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- CreateInventoryItem ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += InventoryBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -45485,6 +52521,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -45523,6 +52567,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(EventID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- EventData --");
+                output.Append(String.Format("EventID: {0}", EventID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -45576,10 +52627,19 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(FolderID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InventoryBlock --");
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                Helpers.FieldToString(output, Name, "Name");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -45653,6 +52713,15 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- CreateLandmarkForEvent ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += EventData.ToString() + Environment.NewLine;
+                output += InventoryBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -45694,6 +52763,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(RegionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RequestBlock --");
+                output.Append(String.Format("RegionID: {0}", RegionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -45756,6 +52832,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RegionHandleRequest ---" + Environment.NewLine;
+                output += RequestBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -45800,6 +52883,14 @@ namespace OpenMetaverse.Packets
                 Utils.UInt64ToBytes(RegionHandle, bytes, i); i += 8;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ReplyBlock --");
+                output.AppendLine(String.Format("RegionID: {0}", RegionID));
+                output.Append(String.Format("RegionHandle: {0}", RegionHandle));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -45862,6 +52953,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RegionIDAndHandleReply ---" + Environment.NewLine;
+                output += ReplyBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -45906,6 +53004,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -45977,10 +53083,25 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = AggregatePermNextOwner;
                 bytes[i++] = AggregatePermInventory;
                 Utils.IntToBytes(TransactionType, bytes, i); i += 4;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MoneyData --");
+                output.AppendLine(String.Format("SourceID: {0}", SourceID));
+                output.AppendLine(String.Format("DestID: {0}", DestID));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("Amount: {0}", Amount));
+                output.AppendLine(String.Format("AggregatePermNextOwner: {0}", AggregatePermNextOwner));
+                output.AppendLine(String.Format("AggregatePermInventory: {0}", AggregatePermInventory));
+                output.AppendLine(String.Format("TransactionType: {0}", TransactionType));
+                Helpers.FieldToString(output, Description, "Description");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -46049,6 +53170,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- MoneyTransferRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += MoneyData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -46093,6 +53222,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -46131,6 +53268,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TransactionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MoneyData --");
+                output.Append(String.Format("TransactionID: {0}", TransactionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -46197,6 +53341,14 @@ namespace OpenMetaverse.Packets
             MoneyData.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- MoneyBalanceRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += MoneyData.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -46270,10 +53422,24 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(MoneyBalance, bytes, i); i += 4;
                 Utils.IntToBytes(SquareMetersCredit, bytes, i); i += 4;
                 Utils.IntToBytes(SquareMetersCommitted, bytes, i); i += 4;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MoneyData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("TransactionID: {0}", TransactionID));
+                output.AppendLine(String.Format("TransactionSuccess: {0}", TransactionSuccess));
+                output.AppendLine(String.Format("MoneyBalance: {0}", MoneyBalance));
+                output.AppendLine(String.Format("SquareMetersCredit: {0}", SquareMetersCredit));
+                output.AppendLine(String.Format("SquareMetersCommitted: {0}", SquareMetersCommitted));
+                Helpers.FieldToString(output, Description, "Description");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -46337,6 +53503,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- MoneyBalanceReply ---" + Environment.NewLine;
+                output += MoneyData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -46382,6 +53555,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)(TargetPort % 256);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TargetBlock --");
+                output.AppendLine(String.Format("TargetIP: {0}", TargetIP));
+                output.Append(String.Format("TargetPort: {0}", TargetPort));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -46450,10 +53631,24 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(MoneyBalance, bytes, i); i += 4;
                 Utils.IntToBytes(SquareMetersCredit, bytes, i); i += 4;
                 Utils.IntToBytes(SquareMetersCommitted, bytes, i); i += 4;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MoneyData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("TransactionID: {0}", TransactionID));
+                output.AppendLine(String.Format("TransactionSuccess: {0}", TransactionSuccess));
+                output.AppendLine(String.Format("MoneyBalance: {0}", MoneyBalance));
+                output.AppendLine(String.Format("SquareMetersCredit: {0}", SquareMetersCredit));
+                output.AppendLine(String.Format("SquareMetersCommitted: {0}", SquareMetersCommitted));
+                Helpers.FieldToString(output, Description, "Description");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -46522,6 +53717,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RoutedMoneyBalanceReply ---" + Environment.NewLine;
+                output += TargetBlock.ToString() + Environment.NewLine;
+                output += MoneyData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -46569,6 +53772,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("Flags: {0}", Flags));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -46613,6 +53825,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(GestureFlags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.AppendLine(String.Format("AssetID: {0}", AssetID));
+                output.Append(String.Format("GestureFlags: {0}", GestureFlags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -46695,6 +53916,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ActivateGestures ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < Data.Length; j++)
+            {
+                output += Data[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -46742,6 +53974,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("Flags: {0}", Flags));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -46783,6 +54024,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(GestureFlags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.Append(String.Format("GestureFlags: {0}", GestureFlags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -46865,6 +54114,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DeactivateGestures ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < Data.Length; j++)
+            {
+                output += Data[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -46921,10 +54181,19 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Filename == null) { Console.WriteLine("Warning: Filename is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Filename.Length;
                 Buffer.BlockCopy(Filename, 0, bytes, i, Filename.Length); i += Filename.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MuteData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                Helpers.FieldToString(output, Filename, "Filename");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -46987,6 +54256,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- MuteListUpdate ---" + Environment.NewLine;
+                output += MuteData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -47028,6 +54304,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -47090,6 +54373,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- UseCachedMuteList ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -47134,6 +54424,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -47175,6 +54473,14 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(RelatedRights, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Rights --");
+                output.AppendLine(String.Format("AgentRelated: {0}", AgentRelated));
+                output.Append(String.Format("RelatedRights: {0}", RelatedRights));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -47257,6 +54563,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GrantUserRights ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < Rights.Length; j++)
+            {
+                output += Rights[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -47298,6 +54615,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -47339,6 +54663,14 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(RelatedRights, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Rights --");
+                output.AppendLine(String.Format("AgentRelated: {0}", AgentRelated));
+                output.Append(String.Format("RelatedRights: {0}", RelatedRights));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -47421,6 +54753,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ChangeUserRights ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < Rights.Length; j++)
+            {
+                output += Rights[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -47462,6 +54805,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentBlock --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -47539,6 +54889,16 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- OnlineNotification ---" + Environment.NewLine;
+            for (int j = 0; j < AgentBlock.Length; j++)
+            {
+                output += AgentBlock[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -47580,6 +54940,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentBlock --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -47657,6 +55024,16 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- OfflineNotification ---" + Environment.NewLine;
+            for (int j = 0; j < AgentBlock.Length; j++)
+            {
+                output += AgentBlock[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -47701,6 +55078,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -47757,6 +55142,7 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(SimName == null) { Console.WriteLine("Warning: SimName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SimName.Length;
                 Buffer.BlockCopy(SimName, 0, bytes, i, SimName.Length); i += SimName.Length;
                 Utils.UIntToBytes(LocationID, bytes, i); i += 4;
@@ -47764,6 +55150,17 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(LocationLookAt.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- StartLocationData --");
+                Helpers.FieldToString(output, SimName, "SimName");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("LocationID: {0}", LocationID));
+                output.AppendLine(String.Format("LocationPos: {0}", LocationPos));
+                output.Append(String.Format("LocationLookAt: {0}", LocationLookAt));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -47832,6 +55229,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- SetStartLocationRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += StartLocationData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -47897,11 +55302,23 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)Type;
                 bytes[i++] = (byte)((Tempfile) ? 1 : 0);
                 bytes[i++] = (byte)((StoreLocal) ? 1 : 0);
+                if(AssetData == null) { Console.WriteLine("Warning: AssetData is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(AssetData.Length % 256);
                 bytes[i++] = (byte)((AssetData.Length >> 8) % 256);
                 Buffer.BlockCopy(AssetData, 0, bytes, i, AssetData.Length); i += AssetData.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AssetBlock --");
+                output.AppendLine(String.Format("TransactionID: {0}", TransactionID));
+                output.AppendLine(String.Format("Type: {0}", Type));
+                output.AppendLine(String.Format("Tempfile: {0}", Tempfile));
+                output.AppendLine(String.Format("StoreLocal: {0}", StoreLocal));
+                Helpers.FieldToString(output, AssetData, "AssetData");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -47964,6 +55381,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AssetUploadRequest ---" + Environment.NewLine;
+                output += AssetBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -48011,6 +55435,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Success) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AssetBlock --");
+                output.AppendLine(String.Format("UUID: {0}", UUID));
+                output.AppendLine(String.Format("Type: {0}", Type));
+                output.Append(String.Format("Success: {0}", Success));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -48073,6 +55506,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AssetUploadComplete ---" + Environment.NewLine;
+                output += AssetBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -48117,6 +55557,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -48194,8 +55642,10 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Charter == null) { Console.WriteLine("Warning: Charter is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Charter.Length % 256);
                 bytes[i++] = (byte)((Charter.Length >> 8) % 256);
                 Buffer.BlockCopy(Charter, 0, bytes, i, Charter.Length); i += Charter.Length;
@@ -48207,6 +55657,22 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((MaturePublish) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Charter, "Charter");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("ShowInList: {0}", ShowInList));
+                output.AppendLine(String.Format("InsigniaID: {0}", InsigniaID));
+                output.AppendLine(String.Format("MembershipFee: {0}", MembershipFee));
+                output.AppendLine(String.Format("OpenEnrollment: {0}", OpenEnrollment));
+                output.AppendLine(String.Format("AllowPublish: {0}", AllowPublish));
+                output.Append(String.Format("MaturePublish: {0}", MaturePublish));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -48275,6 +55741,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- CreateGroupRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -48316,6 +55790,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -48372,10 +55853,20 @@ namespace OpenMetaverse.Packets
             {
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
                 bytes[i++] = (byte)((Success) ? 1 : 0);
+                if(Message == null) { Console.WriteLine("Warning: Message is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Message.Length;
                 Buffer.BlockCopy(Message, 0, bytes, i, Message.Length); i += Message.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ReplyData --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("Success: {0}", Success));
+                Helpers.FieldToString(output, Message, "Message");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -48443,6 +55934,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- CreateGroupReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ReplyData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -48487,6 +55986,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -48552,6 +56059,7 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Charter == null) { Console.WriteLine("Warning: Charter is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Charter.Length % 256);
                 bytes[i++] = (byte)((Charter.Length >> 8) % 256);
                 Buffer.BlockCopy(Charter, 0, bytes, i, Charter.Length); i += Charter.Length;
@@ -48563,6 +56071,21 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((MaturePublish) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                Helpers.FieldToString(output, Charter, "Charter");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("ShowInList: {0}", ShowInList));
+                output.AppendLine(String.Format("InsigniaID: {0}", InsigniaID));
+                output.AppendLine(String.Format("MembershipFee: {0}", MembershipFee));
+                output.AppendLine(String.Format("OpenEnrollment: {0}", OpenEnrollment));
+                output.AppendLine(String.Format("AllowPublish: {0}", AllowPublish));
+                output.Append(String.Format("MaturePublish: {0}", MaturePublish));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -48631,6 +56154,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- UpdateGroupInfo ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -48678,6 +56209,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -48722,6 +56262,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Change, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RoleChange --");
+                output.AppendLine(String.Format("RoleID: {0}", RoleID));
+                output.AppendLine(String.Format("MemberID: {0}", MemberID));
+                output.Append(String.Format("Change: {0}", Change));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -48804,6 +56353,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupRoleChanges ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < RoleChange.Length; j++)
+            {
+                output += RoleChange[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -48848,6 +56408,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -48886,6 +56454,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -48954,6 +56529,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- JoinGroupRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -48995,6 +56578,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -49036,6 +56626,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Success) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.Append(String.Format("Success: {0}", Success));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -49103,6 +56701,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- JoinGroupReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -49147,6 +56753,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -49185,6 +56799,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -49223,6 +56844,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(EjecteeID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- EjectData --");
+                output.Append(String.Format("EjecteeID: {0}", EjecteeID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -49310,6 +56938,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- EjectGroupMemberRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+            for (int j = 0; j < EjectData.Length; j++)
+            {
+                output += EjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -49351,6 +56991,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -49389,6 +57036,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -49427,6 +57081,13 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Success) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- EjectData --");
+                output.Append(String.Format("Success: {0}", Success));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -49499,6 +57160,15 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- EjectGroupMemberReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+                output += EjectData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -49543,6 +57213,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -49581,6 +57259,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -49648,6 +57333,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- LeaveGroupRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -49689,6 +57382,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -49730,6 +57430,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Success) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.Append(String.Format("Success: {0}", Success));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -49797,6 +57505,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- LeaveGroupReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -49841,6 +57557,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -49879,6 +57603,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -49920,6 +57651,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(RoleID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- InviteData --");
+                output.AppendLine(String.Format("InviteeID: {0}", InviteeID));
+                output.Append(String.Format("RoleID: {0}", RoleID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -50007,6 +57746,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- InviteGroupRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+            for (int j = 0; j < InviteData.Length; j++)
+            {
+                output += InviteData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -50051,6 +57802,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -50089,6 +57848,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -50156,6 +57922,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupProfileRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -50197,6 +57971,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -50304,12 +58085,15 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Charter == null) { Console.WriteLine("Warning: Charter is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Charter.Length % 256);
                 bytes[i++] = (byte)((Charter.Length >> 8) % 256);
                 Buffer.BlockCopy(Charter, 0, bytes, i, Charter.Length); i += Charter.Length;
                 bytes[i++] = (byte)((ShowInList) ? 1 : 0);
+                if(MemberTitle == null) { Console.WriteLine("Warning: MemberTitle is null, in " + this.GetType()); }
                 bytes[i++] = (byte)MemberTitle.Length;
                 Buffer.BlockCopy(MemberTitle, 0, bytes, i, MemberTitle.Length); i += MemberTitle.Length;
                 Utils.UInt64ToBytes(PowersMask, bytes, i); i += 8;
@@ -50325,6 +58109,31 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(OwnerRole.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Charter, "Charter");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("ShowInList: {0}", ShowInList));
+                Helpers.FieldToString(output, MemberTitle, "MemberTitle");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("PowersMask: {0}", PowersMask));
+                output.AppendLine(String.Format("InsigniaID: {0}", InsigniaID));
+                output.AppendLine(String.Format("FounderID: {0}", FounderID));
+                output.AppendLine(String.Format("MembershipFee: {0}", MembershipFee));
+                output.AppendLine(String.Format("OpenEnrollment: {0}", OpenEnrollment));
+                output.AppendLine(String.Format("Money: {0}", Money));
+                output.AppendLine(String.Format("GroupMembershipCount: {0}", GroupMembershipCount));
+                output.AppendLine(String.Format("GroupRolesCount: {0}", GroupRolesCount));
+                output.AppendLine(String.Format("AllowPublish: {0}", AllowPublish));
+                output.AppendLine(String.Format("MaturePublish: {0}", MaturePublish));
+                output.Append(String.Format("OwnerRole: {0}", OwnerRole));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -50393,6 +58202,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupProfileReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -50440,6 +58257,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -50484,6 +58310,15 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(CurrentInterval, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MoneyData --");
+                output.AppendLine(String.Format("RequestID: {0}", RequestID));
+                output.AppendLine(String.Format("IntervalDays: {0}", IntervalDays));
+                output.Append(String.Format("CurrentInterval: {0}", CurrentInterval));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -50552,6 +58387,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupAccountSummaryRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += MoneyData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -50596,6 +58439,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -50713,6 +58564,7 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(RequestID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Utils.IntToBytes(IntervalDays, bytes, i); i += 4;
                 Utils.IntToBytes(CurrentInterval, bytes, i); i += 4;
+                if(StartDate == null) { Console.WriteLine("Warning: StartDate is null, in " + this.GetType()); }
                 bytes[i++] = (byte)StartDate.Length;
                 Buffer.BlockCopy(StartDate, 0, bytes, i, StartDate.Length); i += StartDate.Length;
                 Utils.IntToBytes(Balance, bytes, i); i += 4;
@@ -50729,12 +58581,42 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(GroupTaxEstimate, bytes, i); i += 4;
                 Utils.IntToBytes(ParcelDirFeeEstimate, bytes, i); i += 4;
                 Utils.IntToBytes(NonExemptMembers, bytes, i); i += 4;
+                if(LastTaxDate == null) { Console.WriteLine("Warning: LastTaxDate is null, in " + this.GetType()); }
                 bytes[i++] = (byte)LastTaxDate.Length;
                 Buffer.BlockCopy(LastTaxDate, 0, bytes, i, LastTaxDate.Length); i += LastTaxDate.Length;
+                if(TaxDate == null) { Console.WriteLine("Warning: TaxDate is null, in " + this.GetType()); }
                 bytes[i++] = (byte)TaxDate.Length;
                 Buffer.BlockCopy(TaxDate, 0, bytes, i, TaxDate.Length); i += TaxDate.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MoneyData --");
+                output.AppendLine(String.Format("RequestID: {0}", RequestID));
+                output.AppendLine(String.Format("IntervalDays: {0}", IntervalDays));
+                output.AppendLine(String.Format("CurrentInterval: {0}", CurrentInterval));
+                Helpers.FieldToString(output, StartDate, "StartDate");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("Balance: {0}", Balance));
+                output.AppendLine(String.Format("TotalCredits: {0}", TotalCredits));
+                output.AppendLine(String.Format("TotalDebits: {0}", TotalDebits));
+                output.AppendLine(String.Format("ObjectTaxCurrent: {0}", ObjectTaxCurrent));
+                output.AppendLine(String.Format("LightTaxCurrent: {0}", LightTaxCurrent));
+                output.AppendLine(String.Format("LandTaxCurrent: {0}", LandTaxCurrent));
+                output.AppendLine(String.Format("GroupTaxCurrent: {0}", GroupTaxCurrent));
+                output.AppendLine(String.Format("ParcelDirFeeCurrent: {0}", ParcelDirFeeCurrent));
+                output.AppendLine(String.Format("ObjectTaxEstimate: {0}", ObjectTaxEstimate));
+                output.AppendLine(String.Format("LightTaxEstimate: {0}", LightTaxEstimate));
+                output.AppendLine(String.Format("LandTaxEstimate: {0}", LandTaxEstimate));
+                output.AppendLine(String.Format("GroupTaxEstimate: {0}", GroupTaxEstimate));
+                output.AppendLine(String.Format("ParcelDirFeeEstimate: {0}", ParcelDirFeeEstimate));
+                output.AppendLine(String.Format("NonExemptMembers: {0}", NonExemptMembers));
+                Helpers.FieldToString(output, LastTaxDate, "LastTaxDate");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, TaxDate, "TaxDate");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -50803,6 +58685,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupAccountSummaryReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += MoneyData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -50850,6 +58740,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -50894,6 +58793,15 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(CurrentInterval, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MoneyData --");
+                output.AppendLine(String.Format("RequestID: {0}", RequestID));
+                output.AppendLine(String.Format("IntervalDays: {0}", IntervalDays));
+                output.Append(String.Format("CurrentInterval: {0}", CurrentInterval));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -50962,6 +58870,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupAccountDetailsRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += MoneyData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -51006,6 +58922,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -51065,10 +58989,21 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(RequestID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Utils.IntToBytes(IntervalDays, bytes, i); i += 4;
                 Utils.IntToBytes(CurrentInterval, bytes, i); i += 4;
+                if(StartDate == null) { Console.WriteLine("Warning: StartDate is null, in " + this.GetType()); }
                 bytes[i++] = (byte)StartDate.Length;
                 Buffer.BlockCopy(StartDate, 0, bytes, i, StartDate.Length); i += StartDate.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MoneyData --");
+                output.AppendLine(String.Format("RequestID: {0}", RequestID));
+                output.AppendLine(String.Format("IntervalDays: {0}", IntervalDays));
+                output.AppendLine(String.Format("CurrentInterval: {0}", CurrentInterval));
+                Helpers.FieldToString(output, StartDate, "StartDate");
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -51121,11 +59056,21 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
                 Utils.IntToBytes(Amount, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- HistoryData --");
+                Helpers.FieldToString(output, Description, "Description");
+                output.Append(Environment.NewLine);
+                output.Append(String.Format("Amount: {0}", Amount));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -51214,6 +59159,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupAccountDetailsReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += MoneyData.ToString() + Environment.NewLine;
+            for (int j = 0; j < HistoryData.Length; j++)
+            {
+                output += HistoryData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -51261,6 +59218,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -51305,6 +59271,15 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(CurrentInterval, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MoneyData --");
+                output.AppendLine(String.Format("RequestID: {0}", RequestID));
+                output.AppendLine(String.Format("IntervalDays: {0}", IntervalDays));
+                output.Append(String.Format("CurrentInterval: {0}", CurrentInterval));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -51373,6 +59348,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupAccountTransactionsRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += MoneyData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -51417,6 +59400,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -51476,10 +59467,21 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(RequestID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Utils.IntToBytes(IntervalDays, bytes, i); i += 4;
                 Utils.IntToBytes(CurrentInterval, bytes, i); i += 4;
+                if(StartDate == null) { Console.WriteLine("Warning: StartDate is null, in " + this.GetType()); }
                 bytes[i++] = (byte)StartDate.Length;
                 Buffer.BlockCopy(StartDate, 0, bytes, i, StartDate.Length); i += StartDate.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MoneyData --");
+                output.AppendLine(String.Format("RequestID: {0}", RequestID));
+                output.AppendLine(String.Format("IntervalDays: {0}", IntervalDays));
+                output.AppendLine(String.Format("CurrentInterval: {0}", CurrentInterval));
+                Helpers.FieldToString(output, StartDate, "StartDate");
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -51564,16 +59566,33 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Time == null) { Console.WriteLine("Warning: Time is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Time.Length;
                 Buffer.BlockCopy(Time, 0, bytes, i, Time.Length); i += Time.Length;
+                if(User == null) { Console.WriteLine("Warning: User is null, in " + this.GetType()); }
                 bytes[i++] = (byte)User.Length;
                 Buffer.BlockCopy(User, 0, bytes, i, User.Length); i += User.Length;
                 Utils.IntToBytes(Type, bytes, i); i += 4;
+                if(Item == null) { Console.WriteLine("Warning: Item is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Item.Length;
                 Buffer.BlockCopy(Item, 0, bytes, i, Item.Length); i += Item.Length;
                 Utils.IntToBytes(Amount, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- HistoryData --");
+                Helpers.FieldToString(output, Time, "Time");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, User, "User");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("Type: {0}", Type));
+                Helpers.FieldToString(output, Item, "Item");
+                output.Append(Environment.NewLine);
+                output.Append(String.Format("Amount: {0}", Amount));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -51662,6 +59681,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupAccountTransactionsReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += MoneyData.ToString() + Environment.NewLine;
+            for (int j = 0; j < HistoryData.Length; j++)
+            {
+                output += HistoryData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -51706,6 +59737,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -51744,6 +59783,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -51782,6 +59828,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TransactionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TransactionData --");
+                output.Append(String.Format("TransactionID: {0}", TransactionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -51854,6 +59907,15 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupActiveProposalsRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+                output += TransactionData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -51898,6 +59960,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -51939,6 +60009,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(TotalNumItems, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TransactionData --");
+                output.AppendLine(String.Format("TransactionID: {0}", TransactionID));
+                output.Append(String.Format("TotalNumItems: {0}", TotalNumItems));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -52061,21 +60139,46 @@ namespace OpenMetaverse.Packets
             {
                 Buffer.BlockCopy(VoteID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(VoteInitiator.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(TerseDateID == null) { Console.WriteLine("Warning: TerseDateID is null, in " + this.GetType()); }
                 bytes[i++] = (byte)TerseDateID.Length;
                 Buffer.BlockCopy(TerseDateID, 0, bytes, i, TerseDateID.Length); i += TerseDateID.Length;
+                if(StartDateTime == null) { Console.WriteLine("Warning: StartDateTime is null, in " + this.GetType()); }
                 bytes[i++] = (byte)StartDateTime.Length;
                 Buffer.BlockCopy(StartDateTime, 0, bytes, i, StartDateTime.Length); i += StartDateTime.Length;
+                if(EndDateTime == null) { Console.WriteLine("Warning: EndDateTime is null, in " + this.GetType()); }
                 bytes[i++] = (byte)EndDateTime.Length;
                 Buffer.BlockCopy(EndDateTime, 0, bytes, i, EndDateTime.Length); i += EndDateTime.Length;
                 bytes[i++] = (byte)((AlreadyVoted) ? 1 : 0);
+                if(VoteCast == null) { Console.WriteLine("Warning: VoteCast is null, in " + this.GetType()); }
                 bytes[i++] = (byte)VoteCast.Length;
                 Buffer.BlockCopy(VoteCast, 0, bytes, i, VoteCast.Length); i += VoteCast.Length;
                 Utils.FloatToBytes(Majority, bytes, i); i += 4;
                 Utils.IntToBytes(Quorum, bytes, i); i += 4;
+                if(ProposalText == null) { Console.WriteLine("Warning: ProposalText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)ProposalText.Length;
                 Buffer.BlockCopy(ProposalText, 0, bytes, i, ProposalText.Length); i += ProposalText.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ProposalData --");
+                output.AppendLine(String.Format("VoteID: {0}", VoteID));
+                output.AppendLine(String.Format("VoteInitiator: {0}", VoteInitiator));
+                Helpers.FieldToString(output, TerseDateID, "TerseDateID");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, StartDateTime, "StartDateTime");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, EndDateTime, "EndDateTime");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("AlreadyVoted: {0}", AlreadyVoted));
+                Helpers.FieldToString(output, VoteCast, "VoteCast");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("Majority: {0}", Majority));
+                output.AppendLine(String.Format("Quorum: {0}", Quorum));
+                Helpers.FieldToString(output, ProposalText, "ProposalText");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -52164,6 +60267,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupActiveProposalItemReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += TransactionData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ProposalData.Length; j++)
+            {
+                output += ProposalData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -52208,6 +60323,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -52246,6 +60369,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -52284,6 +60414,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TransactionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TransactionData --");
+                output.Append(String.Format("TransactionID: {0}", TransactionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -52356,6 +60493,15 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupVoteHistoryRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+                output += TransactionData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -52400,6 +60546,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -52441,6 +60595,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(TotalNumItems, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TransactionData --");
+                output.AppendLine(String.Format("TransactionID: {0}", TransactionID));
+                output.Append(String.Format("TotalNumItems: {0}", TotalNumItems));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -52575,24 +60737,51 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(VoteID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(TerseDateID == null) { Console.WriteLine("Warning: TerseDateID is null, in " + this.GetType()); }
                 bytes[i++] = (byte)TerseDateID.Length;
                 Buffer.BlockCopy(TerseDateID, 0, bytes, i, TerseDateID.Length); i += TerseDateID.Length;
+                if(StartDateTime == null) { Console.WriteLine("Warning: StartDateTime is null, in " + this.GetType()); }
                 bytes[i++] = (byte)StartDateTime.Length;
                 Buffer.BlockCopy(StartDateTime, 0, bytes, i, StartDateTime.Length); i += StartDateTime.Length;
+                if(EndDateTime == null) { Console.WriteLine("Warning: EndDateTime is null, in " + this.GetType()); }
                 bytes[i++] = (byte)EndDateTime.Length;
                 Buffer.BlockCopy(EndDateTime, 0, bytes, i, EndDateTime.Length); i += EndDateTime.Length;
                 Buffer.BlockCopy(VoteInitiator.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(VoteType == null) { Console.WriteLine("Warning: VoteType is null, in " + this.GetType()); }
                 bytes[i++] = (byte)VoteType.Length;
                 Buffer.BlockCopy(VoteType, 0, bytes, i, VoteType.Length); i += VoteType.Length;
+                if(VoteResult == null) { Console.WriteLine("Warning: VoteResult is null, in " + this.GetType()); }
                 bytes[i++] = (byte)VoteResult.Length;
                 Buffer.BlockCopy(VoteResult, 0, bytes, i, VoteResult.Length); i += VoteResult.Length;
                 Utils.FloatToBytes(Majority, bytes, i); i += 4;
                 Utils.IntToBytes(Quorum, bytes, i); i += 4;
+                if(ProposalText == null) { Console.WriteLine("Warning: ProposalText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(ProposalText.Length % 256);
                 bytes[i++] = (byte)((ProposalText.Length >> 8) % 256);
                 Buffer.BlockCopy(ProposalText, 0, bytes, i, ProposalText.Length); i += ProposalText.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- HistoryItemData --");
+                output.AppendLine(String.Format("VoteID: {0}", VoteID));
+                Helpers.FieldToString(output, TerseDateID, "TerseDateID");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, StartDateTime, "StartDateTime");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, EndDateTime, "EndDateTime");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("VoteInitiator: {0}", VoteInitiator));
+                Helpers.FieldToString(output, VoteType, "VoteType");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, VoteResult, "VoteResult");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("Majority: {0}", Majority));
+                output.AppendLine(String.Format("Quorum: {0}", Quorum));
+                Helpers.FieldToString(output, ProposalText, "ProposalText");
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -52648,11 +60837,22 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(CandidateID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(VoteCast == null) { Console.WriteLine("Warning: VoteCast is null, in " + this.GetType()); }
                 bytes[i++] = (byte)VoteCast.Length;
                 Buffer.BlockCopy(VoteCast, 0, bytes, i, VoteCast.Length); i += VoteCast.Length;
                 Utils.IntToBytes(NumVotes, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- VoteItem --");
+                output.AppendLine(String.Format("CandidateID: {0}", CandidateID));
+                Helpers.FieldToString(output, VoteCast, "VoteCast");
+                output.Append(Environment.NewLine);
+                output.Append(String.Format("NumVotes: {0}", NumVotes));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -52746,6 +60946,19 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupVoteHistoryItemReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += TransactionData.ToString() + Environment.NewLine;
+                output += HistoryItemData.ToString() + Environment.NewLine;
+            for (int j = 0; j < VoteItem.Length; j++)
+            {
+                output += VoteItem[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -52790,6 +61003,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -52852,10 +61073,22 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(Quorum, bytes, i); i += 4;
                 Utils.FloatToBytes(Majority, bytes, i); i += 4;
                 Utils.IntToBytes(Duration, bytes, i); i += 4;
+                if(ProposalText == null) { Console.WriteLine("Warning: ProposalText is null, in " + this.GetType()); }
                 bytes[i++] = (byte)ProposalText.Length;
                 Buffer.BlockCopy(ProposalText, 0, bytes, i, ProposalText.Length); i += ProposalText.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ProposalData --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("Quorum: {0}", Quorum));
+                output.AppendLine(String.Format("Majority: {0}", Majority));
+                output.AppendLine(String.Format("Duration: {0}", Duration));
+                Helpers.FieldToString(output, ProposalText, "ProposalText");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -52924,6 +61157,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- StartGroupProposal ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ProposalData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -52968,6 +61209,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -53024,10 +61273,20 @@ namespace OpenMetaverse.Packets
             {
                 Buffer.BlockCopy(ProposalID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(VoteCast == null) { Console.WriteLine("Warning: VoteCast is null, in " + this.GetType()); }
                 bytes[i++] = (byte)VoteCast.Length;
                 Buffer.BlockCopy(VoteCast, 0, bytes, i, VoteCast.Length); i += VoteCast.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ProposalData --");
+                output.AppendLine(String.Format("ProposalID: {0}", ProposalID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                Helpers.FieldToString(output, VoteCast, "VoteCast");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -53095,6 +61354,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupProposalBallot ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ProposalData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -53139,6 +61406,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -53180,6 +61455,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(RequestID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.Append(String.Format("RequestID: {0}", RequestID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -53247,6 +61530,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupMembersRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -53288,6 +61579,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -53332,6 +61630,15 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(MemberCount, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("RequestID: {0}", RequestID));
+                output.Append(String.Format("MemberCount: {0}", MemberCount));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -53407,14 +61714,30 @@ namespace OpenMetaverse.Packets
             {
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Utils.IntToBytes(Contribution, bytes, i); i += 4;
+                if(OnlineStatus == null) { Console.WriteLine("Warning: OnlineStatus is null, in " + this.GetType()); }
                 bytes[i++] = (byte)OnlineStatus.Length;
                 Buffer.BlockCopy(OnlineStatus, 0, bytes, i, OnlineStatus.Length); i += OnlineStatus.Length;
                 Utils.UInt64ToBytes(AgentPowers, bytes, i); i += 8;
+                if(Title == null) { Console.WriteLine("Warning: Title is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Title.Length;
                 Buffer.BlockCopy(Title, 0, bytes, i, Title.Length); i += Title.Length;
                 bytes[i++] = (byte)((IsOwner) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MemberData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("Contribution: {0}", Contribution));
+                Helpers.FieldToString(output, OnlineStatus, "OnlineStatus");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("AgentPowers: {0}", AgentPowers));
+                Helpers.FieldToString(output, Title, "Title");
+                output.Append(Environment.NewLine);
+                output.Append(String.Format("IsOwner: {0}", IsOwner));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -53503,6 +61826,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupMembersReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+            for (int j = 0; j < MemberData.Length; j++)
+            {
+                output += MemberData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -53550,6 +61885,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -53613,6 +61957,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ActivateGroup ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -53657,6 +62008,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -53698,6 +62057,14 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(Contribution, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.Append(String.Format("Contribution: {0}", Contribution));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -53765,6 +62132,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- SetGroupContribution ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -53809,6 +62184,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -53850,6 +62233,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((AcceptNotices) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.Append(String.Format("AcceptNotices: {0}", AcceptNotices));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -53888,6 +62279,13 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((ListInProfile) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- NewData --");
+                output.Append(String.Format("ListInProfile: {0}", ListInProfile));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -53960,6 +62358,15 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- SetGroupAcceptNotices ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+                output += NewData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -54004,6 +62411,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -54045,6 +62460,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(RequestID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.Append(String.Format("RequestID: {0}", RequestID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -54112,6 +62535,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupRoleDataRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -54153,6 +62584,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -54197,6 +62635,15 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(RoleCount, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("RequestID: {0}", RequestID));
+                output.Append(String.Format("RoleCount: {0}", RoleCount));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -54284,16 +62731,34 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(RoleID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Title == null) { Console.WriteLine("Warning: Title is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Title.Length;
                 Buffer.BlockCopy(Title, 0, bytes, i, Title.Length); i += Title.Length;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
                 Utils.UInt64ToBytes(Powers, bytes, i); i += 8;
                 Utils.UIntToBytes(Members, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RoleData --");
+                output.AppendLine(String.Format("RoleID: {0}", RoleID));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Title, "Title");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Description, "Description");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("Powers: {0}", Powers));
+                output.Append(String.Format("Members: {0}", Members));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -54381,6 +62846,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupRoleDataReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+            for (int j = 0; j < RoleData.Length; j++)
+            {
+                output += RoleData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -54425,6 +62902,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -54466,6 +62951,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(RequestID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.Append(String.Format("RequestID: {0}", RequestID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -54533,6 +63026,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupRoleMembersRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += GroupData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -54583,6 +63084,16 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(TotalPairs, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("RequestID: {0}", RequestID));
+                output.Append(String.Format("TotalPairs: {0}", TotalPairs));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -54624,6 +63135,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(MemberID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MemberData --");
+                output.AppendLine(String.Format("RoleID: {0}", RoleID));
+                output.Append(String.Format("MemberID: {0}", MemberID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -54706,6 +63225,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupRoleMembersReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < MemberData.Length; j++)
+            {
+                output += MemberData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -54756,6 +63286,16 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(RequestID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.Append(String.Format("RequestID: {0}", RequestID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -54818,6 +63358,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupTitlesRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -54865,6 +63412,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(RequestID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.Append(String.Format("RequestID: {0}", RequestID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -54919,12 +63475,23 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Title == null) { Console.WriteLine("Warning: Title is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Title.Length;
                 Buffer.BlockCopy(Title, 0, bytes, i, Title.Length); i += Title.Length;
                 Buffer.BlockCopy(RoleID.GetBytes(), 0, bytes, i, 16); i += 16;
                 bytes[i++] = (byte)((Selected) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                Helpers.FieldToString(output, Title, "Title");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("RoleID: {0}", RoleID));
+                output.Append(String.Format("Selected: {0}", Selected));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -55008,6 +63575,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupTitlesReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < GroupData.Length; j++)
+            {
+                output += GroupData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -55058,6 +63636,16 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(TitleRoleID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.Append(String.Format("TitleRoleID: {0}", TitleRoleID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -55120,6 +63708,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupTitleUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -55167,6 +63762,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -55254,16 +63858,34 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(RoleID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
+                if(Title == null) { Console.WriteLine("Warning: Title is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Title.Length;
                 Buffer.BlockCopy(Title, 0, bytes, i, Title.Length); i += Title.Length;
                 Utils.UInt64ToBytes(Powers, bytes, i); i += 8;
                 bytes[i++] = UpdateType;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RoleData --");
+                output.AppendLine(String.Format("RoleID: {0}", RoleID));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Description, "Description");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Title, "Title");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("Powers: {0}", Powers));
+                output.Append(String.Format("UpdateType: {0}", UpdateType));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -55346,6 +63968,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupRoleUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < RoleData.Length; j++)
+            {
+                output += RoleData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -55390,6 +64023,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RequestData --");
+                output.AppendLine(String.Format("RequestID: {0}", RequestID));
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -55452,6 +64093,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- LiveHelpGroupRequest ---" + Environment.NewLine;
+                output += RequestData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -55511,10 +64159,20 @@ namespace OpenMetaverse.Packets
             {
                 Buffer.BlockCopy(RequestID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Selection == null) { Console.WriteLine("Warning: Selection is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Selection.Length;
                 Buffer.BlockCopy(Selection, 0, bytes, i, Selection.Length); i += Selection.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ReplyData --");
+                output.AppendLine(String.Format("RequestID: {0}", RequestID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                Helpers.FieldToString(output, Selection, "Selection");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -55577,6 +64235,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- LiveHelpGroupReply ---" + Environment.NewLine;
+                output += ReplyData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -55621,6 +64286,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -55683,6 +64356,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentWearablesRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -55730,6 +64410,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(SerialNum, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("SerialNum: {0}", SerialNum));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -55774,6 +64463,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = WearableType;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- WearableData --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.AppendLine(String.Format("AssetID: {0}", AssetID));
+                output.Append(String.Format("WearableType: {0}", WearableType));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -55857,6 +64555,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentWearablesUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < WearableData.Length; j++)
+            {
+                output += WearableData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -55901,6 +64610,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -55942,6 +64659,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = WearableType;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- WearableData --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.Append(String.Format("WearableType: {0}", WearableType));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -56025,6 +64750,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentIsNowWearing ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < WearableData.Length; j++)
+            {
+                output += WearableData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -56072,6 +64808,15 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(SerialNum, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("SerialNum: {0}", SerialNum));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -56113,6 +64858,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = TextureIndex;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- WearableData --");
+                output.AppendLine(String.Format("ID: {0}", ID));
+                output.Append(String.Format("TextureIndex: {0}", TextureIndex));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -56195,6 +64948,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentCachedTexture ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < WearableData.Length; j++)
+            {
+                output += WearableData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -56242,6 +65006,15 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(SerialNum, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("SerialNum: {0}", SerialNum));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -56298,10 +65071,20 @@ namespace OpenMetaverse.Packets
             {
                 Buffer.BlockCopy(TextureID.GetBytes(), 0, bytes, i, 16); i += 16;
                 bytes[i++] = TextureIndex;
+                if(HostName == null) { Console.WriteLine("Warning: HostName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)HostName.Length;
                 Buffer.BlockCopy(HostName, 0, bytes, i, HostName.Length); i += HostName.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- WearableData --");
+                output.AppendLine(String.Format("TextureID: {0}", TextureID));
+                output.AppendLine(String.Format("TextureIndex: {0}", TextureIndex));
+                Helpers.FieldToString(output, HostName, "HostName");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -56384,6 +65167,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentCachedTextureResponse ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < WearableData.Length; j++)
+            {
+                output += WearableData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -56428,6 +65222,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -56488,6 +65290,13 @@ namespace OpenMetaverse.Packets
             AgentData.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- AgentDataUpdateRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -56595,18 +65404,38 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(FirstName == null) { Console.WriteLine("Warning: FirstName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)FirstName.Length;
                 Buffer.BlockCopy(FirstName, 0, bytes, i, FirstName.Length); i += FirstName.Length;
+                if(LastName == null) { Console.WriteLine("Warning: LastName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)LastName.Length;
                 Buffer.BlockCopy(LastName, 0, bytes, i, LastName.Length); i += LastName.Length;
+                if(GroupTitle == null) { Console.WriteLine("Warning: GroupTitle is null, in " + this.GetType()); }
                 bytes[i++] = (byte)GroupTitle.Length;
                 Buffer.BlockCopy(GroupTitle, 0, bytes, i, GroupTitle.Length); i += GroupTitle.Length;
                 Buffer.BlockCopy(ActiveGroupID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Utils.UInt64ToBytes(GroupPowers, bytes, i); i += 8;
+                if(GroupName == null) { Console.WriteLine("Warning: GroupName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)GroupName.Length;
                 Buffer.BlockCopy(GroupName, 0, bytes, i, GroupName.Length); i += GroupName.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                Helpers.FieldToString(output, FirstName, "FirstName");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, LastName, "LastName");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, GroupTitle, "GroupTitle");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("ActiveGroupID: {0}", ActiveGroupID));
+                output.AppendLine(String.Format("GroupPowers: {0}", GroupPowers));
+                Helpers.FieldToString(output, GroupName, "GroupName");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -56668,6 +65497,13 @@ namespace OpenMetaverse.Packets
             AgentData.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- AgentDataUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -56732,10 +65568,21 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Utils.UInt64ToBytes(AgentPowers, bytes, i); i += 8;
+                if(GroupTitle == null) { Console.WriteLine("Warning: GroupTitle is null, in " + this.GetType()); }
                 bytes[i++] = (byte)GroupTitle.Length;
                 Buffer.BlockCopy(GroupTitle, 0, bytes, i, GroupTitle.Length); i += GroupTitle.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentGroupData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("AgentPowers: {0}", AgentPowers));
+                Helpers.FieldToString(output, GroupTitle, "GroupTitle");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -56814,6 +65661,16 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- GroupDataUpdate ---" + Environment.NewLine;
+            for (int j = 0; j < AgentGroupData.Length; j++)
+            {
+                output += AgentGroupData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -56855,6 +65712,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -56920,10 +65784,23 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((AcceptNotices) ? 1 : 0);
                 Buffer.BlockCopy(GroupInsigniaID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Utils.IntToBytes(Contribution, bytes, i); i += 4;
+                if(GroupName == null) { Console.WriteLine("Warning: GroupName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)GroupName.Length;
                 Buffer.BlockCopy(GroupName, 0, bytes, i, GroupName.Length); i += GroupName.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("GroupPowers: {0}", GroupPowers));
+                output.AppendLine(String.Format("AcceptNotices: {0}", AcceptNotices));
+                output.AppendLine(String.Format("GroupInsigniaID: {0}", GroupInsigniaID));
+                output.AppendLine(String.Format("Contribution: {0}", Contribution));
+                Helpers.FieldToString(output, GroupName, "GroupName");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -57007,6 +65884,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentGroupDataUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < GroupData.Length; j++)
+            {
+                output += GroupData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -57051,6 +65939,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -57114,6 +66010,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentDropGroup ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -57159,6 +66062,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(Digest, 0, bytes, i, 32);i += 32;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- DataBlock --");
+                output.AppendLine(String.Format("EndPointID: {0}", EndPointID));
+                Helpers.FieldToString(output, Digest, "Digest");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -57221,6 +66132,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- CreateTrustedCircuit ---" + Environment.NewLine;
+                output += DataBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -57262,6 +66180,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(EndPointID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- DataBlock --");
+                output.Append(String.Format("EndPointID: {0}", EndPointID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -57324,6 +66249,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DenyTrustedCircuit ---" + Environment.NewLine;
+                output += DataBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -57384,6 +66316,12 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RequestTrustedCircuit ---" + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -57428,6 +66366,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -57514,12 +66460,30 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(GroupMask, bytes, i); i += 4;
                 Utils.UIntToBytes(EveryoneMask, bytes, i); i += 4;
                 Utils.UIntToBytes(NextOwnerMask, bytes, i); i += 4;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("AttachmentPt: {0}", AttachmentPt));
+                output.AppendLine(String.Format("ItemFlags: {0}", ItemFlags));
+                output.AppendLine(String.Format("GroupMask: {0}", GroupMask));
+                output.AppendLine(String.Format("EveryoneMask: {0}", EveryoneMask));
+                output.AppendLine(String.Format("NextOwnerMask: {0}", NextOwnerMask));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Description, "Description");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -57588,6 +66552,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RezSingleAttachmentFromInv ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ObjectData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -57632,6 +66604,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -57676,6 +66656,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((FirstDetachAll) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- HeaderData --");
+                output.AppendLine(String.Format("CompoundMsgID: {0}", CompoundMsgID));
+                output.AppendLine(String.Format("TotalObjects: {0}", TotalObjects));
+                output.Append(String.Format("FirstDetachAll: {0}", FirstDetachAll));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -57762,12 +66751,30 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(GroupMask, bytes, i); i += 4;
                 Utils.UIntToBytes(EveryoneMask, bytes, i); i += 4;
                 Utils.UIntToBytes(NextOwnerMask, bytes, i); i += 4;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("AttachmentPt: {0}", AttachmentPt));
+                output.AppendLine(String.Format("ItemFlags: {0}", ItemFlags));
+                output.AppendLine(String.Format("GroupMask: {0}", GroupMask));
+                output.AppendLine(String.Format("EveryoneMask: {0}", EveryoneMask));
+                output.AppendLine(String.Format("NextOwnerMask: {0}", NextOwnerMask));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Description, "Description");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -57856,6 +66863,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RezMultipleAttachmentsFromInv ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += HeaderData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -57900,6 +66919,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ItemID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("ItemID: {0}", ItemID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -57962,6 +66989,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- DetachAttachmentIntoInv ---" + Environment.NewLine;
+                output += ObjectData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -58006,6 +67040,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -58044,6 +67086,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(NewFolderID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- HeaderData --");
+                output.Append(String.Format("NewFolderID: {0}", NewFolderID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -58085,6 +67134,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(OldFolderID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("OldItemID: {0}", OldItemID));
+                output.Append(String.Format("OldFolderID: {0}", OldFolderID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -58172,6 +67229,18 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- CreateNewOutfitAttachments ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += HeaderData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -58216,6 +67285,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -58278,6 +67355,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- UserInfoRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -58319,6 +67403,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -58387,13 +67478,25 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 bytes[i++] = (byte)((IMViaEMail) ? 1 : 0);
+                if(DirectoryVisibility == null) { Console.WriteLine("Warning: DirectoryVisibility is null, in " + this.GetType()); }
                 bytes[i++] = (byte)DirectoryVisibility.Length;
                 Buffer.BlockCopy(DirectoryVisibility, 0, bytes, i, DirectoryVisibility.Length); i += DirectoryVisibility.Length;
+                if(EMail == null) { Console.WriteLine("Warning: EMail is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(EMail.Length % 256);
                 bytes[i++] = (byte)((EMail.Length >> 8) % 256);
                 Buffer.BlockCopy(EMail, 0, bytes, i, EMail.Length); i += EMail.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- UserData --");
+                output.AppendLine(String.Format("IMViaEMail: {0}", IMViaEMail));
+                Helpers.FieldToString(output, DirectoryVisibility, "DirectoryVisibility");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, EMail, "EMail");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -58461,6 +67564,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- UserInfoReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += UserData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -58505,6 +67616,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -58558,10 +67677,19 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 bytes[i++] = (byte)((IMViaEMail) ? 1 : 0);
+                if(DirectoryVisibility == null) { Console.WriteLine("Warning: DirectoryVisibility is null, in " + this.GetType()); }
                 bytes[i++] = (byte)DirectoryVisibility.Length;
                 Buffer.BlockCopy(DirectoryVisibility, 0, bytes, i, DirectoryVisibility.Length); i += DirectoryVisibility.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- UserData --");
+                output.AppendLine(String.Format("IMViaEMail: {0}", IMViaEMail));
+                Helpers.FieldToString(output, DirectoryVisibility, "DirectoryVisibility");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -58629,6 +67757,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- UpdateUserInfo ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += UserData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -58670,6 +67806,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -58735,12 +67878,23 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(SimFilename == null) { Console.WriteLine("Warning: SimFilename is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SimFilename.Length;
                 Buffer.BlockCopy(SimFilename, 0, bytes, i, SimFilename.Length); i += SimFilename.Length;
+                if(ViewerFilename == null) { Console.WriteLine("Warning: ViewerFilename is null, in " + this.GetType()); }
                 bytes[i++] = (byte)ViewerFilename.Length;
                 Buffer.BlockCopy(ViewerFilename, 0, bytes, i, ViewerFilename.Length); i += ViewerFilename.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- FileData --");
+                Helpers.FieldToString(output, SimFilename, "SimFilename");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, ViewerFilename, "ViewerFilename");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -58808,6 +67962,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- InitiateDownload ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += FileData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -58866,12 +68028,23 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Method == null) { Console.WriteLine("Warning: Method is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Method.Length;
                 Buffer.BlockCopy(Method, 0, bytes, i, Method.Length); i += Method.Length;
                 Buffer.BlockCopy(Invoice.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(Digest, 0, bytes, i, 32);i += 32;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- MethodData --");
+                Helpers.FieldToString(output, Method, "Method");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("Invoice: {0}", Invoice));
+                Helpers.FieldToString(output, Digest, "Digest");
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -58922,10 +68095,18 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Parameter == null) { Console.WriteLine("Warning: Parameter is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Parameter.Length;
                 Buffer.BlockCopy(Parameter, 0, bytes, i, Parameter.Length); i += Parameter.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParamList --");
+                Helpers.FieldToString(output, Parameter, "Parameter");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -59009,6 +68190,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- SystemMessage ---" + Environment.NewLine;
+                output += MethodData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ParamList.Length; j++)
+            {
+                output += ParamList[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -59062,6 +68254,17 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Godlike) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("EstateID: {0}", EstateID));
+                output.Append(String.Format("Godlike: {0}", Godlike));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -59124,6 +68327,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- MapLayerRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -59168,6 +68378,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("Flags: {0}", Flags));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -59218,6 +68436,17 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ImageID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- LayerData --");
+                output.AppendLine(String.Format("Left: {0}", Left));
+                output.AppendLine(String.Format("Right: {0}", Right));
+                output.AppendLine(String.Format("Top: {0}", Top));
+                output.AppendLine(String.Format("Bottom: {0}", Bottom));
+                output.Append(String.Format("ImageID: {0}", ImageID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -59300,6 +68529,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- MapLayerReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < LayerData.Length; j++)
+            {
+                output += LayerData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -59353,6 +68593,17 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Godlike) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("EstateID: {0}", EstateID));
+                output.Append(String.Format("Godlike: {0}", Godlike));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -59404,6 +68655,16 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((MaxY >> 8) % 256);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- PositionData --");
+                output.AppendLine(String.Format("MinX: {0}", MinX));
+                output.AppendLine(String.Format("MaxX: {0}", MaxX));
+                output.AppendLine(String.Format("MinY: {0}", MinY));
+                output.Append(String.Format("MaxY: {0}", MaxY));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -59471,6 +68732,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- MapBlockRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += PositionData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -59524,6 +68793,17 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Godlike) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("EstateID: {0}", EstateID));
+                output.Append(String.Format("Godlike: {0}", Godlike));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -59574,10 +68854,18 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- NameData --");
+                Helpers.FieldToString(output, Name, "Name");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -59645,6 +68933,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- MapNameRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += NameData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -59689,6 +68985,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("Flags: {0}", Flags));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -59757,6 +69061,7 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((X >> 8) % 256);
                 bytes[i++] = (byte)(Y % 256);
                 bytes[i++] = (byte)((Y >> 8) % 256);
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
                 bytes[i++] = Access;
@@ -59766,6 +69071,21 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(MapImageID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("X: {0}", X));
+                output.AppendLine(String.Format("Y: {0}", Y));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("Access: {0}", Access));
+                output.AppendLine(String.Format("RegionFlags: {0}", RegionFlags));
+                output.AppendLine(String.Format("WaterHeight: {0}", WaterHeight));
+                output.AppendLine(String.Format("Agents: {0}", Agents));
+                output.Append(String.Format("MapImageID: {0}", MapImageID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -59848,6 +69168,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- MapBlockReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < Data.Length; j++)
+            {
+                output += Data[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -59901,6 +69232,17 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Godlike) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("EstateID: {0}", EstateID));
+                output.Append(String.Format("Godlike: {0}", Godlike));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -59942,6 +69284,14 @@ namespace OpenMetaverse.Packets
                 Utils.UInt64ToBytes(RegionHandle, bytes, i); i += 8;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RequestData --");
+                output.AppendLine(String.Format("ItemType: {0}", ItemType));
+                output.Append(String.Format("RegionHandle: {0}", RegionHandle));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -60009,6 +69359,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- MapItemRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += RequestData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -60053,6 +69411,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Flags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("Flags: {0}", Flags));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -60091,6 +69457,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ItemType, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RequestData --");
+                output.Append(String.Format("ItemType: {0}", ItemType));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -60156,10 +69529,23 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Utils.IntToBytes(Extra, bytes, i); i += 4;
                 Utils.IntToBytes(Extra2, bytes, i); i += 4;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("X: {0}", X));
+                output.AppendLine(String.Format("Y: {0}", Y));
+                output.AppendLine(String.Format("ID: {0}", ID));
+                output.AppendLine(String.Format("Extra: {0}", Extra));
+                output.AppendLine(String.Format("Extra2: {0}", Extra2));
+                Helpers.FieldToString(output, Name, "Name");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -60245,6 +69631,18 @@ namespace OpenMetaverse.Packets
             for (int j = 0; j < Data.Length; j++) { Data[j].ToBytes(bytes, ref i); }
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- MapItemReply ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += RequestData.ToString() + Environment.NewLine;
+            for (int j = 0; j < Data.Length; j++)
+            {
+                output += Data[j].ToString() + Environment.NewLine;
+            }
+            return output;
         }
 
     }
@@ -60376,14 +69774,19 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(AssetID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(PosGlobal.GetBytes(), 0, bytes, i, 24); i += 24;
+                if(To == null) { Console.WriteLine("Warning: To is null, in " + this.GetType()); }
                 bytes[i++] = (byte)To.Length;
                 Buffer.BlockCopy(To, 0, bytes, i, To.Length); i += To.Length;
+                if(From == null) { Console.WriteLine("Warning: From is null, in " + this.GetType()); }
                 bytes[i++] = (byte)From.Length;
                 Buffer.BlockCopy(From, 0, bytes, i, From.Length); i += From.Length;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Subject == null) { Console.WriteLine("Warning: Subject is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Subject.Length;
                 Buffer.BlockCopy(Subject, 0, bytes, i, Subject.Length); i += Subject.Length;
+                if(Msg == null) { Console.WriteLine("Warning: Msg is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Msg.Length % 256);
                 bytes[i++] = (byte)((Msg.Length >> 8) % 256);
                 Buffer.BlockCopy(Msg, 0, bytes, i, Msg.Length); i += Msg.Length;
@@ -60391,6 +69794,28 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((MaturePublish) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.AppendLine(String.Format("AssetID: {0}", AssetID));
+                output.AppendLine(String.Format("PosGlobal: {0}", PosGlobal));
+                Helpers.FieldToString(output, To, "To");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, From, "From");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Subject, "Subject");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Msg, "Msg");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("AllowPublish: {0}", AllowPublish));
+                output.Append(String.Format("MaturePublish: {0}", MaturePublish));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -60453,6 +69878,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- SendPostcard ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -60500,6 +69932,15 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(Time, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- CommandBlock --");
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("Command: {0}", Command));
+                output.Append(String.Format("Time: {0}", Time));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -60562,6 +70003,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelMediaCommandMessage ---" + Environment.NewLine;
+                output += CommandBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -60619,12 +70067,23 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(MediaURL == null) { Console.WriteLine("Warning: MediaURL is null, in " + this.GetType()); }
                 bytes[i++] = (byte)MediaURL.Length;
                 Buffer.BlockCopy(MediaURL, 0, bytes, i, MediaURL.Length); i += MediaURL.Length;
                 Buffer.BlockCopy(MediaID.GetBytes(), 0, bytes, i, 16); i += 16;
                 bytes[i++] = MediaAutoScale;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- DataBlock --");
+                Helpers.FieldToString(output, MediaURL, "MediaURL");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("MediaID: {0}", MediaID));
+                output.Append(String.Format("MediaAutoScale: {0}", MediaAutoScale));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -60696,8 +70155,10 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(MediaType == null) { Console.WriteLine("Warning: MediaType is null, in " + this.GetType()); }
                 bytes[i++] = (byte)MediaType.Length;
                 Buffer.BlockCopy(MediaType, 0, bytes, i, MediaType.Length); i += MediaType.Length;
+                if(MediaDesc == null) { Console.WriteLine("Warning: MediaDesc is null, in " + this.GetType()); }
                 bytes[i++] = (byte)MediaDesc.Length;
                 Buffer.BlockCopy(MediaDesc, 0, bytes, i, MediaDesc.Length); i += MediaDesc.Length;
                 Utils.IntToBytes(MediaWidth, bytes, i); i += 4;
@@ -60705,6 +70166,19 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = MediaLoop;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- DataBlockExtended --");
+                Helpers.FieldToString(output, MediaType, "MediaType");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, MediaDesc, "MediaDesc");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("MediaWidth: {0}", MediaWidth));
+                output.AppendLine(String.Format("MediaHeight: {0}", MediaHeight));
+                output.Append(String.Format("MediaLoop: {0}", MediaLoop));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -60772,6 +70246,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelMediaUpdate ---" + Environment.NewLine;
+                output += DataBlock.ToString() + Environment.NewLine;
+                output += DataBlockExtended.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -60816,6 +70298,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -60874,11 +70364,23 @@ namespace OpenMetaverse.Packets
             {
                 Utils.UIntToBytes(ReportType, bytes, i); i += 4;
                 Utils.UIntToBytes(RequestFlags, bytes, i); i += 4;
+                if(Filter == null) { Console.WriteLine("Warning: Filter is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Filter.Length;
                 Buffer.BlockCopy(Filter, 0, bytes, i, Filter.Length); i += Filter.Length;
                 Utils.IntToBytes(ParcelLocalID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RequestData --");
+                output.AppendLine(String.Format("ReportType: {0}", ReportType));
+                output.AppendLine(String.Format("RequestFlags: {0}", RequestFlags));
+                Helpers.FieldToString(output, Filter, "Filter");
+                output.Append(Environment.NewLine);
+                output.Append(String.Format("ParcelLocalID: {0}", ParcelLocalID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -60946,6 +70448,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- LandStatRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += RequestData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -60993,6 +70503,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(TotalObjectCount, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RequestData --");
+                output.AppendLine(String.Format("ReportType: {0}", ReportType));
+                output.AppendLine(String.Format("RequestFlags: {0}", RequestFlags));
+                output.Append(String.Format("TotalObjectCount: {0}", TotalObjectCount));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -61076,12 +70595,29 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(LocationY, bytes, i); i += 4;
                 Utils.FloatToBytes(LocationZ, bytes, i); i += 4;
                 Utils.FloatToBytes(Score, bytes, i); i += 4;
+                if(TaskName == null) { Console.WriteLine("Warning: TaskName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)TaskName.Length;
                 Buffer.BlockCopy(TaskName, 0, bytes, i, TaskName.Length); i += TaskName.Length;
+                if(OwnerName == null) { Console.WriteLine("Warning: OwnerName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)OwnerName.Length;
                 Buffer.BlockCopy(OwnerName, 0, bytes, i, OwnerName.Length); i += OwnerName.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ReportData --");
+                output.AppendLine(String.Format("TaskLocalID: {0}", TaskLocalID));
+                output.AppendLine(String.Format("TaskID: {0}", TaskID));
+                output.AppendLine(String.Format("LocationX: {0}", LocationX));
+                output.AppendLine(String.Format("LocationY: {0}", LocationY));
+                output.AppendLine(String.Format("LocationZ: {0}", LocationZ));
+                output.AppendLine(String.Format("Score: {0}", Score));
+                Helpers.FieldToString(output, TaskName, "TaskName");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, OwnerName, "OwnerName");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -61164,6 +70700,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- LandStatReply ---" + Environment.NewLine;
+                output += RequestData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ReportData.Length; j++)
+            {
+                output += ReportData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -61205,6 +70752,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -61305,19 +70859,38 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Utils.IntToBytes(Code, bytes, i); i += 4;
+                if(Token == null) { Console.WriteLine("Warning: Token is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Token.Length;
                 Buffer.BlockCopy(Token, 0, bytes, i, Token.Length); i += Token.Length;
                 Buffer.BlockCopy(ID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(System == null) { Console.WriteLine("Warning: System is null, in " + this.GetType()); }
                 bytes[i++] = (byte)System.Length;
                 Buffer.BlockCopy(System, 0, bytes, i, System.Length); i += System.Length;
+                if(Message == null) { Console.WriteLine("Warning: Message is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Message.Length % 256);
                 bytes[i++] = (byte)((Message.Length >> 8) % 256);
                 Buffer.BlockCopy(Message, 0, bytes, i, Message.Length); i += Message.Length;
+                if(Data == null) { Console.WriteLine("Warning: Data is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Data.Length % 256);
                 bytes[i++] = (byte)((Data.Length >> 8) % 256);
                 Buffer.BlockCopy(Data, 0, bytes, i, Data.Length); i += Data.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Data --");
+                output.AppendLine(String.Format("Code: {0}", Code));
+                Helpers.FieldToString(output, Token, "Token");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("ID: {0}", ID));
+                Helpers.FieldToString(output, System, "System");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Message, "Message");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Data, "Data");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -61386,6 +70959,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- Error ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += Data.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -61430,6 +71011,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -61471,6 +71060,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((IncludeInSearch) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                output.Append(String.Format("IncludeInSearch: {0}", IncludeInSearch));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -61553,6 +71150,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectIncludeInSearch ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -61594,6 +71202,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Packets --");
+                output.Append(String.Format("ID: {0}", ID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -61671,6 +71286,16 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- PacketAck ---" + Environment.NewLine;
+            for (int j = 0; j < Packets.Length; j++)
+            {
+                output += Packets[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -61716,6 +71341,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)(Port % 256);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- CircuitInfo --");
+                output.AppendLine(String.Format("IP: {0}", IP));
+                output.Append(String.Format("Port: {0}", Port));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -61778,6 +71411,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- OpenCircuit ---" + Environment.NewLine;
+                output += CircuitInfo.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -61838,6 +71478,12 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- CloseCircuit ---" + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -61885,6 +71531,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.Append(String.Format("GroupID: {0}", GroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -62012,6 +71667,41 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = State;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("PCode: {0}", PCode));
+                output.AppendLine(String.Format("Material: {0}", Material));
+                output.AppendLine(String.Format("AddFlags: {0}", AddFlags));
+                output.AppendLine(String.Format("PathCurve: {0}", PathCurve));
+                output.AppendLine(String.Format("ProfileCurve: {0}", ProfileCurve));
+                output.AppendLine(String.Format("PathBegin: {0}", PathBegin));
+                output.AppendLine(String.Format("PathEnd: {0}", PathEnd));
+                output.AppendLine(String.Format("PathScaleX: {0}", PathScaleX));
+                output.AppendLine(String.Format("PathScaleY: {0}", PathScaleY));
+                output.AppendLine(String.Format("PathShearX: {0}", PathShearX));
+                output.AppendLine(String.Format("PathShearY: {0}", PathShearY));
+                output.AppendLine(String.Format("PathTwist: {0}", PathTwist));
+                output.AppendLine(String.Format("PathTwistBegin: {0}", PathTwistBegin));
+                output.AppendLine(String.Format("PathRadiusOffset: {0}", PathRadiusOffset));
+                output.AppendLine(String.Format("PathTaperX: {0}", PathTaperX));
+                output.AppendLine(String.Format("PathTaperY: {0}", PathTaperY));
+                output.AppendLine(String.Format("PathRevolutions: {0}", PathRevolutions));
+                output.AppendLine(String.Format("PathSkew: {0}", PathSkew));
+                output.AppendLine(String.Format("ProfileBegin: {0}", ProfileBegin));
+                output.AppendLine(String.Format("ProfileEnd: {0}", ProfileEnd));
+                output.AppendLine(String.Format("ProfileHollow: {0}", ProfileHollow));
+                output.AppendLine(String.Format("BypassRaycast: {0}", BypassRaycast));
+                output.AppendLine(String.Format("RayStart: {0}", RayStart));
+                output.AppendLine(String.Format("RayEnd: {0}", RayEnd));
+                output.AppendLine(String.Format("RayTargetID: {0}", RayTargetID));
+                output.AppendLine(String.Format("RayEndIsIntersection: {0}", RayEndIsIntersection));
+                output.AppendLine(String.Format("Scale: {0}", Scale));
+                output.AppendLine(String.Format("Rotation: {0}", Rotation));
+                output.Append(String.Format("State: {0}", State));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -62080,6 +71770,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectAdd ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ObjectData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -62124,6 +71822,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -62180,10 +71886,20 @@ namespace OpenMetaverse.Packets
             {
                 Utils.UIntToBytes(ObjectLocalID, bytes, i); i += 4;
                 bytes[i++] = Type;
+                if(Data == null) { Console.WriteLine("Warning: Data is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Data.Length;
                 Buffer.BlockCopy(Data, 0, bytes, i, Data.Length); i += Data.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                output.AppendLine(String.Format("Type: {0}", Type));
+                Helpers.FieldToString(output, Data, "Data");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -62267,6 +71983,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- MultipleObjectUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -62311,6 +72038,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -62352,6 +72087,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("CacheMissType: {0}", CacheMissType));
+                output.Append(String.Format("ID: {0}", ID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -62435,6 +72178,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RequestMultipleObjects ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -62479,6 +72233,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -62520,6 +72282,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(Position.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ObjectLocalID: {0}", ObjectLocalID));
+                output.Append(String.Format("Position: {0}", Position));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -62603,6 +72373,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectPosition ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -62647,6 +72428,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -62688,6 +72477,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("RequestFlags: {0}", RequestFlags));
+                output.Append(String.Format("ObjectID: {0}", ObjectID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -62756,6 +72553,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RequestObjectPropertiesFamily ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ObjectData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -62803,6 +72608,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = Z;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Location --");
+                output.AppendLine(String.Format("X: {0}", X));
+                output.AppendLine(String.Format("Y: {0}", Y));
+                output.Append(String.Format("Z: {0}", Z));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -62846,6 +72660,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Prey >> 8) % 256);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Index --");
+                output.AppendLine(String.Format("You: {0}", You));
+                output.Append(String.Format("Prey: {0}", Prey));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -62884,6 +72706,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(AgentID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.Append(String.Format("AgentID: {0}", AgentID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -62986,6 +72815,21 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- CoarseLocationUpdate ---" + Environment.NewLine;
+            for (int j = 0; j < Location.Length; j++)
+            {
+                output += Location[j].ToString() + Environment.NewLine;
+            }
+                output += Index.ToString() + Environment.NewLine;
+            for (int j = 0; j < AgentData.Length; j++)
+            {
+                output += AgentData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -63030,6 +72874,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -63090,11 +72942,22 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((SimPort >> 8) % 256);
                 bytes[i++] = (byte)(SimPort % 256);
                 Utils.UInt64ToBytes(RegionHandle, bytes, i); i += 8;
+                if(SeedCapability == null) { Console.WriteLine("Warning: SeedCapability is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(SeedCapability.Length % 256);
                 bytes[i++] = (byte)((SeedCapability.Length >> 8) % 256);
                 Buffer.BlockCopy(SeedCapability, 0, bytes, i, SeedCapability.Length); i += SeedCapability.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RegionData --");
+                output.AppendLine(String.Format("SimIP: {0}", SimIP));
+                output.AppendLine(String.Format("SimPort: {0}", SimPort));
+                output.AppendLine(String.Format("RegionHandle: {0}", RegionHandle));
+                Helpers.FieldToString(output, SeedCapability, "SeedCapability");
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -63136,6 +72999,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(LookAt.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Info --");
+                output.AppendLine(String.Format("Position: {0}", Position));
+                output.Append(String.Format("LookAt: {0}", LookAt));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -63208,6 +73079,15 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- CrossedRegion ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += RegionData.ToString() + Environment.NewLine;
+                output += Info.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -63252,6 +73132,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -63312,6 +73200,13 @@ namespace OpenMetaverse.Packets
             AgentData.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- ConfirmEnableSimulator ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -63494,18 +73389,60 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(FolderID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(FromTaskID.GetBytes(), 0, bytes, i, 16); i += 16;
                 Buffer.BlockCopy(LastOwnerID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
+                if(TouchName == null) { Console.WriteLine("Warning: TouchName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)TouchName.Length;
                 Buffer.BlockCopy(TouchName, 0, bytes, i, TouchName.Length); i += TouchName.Length;
+                if(SitName == null) { Console.WriteLine("Warning: SitName is null, in " + this.GetType()); }
                 bytes[i++] = (byte)SitName.Length;
                 Buffer.BlockCopy(SitName, 0, bytes, i, SitName.Length); i += SitName.Length;
+                if(TextureID == null) { Console.WriteLine("Warning: TextureID is null, in " + this.GetType()); }
                 bytes[i++] = (byte)TextureID.Length;
                 Buffer.BlockCopy(TextureID, 0, bytes, i, TextureID.Length); i += TextureID.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.AppendLine(String.Format("CreatorID: {0}", CreatorID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("CreationDate: {0}", CreationDate));
+                output.AppendLine(String.Format("BaseMask: {0}", BaseMask));
+                output.AppendLine(String.Format("OwnerMask: {0}", OwnerMask));
+                output.AppendLine(String.Format("GroupMask: {0}", GroupMask));
+                output.AppendLine(String.Format("EveryoneMask: {0}", EveryoneMask));
+                output.AppendLine(String.Format("NextOwnerMask: {0}", NextOwnerMask));
+                output.AppendLine(String.Format("OwnershipCost: {0}", OwnershipCost));
+                output.AppendLine(String.Format("SaleType: {0}", SaleType));
+                output.AppendLine(String.Format("SalePrice: {0}", SalePrice));
+                output.AppendLine(String.Format("AggregatePerms: {0}", AggregatePerms));
+                output.AppendLine(String.Format("AggregatePermTextures: {0}", AggregatePermTextures));
+                output.AppendLine(String.Format("AggregatePermTexturesOwner: {0}", AggregatePermTexturesOwner));
+                output.AppendLine(String.Format("Category: {0}", Category));
+                output.AppendLine(String.Format("InventorySerial: {0}", InventorySerial));
+                output.AppendLine(String.Format("ItemID: {0}", ItemID));
+                output.AppendLine(String.Format("FolderID: {0}", FolderID));
+                output.AppendLine(String.Format("FromTaskID: {0}", FromTaskID));
+                output.AppendLine(String.Format("LastOwnerID: {0}", LastOwnerID));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Description, "Description");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, TouchName, "TouchName");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, SitName, "SitName");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, TextureID, "TextureID");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -63582,6 +73519,16 @@ namespace OpenMetaverse.Packets
             for (int j = 0; j < ObjectData.Length; j++) { ObjectData[j].ToBytes(bytes, ref i); }
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- ObjectProperties ---" + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
         }
 
     }
@@ -63694,12 +73641,37 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(SalePrice, bytes, i); i += 4;
                 Utils.UIntToBytes(Category, bytes, i); i += 4;
                 Buffer.BlockCopy(LastOwnerID.GetBytes(), 0, bytes, i, 16); i += 16;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Description == null) { Console.WriteLine("Warning: Description is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Description.Length;
                 Buffer.BlockCopy(Description, 0, bytes, i, Description.Length); i += Description.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("RequestFlags: {0}", RequestFlags));
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("BaseMask: {0}", BaseMask));
+                output.AppendLine(String.Format("OwnerMask: {0}", OwnerMask));
+                output.AppendLine(String.Format("GroupMask: {0}", GroupMask));
+                output.AppendLine(String.Format("EveryoneMask: {0}", EveryoneMask));
+                output.AppendLine(String.Format("NextOwnerMask: {0}", NextOwnerMask));
+                output.AppendLine(String.Format("OwnershipCost: {0}", OwnershipCost));
+                output.AppendLine(String.Format("SaleType: {0}", SaleType));
+                output.AppendLine(String.Format("SalePrice: {0}", SalePrice));
+                output.AppendLine(String.Format("Category: {0}", Category));
+                output.AppendLine(String.Format("LastOwnerID: {0}", LastOwnerID));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Description, "Description");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -63763,6 +73735,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectPropertiesFamily ---" + Environment.NewLine;
+                output += ObjectData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -63807,6 +73786,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -63860,6 +73847,18 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((SnapSelection) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.AppendLine(String.Format("SequenceID: {0}", SequenceID));
+                output.AppendLine(String.Format("West: {0}", West));
+                output.AppendLine(String.Format("South: {0}", South));
+                output.AppendLine(String.Format("East: {0}", East));
+                output.AppendLine(String.Format("North: {0}", North));
+                output.Append(String.Format("SnapSelection: {0}", SnapSelection));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -63928,6 +73927,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ParcelPropertiesRequest ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += ParcelData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -63981,6 +73988,17 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = Flags;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- DataBlock --");
+                output.AppendLine(String.Format("SoundID: {0}", SoundID));
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("Gain: {0}", Gain));
+                output.Append(String.Format("Flags: {0}", Flags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -64043,6 +74061,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AttachedSound ---" + Environment.NewLine;
+                output += DataBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -64087,6 +74112,14 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(Gain, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- DataBlock --");
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.Append(String.Format("Gain: {0}", Gain));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -64149,6 +74182,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AttachedSoundGainChange ---" + Environment.NewLine;
+                output += DataBlock.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -64196,6 +74236,15 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SoundID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- DataBlock --");
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.Append(String.Format("SoundID: {0}", SoundID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -64273,6 +74322,16 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- PreloadSound ---" + Environment.NewLine;
+            for (int j = 0; j < DataBlock.Length; j++)
+            {
+                output += DataBlock[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -64317,6 +74376,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -64383,10 +74450,24 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = Type;
                 Utils.FloatToBytes(Duration, bytes, i); i += 4;
                 Buffer.BlockCopy(Color, 0, bytes, i, 4);i += 4;
+                if(TypeData == null) { Console.WriteLine("Warning: TypeData is null, in " + this.GetType()); }
                 bytes[i++] = (byte)TypeData.Length;
                 Buffer.BlockCopy(TypeData, 0, bytes, i, TypeData.Length); i += TypeData.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Effect --");
+                output.AppendLine(String.Format("ID: {0}", ID));
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("Type: {0}", Type));
+                output.AppendLine(String.Format("Duration: {0}", Duration));
+                Helpers.FieldToString(output, Color, "Color");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, TypeData, "TypeData");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -64470,6 +74551,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ViewerEffect ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < Effect.Length; j++)
+            {
+                output += Effect[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -64514,6 +74606,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(OldestUnacked, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- PingID --");
+                output.AppendLine(String.Format("PingID: {0}", PingID));
+                output.Append(String.Format("OldestUnacked: {0}", OldestUnacked));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -64576,6 +74676,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- StartPingCheck ---" + Environment.NewLine;
+                output += PingID.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -64617,6 +74724,13 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = PingID;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- PingID --");
+                output.Append(String.Format("PingID: {0}", PingID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -64677,6 +74791,13 @@ namespace OpenMetaverse.Packets
             PingID.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- CompletePingCheck ---" + Environment.NewLine;
+                output += PingID.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -64753,6 +74874,24 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = Flags;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.AppendLine(String.Format("BodyRotation: {0}", BodyRotation));
+                output.AppendLine(String.Format("HeadRotation: {0}", HeadRotation));
+                output.AppendLine(String.Format("State: {0}", State));
+                output.AppendLine(String.Format("CameraCenter: {0}", CameraCenter));
+                output.AppendLine(String.Format("CameraAtAxis: {0}", CameraAtAxis));
+                output.AppendLine(String.Format("CameraLeftAxis: {0}", CameraLeftAxis));
+                output.AppendLine(String.Format("CameraUpAxis: {0}", CameraUpAxis));
+                output.AppendLine(String.Format("Far: {0}", Far));
+                output.AppendLine(String.Format("ControlFlags: {0}", ControlFlags));
+                output.Append(String.Format("Flags: {0}", Flags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -64816,6 +74955,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -64860,6 +75006,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -64901,6 +75055,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((StartAnim) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AnimationList --");
+                output.AppendLine(String.Format("AnimID: {0}", AnimID));
+                output.Append(String.Format("StartAnim: {0}", StartAnim));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -64951,10 +75113,18 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(TypeData == null) { Console.WriteLine("Warning: TypeData is null, in " + this.GetType()); }
                 bytes[i++] = (byte)TypeData.Length;
                 Buffer.BlockCopy(TypeData, 0, bytes, i, TypeData.Length); i += TypeData.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- PhysicalAvatarEventList --");
+                Helpers.FieldToString(output, TypeData, "TypeData");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -65057,6 +75227,21 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentAnimation ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < AnimationList.Length; j++)
+            {
+                output += AnimationList[j].ToString() + Environment.NewLine;
+            }
+            for (int j = 0; j < PhysicalAvatarEventList.Length; j++)
+            {
+                output += PhysicalAvatarEventList[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -65101,6 +75286,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -65142,6 +75335,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(Offset.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TargetObject --");
+                output.AppendLine(String.Format("TargetID: {0}", TargetID));
+                output.Append(String.Format("Offset: {0}", Offset));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -65210,6 +75411,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentRequestSit ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+                output += TargetObject.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -65254,6 +75463,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -65316,6 +75533,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AgentSit ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -65360,6 +75584,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -65410,6 +75642,17 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = Type;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RequestImage --");
+                output.AppendLine(String.Format("Image: {0}", Image));
+                output.AppendLine(String.Format("DiscardLevel: {0}", DiscardLevel));
+                output.AppendLine(String.Format("DownloadPriority: {0}", DownloadPriority));
+                output.AppendLine(String.Format("Packet: {0}", Packet));
+                output.Append(String.Format("Type: {0}", Type));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -65492,6 +75735,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- RequestImage ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < RequestImage.Length; j++)
+            {
+                output += RequestImage[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -65543,6 +75797,16 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Packets >> 8) % 256);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ImageID --");
+                output.AppendLine(String.Format("ID: {0}", ID));
+                output.AppendLine(String.Format("Codec: {0}", Codec));
+                output.AppendLine(String.Format("Size: {0}", Size));
+                output.Append(String.Format("Packets: {0}", Packets));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -65593,11 +75857,19 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Data == null) { Console.WriteLine("Warning: Data is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Data.Length % 256);
                 bytes[i++] = (byte)((Data.Length >> 8) % 256);
                 Buffer.BlockCopy(Data, 0, bytes, i, Data.Length); i += Data.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ImageData --");
+                Helpers.FieldToString(output, Data, "Data");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -65665,6 +75937,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ImageData ---" + Environment.NewLine;
+                output += ImageID.ToString() + Environment.NewLine;
+                output += ImageData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -65710,6 +75990,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((Packet >> 8) % 256);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ImageID --");
+                output.AppendLine(String.Format("ID: {0}", ID));
+                output.Append(String.Format("Packet: {0}", Packet));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -65760,11 +76048,19 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Data == null) { Console.WriteLine("Warning: Data is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Data.Length % 256);
                 bytes[i++] = (byte)((Data.Length >> 8) % 256);
                 Buffer.BlockCopy(Data, 0, bytes, i, Data.Length); i += Data.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ImageData --");
+                Helpers.FieldToString(output, Data, "Data");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -65832,6 +76128,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ImagePacket ---" + Environment.NewLine;
+                output += ImageID.ToString() + Environment.NewLine;
+                output += ImageData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -65873,6 +76177,13 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = Type;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- LayerID --");
+                output.Append(String.Format("Type: {0}", Type));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -65923,11 +76234,19 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Data == null) { Console.WriteLine("Warning: Data is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Data.Length % 256);
                 bytes[i++] = (byte)((Data.Length >> 8) % 256);
                 Buffer.BlockCopy(Data, 0, bytes, i, Data.Length); i += Data.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- LayerData --");
+                Helpers.FieldToString(output, Data, "Data");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -65995,6 +76314,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- LayerData ---" + Environment.NewLine;
+                output += LayerID.ToString() + Environment.NewLine;
+                output += LayerData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -66040,6 +76367,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((TimeDilation >> 8) % 256);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RegionData --");
+                output.AppendLine(String.Format("RegionHandle: {0}", RegionHandle));
+                output.Append(String.Format("TimeDilation: {0}", TimeDilation));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -66293,6 +76628,7 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = Material;
                 bytes[i++] = ClickAction;
                 Buffer.BlockCopy(Scale.GetBytes(), 0, bytes, i, 12); i += 12;
+                if(ObjectData == null) { Console.WriteLine("Warning: ObjectData is null, in " + this.GetType()); }
                 bytes[i++] = (byte)ObjectData.Length;
                 Buffer.BlockCopy(ObjectData, 0, bytes, i, ObjectData.Length); i += ObjectData.Length;
                 Utils.UIntToBytes(ParentID, bytes, i); i += 4;
@@ -66320,24 +76656,32 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((ProfileEnd >> 8) % 256);
                 bytes[i++] = (byte)(ProfileHollow % 256);
                 bytes[i++] = (byte)((ProfileHollow >> 8) % 256);
+                if(TextureEntry == null) { Console.WriteLine("Warning: TextureEntry is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(TextureEntry.Length % 256);
                 bytes[i++] = (byte)((TextureEntry.Length >> 8) % 256);
                 Buffer.BlockCopy(TextureEntry, 0, bytes, i, TextureEntry.Length); i += TextureEntry.Length;
+                if(TextureAnim == null) { Console.WriteLine("Warning: TextureAnim is null, in " + this.GetType()); }
                 bytes[i++] = (byte)TextureAnim.Length;
                 Buffer.BlockCopy(TextureAnim, 0, bytes, i, TextureAnim.Length); i += TextureAnim.Length;
+                if(NameValue == null) { Console.WriteLine("Warning: NameValue is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(NameValue.Length % 256);
                 bytes[i++] = (byte)((NameValue.Length >> 8) % 256);
                 Buffer.BlockCopy(NameValue, 0, bytes, i, NameValue.Length); i += NameValue.Length;
+                if(Data == null) { Console.WriteLine("Warning: Data is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Data.Length % 256);
                 bytes[i++] = (byte)((Data.Length >> 8) % 256);
                 Buffer.BlockCopy(Data, 0, bytes, i, Data.Length); i += Data.Length;
+                if(Text == null) { Console.WriteLine("Warning: Text is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Text.Length;
                 Buffer.BlockCopy(Text, 0, bytes, i, Text.Length); i += Text.Length;
                 Buffer.BlockCopy(TextColor, 0, bytes, i, 4);i += 4;
+                if(MediaURL == null) { Console.WriteLine("Warning: MediaURL is null, in " + this.GetType()); }
                 bytes[i++] = (byte)MediaURL.Length;
                 Buffer.BlockCopy(MediaURL, 0, bytes, i, MediaURL.Length); i += MediaURL.Length;
+                if(PSBlock == null) { Console.WriteLine("Warning: PSBlock is null, in " + this.GetType()); }
                 bytes[i++] = (byte)PSBlock.Length;
                 Buffer.BlockCopy(PSBlock, 0, bytes, i, PSBlock.Length); i += PSBlock.Length;
+                if(ExtraParams == null) { Console.WriteLine("Warning: ExtraParams is null, in " + this.GetType()); }
                 bytes[i++] = (byte)ExtraParams.Length;
                 Buffer.BlockCopy(ExtraParams, 0, bytes, i, ExtraParams.Length); i += ExtraParams.Length;
                 Buffer.BlockCopy(Sound.GetBytes(), 0, bytes, i, 16); i += 16;
@@ -66350,6 +76694,68 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(JointAxisOrAnchor.GetBytes(), 0, bytes, i, 12); i += 12;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ID: {0}", ID));
+                output.AppendLine(String.Format("State: {0}", State));
+                output.AppendLine(String.Format("FullID: {0}", FullID));
+                output.AppendLine(String.Format("CRC: {0}", CRC));
+                output.AppendLine(String.Format("PCode: {0}", PCode));
+                output.AppendLine(String.Format("Material: {0}", Material));
+                output.AppendLine(String.Format("ClickAction: {0}", ClickAction));
+                output.AppendLine(String.Format("Scale: {0}", Scale));
+                Helpers.FieldToString(output, ObjectData, "ObjectData");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("ParentID: {0}", ParentID));
+                output.AppendLine(String.Format("UpdateFlags: {0}", UpdateFlags));
+                output.AppendLine(String.Format("PathCurve: {0}", PathCurve));
+                output.AppendLine(String.Format("ProfileCurve: {0}", ProfileCurve));
+                output.AppendLine(String.Format("PathBegin: {0}", PathBegin));
+                output.AppendLine(String.Format("PathEnd: {0}", PathEnd));
+                output.AppendLine(String.Format("PathScaleX: {0}", PathScaleX));
+                output.AppendLine(String.Format("PathScaleY: {0}", PathScaleY));
+                output.AppendLine(String.Format("PathShearX: {0}", PathShearX));
+                output.AppendLine(String.Format("PathShearY: {0}", PathShearY));
+                output.AppendLine(String.Format("PathTwist: {0}", PathTwist));
+                output.AppendLine(String.Format("PathTwistBegin: {0}", PathTwistBegin));
+                output.AppendLine(String.Format("PathRadiusOffset: {0}", PathRadiusOffset));
+                output.AppendLine(String.Format("PathTaperX: {0}", PathTaperX));
+                output.AppendLine(String.Format("PathTaperY: {0}", PathTaperY));
+                output.AppendLine(String.Format("PathRevolutions: {0}", PathRevolutions));
+                output.AppendLine(String.Format("PathSkew: {0}", PathSkew));
+                output.AppendLine(String.Format("ProfileBegin: {0}", ProfileBegin));
+                output.AppendLine(String.Format("ProfileEnd: {0}", ProfileEnd));
+                output.AppendLine(String.Format("ProfileHollow: {0}", ProfileHollow));
+                Helpers.FieldToString(output, TextureEntry, "TextureEntry");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, TextureAnim, "TextureAnim");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, NameValue, "NameValue");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Data, "Data");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Text, "Text");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, TextColor, "TextColor");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, MediaURL, "MediaURL");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, PSBlock, "PSBlock");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, ExtraParams, "ExtraParams");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("Sound: {0}", Sound));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("Gain: {0}", Gain));
+                output.AppendLine(String.Format("Flags: {0}", Flags));
+                output.AppendLine(String.Format("Radius: {0}", Radius));
+                output.AppendLine(String.Format("JointType: {0}", JointType));
+                output.AppendLine(String.Format("JointPivot: {0}", JointPivot));
+                output.Append(String.Format("JointAxisOrAnchor: {0}", JointAxisOrAnchor));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -66433,6 +76839,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectUpdate ---" + Environment.NewLine;
+                output += RegionData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -66478,6 +76895,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((TimeDilation >> 8) % 256);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RegionData --");
+                output.AppendLine(String.Format("RegionHandle: {0}", RegionHandle));
+                output.Append(String.Format("TimeDilation: {0}", TimeDilation));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -66531,11 +76956,20 @@ namespace OpenMetaverse.Packets
             public override void ToBytes(byte[] bytes, ref int i)
             {
                 Utils.UIntToBytes(UpdateFlags, bytes, i); i += 4;
+                if(Data == null) { Console.WriteLine("Warning: Data is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Data.Length % 256);
                 bytes[i++] = (byte)((Data.Length >> 8) % 256);
                 Buffer.BlockCopy(Data, 0, bytes, i, Data.Length); i += Data.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("UpdateFlags: {0}", UpdateFlags));
+                Helpers.FieldToString(output, Data, "Data");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -66618,6 +77052,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectUpdateCompressed ---" + Environment.NewLine;
+                output += RegionData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -66663,6 +77108,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((TimeDilation >> 8) % 256);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RegionData --");
+                output.AppendLine(String.Format("RegionHandle: {0}", RegionHandle));
+                output.Append(String.Format("TimeDilation: {0}", TimeDilation));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -66707,6 +77160,15 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(UpdateFlags, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.AppendLine(String.Format("ID: {0}", ID));
+                output.AppendLine(String.Format("CRC: {0}", CRC));
+                output.Append(String.Format("UpdateFlags: {0}", UpdateFlags));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -66789,6 +77251,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ObjectUpdateCached ---" + Environment.NewLine;
+                output += RegionData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -66834,6 +77307,14 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((TimeDilation >> 8) % 256);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- RegionData --");
+                output.AppendLine(String.Format("RegionHandle: {0}", RegionHandle));
+                output.Append(String.Format("TimeDilation: {0}", TimeDilation));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -66899,13 +77380,24 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Data == null) { Console.WriteLine("Warning: Data is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Data.Length;
                 Buffer.BlockCopy(Data, 0, bytes, i, Data.Length); i += Data.Length;
+                if(TextureEntry == null) { Console.WriteLine("Warning: TextureEntry is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(TextureEntry.Length % 256);
                 bytes[i++] = (byte)((TextureEntry.Length >> 8) % 256);
                 Buffer.BlockCopy(TextureEntry, 0, bytes, i, TextureEntry.Length); i += TextureEntry.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                Helpers.FieldToString(output, Data, "Data");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, TextureEntry, "TextureEntry");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -66988,6 +77480,17 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ImprovedTerseObjectUpdate ---" + Environment.NewLine;
+                output += RegionData.ToString() + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -67029,6 +77532,13 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(ID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ObjectData --");
+                output.Append(String.Format("ID: {0}", ID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -67106,6 +77616,16 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- KillObject ---" + Environment.NewLine;
+            for (int j = 0; j < ObjectData.Length; j++)
+            {
+                output += ObjectData[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -67171,11 +77691,23 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(ChannelType, bytes, i); i += 4;
                 Utils.IntToBytes(Packet, bytes, i); i += 4;
                 Utils.IntToBytes(Status, bytes, i); i += 4;
+                if(Data == null) { Console.WriteLine("Warning: Data is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Data.Length % 256);
                 bytes[i++] = (byte)((Data.Length >> 8) % 256);
                 Buffer.BlockCopy(Data, 0, bytes, i, Data.Length); i += Data.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- TransferData --");
+                output.AppendLine(String.Format("TransferID: {0}", TransferID));
+                output.AppendLine(String.Format("ChannelType: {0}", ChannelType));
+                output.AppendLine(String.Format("Packet: {0}", Packet));
+                output.AppendLine(String.Format("Status: {0}", Status));
+                Helpers.FieldToString(output, Data, "Data");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -67238,6 +77770,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- TransferPacket ---" + Environment.NewLine;
+                output += TransferData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -67282,6 +77821,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Packet, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- XferID --");
+                output.AppendLine(String.Format("ID: {0}", ID));
+                output.Append(String.Format("Packet: {0}", Packet));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -67332,11 +77879,19 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(Data == null) { Console.WriteLine("Warning: Data is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Data.Length % 256);
                 bytes[i++] = (byte)((Data.Length >> 8) % 256);
                 Buffer.BlockCopy(Data, 0, bytes, i, Data.Length); i += Data.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- DataPacket --");
+                Helpers.FieldToString(output, Data, "Data");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -67404,6 +77959,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- SendXferPacket ---" + Environment.NewLine;
+                output += XferID.ToString() + Environment.NewLine;
+                output += DataPacket.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -67448,6 +78011,14 @@ namespace OpenMetaverse.Packets
                 Utils.UIntToBytes(Packet, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- XferID --");
+                output.AppendLine(String.Format("ID: {0}", ID));
+                output.Append(String.Format("Packet: {0}", Packet));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -67510,6 +78081,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ConfirmXferPacket ---" + Environment.NewLine;
+                output += XferID.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -67551,6 +78129,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- Sender --");
+                output.Append(String.Format("ID: {0}", ID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -67592,6 +78177,14 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(AnimSequenceID, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AnimationList --");
+                output.AppendLine(String.Format("AnimID: {0}", AnimID));
+                output.Append(String.Format("AnimSequenceID: {0}", AnimSequenceID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -67630,6 +78223,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AnimationSourceList --");
+                output.Append(String.Format("ObjectID: {0}", ObjectID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -67680,10 +78280,18 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(TypeData == null) { Console.WriteLine("Warning: TypeData is null, in " + this.GetType()); }
                 bytes[i++] = (byte)TypeData.Length;
                 Buffer.BlockCopy(TypeData, 0, bytes, i, TypeData.Length); i += TypeData.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- PhysicalAvatarEventList --");
+                Helpers.FieldToString(output, TypeData, "TypeData");
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -67806,6 +78414,25 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AvatarAnimation ---" + Environment.NewLine;
+                output += Sender.ToString() + Environment.NewLine;
+            for (int j = 0; j < AnimationList.Length; j++)
+            {
+                output += AnimationList[j].ToString() + Environment.NewLine;
+            }
+            for (int j = 0; j < AnimationSourceList.Length; j++)
+            {
+                output += AnimationSourceList[j].ToString() + Environment.NewLine;
+            }
+            for (int j = 0; j < PhysicalAvatarEventList.Length; j++)
+            {
+                output += PhysicalAvatarEventList[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -67847,6 +78474,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- SitObject --");
+                output.Append(String.Format("ID: {0}", ID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -67900,6 +78534,18 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((ForceMouselook) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- SitTransform --");
+                output.AppendLine(String.Format("AutoPilot: {0}", AutoPilot));
+                output.AppendLine(String.Format("SitPosition: {0}", SitPosition));
+                output.AppendLine(String.Format("SitRotation: {0}", SitRotation));
+                output.AppendLine(String.Format("CameraEyeOffset: {0}", CameraEyeOffset));
+                output.AppendLine(String.Format("CameraAtOffset: {0}", CameraAtOffset));
+                output.Append(String.Format("ForceMouselook: {0}", ForceMouselook));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -67968,6 +78614,14 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- AvatarSitResponse ---" + Environment.NewLine;
+                output += SitObject.ToString() + Environment.NewLine;
+                output += SitTransform.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -68009,6 +78663,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(Plane.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- CameraCollidePlane --");
+                output.Append(String.Format("Plane: {0}", Plane));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -68070,6 +78731,13 @@ namespace OpenMetaverse.Packets
             CameraCollidePlane.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- CameraConstraint ---" + Environment.NewLine;
+                output += CameraCollidePlane.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -68288,6 +78956,7 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(RentPrice, bytes, i); i += 4;
                 Buffer.BlockCopy(AABBMin.GetBytes(), 0, bytes, i, 12); i += 12;
                 Buffer.BlockCopy(AABBMax.GetBytes(), 0, bytes, i, 12); i += 12;
+                if(Bitmap == null) { Console.WriteLine("Warning: Bitmap is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(Bitmap.Length % 256);
                 bytes[i++] = (byte)((Bitmap.Length >> 8) % 256);
                 Buffer.BlockCopy(Bitmap, 0, bytes, i, Bitmap.Length); i += Bitmap.Length;
@@ -68305,12 +78974,16 @@ namespace OpenMetaverse.Packets
                 Utils.IntToBytes(OtherCleanTime, bytes, i); i += 4;
                 Utils.UIntToBytes(ParcelFlags, bytes, i); i += 4;
                 Utils.IntToBytes(SalePrice, bytes, i); i += 4;
+                if(Name == null) { Console.WriteLine("Warning: Name is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Name.Length;
                 Buffer.BlockCopy(Name, 0, bytes, i, Name.Length); i += Name.Length;
+                if(Desc == null) { Console.WriteLine("Warning: Desc is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Desc.Length;
                 Buffer.BlockCopy(Desc, 0, bytes, i, Desc.Length); i += Desc.Length;
+                if(MusicURL == null) { Console.WriteLine("Warning: MusicURL is null, in " + this.GetType()); }
                 bytes[i++] = (byte)MusicURL.Length;
                 Buffer.BlockCopy(MusicURL, 0, bytes, i, MusicURL.Length); i += MusicURL.Length;
+                if(MediaURL == null) { Console.WriteLine("Warning: MediaURL is null, in " + this.GetType()); }
                 bytes[i++] = (byte)MediaURL.Length;
                 Buffer.BlockCopy(MediaURL, 0, bytes, i, MediaURL.Length); i += MediaURL.Length;
                 Buffer.BlockCopy(MediaID.GetBytes(), 0, bytes, i, 16); i += 16;
@@ -68330,6 +79003,66 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((RegionDenyTransacted) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- ParcelData --");
+                output.AppendLine(String.Format("RequestResult: {0}", RequestResult));
+                output.AppendLine(String.Format("SequenceID: {0}", SequenceID));
+                output.AppendLine(String.Format("SnapSelection: {0}", SnapSelection));
+                output.AppendLine(String.Format("SelfCount: {0}", SelfCount));
+                output.AppendLine(String.Format("OtherCount: {0}", OtherCount));
+                output.AppendLine(String.Format("PublicCount: {0}", PublicCount));
+                output.AppendLine(String.Format("LocalID: {0}", LocalID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("IsGroupOwned: {0}", IsGroupOwned));
+                output.AppendLine(String.Format("AuctionID: {0}", AuctionID));
+                output.AppendLine(String.Format("ClaimDate: {0}", ClaimDate));
+                output.AppendLine(String.Format("ClaimPrice: {0}", ClaimPrice));
+                output.AppendLine(String.Format("RentPrice: {0}", RentPrice));
+                output.AppendLine(String.Format("AABBMin: {0}", AABBMin));
+                output.AppendLine(String.Format("AABBMax: {0}", AABBMax));
+                Helpers.FieldToString(output, Bitmap, "Bitmap");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("Area: {0}", Area));
+                output.AppendLine(String.Format("Status: {0}", Status));
+                output.AppendLine(String.Format("SimWideMaxPrims: {0}", SimWideMaxPrims));
+                output.AppendLine(String.Format("SimWideTotalPrims: {0}", SimWideTotalPrims));
+                output.AppendLine(String.Format("MaxPrims: {0}", MaxPrims));
+                output.AppendLine(String.Format("TotalPrims: {0}", TotalPrims));
+                output.AppendLine(String.Format("OwnerPrims: {0}", OwnerPrims));
+                output.AppendLine(String.Format("GroupPrims: {0}", GroupPrims));
+                output.AppendLine(String.Format("OtherPrims: {0}", OtherPrims));
+                output.AppendLine(String.Format("SelectedPrims: {0}", SelectedPrims));
+                output.AppendLine(String.Format("ParcelPrimBonus: {0}", ParcelPrimBonus));
+                output.AppendLine(String.Format("OtherCleanTime: {0}", OtherCleanTime));
+                output.AppendLine(String.Format("ParcelFlags: {0}", ParcelFlags));
+                output.AppendLine(String.Format("SalePrice: {0}", SalePrice));
+                Helpers.FieldToString(output, Name, "Name");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, Desc, "Desc");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, MusicURL, "MusicURL");
+                output.Append(Environment.NewLine);
+                Helpers.FieldToString(output, MediaURL, "MediaURL");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("MediaID: {0}", MediaID));
+                output.AppendLine(String.Format("MediaAutoScale: {0}", MediaAutoScale));
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("PassPrice: {0}", PassPrice));
+                output.AppendLine(String.Format("PassHours: {0}", PassHours));
+                output.AppendLine(String.Format("Category: {0}", Category));
+                output.AppendLine(String.Format("AuthBuyerID: {0}", AuthBuyerID));
+                output.AppendLine(String.Format("SnapshotID: {0}", SnapshotID));
+                output.AppendLine(String.Format("UserLocation: {0}", UserLocation));
+                output.AppendLine(String.Format("UserLookAt: {0}", UserLookAt));
+                output.AppendLine(String.Format("LandingType: {0}", LandingType));
+                output.AppendLine(String.Format("RegionPushOverride: {0}", RegionPushOverride));
+                output.AppendLine(String.Format("RegionDenyAnonymous: {0}", RegionDenyAnonymous));
+                output.AppendLine(String.Format("RegionDenyIdentified: {0}", RegionDenyIdentified));
+                output.Append(String.Format("RegionDenyTransacted: {0}", RegionDenyTransacted));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -68368,6 +79101,13 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((RegionDenyAgeUnverified) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgeVerificationBlock --");
+                output.Append(String.Format("RegionDenyAgeUnverified: {0}", RegionDenyAgeUnverified));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -68434,6 +79174,14 @@ namespace OpenMetaverse.Packets
             AgeVerificationBlock.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- ParcelProperties ---" + Environment.NewLine;
+                output += ParcelData.ToString() + Environment.NewLine;
+                output += AgeVerificationBlock.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -68566,6 +79314,7 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((ChangedGrid) ? 1 : 0);
                 Utils.FloatToBytes(Far, bytes, i); i += 4;
                 Utils.FloatToBytes(Aspect, bytes, i); i += 4;
+                if(Throttles == null) { Console.WriteLine("Warning: Throttles is null, in " + this.GetType()); }
                 bytes[i++] = (byte)Throttles.Length;
                 Buffer.BlockCopy(Throttles, 0, bytes, i, Throttles.Length); i += Throttles.Length;
                 Utils.UIntToBytes(LocomotionState, bytes, i); i += 4;
@@ -68577,12 +79326,47 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((AlwaysRun) ? 1 : 0);
                 Buffer.BlockCopy(PreyAgent.GetBytes(), 0, bytes, i, 16); i += 16;
                 bytes[i++] = AgentAccess;
+                if(AgentTextures == null) { Console.WriteLine("Warning: AgentTextures is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(AgentTextures.Length % 256);
                 bytes[i++] = (byte)((AgentTextures.Length >> 8) % 256);
                 Buffer.BlockCopy(AgentTextures, 0, bytes, i, AgentTextures.Length); i += AgentTextures.Length;
                 Buffer.BlockCopy(ActiveGroupID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("RegionHandle: {0}", RegionHandle));
+                output.AppendLine(String.Format("ViewerCircuitCode: {0}", ViewerCircuitCode));
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.AppendLine(String.Format("AgentPos: {0}", AgentPos));
+                output.AppendLine(String.Format("AgentVel: {0}", AgentVel));
+                output.AppendLine(String.Format("Center: {0}", Center));
+                output.AppendLine(String.Format("Size: {0}", Size));
+                output.AppendLine(String.Format("AtAxis: {0}", AtAxis));
+                output.AppendLine(String.Format("LeftAxis: {0}", LeftAxis));
+                output.AppendLine(String.Format("UpAxis: {0}", UpAxis));
+                output.AppendLine(String.Format("ChangedGrid: {0}", ChangedGrid));
+                output.AppendLine(String.Format("Far: {0}", Far));
+                output.AppendLine(String.Format("Aspect: {0}", Aspect));
+                Helpers.FieldToString(output, Throttles, "Throttles");
+                output.Append(Environment.NewLine);
+                output.AppendLine(String.Format("LocomotionState: {0}", LocomotionState));
+                output.AppendLine(String.Format("HeadRotation: {0}", HeadRotation));
+                output.AppendLine(String.Format("BodyRotation: {0}", BodyRotation));
+                output.AppendLine(String.Format("ControlFlags: {0}", ControlFlags));
+                output.AppendLine(String.Format("EnergyLevel: {0}", EnergyLevel));
+                output.AppendLine(String.Format("GodLevel: {0}", GodLevel));
+                output.AppendLine(String.Format("AlwaysRun: {0}", AlwaysRun));
+                output.AppendLine(String.Format("PreyAgent: {0}", PreyAgent));
+                output.AppendLine(String.Format("AgentAccess: {0}", AgentAccess));
+                Helpers.FieldToString(output, AgentTextures, "AgentTextures");
+                output.Append(Environment.NewLine);
+                output.Append(String.Format("ActiveGroupID: {0}", ActiveGroupID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -68627,6 +79411,15 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((AcceptNotices) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GroupData --");
+                output.AppendLine(String.Format("GroupID: {0}", GroupID));
+                output.AppendLine(String.Format("GroupPowers: {0}", GroupPowers));
+                output.Append(String.Format("AcceptNotices: {0}", AcceptNotices));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -68668,6 +79461,14 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(ObjectID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AnimationData --");
+                output.AppendLine(String.Format("Animation: {0}", Animation));
+                output.Append(String.Format("ObjectID: {0}", ObjectID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -68706,6 +79507,13 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(GranterID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- GranterBlock --");
+                output.Append(String.Format("GranterID: {0}", GranterID));
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -68756,11 +79564,19 @@ namespace OpenMetaverse.Packets
 
             public override void ToBytes(byte[] bytes, ref int i)
             {
+                if(NVPairs == null) { Console.WriteLine("Warning: NVPairs is null, in " + this.GetType()); }
                 bytes[i++] = (byte)(NVPairs.Length % 256);
                 bytes[i++] = (byte)((NVPairs.Length >> 8) % 256);
                 Buffer.BlockCopy(NVPairs, 0, bytes, i, NVPairs.Length); i += NVPairs.Length;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- NVPairData --");
+                Helpers.FieldToString(output, NVPairs, "NVPairs");
+                return output.ToString();
+            }
         }
 
         /// <exclude/>
@@ -68799,6 +79615,13 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = ParamValue;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- VisualParam --");
+                output.Append(String.Format("ParamValue: {0}", ParamValue));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -68962,6 +79785,33 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ChildAgentUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            for (int j = 0; j < GroupData.Length; j++)
+            {
+                output += GroupData[j].ToString() + Environment.NewLine;
+            }
+            for (int j = 0; j < AnimationData.Length; j++)
+            {
+                output += AnimationData[j].ToString() + Environment.NewLine;
+            }
+            for (int j = 0; j < GranterBlock.Length; j++)
+            {
+                output += GranterBlock[j].ToString() + Environment.NewLine;
+            }
+            for (int j = 0; j < NVPairData.Length; j++)
+            {
+                output += NVPairData[j].ToString() + Environment.NewLine;
+            }
+            for (int j = 0; j < VisualParam.Length; j++)
+            {
+                output += VisualParam[j].ToString() + Environment.NewLine;
+            }
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -69012,6 +79862,16 @@ namespace OpenMetaverse.Packets
                 Buffer.BlockCopy(SessionID.GetBytes(), 0, bytes, i, 16); i += 16;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("RegionHandle: {0}", RegionHandle));
+                output.AppendLine(String.Format("ViewerCircuitCode: {0}", ViewerCircuitCode));
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.Append(String.Format("SessionID: {0}", SessionID));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -69072,6 +79932,13 @@ namespace OpenMetaverse.Packets
             AgentData.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- ChildAgentAlive ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
         }
 
     }
@@ -69148,6 +80015,24 @@ namespace OpenMetaverse.Packets
                 bytes[i++] = (byte)((ChangedGrid) ? 1 : 0);
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- AgentData --");
+                output.AppendLine(String.Format("RegionHandle: {0}", RegionHandle));
+                output.AppendLine(String.Format("ViewerCircuitCode: {0}", ViewerCircuitCode));
+                output.AppendLine(String.Format("AgentID: {0}", AgentID));
+                output.AppendLine(String.Format("SessionID: {0}", SessionID));
+                output.AppendLine(String.Format("AgentPos: {0}", AgentPos));
+                output.AppendLine(String.Format("AgentVel: {0}", AgentVel));
+                output.AppendLine(String.Format("Center: {0}", Center));
+                output.AppendLine(String.Format("Size: {0}", Size));
+                output.AppendLine(String.Format("AtAxis: {0}", AtAxis));
+                output.AppendLine(String.Format("LeftAxis: {0}", LeftAxis));
+                output.AppendLine(String.Format("UpAxis: {0}", UpAxis));
+                output.Append(String.Format("ChangedGrid: {0}", ChangedGrid));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -69210,6 +80095,13 @@ namespace OpenMetaverse.Packets
             return bytes;
         }
 
+        public override string ToString()
+        {
+            string output = "--- ChildAgentPositionUpdate ---" + Environment.NewLine;
+                output += AgentData.ToString() + Environment.NewLine;
+            return output;
+        }
+
     }
 
     /// <exclude/>
@@ -69269,6 +80161,19 @@ namespace OpenMetaverse.Packets
                 Utils.FloatToBytes(Gain, bytes, i); i += 4;
             }
 
+            public override string ToString()
+            {
+                StringBuilder output = new StringBuilder();
+                output.AppendLine("-- SoundData --");
+                output.AppendLine(String.Format("SoundID: {0}", SoundID));
+                output.AppendLine(String.Format("OwnerID: {0}", OwnerID));
+                output.AppendLine(String.Format("ObjectID: {0}", ObjectID));
+                output.AppendLine(String.Format("ParentID: {0}", ParentID));
+                output.AppendLine(String.Format("Handle: {0}", Handle));
+                output.AppendLine(String.Format("Position: {0}", Position));
+                output.Append(String.Format("Gain: {0}", Gain));
+                return output.ToString();
+            }
         }
 
         private Header header;
@@ -69329,6 +80234,13 @@ namespace OpenMetaverse.Packets
             SoundData.ToBytes(bytes, ref i);
             if (header.AckList.Length > 0) { header.AcksToBytes(bytes, ref i); }
             return bytes;
+        }
+
+        public override string ToString()
+        {
+            string output = "--- SoundTrigger ---" + Environment.NewLine;
+                output += SoundData.ToString() + Environment.NewLine;
+            return output;
         }
 
     }

@@ -935,6 +935,8 @@ namespace OpenMetaverse
                 WaitForSimParcel = new AutoResetEvent(false);
             }
 
+            
+
             if (refresh)
             {
                     for (int y = 0; y < 64; y++)
@@ -1167,15 +1169,7 @@ namespace OpenMetaverse
         /// dictionary.</remarks>
         public int GetParcelLocalID(Simulator simulator, Vector3 position)
         {
-            if (simulator.ParcelMap[(byte)position.Y / 4, (byte)position.X / 4] > 0)
-            {
-                return simulator.ParcelMap[(byte)position.Y / 4, (byte)position.X / 4];
-            }
-            else
-            {
-                Logger.Log(String.Format("ParcelMap returned an default/invalid value for location {0}/{1} Did you use RequestAllSimParcels() to populate the dictionaries?", (byte)position.Y / 4, (byte)position.X / 4 ), Helpers.LogLevel.Warning);
-                return 0;
-            }
+            return simulator.ParcelMap[(byte)position.Y / 4, (byte)position.X / 4];
         }
 
         /// <summary>
@@ -1507,36 +1501,29 @@ namespace OpenMetaverse
 
                 if (Client.Settings.PARCEL_TRACKING)
                 {
+                    if(sequenceID.Equals(int.MaxValue))
+                        WaitForSimParcel.Set();
+
                     lock (simulator.Parcels.Dictionary)
                         simulator.Parcels.Dictionary[parcel.LocalID] = parcel;
 
-                    bool set = false;
                     int y, x, index, bit;
-                    for (y = 0; y < 64; y++)
+                    for (y = 0; y < simulator.ParcelMap.GetLength(0); y++)
                     {
-                        for (x = 0; x < 64; x++)
+                        for (x = 0; x < simulator.ParcelMap.GetLength(1); x++)
                         {
-                            index = (y * 64) + x;
-                            bit = index % 8;
-                            index >>= 3;
-
-                            if ((parcel.Bitmap[index] & (1 << bit)) != 0)
+                            if (simulator.ParcelMap[y, x] == 0)
                             {
-                                simulator.ParcelMap[y, x] = parcel.LocalID;
-                                set = true;
+                                index = (y * 64) + x;
+                                bit = index % 8;
+                                index >>= 3;
+
+                                if ((parcel.Bitmap[index] & (1 << bit)) != 0)
+                                    simulator.ParcelMap[y, x] = parcel.LocalID;
                             }
                         }
                     }
-
-                    if (!set)
-                    {
-                        Logger.Log("Received a parcel with a bitmap that did not map to any locations",
-                            Helpers.LogLevel.Warning);
-                    }
                 }
-
-                if (sequenceID.Equals(int.MaxValue) && WaitForSimParcel != null)
-                    WaitForSimParcel.Set();
 
                 // auto request acl, will be stored in parcel tracking dictionary if enabled
                 if (Client.Settings.ALWAYS_REQUEST_PARCEL_ACL)
