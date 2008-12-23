@@ -279,7 +279,7 @@ namespace OpenMetaverse
                         }
                         else
                         {
-                            WriteXmlRpcInventoryItem(writer, "Inventory", UUID.Zero, 1, (uint)AssetType.Folder, InventoryRoot);
+                            WriteXmlRpcInventoryItem(writer, "Inventory", UUID.Zero, 1, (uint)InventoryType.Category, InventoryRoot);
                         }
                         WriteXmlRpcArrayEnd(writer);
 
@@ -321,7 +321,7 @@ namespace OpenMetaverse
                         }
                         else
                         {
-                            WriteXmlRpcInventoryItem(writer, "Library", UUID.Zero, 1, (uint)AssetType.Folder, LibraryRoot);
+                            WriteXmlRpcInventoryItem(writer, "Library", UUID.Zero, 1, (uint)InventoryType.Category, LibraryRoot);
                         }
                         WriteXmlRpcArrayEnd(writer);
 
@@ -1156,22 +1156,26 @@ namespace OpenMetaverse
         /// <returns>A string containing the first found Mac Address</returns>
         private static string GetMAC()
         {
-            string mac = String.Empty;
+            string mac = "";
             System.Net.NetworkInformation.NetworkInterface[] nics = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces();
 
             if (nics.Length > 0)
+            {
                 mac = nics[0].GetPhysicalAddress().ToString().ToUpper();
+            }
 
             if (mac.Length < 12)
+            {
                 mac = mac.PadRight(12, '0');
+            }
 
             return String.Format("{0}:{1}:{2}:{3}:{4}:{5}",
-                mac.Substring(0, 2),
-                mac.Substring(2, 2),
-                mac.Substring(4, 2),
-                mac.Substring(6, 2),
-                mac.Substring(8, 2),
-                mac.Substring(10, 2));
+                                 mac.Substring(0, 2),
+                                 mac.Substring(2, 2),
+                                 mac.Substring(4, 2),
+                                 mac.Substring(6, 2),
+                                 mac.Substring(8, 2),
+                                 mac.Substring(10, 2));
         }
     }
 }

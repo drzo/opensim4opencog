@@ -32,7 +32,7 @@ namespace OpenMetaverse.Capabilities
 {
     public class HttpServer
     {
-        #region HttpRequestHandler struct
+        public delegate void HttpRequestCallback(HttpRequestSignature signature, ref HttpListenerContext context);
 
         public struct HttpRequestHandler : IEquatable<HttpRequestHandler>
         {
@@ -55,41 +55,34 @@ namespace OpenMetaverse.Capabilities
                 return Signature.GetHashCode();
             }
 
-            public override string ToString()
-            {
-                return Signature.ToString();
-            }
-
             public bool Equals(HttpRequestHandler handler)
             {
                 return this.Signature == handler.Signature;
             }
         }
 
-        #endregion HttpRequestHandler struct
+        HttpListener server;
+        //int serverPort;
+        //bool sslEnabled;
+        // TODO: Replace this with an immutable list to avoid locking
+        List<HttpRequestHandler> requestHandlers;
 
-        public delegate bool HttpRequestCallback(ref HttpListenerContext context);
-
-        HttpListener server = null;
-        HttpRequestHandler[] requestHandlers = new HttpRequestHandler[0];
-        bool isRunning = false;
+        bool isRunning;
 
         public HttpServer(int port, bool ssl)
         {
+            //serverPort = port;
+            //sslEnabled = ssl;
             server = new HttpListener();
 
             if (ssl)
                 server.Prefixes.Add(String.Format("https://+:{0}/", port));
             else
                 server.Prefixes.Add(String.Format("http://+:{0}/", port));
-        }
 
-        public HttpServer(List<string> prefixes)
-        {
-            server = new HttpListener();
+            requestHandlers = new List<HttpRequestHandler>();
 
-            for (int i = 0; i < prefixes.Count; i++)
-                server.Prefixes.Add(prefixes[i]);
+            isRunning = false;
         }
 
         public void AddHandler(string method, string contentType, string path, HttpRequestCallback callback)
@@ -103,27 +96,12 @@ namespace OpenMetaverse.Capabilities
 
         public void AddHandler(HttpRequestHandler handler)
         {
-            HttpRequestHandler[] newHandlers = new HttpRequestHandler[requestHandlers.Length + 1];
-
-            for (int i = 0; i < requestHandlers.Length; i++)
-                newHandlers[i] = requestHandlers[i];
-            newHandlers[requestHandlers.Length] = handler;
-
-            // CLR guarantees this is an atomic operation
-            requestHandlers = newHandlers;
+            lock (requestHandlers) requestHandlers.Add(handler);
         }
 
         public void RemoveHandler(HttpRequestHandler handler)
         {
-            HttpRequestHandler[] newHandlers = new HttpRequestHandler[requestHandlers.Length - 1];
-
-            int j = 0;
-            for (int i = 0; i < requestHandlers.Length; i++)
-                if (!requestHandlers[i].Signature.ExactlyEquals(handler.Signature))
-                    newHandlers[j++] = handler;
-
-            // CLR guarantees this is an atomic operation
-            requestHandlers = newHandlers;
+            lock (requestHandlers) requestHandlers.Remove(handler);
         }
 
         public void Start()
@@ -167,39 +145,27 @@ namespace OpenMetaverse.Capabilities
                     HttpRequestSignature signature = new HttpRequestSignature(context);
 
                     // Look for a signature match in our handlers
-                    for (int i = 0; i < requestHandlers.Length; i++)
+                    lock (requestHandlers)
                     {
-                        HttpRequestHandler handler = requestHandlers[i];
-
-                        if (handler.Signature != null && signature == handler.Signature)
+                        for (int i = 0; i < requestHandlers.Count; i++)
                         {
-                            bool closeConnection = true;
+                            HttpRequestHandler handler = requestHandlers[i];
 
-                            // Request signature matched, handle it
-                            try { closeConnection = handler.Callback(ref context); }
-                            catch (Exception ex) { Logger.Log("Exception in HTTP handler: " + ex.Message, Helpers.LogLevel.Error, ex); }
-
-                            if (closeConnection)
+                            if (signature == handler.Signature)
                             {
-                                // Close the connection
-                                try { context.Response.Close(); }
-                                catch (Exception) { }
+                                // Request signature matched, handle it
+                                handler.Callback(signature, ref context);
+                                return;
                             }
-
-                            return;
                         }
                     }
 
                     // No registered handler matched this request's signature. Send a 404
-                    try
-                    {
-                        context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                        context.Response.StatusDescription = String.Format(
-                            "No request handler registered for Method=\"{0}\", Content-Type=\"{1}\", Path=\"{2}\"",
-                            signature.Method, signature.ContentType, signature.Path);
-                        context.Response.Close();
-                    }
-                    catch (Exception) { }
+                    context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                    context.Response.StatusDescription = String.Format(
+                        "No request handler registered for Method=\"{0}\", Content-Type=\"{1}\", Path=\"{2}\"",
+                        signature.Method, signature.ContentType, signature.Path);
+                    context.Response.Close();
                 }
             }
         }

@@ -112,6 +112,26 @@ namespace OpenMetaverse
         }
 
         /// <summary>
+        /// Calculate the magnitude of the supplied vector
+        /// </summary>
+        public static float Mag(Vector3 v)
+        {
+            return (float)Math.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
+        }
+
+        /// <summary>
+        /// Returns a normalized version of the supplied vector
+        /// </summary>
+        /// <param name="vector">The vector to normalize</param>
+        /// <returns>A normalized version of the vector</returns>
+        public static Vector3 Norm(Vector3 vector)
+        {
+            //float mag = Mag(vector);
+           // return new Vector3(vector.X / mag, vector.Y / mag, vector.Z / mag);
+            return Normalize(vector);
+        }
+
+        /// <summary>
         /// Test if this vector is equal to another vector, within a given
         /// tolerance range
         /// </summary>
@@ -264,11 +284,6 @@ namespace OpenMetaverse
                 Utils.Lerp(value1.X, value2.X, amount),
                 Utils.Lerp(value1.Y, value2.Y, amount),
                 Utils.Lerp(value1.Z, value2.Z, amount));
-        }
-
-        public static float Mag(Vector3 value)
-        {
-            return (float)Math.Sqrt((value.X * value.X) + (value.Y * value.Y) + (value.Z * value.Z));
         }
 
         public static Vector3 Max(Vector3 value1, Vector3 value2)

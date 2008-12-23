@@ -12,19 +12,15 @@
             </fileset>
         </copy>
         <csc target="library" debug="${build.debug}" unsafe="True" warnaserror="False" define="TRACE;DEBUG" main="" output="${project::get-base-directory()}/${build.dir}/${project::get-name()}.dll">
-            <resources prefix="OpenMetaverse" dynamicprefix="true" >
+            <resources prefix="OpenMetaverseTypes" dynamicprefix="true" >
             </resources>
             <sources failonempty="true">
-                <include name="BlockingQueue.cs" />
                 <include name="Color4.cs" />
-                <include name="DoubleDictionary.cs" />
-                <include name="ExpiringCache.cs" />
                 <include name="Matrix4.cs" />
                 <include name="Quaternion.cs" />
                 <include name="Ray.cs" />
                 <include name="UUID.cs" />
                 <include name="Utils.cs" />
-                <include name="UtilsConversions.cs" />
                 <include name="Vector2.cs" />
                 <include name="Vector3.cs" />
                 <include name="Vector3d.cs" />
@@ -36,6 +32,8 @@
                     <include name="${project::get-base-directory()}/${build.dir}" />
                 </lib>
                 <include name="System.dll" />
+                <include name="System.Data.dll" />
+                <include name="System.Xml.dll" />
             </references>
         </csc>
         <echo message="Copying from [${project::get-base-directory()}/${build.dir}/] to [${project::get-base-directory()}/../../bin/" />

@@ -5,7 +5,7 @@
         <mkdir dir="${project::get-base-directory()}/${build.dir}" />
         <copy todir="${project::get-base-directory()}/${build.dir}" flatten="true">
             <fileset basedir="${project::get-base-directory()}">
-                <include name="bin/log4net.dll" />
+                <include name="../log4net.dll" />
             </fileset>
         </copy>
         <copy todir="${project::get-base-directory()}/${build.dir}">
@@ -19,7 +19,6 @@
                 <include name="Actions/Action.cs" />
                 <include name="Actions/Crouch.cs" />
                 <include name="Actions/Describe.cs" />
-                <include name="Actions/Eval.cs" />
                 <include name="Actions/Fly.cs" />
                 <include name="Actions/Follow.cs" />
                 <include name="Actions/Help.cs" />
@@ -37,7 +36,6 @@
                 <include name="Actions/StopFlying.cs" />
                 <include name="Actions/Teleport.cs" />
                 <include name="Actions/Use.cs" />
-                <include name="Actions/Wear.cs" />
                 <include name="Actions/Where.cs" />
                 <include name="Actions/Whisper.cs" />
                 <include name="Listeners/Avatars.cs" />
@@ -54,13 +52,6 @@
                 <include name="Tutorials/Tutorial.cs" />
                 <include name="Tutorials/Tutorial1.cs" />
                 <include name="Utilities/XMLInterpreter.cs" />
-                <include name="DotCYC/CycConnectionForm.Designer.cs" />
-                <include name="DotCYC/CycConnectionForm.cs" />
-                <include name="ScriptEngines/ABCLInterpreter.cs" />
-                <include name="ScriptEngines/CycInterpreter.cs" />
-                <include name="ScriptEngines/DotLispInterpreter.cs" />
-                <include name="ScriptEngines/ScriptInterpreter.cs" />
-                <include name="ScriptEngines/ScriptManager.cs" />
                 <include name="LoginForm.Designer.cs" />
                 <include name="LoginForm.cs" />
                 <include name="Program.cs" />
@@ -72,17 +63,13 @@
                     <include name="${project::get-base-directory()}" />
                     <include name="${project::get-base-directory()}/${build.dir}" />
                 </lib>
-                <include name="bin/ABCL.Net.dll" />
-                <include name="bin/DotLisp.dll" />
-                <include name="bin/IKVM.OpenJDK.ClassLibrary.dll" />
-                <include name="bin/IKVM.Runtime.dll" />
-                <include name="bin/log4net.dll" />
-                <include name="bin/OpenCyc.dll" />
-                <include name="OpenMetaverse.dll.dll" />
-                <include name="bin/OpenMetaverseTypes.dll" />
+                <include name="../DotLisp.dll" />
+                <include name="../log4net.dll" />
+                <include name="../OpenMetaverse.dll" />
                 <include name="System.dll" />
                 <include name="System.Data.dll" />
                 <include name="System.Drawing.dll" />
+                <include name="System.Text.dll" />
                 <include name="System.Windows.Forms.dll" />
                 <include name="System.Xml.dll" />
             </references>

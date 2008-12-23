@@ -41,7 +41,6 @@ namespace OpenMetaverse.Capabilities
         private string contentType;
         private string path;
 
-        /// <summary>HTTP method</summary>
         public string Method
         {
             get { return method; }
@@ -51,7 +50,6 @@ namespace OpenMetaverse.Capabilities
                 else method = String.Empty;
             }
         }
-        /// <summary>HTTP Content-Type</summary>
         public string ContentType
         {
             get { return contentType; }
@@ -61,21 +59,16 @@ namespace OpenMetaverse.Capabilities
                 else contentType = String.Empty;
             }
         }
-        /// <summary>Relative URL path</summary>
         public string Path
         {
             get { return path; }
             set
             {
-                if (!String.IsNullOrEmpty(value)) path = value;
+                if (!String.IsNullOrEmpty(value)) path = value.ToLower();
                 else path = String.Empty;
             }
         }
 
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="context">HTTP request to build a signature for</param>
         public HttpRequestSignature(HttpListenerContext context)
         {
             method = contentType = path = String.Empty;
@@ -128,11 +121,6 @@ namespace OpenMetaverse.Capabilities
             hash ^= (contentType != null) ? contentType.GetHashCode() : 0;
             hash ^= (path != null) ? path.GetHashCode() : 0;
             return hash;
-        }
-
-        public override string ToString()
-        {
-            return String.Format("{0} {1} Content-Type: {2}", method, path, contentType);
         }
 
         /// <summary>

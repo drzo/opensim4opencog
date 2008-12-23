@@ -78,21 +78,12 @@ namespace OpenMetaverse.StructuredData
 
         public virtual bool AsBoolean() { return false; }
         public virtual int AsInteger() { return 0; }
-        public virtual uint AsUInteger() { return 0; }
-        public virtual long AsLong() { return 0; }
-        public virtual ulong AsULong() { return 0; }
         public virtual double AsReal() { return 0d; }
         public virtual string AsString() { return String.Empty; }
         public virtual UUID AsUUID() { return UUID.Zero; }
         public virtual DateTime AsDate() { return Utils.Epoch; }
         public virtual Uri AsUri() { return new Uri(String.Empty); }
         public virtual byte[] AsBinary() { return new byte[0]; }
-        public virtual Vector2 AsVector2() { return Vector2.Zero; }
-        public virtual Vector3 AsVector3() { return Vector3.Zero; }
-        public virtual Vector3d AsVector3d() { return Vector3d.Zero; }
-        public virtual Vector4 AsVector4() { return Vector4.Zero; }
-        public virtual Quaternion AsQuaternion() { return Quaternion.Identity; }
-        public virtual Color4 AsColor4() { return Color4.Black; }
 
         public override string ToString() { return "undef"; }
 
@@ -104,8 +95,6 @@ namespace OpenMetaverse.StructuredData
         public static OSD FromInteger(sbyte value) { return new OSDInteger((int)value); }
         public static OSD FromInteger(byte value) { return new OSDInteger((int)value); }
         public static OSD FromUInteger(uint value) { return new OSDBinary(value); }
-        public static OSD FromLong(long value) { return new OSDBinary(value); }
-        public static OSD FromULong(ulong value) { return new OSDBinary(value); }
         public static OSD FromReal(double value) { return new OSDReal(value); }
         public static OSD FromReal(float value) { return new OSDReal((double)value); }
         public static OSD FromString(string value) { return new OSDString(value); }
@@ -386,16 +375,13 @@ namespace OpenMetaverse.StructuredData
 
         public override bool AsBoolean() { return value != 0; }
         public override int AsInteger() { return value; }
-        public override uint AsUInteger() { return (uint)value; }
-        public override long AsLong() { return value; }
-        public override ulong AsULong() { return (ulong)value; }
         public override double AsReal() { return (double)value; }
         public override string AsString() { return value.ToString(); }
         public override byte[] AsBinary() { return Utils.IntToBytes(value); }
-
-        public override string ToString() { return AsString(); }
+        
+        public override string ToString() { return AsString(); }        
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -411,51 +397,16 @@ namespace OpenMetaverse.StructuredData
         }
 
         public override bool AsBoolean() { return (!Double.IsNaN(value) && value != 0d); }
-        
-        public override int AsInteger()
-        {
-            if (Double.IsNaN(value))
+        public override int AsInteger() { 
+            if ( Double.IsNaN( value ) )
                 return 0;
-            if (value > (double)Int32.MaxValue)
+            if ( value > (double)Int32.MaxValue )
                 return Int32.MaxValue;
-            if (value < (double)Int32.MinValue)
+            if ( value < (double)Int32.MinValue )
                 return Int32.MinValue;
-            return (int)Math.Round(value);
+            return (int)Math.Round( value );
         }
-
-        public override uint AsUInteger()
-        {
-            if (Double.IsNaN(value))
-                return 0;
-            if (value > (double)UInt32.MaxValue)
-                return UInt32.MaxValue;
-            if (value < (double)UInt32.MinValue)
-                return UInt32.MinValue;
-            return (uint)Math.Round(value);
-        }
-
-        public override long AsLong()
-        {
-            if (Double.IsNaN(value))
-                return 0;
-            if (value > (double)Int64.MaxValue)
-                return Int64.MaxValue;
-            if (value < (double)Int64.MinValue)
-                return Int64.MinValue;
-            return (long)Math.Round(value);
-        }
-
-        public override ulong AsULong()
-        {
-            if (Double.IsNaN(value))
-                return 0;
-            if (value > (double)UInt64.MaxValue)
-                return Int32.MaxValue;
-            if (value < (double)UInt64.MinValue)
-                return UInt64.MinValue;
-            return (ulong)Math.Round(value);
-        }
-
+ 
         public override double AsReal() { return value; }
         public override string AsString() { return value.ToString(Utils.EnUsCulture); }
         public override byte[] AsBinary() { return Utils.DoubleToBytes(value); }
@@ -495,38 +446,10 @@ namespace OpenMetaverse.StructuredData
         {
             double dbl;
             if (Double.TryParse(value, out dbl))
-                return (int)Math.Floor(dbl);
+                return (int)Math.Floor( dbl );
             else
                 return 0;
         }
-
-        public override uint AsUInteger()
-        {
-            double dbl;
-            if (Double.TryParse(value, out dbl))
-                return (uint)Math.Floor(dbl);
-            else
-                return 0;
-        }
-
-        public override long AsLong()
-        {
-            double dbl;
-            if (Double.TryParse(value, out dbl))
-                return (long)Math.Floor(dbl);
-            else
-                return 0;
-        }
-
-        public override ulong AsULong()
-        {
-            double dbl;
-            if (Double.TryParse(value, out dbl))
-                return (ulong)Math.Floor(dbl);
-            else
-                return 0;
-        }
-
         public override double AsReal()
         {
             double dbl;
@@ -535,9 +458,8 @@ namespace OpenMetaverse.StructuredData
             else
                 return 0d;
         }
-
-        public override string AsString() { return value; }
-        public override byte[] AsBinary() { return Encoding.UTF8.GetBytes(value); }
+        public override string AsString() { return value; } 
+        public override byte[] AsBinary() { return Encoding.UTF8.GetBytes( value ); }
         public override UUID AsUUID()
         {
             UUID uuid;
@@ -594,39 +516,19 @@ namespace OpenMetaverse.StructuredData
             this.value = value;
         }
 
-        public override string AsString()
-        {
+        public override string AsString() 
+        { 
             string format;
-            if (value.Millisecond > 0)
+            if ( value.Millisecond > 0 )
                 format = "yyyy-MM-ddTHH:mm:ss.ffZ";
             else
                 format = "yyyy-MM-ddTHH:mm:ssZ";
-            return value.ToUniversalTime().ToString(format);
+            return value.ToUniversalTime().ToString( format );        
         }
-
-        public override int AsInteger()
-        {
-            return (int)Utils.DateTimeToUnixTime(value);
-        }
-
-        public override uint AsUInteger()
-        {
-            return Utils.DateTimeToUnixTime(value);
-        }
-
-        public override long AsLong()
-        {
-            return (long)Utils.DateTimeToUnixTime(value);
-        }
-
-        public override ulong AsULong()
-        {
-            return Utils.DateTimeToUnixTime(value);
-        }
-
-        public override byte[] AsBinary()
-        {
-            TimeSpan ts = value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        
+         public override byte[] AsBinary()
+         {
+            TimeSpan ts = value.ToUniversalTime() - new DateTime( 1970, 1, 1, 0, 0, 0, DateTimeKind.Utc );
             return Utils.DoubleToBytes(ts.TotalSeconds);
         }
 
@@ -688,9 +590,6 @@ namespace OpenMetaverse.StructuredData
 
         public override string AsString() { return Convert.ToBase64String(value); }
         public override byte[] AsBinary() { return value; }
-        public override uint AsUInteger() { return Utils.BytesToUInt(value); }
-        public override long AsLong() { return Utils.BytesToInt64(value); }
-        public override ulong AsULong() { return Utils.BytesToUInt64(value); }
 
         public override string ToString()
         {
@@ -843,7 +742,7 @@ namespace OpenMetaverse.StructuredData
                 this.value = new List<OSD>();
         }
 
-        public override Vector2 AsVector2()
+        public Vector2 AsVector2()
         {
             Vector2 vector = Vector2.Zero;
 
@@ -856,7 +755,7 @@ namespace OpenMetaverse.StructuredData
             return vector;
         }
 
-        public override Vector3 AsVector3()
+        public Vector3 AsVector3()
         {
             Vector3 vector = Vector3.Zero;
 
@@ -870,7 +769,7 @@ namespace OpenMetaverse.StructuredData
             return vector;
         }
 
-        public override Vector3d AsVector3d()
+        public Vector3d AsVector3d()
         {
             Vector3d vector = Vector3d.Zero;
 
@@ -884,7 +783,7 @@ namespace OpenMetaverse.StructuredData
             return vector;
         }
 
-        public override Vector4 AsVector4()
+        public Vector4 AsVector4()
         {
             Vector4 vector = Vector4.Zero;
 
@@ -899,7 +798,7 @@ namespace OpenMetaverse.StructuredData
             return vector;
         }
 
-        public override Quaternion AsQuaternion()
+        public Quaternion AsQuaternion()
         {
             Quaternion quaternion = Quaternion.Identity;
 
@@ -914,7 +813,7 @@ namespace OpenMetaverse.StructuredData
             return quaternion;
         }
 
-        public override Color4 AsColor4()
+        public Color4 AsColor4()
         {
             Color4 color = Color4.Black;
 
