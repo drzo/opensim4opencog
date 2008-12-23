@@ -26,11 +26,11 @@
  ; Here the bot is officially connected (I think), so you could 
  ; have it perform a initial inworld tasks like wearing some clothes
  ;-------------------------------------
- (def (on-network-connected reason message)
+ (def (on-network-connected &opt reason message)
   (block
     (thisClient.msgClient (@"(on-network-connected )" ) )
-    (thisClient.ExecuteCommand “say Hello World”)   
-    (thisClient.ExecuteCommand “use HMG to wear”)
+    (thisClient.ExecuteCommand (@"say Hello World"))   
+    (thisClient.ExecuteCommand (@"use HMG to wear"))
     )
  )
 

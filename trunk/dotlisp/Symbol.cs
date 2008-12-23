@@ -185,6 +185,15 @@ internal class SymbolTable
                         if (typeString == "System.Collections.IEnumerator") return (Type)type;
                         if (typeString == "System.Windows.Forms.IDataObject") return (Type)type;
                     }
+		    foreach (Type type in tlist) 
+                    {
+                        string typeString = type.ToString(); 
+                        if (typeString.StartsWith("System.")) return (Type)type;
+                        if (typeString.StartsWith("DotLisp.")) return (Type)type; 
+                        if (typeString.StartsWith("Microsoft.")) return (Type)type; 
+                        if (typeString.StartsWith("Mono.")) return (Type)type; 
+                    } 
+
 				//todo tell them which names conflict
 				StringBuilder sb = new StringBuilder
 										 ("Ambiguous Type name: " + name + " ->");
