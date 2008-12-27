@@ -6,10 +6,11 @@ using OpenMetaverse; //using libsecondlife;
 
 namespace cogbot.Actions
 {
-    public class Action
+    abstract public class Action
     {
-        protected TextForm parent;
-        protected GridClient client;
+        public TextForm parent;
+        public GridClient client;
+        public string Name;
         protected string helpString;
         protected string usageString;
 
@@ -22,14 +23,24 @@ namespace cogbot.Actions
             client = parent.client;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="format"></param>
+        /// <param name="arg"></param>
+        public void WriteLine(string format, params object[] arg)
+        {
+            String s = String.Format(format, arg);
+            parent.output(s);
+            Console.WriteLine(format, arg);
+        } // method: WriteLine
+
         public void acceptInputWrapper(string verb, string args)
         {
             acceptInput(verb, new Parser(args));
         }
 
-        public virtual void acceptInput(string verb, Parser args)
-        {
-        }
+        public abstract void acceptInput(string verb, Parser args);
 
         public virtual string makeHelpString()
         {
@@ -38,6 +49,16 @@ namespace cogbot.Actions
         public virtual string makeUsageString()
         {
             return usageString;
+        }
+
+        internal object Execute(string[] args, UUID fromAgentID)
+        {          
+            throw new Exception("The method or operation is not implemented.");
+        }
+
+        public virtual string GetDescription()
+        {
+            return helpString + " " + usageString;
         }
     }
 }

@@ -15,7 +15,7 @@ namespace cogbot.Actions
 
         public override void acceptInput(string verb, Parser args)
         {
-            base.acceptInput(verb, args);
+           // base.acceptInput(verb, args);
 
             parent.output("You are in " + client.Network.CurrentSim.Name + " " + (int)client.Self.SimPosition.X + "," + (int)client.Self.SimPosition.Y + "," + (int)client.Self.SimPosition.Z);
         }

@@ -17,7 +17,7 @@ namespace cogbot.Actions
 
         public override void acceptInput(string verb, Parser args)
         {
-            base.acceptInput(verb, args);
+           // base.acceptInput(verb, args);
 
             float moveDist = 5;
             Vector3 moveVec;

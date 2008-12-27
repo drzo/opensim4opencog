@@ -74,85 +74,85 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="BacktraceException.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Closure.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CLSConstructor.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="CLSField.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="CLSLateBoundMember.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="CLSMember.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="CLSMethod.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="CLSProperty.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="CLSSymbols.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Cons.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="DynamicEnvironment.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Environment.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Expressions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="FnEnumerator.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Function.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GenericFunction.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Interpreter.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Keyword.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="LocalVariable.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Macro.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Param.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Primitives.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Reader.cs">
+    <Compile Include="Util.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Record.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="CLSMethod.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GenericFunction.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="BacktraceException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CLSField.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Function.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CLSProperty.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Primitives.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Interpreter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Reader.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="FnEnumerator.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CLSLateBoundMember.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DynamicEnvironment.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Expressions.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CLSSymbols.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Keyword.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CLSConstructor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="LocalVariable.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Param.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Macro.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Cons.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Environment.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Symbol.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Util.cs">
+    <Compile Include="CLSMember.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

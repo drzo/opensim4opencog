@@ -76,7 +76,7 @@ namespace cogbot
             this.logoutToolStripMenuItem});
             this.clientToolStripMenuItem.Name = "clientToolStripMenuItem";
             this.clientToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
-            this.clientToolStripMenuItem.Text = "Client";
+            this.clientToolStripMenuItem.Text = "client";
             // 
             // loginToolStripMenuItem
             // 

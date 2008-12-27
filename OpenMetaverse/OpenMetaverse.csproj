@@ -88,91 +88,19 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AgentManager.cs">
+    <Compile Include="NetworkManager.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AgentManagerCamera.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AgentManagerMovement.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AgentThrottle.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Animations.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AppearanceManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AssetManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AssetTypes.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Avatar.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AvatarManager.cs">
+    <Compile Include="Permissions.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="BitPack.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="BlockingQueue.cs">
+    <Compile Include="Avatar.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Caps.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="CapsToPacket.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="CoordinateFrame.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="DirectoryManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="EstateTools.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="EventDictionary.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="FriendsManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GridClient.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GridManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GroupManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Helpers.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="InternalDictionary.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Inventory.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="InventoryManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="InventoryNode.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="InventoryNodeDictionary.cs">
+    <Compile Include="_VisualParam_.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Logger.cs">
@@ -181,55 +109,133 @@
     <Compile Include="Login.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="NameValue.cs">
+    <Compile Include="FriendsManager.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="NetworkManager.cs">
+    <Compile Include="InventoryManager.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ObjectManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ObjectPool.cs">
+    <Compile Include="AppearanceManager.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ObjectPoolBase.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ObjectPool.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ParcelManager.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Permissions.cs">
+    <Compile Include="CoordinateFrame.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ProtocolManager.cs">
+    <Compile Include="AgentManagerCamera.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Settings.cs">
+    <Compile Include="InventoryNode.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="AvatarManager.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Simulator.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="SoundManager.cs">
+    <Compile Include="GridManager.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="TerrainCompressor.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="TerrainManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ThreadUtil.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UDPBase.cs">
+    <Compile Include="GridClient.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="_Packets_.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="_VisualParam_.cs">
+    <Compile Include="AgentManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TerrainManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Settings.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ObjectManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ThreadUtil.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="EventDictionary.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Helpers.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Caps.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SoundManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GroupManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ProtocolManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Inventory.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DirectoryManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="InternalDictionary.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Animations.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="AssetTypes.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="AgentManagerMovement.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="AssetManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NameValue.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TerrainCompressor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CapsToPacket.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="UDPBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="AgentThrottle.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="InventoryNodeDictionary.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="BlockingQueue.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="EstateTools.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Capabilities\HttpRequestSignature.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Capabilities\EventQueueServer.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Capabilities\CapsBase.cs">
@@ -241,25 +247,58 @@
     <Compile Include="Capabilities\EventQueueClient.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Capabilities\EventQueueServer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Capabilities\HttpRequestSignature.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Capabilities\HttpServer.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Imaging\BakeLayer.cs">
+    <Compile Include="StructuredData\StructuredData.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="StructuredData\XmlLLSD.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="StructuredData\BinaryLLSD.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="StructuredData\NotationLLSD.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Voice\VoiceConnector.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Voice\VoiceDefinitions.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Voice\VoiceAccount.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Voice\VoiceAux.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Voice\TCPPipe.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Voice\VoiceGateway.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Voice\VoiceSession.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Imaging\ManagedImage.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Imaging\OpenJPEG.cs">
+    <Compile Include="Imaging\BakeLayer.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Imaging\TGALoader.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Imaging\OpenJPEG.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Rendering\LindenMesh.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Rendering\Rendering.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Interfaces\INetworkManager.cs">
@@ -271,49 +310,10 @@
     <Compile Include="Primitives\ParticleSystem.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Primitives\Primitive.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Primitives\TextureEntry.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Rendering\LindenMesh.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Rendering\Rendering.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="StructuredData\BinaryLLSD.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="StructuredData\NotationLLSD.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="StructuredData\StructuredData.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="StructuredData\XmlLLSD.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\TCPPipe.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceAccount.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceAux.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceConnector.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceDefinitions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceGateway.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Voice\VoiceSession.cs">
+    <Compile Include="Primitives\Primitive.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

@@ -39,7 +39,7 @@ namespace cogbot.Actions
 
         public override void acceptInput(string verb, Parser args)
         {
-            base.acceptInput(verb, args);
+            //base.acceptInput(verb, args);
 
             if (client.Self.SittingOn != 0 || sittingOnGround)
                 parent.output("You are already sitting.");

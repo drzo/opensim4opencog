@@ -65,8 +65,8 @@
     </target>
 
     <target name="build" depends="init" description="">
-        <nant buildfile="OpenMetaverse/OpenMetaverse.dll.build" target="build" />
         <nant buildfile="OpenMetaverse/Types/OpenMetaverseTypes.dll.build" target="build" />
+        <nant buildfile="OpenMetaverse/OpenMetaverse.dll.build" target="build" />
         <nant buildfile="dotlisp/DotLisp.dll.build" target="build" />
         <nant buildfile="../opensim4opencog/cogbot.exe.build" target="build" />
     </target>

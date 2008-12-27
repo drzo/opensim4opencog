@@ -142,7 +142,7 @@ namespace cogbot.ScriptEngines
             }
             catch (Exception e)
             {
-                Console.WriteLine( e.ToString());
+                Console.WriteLine(e.ToString());
                 return Lisp.EOF;
             }
         }
@@ -259,7 +259,7 @@ namespace cogbot.ScriptEngines
         object ScriptInterpreter.Eval(object p)
         {
             getInterpreter();
-            System.Console.WriteLine("ABCL EVAL: " + ToStr(p));
+            Console.WriteLine("ABCL EVAL: " + ToStr(p));
             //if (p is LispObject) return Lisp.eval((LispObject)p);
             return p;
         }

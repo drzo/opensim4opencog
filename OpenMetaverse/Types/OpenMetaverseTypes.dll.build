@@ -21,6 +21,7 @@
                 <include name="Ray.cs" />
                 <include name="UUID.cs" />
                 <include name="Utils.cs" />
+                <include name="UtilsConversions.cs" />
                 <include name="Vector2.cs" />
                 <include name="Vector3.cs" />
                 <include name="Vector3d.cs" />

@@ -1,0 +1,70 @@
+using System;
+using OpenMetaverse;
+
+namespace cogbot.Actions
+{
+    public class PrimInfoCommand : Command
+    {
+        public PrimInfoCommand(cogbot.TextForm testClient)
+        {
+            Name = "priminfo";
+            Description = "Dumps information about a specified prim. " + "Usage: priminfo [prim-uuid]";
+            Category = CommandCategory.Objects;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            UUID primID;
+
+            if (args.Length != 1)
+                return "Usage: priminfo [prim-uuid]";
+
+            if (UUID.TryParse(args[0], out primID))
+            {
+                Primitive target = client.Network.CurrentSim.ObjectsPrimitives.Find(
+                    delegate(Primitive prim) { return prim.ID == primID; }
+                );
+
+                if (target != null)
+                {
+                    Logger.Log("Light: " + target.Light.ToString(), Helpers.LogLevel.Info, client);
+
+                    if (target.ParticleSys.CRC != 0)
+                        Logger.Log("Particles: " + target.ParticleSys.ToString(), Helpers.LogLevel.Info, client);
+
+                    Logger.Log("TextureEntry:", Helpers.LogLevel.Info, client);
+                    if (target.Textures != null)
+                    {
+                        Logger.Log(String.Format("Default texure: {0}",
+                            target.Textures.DefaultTexture.TextureID.ToString()),
+                            Helpers.LogLevel.Info);
+
+                        for (int i = 0; i < target.Textures.FaceTextures.Length; i++)
+                        {
+                            if (target.Textures.FaceTextures[i] != null)
+                            {
+                                Logger.Log(String.Format("Face {0}: {1}", i,
+                                    target.Textures.FaceTextures[i].TextureID.ToString()),
+                                    Helpers.LogLevel.Info, client);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Logger.Log("null", Helpers.LogLevel.Info, client);
+                    }
+
+                    return "Done.";
+                }
+                else
+                {
+                    return "Could not find prim " + primID.ToString();
+                }
+            }
+            else
+            {
+                return "Usage: priminfo [prim-uuid]";
+            }
+        }
+    }
+}

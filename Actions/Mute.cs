@@ -18,7 +18,7 @@ namespace cogbot.Actions
 
         public override void acceptInput(string verb, Parser args)
         {
-            base.acceptInput(verb, args);
+           // base.acceptInput(verb, args);
 
             Avatar avatar;
 			Listeners.Chat chat = (Listeners.Chat)parent.listeners["chat"];
