@@ -130,14 +130,14 @@
       <ReferencePath>bin/</ReferencePath>
       <Reference name="log4net.dll" localCopy="true"/>
       <Reference name="System" localCopy="false"/>
-      <Reference name="DotLisp.dll" localCopy="false"/>
+      <Reference name="DotLisp" localCopy="false"/>
       <Reference name="System.Drawing" localCopy="false"/>
       <Reference name="System.Windows.Forms" localCopy="false"/>
      <!-- <Reference name="System.Text" localCopy="false"/> -->
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
       <Reference name="OpenMetaverseTypes" localCopy="false"/>
-      <Reference name="OpenMetaverse.dll" localCopy="false"/>
+      <Reference name="OpenMetaverse" localCopy="false"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="ABCL.Net.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>

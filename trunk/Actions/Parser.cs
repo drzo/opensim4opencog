@@ -11,18 +11,18 @@ namespace cogbot.Actions
         public Dictionary<string, string> prepPhrases;
         public string objectPhrase;
         public string str;
+        public string[] tokens;
 
         public Parser(string _str)
         {
             str = _str;
-
             prepPhrases = new Dictionary<string, string>();
             foreach (string prep in preps)
                 prepPhrases[prep] = "";
             objectPhrase = "";
 
             string currentPrep = "";
-            string[] tokens = str.Split(null);
+            tokens = str.Split(null);
             bool firstTok = true;
 
             for (int i = 0; i < tokens.Length; ++i)

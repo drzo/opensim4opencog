@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cogbot", "..\FreshCogbot\cogbot.csproj", "{B95B6315-0000-0000-0000-000000000000}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cogbot", "..\opensim4opencog\cogbot.csproj", "{B95B6315-0000-0000-0000-000000000000}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotLisp", "dotlisp\DotLisp.csproj", "{5B1B186D-0000-0000-0000-000000000000}"
 EndProject
@@ -14,7 +14,9 @@ Global
     Release|Any CPU = Release|Any CPU
   EndGlobalSection
   GlobalSection(ProjectDependencies) = postSolution
-    ({B95B6315-0000-0000-0000-000000000000}).6 = ({29DCFE14-0000-0000-0000-000000000000})
+    ({B95B6315-0000-0000-0000-000000000000}).1 = ({5B1B186D-0000-0000-0000-000000000000})
+    ({B95B6315-0000-0000-0000-000000000000}).6 = ({3164F259-0000-0000-0000-000000000000})
+    ({B95B6315-0000-0000-0000-000000000000}).7 = ({29DCFE14-0000-0000-0000-000000000000})
     ({3164F259-0000-0000-0000-000000000000}).1 = ({29DCFE14-0000-0000-0000-000000000000})
   EndGlobalSection
   GlobalSection(ProjectConfigurationPlatforms) = postSolution

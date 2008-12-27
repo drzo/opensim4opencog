@@ -1,0 +1,21 @@
+using System;
+using OpenMetaverse;
+
+namespace cogbot.Actions
+{
+    public class JumpCommand: Command
+    {
+        public JumpCommand(cogbot.TextForm testClient)
+		{
+			Name = "jump";
+			Description = "Jumps or flies up";
+            Category = CommandCategory.Movement;
+		}
+
+        public override string Execute(string[] args, UUID fromAgentID)
+		{
+            client.Self.Jump(true);
+            return "Jumped";
+		}
+    }
+}

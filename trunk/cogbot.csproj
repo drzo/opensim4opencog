@@ -1,4 +1,4 @@
-﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
@@ -6,8 +6,7 @@
     <ProjectGuid>{B95B6315-0000-0000-0000-000000000000}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ApplicationIcon>
-    </ApplicationIcon>
+    <ApplicationIcon></ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
     <AssemblyName>cogbot</AssemblyName>
@@ -16,11 +15,9 @@
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <DelaySign>false</DelaySign>
     <OutputType>Exe</OutputType>
-    <AppDesignerFolder>
-    </AppDesignerFolder>
+    <AppDesignerFolder></AppDesignerFolder>
     <RootNamespace>cogbot</RootNamespace>
-    <StartupObject>
-    </StartupObject>
+    <StartupObject></StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
   </PropertyGroup>
@@ -31,8 +28,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <DocumentationFile>
-    </DocumentationFile>
+    <DocumentationFile></DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
@@ -41,8 +37,7 @@
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
-    <NoWarn>
-    </NoWarn>
+    <NoWarn></NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -51,8 +46,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE</DefineConstants>
-    <DocumentationFile>
-    </DocumentationFile>
+    <DocumentationFile></DocumentationFile>
     <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
@@ -61,158 +55,450 @@
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
-    <NoWarn>
-    </NoWarn>
+    <NoWarn></NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DotLisp.dll">
-      <HintPath>bin\DotLisp.dll</HintPath>
+    <Reference Include="ABCL.Net.dll" >
+      <HintPath>bin\ABCL.Net.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="IKVM.OpenJDK.ClassLibrary.dll">
+    <Reference Include="IKVM.OpenJDK.ClassLibrary.dll" >
       <HintPath>bin\IKVM.OpenJDK.ClassLibrary.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="IKVM.Runtime.dll">
+    <Reference Include="IKVM.Runtime.dll" >
       <HintPath>bin\IKVM.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="log4net.dll">
+    <Reference Include="log4net.dll" >
       <HintPath>bin\log4net.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="OpenCyc.dll">
+    <Reference Include="OpenCyc.dll" >
       <HintPath>bin\OpenCyc.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="OpenMetaverse.dll">
-      <HintPath>bin\OpenMetaverse.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System">
+    <Reference Include="System" >
       <HintPath>System.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Data">
+    <Reference Include="System.Data" >
       <HintPath>System.Data.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Drawing">
+    <Reference Include="System.Drawing" >
       <HintPath>System.Drawing.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Windows.Forms">
+    <Reference Include="System.Windows.Forms" >
       <HintPath>System.Windows.Forms.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Xml">
+    <Reference Include="System.Xml" >
       <HintPath>System.Xml.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FreshCogbot\OpenMetaverse\Types\OpenMetaverseTypes.csproj">
+    <ProjectReference Include="..\opensim4opencog\dotlisp\DotLisp.csproj">
+      <Name>DotLisp</Name>
+      <Project>{5B1B186D-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+			<Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\opensim4opencog\OpenMetaverse\OpenMetaverse.csproj">
+      <Name>OpenMetaverse</Name>
+      <Project>{3164F259-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+			<Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\opensim4opencog\OpenMetaverse\Types\OpenMetaverseTypes.csproj">
       <Name>OpenMetaverseTypes</Name>
       <Project>{29DCFE14-0000-0000-0000-000000000000}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-      <Private>False</Private>
+			<Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Actions\Action.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Actions\Crouch.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Describe.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Eval.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Fly.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Follow.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Help.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Actions\Jump.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Locate.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Login.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Logout.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Move.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Mute.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Parser.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Say.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Sit.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Stand.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Stop.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Actions\StopFlying.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Actions\Teleport.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Use.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Wear.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Actions\Where.cs">
+    <Compile Include="Actions\Describe.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Actions\Whisper.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Listeners\Avatars.cs">
+    <Compile Include="Actions\Crouch.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Listeners\Bump.cs">
+    <Compile Include="Actions\Stop.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Listeners\Chat.cs">
+    <Compile Include="Actions\Eval.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Listeners\Listener.cs">
+    <Compile Include="Actions\Help.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Listeners\Objects.cs">
+    <Compile Include="Actions\Fly.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Listeners\Sound.cs">
+    <Compile Include="Actions\Say.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Use.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Parser.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Wear.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Teleport.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Follow.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Sit.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Locate.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Move.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Logout.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Login.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Arguments.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Stand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Mute.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Where.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\ClientManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Command.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Parsing.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\GoHome.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\GotoLandmark.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\ScriptCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\SearchEventsCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\ShowEventDetailsCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\SleepCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\TouchCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\TreeCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\WhoCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Movement\ForwardCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Movement\RightCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Movement\CrouchCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Movement\LeftCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Movement\FlyCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Movement\SitOnCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Movement\FlyToCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Movement\SitCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Movement\BackCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Movement\FollowCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Movement\GotoCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Movement\SetHome.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Movement\RotateCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Movement\LocationCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Movement\StandCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Movement\MoveToCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Movement\JumpCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Land\ParcelPrimOwnersCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Land\ParcelDetailsCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Land\ParcelSelectObjectsCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Land\WindCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Land\GridLayerCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Land\ParcelInfoCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Land\GridMapCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Land\FindSimCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Land\AgentLocationsCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Inventory\DeleteFolderCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Inventory\InventoryCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Inventory\CreateNotecardCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Inventory\DumpOutfitCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Inventory\UploadImageCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Inventory\GiveAllCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Inventory\BackupCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Inventory\ObjectInventoryCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Inventory\balancecommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Inventory\DownloadCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Inventory\listcontentscommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Inventory\GiveItemCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Inventory\ChangeDirectoryCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Inventory\ViewNotecardCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Groups\ActivateGroupCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Groups\JoinGroupCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Groups\LeaveGroupCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Groups\GroupsCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Friends\MapFriendCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Friends\FriendsCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Communication\WhisperCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Communication\SayCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Communication\IMGroupCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Communication\ShoutCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Communication\IMCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Communication\EchoMasterCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Appearance\AppearanceCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Appearance\WearCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Appearance\AvatarInfoCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Appearance\CloneCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Appearance\AttachmentsCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\System\SetMasterCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\System\LoadCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\System\QuitCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\System\SetMasterKeyCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\System\ShowEffectsCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\System\MD5Command.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\System\DebugCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\System\PacketLogCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\System\HelpCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\System\LoginCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\System\LogoutCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Stats\RegionInfoCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Stats\StatsCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Stats\DilationCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Stats\UptimeCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Prims\DownloadTextureCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Prims\ChangePermsCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Prims\PrimCountCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Prims\ExportCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Prims\FindTextureCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Prims\PrimRegexCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Prims\PrimInfoCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Prims\ExportParticlesCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Prims\FindObjectsCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\Prims\ImportCommand.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Listeners\Teleport.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Listeners\Chat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Listeners\Avatars.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Listeners\Whisper.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Listeners\Bump.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Listeners\Listener.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Listeners\Sound.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Listeners\Objects.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -236,14 +522,29 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DotCYC\CycConnectionForm.cs">
-      <SubType>Form</SubType>
+      <SubType>Code</SubType>
     </Compile>
     <Compile Include="DotCYC\CycConnectionForm.Designer.cs">
       <DependentUpon>CycConnectionForm.cs</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ScriptEngines\CycInterpreter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ScriptEngines\ScriptManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ScriptEngines\DotLispInterpreter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ScriptEngines\ABCLInterpreter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ScriptEngines\ScriptInterpreter.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="LoginForm.cs">
-      <SubType>Form</SubType>
+      <SubType>Code</SubType>
     </Compile>
     <Compile Include="LoginForm.Designer.cs">
       <DependentUpon>LoginForm.cs</DependentUpon>
@@ -252,11 +553,11 @@
     <Compile Include="Program.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="TextForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="TextForm.Designer.cs">
       <DependentUpon>TextForm.cs</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TextForm.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

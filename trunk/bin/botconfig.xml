@@ -6,7 +6,6 @@
   <firstName>My</firstName>
   <lastName>Bot</lastName>
   <password>MyBotPassword</password>
-  <simURL>http://localhost:8002/</simURL>
+  <simURL>http://titan:9000/</simURL>
   <startupLisp>(thisClient.ExecuteCommand "login")</startupLisp>
-
 </Configuration>

@@ -19,7 +19,7 @@ namespace cogbot.Actions
 
 		public override void acceptInput(string verb, Parser args)
         {
-			base.acceptInput(verb, args);
+			//base.acceptInput(verb, args);
             string[] tokens = args.objectPhrase.Split(null);
 
             if ((tokens.Length!=1)&& (tokens.Length != 3))

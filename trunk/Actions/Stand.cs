@@ -16,7 +16,7 @@ namespace cogbot.Actions
 
         public override void acceptInput(string verb, Parser args)
         {
-            base.acceptInput(verb, args);
+            //base.acceptInput(verb, args);
 
             Sit sit = (Sit)parent.actions["sit"];
             if (client.Self.SittingOn == 0 && !sit.sittingOnGround)

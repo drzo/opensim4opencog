@@ -18,6 +18,8 @@ using System.Threading;
 using System.IO;
 using System.Collections;
 using cogbot.ScriptEngines;
+using OpenMetaverse.Packets;
+using cogbot.Actions;
 //using DotLisp;
 
 
@@ -31,6 +33,22 @@ namespace cogbot
 
     public partial class TextForm : Form
     {
+        public UUID GroupID = UUID.Zero;
+        public Dictionary<UUID, GroupMember> GroupMembers;
+        public Dictionary<UUID, AvatarAppearancePacket> Appearances = new Dictionary<UUID, AvatarAppearancePacket>();
+       // public Dictionary<string, cogbot.Actions.Action> Commands = null;//new Dictionary<string, cogbot.Actions.Action>();
+        public bool Running = true;
+        public bool GroupCommands = false;
+        public string MasterName = String.Empty;
+        public UUID MasterKey = UUID.Zero;
+        public bool AllowObjectMaster = false;
+        //  public cogbot.TextForm ClientManager;
+     //   public VoiceManager VoiceManager;
+        // Shell-like inventory commands need to be aware of the 'current' inventory folder.
+        public InventoryFolder CurrentDirectory = null;
+
+        static public TextForm SingleInstance = null;
+
         public GridClient client;
         public OutputDelegate outputDelegate;
         public DotCYC.CycConnectionForm cycConnection;
@@ -63,6 +81,7 @@ namespace cogbot
         public static int debugLevel = 1;
         public TextForm()
         {
+            SingleInstance = this;
             client = new GridClient();
 
             client.Settings.ALWAYS_DECODE_OBJECTS = true;
@@ -130,7 +149,7 @@ namespace cogbot
             actions["stop-following"] = follow;
             tutorials = new Dictionary<string, cogbot.Tutorials.Tutorial>();
             tutorials["tutorial1"] = new Tutorials.Tutorial1(this);
-
+            RegisterAllCommands(Assembly.GetExecutingAssembly());
             describeNext = true;
 
             InitializeComponent();
@@ -140,6 +159,14 @@ namespace cogbot
             // Start the server
             startSocketListener();
             extraHooks();
+            //client.Network.RegisterCallback(PacketType.AgentDataUpdate, new NetworkManager.PacketCallback(AgentDataUpdateHandler));
+            client.Network.OnLogin += new NetworkManager.LoginCallback(LoginHandler);
+            //client.Self.OnInstantMessage += new AgentManager.InstantMessageCallback(Self_OnInstantMessage);
+            //client.Groups.OnGroupMembers += new GroupManager.GroupMembersCallback(GroupMembersHandler);
+            //client.Inventory.OnObjectOffered += new InventoryManager.ObjectOfferedCallback(Inventory_OnInventoryObjectReceived);
+
+            //client.Network.RegisterCallback(PacketType.AvatarAppearance, new NetworkManager.PacketCallback(AvatarAppearanceHandler));
+            //client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(AlertMessageHandler));
 
 
         }
@@ -885,7 +912,7 @@ namespace cogbot
         {
             try
             {
-                this.Invoke(outputDelegate, str);
+                this.Invoke(outputDelegate, str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n"));
             }
             catch (Exception e)
             {
@@ -1084,7 +1111,7 @@ namespace cogbot
 
                 //data = new byte[1024];
                 //receivedDataLength = ns.Read(data, 0, data.Length);
-                //Console.WriteLine(Encoding.ASCII.GetString(data, 0, receivedDataLength));
+                //WriteLine(Encoding.ASCII.GetString(data, 0, receivedDataLength));
                 //ns.Write(data, 0, receivedDataLength);
                 ns.Close();
                 tcp_client.Close();
@@ -1581,7 +1608,7 @@ namespace cogbot
                 string serverMessage = "";
                 thisTask.results = "'(unevaluated)";
                 taskInterperter.Intern("thisClient", this);
-                taskInterperter.Intern("Client", this);
+                taskInterperter.Intern("client", this);
                 taskInterperter.Intern("thisTask", thisTask);
                 //should make the following safer ...
                 //taskInterperter.Intern("tcpReader", tcpStreamReader);
@@ -1589,7 +1616,7 @@ namespace cogbot
                 //a safer way is to have a serverMessage string that is sent to the client
                 // in a more thread safe async way
                 taskInterperter.Intern("serverMessage", serverMessage);
-                //interpreter.Intern("Client",Command.Client);
+                //interpreter.Intern("client",Command.client);
 
                 // EVALUATE !!!
                 Object x = taskInterperter.Eval(thisTask.codeTree);
@@ -1722,6 +1749,84 @@ namespace cogbot
 
 
 
+
+        /// <summary>
+        /// Initialize everything that needs to be initialized once we're logged in.
+        /// </summary>
+        /// <param name="login">The status of the login</param>
+        /// <param name="message">Error message on failure, MOTD on success.</param>
+        public void LoginHandler(LoginStatus login, string message)
+        {
+            if (login == LoginStatus.Success)
+            {
+                // Start in the inventory root folder.
+                CurrentDirectory = Manager.Store.RootFolder;//.RootFolder;
+            }
+        }
+
+        public void RegisterAllCommands(Assembly assembly)
+        {
+            foreach (Type t in assembly.GetTypes())
+            {
+                try
+                {
+                    if (t.IsSubclassOf(typeof(Command)))
+                    {
+                        ConstructorInfo info = t.GetConstructor(new Type[] { typeof(TextForm) });
+                        try
+                        {
+                            Command command = (Command)info.Invoke(new object[] { this });
+                            RegisterCommand(command);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.ToString() +
+                            e.GetBaseException().ToString() + "\r\n In " + t.Name);
+
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                }
+            }
+        }
+
+
+        private void RegisterCommand(string name, cogbot.Actions.Action command)
+        {
+            name = name.ToLower();
+
+            if (!actions.ContainsKey(name))
+            {
+                actions.Add(name, command);
+            }
+            else
+            {
+                name = "!" + name;
+                command.Name = name;
+                actions.Add(name, command);
+            }
+        }
+
+        public void RegisterCommand(Command command)
+        {
+            command.client = this.client;
+            command.parent = this;
+            command.client = this.client; 
+            RegisterCommand(command.Name, command);
+        }
+
+        internal void DoCommandAll(string line, UUID uUID)
+        {
+            throw new Exception("The method or operation is not implemented.");
+        }
+
+        internal void LogOut(GridClient Client)
+        {
+            throw new Exception("The method or operation is not implemented.");
+        }
     }
 
     #region -- Configuration Class --
