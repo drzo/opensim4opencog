@@ -58,7 +58,7 @@ namespace cogbot.Actions
 
         public virtual string GetDescription()
         {
-            return helpString + " " + usageString;
+            return helpString + "  Usage: " + usageString;
         }
     }
 }

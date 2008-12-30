@@ -9,10 +9,37 @@ using org.armedbear.lisp;
 namespace cogbot.ScriptEngines
 {
 
+    class CSThrowError : Primitive
+    {
+        LispObject previous;
+        public CSThrowError(LispObject prev)
+            : base("CSThrowError", "datum &rest arguments")
+        {
+            previous = prev;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="args"></param>
+        public override LispObject execute(LispObject[] args)
+        {
+            if (args[0] is Condition)
+            {
+                Condition cond = (Condition)args[0];
+                String s = "DESC:\r\n" + cond.getDescription().writeToString() + "\r\nMESG:\r\n" + cond.getMessage() + "\r\nRPRT:\r\n" + cond.getConditionReport() + "\r\n";
+                System.Console.WriteLine(s);
+               // if (true) return previous.execute(args);
+                throw new Exception(s);
+            }
+            throw new Exception(Lisp.javaString(args[0]));
+        } // method: execute
+
+    }
 
     public class ABCLInterpreter : ScriptInterpreter
     {
 
+ 
 
         private java.io.OutputStream getOutputStream()
         {
@@ -156,9 +183,10 @@ namespace cogbot.ScriptEngines
 
         void ScriptInterpreter.Intern(string p, object globalcogbotTextForm)
         {
-            Intern(p, globalcogbotTextForm,allExceptFor);
+            java.lang.Class ic = ikvm.runtime.Util.getInstanceTypeFromClass(globalcogbotTextForm.GetType());
+            Intern(p, globalcogbotTextForm, allExceptFor, ic, 2);
         }
-        public Symbol Intern(string p, object globalcogbotTextForm, List<object> exceptFor)
+        public Symbol Intern(string p, object globalcogbotTextForm, List<object> exceptFor, java.lang.Class ic, int depth)
         {
             Package pkg = CurrentPackage();
             p = p.ToUpper();
@@ -168,52 +196,71 @@ namespace cogbot.ScriptEngines
             {
                 if (sv.javaInstance() == globalcogbotTextForm) return s;
             }
-            JavaObject jo = new JavaObject(globalcogbotTextForm);
-            s.setSymbolValue(jo);
+            Symbol fun = pkg.findAccessibleSymbol("SYMBOL-JOBJECT");
+            if (fun != null)
+            {
+                LispObject vtemp = s.getSymbolValue();
+                s.setSymbolValue(s);
+                JavaObject jclass = new JavaObject(ic);
+                Lisp.eval(Lisp.list4(fun, new SimpleString(p),s,jclass));
+                s.setSymbolValue(vtemp);
+            }
+            if (globalcogbotTextForm != null)
+            {
+                JavaObject jo = new JavaObject(globalcogbotTextForm);
+                s.setSymbolValue(jo);
 
-            if (exceptFor.Contains(globalcogbotTextForm)) return s;
-            exceptFor.Add(globalcogbotTextForm);
-            Type t = globalcogbotTextForm.GetType();
-            String ns = t.Namespace;
-            String ts = t.Name;
-            if (ns.StartsWith("System")) return s;
-            AddMembers(p, s, t, exceptFor,1);
+                if (exceptFor.Contains(globalcogbotTextForm)) return s;
+                exceptFor.Add(globalcogbotTextForm);
+            }
+            String ns = ic.getName();
+            if (!useClassname(ns)) return s;
+            if (depth > 0) AddMembers(p, s, ic, exceptFor, depth-1);
             return s;
         }
 
-        private void AddMembers(String p, Symbol s, Type t, List<object> exceptFor, int maxDepth)
+        private bool useClassname(string ns)
+        {
+            if (ns.StartsWith("System")) return false;
+            if (ns.StartsWith("java.lang.")) return false;
+            if (ns.StartsWith("cli.System")) return false;
+            return true;
+        }
+
+        private void AddMembers(String p, Symbol s, java.lang.Class ci, List<object> exceptFor, int maxDepth)
         {
             Package pkg = CurrentPackage();
-            String ns = t.Namespace;
-            String ts = t.Name;
-            if (ns.StartsWith("System")) return;
-            if (ns.StartsWith("cli.System")) return;
-            if (ns.StartsWith("java.lang.Object")) return;
-            Console.WriteLine("; importing " + p + " as " + ns + "." + ts);
-            java.lang.Class clazz = ikvm.runtime.Util.getFriendlyClassFromType(t);
-
-            java.lang.reflect.Field[] fi = clazz.getFields();
+            String ns = ci.getName();
+            if (!useClassname(ns)) return;
+            Console.WriteLine("; importing " + p + " as " + ns );
+            java.lang.reflect.Field[] fi = ci.getFields();
             for (int i = 0; i < fi.Length; i++)
             {
                 java.lang.reflect.Field f = fi[i];
+                f.setAccessible(true);
                 String fname = ("" + p + "." + f.getName()).ToUpper();
                 Symbol old = pkg.findAccessibleSymbol(fname);
                 if (old != null)
                 {
-                    fname = ("" + p + "%" + f.getName()).ToUpper() + "";
-                    old = pkg.findAccessibleSymbol(fname);
-                } 
-                if (old != null)
+                 //   fname = ("" + p + "%" + f.getName()).ToUpper() + "";
+                  //  old = pkg.findAccessibleSymbol(fname);
+                }
+                bool needsClear = false;
+                if (old == null)
                 {
-                    Console.WriteLine(";;; skip field " + fname + " for " + f);
-                    continue;
+                    old = pkg.intern(new SimpleString(fname));
+                    needsClear = true;
+                   // Console.WriteLine(";;; skip field " + fname + " for " + f);
+                  //  continue;
                 }
                 Console.WriteLine(";;; field " + fname + " for " + f);
-                Symbol sfm = IkvmSite.fieldToInstanceSymbol(fname, pkg, s, f);
+                Symbol sfm = Intern(fname, null, exceptFor, f.getType(), maxDepth-1);// IkvmSite.fieldToInstanceSymbol(fname, pkg, s, f);
+                if (needsClear) sfm.setSymbolValue(null);
+
                 if (maxDepth > 0)
                     {
                         exceptFor.Add(f);
-                        AddMembers(fname, sfm, ikvm.runtime.Util.getInstanceTypeFromClass(f.getType()), exceptFor, maxDepth - 1);
+                        AddMembers(fname, sfm, f.getType(), exceptFor, maxDepth - 1);
                     }
                     else
                     {
@@ -223,8 +270,8 @@ namespace cogbot.ScriptEngines
                         }
                     }
             }
-            java.lang.reflect.Method[] mi = clazz.getDeclaredMethods();
-            for (int i = 0; i < mi.Length; i++)
+            java.lang.reflect.Method[] mi = ci.getDeclaredMethods();
+            if (false) for (int i = 0; i < mi.Length; i++)
             {
                 java.lang.reflect.Method m = mi[i];
                 String fname = ("" + p + "." + m.getName()).ToUpper() + "";
@@ -245,7 +292,7 @@ namespace cogbot.ScriptEngines
                     continue;
                 }
                 Console.WriteLine(";;; method " + p + " as " + fname + " to " + m);
-                LispObject sfm = IkvmSite.methodToInstanceSymbol(fname, pkg, s, m);
+                //LispObject sfm = IkvmSite.methodToInstanceSymbol(fname, pkg, s, m);
             }
         }
 
@@ -258,9 +305,18 @@ namespace cogbot.ScriptEngines
 
         object ScriptInterpreter.Eval(object p)
         {
+            TextForm.debugLevel = 2;
             getInterpreter();
             Console.WriteLine("ABCL EVAL: " + ToStr(p));
-            //if (p is LispObject) return Lisp.eval((LispObject)p);
+            try
+            {
+                if (p is LispObject) return Lisp.eval((LispObject)p);
+            }
+
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
             return p;
         }
 
@@ -303,8 +359,12 @@ namespace cogbot.ScriptEngines
         void StartJLISP()
         {
             StartInstanceBlocked();
-            isReady = true;
             // interpreter.initializeJLisp();
+            Symbol sym = Lisp.PACKAGE_CL_USER.findAccessibleSymbol("ERROR");
+            if (sym != null) sym.setSymbolFunction(new CSThrowError(sym.getSymbolFunction()));
+            sym = Lisp.PACKAGE_SYS.findAccessibleSymbol("%DEBUGGER-HOOK-FUNCTION");
+            if (sym != null) sym.setSymbolFunction(new CSThrowError(sym.getSymbolFunction()));
+            isReady = true;
             interpreter.run();
         }
 

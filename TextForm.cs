@@ -33,9 +33,13 @@ namespace cogbot
 
     public partial class TextForm : Form
     {
+
+        static public TextForm SingleInstance = null;
+        public static int debugLevel = 1;
+        
         public UUID GroupID = UUID.Zero;
-        public Dictionary<UUID, GroupMember> GroupMembers;
-        public Dictionary<UUID, AvatarAppearancePacket> Appearances = new Dictionary<UUID, AvatarAppearancePacket>();
+        public Dictionary<UUID, GroupMember> GroupMembers = null;// new Dictionary<UUID, GroupMember>();
+        public Dictionary<UUID, AvatarAppearancePacket> Appearances = null;// new Dictionary<UUID, AvatarAppearancePacket>();
        // public Dictionary<string, cogbot.Actions.Action> Commands = null;//new Dictionary<string, cogbot.Actions.Action>();
         public bool Running = true;
         public bool GroupCommands = false;
@@ -43,11 +47,9 @@ namespace cogbot
         public UUID MasterKey = UUID.Zero;
         public bool AllowObjectMaster = false;
         //  public cogbot.TextForm ClientManager;
-     //   public VoiceManager VoiceManager;
+        //  public VoiceManager VoiceManager;
         // Shell-like inventory commands need to be aware of the 'current' inventory folder.
         public InventoryFolder CurrentDirectory = null;
-
-        static public TextForm SingleInstance = null;
 
         public GridClient client;
         public OutputDelegate outputDelegate;
@@ -78,11 +80,14 @@ namespace cogbot
         public InventoryManager Manager;
         public Configuration config;
         public String taskInterperterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
-        public static int debugLevel = 1;
+
         public TextForm()
         {
             SingleInstance = this;
             client = new GridClient();
+
+            GroupMembers = new Dictionary<UUID, GroupMember>();
+            Appearances = new Dictionary<UUID, AvatarAppearancePacket>();
 
             client.Settings.ALWAYS_DECODE_OBJECTS = true;
             client.Settings.ALWAYS_REQUEST_OBJECTS = true;
@@ -149,13 +154,15 @@ namespace cogbot
             actions["stop-following"] = follow;
             tutorials = new Dictionary<string, cogbot.Tutorials.Tutorial>();
             tutorials["tutorial1"] = new Tutorials.Tutorial1(this);
-            RegisterAllCommands(Assembly.GetExecutingAssembly());
+    
             describeNext = true;
 
             InitializeComponent();
-
+            Show();
             consoleInputText.Enabled = true;
             consoleInputText.Focus();
+           // RegisterAllCommands(Assembly.GetExecutingAssembly());
+
             // Start the server
             startSocketListener();
             extraHooks();
@@ -352,7 +359,7 @@ namespace cogbot
         void Objects_OnObjectKilled(Simulator simulator, uint objectID)
         {
             //throw new NotImplementedException();
-            output("TextForm Objects_OnObjectKilled: ");
+            output("TextForm Objects_OnObjectKilled: "+ objectID);
         }
 
         void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
@@ -979,7 +986,7 @@ namespace cogbot
         public void describeAll()
         {
             foreach (string dname in describers.Keys)
-                describers[dname].Invoke(false);
+                describers[dname].Invoke(true);
         }
 
         public void describeSituation()
@@ -1381,6 +1388,19 @@ namespace cogbot
             return actReport;
         }
 
+        /// <summary>
+        /// (thisClient.XML2Lisp2 "http://myserver/myservice/?q=" chatstring) 
+        /// </summary>
+        /// <param name="URL"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+         public string XML2Lisp2(string URL, string args)
+         {
+            string xcmd = URL + args;
+            return XML2Lisp(xcmd);             
+         } // method: XML2Lisp2
+
+
         public string XML2Lisp(string xcmd)
         {
             try
@@ -1504,7 +1524,7 @@ namespace cogbot
             try
             {
                 taskQueue = new Queue();
-                output("Start Loading TaskInterperter ... " + taskInterperterType + " \n");
+                output("Start Loading TaskInterperter ... '" + taskInterperterType + "' \n");
                 taskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
                 taskInterperter.LoadFile("boot.lisp");
                 taskInterperter.LoadFile("extra.lisp");
@@ -1514,7 +1534,7 @@ namespace cogbot
                 {
                     enqueueLispTask(config.startupLisp);
                 }
-                output("Completed Loading TaskInterperter \n");
+                output("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
             }
             catch (Exception e)
             {
@@ -1780,9 +1800,7 @@ namespace cogbot
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine(e.ToString() +
-                            e.GetBaseException().ToString() + "\r\n In " + t.Name);
-
+                            output("RegisterAllCommands: " + e.ToString() + "\n" + e.InnerException + "\n In " + t.Name);
                         }
                     }
                 }
@@ -1801,6 +1819,7 @@ namespace cogbot
             if (!actions.ContainsKey(name))
             {
                 actions.Add(name, command);
+                command.Name = name;
             }
             else
             {
@@ -1820,12 +1839,12 @@ namespace cogbot
 
         internal void DoCommandAll(string line, UUID uUID)
         {
-            throw new Exception("The method or operation is not implemented.");
+            ExecuteCommand(line);
         }
 
         internal void LogOut(GridClient Client)
         {
-            throw new Exception("The method or operation is not implemented.");
+            Client.Network.Logout();
         }
     }
 
