@@ -29,6 +29,16 @@ namespace cogbot.ScriptEngines
                 String s = "DESC:\r\n" + cond.getDescription().writeToString() + "\r\nMESG:\r\n" + cond.getMessage() + "\r\nRPRT:\r\n" + cond.getConditionReport() + "\r\n";
                 System.Console.WriteLine(s);
                // if (true) return previous.execute(args);
+                if (args[0] is UndefinedFunction)
+                {
+                    UndefinedFunction u = (UndefinedFunction)args[0];
+                    return ABCLInterpreter.COMMON_ABCLInterpreter.makeFunction(u.getCellName());
+                }
+                if (args[0] is UnboundVariable)
+                {
+                    UnboundVariable u = (UnboundVariable)args[0];
+                    return ABCLInterpreter.COMMON_ABCLInterpreter.makeVariable(u.getCellName());
+                }
                 throw new Exception(s);
             }
             throw new Exception(Lisp.javaString(args[0]));
@@ -36,10 +46,50 @@ namespace cogbot.ScriptEngines
 
     }
 
+
+    class LateSymbolPrimitive : Primitive
+    {
+        Symbol previous;
+        public LateSymbolPrimitive(Symbol prev)
+            : base(prev.getName(), "&rest arguments")
+        {
+            previous = prev;
+            prev.setSymbolFunction(this);
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="args"></param>
+        public override LispObject execute(LispObject[] args)
+        {
+            return ABCLInterpreter.COMMON_ABCLInterpreter.clojEval(this,previous,args);
+        } // method: execute
+
+    }
+
     public class ABCLInterpreter : ScriptInterpreter
     {
 
- 
+        /// <summary>
+        /// (ON-CHAT (@ "My Bot") (@ "hi"))
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public Object findSymbol(object obj,String s) {
+            Package pkg = CurrentPackage();
+            if (obj == null)
+            {
+                LispObject lo = pkg.findAccessibleSymbol(s);
+                if (lo is Symbol)
+                {
+                    return lo.getSymbolValue().javaInstance();
+                }
+
+            }
+            throw new Exception("no function binding for " + s);
+        } // method: findSymbol
+
+        static public ABCLInterpreter COMMON_ABCLInterpreter = null;
 
         private java.io.OutputStream getOutputStream()
         {
@@ -69,6 +119,7 @@ namespace cogbot.ScriptEngines
         public ABCLInterpreter()
         {
             buffer = new TextReaderStringBuffer(this);
+            COMMON_ABCLInterpreter = this;
         }
         //
         readonly static public String VersionString = "Winform REPL";
@@ -419,9 +470,100 @@ namespace cogbot.ScriptEngines
             }
             return interpreter;
 
+        }       
+
+        internal LispObject makeFunction(LispObject lispObject)
+        {
+            return new LateSymbolPrimitive((Symbol)lispObject);
         }
-        
-       }
+
+        internal LispObject makeVariable(LispObject lispObject)
+        {
+            Console.WriteLine("faking " + lispObject);
+            return lispObject;
+            //throw new Exception("The method or operation is not implemented.");
+        }
+
+        internal LispObject clojEval(LateSymbolPrimitive lsp, Symbol previous, LispObject[] args)
+        {
+            LispObject pv = previous.getSymbolValue();
+            LispObject pf = previous.getSymbolFunction();
+            if (lsp == pf)
+            {
+
+            }
+            String s = ((Symbol)previous).getName();
+            return clojEval(lsp, s, args);
+        }
+        internal Object clojExecute(object target, String s, LispObject[] args)
+        {
+            int index = 0;
+            int found = -1;
+            char[] cs = s.ToCharArray();
+            char c = cs[index];
+            while (index < cs.Length && found==-1)
+            {
+                switch (c)
+                {
+                    case ':':
+                    case '/':
+                    case '.':
+                        found = index;
+                        break;
+
+                    default:
+                        index++;
+                        break;
+                } // switch
+            }
+
+            int indexOf = s.IndexOf(".");
+            while (indexOf > 0)
+            {
+                String s1 = s.Substring(0, indexOf - 1);
+                target = findSymbol(target, s1);
+                s = s.Substring(indexOf + 1);
+                indexOf = s.IndexOf(".");
+            }
+            throw new Exception("no function binding for " + target + " .  " + s +  " arg= " + args);
+        }
+
+        internal LispObject clojEval(LateSymbolPrimitive lsp, String s, LispObject[] args)
+        {
+            Object target = null;
+            int indexOf = s.IndexOf(".");
+            if (indexOf > 0)
+            {
+                String s1 = s.Substring(0, indexOf );
+                target = findSymbol(target, s1);
+                if (target != null)
+                {
+                   ((ScriptInterpreter)this).Intern(s1, target);
+                   
+                }
+                Package pkg = CurrentPackage();
+                Symbol sym = pkg.findAccessibleSymbol(s);
+                LispObject sf = sym.getSymbolFunction();
+                if (sf!=null)
+                {
+                    if (sf!=lsp)
+                    {
+                        return sf.execute(args);
+                    }
+
+                }
+
+                s = s.Substring(indexOf + 1);
+                Object o = clojExecute(target, s, args);
+                return new JavaObject(o);
+            } else {
+            String s1 = s;
+            target = findSymbol(target, s1);
+            Object o = clojExecute(target, "", args);
+            return new JavaObject(o);
+            }
+        }
+    }
 
     public class WinformInputStream : java.io.InputStream
     {
