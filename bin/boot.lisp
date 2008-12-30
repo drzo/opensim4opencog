@@ -998,4 +998,4 @@
 		(__make-interface ~type ~method-name f ~data))))
 
 
-(def-macro clojure (&rest args) args)
+(def-macro (cloj &rest args) args)
