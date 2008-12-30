@@ -996,3 +996,6 @@
 		method-name (sym.Substring (+ cp 1)))
 	`(let (f (fn (Me ~@args) ~@body))
 		(__make-interface ~type ~method-name f ~data))))
+
+
+(def-macro clojure (&rest args) args)

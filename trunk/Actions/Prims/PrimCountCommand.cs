@@ -20,10 +20,11 @@ namespace cogbot.Actions
             {
                 for (int i = 0; i < client.Network.Simulators.Count; i++)
                 {
-                    int avcount = client.Network.Simulators[i].ObjectsAvatars.Count;
-                    int primcount = client.Network.Simulators[i].ObjectsPrimitives.Count;
+                    Simulator sim = client.Network.Simulators[i];
+                    int avcount = sim.ObjectsAvatars.Count;
+                    int primcount = sim.ObjectsPrimitives.Count;
 
-                    WriteLine("{0} (Avatars: {1} Primitives: {2})", 
+                    WriteLine("" + sim + " {0} (Avatars: {1} Primitives: {2})", 
                         client.Network.Simulators[i].Name, avcount, primcount);
 
                     count += avcount;

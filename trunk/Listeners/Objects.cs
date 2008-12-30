@@ -25,6 +25,7 @@ namespace cogbot.Listeners
         public Dictionary<string, string> shortNames;
         public Dictionary<string, string> reverseShortNames;
         public List<string> numberedObjects;
+        Simulator sim;
 
         public Objects(TextForm parent)
             : base(parent)
@@ -53,6 +54,7 @@ namespace cogbot.Listeners
 
         void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties properties)
         {
+            sim = simulator;
             lock (pendingPrims)
             {
                 if (pendingPrims.ContainsKey(properties.ObjectID))
@@ -83,6 +85,7 @@ namespace cogbot.Listeners
 
         void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
         {
+            sim = simulator;
             try
             {
                 lock (newLock)
@@ -165,6 +168,8 @@ namespace cogbot.Listeners
 
         public void describePrimToAI(Primitive prim)
         {
+
+            updatePrimProps(prim);
             if (prim.Properties.Name != null)
                {
                  //parent.enqueueLispTask("(on-prim-description '(" + prim.Properties.Name + ") '" + prim.Properties.Description + "' )");
@@ -180,6 +185,14 @@ namespace cogbot.Listeners
               }
             }
 
+        private void updatePrimProps(Primitive prim)
+        {
+            if (/*prim.Properties == null ||*/prim.Properties.Name == null ||prim.Properties.Name.Equals("") )
+            {
+                client.Objects.SelectObject(sim, prim.LocalID);
+            }
+        }
+
         public int comp(Primitive p1, Primitive p2)
         {
             return (int)(getFitness(p1) - getFitness(p2));
@@ -188,10 +201,19 @@ namespace cogbot.Listeners
         public List<Primitive> getPrimitives(int num)
         {
             List<Primitive> ret = new List<Primitive>();
+            if (prims.Count == 0)
+            {
+                            foreach (Primitive prim in sim.ObjectsPrimitives.Dictionary.Values)
+                                    {
+                                        ret.Add(prim);
+                                    }
+            }
+
             foreach (Primitive prim in prims.Values)
             {
                 ret.Add(prim);
             }
+
 
             if (ret.Count <= num)
             {
