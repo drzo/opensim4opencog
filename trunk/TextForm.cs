@@ -161,7 +161,7 @@ namespace cogbot
             Show();
             consoleInputText.Enabled = true;
             consoleInputText.Focus();
-           // RegisterAllCommands(Assembly.GetExecutingAssembly());
+            RegisterAllCommands(Assembly.GetExecutingAssembly());
 
             // Start the server
             startSocketListener();
