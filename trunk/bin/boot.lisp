@@ -999,3 +999,4 @@
 
 
 (def-macro (cloj &rest args) args)
+(def-macro (setj &rest args) `(set ~@args))

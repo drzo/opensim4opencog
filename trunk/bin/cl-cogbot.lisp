@@ -1,5 +1,12 @@
 ; Note: to find event generators in C# code look for
 ;   enqueueLispTask("(on
+#|
+(defmacro jinvoke 
+  (methodname class instance &optional inst &rest args) 
+ {if (eq inst instance)
+   `(jcall ,methodname ,inst ,@args)
+   `(jstatic ,methodname ,class ,@args)))
+|#
 
 (defun SYMBOL-JOBJECT (sname osymbol oclass &optional (depth 3))
  (let* ((wasbound (boundp osymbol))(lastbound (if wasbound (symbol-value osymbol))))
@@ -20,25 +27,43 @@
 	   ;;(when (> depth 0) (symbol-jobject (symbol-name sym) sym  (jcall "getType" fs) (- depth 1)))
 	   (eval `(define-symbol-macro ,sym ,jff))
 	      
-	   ))
-	
+	   ))	
+		
 	(dolist (fs oms)
-          (let* ((mn (jcall "getName" fs))
-	         (sym (intern  (string-upcase (concatenate 'string sname "." mn))))
+          (let* ((mn (jcall "getName" fs))	         
 		 (isstatic (jstatic "isStatic" "java.lang.reflect.Modifier" (jcall "getModifiers" fs)))
+		 (sym (intern  (string-upcase (concatenate 'string sname (if isstatic "/" ".") mn))))
 		 jff)
-           (jcall "setAccessible" fs T)
     	   (setq jff 
 	    (if isstatic 
              `(defun ,sym (&rest args) (eval `(jstatic ,,mn (jcall "getClass" ,,osymbol) ',@args )))
              `(defun ,sym (&rest args) (eval `(jcall ,,mn ,,osymbol ',@args )))
-	     ))
+	     ))	     
+          ;;(setq jff `(defun ,sym (&rest args) (eval `(jinvoke ,,mn (jcall "getClass" ,,osymbol) ,,osymbol ',@args ))))
 	   (print jff)
 	   (eval jff)
-	   ))
-    (if wasbound (setq osymbol lastbound) (makunbound osymbol))
+	 ))
+
+	(if wasbound (setq osymbol lastbound) (makunbound osymbol))
      )))
 
+;; (ON-CHAT (@ "My Bot") (@ "hi"))
+
+;;  (let* 
+;;     ((val (eval value))
+;;      (oclass (jcall "getClass" (MAKE-IMMEDIATE-OBJECT   (MAKE-IMMEDIATE-OBJECT  val))))
+;;   (SYMBOL-JOBJECT (symbol-name osymbol) osymbol oclass)
+(defmacro setj (osymbol value)
+  `(progn (setq ,osymbol ,value)
+    (SYMBOL-JOBJECT ,(symbol-name osymbol) ',osymbol (jcall "getClass" (MAKE-IMMEDIATE-OBJECT (MAKE-IMMEDIATE-OBJECT ,osymbol))))
+    ,osymbol))
+  
+;; dotLisp compat
+(defvar *set-funvalue* (symbol-function 'set))
+'(defmacro set (sym value)
+  (if (symbolp sym) 
+    `(setq ,sym ,value)
+    `(setq ,(eval sym) ,value)))
 
 (defun seq-to-list (seq)
   (let ((len (- (length seq) 1)) result)
