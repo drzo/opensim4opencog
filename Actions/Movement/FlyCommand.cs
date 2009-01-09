@@ -21,12 +21,12 @@ namespace cogbot.Actions
 
             if (start)
             {
-                client.Self.Fly(true);
+                Client.Self.Fly(true);
                 return "Started flying";
             }
             else
             {
-                client.Self.Fly(false);
+                Client.Self.Fly(false);
                 return "Stopped flying";
             }
         }

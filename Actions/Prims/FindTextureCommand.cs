@@ -24,7 +24,7 @@ namespace cogbot.Actions
             if (Int32.TryParse(args[0], out faceIndex) &&
                 UUID.TryParse(args[1], out textureID))
             {
-                client.Network.CurrentSim.ObjectsPrimitives.ForEach(
+                Client.Network.CurrentSim.ObjectsPrimitives.ForEach(
                     delegate(Primitive prim)
                     {
                         if (prim.Textures != null && prim.Textures.FaceTextures[faceIndex] != null)
@@ -33,7 +33,7 @@ namespace cogbot.Actions
                             {
                                 Logger.Log(String.Format("Primitive {0} ({1}) has face index {2} set to {3}",
                                     prim.ID.ToString(), prim.LocalID, faceIndex, textureID.ToString()),
-                                    Helpers.LogLevel.Info, client);
+                                    Helpers.LogLevel.Info, Client);
                             }
                         }
                     }

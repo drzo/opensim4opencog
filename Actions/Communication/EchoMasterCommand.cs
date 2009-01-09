@@ -20,13 +20,13 @@ namespace cogbot.Actions
 			if (!Active)
 			{
 				Active = true;
-                client.Self.OnChat += new AgentManager.ChatCallback(Self_OnChat);
+                Client.Self.OnChat += new AgentManager.ChatCallback(Self_OnChat);
 				return "Echoing is now on.";
 			}
 			else
 			{
 				Active = false;
-                client.Self.OnChat -= new AgentManager.ChatCallback(Self_OnChat);
+                Client.Self.OnChat -= new AgentManager.ChatCallback(Self_OnChat);
 				return "Echoing is now off.";
 			}
 		}
@@ -35,7 +35,7 @@ namespace cogbot.Actions
             ChatSourceType sourcetype, string fromName, UUID id, UUID ownerid, Vector3 position)
 		{
             if (message.Length > 0 && (parent.MasterKey == id || (parent.MasterName == fromName && !parent.AllowObjectMaster)))
-			    client.Self.Chat(message, 0, ChatType.Normal);
+			    Client.Self.Chat(message, 0, ChatType.Normal);
 		}
     }
 }

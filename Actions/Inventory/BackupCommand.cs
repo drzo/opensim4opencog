@@ -9,6 +9,7 @@ using System.Xml.Serialization;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
+
 namespace cogbot.Actions
 {
     public class QueuedDownloadInfo
@@ -108,11 +109,11 @@ namespace cogbot.Actions
 
         #endregion Properties
 
-        public BackupCommand(cogbot.TextForm testClient)
+        public BackupCommand(TextForm testClient)
         {
             Name = "backuptext";
             Description = "Backup inventory to a folder on your hard drive. Usage: " + Name + " [to <directory>] | [abort] | [status]";
-             testClient.client.Assets.OnAssetReceived += new AssetManager.AssetReceivedCallback(Assets_OnAssetReceived);
+            testClient .client.Assets.OnAssetReceived += new AssetManager.AssetReceivedCallback(Assets_OnAssetReceived);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
@@ -164,7 +165,7 @@ namespace cogbot.Actions
         void bwQueueRunner_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             QueueWorker = null;
-            WriteLine(BackgroundBackupStatus);
+            Console.WriteLine(BackgroundBackupStatus);
         }
 
         void bwQueueRunner_DoWork(object sender, DoWorkEventArgs e)
@@ -180,9 +181,9 @@ namespace cogbot.Actions
                     {
                         if ((qdi.WhenRequested + TimeSpan.FromSeconds(60)) < DateTime.Now)
                         {
-                            Logger.DebugLog(Name + ": timeout on asset " + qdi.AssetID.ToString(), client);
+                            Logger.DebugLog(Name + ": timeout on asset " + qdi.AssetID.ToString(), Client);
                             // submit request again
-                            qdi.TransferID = client.Assets.RequestInventoryAsset(
+                            qdi.TransferID = Client.Assets.RequestInventoryAsset(
                                 qdi.AssetID, qdi.ItemID, qdi.TaskID, qdi.OwnerID, qdi.Type, true);
                             qdi.WhenRequested = DateTime.Now;
                             qdi.IsRequested = true;
@@ -199,7 +200,7 @@ namespace cogbot.Actions
                         QueuedDownloadInfo qdi = PendingDownloads.Dequeue();
                         qdi.WhenRequested = DateTime.Now;
                         qdi.IsRequested = true;
-                        qdi.TransferID = client.Assets.RequestInventoryAsset(
+                        qdi.TransferID = Client.Assets.RequestInventoryAsset(
                             qdi.AssetID, qdi.ItemID, qdi.TaskID, qdi.OwnerID, qdi.Type, true);
 
                         lock (CurrentDownloads) CurrentDownloads.Add(qdi);
@@ -208,7 +209,7 @@ namespace cogbot.Actions
 
                 if (CurrentDownloads.Count == 0 && PendingDownloads.Count == 0 && BackupWorker == null)
                 {
-                    Logger.DebugLog(Name + ": both transfer queues empty AND inventory walking thread is done", client);
+                    Logger.DebugLog(Name + ": both transfer queues empty AND inventory walking thread is done", Client);
                     return;
                 }
 
@@ -218,7 +219,7 @@ namespace cogbot.Actions
 
         void bwBackup_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            WriteLine(Name + ": Inventory walking thread done.");
+            Console.WriteLine(Name + ": Inventory walking thread done.");
             BackupWorker = null;
         }
 
@@ -233,13 +234,13 @@ namespace cogbot.Actions
             lock (CurrentDownloads) CurrentDownloads.Clear();
 
             // FIXME:
-            //client.Inventory.RequestFolderContents(client.Inventory.Store.RootFolder.UUID, client.Self.AgentID, 
+            //Client.Inventory.RequestFolderContents(Client.Inventory.Store.RootFolder.UUID, Client.Self.AgentID, 
             //    true, true, false, InventorySortOrder.ByName);
 
             DirectoryInfo di = new DirectoryInfo(args[1]);
 
             // recurse on the root folder into the entire inventory
-            BackupFolder(client.Inventory.Store.RootNode, di.FullName);
+            BackupFolder(Client.Inventory.Store.RootNode, di.FullName);
         }
 
         /// <summary>
@@ -252,7 +253,7 @@ namespace cogbot.Actions
             StringBuilder sbRequests = new StringBuilder();
 
             // FIXME:
-            //client.Inventory.RequestFolderContents(folder.Data.UUID, client.Self.AgentID, true, true, false, 
+            //Client.Inventory.RequestFolderContents(folder.Data.UUID, Client.Self.AgentID, true, true, false, 
             //    InventorySortOrder.ByName);
 
             // first scan this folder for text
@@ -281,7 +282,7 @@ namespace cogbot.Actions
 
                         // create the new qdi
                         QueuedDownloadInfo qdi = new QueuedDownloadInfo(sPath, ii.AssetUUID, iNode.Data.UUID, UUID.Zero,
-                            client.Self.AgentID, ii.AssetType);
+                            Client.Self.AgentID, ii.AssetType);
 
                         // add it to the queue
                         lock (PendingDownloads)
@@ -328,13 +329,13 @@ namespace cogbot.Actions
 
                         // write out the file
                         File.WriteAllBytes(r.FileName, asset.AssetData);
-                        Logger.DebugLog(Name + " Wrote: " + r.FileName, client);
+                        Logger.DebugLog(Name + " Wrote: " + r.FileName, Client);
                         TextItemsTransferred++;
                     }
                     else
                     {
                         TextItemErrors++;
-                        WriteLine("{0}: Download of asset {1} ({2}) failed with status {3}", Name, r.FileName,
+                        Console.WriteLine("{0}: Download of asset {1} ({2}) failed with status {3}", Name, r.FileName,
                             r.AssetID.ToString(), asset.Status.ToString());
                     }
 

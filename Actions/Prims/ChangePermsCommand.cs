@@ -60,26 +60,26 @@ namespace cogbot.Actions
                 }
             }
 
-            Logger.DebugLog("Using PermissionMask: " + Perms.ToString(), client);
+            Logger.DebugLog("Using PermissionMask: " + Perms.ToString(), Client);
 
             // Find the requested prim
-            rootPrim = client.Network.CurrentSim.ObjectsPrimitives.Find(delegate(Primitive prim) { return prim.ID == rootID; });
+            rootPrim = Client.Network.CurrentSim.ObjectsPrimitives.Find(delegate(Primitive prim) { return prim.ID == rootID; });
             if (rootPrim == null)
                 return "Cannot find requested prim " + rootID.ToString();
             else
-                Logger.DebugLog("Found requested prim " + rootPrim.ID.ToString(), client);
+                Logger.DebugLog("Found requested prim " + rootPrim.ID.ToString(), Client);
 
             if (rootPrim.ParentID != 0)
             {
                 // This is not actually a root prim, find the root
-                if (!client.Network.CurrentSim.ObjectsPrimitives.TryGetValue(rootPrim.ParentID, out rootPrim))
+                if (!Client.Network.CurrentSim.ObjectsPrimitives.TryGetValue(rootPrim.ParentID, out rootPrim))
                     return "Cannot find root prim for requested object";
                 else
-                    Logger.DebugLog("Set root prim to " + rootPrim.ID.ToString(), client);
+                    Logger.DebugLog("Set root prim to " + rootPrim.ID.ToString(), Client);
             }
 
             // Find all of the child objects linked to this root
-            childPrims = client.Network.CurrentSim.ObjectsPrimitives.FindAll(delegate(Primitive prim) { return prim.ParentID == rootPrim.LocalID; });
+            childPrims = Client.Network.CurrentSim.ObjectsPrimitives.FindAll(delegate(Primitive prim) { return prim.ParentID == rootPrim.LocalID; });
 
             // Build a dictionary of primitives for referencing later
             Objects[rootPrim.ID] = rootPrim;
@@ -96,9 +96,9 @@ namespace cogbot.Actions
 
             PermCount = 0;
             if ((Perms & PermissionMask.Modify) == PermissionMask.Modify)
-                client.Objects.SetPermissions(client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Modify, true);
+                Client.Objects.SetPermissions(Client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Modify, true);
             else
-                client.Objects.SetPermissions(client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Modify, false);
+                Client.Objects.SetPermissions(Client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Modify, false);
             PermsSent = true;
 
             if (!GotPermissionsEvent.WaitOne(1000 * 30, false))
@@ -106,9 +106,9 @@ namespace cogbot.Actions
 
             PermCount = 0;
             if ((Perms & PermissionMask.Copy) == PermissionMask.Copy)
-                client.Objects.SetPermissions(client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Copy, true);
+                Client.Objects.SetPermissions(Client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Copy, true);
             else
-                client.Objects.SetPermissions(client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Copy, false);
+                Client.Objects.SetPermissions(Client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Copy, false);
             PermsSent = true;
 
             if (!GotPermissionsEvent.WaitOne(1000 * 30, false))
@@ -116,9 +116,9 @@ namespace cogbot.Actions
 
             PermCount = 0;
             if ((Perms & PermissionMask.Transfer) == PermissionMask.Transfer)
-                client.Objects.SetPermissions(client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Transfer, true);
+                Client.Objects.SetPermissions(Client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Transfer, true);
             else
-                client.Objects.SetPermissions(client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Transfer, false);
+                Client.Objects.SetPermissions(Client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Transfer, false);
             PermsSent = true;
 
             if (!GotPermissionsEvent.WaitOne(1000 * 30, false))
@@ -132,7 +132,7 @@ namespace cogbot.Actions
             {
                 if ((prim.Flags & PrimFlags.InventoryEmpty) == 0)
                 {
-                    List<InventoryBase> items = client.Inventory.GetTaskInventory(prim.ID, prim.LocalID, 1000 * 30);
+                    List<InventoryBase> items = Client.Inventory.GetTaskInventory(prim.ID, prim.LocalID, 1000 * 30);
 
                     if (items != null)
                     {
@@ -143,7 +143,7 @@ namespace cogbot.Actions
                                 InventoryItem item = (InventoryItem)items[i];
                                 item.Permissions.NextOwnerMask = Perms;
 
-                                client.Inventory.UpdateTaskInventory(prim.LocalID, item);
+                                Client.Inventory.UpdateTaskInventory(prim.LocalID, item);
                                 ++taskItems;
                             }
                         }

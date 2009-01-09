@@ -99,7 +99,7 @@ namespace cogbot.Actions
                     currentPrim = linkset.RootPrim;
                     // HACK: Import the structure just above our head
                     // We need a more elaborate solution for importing with relative or absolute offsets
-                    linkset.RootPrim.Position = client.Self.SimPosition;
+                    linkset.RootPrim.Position = Client.Self.SimPosition;
                     linkset.RootPrim.Position.Z += 3.0f;
                     currentPosition = linkset.RootPrim.Position;
 
@@ -107,13 +107,13 @@ namespace cogbot.Actions
                     Quaternion rootRotation = linkset.RootPrim.Rotation;
                     linkset.RootPrim.Rotation = Quaternion.Identity;
 
-                    client.Objects.AddPrim(client.Network.CurrentSim, linkset.RootPrim.PrimData, GroupID,
+                    Client.Objects.AddPrim(Client.Network.CurrentSim, linkset.RootPrim.PrimData, GroupID,
                         linkset.RootPrim.Position, linkset.RootPrim.Scale, linkset.RootPrim.Rotation);
 
                     if (!primDone.WaitOne(10000, false))
                         return "Rez failed, timed out while creating the root prim.";
 
-                    client.Objects.SetPosition(client.Network.CurrentSim, primsCreated[primsCreated.Count - 1].LocalID, linkset.RootPrim.Position);
+                    Client.Objects.SetPosition(Client.Network.CurrentSim, primsCreated[primsCreated.Count - 1].LocalID, linkset.RootPrim.Position);
 
                     state = ImporterState.RezzingChildren;
 
@@ -123,12 +123,12 @@ namespace cogbot.Actions
                         currentPrim = prim;
                         currentPosition = prim.Position + linkset.RootPrim.Position;
 
-                        client.Objects.AddPrim(client.Network.CurrentSim, prim.PrimData, GroupID, currentPosition,
+                        Client.Objects.AddPrim(Client.Network.CurrentSim, prim.PrimData, GroupID, currentPosition,
                             prim.Scale, prim.Rotation);
 
                         if (!primDone.WaitOne(10000, false))
                             return "Rez failed, timed out while creating child prim.";
-                        client.Objects.SetPosition(client.Network.CurrentSim, primsCreated[primsCreated.Count - 1].LocalID, currentPosition);
+                        Client.Objects.SetPosition(Client.Network.CurrentSim, primsCreated[primsCreated.Count - 1].LocalID, currentPosition);
 
                     }
 
@@ -149,21 +149,21 @@ namespace cogbot.Actions
 
                         // Link and set the permissions + rotation
                         state = ImporterState.Linking;
-                        client.Objects.LinkPrims(client.Network.CurrentSim, linkQueue);
+                        Client.Objects.LinkPrims(Client.Network.CurrentSim, linkQueue);
 
                         if (primDone.WaitOne(1000 * linkset.Children.Count, false))
-                            client.Objects.SetRotation(client.Network.CurrentSim, rootLocalID, rootRotation);
+                            Client.Objects.SetRotation(Client.Network.CurrentSim, rootLocalID, rootRotation);
                         else
                             WriteLine("Warning: Failed to link {0} prims", linkQueue.Count);
 
                     }
                     else
                     {
-                        client.Objects.SetRotation(client.Network.CurrentSim, rootLocalID, rootRotation);
+                        Client.Objects.SetRotation(Client.Network.CurrentSim, rootLocalID, rootRotation);
                     }
                     
                     // Set permissions on newly created prims
-                    client.Objects.SetPermissions(client.Network.CurrentSim, primIDs,
+                    Client.Objects.SetPermissions(Client.Network.CurrentSim, primIDs,
                         PermissionWho.Everyone | PermissionWho.Group | PermissionWho.NextOwner,
                         PermissionMask.All, true);
                     
@@ -197,23 +197,23 @@ namespace cogbot.Actions
                     {
                         WriteLine("Setting properties for " + prim.LocalID);
                         // TODO: Is there a way to set all of this at once, and update more ObjectProperties stuff?
-                        client.Objects.SetPosition(simulator, prim.LocalID, currentPosition);
-                        client.Objects.SetTextures(simulator, prim.LocalID, currentPrim.Textures);
+                        Client.Objects.SetPosition(simulator, prim.LocalID, currentPosition);
+                        Client.Objects.SetTextures(simulator, prim.LocalID, currentPrim.Textures);
 
                         if (currentPrim.Light.Intensity > 0) {
-                            client.Objects.SetLight(simulator, prim.LocalID, currentPrim.Light);
+                            Client.Objects.SetLight(simulator, prim.LocalID, currentPrim.Light);
                         }
 
-                        client.Objects.SetFlexible(simulator, prim.LocalID, currentPrim.Flexible);
+                        Client.Objects.SetFlexible(simulator, prim.LocalID, currentPrim.Flexible);
  
                         if (currentPrim.Sculpt.SculptTexture != UUID.Zero) {
-                            client.Objects.SetSculpt(simulator, prim.LocalID, currentPrim.Sculpt);
+                            Client.Objects.SetSculpt(simulator, prim.LocalID, currentPrim.Sculpt);
                         }
 
                         if (!String.IsNullOrEmpty(currentPrim.Properties.Name))
-                            client.Objects.SetName(simulator, prim.LocalID, currentPrim.Properties.Name);
+                            Client.Objects.SetName(simulator, prim.LocalID, currentPrim.Properties.Name);
                         if (!String.IsNullOrEmpty(currentPrim.Properties.Description))
-                            client.Objects.SetDescription(simulator, prim.LocalID, currentPrim.Properties.Description);
+                            Client.Objects.SetDescription(simulator, prim.LocalID, currentPrim.Properties.Description);
 
                         primsCreated.Add(prim);
                         primDone.Set();

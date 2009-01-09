@@ -39,9 +39,22 @@ namespace cogbot.ScriptEngines
                     UnboundVariable u = (UnboundVariable)args[0];
                     return ABCLInterpreter.COMMON_ABCLInterpreter.makeVariable(u.getCellName());
                 }
-                throw new Exception(s);
+
+                lock (ABCLInterpreter.SubThreadInDebugMutex)
+                {
+                    bool wasDebugging = ABCLInterpreter.IsSubThreadInDebug;
+                    try
+                    {
+                        ABCLInterpreter.IsSubThreadInDebug = true;
+                        previous.execute(args); //throw new ConditionThrowable(cond);
+                    }
+                    finally
+                    {
+                        ABCLInterpreter.IsSubThreadInDebug = wasDebugging;
+                    }
+                }
             }
-            throw new Exception(Lisp.javaString(args[0]));
+            throw new ConditionThrowable(Lisp.javaString(args[0]));
         } // method: execute
 
     }
@@ -67,9 +80,31 @@ namespace cogbot.ScriptEngines
 
     }
 
+    class CSPrimitive : Primitive
+    {
+        Delegate dynamicDelagate;
+        public CSPrimitive(String symbolName, Delegate lispObjectDelagate)
+            : base(symbolName, "&rest arguments")
+        {
+            dynamicDelagate = lispObjectDelagate;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="args"></param>
+        public override LispObject execute(LispObject[] args)
+        {
+            return (LispObject)dynamicDelagate.DynamicInvoke(args);
+        } // method: execute
+
+    }
+
+
     public class ABCLInterpreter : ScriptInterpreter
     {
 
+        public static bool IsSubThreadInDebug = false;
+        public static System.Threading.Mutex SubThreadInDebugMutex = new System.Threading.Mutex();
         /// <summary>
         /// (ON-CHAT (@ "My Bot") (@ "hi"))
         /// </summary>
@@ -86,7 +121,7 @@ namespace cogbot.ScriptEngines
                 }
 
             }
-            throw new Exception("no function binding for " + s);
+            throw new ConditionThrowable("no function binding for " + s);
         } // method: findSymbol
 
         static public ABCLInterpreter COMMON_ABCLInterpreter = null;
@@ -231,6 +266,7 @@ namespace cogbot.ScriptEngines
         }
 
         static public List<object> allExceptFor = new List<object>();
+        static public List<object> subTreeDoneFor = new List<object>();
 
         void ScriptInterpreter.Intern(string p, object globalcogbotTextForm)
         {
@@ -248,13 +284,16 @@ namespace cogbot.ScriptEngines
                 if (sv.javaInstance() == globalcogbotTextForm) return s;
             }
             Symbol fun = pkg.findAccessibleSymbol("SYMBOL-JOBJECT");
-            if (fun != null)
+            String mask = p + " " + ic.getName();
+            if (fun != null && !allExceptFor.Contains(mask))
             {
+                allExceptFor.Add(mask);
                 LispObject vtemp = s.getSymbolValue();
                 s.setSymbolValue(s);
                 JavaObject jclass = new JavaObject(ic);
                 Lisp.eval(Lisp.list4(fun, new SimpleString(p),s,jclass));
                 s.setSymbolValue(vtemp);
+                depth++;
             }
             if (globalcogbotTextForm != null)
             {
@@ -264,6 +303,9 @@ namespace cogbot.ScriptEngines
                 if (exceptFor.Contains(globalcogbotTextForm)) return s;
                 exceptFor.Add(globalcogbotTextForm);
             }
+
+            if (true) return s;
+
             String ns = ic.getName();
             if (!useClassname(ns)) return s;
             if (depth > 0) AddMembers(p, s, ic, exceptFor, depth-1);
@@ -391,10 +433,10 @@ namespace cogbot.ScriptEngines
             return ToStr(x);
         }
 
-        public class JRunnable : java.lang.Runnable
+        public class JRunnableLisp : java.lang.Runnable
         {
             ABCLInterpreter engine;
-            public JRunnable(ABCLInterpreter lengine)
+            public JRunnableLisp(ABCLInterpreter lengine)
             {
                 engine = lengine;
             }
@@ -426,7 +468,7 @@ namespace cogbot.ScriptEngines
                 /// outStream = getOutputStream();
                 //  inStream = getInputStream();
                 //                interpreter = Interpreter.createJLispInstance(inStream, outStream, ".", VersionString);
-                interpreter = Interpreter.createDefaultInstance(new String[0]);//inStream, outStream, ".", VersionString);
+               interpreter = Interpreter.createDefaultInstance(new String[0]);//inStream, outStream, ".", VersionString);
             }
         }
 
@@ -444,7 +486,7 @@ namespace cogbot.ScriptEngines
                     // StartInstanceBlocked();
                     // isReady = true;
 
-                    jrunnable = new JRunnable(this);
+                    jrunnable = new JRunnableLisp(this);
                     jthread = new java.lang.Thread(jrunnable);
                     jthread.start();
                 }
@@ -525,7 +567,7 @@ namespace cogbot.ScriptEngines
                 s = s.Substring(indexOf + 1);
                 indexOf = s.IndexOf(".");
             }
-            throw new Exception("no function binding for " + target + " .  " + s +  " arg= " + args);
+            throw new ConditionThrowable("no function binding for " + target + " .  " + s + " arg= " + args);
         }
 
         internal LispObject clojEval(LateSymbolPrimitive lsp, String s, LispObject[] args)
@@ -563,6 +605,265 @@ namespace cogbot.ScriptEngines
             return new JavaObject(o);
             }
         }
+    }
+
+    public class SuspendableTextReader : TextReader
+    {
+        TextReader csTextReader;
+        object lockme = new object();
+        bool isSuspended = true;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="?"></param>
+        public void SupendIt(bool tf) {
+            //lockme = null;
+        } // method: SupendIt
+        
+        public SuspendableTextReader(TextReader tIn)
+        {
+            csTextReader = tIn;
+        }
+        // Summary:
+        //     Closes the System.IO.TextReader and releases any system resources associated
+        //     with the TextReader.
+        /// <summary>
+        /// 
+        /// </summary>
+        public virtual void Close() {
+            this.csTextReader.Close();
+        } // method: Close
+
+        //
+        // Summary:
+        //     Reads the next character without changing the state of the reader or the
+        //     character source. Returns the next available character without actually reading
+        //     it from the input stream.
+        //
+        // Returns:
+        //     The next character to be read, or -1 if no more characters are available
+        //     or the stream does not support seeking.
+        //
+        // Exceptions:
+        //   System.IO.IOException:
+        //     An I/O error occurs.
+        //
+        //   System.ObjectDisposedException:
+        //     The System.IO.TextReader is closed.
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public virtual int Peek() {
+            WaitOnSuspened();
+            return this.csTextReader.Peek();
+        } // method: Peek
+
+        //
+        // Summary:
+        //     Reads the next character from the input stream and advances the character
+        //     position by one character.
+        //
+        // Returns:
+        //     The next character from the input stream, or -1 if no more characters are
+        //     available. The default implementation returns -1.
+        //
+        // Exceptions:
+        //   System.IO.IOException:
+        //     An I/O error occurs.
+        //
+        //   System.ObjectDisposedException:
+        //     The System.IO.TextReader is closed.
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public virtual int Read() {
+            WaitOnSuspened();
+            return this.csTextReader.Read();
+        } // method: Read
+
+        //
+        // Summary:
+        //     Reads a maximum of count characters from the current stream and writes the
+        //     data to buffer, beginning at index.
+        //
+        // Parameters:
+        //   count:
+        //     The maximum number of characters to read. If the end of the stream is reached
+        //     before count of characters is read into buffer, the current method returns.
+        //
+        //   buffer:
+        //     When this method returns, contains the specified character array with the
+        //     values between index and (index + count - 1) replaced by the characters read
+        //     from the current source.
+        //
+        //   index:
+        //     The place in buffer at which to begin writing.
+        //
+        // Returns:
+        //     The number of characters that have been read. The number will be less than
+        //     or equal to count, depending on whether the data is available within the
+        //     stream. This method returns zero if called when no more characters are left
+        //     to read.
+        //
+        // Exceptions:
+        //   System.IO.IOException:
+        //     An I/O error occurs.
+        //
+        //   System.ArgumentOutOfRangeException:
+        //     index or count is negative.
+        //
+        //   System.ArgumentException:
+        //     The buffer length minus index is less than count.
+        //
+        //   System.ArgumentNullException:
+        //     buffer is null.
+        //
+        //   System.ObjectDisposedException:
+        //     The System.IO.TextReader is closed.
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="index"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public virtual int Read(char[] buffer, int index, int count) {
+            WaitOnSuspened();
+            return this.csTextReader.Read(buffer, index, count);
+        } // method: Read
+
+        //
+        // Summary:
+        //     Reads a maximum of count characters from the current stream and writes the
+        //     data to buffer, beginning at index.
+        //
+        // Parameters:
+        //   count:
+        //     The maximum number of characters to read.
+        //
+        //   buffer:
+        //     When this method returns, this parameter contains the specified character
+        //     array with the values between index and (index + count -1) replaced by the
+        //     characters read from the current source.
+        //
+        //   index:
+        //     The place in buffer at which to begin writing.
+        //
+        // Returns:
+        //     The number of characters that have been read. The number will be less than
+        //     or equal to count, depending on whether all input characters have been read.
+        //
+        // Exceptions:
+        //   System.IO.IOException:
+        //     An I/O error occurs.
+        //
+        //   System.ArgumentOutOfRangeException:
+        //     index or count is negative.
+        //
+        //   System.ArgumentException:
+        //     The buffer length minus index is less than count.
+        //
+        //   System.ArgumentNullException:
+        //     buffer is null.
+        //
+        //   System.ObjectDisposedException:
+        //     The System.IO.TextReader is closed.
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="index"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public virtual int ReadBlock(char[] buffer, int index, int count) {
+            WaitOnSuspened();
+            return this.csTextReader.ReadBlock(buffer,index,count);
+        } // method: ReadBlock
+
+        //
+        // Summary:
+        //     Reads a line of characters from the current stream and returns the data as
+        //     a string.
+        //
+        // Returns:
+        //     The next line from the input stream, or null if all characters have been
+        //     read.
+        //
+        // Exceptions:
+        //   System.ArgumentOutOfRangeException:
+        //     The number of characters in the next line is larger than System.Int32.MaxValue
+        //
+        //   System.IO.IOException:
+        //     An I/O error occurs.
+        //
+        //   System.OutOfMemoryException:
+        //     There is insufficient memory to allocate a buffer for the returned string.
+        //
+        //   System.ObjectDisposedException:
+        //     The System.IO.TextReader is closed.
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public virtual string ReadLine() {
+            WaitOnSuspened();
+            return this.csTextReader.ReadLine();
+        } // method: ReadLine
+
+        //
+        // Summary:
+        //     Reads all characters from the current position to the end of the TextReader
+        //     and returns them as one string.
+        //
+        // Returns:
+        //     A string containing all characters from the current position to the end of
+        //     the TextReader.
+        //
+        // Exceptions:
+        //   System.ArgumentOutOfRangeException:
+        //     The number of characters in the next line is larger than System.Int32.MaxValue
+        //
+        //   System.IO.IOException:
+        //     An I/O error occurs.
+        //
+        //   System.OutOfMemoryException:
+        //     There is insufficient memory to allocate a buffer for the returned string.
+        //
+        //   System.ObjectDisposedException:
+        //     The System.IO.TextReader is closed.
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public virtual string ReadToEnd() {
+            WaitOnSuspened();
+            return this.csTextReader.ReadToEnd();
+        }
+
+        private void WaitOnSuspened()
+        {
+            throw new Exception("The method or operation is not implemented.");
+        } // method: ReadToEnd
+
+        //
+        // Summary:
+        //     Creates a thread-safe wrapper around the specified TextReader.
+        //
+        // Parameters:
+        //   reader:
+        //     The TextReader to synchronize.
+        //
+        // Returns:
+        //     A thread-safe System.IO.TextReader.
+        //
+        // Exceptions:
+        //   System.ArgumentNullException:
+        //     reader is null.
+//        public static TextReader Synchronized(TextReader reader);
+
+
     }
 
     public class WinformInputStream : java.io.InputStream

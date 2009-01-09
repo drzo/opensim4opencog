@@ -24,11 +24,11 @@ namespace cogbot.Actions
             if (!UUID.TryParse(args[0], out id))
                 return "Usage: exportparticles [prim-uuid]";
 
-            lock (client.Network.Simulators)
+            lock (Client.Network.Simulators)
             {
-                for (int i = 0; i < client.Network.Simulators.Count; i++)
+                for (int i = 0; i < Client.Network.Simulators.Count; i++)
                 {
-                    Primitive exportPrim = client.Network.Simulators[i].ObjectsPrimitives.Find(
+                    Primitive exportPrim = Client.Network.Simulators[i].ObjectsPrimitives.Find(
                         delegate(Primitive prim)
                         {
                             return prim.ID == id;

@@ -7,7 +7,7 @@ namespace cogbot.Actions
     {
         public WearCommand(cogbot.TextForm testClient)
         {
-            client = testClient.client;
+            //Client = testClient.client;
             Name = "wear";
             Description = "Wear an outfit folder from inventory. Usage: wear [outfit name] [nobake]";
             Category = CommandCategory.Appearance;
@@ -33,7 +33,7 @@ namespace cogbot.Actions
 
             try
             {
-                client.Appearance.WearOutfit(target.Split('/'), bake);
+                Client.Appearance.WearOutfit(target.Split('/'), bake);
             }
             catch (InvalidOutfitException ex)
             {

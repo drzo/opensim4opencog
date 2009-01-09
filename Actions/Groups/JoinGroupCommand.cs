@@ -46,12 +46,12 @@ namespace cogbot.Actions
                     groupName += args[i] + " ";
                 groupName = groupName.Trim();
                 DirectoryManager.DirGroupsReplyCallback callback = new DirectoryManager.DirGroupsReplyCallback(Directory_OnDirGroupsReply);
-                client.Directory.OnDirGroupsReply += callback;
-                queryID = client.Directory.StartGroupSearch(DirectoryManager.DirFindFlags.Groups, groupName, 0);
+                Client.Directory.OnDirGroupsReply += callback;
+                queryID = Client.Directory.StartGroupSearch(DirectoryManager.DirFindFlags.Groups, groupName, 0);
 
                 GetGroupsSearchEvent.WaitOne(60000, false);
 
-                client.Directory.OnDirGroupsReply -= callback;
+                Client.Directory.OnDirGroupsReply -= callback;
                 GetGroupsSearchEvent.Reset();
             }
 
@@ -64,8 +64,8 @@ namespace cogbot.Actions
             }
 
             GroupManager.GroupJoinedCallback gcallback = new GroupManager.GroupJoinedCallback(Groups_OnGroupJoined);
-            client.Groups.OnGroupJoined += gcallback;
-            client.Groups.RequestJoinGroup(resolvedGroupID);
+            Client.Groups.OnGroupJoined += gcallback;
+            Client.Groups.RequestJoinGroup(resolvedGroupID);
 
             /* A.Biondi 
              * TODO: implement the pay to join procedure.
@@ -73,7 +73,7 @@ namespace cogbot.Actions
 
             GetGroupsSearchEvent.WaitOne(60000, false);
 
-            client.Groups.OnGroupJoined -= gcallback;
+            Client.Groups.OnGroupJoined -= gcallback;
             GetGroupsSearchEvent.Reset();
 
             if (joinedGroup)
@@ -83,7 +83,7 @@ namespace cogbot.Actions
 
         void Groups_OnGroupJoined(UUID groupID, bool success)
         {
-            WriteLine(client.ToString() + (success ? " joined " : " failed to join ") + groupID.ToString());
+            WriteLine(Client.ToString() + (success ? " joined " : " failed to join ") + groupID.ToString());
 
             /* A.Biondi 
              * This code is not necessary because it is yet present in the 
@@ -93,8 +93,8 @@ namespace cogbot.Actions
                 
             if (success)
             {
-                WriteLine(client.ToString() + " setting " + groupID.ToString() + " as the active group");
-                client.Groups.ActivateGroup(groupID);
+                WriteLine(Client.ToString() + " setting " + groupID.ToString() + " as the active group");
+                Client.Groups.ActivateGroup(groupID);
             }
                 
             */

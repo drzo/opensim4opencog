@@ -17,7 +17,7 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-			client.Self.SetHome();
+			Client.Self.SetHome();
             return "Home Set";
         }
     }

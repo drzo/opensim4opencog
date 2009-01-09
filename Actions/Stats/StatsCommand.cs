@@ -19,11 +19,11 @@ namespace cogbot.Actions
         {
             StringBuilder output = new StringBuilder();
 
-            lock (client.Network.Simulators)
+            lock (Client.Network.Simulators)
             {
-                for (int i = 0; i < client.Network.Simulators.Count; i++)
+                for (int i = 0; i < Client.Network.Simulators.Count; i++)
                 {
-                    Simulator sim = client.Network.Simulators[i];
+                    Simulator sim = Client.Network.Simulators[i];
 
                     output.AppendLine(String.Format(
                         "[{0}] Dilation: {1} InBPS: {2} OutBPS: {3} ResentOut: {4}  ResentIn: {5}",
@@ -32,9 +32,9 @@ namespace cogbot.Actions
                 }
             }
 
-            Simulator csim = client.Network.CurrentSim;
+            Simulator csim = Client.Network.CurrentSim;
 
-            output.Append("Packets in the queue: " + client.Network.InboxCount);
+            output.Append("Packets in the queue: " + Client.Network.InboxCount);
 			output.AppendLine(String.Format("FPS : {0} PhysicsFPS : {1} AgentUpdates : {2} Objects : {3} Scripted Objects : {4}",
                 csim.Stats.FPS, csim.Stats.PhysicsFPS, csim.Stats.AgentUpdates, csim.Stats.Objects, csim.Stats.ScriptedObjects));
 			output.AppendLine(String.Format("Frame Time : {0} Net Time : {1} Image Time : {2} Physics Time : {3} Script Time : {4} Other Time : {5}",

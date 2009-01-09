@@ -183,7 +183,7 @@ namespace cogbot.Listeners
            // else
            //     verb = "sitting";
             //parent.output(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
-            //parent.output(avatar.Name + " is " + Vector3.Distance(client.Self.SimPosition, avatar.Position).ToString() + " distant.");
+            //parent.output(avatar.Name + " is " + Vector3.Distance(Client.Self.SimPosition, avatar.Position).ToString() + " distant.");
 
             parent.enqueueLispTask("(on-avatar-dist (@\"" + avatar.Name + "\") " + Vector3.Distance(client.Self.SimPosition, avatar.Position).ToString() + " )");
             parent.enqueueLispTask("(on-avatar-pos (@\"" + avatar.Name + "\") (@\"" + avatar.Position.ToString() + "\") )");

@@ -28,10 +28,10 @@ namespace cogbot.Actions
             searchText = searchText.TrimEnd();
             waitQuery.Reset();
 
-            client.Directory.OnEventsReply += new DirectoryManager.EventReplyCallback(Directory_OnEventsReply);
-            client.Directory.StartEventsSearch(searchText, true, "u", 0, DirectoryManager.EventCategories.All, UUID.Random());
+            Client.Directory.OnEventsReply += new DirectoryManager.EventReplyCallback(Directory_OnEventsReply);
+            Client.Directory.StartEventsSearch(searchText, true, "u", 0, DirectoryManager.EventCategories.All, UUID.Random());
             string result;
-            if (waitQuery.WaitOne(20000, false) && client.Network.Connected)
+            if (waitQuery.WaitOne(20000, false) && Client.Network.Connected)
             {
                 result =  "Your query '" + searchText + "' matched " + resultCount + " Events. ";
             }
@@ -39,7 +39,7 @@ namespace cogbot.Actions
             {
                 result =  "Timeout waiting for simulator to respond.";
             }            
-            client.Directory.OnEventsReply -= new DirectoryManager.EventReplyCallback(Directory_OnEventsReply);
+            Client.Directory.OnEventsReply -= new DirectoryManager.EventReplyCallback(Directory_OnEventsReply);
             return result;
         }
 

@@ -25,16 +25,16 @@ namespace cogbot.Actions
                 simName += args[i] + " ";
             simName = simName.TrimEnd().ToLower();
 
-            //if (!GridDataCached[client])
+            //if (!GridDataCached[Client])
             //{
-            //    client.Grid.RequestAllSims(GridManager.MapLayerType.Objects);
+            //    Client.Grid.RequestAllSims(GridManager.MapLayerType.Objects);
             //    System.Threading.Thread.Sleep(5000);
-            //    GridDataCached[client] = true;
+            //    GridDataCached[Client] = true;
             //}
 
             GridRegion region;
 
-            if (client.Grid.GetGridRegion(simName, GridLayerType.Objects, out region))
+            if (Client.Grid.GetGridRegion(simName, GridLayerType.Objects, out region))
                 return String.Format("{0}: handle={1} ({2},{3})", region.Name, region.RegionHandle, region.X, region.Y);
             else
                 return "Lookup of " + simName + " failed";

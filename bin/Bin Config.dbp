@@ -1,0 +1,15 @@
+# Microsoft Developer Studio Project File - Database Project
+Begin DataProject = "Bin Config"
+   MSDTVersion = "80"
+   Script = "boot.lisp"
+   Script = "botconfig.xml"
+   Script = "cl-cogbot.lisp"
+   Script = "cogbot.lisp"
+   Begin DBRefFolder = "Database References"
+   End
+   Script = "extra.lisp"
+   Script = "ExtractIcons.lisp"
+   Script = "lalr.lisp"
+   Script = "test.lisp"
+   Script = "util.lisp"
+End

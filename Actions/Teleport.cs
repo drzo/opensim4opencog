@@ -13,7 +13,7 @@ namespace cogbot.Actions
         {
             helpString = "Teleport to a location.";
             usageString = "To teleport to a location, type \"teleport to <location name>\"";
-            client.Self.OnTeleport += new AgentManager.TeleportCallback(On_Teleport);
+            Client.Self.OnTeleport += new AgentManager.TeleportCallback(On_Teleport);
         }
 
         public void On_Teleport(string message, AgentManager.TeleportStatus status, AgentManager.TeleportFlags flags)
@@ -68,7 +68,7 @@ namespace cogbot.Actions
                     to = to.Trim();
                 }
                 parent.output("Trying to teleport to " + to + ".");
-                client.Self.Teleport(to, new Vector3(128, 128, 0));
+                Client.Self.Teleport(to, new Vector3(128, 128, 0));
             }
 
             parent.describeNext = false;

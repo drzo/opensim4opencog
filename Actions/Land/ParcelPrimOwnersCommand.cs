@@ -24,7 +24,7 @@ namespace cogbot.Actions
             Parcel parcel;
             StringBuilder result = new StringBuilder();
             // test argument that is is a valid integer, then verify we have that parcel data stored in the dictionary
-            if (Int32.TryParse(args[0], out parcelID) && client.Network.CurrentSim.Parcels.TryGetValue(parcelID, out parcel))
+            if (Int32.TryParse(args[0], out parcelID) && Client.Network.CurrentSim.Parcels.TryGetValue(parcelID, out parcel))
             {
                 AutoResetEvent wait = new AutoResetEvent(false);
                 ParcelManager.ParcelObjectOwnersListReplyCallback callback = delegate(Simulator simulator, List<ParcelManager.ParcelPrimOwners> primOwners)
@@ -36,14 +36,14 @@ namespace cogbot.Actions
                     }
                 };
                 
-                client.Parcels.OnPrimOwnersListReply += callback;
+                Client.Parcels.OnPrimOwnersListReply += callback;
                 
-                client.Parcels.ObjectOwnersRequest(client.Network.CurrentSim, parcelID);
+                Client.Parcels.ObjectOwnersRequest(Client.Network.CurrentSim, parcelID);
                 if (!wait.WaitOne(10000, false))
                 {
                     result.AppendLine("Timed out waiting for packet.");
                 }
-                client.Parcels.OnPrimOwnersListReply -= callback;
+                Client.Parcels.OnPrimOwnersListReply -= callback;
                 
                 return result.ToString();
             }

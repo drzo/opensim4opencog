@@ -1,201 +1,205 @@
 <?xml version="1.0" ?>
 <project name="cogbot" default="build">
-    <target name="build">
-        <echo message="Build Directory is ${project::get-base-directory()}/${build.dir}" />
-        <mkdir dir="${project::get-base-directory()}/${build.dir}" />
-        <copy todir="${project::get-base-directory()}/${build.dir}" flatten="true">
-            <fileset basedir="${project::get-base-directory()}">
-                <include name="bin/log4net.dll" />
-            </fileset>
-        </copy>
-        <copy todir="${project::get-base-directory()}/${build.dir}">
-            <fileset basedir=".">
-            </fileset>
-        </copy>
-        <csc target="exe" debug="${build.debug}" unsafe="True" warnaserror="False" define="TRACE;DEBUG" main="" output="${project::get-base-directory()}/${build.dir}/${project::get-name()}.exe">
-            <resources prefix="cogbot" dynamicprefix="true" >
-            </resources>
-            <sources failonempty="true">
-                <include name="Actions/Action.cs" />
-                <include name="Actions/Arguments.cs" />
-                <include name="Actions/ClientManager.cs" />
-                <include name="Actions/Command.cs" />
-                <include name="Actions/Crouch.cs" />
-                <include name="Actions/Describe.cs" />
-                <include name="Actions/Eval.cs" />
-                <include name="Actions/Fly.cs" />
-                <include name="Actions/Follow.cs" />
-                <include name="Actions/GoHome.cs" />
-                <include name="Actions/GotoLandmark.cs" />
-                <include name="Actions/Help.cs" />
-                <include name="Actions/Jump.cs" />
-                <include name="Actions/Locate.cs" />
-                <include name="Actions/Login.cs" />
-                <include name="Actions/Logout.cs" />
-                <include name="Actions/Move.cs" />
-                <include name="Actions/Mute.cs" />
-                <include name="Actions/Parser.cs" />
-                <include name="Actions/Parsing.cs" />
-                <include name="Actions/Say.cs" />
-                <include name="Actions/ScriptCommand.cs" />
-                <include name="Actions/SearchEventsCommand.cs" />
-                <include name="Actions/ShowEventDetailsCommand.cs" />
-                <include name="Actions/Sit.cs" />
-                <include name="Actions/SleepCommand.cs" />
-                <include name="Actions/Stand.cs" />
-                <include name="Actions/Stop.cs" />
-                <include name="Actions/StopFlying.cs" />
-                <include name="Actions/Teleport.cs" />
-                <include name="Actions/TouchCommand.cs" />
-                <include name="Actions/TreeCommand.cs" />
-                <include name="Actions/Use.cs" />
-                <include name="Actions/Wear.cs" />
-                <include name="Actions/Where.cs" />
-                <include name="Actions/Whisper.cs" />
-                <include name="Actions/WhoCommand.cs" />
-                <include name="Actions/Appearance/AppearanceCommand.cs" />
-                <include name="Actions/Appearance/AttachmentsCommand.cs" />
-                <include name="Actions/Appearance/AvatarInfoCommand.cs" />
-                <include name="Actions/Appearance/CloneCommand.cs" />
-                <include name="Actions/Appearance/WearCommand.cs" />
-                <include name="Actions/Communication/EchoMasterCommand.cs" />
-                <include name="Actions/Communication/IMCommand.cs" />
-                <include name="Actions/Communication/IMGroupCommand.cs" />
-                <include name="Actions/Communication/SayCommand.cs" />
-                <include name="Actions/Communication/ShoutCommand.cs" />
-                <include name="Actions/Communication/WhisperCommand.cs" />
-                <include name="Actions/Friends/FriendsCommand.cs" />
-                <include name="Actions/Friends/MapFriendCommand.cs" />
-                <include name="Actions/Groups/ActivateGroupCommand.cs" />
-                <include name="Actions/Groups/GroupsCommand.cs" />
-                <include name="Actions/Groups/JoinGroupCommand.cs" />
-                <include name="Actions/Groups/LeaveGroupCommand.cs" />
-                <include name="Actions/Inventory/BackupCommand.cs" />
-                <include name="Actions/Inventory/ChangeDirectoryCommand.cs" />
-                <include name="Actions/Inventory/CreateNotecardCommand.cs" />
-                <include name="Actions/Inventory/DeleteFolderCommand.cs" />
-                <include name="Actions/Inventory/DownloadCommand.cs" />
-                <include name="Actions/Inventory/DumpOutfitCommand.cs" />
-                <include name="Actions/Inventory/GiveAllCommand.cs" />
-                <include name="Actions/Inventory/GiveItemCommand.cs" />
-                <include name="Actions/Inventory/InventoryCommand.cs" />
-                <include name="Actions/Inventory/ObjectInventoryCommand.cs" />
-                <include name="Actions/Inventory/UploadImageCommand.cs" />
-                <include name="Actions/Inventory/ViewNotecardCommand.cs" />
-                <include name="Actions/Inventory/balancecommand.cs" />
-                <include name="Actions/Inventory/listcontentscommand.cs" />
-                <include name="Actions/Land/AgentLocationsCommand.cs" />
-                <include name="Actions/Land/FindSimCommand.cs" />
-                <include name="Actions/Land/GridLayerCommand.cs" />
-                <include name="Actions/Land/GridMapCommand.cs" />
-                <include name="Actions/Land/ParcelDetailsCommand.cs" />
-                <include name="Actions/Land/ParcelInfoCommand.cs" />
-                <include name="Actions/Land/ParcelPrimOwnersCommand.cs" />
-                <include name="Actions/Land/ParcelSelectObjectsCommand.cs" />
-                <include name="Actions/Land/WindCommand.cs" />
-                <include name="Actions/Movement/BackCommand.cs" />
-                <include name="Actions/Movement/CrouchCommand.cs" />
-                <include name="Actions/Movement/FlyCommand.cs" />
-                <include name="Actions/Movement/FlyToCommand.cs" />
-                <include name="Actions/Movement/FollowCommand.cs" />
-                <include name="Actions/Movement/ForwardCommand.cs" />
-                <include name="Actions/Movement/GotoCommand.cs" />
-                <include name="Actions/Movement/JumpCommand.cs" />
-                <include name="Actions/Movement/LeftCommand.cs" />
-                <include name="Actions/Movement/LocationCommand.cs" />
-                <include name="Actions/Movement/MoveToCommand.cs" />
-                <include name="Actions/Movement/RightCommand.cs" />
-                <include name="Actions/Movement/RotateCommand.cs" />
-                <include name="Actions/Movement/SetHome.cs" />
-                <include name="Actions/Movement/SitCommand.cs" />
-                <include name="Actions/Movement/SitOnCommand.cs" />
-                <include name="Actions/Movement/StandCommand.cs" />
-                <include name="Actions/Prims/ChangePermsCommand.cs" />
-                <include name="Actions/Prims/DownloadTextureCommand.cs" />
-                <include name="Actions/Prims/ExportCommand.cs" />
-                <include name="Actions/Prims/ExportParticlesCommand.cs" />
-                <include name="Actions/Prims/FindObjectsCommand.cs" />
-                <include name="Actions/Prims/FindTextureCommand.cs" />
-                <include name="Actions/Prims/ImportCommand.cs" />
-                <include name="Actions/Prims/PrimCountCommand.cs" />
-                <include name="Actions/Prims/PrimInfoCommand.cs" />
-                <include name="Actions/Prims/PrimRegexCommand.cs" />
-                <include name="Actions/Stats/DilationCommand.cs" />
-                <include name="Actions/Stats/RegionInfoCommand.cs" />
-                <include name="Actions/Stats/StatsCommand.cs" />
-                <include name="Actions/Stats/UptimeCommand.cs" />
-                <include name="Actions/System/DebugCommand.cs" />
-                <include name="Actions/System/HelpCommand.cs" />
-                <include name="Actions/System/LoadCommand.cs" />
-                <include name="Actions/System/LoginCommand.cs" />
-                <include name="Actions/System/LogoutCommand.cs" />
-                <include name="Actions/System/MD5Command.cs" />
-                <include name="Actions/System/PacketLogCommand.cs" />
-                <include name="Actions/System/QuitCommand.cs" />
-                <include name="Actions/System/SetMasterCommand.cs" />
-                <include name="Actions/System/SetMasterKeyCommand.cs" />
-                <include name="Actions/System/ShowEffectsCommand.cs" />
-                <include name="Listeners/Avatars.cs" />
-                <include name="Listeners/Bump.cs" />
-                <include name="Listeners/Chat.cs" />
-                <include name="Listeners/Listener.cs" />
-                <include name="Listeners/Objects.cs" />
-                <include name="Listeners/Sound.cs" />
-                <include name="Listeners/Teleport.cs" />
-                <include name="Listeners/Whisper.cs" />
-                <include name="Properties/AssemblyInfo.cs" />
-                <include name="Properties/Resources.Designer.cs" />
-                <include name="Properties/Settings.Designer.cs" />
-                <include name="Tutorials/Tutorial.cs" />
-                <include name="Tutorials/Tutorial1.cs" />
-                <include name="Utilities/XMLInterpreter.cs" />
-                <include name="DotCYC/CycConnectionForm.Designer.cs" />
-                <include name="DotCYC/CycConnectionForm.cs" />
-                <include name="ScriptEngines/ABCLInterpreter.cs" />
-                <include name="ScriptEngines/CycInterpreter.cs" />
-                <include name="ScriptEngines/DotLispInterpreter.cs" />
-                <include name="ScriptEngines/ScriptInterpreter.cs" />
-                <include name="ScriptEngines/ScriptManager.cs" />
-                <include name="LoginForm.Designer.cs" />
-                <include name="LoginForm.cs" />
-                <include name="Program.cs" />
-                <include name="TextForm.Designer.cs" />
-                <include name="TextForm.cs" />
-            </sources>
-            <references basedir="${project::get-base-directory()}">
-                <lib>
-                    <include name="${project::get-base-directory()}" />
-                    <include name="${project::get-base-directory()}/${build.dir}" />
-                </lib>
-                <include name="bin/ABCL.Net.dll" />
-                <include name="bin/DotLisp.dll" />
-                <include name="bin/IKVM.OpenJDK.ClassLibrary.dll" />
-                <include name="bin/IKVM.Runtime.dll" />
-                <include name="bin/log4net.dll" />
-                <include name="bin/OpenCyc.dll" />
-                <include name="bin/OpenMetaverse.dll" />
-                <include name="bin/OpenMetaverseTypes.dll" />
-                <include name="System.dll" />
-                <include name="System.Data.dll" />
-                <include name="System.Drawing.dll" />
-                <include name="System.Windows.Forms.dll" />
-                <include name="System.Xml.dll" />
-            </references>
-        </csc>
-        <echo message="Copying from [${project::get-base-directory()}/${build.dir}/] to [${project::get-base-directory()}/bin/" />
-        <mkdir dir="${project::get-base-directory()}/bin/"/>
-        <copy todir="${project::get-base-directory()}/bin/">
-            <fileset basedir="${project::get-base-directory()}/${build.dir}/" >
-                <include name="*.dll"/>
-                <include name="*.exe"/>
-                <include name="*.mdb"/>
-            </fileset>
-        </copy>
-    </target>
-    <target name="clean">
-        <delete dir="${obj.dir}" failonerror="false" />
-        <delete dir="${bin.dir}" failonerror="false" />
-    </target>
-    <target name="doc" description="Creates documentation.">
-    </target>
+	  <target name="build">
+		  <echo message="Build Directory is ${build.dir}" />
+		  <mkdir dir="${build.dir}" />
+		  <copy todir="${build.dir}" flatten="true">
+			  <fileset basedir="${project::get-base-directory()}">
+				  <include name="bin/log4net.dll" />
+			  </fileset>
+		  </copy>
+		  <copy todir="${build.dir}">
+			  <fileset basedir=".">
+			  </fileset>
+		  </copy>
+		  <csc target="exe" debug="${build.debug}" unsafe="True" warnaserror="False" define="TRACE" nostdlib="False" main="" output="${build.dir}/${project::get-name()}.exe">
+			  <resources prefix="cogbot" dynamicprefix="true" >
+			  </resources>
+			  <sources failonempty="true">
+				  <include name="Actions/Action.cs" />
+				  <include name="Actions/Arguments.cs" />
+				  <include name="Actions/ClientManager.cs" />
+				  <include name="Actions/CloneProfileCommand.cs" />
+				  <include name="Actions/Command.cs" />
+				  <include name="Actions/Crouch.cs" />
+				  <include name="Actions/Describe.cs" />
+				  <include name="Actions/Eval.cs" />
+				  <include name="Actions/Fly.cs" />
+				  <include name="Actions/Follow.cs" />
+				  <include name="Actions/GoHome.cs" />
+				  <include name="Actions/GotoLandmark.cs" />
+				  <include name="Actions/Help.cs" />
+				  <include name="Actions/Jump.cs" />
+				  <include name="Actions/Locate.cs" />
+				  <include name="Actions/Login.cs" />
+				  <include name="Actions/Logout.cs" />
+				  <include name="Actions/Move.cs" />
+				  <include name="Actions/Mute.cs" />
+				  <include name="Actions/Parser.cs" />
+				  <include name="Actions/Parsing.cs" />
+				  <include name="Actions/Say.cs" />
+				  <include name="Actions/ScriptCommand.cs" />
+				  <include name="Actions/SearchEventsCommand.cs" />
+				  <include name="Actions/ShowEventDetailsCommand.cs" />
+				  <include name="Actions/Sit.cs" />
+				  <include name="Actions/SleepCommand.cs" />
+				  <include name="Actions/Stand.cs" />
+				  <include name="Actions/Stop.cs" />
+				  <include name="Actions/StopFlying.cs" />
+				  <include name="Actions/Teleport.cs" />
+				  <include name="Actions/TouchCommand.cs" />
+				  <include name="Actions/TreeCommand.cs" />
+				  <include name="Actions/Use.cs" />
+				  <include name="Actions/Wear.cs" />
+				  <include name="Actions/Where.cs" />
+				  <include name="Actions/Whisper.cs" />
+				  <include name="Actions/WhoCommand.cs" />
+				  <include name="Actions/Appearance/AppearanceCommand.cs" />
+				  <include name="Actions/Appearance/AttachmentsCommand.cs" />
+				  <include name="Actions/Appearance/AvatarInfoCommand.cs" />
+				  <include name="Actions/Appearance/CloneCommand.cs" />
+				  <include name="Actions/Appearance/WearCommand.cs" />
+				  <include name="Actions/Communication/EchoMasterCommand.cs" />
+				  <include name="Actions/Communication/IMCommand.cs" />
+				  <include name="Actions/Communication/IMGroupCommand.cs" />
+				  <include name="Actions/Communication/SayCommand.cs" />
+				  <include name="Actions/Communication/ShoutCommand.cs" />
+				  <include name="Actions/Communication/WhisperCommand.cs" />
+				  <include name="Actions/Friends/FriendsCommand.cs" />
+				  <include name="Actions/Friends/MapFriendCommand.cs" />
+				  <include name="Actions/Groups/ActivateGroupCommand.cs" />
+				  <include name="Actions/Groups/GroupsCommand.cs" />
+				  <include name="Actions/Groups/JoinGroupCommand.cs" />
+				  <include name="Actions/Groups/LeaveGroupCommand.cs" />
+				  <include name="Actions/Inventory/BackupCommand.cs" />
+				  <include name="Actions/Inventory/ChangeDirectoryCommand.cs" />
+				  <include name="Actions/Inventory/CreateNotecardCommand.cs" />
+				  <include name="Actions/Inventory/DeleteFolderCommand.cs" />
+				  <include name="Actions/Inventory/DownloadCommand.cs" />
+				  <include name="Actions/Inventory/DumpOutfitCommand.cs" />
+				  <include name="Actions/Inventory/GiveAllCommand.cs" />
+				  <include name="Actions/Inventory/GiveItemCommand.cs" />
+				  <include name="Actions/Inventory/InventoryCommand.cs" />
+				  <include name="Actions/Inventory/ObjectInventoryCommand.cs" />
+				  <include name="Actions/Inventory/UploadImageCommand.cs" />
+				  <include name="Actions/Inventory/ViewNotecardCommand.cs" />
+				  <include name="Actions/Inventory/balancecommand.cs" />
+				  <include name="Actions/Inventory/listcontentscommand.cs" />
+				  <include name="Actions/Land/AgentLocationsCommand.cs" />
+				  <include name="Actions/Land/FindSimCommand.cs" />
+				  <include name="Actions/Land/GridLayerCommand.cs" />
+				  <include name="Actions/Land/GridMapCommand.cs" />
+				  <include name="Actions/Land/ParcelDetailsCommand.cs" />
+				  <include name="Actions/Land/ParcelInfoCommand.cs" />
+				  <include name="Actions/Land/ParcelPrimOwnersCommand.cs" />
+				  <include name="Actions/Land/ParcelSelectObjectsCommand.cs" />
+				  <include name="Actions/Land/WindCommand.cs" />
+				  <include name="Actions/Movement/BackCommand.cs" />
+				  <include name="Actions/Movement/CrouchCommand.cs" />
+				  <include name="Actions/Movement/FlyCommand.cs" />
+				  <include name="Actions/Movement/FlyToCommand.cs" />
+				  <include name="Actions/Movement/FollowCommand.cs" />
+				  <include name="Actions/Movement/ForwardCommand.cs" />
+				  <include name="Actions/Movement/GotoCommand.cs" />
+				  <include name="Actions/Movement/JumpCommand.cs" />
+				  <include name="Actions/Movement/LeftCommand.cs" />
+				  <include name="Actions/Movement/LocationCommand.cs" />
+				  <include name="Actions/Movement/MoveToCommand.cs" />
+				  <include name="Actions/Movement/RightCommand.cs" />
+				  <include name="Actions/Movement/RotateCommand.cs" />
+				  <include name="Actions/Movement/SetHome.cs" />
+				  <include name="Actions/Movement/SitCommand.cs" />
+				  <include name="Actions/Movement/SitOnCommand.cs" />
+				  <include name="Actions/Movement/StandCommand.cs" />
+				  <include name="Actions/Prims/ChangePermsCommand.cs" />
+				  <include name="Actions/Prims/DownloadTextureCommand.cs" />
+				  <include name="Actions/Prims/ExportCommand.cs" />
+				  <include name="Actions/Prims/ExportParticlesCommand.cs" />
+				  <include name="Actions/Prims/FindObjectsCommand.cs" />
+				  <include name="Actions/Prims/FindTextureCommand.cs" />
+				  <include name="Actions/Prims/ImportCommand.cs" />
+				  <include name="Actions/Prims/PrimCountCommand.cs" />
+				  <include name="Actions/Prims/PrimInfoCommand.cs" />
+				  <include name="Actions/Prims/PrimRegexCommand.cs" />
+				  <include name="Actions/Prims/TexturesCommand.cs" />
+				  <include name="Actions/SimExport/DoubleDictionary.cs" />
+				  <include name="Actions/SimExport/OarFile.cs" />
+				  <include name="Actions/SimExport/Options.cs" />
+				  <include name="Actions/SimExport/SimExportCommand.cs" />
+				  <include name="Actions/SimExport/TarArchiveWriter.cs" />
+				  <include name="Actions/Stats/DilationCommand.cs" />
+				  <include name="Actions/Stats/RegionInfoCommand.cs" />
+				  <include name="Actions/Stats/StatsCommand.cs" />
+				  <include name="Actions/Stats/UptimeCommand.cs" />
+				  <include name="Actions/System/DebugCommand.cs" />
+				  <include name="Actions/System/HelpCommand.cs" />
+				  <include name="Actions/System/LoadCommand.cs" />
+				  <include name="Actions/System/LoginCommand.cs" />
+				  <include name="Actions/System/LogoutCommand.cs" />
+				  <include name="Actions/System/MD5Command.cs" />
+				  <include name="Actions/System/PacketLogCommand.cs" />
+				  <include name="Actions/System/QuitCommand.cs" />
+				  <include name="Actions/System/SetMasterCommand.cs" />
+				  <include name="Actions/System/SetMasterKeyCommand.cs" />
+				  <include name="Actions/System/ShowEffectsCommand.cs" />
+				  <include name="Actions/Voice/ParcelVoiceInfo.cs" />
+				  <include name="Actions/Voice/VoiceAcountCommand.cs" />
+				  <include name="Listeners/Avatars.cs" />
+				  <include name="Listeners/Bump.cs" />
+				  <include name="Listeners/Chat.cs" />
+				  <include name="Listeners/Listener.cs" />
+				  <include name="Listeners/Objects.cs" />
+				  <include name="Listeners/Sound.cs" />
+				  <include name="Listeners/Teleport.cs" />
+				  <include name="Listeners/Whisper.cs" />
+				  <include name="Properties/AssemblyInfo.cs" />
+				  <include name="Properties/Resources.Designer.cs" />
+				  <include name="Properties/Settings.Designer.cs" />
+				  <include name="Tutorials/Tutorial.cs" />
+				  <include name="Tutorials/Tutorial1.cs" />
+				  <include name="Utilities/XMLInterpreter.cs" />
+				  <include name="DotCYC/CycConnectionForm.Designer.cs" />
+				  <include name="DotCYC/CycConnectionForm.cs" />
+				  <include name="ScriptEngines/ABCLInterpreter.cs" />
+				  <include name="ScriptEngines/ClojureInterpreter.cs" />
+				  <include name="ScriptEngines/CycInterpreter.cs" />
+				  <include name="ScriptEngines/DotLispInterpreter.cs" />
+				  <include name="ScriptEngines/ScriptInterpreter.cs" />
+				  <include name="ScriptEngines/ScriptManager.cs" />
+				  <include name="LoginForm.Designer.cs" />
+				  <include name="LoginForm.cs" />
+				  <include name="Program.cs" />
+				  <include name="TextForm.Designer.cs" />
+				  <include name="TextForm.cs" />
+			  </sources>
+			  <references basedir="${project::get-base-directory()}">
+				  <lib>
+					  <include name="${project::get-base-directory()}" />
+					  <include name="${build.dir}" />
+				  </lib>
+				  <include name="bin/log4net.dll" />
+				  <include name="System.dll" />
+				  <include name="${build.dir}/DotLisp.dll" />
+				  <include name="System.Drawing.dll" />
+				  <include name="System.Windows.Forms.dll" />
+				  <include name="System.Data.dll" />
+				  <include name="System.Xml.dll" />
+				  <include name="${build.dir}/OpenMetaverseTypes.dll" />
+				  <include name="${build.dir}/OpenMetaverse.dll" />
+				  <include name="${build.dir}/OpenMetaverse.StructuredData.dll" />
+				  <include name="${build.dir}/OpenMetaverse.Utilities.dll" />
+				  <include name="${build.dir}/OpenMetaverse.Http.dll" />
+				  <include name="bin/OpenCyc.dll" />
+				  <include name="bin/ABCL.Net.dll" />
+				  <include name="bin/IKVM.Runtime.dll" />
+				  <include name="bin/IKVM.OpenJDK.ClassLibrary.dll" />
+			  </references>
+		  </csc>
+	  </target>
+	  <target name="clean">
+		  <delete dir="${bin.dir}" failonerror="false" />
+		  <delete dir="${obj.dir}" failonerror="false" />
+	  </target>
+	  <target name="doc" description="Creates documentation.">
+	  </target>
 </project>

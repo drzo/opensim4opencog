@@ -36,12 +36,12 @@ namespace cogbot.Actions
             groupName = groupName.Trim();
 
             GroupManager.CurrentGroupsCallback callback = new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
-            client.Groups.OnCurrentGroups += callback;
-            client.Groups.RequestCurrentGroups();
+            Client.Groups.OnCurrentGroups += callback;
+            Client.Groups.RequestCurrentGroups();
 
             GroupsEvent.WaitOne(30000, false);
 
-            client.Groups.OnCurrentGroups -= callback;
+            Client.Groups.OnCurrentGroups -= callback;
             GroupsEvent.Reset();
 
             if (groups.Count > 0)
@@ -50,13 +50,13 @@ namespace cogbot.Actions
                     if (currentGroup.Name.ToLower() == groupName.ToLower())
                     {
                         NetworkManager.PacketCallback pcallback = new NetworkManager.PacketCallback(AgentDataUpdateHandler);
-                        client.Network.RegisterCallback(PacketType.AgentDataUpdate, pcallback);
+                        Client.Network.RegisterCallback(PacketType.AgentDataUpdate, pcallback);
 
                         WriteLine("setting " + currentGroup.Name + " as active group");
-                        client.Groups.ActivateGroup(currentGroup.ID);
+                        Client.Groups.ActivateGroup(currentGroup.ID);
                         GroupsEvent.WaitOne(30000, false);
 
-                        client.Network.UnregisterCallback(PacketType.AgentDataUpdate, pcallback);
+                        Client.Network.UnregisterCallback(PacketType.AgentDataUpdate, pcallback);
                         GroupsEvent.Reset();
 
                         /* A.Biondi 
@@ -64,14 +64,14 @@ namespace cogbot.Actions
                          */
 
                         if (String.IsNullOrEmpty(activeGroup))
-                            return client.ToString() + " failed to activate the group " + groupName;
+                            return Client.ToString() + " failed to activate the group " + groupName;
 
                         return "Active group is now " + activeGroup;
                     }
-                return client.ToString() + " doesn't seem to be member of the group " + groupName;
+                return Client.ToString() + " doesn't seem to be member of the group " + groupName;
             }
 
-            return client.ToString() + " doesn't seem member of any group";
+            return Client.ToString() + " doesn't seem member of any group";
         }
 
         void Groups_OnCurrentGroups(Dictionary<UUID, Group> cGroups)
@@ -83,7 +83,7 @@ namespace cogbot.Actions
         private void AgentDataUpdateHandler(Packet packet, Simulator sim)
         {
             AgentDataUpdatePacket p = (AgentDataUpdatePacket)packet;
-            if (p.AgentData.AgentID == client.Self.AgentID)
+            if (p.AgentData.AgentID == Client.Self.AgentID)
             {
                 activeGroup = Utils.BytesToString(p.AgentData.GroupName) + " ( " + Utils.BytesToString(p.AgentData.GroupTitle) + " )";
                 GroupsEvent.Set();

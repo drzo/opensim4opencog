@@ -24,10 +24,10 @@ namespace cogbot.Actions
             Parcel parcel;
 
             // test argument that is is a valid integer, then verify we have that parcel data stored in the dictionary
-            if (Int32.TryParse(args[0], out parcelID) && client.Network.CurrentSim.Parcels.TryGetValue(parcelID, out parcel))
+            if (Int32.TryParse(args[0], out parcelID) && Client.Network.CurrentSim.Parcels.TryGetValue(parcelID, out parcel))
             {
                 // this request will update the parcels dictionary
-                client.Parcels.PropertiesRequest(client.Network.CurrentSim, parcelID, 0);
+                Client.Parcels.PropertiesRequest(Client.Network.CurrentSim, parcelID, 0);
                 
                 // Use reflection to dynamically get the fields from the Parcel struct
                 Type t = parcel.GetType();

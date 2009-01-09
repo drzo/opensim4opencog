@@ -20,10 +20,10 @@ namespace cogbot.Actions
             Primitive closest = null;
 		    double closestDistance = Double.MaxValue;
 
-            client.Network.CurrentSim.ObjectsPrimitives.ForEach(
+            Client.Network.CurrentSim.ObjectsPrimitives.ForEach(
                 delegate(Primitive prim)
                 {
-                    float distance = Vector3.Distance(client.Self.SimPosition, prim.Position);
+                    float distance = Vector3.Distance(Client.Self.SimPosition, prim.Position);
 
                     if (closest == null || distance < closestDistance)
                     {
@@ -35,8 +35,8 @@ namespace cogbot.Actions
 
             if (closest != null)
             {
-                client.Self.RequestSit(closest.ID, Vector3.Zero);
-                client.Self.Sit();
+                Client.Self.RequestSit(closest.ID, Vector3.Zero);
+                Client.Self.Sit();
 
                 return "Sat on " + closest.ID + " (" + closest.LocalID + "). Distance: " + closestDistance;
             }

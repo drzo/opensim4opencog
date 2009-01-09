@@ -19,11 +19,11 @@ namespace cogbot.Actions
 		{
 			StringBuilder result = new StringBuilder();
 
-            lock (client.Network.Simulators)
+            lock (Client.Network.Simulators)
             {
-                for (int i = 0; i < client.Network.Simulators.Count; i++)
+                for (int i = 0; i < Client.Network.Simulators.Count; i++)
                 {
-                    client.Network.Simulators[i].ObjectsAvatars.ForEach(
+                    Client.Network.Simulators[i].ObjectsAvatars.ForEach(
                         delegate(Avatar av)
                         {
                             result.AppendLine();

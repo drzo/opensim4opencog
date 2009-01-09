@@ -32,12 +32,12 @@ namespace cogbot.Actions
             groupName = groupName.Trim();
 
             GroupManager.CurrentGroupsCallback callback = new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
-            client.Groups.OnCurrentGroups += callback;
-            client.Groups.RequestCurrentGroups();
+            Client.Groups.OnCurrentGroups += callback;
+            Client.Groups.RequestCurrentGroups();
 
             GroupsEvent.WaitOne(30000, false);
 
-            client.Groups.OnCurrentGroups -= callback;
+            Client.Groups.OnCurrentGroups -= callback;
             GroupsEvent.Reset();
 
             if (groups.Count > 0)
@@ -46,8 +46,8 @@ namespace cogbot.Actions
                     if (currentGroup.Name.ToLower() == groupName.ToLower())
                     {
                         GroupManager.GroupLeftCallback lcallback = new GroupManager.GroupLeftCallback(Groups_OnGroupLeft);
-                        client.Groups.OnGroupLeft += lcallback;
-                        client.Groups.LeaveGroup(currentGroup.ID);
+                        Client.Groups.OnGroupLeft += lcallback;
+                        Client.Groups.LeaveGroup(currentGroup.ID);
 
                         /* A.Biondi 
                          * TODO: modify GroupsCommand.cs
@@ -55,22 +55,22 @@ namespace cogbot.Actions
                          * CurrentGroupsCallback occurs, so if you'd issue the command
                          * 'Groups' right after have left a group, it'll display still yet 
                          * the group you just left (unless you have 0 groups, because it 
-                         * would force the refresh with client.Groups.RequestCurrentGroups).
+                         * would force the refresh with Client.Groups.RequestCurrentGroups).
                          */
 
                         GroupsEvent.WaitOne(30000, false);
 
-                        client.Groups.OnGroupLeft -= lcallback;
+                        Client.Groups.OnGroupLeft -= lcallback;
                         GroupsEvent.Reset();
 
                         if (leftGroup)
-                            return client.ToString() + " has left the group " + groupName;
+                            return Client.ToString() + " has left the group " + groupName;
                         return "failed to left the group " + groupName;
                     }
-                return client.ToString() + " doesn't seem to be member of the group " + groupName;
+                return Client.ToString() + " doesn't seem to be member of the group " + groupName;
             }
 
-            return client.ToString() + " doesn't seem member of any group";
+            return Client.ToString() + " doesn't seem member of any group";
         }
 
         void Groups_OnCurrentGroups(Dictionary<UUID, Group> cGroups)
@@ -81,7 +81,7 @@ namespace cogbot.Actions
 
         void Groups_OnGroupLeft(UUID groupID, bool success)
         {
-            WriteLine(client.ToString() + (success ? " has left group " : " failed to left group ") + groupID.ToString());
+            WriteLine(Client.ToString() + (success ? " has left group " : " failed to left group ") + groupID.ToString());
 
             leftGroup = success;
             GroupsEvent.Set();

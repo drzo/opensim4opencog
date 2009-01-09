@@ -24,17 +24,17 @@ namespace cogbot.Actions
             AutoResetEvent appearanceEvent = new AutoResetEvent(false);
             AppearanceManager.AppearanceUpdatedCallback callback =
                 delegate(Primitive.TextureEntry te) { appearanceEvent.Set(); };
-            client.Appearance.OnAppearanceUpdated += callback;
+            Client.Appearance.OnAppearanceUpdated += callback;
 
             // Start the appearance setting process (with baking enabled or disabled)
-            client.Appearance.SetPreviousAppearance(!(args.Length > 0 && args[0].Equals("nobake")));
+            Client.Appearance.SetPreviousAppearance(!(args.Length > 0 && args[0].Equals("nobake")));
 
             // Wait for the process to complete or time out
             if (appearanceEvent.WaitOne(1000 * 120, false))
                 success = true;
 
             // Unregister the handler
-            client.Appearance.OnAppearanceUpdated -= callback;
+            Client.Appearance.OnAppearanceUpdated -= callback;
 
             // Return success or failure message
             if (success)

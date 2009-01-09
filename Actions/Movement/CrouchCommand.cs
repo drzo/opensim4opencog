@@ -21,12 +21,12 @@ namespace cogbot.Actions
 
             if (start)
             {
-                client.Self.Crouch(true);
+                Client.Self.Crouch(true);
                 return "Started crouching";
             }
             else
             {
-                client.Self.Crouch(false);
+                Client.Self.Crouch(false);
                 return "Stopped crouching";
             }
         }

@@ -15,9 +15,9 @@ namespace cogbot.Actions
 
         public override void acceptInput(string verb, Parser args)
         {
-            if (client.Network.Connected)
+            if (Client.Network.Connected)
             {
-                client.Network.Logout();
+                Client.Network.Logout();
             }
         }
 

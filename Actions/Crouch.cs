@@ -19,7 +19,7 @@ namespace cogbot.Actions
             //base.acceptInput(verb, args);
 
             parent.output("You crouched.");
-            client.Self.Crouch(true);
+            Client.Self.Crouch(true);
 
             parent.describeNext = true;
         }

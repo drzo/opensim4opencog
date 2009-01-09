@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Drawing;
 using OpenMetaverse;
-using OpenMetaverse.Capabilities;
+using OpenMetaverse.Http;
 using OpenMetaverse.Imaging;
 
 namespace cogbot.Actions
@@ -15,7 +15,7 @@ namespace cogbot.Actions
         UUID TextureID = UUID.Zero;
         DateTime start;
 
-        public UploadImageCommand(cogbot.TextForm testClient)
+        public UploadImageCommand(TextForm testClient)
         {
             Name = "uploadimage";
             Description = "Upload an image to your inventory. Usage: uploadimage [inventoryname] [timeout] [filename]";
@@ -37,11 +37,11 @@ namespace cogbot.Actions
             if (!UInt32.TryParse(args[1], out timeout))
                 return "Usage: uploadimage [inventoryname] [timeout] [filename]";
 
-            WriteLine("Loading image " + fileName);
+            Console.WriteLine("Loading image " + fileName);
             byte[] jpeg2k = LoadImage(fileName);
             if (jpeg2k == null)
                 return "Failed to compress image to JPEG2000";
-            WriteLine("Finished compressing image to JPEG2000, uploading...");
+            Console.WriteLine("Finished compressing image to JPEG2000, uploading...");
             start = DateTime.Now;
             DoUpload(jpeg2k, inventoryName);
 
@@ -62,23 +62,23 @@ namespace cogbot.Actions
             {
                 string name = System.IO.Path.GetFileNameWithoutExtension(FileName);
 
-                client.Inventory.RequestCreateItemFromAsset(UploadData, name, "Uploaded with cogbot.TextForm",
-                    AssetType.Texture, InventoryType.Texture, client.Inventory.FindFolderForType(AssetType.Texture),
+                Client.Inventory.RequestCreateItemFromAsset(UploadData, name, "Uploaded with TestClient",
+                    AssetType.Texture, InventoryType.Texture, Client.Inventory.FindFolderForType(AssetType.Texture),
 
-                    delegate(CapsClient client00, long bytesReceived, long bytesSent, long totalBytesToReceive, long totalBytesToSend)
+                    delegate(CapsClient client, long bytesReceived, long bytesSent, long totalBytesToReceive, long totalBytesToSend)
                     {
                         if (bytesSent > 0)
-                            WriteLine(String.Format("Texture upload: {0} / {1}", bytesSent, totalBytesToSend));
+                            Console.WriteLine(String.Format("Texture upload: {0} / {1}", bytesSent, totalBytesToSend));
                     },
 
                     delegate(bool success, string status, UUID itemID, UUID assetID)
                     {
-                        WriteLine(String.Format(
+                        Console.WriteLine(String.Format(
                             "RequestCreateItemFromAsset() returned: Success={0}, Status={1}, ItemID={2}, AssetID={3}",
                             success, status, itemID, assetID));
 
                         TextureID = assetID;
-                        WriteLine(String.Format("Upload took {0}", DateTime.Now.Subtract(start)));
+                        Console.WriteLine(String.Format("Upload took {0}", DateTime.Now.Subtract(start)));
                         UploadCompleteEvent.Set();
                     }
                 );
@@ -154,7 +154,7 @@ namespace cogbot.Actions
             }
             catch (Exception ex)
             {
-                WriteLine(ex.ToString() + " SL Image Upload ");
+                Console.WriteLine(ex.ToString() + " SL Image Upload ");
                 return null;
             }
             return UploadData;

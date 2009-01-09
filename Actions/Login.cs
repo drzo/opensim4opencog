@@ -42,10 +42,10 @@ namespace cogbot.Actions
 		         password = parent.config.password; //"geheim";
 
                 }
-                if (!client.Network.Connected)
+                if (!Client.Network.Connected)
                 {
-                    client.Settings.LOGIN_SERVER = parent.config.simURL; // "http://127.0.0.1:8002/";
-                    client.Network.Login(firstName, lastName, password, "TextSL", "UNR");
+                    Client.Settings.LOGIN_SERVER = parent.config.simURL; // "http://127.0.0.1:8002/";
+                    Client.Network.Login(firstName, lastName, password, "TextSL", "UNR");
                 }
                 else
                     parent.output("You are already logged in.");

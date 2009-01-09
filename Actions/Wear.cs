@@ -22,7 +22,7 @@ namespace cogbot.Actions
             try
             {
                 parent.output("wear args =(" + args.str + ").");
-                client.Appearance.WearOutfit(args.str.Split('/'), bake);
+                Client.Appearance.WearOutfit(args.str.Split('/'), bake);
             }
             catch (InvalidOutfitException ex)
             {

@@ -12,7 +12,7 @@ namespace cogbot.Actions
         List<UUID> OutfitAssets = new List<UUID>();
         AssetManager.ImageReceivedCallback ImageReceivedHandler;
 
-        public DumpOutfitCommand(cogbot.TextForm testClient)
+        public DumpOutfitCommand(TextForm testClient)
         {
             Name = "dumpoutfit";
             Description = "Dumps all of the textures from an avatars outfit to the hard drive. Usage: dumpoutfit [avatar-uuid]";
@@ -31,13 +31,13 @@ namespace cogbot.Actions
             if (!UUID.TryParse(args[0], out target))
                 return "Usage: dumpoutfit [avatar-uuid]";
 
-            lock (client.Network.Simulators)
+            lock (Client.Network.Simulators)
             {
-                for (int i = 0; i < client.Network.Simulators.Count; i++)
+                for (int i = 0; i < Client.Network.Simulators.Count; i++)
                 {
                     Avatar targetAv;
 
-                    targetAv = client.Network.Simulators[i].ObjectsAvatars.Find(
+                    targetAv = Client.Network.Simulators[i].ObjectsAvatars.Find(
                         delegate(Avatar avatar)
                         {
                             return avatar.ID == target;
@@ -49,7 +49,7 @@ namespace cogbot.Actions
                         StringBuilder output = new StringBuilder("Downloading ");
 
                         lock (OutfitAssets) OutfitAssets.Clear();
-                        client.Assets.OnImageReceived += ImageReceivedHandler;
+                        Client.Assets.OnImageReceived += ImageReceivedHandler;
 
                         for (int j = 0; j < targetAv.Textures.FaceTextures.Length; j++)
                         {
@@ -71,7 +71,7 @@ namespace cogbot.Actions
                                 }
 
                                 OutfitAssets.Add(face.TextureID);
-                                client.Assets.RequestImage(face.TextureID, type, 100000.0f, 0, 0);
+                                Client.Assets.RequestImage(face.TextureID, type, 100000.0f, 0, 0);
 
                                 output.Append(((AppearanceManager.TextureIndex)j).ToString());
                                 output.Append(" ");
@@ -97,28 +97,28 @@ namespace cogbot.Actions
                         try
                         {
                             File.WriteAllBytes(image.ID.ToString() + ".jp2", image.AssetData);
-                            WriteLine("Wrote JPEG2000 image " + image.ID.ToString() + ".jp2");
+                            Console.WriteLine("Wrote JPEG2000 image " + image.ID.ToString() + ".jp2");
 
                             ManagedImage imgData;
                             OpenJPEG.DecodeToImage(image.AssetData, out imgData);
                             byte[] tgaFile = imgData.ExportTGA();
                             File.WriteAllBytes(image.ID.ToString() + ".tga", tgaFile);
-                            WriteLine("Wrote TGA image " + image.ID.ToString() + ".tga");
+                            Console.WriteLine("Wrote TGA image " + image.ID.ToString() + ".tga");
                         }
                         catch (Exception e)
                         {
-                            WriteLine(e.ToString());
+                            Console.WriteLine(e.ToString());
                         }
                     }
                     else
                     {
-                        WriteLine("Failed to download image " + image.ID.ToString());
+                        Console.WriteLine("Failed to download image " + image.ID.ToString());
                     }
 
                     OutfitAssets.Remove(image.ID);
 
                     if (OutfitAssets.Count == 0)
-                        client.Assets.OnImageReceived -= ImageReceivedHandler;
+                        Client.Assets.OnImageReceived -= ImageReceivedHandler;
                 }
             }
         }

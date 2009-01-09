@@ -27,6 +27,22 @@ namespace cogbot.Listeners
         public List<string> numberedObjects;
         Simulator sim;
 
+        public void SetCurrentSimulator(Simulator simulator)
+        {
+            sim = simulator;
+        }
+
+        public Primitive SelectObject(Primitive prim)
+        {
+            if (prim.Properties != null) return prim;
+            client.Objects.SelectObject(sim, prim.LocalID);
+            while (prim.Properties == null)
+            { // TODO maybe add a timer
+                System.Windows.Forms.Application.DoEvents();
+            }
+            return prim;
+        }
+
         public Objects(TextForm parent)
             : base(parent)
         {
@@ -119,6 +135,7 @@ namespace cogbot.Listeners
         }
         public void CalcStats(Primitive prim)
         {
+            SelectObject(prim);
             if (boringNamesHeuristic(prim) == 0)
                 parent.BoringNamesCount++;                
             else
@@ -136,6 +153,7 @@ namespace cogbot.Listeners
                 if (i > 0 && i <= numberedObjects.Count)
                 {
                     prim = prims[numberedObjects[i - 1]];
+                    SelectObject(prim);
                     return true;
                 }
             }
@@ -143,6 +161,7 @@ namespace cogbot.Listeners
             if (shortNames.ContainsKey(name))
             {
                 prim = prims[shortNames[name]];
+                SelectObject(prim);
                 return true;
             }
 
@@ -151,6 +170,7 @@ namespace cogbot.Listeners
                 if (primName.Length >= name.Length && primName.Substring(0, name.Length) == name)
                 {
                     prim = prims[primName];
+                    SelectObject(prim);
                     return true;
                 }
             }
@@ -159,6 +179,7 @@ namespace cogbot.Listeners
 
         public void describePrim(Primitive prim)
         {
+            SelectObject(prim);
             parent.output(prim.Properties.Name + ": " + prim.Properties.Description);
             if (prim.Sound != UUID.Zero)
                 parent.output("This object makes sound.");
@@ -169,7 +190,7 @@ namespace cogbot.Listeners
         public void describePrimToAI(Primitive prim)
         {
 
-            updatePrimProps(prim);
+            SelectObject(prim);
             if (prim.Properties.Name != null)
                {
                  //parent.enqueueLispTask("(on-prim-description '(" + prim.Properties.Name + ") '" + prim.Properties.Description + "' )");
@@ -184,14 +205,6 @@ namespace cogbot.Listeners
                 //    parent.output("This object is for sale for L" + prim.Properties.SalePrice);
               }
             }
-
-        private void updatePrimProps(Primitive prim)
-        {
-            if (/*prim.Properties == null ||*/prim.Properties.Name == null ||prim.Properties.Name.Equals("") )
-            {
-                client.Objects.SelectObject(sim, prim.LocalID);
-            }
-        }
 
         public int comp(Primitive p1, Primitive p2)
         {

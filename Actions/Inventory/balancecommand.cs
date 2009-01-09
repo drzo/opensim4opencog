@@ -7,7 +7,7 @@ namespace cogbot.Actions
 {
     public class BalanceCommand: Command
     {
-        public BalanceCommand(cogbot.TextForm testClient)
+        public BalanceCommand(TextForm testClient)
 		{
 			Name = "balance";
 			Description = "Shows the amount of L$.";
@@ -18,14 +18,14 @@ namespace cogbot.Actions
 		{
             System.Threading.AutoResetEvent waitBalance = new System.Threading.AutoResetEvent(false);
             AgentManager.BalanceCallback del = delegate(int balance) { waitBalance.Set(); };
-            client.Self.OnBalanceUpdated += del;
-            client.Self.RequestBalance();
+            Client.Self.OnBalanceUpdated += del;
+            Client.Self.RequestBalance();
             String result = "Timeout waiting for balance reply";
             if (waitBalance.WaitOne(10000, false))
             {
-                result = client.ToString() + " has L$: " + client.Self.Balance;
-            }            
-            client.Self.OnBalanceUpdated -= del;
+                result = Client.ToString() + " has L$: " + Client.Self.Balance;
+            }
+            Client.Self.OnBalanceUpdated -= del;
             return result;
 
 		}

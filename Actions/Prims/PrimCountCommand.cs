@@ -16,16 +16,16 @@ namespace cogbot.Actions
 		{
             int count = 0;
 
-            lock (client.Network.Simulators)
+            lock (Client.Network.Simulators)
             {
-                for (int i = 0; i < client.Network.Simulators.Count; i++)
+                for (int i = 0; i < Client.Network.Simulators.Count; i++)
                 {
-                    Simulator sim = client.Network.Simulators[i];
+                    Simulator sim = Client.Network.Simulators[i];
                     int avcount = sim.ObjectsAvatars.Count;
                     int primcount = sim.ObjectsPrimitives.Count;
 
                     WriteLine("" + sim + " {0} (Avatars: {1} Primitives: {2})", 
-                        client.Network.Simulators[i].Name, avcount, primcount);
+                        Client.Network.Simulators[i].Name, avcount, primcount);
 
                     count += avcount;
                     count += primcount;

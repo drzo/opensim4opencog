@@ -32,7 +32,7 @@ using System.Net;
 using System.Xml;
 using System.Security.Cryptography.X509Certificates;
 using OpenMetaverse.StructuredData;
-using OpenMetaverse.Capabilities;
+using OpenMetaverse.Http;
 using OpenMetaverse.Packets;
 
 namespace OpenMetaverse
@@ -279,7 +279,7 @@ namespace OpenMetaverse
                         }
                         else
                         {
-                            WriteXmlRpcInventoryItem(writer, "Inventory", UUID.Zero, 1, (uint)InventoryType.Category, InventoryRoot);
+                            WriteXmlRpcInventoryItem(writer, "Inventory", UUID.Zero, 1, (uint)AssetType.Folder, InventoryRoot);
                         }
                         WriteXmlRpcArrayEnd(writer);
 
@@ -321,7 +321,7 @@ namespace OpenMetaverse
                         }
                         else
                         {
-                            WriteXmlRpcInventoryItem(writer, "Library", UUID.Zero, 1, (uint)InventoryType.Category, LibraryRoot);
+                            WriteXmlRpcInventoryItem(writer, "Library", UUID.Zero, 1, (uint)AssetType.Folder, LibraryRoot);
                         }
                         WriteXmlRpcArrayEnd(writer);
 
@@ -972,6 +972,7 @@ namespace OpenMetaverse
             CapsClient loginRequest = new CapsClient(loginUri);
             loginRequest.OnComplete += new CapsClient.CompleteCallback(LoginReplyHandler);
             loginRequest.UserData = CurrentContext;
+            UpdateLoginStatus(LoginStatus.ConnectingToLogin, String.Format("Logging in as {0} {1}...", loginParams.FirstName, loginParams.LastName));
             loginRequest.StartRequest(OSDParser.SerializeLLSDXmlBytes(loginLLSD), "application/xml+llsd");
         }
 
@@ -1156,26 +1157,22 @@ namespace OpenMetaverse
         /// <returns>A string containing the first found Mac Address</returns>
         private static string GetMAC()
         {
-            string mac = "";
+            string mac = String.Empty;
             System.Net.NetworkInformation.NetworkInterface[] nics = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces();
 
             if (nics.Length > 0)
-            {
                 mac = nics[0].GetPhysicalAddress().ToString().ToUpper();
-            }
 
             if (mac.Length < 12)
-            {
                 mac = mac.PadRight(12, '0');
-            }
 
             return String.Format("{0}:{1}:{2}:{3}:{4}:{5}",
-                                 mac.Substring(0, 2),
-                                 mac.Substring(2, 2),
-                                 mac.Substring(4, 2),
-                                 mac.Substring(6, 2),
-                                 mac.Substring(8, 2),
-                                 mac.Substring(10, 2));
+                mac.Substring(0, 2),
+                mac.Substring(2, 2),
+                mac.Substring(4, 2),
+                mac.Substring(6, 2),
+                mac.Substring(8, 2),
+                mac.Substring(10, 2));
         }
     }
 }

@@ -21,11 +21,11 @@ namespace cogbot.Actions
         {
             parent.MasterKey = UUID.Parse(args[0]);
 
-            lock (client.Network.Simulators)
+            lock (Client.Network.Simulators)
             {
-                for (int i = 0; i < client.Network.Simulators.Count; i++)
+                for (int i = 0; i < Client.Network.Simulators.Count; i++)
                 {
-                    Avatar master = client.Network.Simulators[i].ObjectsAvatars.Find(
+                    Avatar master = Client.Network.Simulators[i].ObjectsAvatars.Find(
                         delegate(Avatar avatar)
                         {
                             return avatar.ID == parent.MasterKey;
@@ -34,7 +34,7 @@ namespace cogbot.Actions
 
                     if (master != null)
                     {
-                        client.Self.InstantMessage(master.ID,
+                        Client.Self.InstantMessage(master.ID,
                             "You are now my master. IM me with \"help\" for a command list.");
                         break;
                     }

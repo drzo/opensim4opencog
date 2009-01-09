@@ -13,9 +13,9 @@ namespace cogbot.Actions
     public class InventoryCommand : Command
     {
         private OpenMetaverse.Inventory Inventory;
-        private InventoryManager Manager;
+        private OpenMetaverse.InventoryManager Manager;
 
-        public InventoryCommand(cogbot.TextForm testClient)
+        public InventoryCommand(TextForm testClient)
         {
             Name = "i";
             Description = "Prints out inventory.";
@@ -24,7 +24,7 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            Manager = client.Inventory;
+            Manager = Client.Inventory;
             Inventory = Manager.Store;
 
             StringBuilder result = new StringBuilder();
@@ -37,7 +37,7 @@ namespace cogbot.Actions
 
         void PrintFolder(InventoryFolder f, StringBuilder result, int indent)
         {
-            List<InventoryBase> contents = Manager.FolderContents(f.UUID, client.Self.AgentID,
+            List<InventoryBase> contents = Manager.FolderContents(f.UUID, Client.Self.AgentID,
                 true, true, InventorySortOrder.ByName, 3000);
 
             if (contents != null)

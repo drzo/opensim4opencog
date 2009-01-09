@@ -50,7 +50,8 @@
  )
 
 (def (on-new-prim  prim-name prim-uuid prim-description)
-  (block
+  (progn
+    (prim-check prim-uuid)
     (thisClient.msgClient (@"(on-new-prim ({0}) ({1}) ({2}))" (str prim-name)(str prim-uuid)(str prim-description)) )
     )
  )
@@ -60,20 +61,29 @@
     )
  )
 
+;; DotLisp/Clojure the == is equalp
+(def (notme agent)
+   ;; TODO: actually compare it to login name...
+   (not (== (str agent) "My Bot")))
 
+(def (prim-check primUUID) ) 
 ;-----------------------------
 ; In World Events
 ;-----------------------------
 ;  (on-chat agent message) -> "(heard (agent) message)";
 (def (on-chat agent message)
   (block
-    (thisClient.msgClient (@"(heard ({0}) '{1}')" (str agent)(str message)) )
+    (thisClient.msgClient (@"(heard ({0}) '{1}')" (notme agent)(str message)) )
     ;(thisClient.ExecuteCommand (@"say I heard ({0}) '{1}')" (str agent)(str message)) )
     ;(thisClient.ExecuteCommand (@"say I heard ({0}) '{1}')" (str agent)(str message)) )
     ; (thisClient.ExecuteCommand (@"{0}" (str message)) )
+
     )
-     (set mymsg (str message))
-    ; (set mymsgList (into nil (mymsg.Split(" ") )))
+  (when
+   (notme agent)
+    ;; end this block
+    (setj mymsg (str message))
+    ; (setj mymsgList (into nil (mymsg.Split(" ") )))
      
     ; (when (member mymsgList wamo )
     ;  (thisClient.ExecuteCommand "say I just saw wamo")
@@ -89,13 +99,13 @@
         (thisClient.ExecuteCommand (@"{0}" (str message)) )
      )
      (when (>= (mymsg.IndexOf "cogbot" ) 0)
-       (block 
-        (set mycommand (str message))
-        (set mycommand1 (mycommand.Replace "cogbot " ""))
+       (progn
+        (setj mycommand (str message))
+        (setj mycommand1 (mycommand.Replace "cogbot " ""))
         (thisClient.ExecuteCommand  mycommand1 )
         )
      )
-    
+    )
  )
  
  ;  (on-instantmessage agent message) -> "(heard (agent) message)";
@@ -170,7 +180,8 @@
 ;---------------------------------
 ;  (on-prim-description obj primID description) -> "(prim-description (obj) 'description' )";
 (def (on-prim-description  obj primID description)
-  (block
+  (progn
+    (prim-check primID)
     (thisClient.msgClient (@"(prim-description ({0}) ({1}) ({2}))" (str obj)(str primID)(str description)) )
     )
  )
@@ -184,7 +195,8 @@
 
 ;  (on-prim-pos prim-name primID vector) -> "(prim-position (prim-name) (primID) vector)";
 (def (on-prim-pos prim-name primID vector)
-  (block
+  (progn
+    (prim-check primID)
     (thisClient.msgClient (@"(prim-position ({0})({1}) '{2}')" (str prim-name)(str primID)(str vector)) )
     )
  )

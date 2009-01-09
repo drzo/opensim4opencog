@@ -31,7 +31,7 @@ namespace cogbot.Actions
             {
                 WriteLine("Teleporting to " + landmark.ToString());
             }
-            if (client.Self.Teleport(landmark))
+            if (Client.Self.Teleport(landmark))
             {
                 return "Teleport Succesful";
             }

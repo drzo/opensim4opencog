@@ -43,17 +43,17 @@ namespace cogbot.Actions
                         wait.Set();
                 };
 
-                client.Parcels.OnParcelSelectedObjects += callback;
-                client.Parcels.SelectObjects(parcelID, (ObjectReturnType)16, ownerUUID);
+                Client.Parcels.OnParcelSelectedObjects += callback;
+                Client.Parcels.SelectObjects(parcelID, (ObjectReturnType)16, ownerUUID);
                 
 
-                client.Parcels.ObjectOwnersRequest(client.Network.CurrentSim, parcelID);
+                Client.Parcels.ObjectOwnersRequest(Client.Network.CurrentSim, parcelID);
                 if (!wait.WaitOne(30000, false))
                 {
                     result.AppendLine("Timed out waiting for packet.");
                 }
                 
-                client.Parcels.OnParcelSelectedObjects -= callback;
+                Client.Parcels.OnParcelSelectedObjects -= callback;
                 result.AppendLine("Found a total of " + counter + " Objects");
                 return result.ToString();
             }

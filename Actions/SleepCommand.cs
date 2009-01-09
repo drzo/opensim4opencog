@@ -22,21 +22,21 @@ namespace cogbot.Actions
                 return "Usage: sleep [seconds]";
 
             AgentPausePacket pause = new AgentPausePacket();
-            pause.AgentData.AgentID = client.Self.AgentID;
-            pause.AgentData.SessionID = client.Self.SessionID;
+            pause.AgentData.AgentID = Client.Self.AgentID;
+            pause.AgentData.SessionID = Client.Self.SessionID;
             pause.AgentData.SerialNum = sleepSerialNum++;
 
-            client.Network.SendPacket(pause);
+            Client.Network.SendPacket(pause);
 
             // Sleep
             System.Threading.Thread.Sleep(seconds * 1000);
 
             AgentResumePacket resume = new AgentResumePacket();
-            resume.AgentData.AgentID = client.Self.AgentID;
-            resume.AgentData.SessionID = client.Self.SessionID;
+            resume.AgentData.AgentID = Client.Self.AgentID;
+            resume.AgentData.SessionID = Client.Self.SessionID;
             resume.AgentData.SerialNum = pause.AgentData.SerialNum;
 
-            client.Network.SendPacket(resume);
+            Client.Network.SendPacket(resume);
 
             return "Paused, slept for " + seconds + " second(s), and resumed";
         }

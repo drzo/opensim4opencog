@@ -43,7 +43,7 @@ namespace cogbot.Actions
                         return "Usage: downloadtexture [texture-uuid] [discardlevel]";
                 }
 
-                client.Assets.RequestImage(TextureID, ImageType.Normal, 1000000.0f, discardLevel, 0);
+                Client.Assets.RequestImage(TextureID, ImageType.Normal, 1000000.0f, discardLevel, 0);
 
                 if (DownloadHandle.WaitOne(120 * 1000, false))
                 {
@@ -52,7 +52,7 @@ namespace cogbot.Actions
                         if (Asset != null && Asset.Decode())
                         {
                             try { File.WriteAllBytes(Image.ID.ToString() + ".jp2", Asset.AssetData); }
-                            catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, client, ex); }
+                            catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex); }
 
                             return String.Format("Saved {0}.jp2 ({1}x{2})", Image.ID, Asset.Image.Width, Asset.Image.Height);
                         }

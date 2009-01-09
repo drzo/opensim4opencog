@@ -40,14 +40,14 @@ namespace cogbot.Actions
                     WaitforFriend.Set();
                 };
 
-            client.Friends.OnFriendFound += del;
+            Client.Friends.OnFriendFound += del;
             WaitforFriend.Reset();
-            client.Friends.MapFriend(targetID);
+            Client.Friends.MapFriend(targetID);
             if (!WaitforFriend.WaitOne(10000, false))
             {
                 sb.AppendFormat("Timeout waiting for reply, Do you have mapping rights on {0}?", targetID);
             }
-            client.Friends.OnFriendFound -= del;
+            Client.Friends.OnFriendFound -= del;
             return sb.ToString();
         }
     }

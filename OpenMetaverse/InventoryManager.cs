@@ -29,7 +29,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Text;
-using OpenMetaverse.Capabilities;
+using OpenMetaverse.Http;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse.Packets;
 
@@ -1965,9 +1965,9 @@ namespace OpenMetaverse
         /// <param name="simulator">Simulator to place object in</param>
         /// <param name="rotation">Rotation of the object when rezzed</param>
         /// <param name="position">Vector of where to place object</param>
-        /// <param name="item">InventoryObject object containing item details</param>
+        /// <param name="item">InventoryItem object containing item details</param>
         public UUID RequestRezFromInventory(Simulator simulator, Quaternion rotation, Vector3 position,
-            InventoryObject item)
+            InventoryItem item)
         {
             return RequestRezFromInventory(simulator, rotation, position, item, _Client.Self.ActiveGroup,
                 UUID.Random(), false);
@@ -1979,10 +1979,10 @@ namespace OpenMetaverse
         /// <param name="simulator">Simulator to place object in</param>
         /// <param name="rotation">Rotation of the object when rezzed</param>
         /// <param name="position">Vector of where to place object</param>
-        /// <param name="item">InventoryObject object containing item details</param>
+        /// <param name="item">InventoryItem object containing item details</param>
         /// <param name="groupOwner">UUID of group to own the object</param>
         public UUID RequestRezFromInventory(Simulator simulator, Quaternion rotation, Vector3 position,
-            InventoryObject item, UUID groupOwner)
+            InventoryItem item, UUID groupOwner)
         {
             return RequestRezFromInventory(simulator, rotation, position, item, groupOwner, UUID.Random(), false);
         }
@@ -1993,13 +1993,13 @@ namespace OpenMetaverse
         /// <param name="simulator">Simulator to place object in</param>
         /// <param name="rotation">Rotation of the object when rezzed</param>
         /// <param name="position">Vector of where to place object</param>
-        /// <param name="item">InventoryObject object containing item details</param>
+        /// <param name="item">InventoryItem object containing item details</param>
         /// <param name="groupOwner">UUID of group to own the object</param>        
         /// <param name="queryID">User defined queryID to correlate replies</param>
         /// <param name="requestObjectDetails">if set to true the simulator
         /// will automatically send object detail packet(s) back to the client</param>
         public UUID RequestRezFromInventory(Simulator simulator, Quaternion rotation, Vector3 position,
-            InventoryObject item, UUID groupOwner, UUID queryID, bool requestObjectDetails)
+            InventoryItem item, UUID groupOwner, UUID queryID, bool requestObjectDetails)
         {
             RezObjectPacket add = new RezObjectPacket();
 
@@ -2955,7 +2955,7 @@ namespace OpenMetaverse
             if (reply.AgentData.Descendents > 0)
             {
                 // InventoryDescendantsReply sends a null folder if the parent doesnt contain any folders
-                if ((reply.FolderData.GetLength(0)>0)&&(reply.FolderData[0].FolderID != UUID.Zero))
+                if (reply.FolderData[0].FolderID != UUID.Zero)
                 {
                     // Iterate folders in this packet
                     for (int i = 0; i < reply.FolderData.Length; i++)
@@ -2971,7 +2971,7 @@ namespace OpenMetaverse
                 }
 
                 // InventoryDescendantsReply sends a null item if the parent doesnt contain any items.
-                if ((reply.ItemData.GetLength(0)>0) && (reply.ItemData[0].ItemID != UUID.Zero))
+                if (reply.ItemData[0].ItemID != UUID.Zero)
                 {
                     // Iterate items in this packet
                     for (int i = 0; i < reply.ItemData.Length; i++)

@@ -16,7 +16,7 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            client.Grid.RequestMapLayer(GridLayerType.Objects);
+            Client.Grid.RequestMapLayer(GridLayerType.Objects);
 
             return "Sent.";
         }

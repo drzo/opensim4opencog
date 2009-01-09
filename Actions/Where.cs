@@ -28,33 +28,33 @@ namespace cogbot.Actions
             {
                 if (((Listeners.Avatars)parent.listeners["avatars"]).tryGetAvatar(args.prepPhrases["is"], out avatar))
                 {
-                    //client.Self.Movement.Camera.AtAxis
-                    Vector3 myPos = client.Self.SimPosition;
+                    //Client.Self.Movement.Camera.AtAxis
+                    Vector3 myPos = Client.Self.SimPosition;
                     Vector3 forward = new Vector3(1, 0, 0);
                     Vector3 offset = Vector3.Normalize(avatar.Position - myPos);
                     Quaternion newRot2 = Vector3.RotationBetween(forward, offset);
 
-                    Quaternion newRot1 = Vector3.RotationBetween(avatar.Position, client.Self.RelativePosition);
-                    double newDist = Vector3.Distance(avatar.Position, client.Self.RelativePosition);
-                    parent.output(client.Self.Movement.Camera.AtAxis + ", " + newRot2 + ", " + newDist);
+                    Quaternion newRot1 = Vector3.RotationBetween(avatar.Position, Client.Self.RelativePosition);
+                    double newDist = Vector3.Distance(avatar.Position, Client.Self.RelativePosition);
+                    parent.output(Client.Self.Movement.Camera.AtAxis + ", " + newRot2 + ", " + newDist);
 
                     //parent.output(avatar.Position.X + ", " + avatar.Position.Y + ", " + avatar.Position.Z);
-                    //parent.output(client.Self.RelativePosition.X + ", " + client.Self.RelativePosition.Y + ", " + client.Self.RelativePosition.Z +"\n");
+                    //parent.output(Client.Self.RelativePosition.X + ", " + Client.Self.RelativePosition.Y + ", " + Client.Self.RelativePosition.Z +"\n");
 
                     //parent.output(avatar.Rotation.X + ", " + avatar.Rotation.Y + ", " + avatar.Rotation.Z);
-                    //parent.output(client.Self.RelativeRotation.X + ", " + client.Self.RelativeRotation.Y + ", " + client.Self.RelativeRotation.Z + "\n");
+                    //parent.output(Client.Self.RelativeRotation.X + ", " + Client.Self.RelativeRotation.Y + ", " + Client.Self.RelativeRotation.Z + "\n");
                 }
                 else if (((Listeners.Objects)parent.listeners["objects"]).tryGetPrim(args.prepPhrases["is"], out prim))
                 {
-                    Quaternion newRot = Vector3.RotationBetween(prim.Position, client.Self.RelativePosition);
-                    double newDist = Vector3.Distance(prim.Position, client.Self.RelativePosition);
+                    Quaternion newRot = Vector3.RotationBetween(prim.Position, Client.Self.RelativePosition);
+                    double newDist = Vector3.Distance(prim.Position, Client.Self.RelativePosition);
                     parent.output(newRot + ", " + newDist);
 
                     //parent.output(prim.Position.X + ", " + prim.Position.Y + ", " + prim.Position.Z);
-                    //parent.output(client.Self.RelativePosition.X + ", " + client.Self.RelativePosition.Y + ", " + client.Self.RelativePosition.Z + "\n");
+                    //parent.output(Client.Self.RelativePosition.X + ", " + Client.Self.RelativePosition.Y + ", " + Client.Self.RelativePosition.Z + "\n");
 
                     //parent.output(prim.Rotation.X + ", " + prim.Rotation.Y + ", " + prim.Rotation.Z);
-                    //parent.output(client.Self.RelativeRotation.X + ", " + client.Self.RelativeRotation.Y + ", " + client.Self.RelativeRotation.Z + "\n");
+                    //parent.output(Client.Self.RelativeRotation.X + ", " + Client.Self.RelativeRotation.Y + ", " + Client.Self.RelativeRotation.Z + "\n");
                 }
                 else
                 {
