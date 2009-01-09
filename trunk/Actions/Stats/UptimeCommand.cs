@@ -19,7 +19,7 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            string name = client.ToString();
+            string name = Client.ToString();
             return "I am " + name + ", Up Since: " + Created + " (" + (DateTime.Now - Created) + ")";
         }
     }

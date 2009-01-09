@@ -19,12 +19,12 @@ namespace cogbot.Actions
             if (args.Length < 1)
                 return "Usage: showevent [eventID] (use searchevents to get ID)";
 
-            client.Directory.OnEventInfo += new DirectoryManager.EventInfoCallback(Directory_OnEventInfo);
+            Client.Directory.OnEventInfo += new DirectoryManager.EventInfoCallback(Directory_OnEventInfo);
             uint eventID;
 
             if (UInt32.TryParse(args[0], out eventID))
             {
-                client.Directory.EventInfoRequest(eventID);
+                Client.Directory.EventInfoRequest(eventID);
                 return "Query Sent";
             }
             else

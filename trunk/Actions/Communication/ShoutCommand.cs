@@ -42,7 +42,7 @@ namespace cogbot.Actions
                 message += args[i] + " ";
             }
 
-            client.Self.Chat(message, channel, ChatType.Shout);
+            Client.Self.Chat(message, channel, ChatType.Shout);
 
             return "Shouted " + message;
         }

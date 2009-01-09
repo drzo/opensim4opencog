@@ -9,7 +9,7 @@ namespace cogbot.Actions.Inventory.Shell
     {
         private InventoryManager Manager;
         private OpenMetaverse.Inventory Inventory;
-        public ListContentsCommand(cogbot.TextForm client)
+        public ListContentsCommand(TextForm client)
         {
             Name = "ls";
             Description = "Lists the contents of the current working inventory folder.";
@@ -23,7 +23,7 @@ namespace cogbot.Actions.Inventory.Shell
             if (args.Length > 0 && args[0] == "-l")
                 longDisplay = true;
 
-            Manager = client.Inventory;
+            Manager = Client.Inventory;
             Inventory = Manager.Store;
             // WARNING: Uses local copy of inventory contents, need to download them first.
             List<InventoryBase> contents = Inventory.GetContents(parent.CurrentDirectory);

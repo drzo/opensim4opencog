@@ -33,11 +33,11 @@ namespace cogbot.Actions
                 message = message.TrimEnd();
                 if (message.Length > 1023) message = message.Remove(1023);
 
-                client.Self.OnGroupChatJoin += new AgentManager.GroupChatJoinedCallback(Self_OnGroupChatJoin);
-                if (!client.Self.GroupChatSessions.ContainsKey(ToGroupID))
+                Client.Self.OnGroupChatJoin += new AgentManager.GroupChatJoinedCallback(Self_OnGroupChatJoin);
+                if (!Client.Self.GroupChatSessions.ContainsKey(ToGroupID))
                 {
                     WaitForSessionStart.Reset();
-                    client.Self.RequestJoinGroupChat(ToGroupID);
+                    Client.Self.RequestJoinGroupChat(ToGroupID);
                 }
                 else
                 {
@@ -46,14 +46,14 @@ namespace cogbot.Actions
                 
                 if (WaitForSessionStart.WaitOne(20000, false))
                 {
-                    client.Self.InstantMessageGroup(ToGroupID, message);
+                    Client.Self.InstantMessageGroup(ToGroupID, message);
                 }
                 else
                 {
                     return "Timeout waiting for group session start";
                 }
                 
-                client.Self.OnGroupChatJoin -= new AgentManager.GroupChatJoinedCallback(Self_OnGroupChatJoin);
+                Client.Self.OnGroupChatJoin -= new AgentManager.GroupChatJoinedCallback(Self_OnGroupChatJoin);
                 return "Instant Messaged group " + ToGroupID.ToString() + " with message: " + message;
             }
             else

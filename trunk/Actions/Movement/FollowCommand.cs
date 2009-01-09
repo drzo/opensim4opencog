@@ -32,7 +32,7 @@ namespace cogbot.Actions
             {
                 Active = false;
                 targetLocalID = 0;
-                client.Self.AutoPilotCancel();
+                Client.Self.AutoPilotCancel();
                 return "Following is off";
             }
             else
@@ -40,17 +40,17 @@ namespace cogbot.Actions
                 if (Follow(target))
                     return "Following " + target;
                 else
-                    return "Unable to follow " + target + ".  client may not be able to see that avatar.";
+                    return "Unable to follow " + target + ".  Client may not be able to see that avatar.";
             }
 		}
 
         bool Follow(string name)
         {
-            lock (client.Network.Simulators)
+            lock (Client.Network.Simulators)
             {
-                for (int i = 0; i < client.Network.Simulators.Count; i++)
+                for (int i = 0; i < Client.Network.Simulators.Count; i++)
                 {
-                    Avatar target = client.Network.Simulators[i].ObjectsAvatars.Find(
+                    Avatar target = Client.Network.Simulators[i].ObjectsAvatars.Find(
                         delegate(Avatar avatar)
                         {
                             return avatar.Name == name;
@@ -68,7 +68,7 @@ namespace cogbot.Actions
 
             if (Active)
             {
-                client.Self.AutoPilotCancel();
+                Client.Self.AutoPilotCancel();
                 Active = false;
             }
 
@@ -77,11 +77,11 @@ namespace cogbot.Actions
 
         bool Follow(UUID id)
         {
-            lock (client.Network.Simulators)
+            lock (Client.Network.Simulators)
             {
-                for (int i = 0; i < client.Network.Simulators.Count; i++)
+                for (int i = 0; i < Client.Network.Simulators.Count; i++)
                 {
-                    Avatar target = client.Network.Simulators[i].ObjectsAvatars.Find(
+                    Avatar target = Client.Network.Simulators[i].ObjectsAvatars.Find(
                         delegate(Avatar avatar)
                         {
                             return avatar.ID == id;
@@ -106,19 +106,19 @@ namespace cogbot.Actions
             if (Active)
             {
                 // Find the target position
-                lock (client.Network.Simulators)
+                lock (Client.Network.Simulators)
                 {
-                    for (int i = 0; i < client.Network.Simulators.Count; i++)
+                    for (int i = 0; i < Client.Network.Simulators.Count; i++)
                     {
                         Avatar targetAv;
 
-                        if (client.Network.Simulators[i].ObjectsAvatars.TryGetValue(targetLocalID, out targetAv))
+                        if (Client.Network.Simulators[i].ObjectsAvatars.TryGetValue(targetLocalID, out targetAv))
                         {
                             float distance = 0.0f;
 
-                            if (client.Network.Simulators[i] == client.Network.CurrentSim)
+                            if (Client.Network.Simulators[i] == Client.Network.CurrentSim)
                             {
-                                distance = Vector3.Distance(targetAv.Position, client.Self.SimPosition);
+                                distance = Vector3.Distance(targetAv.Position, Client.Self.SimPosition);
                             }
                             else
                             {
@@ -128,21 +128,21 @@ namespace cogbot.Actions
                             if (distance > DISTANCE_BUFFER)
                             {
                                 uint regionX, regionY;
-                                Utils.LongToUInts(client.Network.Simulators[i].Handle, out regionX, out regionY);
+                                Utils.LongToUInts(Client.Network.Simulators[i].Handle, out regionX, out regionY);
 
                                 double xTarget = (double)targetAv.Position.X + (double)regionX;
                                 double yTarget = (double)targetAv.Position.Y + (double)regionY;
                                 double zTarget = targetAv.Position.Z - 2f;
 
                                 Logger.DebugLog(String.Format("[Autopilot] {0} meters away from the target, starting autopilot to <{1},{2},{3}>",
-                                    distance, xTarget, yTarget, zTarget), client);
+                                    distance, xTarget, yTarget, zTarget), Client);
 
-                                client.Self.AutoPilot(xTarget, yTarget, zTarget);
+                                Client.Self.AutoPilot(xTarget, yTarget, zTarget);
                             }
                             else
                             {
                                 // We are in range of the target and moving, stop moving
-                                client.Self.AutoPilotCancel();
+                                Client.Self.AutoPilotCancel();
                             }
                         }
                     }
@@ -159,7 +159,7 @@ namespace cogbot.Actions
 
             if (message.Contains("Autopilot cancel"))
             {
-                Logger.Log("FollowCommand: " + message, Helpers.LogLevel.Info, client);
+                Logger.Log("FollowCommand: " + message, Helpers.LogLevel.Info, Client);
             }
         }
     }

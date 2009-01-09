@@ -14,7 +14,7 @@ namespace cogbot.Actions
     /// </summary>
     public class DeleteFolderCommand : Command
     {
-        public DeleteFolderCommand(cogbot.TextForm testClient)
+        public DeleteFolderCommand(TextForm testClient)
         {
             Name = "deleteFolder";
             Description = "Moves a folder to the Trash Folder";
@@ -34,11 +34,11 @@ namespace cogbot.Actions
             try
             {
                 // find the folder
-                found = client.Inventory.LocalFind(client.Inventory.Store.RootFolder.UUID, target.Split('/'), 0, true);
+                found = Client.Inventory.LocalFind(Client.Inventory.Store.RootFolder.UUID, target.Split('/'), 0, true);
                 if (found.Count.Equals(1))
                 {
                     // move the folder to the trash folder
-                    client.Inventory.MoveFolder(found[0].UUID, client.Inventory.FindFolderForType(AssetType.TrashFolder));
+                    Client.Inventory.MoveFolder(found[0].UUID, Client.Inventory.FindFolderForType(AssetType.TrashFolder));
                     return String.Format("Moved folder {0} to Trash", found[0].Name);
                 }
             }

@@ -53,7 +53,7 @@ namespace cogbot.Actions
 
             Primitive exportPrim;
 
-            exportPrim = client.Network.CurrentSim.ObjectsPrimitives.Find(
+            exportPrim = Client.Network.CurrentSim.ObjectsPrimitives.Find(
                 delegate(Primitive prim) { return prim.ID == id; }
             );
 
@@ -65,7 +65,7 @@ namespace cogbot.Actions
                     localid = exportPrim.LocalID;
 
                 // Check for export permission first
-                client.Objects.RequestObjectPropertiesFamily(client.Network.CurrentSim, id);
+                Client.Objects.RequestObjectPropertiesFamily(Client.Network.CurrentSim, id);
                 GotPermissionsEvent.WaitOne(1000 * 10, false);
 
                 if (!GotPermissions)
@@ -75,16 +75,16 @@ namespace cogbot.Actions
                 else
                 {
                     GotPermissions = false;
-                    if (Properties.OwnerID != client.Self.AgentID &&
+                    if (Properties.OwnerID != Client.Self.AgentID &&
                         Properties.OwnerID != parent.MasterKey && 
-                        client.Self.AgentID != client.Self.AgentID)
+                        Client.Self.AgentID != Client.Self.AgentID)
                     {
                         return "That object is owned by " + Properties.OwnerID + ", we don't have permission " +
                             "to export it";
                     }
                 }
 
-                List<Primitive> prims = client.Network.CurrentSim.ObjectsPrimitives.FindAll(
+                List<Primitive> prims = Client.Network.CurrentSim.ObjectsPrimitives.FindAll(
                     delegate(Primitive prim)
                     {
                         return (prim.LocalID == localid || prim.ParentID == localid);
@@ -95,16 +95,16 @@ namespace cogbot.Actions
 
                 if (!complete)
                 {
-                    Logger.Log("Warning: Unable to retrieve full properties for:", Helpers.LogLevel.Warning, client);
+                    Logger.Log("Warning: Unable to retrieve full properties for:", Helpers.LogLevel.Warning, Client);
                     foreach (UUID uuid in PrimsWaiting.Keys)
-                        Logger.Log(uuid.ToString(), Helpers.LogLevel.Warning, client);
+                        Logger.Log(uuid.ToString(), Helpers.LogLevel.Warning, Client);
                 }
 
                 string output = OSDParser.SerializeLLSDXmlString(Helpers.PrimListToOSD(prims));
                 try { File.WriteAllText(file, output); }
                 catch (Exception e) { return e.Message; }
 
-                Logger.Log("Exported " + prims.Count + " prims to " + file, Helpers.LogLevel.Info, client);
+                Logger.Log("Exported " + prims.Count + " prims to " + file, Helpers.LogLevel.Info, Client);
 
                 // Create a list of all of the textures to download
                 List<ImageRequest> textureRequests = new List<ImageRequest>();
@@ -142,14 +142,14 @@ namespace cogbot.Actions
                 }
 
                 // Download all of the textures in the export list
-                client.Assets.RequestImages(textureRequests);
+                Client.Assets.RequestImages(textureRequests);
 
                 return "XML exported, began downloading " + Textures.Count + " textures";
             }
             else
             {
                 return "Couldn't find UUID " + id.ToString() + " in the " + 
-                    client.Network.CurrentSim.ObjectsPrimitives.Count + 
+                    Client.Network.CurrentSim.ObjectsPrimitives.Count + 
                     "objects currently indexed in the current simulator";
             }
         }
@@ -170,7 +170,7 @@ namespace cogbot.Actions
                 }
             }
 
-            client.Objects.SelectObjects(client.Network.CurrentSim, localids);
+            Client.Objects.SelectObjects(Client.Network.CurrentSim, localids);
 
             return AllPropertiesReceived.WaitOne(2000 + msPerRequest * objects.Count, false);
         }
@@ -185,23 +185,23 @@ namespace cogbot.Actions
                 if (image.Success)
                 {
                     try { File.WriteAllBytes(image.ID.ToString() + ".jp2", asset.AssetData); }
-                    catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, client); }
+                    catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client); }
 
                     if (asset.Decode())
                     {
                         try { File.WriteAllBytes(image.ID.ToString() + ".tga", asset.Image.ExportTGA()); }
-                        catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, client); }
+                        catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client); }
                     }
                     else
                     {
-                        Logger.Log("Failed to decode image " + image.ID.ToString(), Helpers.LogLevel.Error, client);
+                        Logger.Log("Failed to decode image " + image.ID.ToString(), Helpers.LogLevel.Error, Client);
                     }
 
-                    Logger.Log("Finished downloading image " + image.ID.ToString(), Helpers.LogLevel.Info, client);
+                    Logger.Log("Finished downloading image " + image.ID.ToString(), Helpers.LogLevel.Info, Client);
                 }
                 else
                 {
-                    Logger.Log("Failed to download image " + image.ID.ToString(), Helpers.LogLevel.Warning, client);
+                    Logger.Log("Failed to download image " + image.ID.ToString(), Helpers.LogLevel.Warning, Client);
                 }
             }
         }
@@ -211,7 +211,7 @@ namespace cogbot.Actions
         {
             if (sourceID == parent.MasterKey)
             {
-                //client.DebugLog("Master is now selecting " + targetID.ToString());
+                //Client.DebugLog("Master is now selecting " + targetID.ToString());
                 SelectedObject = targetID;
             }
         }

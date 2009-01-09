@@ -22,11 +22,11 @@ namespace cogbot.Actions
             ulong regionHandle;
 
             if (args.Length == 0)
-                regionHandle = client.Network.CurrentSim.Handle;
+                regionHandle = Client.Network.CurrentSim.Handle;
             else if (!(args.Length == 1 && UInt64.TryParse(args[0], out regionHandle)))
                 return "Usage: agentlocations [regionhandle]";
 
-            List<GridItem> items = client.Grid.MapItems(regionHandle, GridItemType.AgentLocations, 
+            List<GridItem> items = Client.Grid.MapItems(regionHandle, GridItemType.AgentLocations, 
                 GridLayerType.Objects, 1000 * 20);
 
             if (items != null)

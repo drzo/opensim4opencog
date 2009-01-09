@@ -7,9 +7,9 @@ namespace cogbot.Actions.Inventory.Shell
 {
     class GiveItemCommand : Command
     {
-        private InventoryManager Manager;
+        private OpenMetaverse.InventoryManager Manager;
         private OpenMetaverse.Inventory Inventory;
-        public GiveItemCommand(cogbot.TextForm client)
+        public GiveItemCommand(TextForm client)
         {
             Name = "give";
             Description = "Gives items from the current working directory to an avatar.";
@@ -26,7 +26,7 @@ namespace cogbot.Actions.Inventory.Shell
             {
                 return "First argument expected agent UUID.";
             }
-            Manager = client.Inventory;
+            Manager = Client.Inventory;
             Inventory = Manager.Store;
             string ret = "";
             string nl = "\n";

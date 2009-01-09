@@ -20,7 +20,7 @@ namespace cogbot.Actions
             //if (args.Length < 1)
             //    return "";
 
-            client.Grid.RequestMainlandSims(GridLayerType.Objects);
+            Client.Grid.RequestMainlandSims(GridLayerType.Objects);
             
             return "Sent.";
         }

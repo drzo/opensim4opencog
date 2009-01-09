@@ -42,10 +42,10 @@ namespace cogbot.Actions
                 return "Usage: goto sim/x/y/z";
             }
 
-            if (client.Self.Teleport(sim, new Vector3(x, y, z)))
-                return "Teleported to " + client.Network.CurrentSim;
+            if (Client.Self.Teleport(sim, new Vector3(x, y, z)))
+                return "Teleported to " + Client.Network.CurrentSim;
             else
-                return "Teleport failed: " + client.Self.TeleportMessage;
+                return "Teleport failed: " + Client.Self.TeleportMessage;
 		}
     }
 }

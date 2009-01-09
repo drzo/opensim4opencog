@@ -29,7 +29,7 @@ namespace cogbot.Actions
             if (targetName.Length == 0)
                 return "Usage: clone [name]";
 
-            if (client.Directory.PeopleSearch(DirectoryManager.DirFindFlags.People, targetName, 0, 1000 * 10,
+            if (Client.Directory.PeopleSearch(DirectoryManager.DirFindFlags.People, targetName, 0, 1000 * 10,
                 out matches) && matches.Count > 0)
             {
                 UUID target = matches[0].AgentID;
@@ -42,8 +42,8 @@ namespace cogbot.Actions
                     AvatarAppearancePacket appearance = parent.Appearances[target];
 
                     AgentSetAppearancePacket set = new AgentSetAppearancePacket();
-                    set.AgentData.AgentID = client.Self.AgentID;
-                    set.AgentData.SessionID = client.Self.SessionID;
+                    set.AgentData.AgentID = Client.Self.AgentID;
+                    set.AgentData.SessionID = Client.Self.SessionID;
                     set.AgentData.SerialNum = SerialNum++;
                     set.AgentData.Size = new Vector3(2f, 2f, 2f); // HACK
 
@@ -61,10 +61,10 @@ namespace cogbot.Actions
                     #endregion AvatarAppearance to AgentSetAppearance
 
                     // Detach everything we are currently wearing
-                    client.Appearance.AddAttachments(new List<InventoryBase>(), true);
+                    Client.Appearance.AddAttachments(new List<InventoryBase>(), true);
 
                     // Send the new appearance packet
-                    client.Network.SendPacket(set);
+                    Client.Network.SendPacket(set);
 
                     return "Cloned " + targetName;
                 }

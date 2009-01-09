@@ -42,7 +42,7 @@ namespace cogbot.Actions
                 message += args[i] + " ";
             }
 
-            client.Self.Chat(message, channel, ChatType.Whisper);
+            Client.Self.Chat(message, channel, ChatType.Whisper);
 
             return "Whispered " + message;
         }

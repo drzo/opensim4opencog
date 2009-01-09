@@ -17,8 +17,8 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            string name = client.ToString();
-            parent.LogOut(client);
+            string name = Client.ToString();
+            parent.LogOut(Client);
             return "Logged " + name + " out";
         }
     }

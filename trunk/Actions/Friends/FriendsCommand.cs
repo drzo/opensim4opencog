@@ -39,11 +39,11 @@ namespace cogbot.Actions
             StringBuilder sb = new StringBuilder();
 
             // Only iterate the Friends dictionary if we actually have friends!
-            if (client.Friends.FriendList.Count > 0)
+            if (Client.Friends.FriendList.Count > 0)
             {
                 // iterate over the InternalDictionary using a delegate to populate
                 // our StringBuilder output string
-                client.Friends.FriendList.ForEach(delegate(FriendInfo friend)
+                Client.Friends.FriendList.ForEach(delegate(FriendInfo friend)
                 {
                     // append the name of the friend to our output
                     sb.AppendLine(friend.Name);

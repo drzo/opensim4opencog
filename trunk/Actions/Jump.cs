@@ -18,7 +18,7 @@ namespace cogbot.Actions
           //  base.acceptInput(verb, args);
 
             parent.output("You jumped.");
-            client.Self.Jump(true);
+            Client.Self.Jump(true);
 
             parent.describeNext = true;
         }

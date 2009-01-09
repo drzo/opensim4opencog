@@ -31,10 +31,10 @@ namespace cogbot.Actions
             string searchString = (args.Length > 1)? args[1] : "";
 
             // *** get current location ***
-            Vector3 location = client.Self.SimPosition;
+            Vector3 location = Client.Self.SimPosition;
 
             // *** find all objects in radius ***
-            List<Primitive> prims = client.Network.CurrentSim.ObjectsPrimitives.FindAll(
+            List<Primitive> prims = Client.Network.CurrentSim.ObjectsPrimitives.FindAll(
                 delegate(Primitive prim) {
                     Vector3 pos = prim.Position;
                     return ((prim.ParentID == 0) && (pos != Vector3.Zero) && (Vector3.Distance(pos, location) < radius));
@@ -73,7 +73,7 @@ namespace cogbot.Actions
                 }
             }
 
-            client.Objects.SelectObjects(client.Network.CurrentSim, localids);
+            Client.Objects.SelectObjects(Client.Network.CurrentSim, localids);
 
             return AllPropertiesReceived.WaitOne(2000 + msPerRequest * objects.Count, false);
         }

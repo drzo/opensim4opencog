@@ -20,7 +20,7 @@ namespace cogbot.Actions.Movement
                 return "Usage: moveto x y z";
 
             uint regionX, regionY;
-            Utils.LongToUInts(client.Network.CurrentSim.Handle, out regionX, out regionY);
+            Utils.LongToUInts(Client.Network.CurrentSim.Handle, out regionX, out regionY);
 
             double x, y, z;
             if (!Double.TryParse(args[0], out x) ||
@@ -34,7 +34,7 @@ namespace cogbot.Actions.Movement
             x += (double)regionX;
             y += (double)regionY;
 
-            client.Self.AutoPilot(x, y, z);
+            Client.Self.AutoPilot(x, y, z);
 
             return String.Format("Attempting to move to <{0},{1},{2}>", x, y, z);
         }

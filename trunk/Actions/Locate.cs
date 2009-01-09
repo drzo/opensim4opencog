@@ -17,7 +17,7 @@ namespace cogbot.Actions
         {
            // base.acceptInput(verb, args);
 
-            parent.output("You are in " + client.Network.CurrentSim.Name + " " + (int)client.Self.SimPosition.X + "," + (int)client.Self.SimPosition.Y + "," + (int)client.Self.SimPosition.Z);
+            parent.output("You are in " + Client.Network.CurrentSim.Name + " " + (int)Client.Self.SimPosition.X + "," + (int)Client.Self.SimPosition.Y + "," + (int)Client.Self.SimPosition.Z);
         }
     }
 }

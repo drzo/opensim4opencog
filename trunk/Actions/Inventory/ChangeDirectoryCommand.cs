@@ -10,7 +10,7 @@ namespace cogbot.Actions.Inventory.Shell
         private InventoryManager Manager;
         private OpenMetaverse.Inventory Inventory;
 
-        public ChangeDirectoryCommand(cogbot.TextForm client)
+        public ChangeDirectoryCommand(TextForm client)
         {
             Name = "cd";
             Description = "Changes the current working inventory folder.";
@@ -18,8 +18,8 @@ namespace cogbot.Actions.Inventory.Shell
         }
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            Manager = client.Inventory;
-            Inventory = client.Inventory.Store;
+            Manager = Client.Inventory;
+            Inventory = Client.Inventory.Store;
 
             if (args.Length > 1)
                 return "Usage: cd [path-to-folder]";
@@ -41,7 +41,7 @@ namespace cogbot.Actions.Inventory.Shell
                 currentFolder = Inventory.RootFolder;
 
             if (currentFolder == null) // We need this to be set to something. 
-                return "Error: client not logged in.";
+                return "Error: Client not logged in.";
 
             // Traverse the path, looking for the 
             for (int i = 0; i < path.Length; ++i)

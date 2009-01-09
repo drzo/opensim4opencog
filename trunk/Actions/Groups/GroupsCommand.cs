@@ -24,7 +24,7 @@ namespace cogbot.Actions
         {
             if (groups.Count == 0)
             {
-                client.Groups.RequestCurrentGroups();
+                Client.Groups.RequestCurrentGroups();
                 GetCurrentGroupsEvent.WaitOne(10000, false);
             }
             if (groups.Count > 0)

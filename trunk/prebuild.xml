@@ -1,97 +1,308 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Prebuild xmlns="http://dnpb.sourceforge.net/schemas/prebuild-1.7.xsd" version="1.7">
-  <Solution name="default" activeConfig="Debug" path="./" version="0.5.0-$Rev: 5161 $">
-    <Configuration name="Debug">
-      <Options>
-        <CompilerDefines>TRACE;DEBUG</CompilerDefines>
-        <OptimizeCode>false</OptimizeCode>
-        <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
-        <AllowUnsafe>true</AllowUnsafe>
-        <WarningLevel>4</WarningLevel>
-        <WarningsAsErrors>false</WarningsAsErrors>
-        <SuppressWarnings></SuppressWarnings>
-        <OutputPath>bin\Debug\</OutputPath>
-        <DebugInformation>true</DebugInformation>
-        <IncrementalBuild>true</IncrementalBuild>
-        <NoStdLib>false</NoStdLib>
-      </Options>
-    </Configuration>
-    <Configuration name="Release">
-      <Options>
-        <CompilerDefines>TRACE</CompilerDefines>
-        <OptimizeCode>true</OptimizeCode>
-        <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
-        <AllowUnsafe>true</AllowUnsafe>
-        <WarningLevel>4</WarningLevel>
-        <WarningsAsErrors>false</WarningsAsErrors>
-        <SuppressWarnings></SuppressWarnings>
-        <OutputPath>bin\Release</OutputPath>
-        <DebugInformation>false</DebugInformation>
-        <IncrementalBuild>true</IncrementalBuild>
-        <NoStdLib>false</NoStdLib>
-      </Options>
-    </Configuration>
 
-
-    <Project name="OpenMetaverseTypes" path="OpenMetaverse/Types" type="Library">
-       <Configuration name="Debug">
-         <Options>
-             <OutputPath>../../bin/</OutputPath>
-         </Options>
-       </Configuration>
-       <Configuration name="Release">
-         <Options>
-             <OutputPath>../../bin/</OutputPath>
-         </Options>
-       </Configuration>
-
-       <ReferencePath>../../bin/</ReferencePath>
-       <Reference name="System" localCopy="false"/>
-       <Reference name="System.Data" localCopy="false"/>
-       <Reference name="System.Xml" localCopy="false"/>
-       <Files>
-         <Match pattern="*.cs" recurse="true"/>
-       </Files>
-     </Project>
-
-        <Project name="OpenMetaverse" path="OpenMetaverse" type="Library">
+  <Solution name="default" activeConfig="Debug" path="./" version="0.6.0-$Rev: 5161 $">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../bin/</OutputPath>
+          <CompilerDefines>TRACE;DEBUG</CompilerDefines>
+          <OptimizeCode>false</OptimizeCode>
+          <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
+          <AllowUnsafe>true</AllowUnsafe>
+          <WarningLevel>4</WarningLevel>
+          <WarningsAsErrors>false</WarningsAsErrors>
+          <SuppressWarnings>1591,1574,0419,0618</SuppressWarnings>
+          <OutputPath>bin</OutputPath>
+          <DebugInformation>true</DebugInformation>
+          <IncrementalBuild>true</IncrementalBuild>
+          <NoStdLib>false</NoStdLib>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../bin/</OutputPath>
+          <CompilerDefines>TRACE</CompilerDefines>
+          <OptimizeCode>true</OptimizeCode>
+          <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
+          <AllowUnsafe>true</AllowUnsafe>
+          <WarningLevel>4</WarningLevel>
+          <WarningsAsErrors>false</WarningsAsErrors>
+          <SuppressWarnings>1591,1574,0419,0618</SuppressWarnings>
+          <OutputPath>bin</OutputPath>
+          <DebugInformation>false</DebugInformation>
+          <IncrementalBuild>true</IncrementalBuild>
+          <NoStdLib>false</NoStdLib>
         </Options>
       </Configuration>
 
-      <ReferencePath>../bin/</ReferencePath>
-      <Reference name="log4net" localCopy="false"/>
-      <Reference name="System" localCopy="false"/>
-      <Reference name="System.Drawing" localCopy="false"/>
-      <Reference name="System.Data" localCopy="false"/>
-      <Reference name="System.Xml" localCopy="false"/>
-      <Reference name="OpenMetaverseTypes" localCopy="false"/>
-      <Files>
+        <!-- Libraries -->
 
-        <Match pattern="*.cs" recurse="true">
-          <Exclude name="Color4.cs"/>
-          <Exclude name="Matrix4.cs"/>
-          <Exclude name="Quaternion.cs"/>
-          <Exclude name="Ray.cs"/>
-          <Exclude name="Utils.cs"/>
-          <Exclude name="UtilsConversions.cs"/>
-          <Exclude name="UUID.cs"/>
-          <Exclude name="Vector2.cs"/>
-          <Exclude name="Vector3.cs"/>
-          <Exclude name="Vector3d.cs"/>
-          <Exclude name="Vector4.cs"/>
-        </Match>
-      </Files>
+      <!-- External Libraries -->
+ <!--
+      <Project name="ExtensionLoader" path="ExtensionLoader" type="Library" guid="F0CCD62E-8055-4419-8171-F2C5FD7C8B6D">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+
+        <ReferencePath>../bin/</ReferencePath>
+        <Reference name="System"/>
+        <Files>
+          <Match pattern="*.cs" recurse="true"/>
+        </Files>
+      </Project>
+      -->
+<!--
+      <Project name="HttpServer" path="HttpServer" type="Library" guid="455E7D70-1C85-4D7F-9F01-DC801B8B8C34">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+
+        <ReferencePath>../bin/</ReferencePath>
+        <Reference name="System"/>
+        <Reference name="System.Web"/>
+        <Files>
+          <Match pattern="*.cs" recurse="true"/>
+        </Files>
+      </Project>
+-->
+      <!-- Libraries -->
+
+      <Project name="OpenMetaverseTypes" path="OpenMetaverse/Types" type="Library" rootNamespace="OpenMetaverse">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../../bin/</OutputPath>
+          </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../../bin/</OutputPath>
+            <XmlDocFile>OpenMetaverseTypes.XML</XmlDocFile>
+          </Options>
+        </Configuration>
+
+        <ReferencePath>../../bin/</ReferencePath>
+        <Reference name="System"/>
+        <Files>
+          <Match pattern="*.cs" recurse="true"/>
+        </Files>
       </Project>
 
+      <Project name="OpenMetaverse.StructuredData" path="OpenMetaverse.StructuredData" type="Library" rootNamespace="OpenMetaverse.StructuredData">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+            <XmlDocFile>OpenMetaverse.StructuredData.XML</XmlDocFile>
+          </Options>
+        </Configuration>
 
+        <ReferencePath>../bin/</ReferencePath>
+        <Reference name="System"/>
+        <Reference name="System.Xml"/>
+        <Reference name="OpenMetaverseTypes"/>
+        <Files>
+          <Match pattern="*.cs" recurse="true"/>
+        </Files>
+      </Project>
+
+      <Project name="OpenMetaverse.Http" path="OpenMetaverse.Http" type="Library" rootNamespace="OpenMetaverse.Http">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+            <XmlDocFile>OpenMetaverse.Http.XML</XmlDocFile>
+          </Options>
+        </Configuration>
+
+        <ReferencePath>../bin/</ReferencePath>
+        <Reference name="System"/>
+        <Reference name="System.Xml"/>
+        <Reference name="OpenMetaverseTypes"/>
+        <Reference name="OpenMetaverse.StructuredData"/>
+        <Reference name="HttpServer"/>
+        <Reference name="log4net"/>
+        <Reference name="Mono.Security"/>
+        <Files>
+          <Match pattern="*.cs" recurse="true"/>
+        </Files>
+      </Project>
+
+      <Project name="OpenMetaverse" path="OpenMetaverse" type="Library" rootNamespace="OpenMetaverse">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+            <XmlDocFile>OpenMetaverse.XML</XmlDocFile>
+          </Options>
+        </Configuration>
+
+        <ReferencePath>../bin/</ReferencePath>
+        <Reference name="System"/>
+        <Reference name="System.Xml"/>
+        <Reference name="System.Data"/>
+        <Reference name="System.Drawing"/>
+        <Reference name="log4net"/>
+        <Reference name="OpenMetaverseTypes"/>
+        <Reference name="OpenMetaverse.StructuredData"/>
+        <Reference name="OpenMetaverse.Http"/>
+        <Files>
+          <Match pattern="*.cs" recurse="true">
+            <Exclude name="Color4.cs"/>
+            <Exclude name="Matrix4.cs"/>
+            <Exclude name="Quaternion.cs"/>
+            <Exclude name="Ray.cs"/>
+            <Exclude name="Utils.cs"/>
+            <Exclude name="UtilsConversions.cs"/>
+            <Exclude name="UUID.cs"/>
+            <Exclude name="Vector2.cs"/>
+            <Exclude name="Vector3.cs"/>
+            <Exclude name="Vector3d.cs"/>
+            <Exclude name="Vector4.cs"/>
+            <Exclude name="BlockingQueue.cs"/>
+            <Exclude name="DoubleDictionary.cs"/>
+            <Exclude name="ExpiringCache.cs"/>
+          </Match>
+        </Files>
+      </Project>
+
+      <Project name="OpenMetaverse.Utilities" path="OpenMetaverse.Utilities" type="Library">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+            <XmlDocFile>OpenMetaverse.Utilities.XML</XmlDocFile>
+          </Options>
+        </Configuration>
+
+        <ReferencePath>../bin/</ReferencePath>
+        <Reference name="System"/>
+        <Reference name="System.Xml"/>
+        <Reference name="System.Data"/>
+        <Reference name="OpenMetaverse"/>
+        <Reference name="OpenMetaverseTypes"/>
+        <Reference name="OpenMetaverse.StructuredData"/>
+        <Reference name="OpenMetaverse.Http"/>
+        <Files>
+          <Match pattern="*.cs" recurse="true"/>
+        </Files>
+      </Project>
+
+      <Project name="OpenMetaverse.Rendering.Simple" path="OpenMetaverse.Rendering.Simple" type="Library">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+
+        <ReferencePath>../bin/</ReferencePath>
+        <Reference name="System"/>
+        <Reference name="OpenMetaverse"/>
+        <Reference name="OpenMetaverseTypes"/>
+        <Files>
+          <Match pattern="*.cs" recurse="true"/>
+        </Files>
+      </Project>
+
+      <Project name="OpenMetaverse.Rendering.Meshmerizer" path="OpenMetaverse.Rendering.Meshmerizer" type="Library">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+
+        <ReferencePath>../bin/</ReferencePath>
+        <Reference name="System"/>
+        <Reference name="OpenMetaverse"/>
+        <Reference name="OpenMetaverseTypes"/>
+        <Files>
+          <Match pattern="*.cs" recurse="true"/>
+        </Files>
+      </Project>
+<!--
+      <Project name="OpenMetaverse.Rendering.GPL" path="OpenMetaverse.Rendering.GPL" type="Library">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+
+        <ReferencePath>../bin/</ReferencePath>
+        <Reference name="System"/>
+        <Reference name="OpenMetaverse"/>
+        <Reference name="OpenMetaverseTypes"/>
+        <Files>
+          <Match pattern="*.cs" recurse="true"/>
+        </Files>
+      </Project>
+      -->
+
+      <Project name="OpenMetaverse.GUI" path="OpenMetaverse.GUI" type="Library">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+        <XmlDocFile>OpenMetaverse.GUI.XML</XmlDocFile>
+          </Options>
+        </Configuration>
+
+        <ReferencePath>../bin/</ReferencePath>
+        <Reference name="System"/>
+        <Reference name="System.Data"/>
+        <Reference name="System.Drawing"/>
+        <Reference name="System.Windows.Forms"/>
+        <Reference name="OpenMetaverse"/>
+        <Reference name="OpenMetaverseTypes"/>
+        <Files>
+          <Match pattern="*.cs" recurse="true"/>
+        </Files>
+      </Project>
 
 
     <Project name="DotLisp" path="dotlisp" type="Library">
@@ -138,6 +349,9 @@
       <Reference name="System.Xml" localCopy="false"/>
       <Reference name="OpenMetaverseTypes" localCopy="false"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
+      <Reference name="OpenMetaverse.StructuredData" localCopy="false"/>
+      <Reference name="OpenMetaverse.Utilities" localCopy="false"/>
+      <Reference name="OpenMetaverse.Http" localCopy="false"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="ABCL.Net.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>

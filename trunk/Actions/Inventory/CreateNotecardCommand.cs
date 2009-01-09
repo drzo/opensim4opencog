@@ -7,7 +7,7 @@ namespace cogbot.Actions
 {
     public class CreateNotecardCommand : Command
     {
-        public CreateNotecardCommand(cogbot.TextForm testClient)
+        public CreateNotecardCommand(TextForm testClient)
         {
             Name = "createnotecard";
             Description = "Creates a notecard from a local text file.";
@@ -17,7 +17,7 @@ namespace cogbot.Actions
         void OnNoteUpdate(bool success, string status, UUID itemID, UUID assetID)
         {
             if (success)
-                WriteLine("Notecard successfully uploaded, ItemID {0} AssetID {1}", itemID, assetID);
+                Console.WriteLine("Notecard successfully uploaded, ItemID {0} AssetID {1}", itemID, assetID);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
@@ -30,7 +30,7 @@ namespace cogbot.Actions
                 file = file + args[ct] + " ";
             file = file.TrimEnd();
 
-            WriteLine("Filename: {0}", file);
+            Console.WriteLine("Filename: {0}", file);
             if (!File.Exists(file))
                 return String.Format("Filename '{0}' does not exist", file);
 
@@ -40,15 +40,15 @@ namespace cogbot.Actions
             // FIXME: Upload the notecard asset first. When that completes, call RequestCreateItem
             try
             {
-                string desc = String.Format("{0} created by OpenMetaverse cogbot.TextForm {1}", file, DateTime.Now);
+                string desc = String.Format("{0} created by OpenMetaverse TestClient {1}", file, DateTime.Now);
                 // create the asset
 
-                client.Inventory.RequestCreateItem(client.Inventory.FindFolderForType(AssetType.Notecard),
+                Client.Inventory.RequestCreateItem(Client.Inventory.FindFolderForType(AssetType.Notecard),
                     file, desc, AssetType.Notecard, UUID.Random(), InventoryType.Notecard, PermissionMask.All,
                     delegate(bool success, InventoryItem item)
                     {
                         if (success) // upload the asset
-                            client.Inventory.RequestUploadNotecardAsset(CreateNotecardAsset(body), item.UUID, new InventoryManager.NotecardUploadedAssetCallback(OnNoteUpdate));
+                            Client.Inventory.RequestUploadNotecardAsset(CreateNotecardAsset(body), item.UUID, new InventoryManager.NotecardUploadedAssetCallback(OnNoteUpdate));
                     }
                 );
                 return "Done";
@@ -56,7 +56,7 @@ namespace cogbot.Actions
             }
             catch (System.Exception e)
             {
-                Logger.Log(e.ToString(), Helpers.LogLevel.Error, client);
+                Logger.Log(e.ToString(), Helpers.LogLevel.Error, Client);
                 return "Error creating notecard.";
             }
         }

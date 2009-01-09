@@ -8,10 +8,10 @@ namespace cogbot.Actions
     public class ViewNotecardCommand : Command
     {
         /// <summary>
-        /// cogbot.TextForm command to download and display a notecard asset
+        /// TestClient command to download and display a notecard asset
         /// </summary>
         /// <param name="testClient"></param>
-        public ViewNotecardCommand(cogbot.TextForm testClient)
+        public ViewNotecardCommand(TextForm testClient)
         {
             Name = "viewnote";
             Description = "Downloads and displays a notecard asset";
@@ -53,15 +53,15 @@ namespace cogbot.Actions
             };
 
             // verify asset is loaded in store
-            if (client.Inventory.Store.Contains(note))
+            if (Client.Inventory.Store.Contains(note))
             {
                 // retrieve asset from store
-                InventoryItem ii = (InventoryItem)client.Inventory.Store[note];
+                InventoryItem ii = (InventoryItem)Client.Inventory.Store[note];
                 // subscribe to reply event
-                client.Assets.OnAssetReceived += del;
+                Client.Assets.OnAssetReceived += del;
 
                 // make request for asset
-                client.Assets.RequestInventoryAsset(ii, true);
+                Client.Assets.RequestInventoryAsset(ii, true);
 
                 // wait for reply or timeout
                 if (!waitEvent.WaitOne(10000, false))
@@ -69,7 +69,7 @@ namespace cogbot.Actions
                     result.Append("Timeout waiting for notecard to download.");
                 }
                 // unsubscribe from reply event
-                client.Assets.OnAssetReceived -= del;
+                Client.Assets.OnAssetReceived -= del;
             }
             else
             {

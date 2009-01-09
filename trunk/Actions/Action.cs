@@ -8,8 +8,20 @@ namespace cogbot.Actions
 {
     abstract public class Action
     {
-        public TextForm parent;
-        public GridClient client;
+        public TextForm parent
+        {
+            get
+            {
+                return TextForm.SingleInstance;
+            }
+        }
+        public GridClient Client
+        {
+            get
+            {
+                return parent.client;
+            }
+        }
         public string Name;
         protected string helpString;
         protected string usageString;
@@ -19,8 +31,8 @@ namespace cogbot.Actions
             helpString = "No help information for this action.";
             usageString = "No usage instruction for this action.";
 
-            parent = _parent;
-            client = parent.client;
+           // parent = _parent;
+            //Client = parent.client;
         }
 
         /// <summary>

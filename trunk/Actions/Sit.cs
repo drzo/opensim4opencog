@@ -12,7 +12,7 @@ namespace cogbot.Actions
         public Sit(TextForm parent)
             : base(parent)
         {
-            client.Objects.OnAvatarSitChanged += new ObjectManager.AvatarSitChanged(Objects_OnAvatarSitChanged);
+            Client.Objects.OnAvatarSitChanged += new ObjectManager.AvatarSitChanged(Objects_OnAvatarSitChanged);
 
             helpString = "Sit on the ground or on an object.";
             usageString = "To sit on ground, type \"sit\" \r\n" +
@@ -21,7 +21,7 @@ namespace cogbot.Actions
 
         void Objects_OnAvatarSitChanged(Simulator simulator, Avatar avatar, uint sittingOn, uint oldSeat)
         {
-            if (avatar.Name == client.Self.Name)
+            if (avatar.Name == Client.Self.Name)
             {
                 if (sittingOn != 0)
                     parent.output("You sat down.");
@@ -41,7 +41,7 @@ namespace cogbot.Actions
         {
             //base.acceptInput(verb, args);
 
-            if (client.Self.SittingOn != 0 || sittingOnGround)
+            if (Client.Self.SittingOn != 0 || sittingOnGround)
                 parent.output("You are already sitting.");
             else
             {
@@ -53,8 +53,8 @@ namespace cogbot.Actions
                     if (objects.tryGetPrim(on, out prim))
                     {
                         parent.output("Trying to sit on " + prim.Properties.Name + ".");
-                        client.Self.RequestSit(prim.ID, Vector3.Zero);
-                        client.Self.Sit();
+                        Client.Self.RequestSit(prim.ID, Vector3.Zero);
+                        Client.Self.Sit();
                     }
                     else
                     {
@@ -64,7 +64,7 @@ namespace cogbot.Actions
                 else
                 {
                     parent.output("You sit on the ground.");
-                    client.Self.SitOnGround();
+                    Client.Self.SitOnGround();
                     sittingOnGround = true;
                 }
             }

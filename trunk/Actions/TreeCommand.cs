@@ -24,10 +24,10 @@ namespace cogbot.Actions
 		            string treeName = args[0].Trim(new char[] { ' ' });
 		            Tree tree = (Tree)Enum.Parse(typeof(Tree), treeName);
 
-		            Vector3 treePosition = client.Self.SimPosition;
+		            Vector3 treePosition = Client.Self.SimPosition;
 		            treePosition.Z += 3.0f;
 
-		            client.Objects.AddTree(client.Network.CurrentSim, new Vector3(0.5f, 0.5f, 0.5f),
+		            Client.Objects.AddTree(Client.Network.CurrentSim, new Vector3(0.5f, 0.5f, 0.5f),
                         Quaternion.Identity, treePosition, tree, parent.GroupID, false);
 
 		            return "Attempted to rez a " + treeName + " tree";

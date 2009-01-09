@@ -14,7 +14,7 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
 		{
-            client.Self.Jump(true);
+            Client.Self.Jump(true);
             return "Jumped";
 		}
     }

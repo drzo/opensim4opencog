@@ -35,7 +35,8 @@ namespace cogbot
     {
 
         static public TextForm SingleInstance = null;
-        public static int debugLevel = 1;
+        public static int debugLevel = 3;
+        public bool GetTextures = false;
         
         public UUID GroupID = UUID.Zero;
         public Dictionary<UUID, GroupMember> GroupMembers = null;// new Dictionary<UUID, GroupMember>();
@@ -166,21 +167,21 @@ namespace cogbot
             // Start the server
             startSocketListener();
             extraHooks();
-            //client.Network.RegisterCallback(PacketType.AgentDataUpdate, new NetworkManager.PacketCallback(AgentDataUpdateHandler));
+            //Client.Network.RegisterCallback(PacketType.AgentDataUpdate, new NetworkManager.PacketCallback(AgentDataUpdateHandler));
             client.Network.OnLogin += new NetworkManager.LoginCallback(LoginHandler);
-            //client.Self.OnInstantMessage += new AgentManager.InstantMessageCallback(Self_OnInstantMessage);
-            //client.Groups.OnGroupMembers += new GroupManager.GroupMembersCallback(GroupMembersHandler);
-            //client.Inventory.OnObjectOffered += new InventoryManager.ObjectOfferedCallback(Inventory_OnInventoryObjectReceived);
+            //Client.Self.OnInstantMessage += new AgentManager.InstantMessageCallback(Self_OnInstantMessage);
+            //Client.Groups.OnGroupMembers += new GroupManager.GroupMembersCallback(GroupMembersHandler);
+            //Client.Inventory.OnObjectOffered += new InventoryManager.ObjectOfferedCallback(Inventory_OnInventoryObjectReceived);
 
-            //client.Network.RegisterCallback(PacketType.AvatarAppearance, new NetworkManager.PacketCallback(AvatarAppearanceHandler));
-            //client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(AlertMessageHandler));
+            //Client.Network.RegisterCallback(PacketType.AvatarAppearance, new NetworkManager.PacketCallback(AvatarAppearanceHandler));
+            //Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(AlertMessageHandler));
 
 
         }
 
         void startSocketListener()
         {
-            // The thread that accepts the client and awaits messages
+            // The thread that accepts the Client and awaits messages
 
             thrSvr = new Thread(tcpSrv);
 
@@ -210,7 +211,7 @@ namespace cogbot
             client.Settings.LOG_ALL_CAPS_ERRORS = true;
             client.Settings.FETCH_MISSING_INVENTORY = true;
             client.Settings.SEND_AGENT_THROTTLE = true;
-            //client.Settings.
+            //Client.Settings.
             
             
         }
@@ -226,14 +227,14 @@ namespace cogbot
             client.Network.OnSimDisconnected += new NetworkManager.SimDisconnectedCallback(Network_OnSimDisconnected);
             client.Network.OnEventQueueRunning += new NetworkManager.EventQueueRunningCallback(Network_OnEventQueueRunning);
 
-            //client.Appearance.OnAppearanceUpdated += new AppearanceManager.AppearanceUpdatedCallback(Appearance_OnAppearanceUpdated);
+            //Client.Appearance.OnAppearanceUpdated += new AppearanceManager.AppearanceUpdatedCallback(Appearance_OnAppearanceUpdated);
             
             client.Avatars.OnLookAt += new AvatarManager.LookAtCallback(Avatars_OnLookAt);
             client.Avatars.OnPointAt += new AvatarManager.PointAtCallback(Avatars_OnPointAt);
             client.Avatars.OnAvatarProperties += new AvatarManager.AvatarPropertiesCallback(Avatars_OnAvatarProperties);
             
             client.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
-            client.Objects.OnNewFoliage += new ObjectManager.NewFoliageCallback(Objects_OnNewFoliage);
+            //client.Objects.OnNewFoliage += new ObjectManager.NewFoliageCallback(Objects_OnNewFoliage);
             client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
             client.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
             client.Objects.OnObjectUpdated += new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
@@ -367,7 +368,10 @@ namespace cogbot
             // Handled by Object Listener
             //throw new NotImplementedException();
 //            output("TextForm Objects_OnNewPrim: "+simulator.ToString()+" "+prim.ToString());
-            if (prim.Properties.Name != null)
+                Listeners.Objects objects = (Listeners.Objects)listeners["objects"];
+                objects.SetCurrentSimulator(simulator);
+                objects.SelectObject(prim);
+				if (prim.Properties.Name != null)
                 enqueueLispTask("(on-new-prim (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() + "\") (@\"" + prim.Properties.Description + "\") )");
             
         }
@@ -546,7 +550,7 @@ namespace cogbot
         public void wearFolder(string folderName)
         {
             // what we simply want
-            //    client.Appearance.WearOutfit(folderName.Split('/'), false);
+            //    Client.Appearance.WearOutfit(folderName.Split('/'), false);
 
             UUID folderID;
             InventoryFolder rootFolder = client.Inventory.Store.RootFolder;
@@ -563,7 +567,7 @@ namespace cogbot
 
                 client.Appearance.WearOutfit(folderID,false);
                 /*
-                List<InventoryBase> folderContents=  client.Inventory.FolderContents(folderID, client.Self.AgentID,
+                List<InventoryBase> folderContents=  Client.Inventory.FolderContents(folderID, Client.Self.AgentID,
                                                                 false, true,
                                                                 InventorySortOrder.ByDate, new TimeSpan(0, 0, 0, 0, 10000));
 
@@ -572,8 +576,8 @@ namespace cogbot
                     folderContents.ForEach(
                         delegate(ItemData i)
                         {
-                            client.Appearance.Attach(i, AttachmentPoint.Default);
-                            client.Self.Chat("Attaching item: " + i.Name, 0, ChatType.Normal);
+                            Client.Appearance.Attach(i, AttachmentPoint.Default);
+                            Client.Self.Chat("Attaching item: " + i.Name, 0, ChatType.Normal);
                             output("Attaching item: " + i.Name);
                         }
                     );
@@ -898,7 +902,7 @@ namespace cogbot
 
         private void loginToolStripMenuItem_Click(object sender, EventArgs e)
         {
-             // LoginForm loginForm = new LoginForm(client);
+             // LoginForm loginForm = new LoginForm(Client);
             LoginForm loginForm = new LoginForm(client,this);
             loginForm.ShowDialog();
         }
@@ -1628,15 +1632,15 @@ namespace cogbot
                 string serverMessage = "";
                 thisTask.results = "'(unevaluated)";
                 taskInterperter.Intern("thisClient", this);
-                taskInterperter.Intern("client", this);
+                taskInterperter.Intern("Client", this);
                 taskInterperter.Intern("thisTask", thisTask);
                 //should make the following safer ...
                 //taskInterperter.Intern("tcpReader", tcpStreamReader);
                 //taskInterperter.Intern("tcpWriter", tcpStreamWriter);
-                //a safer way is to have a serverMessage string that is sent to the client
+                //a safer way is to have a serverMessage string that is sent to the Client
                 // in a more thread safe async way
                 taskInterperter.Intern("serverMessage", serverMessage);
-                //interpreter.Intern("client",Command.client);
+                //interpreter.Intern("Client",Command.Client);
 
                 // EVALUATE !!!
                 Object x = taskInterperter.Eval(thisTask.codeTree);
@@ -1737,13 +1741,13 @@ namespace cogbot
 // TODO's
         // Play Animations
         // private static UUID type_anim_uuid = new UUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
-        // client.Self.AnimationStart(type_anim_uuid,false);
-        // client.Self.AnimationStop(type_anim_uuid,false);
+        // Client.Self.AnimationStart(type_anim_uuid,false);
+        // Client.Self.AnimationStop(type_anim_uuid,false);
 
-            // animationFolder = client.Inventory.FindFolderForType(AssetType.Animation);
-            // animationUUID = client.Inventory.FindObjectByPath(animationFolder, client.Self.AgentID, AnimationPath, 500);
-            // client.Self.AnimationStart(animationLLUUID,false);
-            // client.Self.AnimationStop(animationLLUUID,false);
+            // animationFolder = Client.Inventory.FindFolderForType(AssetType.Animation);
+            // animationUUID = Client.Inventory.FindObjectByPath(animationFolder, Client.Self.AgentID, AnimationPath, 500);
+            // Client.Self.AnimationStart(animationLLUUID,false);
+            // Client.Self.AnimationStop(animationLLUUID,false);
 
         
         // Reflect events into lisp
@@ -1831,9 +1835,9 @@ namespace cogbot
 
         public void RegisterCommand(Command command)
         {
-            command.client = this.client;
-            command.parent = this;
-            command.client = this.client; 
+            //command.Client = this.client;
+           // command.parent = this;
+           // command.Client = this.client; 
             RegisterCommand(command.Name, command);
         }
 
@@ -1845,6 +1849,11 @@ namespace cogbot
         internal void LogOut(GridClient Client)
         {
             Client.Network.Logout();
+        }
+
+        internal OpenMetaverse.Utilities.VoiceManager GetVoiceManager()
+        {
+            return null;
         }
     }
 

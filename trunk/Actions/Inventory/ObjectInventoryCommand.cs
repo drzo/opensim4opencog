@@ -6,7 +6,7 @@ namespace cogbot.Actions
 {
     public class ObjectInventoryCommand : Command
     {
-        public ObjectInventoryCommand(cogbot.TextForm testClient)
+        public ObjectInventoryCommand(TextForm testClient)
         {
             Name = "objectinventory";
             Description = "Retrieves a listing of items inside an object (task inventory). Usage: objectinventory [objectID]";
@@ -23,13 +23,13 @@ namespace cogbot.Actions
             if (!UUID.TryParse(args[0], out objectID))
                 return "Usage: objectinventory [objectID]";
 
-            Primitive found = client.Network.CurrentSim.ObjectsPrimitives.Find(delegate(Primitive prim) { return prim.ID == objectID; });
+            Primitive found = Client.Network.CurrentSim.ObjectsPrimitives.Find(delegate(Primitive prim) { return prim.ID == objectID; });
             if (found != null)
                 objectLocalID = found.LocalID;
             else
                 return "Couldn't find prim " + objectID.ToString();
 
-            List<InventoryBase> items = client.Inventory.GetTaskInventory(objectID, objectLocalID, 1000 * 30);
+            List<InventoryBase> items = Client.Inventory.GetTaskInventory(objectID, objectLocalID, 1000 * 30);
 
             if (items != null)
             {

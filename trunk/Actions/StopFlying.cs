@@ -18,7 +18,7 @@ namespace cogbot.Actions
          //   base.acceptInput(verb, args);
 
             parent.output("You stopped flying.");
-            client.Self.Fly(false);
+            Client.Self.Fly(false);
 
             parent.describeNext = true;
         }

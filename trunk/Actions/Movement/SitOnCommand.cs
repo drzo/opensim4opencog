@@ -24,7 +24,7 @@ namespace cogbot.Actions
 
             if (UUID.TryParse(args[0], out target))
             {
-                Primitive targetPrim = client.Network.CurrentSim.ObjectsPrimitives.Find(
+                Primitive targetPrim = Client.Network.CurrentSim.ObjectsPrimitives.Find(
                     delegate(Primitive prim)
                     {
                         return prim.ID == target;
@@ -33,8 +33,8 @@ namespace cogbot.Actions
 
                 if (targetPrim != null)
                 {
-                    client.Self.RequestSit(targetPrim.ID, Vector3.Zero);
-                    client.Self.Sit();
+                    Client.Self.RequestSit(targetPrim.ID, Vector3.Zero);
+                    Client.Self.Sit();
                     return "Requested to sit on prim " + targetPrim.ID.ToString() +
                         " (" + targetPrim.LocalID + ")";
                 }

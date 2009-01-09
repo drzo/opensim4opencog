@@ -22,17 +22,17 @@ namespace cogbot.Actions
 
             if (args.str == "up")
             {
-                client.Self.Movement.UpPos = true;
-                client.Self.Movement.SendUpdate(true);
+                Client.Self.Movement.UpPos = true;
+                Client.Self.Movement.SendUpdate(true);
             }
             else if (args.str == "down")
             {
-                client.Self.Movement.UpNeg = true;
-                client.Self.Movement.SendUpdate(true);
+                Client.Self.Movement.UpNeg = true;
+                Client.Self.Movement.SendUpdate(true);
             }
             else
             {
-                client.Self.Fly(true);
+                Client.Self.Fly(true);
             }
 
             parent.describeNext = true;

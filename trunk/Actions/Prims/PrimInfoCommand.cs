@@ -21,18 +21,18 @@ namespace cogbot.Actions
 
             if (UUID.TryParse(args[0], out primID))
             {
-                Primitive target = client.Network.CurrentSim.ObjectsPrimitives.Find(
+                Primitive target = Client.Network.CurrentSim.ObjectsPrimitives.Find(
                     delegate(Primitive prim) { return prim.ID == primID; }
                 );
 
                 if (target != null)
                 {
-                    Logger.Log("Light: " + target.Light.ToString(), Helpers.LogLevel.Info, client);
+                    Logger.Log("Light: " + target.Light.ToString(), Helpers.LogLevel.Info, Client);
 
                     if (target.ParticleSys.CRC != 0)
-                        Logger.Log("Particles: " + target.ParticleSys.ToString(), Helpers.LogLevel.Info, client);
+                        Logger.Log("Particles: " + target.ParticleSys.ToString(), Helpers.LogLevel.Info, Client);
 
-                    Logger.Log("TextureEntry:", Helpers.LogLevel.Info, client);
+                    Logger.Log("TextureEntry:", Helpers.LogLevel.Info, Client);
                     if (target.Textures != null)
                     {
                         Logger.Log(String.Format("Default texure: {0}",
@@ -45,13 +45,13 @@ namespace cogbot.Actions
                             {
                                 Logger.Log(String.Format("Face {0}: {1}", i,
                                     target.Textures.FaceTextures[i].TextureID.ToString()),
-                                    Helpers.LogLevel.Info, client);
+                                    Helpers.LogLevel.Info, Client);
                             }
                         }
                     }
                     else
                     {
-                        Logger.Log("null", Helpers.LogLevel.Info, client);
+                        Logger.Log("null", Helpers.LogLevel.Info, Client);
                     }
 
                     return "Done.";

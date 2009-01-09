@@ -30,18 +30,18 @@ namespace cogbot.Actions
             };
 
             ParcelsDownloaded.Reset();
-            client.Parcels.OnSimParcelsDownloaded += del;
-            client.Parcels.RequestAllSimParcels(client.Network.CurrentSim);
+            Client.Parcels.OnSimParcelsDownloaded += del;
+            Client.Parcels.RequestAllSimParcels(Client.Network.CurrentSim);
 
-            if (client.Network.CurrentSim.IsParcelMapFull())
+            if (Client.Network.CurrentSim.IsParcelMapFull())
                 ParcelsDownloaded.Set();
 
-            if (ParcelsDownloaded.WaitOne(30000, false) && client.Network.Connected)
+            if (ParcelsDownloaded.WaitOne(30000, false) && Client.Network.Connected)
             {
                 sb.AppendFormat("Downloaded {0} Parcels in {1} " + System.Environment.NewLine, 
-                    client.Network.CurrentSim.Parcels.Count, client.Network.CurrentSim.Name);
+                    Client.Network.CurrentSim.Parcels.Count, Client.Network.CurrentSim.Name);
 
-                client.Network.CurrentSim.Parcels.ForEach(delegate(Parcel parcel)
+                Client.Network.CurrentSim.Parcels.ForEach(delegate(Parcel parcel)
                 {
                     sb.AppendFormat("Parcel[{0}]: Name: \"{1}\", Description: \"{2}\" ACLBlacklist Count: {3}, ACLWhiteList Count: {5} Traffic: {4}" + System.Environment.NewLine,
                         parcel.LocalID, parcel.Name, parcel.Desc, parcel.AccessBlackList.Count, parcel.Dwell, parcel.AccessWhiteList.Count);
@@ -62,7 +62,7 @@ namespace cogbot.Actions
             else
                 result = "Failed to retrieve information on all the simulator parcels";
 
-            client.Parcels.OnSimParcelsDownloaded -= del;
+            Client.Parcels.OnSimParcelsDownloaded -= del;
             return result;
         }
 

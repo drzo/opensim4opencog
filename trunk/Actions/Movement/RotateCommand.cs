@@ -39,7 +39,7 @@ namespace cogbot.Actions.Movement
             if (args.Length == 0)
             {
                 float x, y, z;
-                client.Self.Movement.BodyRotation.GetEulerAngles(out x, out y, out z);
+                Client.Self.Movement.BodyRotation.GetEulerAngles(out x, out y, out z);
                 return "Rotation is at " + z * 57.29577951;
             }
             else
@@ -48,9 +48,9 @@ namespace cogbot.Actions.Movement
                 if (!Int32.TryParse(args[0], out angle))
                     return "Usage: rotate [angle]";
                 float x, y, z;
-                client.Self.Movement.BodyRotation.GetEulerAngles(out x, out y, out z);
+                Client.Self.Movement.BodyRotation.GetEulerAngles(out x, out y, out z);
                 double heading = (angle / 57.29577951);
-                client.Self.Movement.UpdateFromHeading(heading, false);
+                Client.Self.Movement.UpdateFromHeading(heading, false);
                 return "Turned " + angle;
 
             }

@@ -43,9 +43,9 @@ namespace cogbot.Actions
             }
 
             if (currentSession != UUID.Zero)
-                client.Self.InstantMessage(currentAvatar, args.objectPhrase, currentSession);
+                Client.Self.InstantMessage(currentAvatar, args.objectPhrase, currentSession);
             else
-                client.Self.InstantMessage(currentAvatar, args.objectPhrase);
+                Client.Self.InstantMessage(currentAvatar, args.objectPhrase);
         }
     }
 }

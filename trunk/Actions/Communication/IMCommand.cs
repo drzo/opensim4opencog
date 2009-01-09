@@ -38,7 +38,7 @@ namespace cogbot.Actions
             if (!Name2Key.ContainsKey(ToAvatarName.ToLower()))
             {
                 // Send the Query
-                client.Avatars.RequestAvatarNameSearch(ToAvatarName, UUID.Random());
+                Client.Avatars.RequestAvatarNameSearch(ToAvatarName, UUID.Random());
 
                 NameSearchEvent.WaitOne(6000, false);
             }
@@ -47,7 +47,7 @@ namespace cogbot.Actions
             {
                 UUID id = Name2Key[ToAvatarName.ToLower()];
 
-                client.Self.InstantMessage(id, message);
+                Client.Self.InstantMessage(id, message);
                 return "Instant Messaged " + id.ToString() + " with message: " + message;
             }
             else

@@ -23,7 +23,7 @@ namespace cogbot.Actions
             followAvatar = null;
             followDist = 3;
 
-            client.Objects.OnObjectUpdated += new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
+            Client.Objects.OnObjectUpdated += new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
 
         }
 
@@ -35,27 +35,27 @@ namespace cogbot.Actions
             {
                 if (followAvatar != null)
                 {
-                    float curDist = Vector3.Distance(client.Self.SimPosition, followAvatar.Position);
+                    float curDist = Vector3.Distance(Client.Self.SimPosition, followAvatar.Position);
                     if (curDist > followDist)
                     {
 
-                        //client.Self.Movement.SendUpdate();
+                        //Client.Self.Movement.SendUpdate();
                         if (curDist < (followDist * 1.25))
                         {
-                                client.Self.Movement.TurnToward(followAvatar.Position);
-                                client.Self.Movement.AtPos = true;
+                                Client.Self.Movement.TurnToward(followAvatar.Position);
+                                Client.Self.Movement.AtPos = true;
                                 Thread.Sleep(25);
-                                client.Self.Movement.Stop = true;
-                                client.Self.Movement.AtPos = false;
-                                client.Self.Movement.NudgeAtPos = false;
+                                Client.Self.Movement.Stop = true;
+                                Client.Self.Movement.AtPos = false;
+                                Client.Self.Movement.NudgeAtPos = false;
                             
                             Thread.Sleep(100);
                         }
                         else
                         {
-                            client.Self.Movement.TurnToward(followAvatar.Position);
-                            client.Self.Movement.AtPos = true;
-                            client.Self.Movement.UpdateInterval = 0; //100
+                            Client.Self.Movement.TurnToward(followAvatar.Position);
+                            Client.Self.Movement.AtPos = true;
+                            Client.Self.Movement.UpdateInterval = 0; //100
                             //(int)(25 * (1 + (curDist / followDist)))
                             Thread.Sleep(somthing.Next(25, 100));
                         }
@@ -65,13 +65,13 @@ namespace cogbot.Actions
                     {
                         if (justStopped)
                         {
-                            client.Self.Movement.TurnToward(followAvatar.Position);
-                            client.Self.Movement.AtPos = false;
-                            //client.Self.Movement.UpdateInterval = 0;
-                            client.Self.Movement.StandUp = true;
-                            //client.Self.Movement.SendUpdate();
-                            client.Self.Movement.FinishAnim = true;
-                            client.Self.Movement.Stop = true;
+                            Client.Self.Movement.TurnToward(followAvatar.Position);
+                            Client.Self.Movement.AtPos = false;
+                            //Client.Self.Movement.UpdateInterval = 0;
+                            Client.Self.Movement.StandUp = true;
+                            //Client.Self.Movement.SendUpdate();
+                            Client.Self.Movement.FinishAnim = true;
+                            Client.Self.Movement.Stop = true;
                             
                             Thread.Sleep(25);
                             justStopped = false;
@@ -97,23 +97,23 @@ namespace cogbot.Actions
         {
             if (followAvatar != null)
             {
-                if (Vector3.Distance(client.Self.SimPosition, followAvatar.Position) > followDist)
+                if (Vector3.Distance(Client.Self.SimPosition, followAvatar.Position) > followDist)
                 {
                     //if (Vector3.Dist(LastTarget, followAvatar.Position) > 1)
                     //{
                     //   LastTarget = followAvatar.Position;
-                    //    client.Self.Movement.TurnToward(followAvatar.Position);
-                    //    client.Self.Movement.AtPos = true;
-                    //    //client.Self.AutoPilotCancel();
-                    //      client.Self.Movement.UpdateInterval = 0;
-                    //    client.Self.Movement.SendUpdate();
+                    //    Client.Self.Movement.TurnToward(followAvatar.Position);
+                    //    Client.Self.Movement.AtPos = true;
+                    //    //Client.Self.AutoPilotCancel();
+                    //      Client.Self.Movement.UpdateInterval = 0;
+                    //    Client.Self.Movement.SendUpdate();
                     //}
-                    //      client.Self.AutoPilotLocal((int)followAvatar.Position.X,
+                    //      Client.Self.AutoPilotLocal((int)followAvatar.Position.X,
                     //          (int)followAvatar.Position.Y, followAvatar.Position.Z);
                 }
                 else
                 {
-                    //client.Self.AutoPilotCancel();
+                    //Client.Self.AutoPilotCancel();
                 }
             }
         }
@@ -131,7 +131,7 @@ namespace cogbot.Actions
                 {
                     followAvatar = avatar;
                     parent.output("You start to follow " + followAvatar.Name + ".");
-                    // The thread that accepts the client and awaits messages
+                    // The thread that accepts the Client and awaits messages
                     thrTracker= new Thread(tracker);
                     // The thread calls the tracker() method
                     thrTracker.Start();

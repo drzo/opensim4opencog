@@ -14,7 +14,7 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-			if ( client.Self.GoHome() ) {
+			if ( Client.Self.GoHome() ) {
 				return "Teleport Home Succesful";
 			} else {
 				return "Teleport Home Failed";

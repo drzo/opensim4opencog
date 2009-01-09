@@ -1,9 +1,9 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{3164F259-0000-0000-0000-000000000000}</ProjectGuid>
+    <ProjectGuid>{DA279BA9-6A53-45C7-9981-F26880FE6030}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -14,6 +14,7 @@
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <DelaySign>false</DelaySign>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
     <AppDesignerFolder></AppDesignerFolder>
     <RootNamespace>OpenMetaverse</RootNamespace>
@@ -37,7 +38,8 @@
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
-    <NoWarn></NoWarn>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn>1591,1574,0419,0618</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -46,7 +48,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE</DefineConstants>
-    <DocumentationFile></DocumentationFile>
+    <DocumentationFile>OpenMetaverse.XML</DocumentationFile>
     <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
@@ -55,36 +57,41 @@
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
-    <NoWarn></NoWarn>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn>1591,1574,0419,0618</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net" >
-      <HintPath>log4net.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="System">
+        <Name>System</Name>
     </Reference>
-    <Reference Include="System" >
-      <HintPath>System.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="System.Xml">
+        <Name>System.Xml</Name>
     </Reference>
-    <Reference Include="System.Data" >
-      <HintPath>System.Data.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="System.Data">
+        <Name>System.Data</Name>
     </Reference>
-    <Reference Include="System.Drawing" >
-      <HintPath>System.Drawing.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="System.Drawing">
+        <Name>System.Drawing</Name>
     </Reference>
-    <Reference Include="System.Xml" >
-      <HintPath>System.Xml.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="log4net">
+        <Name>log4net</Name>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\OpenMetaverse\Types\OpenMetaverseTypes.csproj">
       <Name>OpenMetaverseTypes</Name>
-      <Project>{29DCFE14-0000-0000-0000-000000000000}</Project>
+      <Project>{60EB04BF-7057-45EE-940D-7AB05AD8EB3D}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-			<Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj">
+      <Name>OpenMetaverse.StructuredData</Name>
+      <Project>{1EC01638-5787-4B7D-AF2E-3F1D591CC7D5}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenMetaverse.Http\OpenMetaverse.Http.csproj">
+      <Name>OpenMetaverse.Http</Name>
+      <Project>{0D42C675-C27F-4F79-83A6-141CE804EA3F}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -100,16 +107,28 @@
     <Compile Include="Avatar.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="_VisualParam_.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Logger.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Login.cs">
+    <Compile Include="_VisualParam_.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Inventory.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SoundManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="InternalDictionary.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="FriendsManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TexturePipeline.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GroupManager.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="InventoryManager.cs">
@@ -127,82 +146,40 @@
     <Compile Include="ParcelManager.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CoordinateFrame.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AgentManagerCamera.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="InventoryNode.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AvatarManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Simulator.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GridManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GridClient.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="_Packets_.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AgentManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="TerrainManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Settings.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ObjectManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ThreadUtil.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="EventDictionary.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Helpers.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Caps.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SoundManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GroupManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="ProtocolManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Inventory.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DirectoryManager.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="InternalDictionary.cs">
+    <Compile Include="_Packets_.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Caps.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="AgentManagerCamera.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Animations.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AssetTypes.cs">
+    <Compile Include="CoordinateFrame.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="InventoryNode.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AgentManagerMovement.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="AssetTypes.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="AvatarManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Login.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AssetManager.cs">
@@ -211,55 +188,58 @@
     <Compile Include="NameValue.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="TerrainCompressor.cs">
+    <Compile Include="Simulator.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GridManager.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CapsToPacket.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="TerrainCompressor.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="UDPBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GridClient.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AgentThrottle.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="TextureCache.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="AgentManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Settings.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="InventoryNodeDictionary.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="BlockingQueue.cs">
+    <Compile Include="Helpers.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TerrainManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ObjectManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ThreadUtil.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="EstateTools.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Capabilities\HttpRequestSignature.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Capabilities\EventQueueServer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Capabilities\CapsBase.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Capabilities\CapsClient.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Capabilities\EventQueueClient.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Capabilities\HttpServer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="StructuredData\StructuredData.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="StructuredData\XmlLLSD.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="StructuredData\BinaryLLSD.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="StructuredData\NotationLLSD.cs">
+    <Compile Include="EventDictionary.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Voice\VoiceConnector.cs">

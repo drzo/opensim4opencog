@@ -1000,3 +1000,5 @@
 
 (def-macro (cloj &rest args) args)
 (def-macro (setj &rest args) `(set ~@args))
+(def-macro (blockj &rest args) `(block ~@args))
+(def-macro (progn &rest args) `(block ~@args))
