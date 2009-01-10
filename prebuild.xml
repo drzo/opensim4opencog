@@ -56,7 +56,7 @@
         </Files>
       </Project>
       -->
-<!--guid="455E7D70-1C85-4D7F-9F01-DC801B8B8C34"-->
+<!---->
       <Project name="HttpServer" path="HttpServer" type="Library" >
         <Configuration name="Debug">
           <Options>
@@ -326,7 +326,7 @@
       </Files>
     </Project>
 
-   <Project name="cogbot" path="." type="Exe">
+   <Project name="cogbot" path="." type="WinExe">
       <Configuration name="Debug">
         <Options>
           <OutputPath>bin/</OutputPath>
@@ -362,9 +362,12 @@
           <Match path="Properties" pattern="*.cs" recurse="true"/>
           <Match path="Tutorials" pattern="*.cs" recurse="true"/>
           <Match path="Utilities" pattern="*.cs" recurse="true"/>
-          <Match path="DotCYC" pattern="CycConnectionForm*.cs" recurse="true"/>
+          <Match path="DotCYC" pattern="CycConnectionForm.resx" recurse="false"/>
+          <Match path="DotCYC" pattern="CycConnectionForm.cs" recurse="false"/>
+          <Match path="DotCYC" pattern="CycConnectionForm.Designer.cs" recurse="false"/>
           <Match path="ScriptEngines" pattern="*.cs" recurse="true"/>
-          <Match path="." pattern="*.cs" recurse="false"/>
+          <Match path="." pattern="*.cs"  recurse="false"/>
+          <Match path="." pattern="*.resx"  recurse="false"/>
       </Files>
     </Project>
 
