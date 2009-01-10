@@ -56,8 +56,8 @@
         </Files>
       </Project>
       -->
-<!--
-      <Project name="HttpServer" path="HttpServer" type="Library" guid="455E7D70-1C85-4D7F-9F01-DC801B8B8C34">
+<!--guid="455E7D70-1C85-4D7F-9F01-DC801B8B8C34"-->
+      <Project name="HttpServer" path="HttpServer" type="Library" >
         <Configuration name="Debug">
           <Options>
             <OutputPath>../bin/</OutputPath>
@@ -76,7 +76,7 @@
           <Match pattern="*.cs" recurse="true"/>
         </Files>
       </Project>
--->
+
       <!-- Libraries -->
 
       <Project name="OpenMetaverseTypes" path="OpenMetaverse/Types" type="Library" rootNamespace="OpenMetaverse">

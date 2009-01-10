@@ -1,9 +1,9 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
-    <ProductVersion>8.0.50727</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{B390B8AC-B0B7-4D2C-A865-ABB91CC2B309}</ProjectGuid>
+    <ProjectGuid>{4DD9E536-0000-0000-0000-000000000000}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -14,7 +14,6 @@
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <DelaySign>false</DelaySign>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
     <AppDesignerFolder></AppDesignerFolder>
     <RootNamespace>OpenMetaverse.Utilities</RootNamespace>
@@ -38,7 +37,6 @@
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
-    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -57,40 +55,46 @@
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
-    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System">
-        <Name>System</Name>
+    <Reference Include="System" >
+      <HintPath>System.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="System.Xml">
-        <Name>System.Xml</Name>
+    <Reference Include="System.Data" >
+      <HintPath>System.Data.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="System.Data">
-        <Name>System.Data</Name>
+    <Reference Include="System.Xml" >
+      <HintPath>System.Xml.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\OpenMetaverse\OpenMetaverse.csproj">
       <Name>OpenMetaverse</Name>
-      <Project>{DA279BA9-6A53-45C7-9981-F26880FE6030}</Project>
+      <Project>{3164F259-0000-0000-0000-000000000000}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\OpenMetaverse\Types\OpenMetaverseTypes.csproj">
-      <Name>OpenMetaverseTypes</Name>
-      <Project>{60EB04BF-7057-45EE-940D-7AB05AD8EB3D}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj">
-      <Name>OpenMetaverse.StructuredData</Name>
-      <Project>{1EC01638-5787-4B7D-AF2E-3F1D591CC7D5}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+			<Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\OpenMetaverse.Http\OpenMetaverse.Http.csproj">
       <Name>OpenMetaverse.Http</Name>
-      <Project>{0D42C675-C27F-4F79-83A6-141CE804EA3F}</Project>
+      <Project>{244CBC6E-0000-0000-0000-000000000000}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+			<Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj">
+      <Name>OpenMetaverse.StructuredData</Name>
+      <Project>{D923C11D-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+			<Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenMetaverse\Types\OpenMetaverseTypes.csproj">
+      <Name>OpenMetaverseTypes</Name>
+      <Project>{29DCFE14-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+			<Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

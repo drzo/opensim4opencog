@@ -56,7 +56,7 @@ namespace cogbot.Actions
 		public string Description;
         public CommandCategory Category;
 
-		public abstract string Execute(string[] args, UUID fromAgentID);
+		public new abstract string Execute(string[] args, UUID fromAgentID);
 
 		/// <summary>
 		/// When set to true, think will be called.
