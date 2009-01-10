@@ -12,8 +12,11 @@
 			  <fileset basedir=".">
 			  </fileset>
 		  </copy>
-		  <csc target="exe" debug="${build.debug}" unsafe="True" warnaserror="False" define="TRACE" nostdlib="False" main="" output="${build.dir}/${project::get-name()}.exe">
+		  <csc target="winexe" debug="${build.debug}" unsafe="True" warnaserror="False" define="TRACE" nostdlib="False" main="" output="${build.dir}/${project::get-name()}.exe">
 			  <resources prefix="cogbot" dynamicprefix="true" >
+				  <include name="DotCYC/CycConnectionForm.resx" />
+				  <include name="LoginForm.resx" />
+				  <include name="TextForm.resx" />
 			  </resources>
 			  <sources failonempty="true">
 				  <include name="Actions/Action.cs" />
@@ -158,8 +161,9 @@
 				  <include name="Tutorials/Tutorial.cs" />
 				  <include name="Tutorials/Tutorial1.cs" />
 				  <include name="Utilities/XMLInterpreter.cs" />
-				  <include name="DotCYC/CycConnectionForm.Designer.cs" />
+				  <include name="DotCYC/CycConnectionForm.resx" />
 				  <include name="DotCYC/CycConnectionForm.cs" />
+				  <include name="DotCYC/CycConnectionForm.Designer.cs" />
 				  <include name="ScriptEngines/ABCLInterpreter.cs" />
 				  <include name="ScriptEngines/ClojureInterpreter.cs" />
 				  <include name="ScriptEngines/CycInterpreter.cs" />
@@ -171,6 +175,8 @@
 				  <include name="Program.cs" />
 				  <include name="TextForm.Designer.cs" />
 				  <include name="TextForm.cs" />
+				  <include name="LoginForm.resx" />
+				  <include name="TextForm.resx" />
 			  </sources>
 			  <references basedir="${project::get-base-directory()}">
 				  <lib>

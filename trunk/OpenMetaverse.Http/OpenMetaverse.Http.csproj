@@ -1,9 +1,9 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{244CBC6E-0000-0000-0000-000000000000}</ProjectGuid>
+    <ProjectGuid>{CAF5A5F6-6F82-4EBD-A39F-1174B5BE4485}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -14,6 +14,7 @@
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <DelaySign>false</DelaySign>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
     <AppDesignerFolder></AppDesignerFolder>
     <RootNamespace>OpenMetaverse.Http</RootNamespace>
@@ -37,6 +38,7 @@
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
+    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -55,44 +57,38 @@
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
+    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net" >
-      <HintPath>log4net.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="System">
+        <Name>System</Name>
     </Reference>
-    <Reference Include="Mono.Security" >
-      <HintPath>Mono.Security.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="System.Xml">
+        <Name>System.Xml</Name>
     </Reference>
-    <Reference Include="System" >
-      <HintPath>System.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="log4net">
+        <Name>log4net</Name>
     </Reference>
-    <Reference Include="System.Xml" >
-      <HintPath>System.Xml.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Mono.Security">
+        <Name>Mono.Security</Name>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\HttpServer\HttpServer.csproj">
-      <Name>HttpServer</Name>
-      <Project>{C27DA2E8-0000-0000-0000-000000000000}</Project>
+    <ProjectReference Include="..\OpenMetaverse\Types\OpenMetaverseTypes.csproj">
+      <Name>OpenMetaverseTypes</Name>
+      <Project>{566B6671-36BE-4C0D-9AE0-F19A3B068E31}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-			<Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj">
       <Name>OpenMetaverse.StructuredData</Name>
-      <Project>{D923C11D-0000-0000-0000-000000000000}</Project>
+      <Project>{6279F36A-5687-4CA1-9D01-FA9B88BC867A}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-			<Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\OpenMetaverse\Types\OpenMetaverseTypes.csproj">
-      <Name>OpenMetaverseTypes</Name>
-      <Project>{29DCFE14-0000-0000-0000-000000000000}</Project>
+    <ProjectReference Include="..\HttpServer\HttpServer.csproj">
+      <Name>HttpServer</Name>
+      <Project>{E110C7D5-41FC-4FF9-B1AD-1EC62C786F3D}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-			<Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

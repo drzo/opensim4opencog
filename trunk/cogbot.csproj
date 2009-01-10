@@ -1,9 +1,9 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{B95B6315-0000-0000-0000-000000000000}</ProjectGuid>
+    <ProjectGuid>{ECFB2F36-448C-43EB-83B4-7CAF500F55ED}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -14,7 +14,8 @@
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <DelaySign>false</DelaySign>
-    <OutputType>Exe</OutputType>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <OutputType>WinExe</OutputType>
     <AppDesignerFolder></AppDesignerFolder>
     <RootNamespace>cogbot</RootNamespace>
     <StartupObject></StartupObject>
@@ -37,6 +38,7 @@
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
+    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -55,86 +57,71 @@
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
+    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ABCL.Net.dll" >
-      <HintPath>bin\ABCL.Net.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="log4net.dll">
+        <Name>log4net.dll</Name>
     </Reference>
-    <Reference Include="IKVM.OpenJDK.ClassLibrary.dll" >
-      <HintPath>bin\IKVM.OpenJDK.ClassLibrary.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="System">
+        <Name>System</Name>
     </Reference>
-    <Reference Include="IKVM.Runtime.dll" >
-      <HintPath>bin\IKVM.Runtime.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="System.Drawing">
+        <Name>System.Drawing</Name>
     </Reference>
-    <Reference Include="log4net.dll" >
-      <HintPath>bin\log4net.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="System.Windows.Forms">
+        <Name>System.Windows.Forms</Name>
     </Reference>
-    <Reference Include="OpenCyc.dll" >
-      <HintPath>bin\OpenCyc.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="System.Data">
+        <Name>System.Data</Name>
     </Reference>
-    <Reference Include="System" >
-      <HintPath>System.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="System.Xml">
+        <Name>System.Xml</Name>
     </Reference>
-    <Reference Include="System.Data" >
-      <HintPath>System.Data.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="OpenCyc.dll">
+        <Name>OpenCyc.dll</Name>
     </Reference>
-    <Reference Include="System.Drawing" >
-      <HintPath>System.Drawing.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="ABCL.Net.dll">
+        <Name>ABCL.Net.dll</Name>
     </Reference>
-    <Reference Include="System.Windows.Forms" >
-      <HintPath>System.Windows.Forms.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="IKVM.Runtime.dll">
+        <Name>IKVM.Runtime.dll</Name>
     </Reference>
-    <Reference Include="System.Xml" >
-      <HintPath>System.Xml.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="IKVM.OpenJDK.ClassLibrary.dll">
+        <Name>IKVM.OpenJDK.ClassLibrary.dll</Name>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\opensim4opencog\dotlisp\DotLisp.csproj">
       <Name>DotLisp</Name>
-      <Project>{5B1B186D-0000-0000-0000-000000000000}</Project>
+      <Project>{8D7CA22D-936C-4376-9B09-30C6853CCE71}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-			<Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\opensim4opencog\OpenMetaverse\OpenMetaverse.csproj">
-      <Name>OpenMetaverse</Name>
-      <Project>{3164F259-0000-0000-0000-000000000000}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-			<Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\opensim4opencog\OpenMetaverse.Http\OpenMetaverse.Http.csproj">
-      <Name>OpenMetaverse.Http</Name>
-      <Project>{244CBC6E-0000-0000-0000-000000000000}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-			<Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\opensim4opencog\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj">
-      <Name>OpenMetaverse.StructuredData</Name>
-      <Project>{D923C11D-0000-0000-0000-000000000000}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-			<Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\opensim4opencog\OpenMetaverse.Utilities\OpenMetaverse.Utilities.csproj">
-      <Name>OpenMetaverse.Utilities</Name>
-      <Project>{4DD9E536-0000-0000-0000-000000000000}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-			<Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\opensim4opencog\OpenMetaverse\Types\OpenMetaverseTypes.csproj">
       <Name>OpenMetaverseTypes</Name>
-      <Project>{29DCFE14-0000-0000-0000-000000000000}</Project>
+      <Project>{566B6671-36BE-4C0D-9AE0-F19A3B068E31}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-			<Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\opensim4opencog\OpenMetaverse\OpenMetaverse.csproj">
+      <Name>OpenMetaverse</Name>
+      <Project>{6328D345-9C25-41F2-A962-008C9E4BAAEA}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\opensim4opencog\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj">
+      <Name>OpenMetaverse.StructuredData</Name>
+      <Project>{6279F36A-5687-4CA1-9D01-FA9B88BC867A}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\opensim4opencog\OpenMetaverse.Utilities\OpenMetaverse.Utilities.csproj">
+      <Name>OpenMetaverse.Utilities</Name>
+      <Project>{2916CFA8-9546-4452-8B7B-BAD19B5A19CB}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\opensim4opencog\OpenMetaverse.Http\OpenMetaverse.Http.csproj">
+      <Name>OpenMetaverse.Http</Name>
+      <Project>{CAF5A5F6-6F82-4EBD-A39F-1174B5BE4485}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -550,11 +537,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\Resources.Designer.cs">
-      <DependentUpon>Resources.cs</DependentUpon>
+      <DependentUpon>Resources.resx</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\Settings.Designer.cs">
-      <DependentUpon>Settings.cs</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Tutorials\Tutorial.cs">
@@ -566,11 +552,18 @@
     <Compile Include="Utilities\XMLInterpreter.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DotCYC\CycConnectionForm.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="DotCYC\CycConnectionForm.Designer.cs">
+    <EmbeddedResource Include="DotCYC\CycConnectionForm.resx">
+      <SubType>Designer</SubType>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>CycConnectionForm.Designer.cs</LastGenOutput>
       <DependentUpon>CycConnectionForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <Compile Include="DotCYC\CycConnectionForm.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CycConnectionForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DotCYC\CycConnectionForm.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ScriptEngines\CycInterpreter.cs">
@@ -594,19 +587,33 @@
     <Compile Include="LoginForm.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="LoginForm.Designer.cs">
-      <DependentUpon>LoginForm.cs</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Program.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="TextForm.Designer.cs">
-      <DependentUpon>TextForm.cs</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="TextForm.cs">
       <SubType>Code</SubType>
+    </Compile>
+    <EmbeddedResource Include="LoginForm.resx">
+      <SubType>Designer</SubType>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>LoginForm.Designer.cs</LastGenOutput>
+      <DependentUpon>LoginForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <Compile Include="LoginForm.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>LoginForm.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="TextForm.resx">
+      <SubType>Designer</SubType>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>TextForm.Designer.cs</LastGenOutput>
+      <DependentUpon>TextForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <Compile Include="TextForm.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>TextForm.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
