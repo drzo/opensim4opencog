@@ -35,7 +35,7 @@ namespace cogbot
     {
 
         static public TextForm SingleInstance = null;
-        public static int debugLevel = 3;
+        public static int debugLevel = 2;
         public bool GetTextures = false;
         
         public UUID GroupID = UUID.Zero;
@@ -432,10 +432,13 @@ namespace cogbot
 
         void client_OnLogMessage(object message, Helpers.LogLevel level)
         {
-            if (message.ToString().Contains("esend")) return;
-            if (message.ToString().Contains("resent packet")) return;
-            if (message.ToString().Contains("Rate limit")) return;
-            output("TextForm client_OnLogMessage: " + level.ToString() + " " + message.ToString());
+            string msg = "" + level + " " + message;
+            if (msg.Contains("esend")) return;
+            if (msg.Contains("resent packet")) return;
+            if (msg.Contains("Rate limit")) return;
+            if (debugLevel < 3 && msg.Contains("Array index is out of range")) return;
+            if (debugLevel < 3 && (msg.Contains("nloadi") || msg.Contains("ransfer"))) return;
+            output("TextForm client_OnLogMessage: " + msg);
         }
 
         void Network_OnEventQueueRunning(Simulator simulator)

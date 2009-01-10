@@ -64,11 +64,13 @@
         <nant buildfile="OpenMetaverse/OpenMetaverse.dll.build" target="clean" />
         <nant buildfile="OpenMetaverse.StructuredData/OpenMetaverse.StructuredData.dll.build" target="clean" />
         <nant buildfile="OpenMetaverse.Http/OpenMetaverse.Http.dll.build" target="clean" />
+        <nant buildfile="HttpServer/HttpServer.dll.build" target="clean" />
         <nant buildfile="dotlisp/DotLisp.dll.build" target="clean" />
         <nant buildfile="OpenMetaverse.Rendering.Simple/OpenMetaverse.Rendering.Simple.dll.build" target="clean" />
     </target>
 
     <target name="build" depends="init" description="">
+        <nant buildfile="HttpServer/HttpServer.dll.build" target="build" />
         <nant buildfile="OpenMetaverse/Types/OpenMetaverseTypes.dll.build" target="build" />
         <nant buildfile="OpenMetaverse.StructuredData/OpenMetaverse.StructuredData.dll.build" target="build" />
         <nant buildfile="OpenMetaverse.Http/OpenMetaverse.Http.dll.build" target="build" />
@@ -97,6 +99,7 @@
         <nant buildfile="OpenMetaverse/OpenMetaverse.dll.build" target="doc" />
         <nant buildfile="OpenMetaverse.StructuredData/OpenMetaverse.StructuredData.dll.build" target="doc" />
         <nant buildfile="OpenMetaverse.Http/OpenMetaverse.Http.dll.build" target="doc" />
+        <nant buildfile="HttpServer/HttpServer.dll.build" target="doc" />
         <nant buildfile="dotlisp/DotLisp.dll.build" target="doc" />
         <nant buildfile="OpenMetaverse.Rendering.Simple/OpenMetaverse.Rendering.Simple.dll.build" target="doc" />
     </target>
