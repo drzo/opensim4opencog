@@ -326,7 +326,7 @@
       </Files>
     </Project>
 
-   <Project name="cogbot" path="." type="WinExe">
+   <Project name="cogbot" path="." type="Exe">
       <Configuration name="Debug">
         <Options>
           <OutputPath>bin/</OutputPath>
