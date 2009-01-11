@@ -64,7 +64,7 @@
 ;; DotLisp/Clojure the == is equalp
 (def (notme agent)
    ;; TODO: actually compare it to login name...
-   (not (== (str agent) "My Bot")))
+   (not (== (str agent) Client.Self.Name)))
 
 (def (prim-check primUUID) ) 
 ;-----------------------------
