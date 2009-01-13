@@ -102,6 +102,9 @@ namespace HttpServer
         /// <summary>Returns set cookies for the request</summary>
         RequestCookies Cookies { get; }
 
+        /// <summary>Returns the requesting client's IP address and port</summary>
+        System.Net.IPEndPoint RemoteEndPoint { get; }
+
         /// <summary>
         /// Decode body into a form.
         /// </summary>

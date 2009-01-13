@@ -25,8 +25,7 @@ namespace HttpServer
         private readonly RequestReceivedHandler _requestHandler;
         private readonly bool _secured;
         private readonly Stream _stream;
-        private readonly string _remoteAddress;
-        private readonly string _remotePort;
+        private readonly IPEndPoint _remoteEndPoint;
     	
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpClientContextImp"/> class.
@@ -52,8 +51,7 @@ namespace HttpServer
             if (!stream.CanWrite || !stream.CanRead)
                 throw new ArgumentException("Stream must be writeable and readable.");
 
-			_remoteAddress = remoteEndPoint.Address.ToString();
-			_remotePort = remoteEndPoint.Port.ToString();
+            _remoteEndPoint = remoteEndPoint;
             _log = writer ?? NullLogWriter.Instance;
             _parser = new HttpRequestParser(OnRequestCompleted, null);
             _secured = secured;
@@ -218,8 +216,7 @@ namespace HttpServer
 
         private void OnRequestCompleted(IHttpRequest request)
         {
-            request.AddHeader("remote_addr", _remoteAddress);
-            request.AddHeader("remote_port", _remotePort);
+            _parser.CurrentRequest._remoteEndPoint = _remoteEndPoint;
             _requestHandler(this, request);
         }
 
