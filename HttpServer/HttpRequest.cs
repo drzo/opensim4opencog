@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Specialized;
 using System.IO;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using HttpServer.FormDecoders;
@@ -36,6 +37,7 @@ namespace HttpServer
         private string[] _uriParts;
         private string _uriPath;
         private bool _respondTo100Continue = true;
+        internal IPEndPoint _remoteEndPoint;
 
         /// <summary>
         /// Have all body content bytes been received?
@@ -155,6 +157,14 @@ namespace HttpServer
                 _uri = value ?? HttpHelper.EmptyUri;
                 _uriParts = _uri.AbsolutePath.Split(UriSplitters, StringSplitOptions.RemoveEmptyEntries);
             }
+        }
+
+        /// <summary>
+        /// Remote client's IP address and port
+        /// </summary>
+        public IPEndPoint RemoteEndPoint
+        {
+            get { return _remoteEndPoint; }
         }
 
         internal bool ShouldReplyTo100Continue()
@@ -370,12 +380,6 @@ namespace HttpServer
                         throw new BadRequestException("Failed to parse uri: " + value + _uriPath, err);
                     }
                     break;
-                case "remote_addr":
-                    // to prevent hacking (since it's added by IHttpClientContext before parsing).
-                    if (_headers[name] == null)
-                        _headers.Add(name, value);
-                    break;
-
                 case "connection":
                     if (string.Compare(value, "close", true) == 0)
                         Connection = ConnectionType.Close;
