@@ -26,6 +26,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections;
 
 namespace OpenMetaverse
 {
@@ -38,7 +39,7 @@ namespace OpenMetaverse
     /// </summary>
     /// <typeparam name="TKey">Key <see langword="Tkey"/></typeparam>
     /// <typeparam name="TValue">Value <see langword="TValue"/></typeparam>
-    public class InternalDictionary<TKey, TValue>
+    public class InternalDictionary<TKey, TValue>:System.Collections.IDictionary
     {
         /// <summary>Internal dictionary that this class wraps around. Do not
         /// modify or enumerate the contents of this dictionary without locking</summary>
@@ -294,5 +295,95 @@ namespace OpenMetaverse
             get { return Dictionary[key]; }
             set { Dictionary[key] = value; }
         }
+
+        #region IDictionary Members
+
+        public void Add(object key, object value)
+        {
+            ((System.Collections.IDictionary)Dictionary).Add(key, value);
+        }
+
+        public void Clear()
+        {
+            ((System.Collections.IDictionary)Dictionary).Clear();
+        }
+
+        public bool Contains(object key)
+        {
+            return ((System.Collections.IDictionary)Dictionary).Contains(key);
+        }
+
+        public System.Collections.IDictionaryEnumerator GetEnumerator()
+        {
+            return ((System.Collections.IDictionary)Dictionary).GetEnumerator();
+        }
+
+        public bool IsFixedSize
+        {
+            get { return ((System.Collections.IDictionary)Dictionary).IsFixedSize; }
+        }
+
+        public bool IsReadOnly
+        {
+            get { return ((System.Collections.IDictionary)Dictionary).IsReadOnly; }
+        }
+
+        public System.Collections.ICollection Keys
+        {
+            get { return ((System.Collections.IDictionary)Dictionary).Keys; }
+        }
+
+        public void Remove(object key)
+        {
+            ((System.Collections.IDictionary)Dictionary).Remove(key); 
+        }
+
+        public System.Collections.ICollection Values
+        {
+            get { return ((System.Collections.IDictionary)Dictionary).Values; }
+        }
+
+        public object this[object key]
+        {
+            get
+            {
+                return ((System.Collections.IDictionary)Dictionary)[key]; 
+            }
+            set
+            {
+                ((System.Collections.IDictionary)Dictionary)[key] = value;
+            }
+        }
+
+        #endregion
+
+        #region ICollection Members
+
+        public void CopyTo(Array array, int index)
+        {
+            ((System.Collections.IDictionary)Dictionary).CopyTo(array, index); 
+        }
+
+        public bool IsSynchronized
+        {
+            get { return ((System.Collections.IDictionary)Dictionary).IsSynchronized; }
+        }
+
+        public object SyncRoot
+        {
+            get { return ((System.Collections.IDictionary)Dictionary).SyncRoot; }
+        }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return ((System.Collections.IDictionary)Dictionary).GetEnumerator();
+
+        }
+
+        #endregion
     }
 }

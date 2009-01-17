@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{566B6671-36BE-4C0D-9AE0-F19A3B068E31}</ProjectGuid>
+    <ProjectGuid>{A0F485C3-7CEB-407C-92BB-15ECB77B837F}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -68,34 +68,16 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Color4.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Ray.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="DoubleDictionary.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="BlockingQueue.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Utils.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Quaternion.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Vector2.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ExpiringCache.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Vector3.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="UUID.cs">
+    <Compile Include="BlockingQueue.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Vector4.cs">
@@ -104,10 +86,28 @@
     <Compile Include="Matrix4.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Vector3d.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ray.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Utils.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="UtilsConversions.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Vector3d.cs">
+    <Compile Include="DoubleDictionary.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Color4.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="UUID.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ExpiringCache.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
