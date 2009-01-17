@@ -2955,6 +2955,11 @@ namespace OpenMetaverse
             if (reply.AgentData.Descendents > 0)
             {
                 // InventoryDescendantsReply sends a null folder if the parent doesnt contain any folders
+                if (reply.FolderData.Length == 0)
+                {
+                    Console.WriteLine("InventoryDescendantsReply reply.FolderData.Length == 0");
+                }
+                else
                 if (reply.FolderData[0].FolderID != UUID.Zero)
                 {
                     // Iterate folders in this packet
@@ -2971,6 +2976,9 @@ namespace OpenMetaverse
                 }
 
                 // InventoryDescendantsReply sends a null item if the parent doesnt contain any items.
+                if (reply.ItemData.Length == 0) {
+                    Console.WriteLine("InventoryDescendantsReply reply.ItemData.Length == 0");
+                } else
                 if (reply.ItemData[0].ItemID != UUID.Zero)
                 {
                     // Iterate items in this packet

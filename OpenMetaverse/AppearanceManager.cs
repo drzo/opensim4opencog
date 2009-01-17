@@ -485,7 +485,7 @@ namespace OpenMetaverse
             attachmentsPacket.AgentData.SessionID = Client.Self.SessionID;
 
             attachmentsPacket.HeaderData.CompoundMsgID = UUID.Random();
-            attachmentsPacket.HeaderData.FirstDetachAll = true;
+            attachmentsPacket.HeaderData.FirstDetachAll = removeExistingFirst;
             attachmentsPacket.HeaderData.TotalObjects = (byte)attachments.Count;
 
             attachmentsPacket.ObjectData = new RezMultipleAttachmentsFromInvPacket.ObjectDataBlock[attachments.Count];
