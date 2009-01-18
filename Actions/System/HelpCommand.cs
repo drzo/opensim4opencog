@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class HelpCommand: Command
     {
-        public HelpCommand(cogbot.TextForm testClient)
+        public HelpCommand(BotClient testClient)
 		{
 			Name = "help";
 			Description = "Lists available commands. usage: help [command] to display information on commands";
@@ -19,8 +19,8 @@ namespace cogbot.Actions
 		{
             if (args.Length > 0)
             {
-                if (parent.actions.ContainsKey(args[0]))
-                    return parent.actions[args[0]].GetDescription();
+                if (Client.Commands.ContainsKey(args[0]))
+                    return Client.Commands[args[0]].GetDescription();
                 else
                     return "Command " + args[0] + " Does not exist. \"help\" to display all available commands.";
             }
@@ -28,7 +28,7 @@ namespace cogbot.Actions
             SortedDictionary<CommandCategory, List<Command>> CommandTree = new SortedDictionary<CommandCategory, List<Command>>();
 
             CommandCategory cc;
-			foreach (Command c in parent.actions.Values)
+            foreach (Command c in Client.Commands.Values)
 			{
                 if (c.Category.Equals(null))
                     cc = CommandCategory.Unknown;

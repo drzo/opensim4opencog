@@ -36,29 +36,29 @@ namespace cogbot
 
         static public TextForm SingleInstance = null;
         public static int debugLevel = 2;
-        public bool GetTextures = false;
+        //public bool GetTextures = false;
         
-        public UUID GroupID = UUID.Zero;
-        public Dictionary<UUID, GroupMember> GroupMembers = null;// new Dictionary<UUID, GroupMember>();
-        public Dictionary<UUID, AvatarAppearancePacket> Appearances = null;// new Dictionary<UUID, AvatarAppearancePacket>();
+        //public UUID GroupID = UUID.Zero;
+        //public Dictionary<UUID, GroupMember> GroupMembers = null;// new Dictionary<UUID, GroupMember>();
+        //public Dictionary<UUID, AvatarAppearancePacket> Appearances = null;// new Dictionary<UUID, AvatarAppearancePacket>();
        // public Dictionary<string, cogbot.Actions.Action> Commands = null;//new Dictionary<string, cogbot.Actions.Action>();
-        public bool Running = true;
-        public bool GroupCommands = false;
-        public string MasterName = String.Empty;
-        public UUID MasterKey = UUID.Zero;
-        public bool AllowObjectMaster = false;
+        //public bool Running = true;
+        //public bool GroupCommands = false;
+        //public string MasterName = String.Empty;
+        //public UUID MasterKey = UUID.Zero;
+        //public bool AllowObjectMaster = false;
         //  public cogbot.TextForm ClientManager;
         //  public VoiceManager VoiceManager;
         // Shell-like inventory commands need to be aware of the 'current' inventory folder.
-        public InventoryFolder CurrentDirectory = null;
+        //public InventoryFolder CurrentDirectory = null;
 
-        public GridClient client;
+        //public BotClient CurrentClient;
         public OutputDelegate outputDelegate;
         public DotCYC.CycConnectionForm cycConnection;
-        public Dictionary<string, DescribeDelegate> describers;
+        ///public Dictionary<string, DescribeDelegate> describers;
 
-        public Dictionary<string, Listeners.Listener> listeners;
-        public Dictionary<string, Actions.Action> actions;
+       // public Dictionary<string, Listeners.Listener> listeners;
+        public Dictionary<string, Actions.Action> groupActions;
         public Dictionary<string, Tutorials.Tutorial> tutorials;
 
         public bool describeNext;
@@ -70,91 +70,59 @@ namespace cogbot
         public int RunningMode = (int)Modes.normal;
         public UUID AnimationFolder = UUID.Zero;
 
-        public Thread thrSvr;
         public Queue taskQueue;
         public Thread thrJobQueue;
-        StreamReader tcpStreamReader = null;// = new StreamReader(ns);
-        StreamWriter tcpStreamWriter = null;// = new StreamWriter(ns);
-        NetworkStream ns = null;
-        InventoryEval searcher =null; // new InventoryEval(this);
-        public Inventory Inventory;
-        public InventoryManager Manager;
+        //InventoryEval searcher =null; // new InventoryEval(this);
+        //public Inventory Inventory;
+        //public InventoryManager Manager;
         public Configuration config;
+        //Utilities.TcpServer UtilitiesTcpServer;
         public String taskInterperterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
-
+        static List<LoginDetails> accounts = new List<LoginDetails>();
+        public static ClientManager clientManager = new ClientManager(accounts, false);
         public TextForm()
         {
             SingleInstance = this;
-            client = new GridClient();
-
-            GroupMembers = new Dictionary<UUID, GroupMember>();
-            Appearances = new Dictionary<UUID, AvatarAppearancePacket>();
-
-            client.Settings.ALWAYS_DECODE_OBJECTS = true;
-            client.Settings.ALWAYS_REQUEST_OBJECTS = true;
-            client.Settings.OBJECT_TRACKING = true;
-
-            Manager = client.Inventory;
-            Inventory = Manager.Store;
-
             config = new Configuration();
             config.loadConfig();
-            client.Settings.LOGIN_SERVER = config.simURL;
-            extraSettings();
+            BotClient.nextTcpPort = config.tcpPort;
+            //LoginDetails details = GetDetailsFromConfig(config);
+          //  CurrentClient = new BotClient(clientManager);// clientManager.Login(details);
+          //  CurrentClient.TextFormClient(this);
+            //GroupMembers = new Dictionary<UUID, GroupMember>();
+            //Appearances = new Dictionary<UUID, AvatarAppearancePacket>();
+
+           // CurrentClient.Settings.ALWAYS_DECODE_OBJECTS = true;
+           // CurrentClient.Settings.ALWAYS_REQUEST_OBJECTS = true;
+          //  CurrentClient.Settings.OBJECT_TRACKING = true;
+
+            //Manager = CurrentClient.Inventory;
+            //Inventory = Manager.Store;
+            groupActions = new Dictionary<string, Action>();
+            groupActions["login"] = new Login(null);
+
+         //   CurrentClient.Settings.LOGIN_SERVER = config.simURL;
+           // extraSettings();
 
 
-            client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
-            client.Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
-            client.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
+           // CurrentClient.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
+           // CurrentClient.Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
+           // CurrentClient.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
 
             outputDelegate = new OutputDelegate(doOutput);
 
-            describers = new Dictionary<string, DescribeDelegate>();
-            describers["location"] = new DescribeDelegate(describeLocation);
-            describers["people"] = new DescribeDelegate(describePeople);
-            describers["objects"] = new DescribeDelegate(describeObjects);
-            describers["buildings"] = new DescribeDelegate(describeBuildings);
+            //listeners = new Dictionary<string, cogbot.Listeners.Listener>();
+            //listeners["chat"] = new Listeners.Chat(this);
+            //listeners["avatars"] = new Listeners.Avatars(this);
+            //listeners["teleport"] = new Listeners.Teleport(this);
+            //listeners["whisper"] = new Listeners.Whisper(this);
+            //ObjectSystem = new Listeners.Objects(this);
+            //listeners["bump"] = new Listeners.Bump(this);
+            //listeners["sound"] = new Listeners.Sound(this);
 
-            describePos = 0;
 
-            listeners = new Dictionary<string, cogbot.Listeners.Listener>();
-            listeners["chat"] = new Listeners.Chat(this);
-            listeners["avatars"] = new Listeners.Avatars(this);
-            listeners["teleport"] = new Listeners.Teleport(this);
-            listeners["whisper"] = new Listeners.Whisper(this);
-            listeners["objects"] = new Listeners.Objects(this);
-            listeners["bump"] = new Listeners.Bump(this);
-            listeners["sound"] = new Listeners.Sound(this);
-
-            actions = new Dictionary<string, cogbot.Actions.Action>();
-            actions["login"] = new Actions.Login(this);
-            actions["logout"] = new Actions.Logout(this);
-            actions["stop"] = new Actions.Stop(this);
-            actions["teleport"] = new Actions.Teleport(this);
-            actions["describe"] = new Actions.Describe(this);
-            actions["say"] = new Actions.Say(this);
-            actions["whisper"] = new Actions.Whisper(this);
-            actions["help"] = new Actions.Help(this);
-            actions["sit"] = new Actions.Sit(this);
-            actions["stand"] = new Actions.Stand(this);
-            actions["jump"] = new Actions.Jump(this);
-            actions["crouch"] = new Actions.Crouch(this);
-            actions["mute"] = new Actions.Mute(this);
-            actions["move"] = new Actions.Move(this);
-            actions["use"] = new Actions.Use(this);
-            actions["eval"] = new Actions.Eval(this);
-
-            actions["fly"] = new Actions.Fly(this);
-            actions["stop-flying"] = new Actions.StopFlying(this);
-            actions["where"] = new Actions.Where(this);
-            actions["locate"] = new Actions.Locate(this);
-            Actions.Follow follow = new Actions.Follow(this);
-            actions["follow"] = follow;
-            actions["wear"] = new Actions.Wear(this);
-            actions["stop following"] = follow;
-            actions["stop-following"] = follow;
             tutorials = new Dictionary<string, cogbot.Tutorials.Tutorial>();
-            tutorials["tutorial1"] = new Tutorials.Tutorial1(this);
+          //  tutorials["tutorial1"] = new Tutorials.Tutorial1(this);
     
             describeNext = true;
 
@@ -162,13 +130,17 @@ namespace cogbot
             Show();
             consoleInputText.Enabled = true;
             consoleInputText.Focus();
-            RegisterAllCommands(Assembly.GetExecutingAssembly());
+         //   RegisterAllCommands(Assembly.GetExecutingAssembly());
 
+         //   UtilitiesTcpServer = new cogbot.Utilities.TcpServer(this);
             // Start the server
-            startSocketListener();
-            extraHooks();
+            ///UtilitiesTcpServer.startSocketListener();
+            taskQueue = new Queue();
+            thrJobQueue = new Thread(jobManager);
+            thrJobQueue.Start();
+
             //Client.Network.RegisterCallback(PacketType.AgentDataUpdate, new NetworkManager.PacketCallback(AgentDataUpdateHandler));
-            client.Network.OnLogin += new NetworkManager.LoginCallback(LoginHandler);
+          //  CurrentClient.Network.OnLogin += new NetworkManager.LoginCallback(LoginHandler);
             //Client.Self.OnInstantMessage += new AgentManager.InstantMessageCallback(Self_OnInstantMessage);
             //Client.Groups.OnGroupMembers += new GroupManager.GroupMembersCallback(GroupMembersHandler);
             //Client.Inventory.OnObjectOffered += new InventoryManager.ObjectOfferedCallback(Inventory_OnInventoryObjectReceived);
@@ -179,292 +151,17 @@ namespace cogbot
 
         }
 
-        void startSocketListener()
+        private LoginDetails GetDetailsFromConfig(Configuration config)
         {
-            // The thread that accepts the Client and awaits messages
-
-            thrSvr = new Thread(tcpSrv);
-
-            // The thread calls the tcpSvr() method
-
-            thrSvr.Start();
-
-            // Thread that runs the Job Queue
-            taskQueue = new Queue();
-            thrJobQueue = new Thread(jobManager);
-            thrJobQueue.Start();
-
-        }
-        void extraSettings()
-        {
-            // Opensim recommends 250k total
-            client.Throttle.Total = 250000;
-            client.Settings.CAPS_TIMEOUT   = 5 * 1000;
-            client.Settings.RESEND_TIMEOUT = 4 * 1000;
-            client.Settings.LOGIN_TIMEOUT  = 16 * 1000;
-            client.Settings.LOGOUT_TIMEOUT = 16 * 1000;
-            client.Settings.SIMULATOR_TIMEOUT = 90 * 1000;
-            client.Settings.SEND_PINGS = true;
-            client.Settings.MULTIPLE_SIMS = false;
-            client.Settings.ENABLE_CAPS = true;
-            client.Self.Movement.Camera.Far = 32;
-            client.Settings.LOG_ALL_CAPS_ERRORS = true;
-            client.Settings.FETCH_MISSING_INVENTORY = true;
-            client.Settings.SEND_AGENT_THROTTLE = true;
-            //Client.Settings.
-            
-            
+            LoginDetails details = new LoginDetails();
+            details.FirstName = config.firstName;
+            details.Password = config.password;
+            details.LastName = config.lastName;
+            details.URI = config.simURL;
+            return details;
+            //details.StartLocation =.
         }
 
-        void extraHooks()
-        {
-
-            Logger.OnLogMessage += new Logger.LogCallback(client_OnLogMessage);
-
-            client.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
-            client.Network.OnLogoutReply += new NetworkManager.LogoutCallback(Network_OnLogoutReply);
-            client.Network.OnSimConnected += new NetworkManager.SimConnectedCallback(Network_OnSimConnected);
-            client.Network.OnSimDisconnected += new NetworkManager.SimDisconnectedCallback(Network_OnSimDisconnected);
-            client.Network.OnEventQueueRunning += new NetworkManager.EventQueueRunningCallback(Network_OnEventQueueRunning);
-
-            //Client.Appearance.OnAppearanceUpdated += new AppearanceManager.AppearanceUpdatedCallback(Appearance_OnAppearanceUpdated);
-            
-            client.Avatars.OnLookAt += new AvatarManager.LookAtCallback(Avatars_OnLookAt);
-            client.Avatars.OnPointAt += new AvatarManager.PointAtCallback(Avatars_OnPointAt);
-            client.Avatars.OnAvatarProperties += new AvatarManager.AvatarPropertiesCallback(Avatars_OnAvatarProperties);
-            
-            client.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
-            //client.Objects.OnNewFoliage += new ObjectManager.NewFoliageCallback(Objects_OnNewFoliage);
-            client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
-            client.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
-            client.Objects.OnObjectUpdated += new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
-            client.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
-            
-            client.Self.OnAnimationsChanged += new AgentManager.AnimationsChangedCallback(Self_OnAnimationsChanged);
-            client.Self.OnScriptDialog += new AgentManager.ScriptDialogCallback(Self_OnScriptDialog);
-            client.Self.OnScriptQuestion += new AgentManager.ScriptQuestionCallback(Self_OnScriptQuestion);
-            
-            client.Terrain.OnLandPatch += new TerrainManager.LandPatchCallback(Terrain_OnLandPatch);
-            
-            client.Sound.OnSoundTrigger += new SoundManager.SoundTriggerCallback(Sound_OnSoundTrigger);
-            searcher = new InventoryEval(this);
-
-        }
-// EVENT CALLBACK SECTION
-        void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
-        {
-            try
-            {
-            if (message.Length > 0)
-                output("Disconnected from server. Reason is " + message + ". " + reason);
-            else
-                output("Disconnected from server. " + reason);
-            
-            enqueueLispTask("(on-network-disconnected (@\"" + reason + "\") (@\"" + message + "\") )");
-
-            output("Bad Names: " + BoringNamesCount);
-            output("Good Names: " + GoodNamesCount);
-                loginToolStripMenuItem.Enabled = true;
-                logoutToolStripMenuItem.Enabled = false;
-                consoleInputText.Enabled = false;
-                submitButton.Enabled = false;
-            }
-            catch (Exception e)
-            {
-            }
-         }
-
-        void Network_OnConnected(object sender)
-        {
-            try
-            {
-                consoleInputText.Enabled = true;
-                loginToolStripMenuItem.Enabled = false;
-                logoutToolStripMenuItem.Enabled = true;
-                submitButton.Enabled = true;
-
-                consoleInputText.Focus();
-
-                System.Threading.Thread.Sleep(3000);
-
-                describeAll();
-                describeSituation();
-                enqueueLispTask("(on-network-connected )");
-
-            }
-            catch (Exception e)
-            {
-            }
-
-        }
-        public void Network_OnLogin(LoginStatus login, string message)
-        {
-            output("TextForm Network_OnLogin : [" + login.ToString() + "] " + message);
-            EnableIt();
-            if (login == LoginStatus.Failed)
-            {
-                output("Not able to login");
-                enqueueLispTask("(on-login-fail (@\"" + login.ToString() + "\") (@\"" + message + "\") )");
-            }
-            else if (login == LoginStatus.Success)
-            {
-                output("Logged in successfully");
-                enqueueLispTask("(on-login-success (@\"" + login.ToString() + "\") (@\"" + message + "\") )");
-            }
-        }
-
-
-        void Sound_OnSoundTrigger(UUID soundID, UUID ownerID, UUID objectID, UUID parentID, float gain, ulong regionHandle, Vector3 position)
-        {
-            //throw new NotImplementedException();
-            output("TextForm Sound_OnSoundTrigger: ");
-        }
-
-        void Terrain_OnLandPatch(Simulator simulator, int x, int y, int width, float[] data)
-        {
-            //throw new NotImplementedException();
-//            output("TextForm Terrain_OnLandPatch: "+simulator.ToString()+"/"+x.ToString()+"/"+y.ToString()+" w="+width.ToString());
-        }
-
-        void Self_OnScriptQuestion(Simulator simulator, UUID taskID, UUID itemID, string objectName, string objectOwner, ScriptPermission questions)
-        {
-            //throw new NotImplementedException();
-            output("TextForm Self_OnScriptQuestion: "+objectName);
-        }
-
-        void Self_OnScriptDialog(string message, string objectName, UUID imageID, UUID objectID, string firstName, string lastName, int chatChannel, List<string> buttons)
-        {
-            //throw new NotImplementedException();
-            output("TextForm Self_OnScriptDialog: "+message);
-        }
-
-        void Self_OnAnimationsChanged(InternalDictionary<UUID, int> agentAnimations)
-        {
-            //throw new NotImplementedException();
- //           output("TextForm Self_OnAnimationsChanged: ");
-        }
-
-        void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties properties)
-        {
-            // Handled by Object Listener
-            //throw new NotImplementedException();
- //           output("TextForm Objects_OnObjectProperties: ");
-        }
-
-        void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
-        {
-            //throw new NotImplementedException();
-//            output("TextForm Objects_OnObjectUpdated: ");
-        }
-
-        void Objects_OnObjectKilled(Simulator simulator, uint objectID)
-        {
-            //throw new NotImplementedException();
-            output("TextForm Objects_OnObjectKilled: "+ objectID);
-        }
-
-        void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
-        {
-            // Handled by Object Listener
-            //throw new NotImplementedException();
-//            output("TextForm Objects_OnNewPrim: "+simulator.ToString()+" "+prim.ToString());
-                Listeners.Objects objects = (Listeners.Objects)listeners["objects"];
-                objects.SetCurrentSimulator(simulator);
-                objects.SelectObject(prim);
-				if (prim.Properties.Name != null)
-                enqueueLispTask("(on-new-prim (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() + "\") (@\"" + prim.Properties.Description + "\") )");
-            
-        }
-
-        void Objects_OnNewFoliage(Simulator simulator, Primitive foliage, ulong regionHandle, ushort timeDilation)
-        {
-            //throw new NotImplementedException();
-//            output("TextForm Objects_OnNewFoliage: ");
-            if (foliage.Properties.Name != null)
-                enqueueLispTask("(on-new-foliage (@\"" + foliage.Properties.Name + "\") (@\"" + foliage.Properties.ObjectID.ToString() + "\") (@\"" + foliage.Properties.Description + "\") )");
-        }
-
-        void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
-        {
-            //throw new NotImplementedException();
-            output("TextForm Objects_OnNewAvatar: ");
-            enqueueLispTask("(on-new-avatar (@\"" + avatar.Name + "\") (@\"" + avatar.ID.ToString() + "\") )");
-        }
-
-        void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)
-        {
-            //throw new NotImplementedException();
-            output("TextForm Avatars_OnAvatarProperties: ");
-        }
-
-        void Avatars_OnPointAt(UUID sourceID, UUID targetID, Vector3d targetPos, PointAtType pointType, float duration, UUID id)
-        {
-            output("TextForm Avatars_OnPointAt: " + sourceID.ToString() + " to " + targetID.ToString() + " at " + targetID.ToString() + " with type " + pointType.ToString()+" duration "+duration.ToString());
-            if (targetID == client.Self.AgentID)
-            {
-                output("  (TARGET IS SELF)");
-                enqueueLispTask("(on-self-point-target (@\"" + sourceID.ToString() + "\") (@\"" + pointType.ToString() + "\") )");
-            }
-            enqueueLispTask("(on-avatar-point (@\"" + sourceID.ToString() + "\") (@\"" + targetID.ToString() + "\") (@\"" + pointType.ToString() + "\") )");
-        }
-
-        void Avatars_OnLookAt(UUID sourceID, UUID targetID, Vector3d targetPos, LookAtType lookType, float duration, UUID id)
-        {
-            if (lookType== LookAtType.Idle) return;
-            output("TextForm Avatars_OnLookAt: " + sourceID.ToString() + " to " + targetID.ToString() + " at " + targetID.ToString() + " with type " + lookType.ToString() + " duration " + duration.ToString());
-            if (targetID == client.Self.AgentID)
-            {
-                output("  (TARGET IS SELF)");
-                enqueueLispTask("(on-self-look-target (@\"" + sourceID.ToString() + "\") (@\"" + lookType.ToString() + "\") )");
-            }
-            enqueueLispTask("(on-avatar-look (@\"" + sourceID.ToString() + "\") (@\""+targetID.ToString() + "\") (@\"" + lookType.ToString() + "\") )");
-        }
-
-        void Appearance_OnAppearanceUpdated(Primitive.TextureEntry te)
-        {
-            output("TextForm Appearance_OnAppearanceUpdated: " + te.ToString());
-        }
-
-        void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
-        {
-            output("TextForm Network_OnSimDisconnected: " + simulator.ToString()+" reason="+reason.ToString());
-        }
-
-        void client_OnLogMessage(object message, Helpers.LogLevel level)
-        {
-            string msg = "" + level + " " + message;
-            if (msg.Contains("esend")) return;
-            if (msg.Contains("resent packet")) return;
-            if (msg.Contains("Rate limit")) return;
-            if (debugLevel < 3 && msg.Contains("Array index is out of range")) return;
-            if (debugLevel < 3 && (msg.Contains("nloadi") || msg.Contains("ransfer"))) return;
-            output("TextForm client_OnLogMessage: " + msg);
-        }
-
-        void Network_OnEventQueueRunning(Simulator simulator)
-        {
-            output("TextForm Network_OnEventQueueRunning: " + simulator.ToString());
-
-        }
-
-        void Network_OnSimConnected(Simulator simulator)
-        {
-            output("TextForm Network_OnSimConnected: " + simulator.ToString());
-            enqueueLispTask("(on-simulator-connected (@\"" + simulator.ToString() + "\") )");
-
-        }
-
-        bool Network_OnSimConnecting(Simulator simulator)
-        {
-            output("TextForm Network_OnSimConnecting: " + simulator.ToString());
-            return true;
-        }
-
-        void Network_OnLogoutReply(List<UUID> inventoryItems)
-        {
-            output("TextForm Network_OnLogoutReply");
-
-        }
 
         private delegate void EnableItDelegate();
         private void EnableIt()
@@ -487,7 +184,7 @@ namespace cogbot
 
                     System.Threading.Thread.Sleep(3000);
 
-                    describeSituation();
+                   // describeSituation();
 
                 }
             }
@@ -499,415 +196,64 @@ namespace cogbot
         public bool ExecuteCommand(string text)
         {
            text = text.Replace("\"", "");
+           output("textform> " + text);
            string verb = text.Split(null)[0];
-            if (actions.ContainsKey(verb))
+            if (groupActions.ContainsKey(verb))
             {
                 if (text.Length > verb.Length)
-                    actions[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1));
+                    groupActions[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1));
                 else
-                    actions[verb].acceptInputWrapper(verb, "");
+                    groupActions[verb].acceptInputWrapper(verb, "");
                 return true;
             }
-            else
+            if (clientManager.BotByName.Count == 0) return clientManager.lastBotClient.ExecuteCommand(text);
+            bool handled = false;
+            foreach (BotClient CurrentClient in clientManager.BotByName.Values)
+            if (CurrentClient!=null)
             {
+                if (CurrentClient.ExecuteCommand(text)) handled = true;
+            }
+            
+            if (!handled) {
                 output("I don't understand the verb " + verb + ".");
                 output("Type \"help\" for help.");
-                describeNext = true;
-
-                return false;
             }
+            return handled;
         }
-//=====================
-        // 
-        // Notes:
-        //   1. When requesting folder contents Opensim/libomv may react differently than SL/libomv
-        //       in particular the boolean for 'folder' may not respond as expected
-        //       one option is to set it to 'false' and expect folders as 'items,type folder' than
-        //       as seperate folder fields.
-
-        /// <summary>
-        /// UseInventoryItem("wear","Pink Dress");
-        /// UseInventoryItem("attach","Torch!");
-        /// UseInventoryItem("animationStart","Dance Loop");
-        /// </summary>
-        /// <param name="usage"></param>
-        /// <param name="Item"></param>
-        public void UseInventoryItem(string usage,string itemName)
-        {
-
-            InventoryFolder rootFolder = client.Inventory.Store.RootFolder;
-            //InventoryEval searcher = new InventoryEval(this);
-            searcher.evalOnFolders(rootFolder, usage, itemName);
-        }
-
-
-
-        public void ListObjectsFolder()
-        {
-            // should be just the objects folder 
-            InventoryFolder rootFolder = client.Inventory.Store.RootFolder;
-            //InventoryEval searcher = new InventoryEval(this);
-            searcher.evalOnFolders(rootFolder, "print", "");
-        }
-
-        public void wearFolder(string folderName)
-        {
-            // what we simply want
-            //    Client.Appearance.WearOutfit(folderName.Split('/'), false);
-
-            UUID folderID;
-            InventoryFolder rootFolder = client.Inventory.Store.RootFolder;
-            //List<FolderData> folderContents;
-            // List<ItemData> folderItems;
-            InventoryEval searcher = new InventoryEval(this);
-
-            folderID = searcher.findInFolders(rootFolder, folderName);
-            
-            if (folderID != UUID.Zero)
-            {
-                client.Self.Chat("Wearing folder \"" + folderName + "\"", 0, ChatType.Normal);
-                output("Wearing folder \"" + folderName + "\"");
-
-                client.Appearance.WearOutfit(folderID,false);
-                /*
-                List<InventoryBase> folderContents=  Client.Inventory.FolderContents(folderID, Client.Self.AgentID,
-                                                                false, true,
-                                                                InventorySortOrder.ByDate, new TimeSpan(0, 0, 0, 0, 10000));
-
-                if (folderContents != null)
-                {
-                    folderContents.ForEach(
-                        delegate(ItemData i)
-                        {
-                            Client.Appearance.Attach(i, AttachmentPoint.Default);
-                            Client.Self.Chat("Attaching item: " + i.Name, 0, ChatType.Normal);
-                            output("Attaching item: " + i.Name);
-                        }
-                    );
-                }
-                */
-            }
-            else
-            {
-                client.Self.Chat("Can't find folder \"" + folderName + "\" to wear", 0, ChatType.Normal);
-                output("Can't find folder \"" + folderName + "\" to wear");
-            }
-
-        }
-
-        public void PrintInventoryAll()
-        {
-            InventoryFolder rootFolder = client.Inventory.Store.RootFolder;
-            //InventoryEval searcher = new InventoryEval(this);
-            searcher.evalOnFolders(rootFolder, "print", "");
-
-        }
-
- 
-        public UUID findInventoryItem(string name)
-        {
-            InventoryFolder rootFolder = client.Inventory.Store.RootFolder ;  //  .Inventory.InventorySkeleton.Folders;// .RootUUID;
-            //InventoryEval searcher = new InventoryEval(this);
-
-            return searcher.findInFolders(rootFolder, name);
-
-        }
-
-        public class InventoryEval
-        {
-            // recursive evaluator
-            public string current_operation = "";
-            public string current_itemName = "";
-            protected TextForm parent;
-            protected GridClient client;
-            public Hashtable hooked = new Hashtable();
-            //private Inventory Inventory;
-            //private InventoryManager Manager;
-
-            public InventoryEval(TextForm _parent)
-            {
-                parent = _parent;
-                client = parent.client;
-
-            }
-
-            public void regFolderHook(InventoryFolder folder)
-            {
-                if (!hooked.ContainsKey(folder.UUID))
-                {
-                    hooked.Add(folder.UUID, folder.Name);
-                    parent.output("  regFolderHook " + folder.Name);
-                }
-                    
-            }
-
-            public void appendFolderHook(InventoryFolder folder)
-            {
-                if (!hooked.ContainsKey(folder.UUID))
-                {
-                    hooked.Add(folder.UUID, folder.Name);
-                   // folder.OnContentsRetrieved += new InventoryFolder.ContentsRetrieved(myfolder_OnContentsRetrieved);
-                    parent.output("  appendFolderHook " + folder.Name);
-                }
-
-            }
-
-            public void myfolder_OnContentsRetrieved(InventoryFolder folder)
-            {
-                regFolderHook(folder);
-               // folder.DownloadContentsOpenSim(TimeSpan.FromSeconds(60));
-               // parent.output("    myfolder_OnContentsRetrieved [" + folder.Name + "] = " + folder.UUID.ToString()+ " with count="+folder.Contents.Count.ToString());
-                     List<InventoryBase> folderContents = client.Inventory.FolderContents(folder.UUID, client.Self.AgentID,
-                                    true, true, InventorySortOrder.ByName, 3000);
-                     if (folderContents != null)
-                     {
-
-                         foreach (InventoryBase ib in folderContents)
-                         {
-                             if (ib is InventoryItem)
-                             {
-                                 InventoryItem ii = ib as InventoryItem;
-                                 if (current_operation == "print")
-                                 {
-                                     //int indent = 1;
-                                     //StringBuilder result = new StringBuilder();
-                                     //result.AppendFormat("{0}{1} ({2})\n", new String(' ', indent * 2), ii.Name, ii.UUID.ToString());
-                                     //output(result.ToString());
-                                     parent.output("   [Inventory Item] Name: " + ii.Name + " <==> " + ii.UUID.ToString() + " in folder[" + folder.Name + "]");
-                                 }
-
-
-                                 if (ii.Name == current_itemName)
-                                 {
-                                     // we found a matcher so lets do our ops
-                                     if (current_operation == "wear") client.Appearance.WearOutfit(ii.UUID, false);
-                                     if (current_operation == "animationStart") client.Self.AnimationStart(ii.UUID, false);
-                                     if (current_operation == "animationStop") client.Self.AnimationStop(ii.UUID, false);
-                                     if (current_operation == "attach") client.Appearance.Attach(ii, AttachmentPoint.Default);
-                                 }
-                             }
-                         }
-                         // now run any subfolders
-                         foreach (InventoryBase ib in folderContents)
-                         {
-                             if (ib is InventoryFolder)
-                             {
-                                 InventoryFolder fld = (InventoryFolder)ib;
-
-                                 parent.output(" [Folder] Name: " + ib.Name + " <==> " + ib.UUID.ToString() + " in folder[" + folder.Name + "]");
-
-                                 //evalOnFolders(ib as InventoryFolder, operation, itemName);
-                                 appendFolderHook(fld);
-                                 //fld.RequestContents();
-
-                             }
-                         }
-                     }
-
-            }
-
-            public void evalOnFolders(InventoryFolder folder, string operation, string itemName)
-            {
-
-                current_itemName = itemName;
-                current_operation = operation;
-
-                try
-                {
-                    /*
-                 //   parent.output("examining folder [" + folder.Name + "] = " + folder.UUID.ToString());
-                    bool success = false;
-                    if (folder.IsStale)
-                    {
-                        for (int wait = 5; ((wait < 10) && (!success)&&(folder.Contents.Count==0)); wait += 5)
-                        {
-                            success = folder.DownloadContentsOpenSim(TimeSpan.FromSeconds(wait));
-                            //success = folder.DownloadContents(TimeSpan.FromSeconds(wait));
-                            parent.output(" DownloadContentets returned " + success.ToString());
-                            parent.output(" Contents.count = " + folder.Contents.Count.ToString());
-                        }
-                    //appendFolderHook(folder);
-                    //folder.RequestContents();
-                    }
-                    //else
-                    //{
-                    //    output(" Claim is folder is fresh...");
-                    //}
-                    */
-
-                     List<InventoryBase> folderContents = client.Inventory.FolderContents(folder.UUID, client.Self.AgentID,
-                                    true, true, InventorySortOrder.ByName, 3000);
-                     if (folderContents != null)
-                     {
-
-                         // first scan this folder for objects
-
-                         foreach (InventoryBase ib in folderContents)
-                         {
-                             //parent.output(" [InvAll] Name: " + ib.Name + " <==> " + ib.ToString());
-                             if (ib is InventoryItem)
-                             {
-                                 InventoryItem ii = ib as InventoryItem;
-                                 if (operation == "print")
-                                 {
-                                     //int indent = 1;
-                                     //StringBuilder result = new StringBuilder();
-                                     //result.AppendFormat("{0}{1} ({2})\n", new String(' ', indent * 2), ii.Name, ii.UUID.ToString());
-                                     //output(result.ToString());
-                                     parent.output(" [Inventory Item] Name: " + ii.Name + " <==> " + ii.UUID.ToString());
-                                 }
-
-
-                                 if (String.Compare(ii.Name,itemName,true)==0)
-                                 {
-                                     // we found a matcher so lets do our ops
-                                     if (operation == "wear") client.Appearance.WearOutfit(ii.UUID, false);
-                                     if (operation == "animationStart") client.Self.AnimationStart(ii.UUID, false);
-                                     if (operation == "animationStop") client.Self.AnimationStop(ii.UUID, false);
-                                     if (operation == "attach") client.Appearance.Attach(ii, AttachmentPoint.Default);
-                                     return;
-                                 }
-                             }
-                         }
-                         // now run any subfolders
-                         foreach (InventoryBase ib in folderContents)
-                         {
-
-                             if (ib is InventoryFolder)
-                             {
-                                 parent.output(" [Folder] Name: " + ib.Name + " <==> " + ib.UUID.ToString());
-                                 InventoryFolder fld = (InventoryFolder)ib;
-                                 //appendFolderHook(fld);
-                                 //fld.RequestContents();
-                                 if ((operation == "wear") && (ib.Name == itemName))
-                                 {
-                                     client.Appearance.WearOutfit(ib.UUID, false);
-                                     parent.output(" [WEAR] Name: " + ib.Name + " <==> " + ib.UUID.ToString());
-                                     return;
-                                 }
-                                 evalOnFolders(ib as InventoryFolder, operation, itemName);
-                             }
-                         }
-                     }
-                }
-                catch (Exception e)
-                {
-                    parent.output("Search Exception :" + e.StackTrace);
-                    parent.output("  msg:" + e.Message);
-
-                }
-            }
-
-
-
-            // Recursively generates lispTasks for items that match itemName in the inventory
-            // like evalLispOnFolders(root,"(Console.Write 'OBJNAME is OBJUUID')","Shoes")
-            public void evalLispOnFolders(InventoryFolder folder, string lispOperation, string itemName)
-            {
-                try
-                {
-                    //if (folder.IsStale)
-                    //    folder.DownloadContentsOpenSim(TimeSpan.FromSeconds(10));
-                    // first scan this folder for text
-                    List<InventoryBase> folderContents = client.Inventory.FolderContents(folder.UUID, client.Self.AgentID,
-                                    true, true, InventorySortOrder.ByName, 3000);
-                    if (folderContents != null)
-                    {
-
-                        foreach (InventoryBase ib in folderContents)
-                        {
-                            if (ib is InventoryItem)
-                            {
-                                InventoryItem ii = ib as InventoryItem;
-                                if (ii.Name == itemName)
-                                {
-                                    String lispCode = lispOperation;
-                                    lispCode.Replace("OBJUUID", ii.UUID.ToString());
-                                    lispCode.Replace("OBJNAME", ii.Name);
-                                    parent.enqueueLispTask(lispCode);
-                                }
-                            }
-                        }
-                        // now run any subfolders
-                        foreach (InventoryBase ib in folderContents)
-                        {
-                            if (ib is InventoryFolder)
-                                evalLispOnFolders(ib as InventoryFolder, lispOperation, itemName);
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                }
-            }
-
-
-            // recursive finder
-            public UUID findInFolders(InventoryFolder folder, string itemName)
-            {
-                try
-                {
-
-                    List<InventoryBase> folderContents = client.Inventory.FolderContents(folder.UUID, client.Self.AgentID,
-                                    true, true, InventorySortOrder.ByName, 3000);
-                    //if (folder.IsStale)
-                    //    folder.DownloadContentsOpenSim(TimeSpan.FromSeconds(10));
-                    // first scan this folder for text
-                    if (folderContents != null)
-                    {
-                        foreach (InventoryBase ib in folderContents)
-                        {
-                            if (ib is InventoryItem)
-                            {
-                                InventoryItem ii = ib as InventoryItem;
-                                if (ii.Name == itemName)
-                                {
-                                    return ii.UUID;
-                                }
-                            }
-                        }
-                        // now run any subfolders
-                        foreach (InventoryBase ib in folderContents)
-                        {
-                            if (ib is InventoryFolder)
-                            {
-                                UUID ANS = findInFolders(ib as InventoryFolder, itemName);
-                                if (ANS != UUID.Zero) return ANS;
-                            }
-                        }
-                    }
-
-                }
-                catch (Exception e)
-                {
-                }
-                return UUID.Zero;
-
-            }
-        }
-
- //================
 
 
         private void TextForm_FormClosed(object sender, FormClosedEventArgs e)
         {
+            ShutDown();
+            //UtilitiesTcpServer.closeTcpListener();
+        }
+
+        private void ShutDown()
+        {
             logout();
-            closeTcpListener();
+            foreach (BotClient CurrentClient in clientManager.BotByName.Values)
+            {
+                CurrentClient.ShutDown();
+            }
+            Application.DoEvents();
+            thrJobQueue.Abort();
+            Application.Exit();
+            Application.ExitThread();
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            logout();
-            closeTcpListener();
-
-            Close();
+            Close(); //            TextForm_FormClosed(sender, null);
         }
 
         private void loginToolStripMenuItem_Click(object sender, EventArgs e)
         {
              // LoginForm loginForm = new LoginForm(Client);
-            LoginForm loginForm = new LoginForm(client,this);
-            loginForm.ShowDialog();
+            foreach (BotClient CurrentClient in clientManager.Clients.Values)
+            {
+                LoginForm loginForm = new LoginForm(CurrentClient, this);
+                loginForm.ShowDialog();
+            }
         }
 
         private void logoutToolStripMenuItem_Click(object sender, EventArgs e)
@@ -917,8 +263,9 @@ namespace cogbot
 
         public void logout()
         {
-            if (client.Network.Connected)
-                client.Network.Logout();
+            foreach (BotClient CurrentClient in clientManager.Clients.Values)
+                if (CurrentClient.Network.Connected)
+                CurrentClient.Network.Logout();
             config.saveConfig();
         }
 
@@ -926,10 +273,18 @@ namespace cogbot
         {
             try
             {
-                this.Invoke(outputDelegate, str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n"));
+                str = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
+                if (str.ToLower().Contains("look")) return;
+                if (IsDisposed) return; // for (un)clean exits
+                this.Invoke(outputDelegate,str);
             }
             catch (Exception e)
             {
+                if (IsDisposed)
+                {
+                    logout();
+                    Application.Exit();
+                }
             }
         }
 
@@ -939,6 +294,7 @@ namespace cogbot
             {
                 lock (consoleText)
                 {
+                    if (consoleText.IsDisposed) return; // for (un)clean exits
                     consoleText.AppendText(str + "\r\n");
                 }
             }
@@ -963,25 +319,13 @@ namespace cogbot
                 //output(text);
                 consoleInputText.Text = "";
 
-                string verb = text.Split(null)[0];
-                if (actions.ContainsKey(verb))
-                {
-                    if (text.Length > verb.Length)
-                        actions[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1));
-                    else
-                        actions[verb].acceptInputWrapper(verb, "");
-                } 
-                else {
-                    output("I don't understand the verb " + verb + ".");
-                    output("Type \"help\" for help.");
-                    describeNext = true;
-                }
+                describeNext = !ExecuteCommand(text);
 
-                if (describeNext)
-                {
-                    describeNext = false;
-                    describeSituation();
-                }
+                //if (describeNext)
+                //{
+                //    describeNext = false;
+                //    describeSituation();
+                //}
             }
         }
 
@@ -990,186 +334,29 @@ namespace cogbot
             if (Convert.ToInt32(e.KeyChar) == 13)
                 acceptConsoleInput();
         }
-        public void describeAll()
-        {
-            foreach (string dname in describers.Keys)
-                describers[dname].Invoke(true);
-        }
+        //public void describeAll()
+        //{
+        //    CurrentClient.describeAll();
+        //}
 
-        public void describeSituation()
-        {
-            int i = 0;
-            string name = "";
-            foreach (string dname in describers.Keys)
-                if (i++ == describePos)
-                    name = dname;
-            describePos = (describePos + 1) % describers.Count;
-            describers[name].Invoke(false);
-        }
-
-        public void describeLocation(bool detailed)
-        {
-            output("You are in " + client.Network.CurrentSim.Name + ".");
-        }
-
-        public void describePeople(bool detailed)
-        {
-            Listeners.Avatars avatars = (Listeners.Avatars)listeners["avatars"];
-            if (detailed)
-            {
-                List<Avatar> avatarList = avatars.getAvatarsNear(client.Self.RelativePosition, 8);
-                if (avatarList.Count > 1)
-                {
-                    string str = "You see the people ";
-                    for (int i = 0; i < avatarList.Count - 1; ++i)
-                        str += avatars.getAvatarName(avatarList[i]) + ", ";
-                    str += "and " + avatars.getAvatarName(avatarList[avatarList.Count - 1]) + ".";
-                    output(str);
-                }
-                else if (avatarList.Count == 1)
-                {
-                    output("You see one person: " + avatars.getAvatarName(avatarList[0]) + ".");
-                }
-                else
-                    output("You don't see anyone around.");
-            }
-            else
-            {
-                output("You see " + avatars.numAvatars() + " people.");
-            }
-        }
-
-        public void describeObjects(bool detailed)
-        {
-            Listeners.Objects objects = (Listeners.Objects)listeners["objects"];
-            List<Primitive> prims = objects.getPrimitives(16);
-            if (prims.Count > 1)
-            {
-                string str = "You see the objects ";
-                for (int i = 0; i < prims.Count - 1; ++i)
-                    str += objects.getObjectName(prims[i]) + ", ";
-                str += "and " + objects.getObjectName(prims[prims.Count - 1]) + ".";
-                output(str);
-            }
-            else if (prims.Count == 1)
-            {
-                output("You see one object: " + objects.getObjectName(prims[0]));
-            }
-            else
-            {
-                output("You don't see any objects around.");
-            }
-        }
-
-        public void describeBuildings(bool detailed)
-        {
-            List<Vector3> buildings = ((Listeners.Objects)listeners["objects"]).getBuildings(8);
-            output("You see " + buildings.Count + " buildings.");
-        }
-
-        //------------------------------------ 
-        // External XML socket server
-        //------------------------------------
-        TcpListener tcp_socket = null;
-        TcpClient tcp_client = null;
-        private void tcpSrv()
-        {
-
-            try
-            {
-                bool _quitRequested = false;
-                string clientMessage = string.Empty;
-                string serverMessage = string.Empty;
-
-                //int receivedDataLength;
-                byte[] data = new byte[1024];
-
-                int PortNumber = config.tcpPort; // 5555;
-                tcp_socket = new TcpListener(IPAddress.Parse(config.tcpIPAddress), PortNumber);
-                output("About to initialize port.");
-                tcp_socket.Start();
-                output("Listening for a connection... port=" + PortNumber);
-
-                tcp_client = tcp_socket.AcceptTcpClient();
-                ns = tcp_client.GetStream();
-                tcpStreamReader = new StreamReader(ns);
-                tcpStreamWriter = new StreamWriter(ns);
-
-                string welcome = "<comment>Welcome to Cogbot</comment>";
-                data = Encoding.ASCII.GetBytes(welcome);
-                ns.Write(data, 0, data.Length);
-
-                // Start loop and handle commands:
-                while (!_quitRequested)
-                {
-                    clientMessage = tcpStreamReader.ReadLine();
-                    output("SockClient:" + clientMessage);
-                    tcpStreamWriter.WriteLine();
-                    if (clientMessage.Contains("xml") || clientMessage.Contains("http:"))
-                    {
-                        serverMessage = EvaluateXmlCommand(clientMessage);
-                    }
-                    else
-                    {
-                        serverMessage = EvaluateCommand(clientMessage);
-                    }
-                    lock (tcpStreamWriter)
-                    {
-                        if (serverMessage != "")
-                            tcpStreamWriter.WriteLine(serverMessage);
-                        tcpStreamWriter.WriteLine();
-                        ns.Write(Encoding.ASCII.GetBytes(serverMessage.ToCharArray()), 0, serverMessage.Length);
-                    }
-                    if (clientMessage == "quit") _quitRequested = true;
-                }
-
-                //data = new byte[1024];
-                //receivedDataLength = ns.Read(data, 0, data.Length);
-                //WriteLine(Encoding.ASCII.GetString(data, 0, receivedDataLength));
-                //ns.Write(data, 0, receivedDataLength);
-                ns.Close();
-                tcp_client.Close();
-                tcp_socket.Stop();
-                thrSvr.Abort();
-            }
-            catch (Exception e)
-            {
-            }
-        }
-
-        public void closeTcpListener()
-        {
-            if (ns!=null) ns.Close();
-            if (tcp_client != null) tcp_client.Close();
-            if (tcp_socket != null) tcp_socket.Stop();
-            if (thrSvr != null) thrSvr.Abort();
-            if (thrJobQueue !=null ) thrJobQueue.Abort();
-
-        }
-
-        public void msgClient(string serverMessage)
-        {
-            if (debugLevel>1)
-            {
-                output("msgClient: " + serverMessage);                
-            } // if
+        //public void describeSituation()
+        //{
+        //    CurrentClient.describeSituation();
+        //}
+    
+    
+        //public void msgClient(string serverMessage)
+        //{
+        //    if (debugLevel>1)
+        //    {
+        //        output("msgClient: " + serverMessage);                
+        //    } // if
               
            
-         //   System.Console.Out.WriteLine("msgClient: " + serverMessage);
-            if ((ns!=null)&&(tcpStreamWriter!=null))
-            {
-                lock (tcpStreamWriter)
-                {
-                    if (serverMessage != "")
-                        tcpStreamWriter.WriteLine(serverMessage);
+        // //   System.Console.Out.WriteLine("msgClient: " + serverMessage);
+        //    UtilitiesTcpServer.msgClient(serverMessage);
 
-                    tcpStreamWriter.WriteLine();
-                    ns.Write(Encoding.ASCII.GetBytes(serverMessage.ToCharArray()), 
-                             0, serverMessage.Length);
-                }
-            }
-
-        }
+        //}
         public void overwrite2Hash(Hashtable hashTable, string key, string value)
         {
             if (hashTable.ContainsKey(key)) hashTable.Remove(key);
@@ -1181,218 +368,6 @@ namespace cogbot
         {
             if (hashTable.ContainsKey(key)) return hashTable[key].ToString();
             return defaultValue;
-        }
-        public string EvaluateCommand(string cmd)
-        {
-            return "";
-        }
-        public string EvaluateXmlCommand(string xcmd)
-        {
-            output("EvaluateXmlCommand :" + xcmd);
-
-            string response = "<request>\r\n <cmd>" + xcmd + "</cmd>\r\n <response>null</response>\r\n</request>";
-            try
-            {
-                if (xcmd.Contains(".xlsp"))
-                {
-                    return XML2Lisp(xcmd);
-                }
-
-
-                int depth = 0;
-                XmlDocument xdoc = new XmlDocument();
-                XmlTextReader reader;
-                StringReader stringReader;
-                if (xcmd.Contains("http:") || xcmd.Contains(".xml"))
-                {
-                    // assuming its a file
-                    xcmd = xcmd.Trim();
-                    reader = new XmlTextReader(xcmd);
-                    xdoc.Load(xcmd);
-                }
-                else
-                {
-                    // otherwise just use the string
-                    stringReader = new System.IO.StringReader(xcmd);
-                    reader = new XmlTextReader(stringReader);
-                    xdoc.LoadXml(xcmd);
-                }
-
-                Hashtable[] attributeStack = new Hashtable[16];
-
-
-                string[] strURI = new String[16];
-                string[] strName = new String[16];
-                string[] strPath = new String[16];
-
-                string totalResponse = "";
-                for (int i = 0; i < 16; i++) { attributeStack[i] = new Hashtable(); }
-
-                while (reader.Read())
-                {
-                    depth = reader.Depth + 1;
-                    switch (reader.NodeType)
-                    {
-
-                        case XmlNodeType.Element:
-                            //Hashtable attributes = new Hashtable();
-                            strURI[depth] = reader.NamespaceURI;
-                            strName[depth] = reader.Name;
-                            strPath[depth] = strPath[depth - 1] + "." + strName[depth];
-                            if (reader.HasAttributes)
-                            {
-                                for (int i = 0; i < reader.AttributeCount; i++)
-                                {
-                                    reader.MoveToAttribute(i);
-                                    string attributeName = reader.Name;
-                                    string attributeValue = reader.Value;
-                                    string attributePath = "";
-                                    if ((attributeName == "name") && ((strName[depth] == "param") || (strName[depth] == "feeling")))
-                                    {
-                                        // so you can have multiple named params
-                                        strPath[depth] = strPath[depth] + "." + attributeValue;
-                                    }
-                                    if (depth > 1)
-                                    {
-                                        attributePath = strPath[depth] + "." + attributeName;
-                                    }
-                                    else
-                                    {
-                                        attributePath = attributeName;
-                                    }
-                                    overwrite2Hash(attributeStack[depth], attributeName, attributeValue);
-                                    // zero depth contains the fully qualified nested dotted value
-                                    // i.e. pet-action-plan.action.param.vector.x
-                                    // i.e. pet-action-plan.action.param.entity.value
-                                    overwrite2Hash(attributeStack[0], attributePath, attributeValue);
-                                }
-                            }
-                            overwrite2Hash(attributeStack[depth], "ElementName", strName[depth]);
-                            overwrite2Hash(attributeStack[depth], "Path", strPath[depth]);
-                            xStartElement(strURI[depth], strName[depth], attributeStack[depth], depth, attributeStack);
-                            if (reader.IsEmptyElement)
-                            {
-                                // do whatever EndElement would do
-                                response = xEndElement(strURI[depth], strName[depth], attributeStack[depth], depth, attributeStack);
-                                totalResponse += response + "\r\n";
-
-                            }
-                            break;
-                        //
-                        //you can handle other cases here
-                        //
-
-                        case XmlNodeType.Text:
-                            // Todo
-                            output(" TextNode: depth=" + depth.ToString() + "  path = " + strPath[depth - 1]); ;
-                            if (reader.Name == "param")
-                            {
-                                overwrite2Hash(attributeStack[depth], strPath[depth - 1] + ".param." + strName[depth] + ".InnerText", reader.Value);
-                                overwrite2Hash(attributeStack[0], strPath[depth - 1] + ".param." + strName[depth] + ".InnerText", reader.Value);
-                            }
-                            else
-                            {
-
-                                overwrite2Hash(attributeStack[depth], strPath[depth - 1] + ".InnerText", reader.Value);
-                                overwrite2Hash(attributeStack[0], strPath[depth - 1] + ".InnerText", reader.Value);
-                            }
-                            break;
-
-                        case XmlNodeType.EndElement:
-                            response = xEndElement(strURI[depth], strName[depth], attributeStack[depth], depth, attributeStack);
-                            totalResponse += response + "\r\n";
-                            // Todo
-                            //depth--;
-                            break;
-                        default:
-                            break;
-                    } //switch
-                } //while
-                string finalResponse = "<pet-petaverse-msg>\r\n" + totalResponse + "</pet-petaverse-msg>\r\n";
-                return finalResponse;
-            } //try
-            catch (Exception e)
-            {
-                output("error occured: " + e.Message);
-                output("        Stack: " + e.StackTrace.ToString());
-                return "<error><response>" + response + "</response><errormsg>" + e.Message.ToString() + "</errormsg> </error>";
-            }
-        }
-
-        public void xStartElement(string strURI, string strName, Hashtable attributes, int depth, Hashtable[] attributeStack)
-        {
-            output("   xStartElement: strURI =(" + strURI + ") strName=(" + strName + ") depth=(" + depth + ")");
-        }
-
-        public string xEndElement(string strURI, string strName, Hashtable attributes, int depth, Hashtable[] attributeStack)
-        {
-            try
-            {
-                output("   xEndElement: strURI =(" + strURI + ") strName=(" + strName + ") depth=(" + depth + ")");
-                if (strName == "action")
-                {
-                    string act = attributes["name"].ToString();
-                    string seqid = attributes["sequence"].ToString();
-                    string planID = getWithDefault(attributeStack[1], "id", "unknown");
-
-                    if (act == "say")
-                    {
-                        string actCmd = act + " " + getWithDefault(attributeStack[0], ".pet-action-plan.action.InnerText", "");
-                        string evalReply = EvaluateCommand(actCmd);
-                        string actSignal = genActReport(planID, seqid, act, "done");
-                        return actSignal;
-                    }
-                    if (act == "wear")
-                    {
-                        string actCmd = act + " " + getWithDefault(attributeStack[0], ".pet-action-plan.action.InnerText", "");
-                        string evalReply = EvaluateCommand(actCmd);
-                        string actSignal = genActReport(planID, seqid, act, "done");
-                        return actSignal;
-                    }
-                    if (act == "follow")
-                    {
-                        string TargetName = getWithDefault(attributeStack[0], ".pet-action-plan.action.param.target.entity.value", "");
-
-                        string actCmd = act + " " + TargetName;
-                        string evalReply = EvaluateCommand(actCmd);
-                        string actSignal = genActReport(planID, seqid, act, "done");
-                        return actSignal;
-                    }
-
-                }
-                /*
-                 * if (strName == "param")
-                {
-                    string paramName = attributes["name"].ToString();
-                    string paramType = attributes["type"].ToString();
-                    string paramValue = attributes["value"].ToString();
-                    string paramText = attributes["InnerText"].ToString();
-                }
-                 */
-
-                return "<response>null</response>";
-            }
-            catch (Exception e)
-            {
-                output("error occured: " + e.Message);
-                output("        Stack: " + e.StackTrace.ToString());
-                return "<error>" + e.Message + "</error>";
-            }
-        }
-
-        public string genActReport(string planID, string seqID, string act, string status)
-        {
-            DateTime dt = DateTime.Now;
-            
-            string actReport = "  <pet-signal pet-name='" + client.Self.Name.ToString()
-                                       + "' pet-id='" + client.Self.AgentID.ToString()
-                                       + "' timestamp='" + dt.ToString()
-                                       + "' action-plan-id='" + planID
-                                       + "' sequence='" + seqID
-                                       + "' name='" + act
-                                       + "' status='" + status + "'/>";
-            output("actReport:" + actReport);
-            return actReport;
         }
 
         /// <summary>
@@ -1520,7 +495,7 @@ namespace cogbot
         {
             public Boolean requeue; // should we be re-entered to the queue
             public String code;    // the lisp code as a string
-            public String results; // the evaluation results as a string
+            public Object results; // the evaluation results as a string
             public Object codeTree; // the lisp code as an evaluatable object
 
         }
@@ -1539,7 +514,7 @@ namespace cogbot
                 // load the initialization string
                 if (config.startupLisp.Length > 1)
                 {
-                    enqueueLispTask(config.startupLisp);
+                    enqueueLispTask("(progn " + config.startupLisp + ")");
                 }
                 output("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
             }
@@ -1601,7 +576,7 @@ namespace cogbot
                 {
                     while (taskQueue.Count > 0)
                     {
-                        taskTick();
+                        taskTickForTCP();
                         Thread.Sleep(1);
                     }
                     Thread.Sleep(50);
@@ -1615,7 +590,7 @@ namespace cogbot
             }
         }
 
-        public void taskTick()
+        public void taskTickForTCP()
         {
             string lastcode="";
             try
@@ -1634,8 +609,8 @@ namespace cogbot
                 lastcode = thisTask.code;
                 string serverMessage = "";
                 thisTask.results = "'(unevaluated)";
-                taskInterperter.Intern("thisClient", this);
-                taskInterperter.Intern("Client", this);
+                taskInterperter.Intern("textForm", this);
+                taskInterperter.Intern("clientManager", clientManager);
                 taskInterperter.Intern("thisTask", thisTask);
                 //should make the following safer ...
                 //taskInterperter.Intern("tcpReader", tcpStreamReader);
@@ -1648,17 +623,7 @@ namespace cogbot
                 // EVALUATE !!!
                 Object x = taskInterperter.Eval(thisTask.codeTree);
                 thisTask.results = taskInterperter.Str(x);
-                if ((serverMessage != "") && (ns != null) && (tcpStreamWriter != null))
-                {
-                    // lock it only if we need to and its there to use
-                    lock (tcpStreamWriter)
-                    {
-
-                        tcpStreamWriter.WriteLine(serverMessage);
-                        tcpStreamWriter.WriteLine();
-                        ns.Write(Encoding.ASCII.GetBytes(serverMessage.ToCharArray()), 0, serverMessage.Length);
-                    }
-                }
+               // UtilitiesTcpServer.taskTick(serverMessage);
 
                 if (false)
                 {
@@ -1759,8 +724,8 @@ namespace cogbot
         }
 
         private void TextForm_Load(object sender, EventArgs e)
-        {
-            cycConnection = new DotCYC.CycConnectionForm();
+        {           
+            //cycConnection = new DotCYC.CycConnectionForm();
         }
 
         private void consoleText_TextChanged(object sender, EventArgs e)
@@ -1774,9 +739,6 @@ namespace cogbot
             cycConnection.Reactivate();
         }
 
-
-
-
         /// <summary>
         /// Initialize everything that needs to be initialized once we're logged in.
         /// </summary>
@@ -1784,80 +746,14 @@ namespace cogbot
         /// <param name="message">Error message on failure, MOTD on success.</param>
         public void LoginHandler(LoginStatus login, string message)
         {
-            if (login == LoginStatus.Success)
-            {
-                // Start in the inventory root folder.
-                CurrentDirectory = Manager.Store.RootFolder;//.RootFolder;
-            }
+            EnableIt();
         }
 
-        public void RegisterAllCommands(Assembly assembly)
+        private void bot1ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            foreach (Type t in assembly.GetTypes())
-            {
-                try
-                {
-                    if (t.IsSubclassOf(typeof(Command)))
-                    {
-                        ConstructorInfo info = t.GetConstructor(new Type[] { typeof(TextForm) });
-                        try
-                        {
-                            Command command = (Command)info.Invoke(new object[] { this });
-                            RegisterCommand(command);
-                        }
-                        catch (Exception e)
-                        {
-                            output("RegisterAllCommands: " + e.ToString() + "\n" + e.InnerException + "\n In " + t.Name);
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.ToString());
-                }
-            }
+
         }
 
-
-        private void RegisterCommand(string name, cogbot.Actions.Action command)
-        {
-            name = name.ToLower();
-
-            if (!actions.ContainsKey(name))
-            {
-                actions.Add(name, command);
-                command.Name = name;
-            }
-            else
-            {
-                name = "!" + name;
-                command.Name = name;
-                actions.Add(name, command);
-            }
-        }
-
-        public void RegisterCommand(Command command)
-        {
-            //command.Client = this.client;
-           // command.parent = this;
-           // command.Client = this.client; 
-            RegisterCommand(command.Name, command);
-        }
-
-        internal void DoCommandAll(string line, UUID uUID)
-        {
-            ExecuteCommand(line);
-        }
-
-        internal void LogOut(GridClient Client)
-        {
-            Client.Network.Logout();
-        }
-
-        internal OpenMetaverse.Utilities.VoiceManager GetVoiceManager()
-        {
-            return null;
-        }
     }
 
     #region -- Configuration Class --
@@ -1872,12 +768,14 @@ namespace cogbot
     {
         int _Version;
         int _TcpPort;
+        int _TcpPortOffset;
         string _TcpIpAddress;
         string _FirstName;
         string _LastName;
         string _Password;
         string _SimURL;
         string _startupLisp;
+        string _startupClientLisp;
 
         public Configuration()
         {
@@ -1887,8 +785,10 @@ namespace cogbot
             _Password = "";
             _SimURL = "http://127.0.0.1:8002/"; // The sim server we talk to
             _TcpPort = 5555; // The TCP port WE provide
+            _TcpPortOffset = 10; // The TCP offset between bots
             _TcpIpAddress = "127.0.0.1"; // The IPAddress WE Listen on
             _startupLisp = "";
+            _startupClientLisp = "";
         }
 
         public static void Serialize(string file, Configuration c)
@@ -1923,6 +823,7 @@ namespace cogbot
                 this.tcpPort = c2.tcpPort;
                 this.tcpIPAddress = c2.tcpIPAddress;
                 this.startupLisp = c2.startupLisp;
+                this.startupClientLisp = c2.startupClientLisp;
 
             }
             catch (Exception e)
@@ -1952,6 +853,11 @@ namespace cogbot
         {
             get { return _TcpPort; }
             set { _TcpPort = value; }
+        }
+        public int tcpPortOffset
+        {
+            get { return _TcpPortOffset; }
+            set { _TcpPortOffset = value; }
         }
         public string tcpIPAddress
         {
@@ -1983,6 +889,12 @@ namespace cogbot
             get { return _startupLisp; }
             set { _startupLisp = value; }
         }
+        public string startupClientLisp
+        {
+            get { return _startupClientLisp; }
+            set { _startupClientLisp = value; }
+        }
+        
     }
     #endregion
 

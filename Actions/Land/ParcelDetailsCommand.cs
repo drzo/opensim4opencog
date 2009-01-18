@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class ParcelDetailsCommand : Command
     {
-        public ParcelDetailsCommand(cogbot.TextForm testClient)
+        public ParcelDetailsCommand(BotClient testClient)
         {
             Name = "parceldetails";
             Description = "Displays parcel details from the ParcelTracker dictionary. Usage: parceldetails parcelID";

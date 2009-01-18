@@ -5,7 +5,7 @@ namespace cogbot.Actions.Movement
 {
     class LeftCommand : Command
     {
-        public LeftCommand(cogbot.TextForm client)
+        public LeftCommand(BotClient client)
         {
             Name = "left";
             Description = "Sends the move left command to the server for a single packet or a given number of seconds. Usage: left [seconds]";

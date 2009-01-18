@@ -10,13 +10,13 @@ namespace cogbot.Actions
     {
         private AutoResetEvent ParcelsDownloaded = new AutoResetEvent(false);
 
-        public ParcelInfoCommand(cogbot.TextForm testClient)
+        public ParcelInfoCommand(BotClient testClient)
         {
             Name = "parcelinfo";
             Description = "Prints out info about all the parcels in this simulator";
             Category = CommandCategory.Parcel;
 
-             testClient.client.Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
+            testClient.Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)

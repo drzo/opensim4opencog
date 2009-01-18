@@ -380,7 +380,7 @@ public class Interpreter
 		return symbolTable.intern(sym);
 		}
 
-	internal Symbol intern(String sym)
+	public Symbol intern(String sym)
 		{
 		return symbolTable.intern(sym);
 		}

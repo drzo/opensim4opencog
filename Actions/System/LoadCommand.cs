@@ -9,7 +9,7 @@ namespace cogbot.Actions
 {
     public class LoadCommand: Command
     {
-        public LoadCommand(cogbot.TextForm testClient)
+        public LoadCommand(BotClient testClient)
 		{
 			Name = "load";
 			Description = "Loads commands from a dll. (Usage: load AssemblyNameWithoutExtension)";
@@ -22,7 +22,7 @@ namespace cogbot.Actions
 				return "Usage: load AssemblyNameWithoutExtension";
 
 			string filename = AppDomain.CurrentDomain.BaseDirectory + args[0] + ".dll";
-			parent.RegisterAllCommands(Assembly.LoadFile(filename));
+			Client.RegisterAllCommands(Assembly.LoadFile(filename));
             return "Assembly " + filename + " loaded.";
 		}
     }

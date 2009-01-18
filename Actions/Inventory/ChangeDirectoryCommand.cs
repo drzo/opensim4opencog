@@ -10,7 +10,7 @@ namespace cogbot.Actions.Inventory.Shell
         private InventoryManager Manager;
         private OpenMetaverse.Inventory Inventory;
 
-        public ChangeDirectoryCommand(TextForm client)
+        public ChangeDirectoryCommand(BotClient client)
         {
             Name = "cd";
             Description = "Changes the current working inventory folder.";
@@ -36,7 +36,7 @@ namespace cogbot.Actions.Inventory.Shell
                 path = pathStr.Split(new char[] { '/' });
                 // Use '/' as a path seperator.
             }
-            InventoryFolder currentFolder = parent.CurrentDirectory;
+            InventoryFolder currentFolder = Client.CurrentDirectory;
             if (pathStr.StartsWith("/"))
                 currentFolder = Inventory.RootFolder;
 
@@ -51,7 +51,7 @@ namespace cogbot.Actions.Inventory.Shell
                     continue; // Ignore '.' and blanks, stay in the current directory.
                 if (nextName == ".." && currentFolder != Inventory.RootFolder)
                 {
-                    // If we encounter .., move to the parent folder.
+                    // If we encounter .., move to the Client folder.
                     currentFolder = Inventory[currentFolder.ParentUUID] as InventoryFolder;
                 }
                 else
@@ -79,7 +79,7 @@ namespace cogbot.Actions.Inventory.Shell
                         return nextName + " not found in " + currentFolder.Name;
                 }
             }
-            parent.CurrentDirectory = currentFolder;
+            Client.CurrentDirectory = currentFolder;
             return "Current folder: " + currentFolder.Name;
         }
     }

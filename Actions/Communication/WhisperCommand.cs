@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class WhisperCommand : Command
     {
-        public WhisperCommand(cogbot.TextForm testClient)
+        public WhisperCommand(BotClient testClient)
         {
             Name = "whisper";
             Description = "Whisper something.";

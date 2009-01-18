@@ -14,7 +14,7 @@ namespace cogbot.Actions
     /// </summary>
     public class DeleteFolderCommand : Command
     {
-        public DeleteFolderCommand(TextForm testClient)
+        public DeleteFolderCommand(BotClient testClient)
         {
             Name = "deleteFolder";
             Description = "Moves a folder to the Trash Folder";

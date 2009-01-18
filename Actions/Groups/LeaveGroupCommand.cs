@@ -13,7 +13,7 @@ namespace cogbot.Actions
         Dictionary<UUID, Group> groups = new Dictionary<UUID, Group>();
         private bool leftGroup;
 
-        public LeaveGroupCommand(cogbot.TextForm testClient)
+        public LeaveGroupCommand(BotClient testClient)
         {
             Name = "leavegroup";
             Description = "Leave a group. Usage: leavegroup GroupName";

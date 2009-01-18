@@ -102,6 +102,11 @@ namespace cogbot.ScriptEngines
 
     public class ABCLInterpreter : ScriptInterpreter
     {
+        public bool DefinedFunction(string eventName)
+        {
+            eventName = eventName.ToLower();
+            return false;
+        }
 
         public static bool IsSubThreadInDebug = false;
         public static System.Threading.Mutex SubThreadInDebugMutex = new System.Threading.Mutex();

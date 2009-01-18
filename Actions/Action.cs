@@ -8,31 +8,44 @@ namespace cogbot.Actions
 {
     abstract public class Action
     {
-        public TextForm parent
+        /// <summary>
+        /// When set to true, think will be called.
+        /// </summary>
+        public bool Active;
+
+        /// <summary>
+        /// Called twice per second, when Command.Active is set to true.
+        /// </summary>
+        public virtual void Think()
+        {
+        }
+
+
+        public BotClient m_Client = null;
+        public BotClient Client
         {
             get
             {
-                return TextForm.SingleInstance;
+                if (m_Client != null) return m_Client;
+                return m_Client;// TextForm.SingleInstance.CurrentClient;
             }
-        }
-        public GridClient Client
-        {
-            get
+            set
             {
-                return parent.client;
+                m_Client = value;
             }
         }
+
         public string Name;
         protected string helpString;
         protected string usageString;
 
-        public Action(TextForm _parent)
+        public Action(BotClient _parent)
         {
             helpString = "No help information for this action.";
             usageString = "No usage instruction for this action.";
 
-           // parent = _parent;
-            //Client = parent.client;
+           // Client = _parent;
+            m_Client = _parent;//.CurrentClient;
         }
 
         /// <summary>
@@ -42,14 +55,20 @@ namespace cogbot.Actions
         /// <param name="arg"></param>
         public void WriteLine(string format, params object[] arg)
         {
-            String s = String.Format(format, arg);
-            parent.output(s);
-            Console.WriteLine(format, arg);
+            String s = String.Format(format, arg);            
+            Console.WriteLine(s);
+            Client.output(s);
         } // method: WriteLine
 
         public void acceptInputWrapper(string verb, string args)
         {
             acceptInput(verb, new Parser(args));
+        }
+
+        public virtual string Execute(string[] args, UUID fromAgentID)
+        {
+            acceptInput(args[0], new Parser(String.Join("", args, 1, args.Length - 1)));
+            return "";
         }
 
         public abstract void acceptInput(string verb, Parser args);
@@ -61,11 +80,6 @@ namespace cogbot.Actions
         public virtual string makeUsageString()
         {
             return usageString;
-        }
-
-        internal object Execute(string[] args, UUID fromAgentID)
-        {          
-            throw new Exception("The method or operation is not implemented.");
         }
 
         public virtual string GetDescription()

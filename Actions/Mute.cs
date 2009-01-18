@@ -8,8 +8,8 @@ namespace cogbot.Actions
 {
     class Mute : Action
     {
-        public Mute(TextForm parent)
-            : base(parent)
+        public Mute(BotClient Client)
+            : base(Client)
         {
             helpString = "Toggle Mute or unmute a user";
             usageString = "To Mute an avatar, type \"Mute <avatar name>\"; to Mute all, type \"mute all\" \r\n" +
@@ -21,29 +21,31 @@ namespace cogbot.Actions
            // base.acceptInput(verb, args);
 
             Avatar avatar;
-			Listeners.Chat chat = (Listeners.Chat)parent.listeners["chat"];
+
+            BotClient chat = Client;//.WorldSystem;
+			
 			if (args.str=="all") {
-			    chat.muted = !chat.muted;  // inverse mute
-				if (chat.muted) parent.output("All conversation muted");
-				else parent.output("All conversation unmuted");
+                chat.muted = !chat.muted;  // inverse mute
+				if (chat.muted) WriteLine("All conversation muted");
+				else WriteLine("All conversation unmuted");
 			} 
-			else if (((Listeners.Avatars)parent.listeners["avatars"]).tryGetAvatar(args.str, out avatar))
+			else if ((Client.WorldSystem).tryGetAvatar(args.str, out avatar))
             {
-               // Listeners.Chat chat = (Listeners.Chat)parent.listeners["chat"];
+               // Listeners.Chat chat = (Listeners.Chat)Client.listeners["chat"];
                 if (chat.muteList.Contains(avatar.Name))
                 {
-                    parent.output("Unmuted " + avatar.Name + ".");
+                    WriteLine("Unmuted " + avatar.Name + ".");
                     chat.muteList.Remove(avatar.Name);
                 }
                 else
                 {
-                    parent.output("Muted " + avatar.Name + ".");
+                    WriteLine("Muted " + avatar.Name + ".");
                     chat.muteList.Add(avatar.Name);
                 }
             }
             else
             {
-                parent.output("I don't know who " + args.str + " is.");
+                WriteLine("I don't know who " + args.str + " is.");
             }
         }
     }

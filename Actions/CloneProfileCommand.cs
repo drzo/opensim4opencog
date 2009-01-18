@@ -16,14 +16,14 @@ namespace cogbot.Actions
         bool ReceivedGroups = false;
         ManualResetEvent ReceivedProfileEvent = new ManualResetEvent(false);
 
-        public CloneProfileCommand(cogbot.TextForm testClient)
+        public CloneProfileCommand(BotClient testClient)
         {
-             testClient.client.Avatars.OnAvatarInterests += new AvatarManager.AvatarInterestsCallback(Avatars_OnAvatarInterests);
-             testClient.client.Avatars.OnAvatarProperties += new AvatarManager.AvatarPropertiesCallback(Avatars_OnAvatarProperties);
-             testClient.client.Avatars.OnAvatarGroups += new AvatarManager.AvatarGroupsCallback(Avatars_OnAvatarGroups);
-             testClient.client.Groups.OnGroupJoined += new GroupManager.GroupJoinedCallback(Groups_OnGroupJoined);
-             testClient.client.Avatars.OnAvatarPicks += new AvatarManager.AvatarPicksCallback(Avatars_OnAvatarPicks);
-             testClient.client.Avatars.OnPickInfo += new AvatarManager.PickInfoCallback(Avatars_OnPickInfo);
+            testClient.Avatars.OnAvatarInterests += new AvatarManager.AvatarInterestsCallback(Avatars_OnAvatarInterests);
+            testClient.Avatars.OnAvatarProperties += new AvatarManager.AvatarPropertiesCallback(Avatars_OnAvatarProperties);
+            testClient.Avatars.OnAvatarGroups += new AvatarManager.AvatarGroupsCallback(Avatars_OnAvatarGroups);
+            testClient.Groups.OnGroupJoined += new GroupManager.GroupJoinedCallback(Groups_OnGroupJoined);
+            testClient.Avatars.OnAvatarPicks += new AvatarManager.AvatarPicksCallback(Avatars_OnAvatarPicks);
+            testClient.Avatars.OnPickInfo += new AvatarManager.PickInfoCallback(Avatars_OnPickInfo);
 
             Name = "cloneprofile";
             Description = "Clones another avatars profile as closely as possible. WARNING: This command will " +
@@ -70,7 +70,7 @@ namespace cogbot.Actions
             Client.Self.UpdateProfile(Properties);
 
             // TODO: Leave all the groups we're currently a member of? This could
-            // break cogbot.TextForm connectivity that might be relying on group authentication
+            // break BotClient connectivity that might be relying on group authentication
 
             // Attempt to join all the groups
             foreach (UUID groupID in Groups)
@@ -143,12 +143,12 @@ namespace cogbot.Actions
 
         void Groups_OnGroupJoined(UUID groupID, bool success)
         {
-            Console.WriteLine(Client.ToString() + (success ? " joined " : " failed to join ") +
+            WriteLine(Client.ToString() + (success ? " joined " : " failed to join ") +
                 groupID.ToString());
 
             if (success)
             {
-                Console.WriteLine(Client.ToString() + " setting " + groupID.ToString() +
+                WriteLine(Client.ToString() + " setting " + groupID.ToString() +
                     " as the active group");
                 Client.Groups.ActivateGroup(groupID);
             }

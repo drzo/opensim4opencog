@@ -5,7 +5,7 @@ namespace cogbot.Actions
 {
     public class CrouchCommand : Command
     {
-        public CrouchCommand(cogbot.TextForm testClient)
+        public CrouchCommand(BotClient testClient)
         {
             Name = "crouch";
             Description = "Starts or stops crouching. Usage: crouch [start/stop]";

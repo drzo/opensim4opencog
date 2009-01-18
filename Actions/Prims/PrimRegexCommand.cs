@@ -6,7 +6,7 @@ namespace cogbot.Actions
 {
     public class PrimRegexCommand : Command
     {
-        public PrimRegexCommand(cogbot.TextForm testClient)
+        public PrimRegexCommand(BotClient testClient)
         {
             Name = "primregex";
             Description = "Find prim by text predicat. " +

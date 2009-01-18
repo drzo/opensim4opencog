@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class StatsCommand : Command
     {
-        public StatsCommand(cogbot.TextForm testClient)
+        public StatsCommand(BotClient testClient)
         {
             Name = "stats";
             Description = "Provide connection figures and statistics";

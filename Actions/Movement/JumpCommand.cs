@@ -5,7 +5,7 @@ namespace cogbot.Actions
 {
     public class JumpCommand: Command
     {
-        public JumpCommand(cogbot.TextForm testClient)
+        public JumpCommand(BotClient testClient)
 		{
 			Name = "jump";
 			Description = "Jumps or flies up";

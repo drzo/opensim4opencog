@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class GotoCommand: Command
     {
-        public GotoCommand(cogbot.TextForm testClient)
+        public GotoCommand(BotClient testClient)
 		{
 			Name = "goto";
 			Description = "Teleport to a location (e.g. \"goto Hooper/100/100/30\")";

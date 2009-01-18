@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class QuitCommand: Command
     {
-        public QuitCommand(cogbot.TextForm testClient)
+        public QuitCommand(BotClient testClient)
 		{
 			Name = "quit";
 			Description = "Log all avatars out and shut down";

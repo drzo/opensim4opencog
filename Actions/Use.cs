@@ -7,8 +7,8 @@ namespace cogbot.Actions
 {
     class Use : Action
     {
-       public Use(TextForm parent)
-            : base(parent)
+       public Use(BotClient Client)
+            : base(Client)
         {
             helpString = "Use an item from inventory.";
         }
@@ -22,10 +22,10 @@ namespace cogbot.Actions
                to_op = args.prepPhrases["to"];
            }
            objname = args.objectPhrase;
-           if (objname == "") { parent.output("I don't know what object to use."); return; }
-           if (to_op == "") { parent.output("I don't know what to do with "+objname); return; }
-           parent.output("Trying to (" + to_op + ") with (" + objname + ")");
-           parent.UseInventoryItem(to_op, objname);
+           if (objname == "") { WriteLine("I don't know what object to use."); return; }
+           if (to_op == "") { WriteLine("I don't know what to do with "+objname); return; }
+           WriteLine("Trying to (" + to_op + ") with (" + objname + ")");
+           Client.UseInventoryItem(to_op, objname);
            
        }
     }

@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{2916CFA8-9546-4452-8B7B-BAD19B5A19CB}</ProjectGuid>
+    <ProjectGuid>{0641C5F9-CAF1-45E8-A697-3DF87BD2D7EF}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -74,22 +74,22 @@
   <ItemGroup>
     <ProjectReference Include="..\OpenMetaverse\OpenMetaverse.csproj">
       <Name>OpenMetaverse</Name>
-      <Project>{6328D345-9C25-41F2-A962-008C9E4BAAEA}</Project>
+      <Project>{67428553-B58D-4FAD-9A70-668D53414780}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\OpenMetaverse\Types\OpenMetaverseTypes.csproj">
       <Name>OpenMetaverseTypes</Name>
-      <Project>{566B6671-36BE-4C0D-9AE0-F19A3B068E31}</Project>
+      <Project>{0EC53F0D-77AA-46E6-B280-0C5B5334E487}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj">
       <Name>OpenMetaverse.StructuredData</Name>
-      <Project>{6279F36A-5687-4CA1-9D01-FA9B88BC867A}</Project>
+      <Project>{8D7203F3-EB41-43C6-ABEB-36F82A85730E}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\OpenMetaverse.Http\OpenMetaverse.Http.csproj">
       <Name>OpenMetaverse.Http</Name>
-      <Project>{CAF5A5F6-6F82-4EBD-A39F-1174B5BE4485}</Project>
+      <Project>{C0AA89EE-427A-433E-9C77-857456CBF9A2}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
@@ -100,10 +100,10 @@
     <Compile Include="Utilities.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="VoiceManagerBlocking.cs">
+    <Compile Include="RegistrationApi.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="RegistrationApi.cs">
+    <Compile Include="VoiceManagerBlocking.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">

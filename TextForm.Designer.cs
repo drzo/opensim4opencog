@@ -1,8 +1,7 @@
 using System.Windows.Forms;
 namespace cogbot
 {
-    partial class TextForm // : Form
-    {
+    partial class TextForm {
         /// <summary>
         /// Required designer variable.
         /// </summary>

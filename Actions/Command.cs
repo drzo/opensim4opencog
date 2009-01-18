@@ -37,7 +37,7 @@ namespace cogbot.Actions
         }
 
         public Command()
-            : base(cogbot.TextForm.SingleInstance)
+            : base(null)
         {
             
         } // constructor
@@ -49,7 +49,7 @@ namespace cogbot.Actions
         /// <param name="verb"></param>
         /// <param name="args"></param>
         public override void acceptInput(string verb, cogbot.Actions.Parser args) {
-            parent.output(Execute(args.tokens, UUID.Zero));
+            WriteLine(Execute(args.tokens, UUID.Zero));
         } // method: acceptInput
 
 
@@ -58,17 +58,6 @@ namespace cogbot.Actions
 
 		public new abstract string Execute(string[] args, UUID fromAgentID);
 
-		/// <summary>
-		/// When set to true, think will be called.
-		/// </summary>
-		public bool Active;
-
-		/// <summary>
-		/// Called twice per second, when Command.Active is set to true.
-		/// </summary>
-		public virtual void Think()
-		{
-		}
 
         public int CompareTo(object obj)
         {

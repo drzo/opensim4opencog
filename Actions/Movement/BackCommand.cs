@@ -5,7 +5,7 @@ namespace cogbot.Actions.Movement
 {
     class BackCommand : Command
     {
-        public BackCommand(cogbot.TextForm client)
+        public BackCommand(BotClient client)
         {
             Name = "back";
             Description = "Sends the move back command to the server for a single packet or a given number of seconds. Usage: back [seconds]";

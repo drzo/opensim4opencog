@@ -12,9 +12,9 @@ namespace cogbot.Actions
         ManualResetEvent NameSearchEvent = new ManualResetEvent(false);
         Dictionary<string, UUID> Name2Key = new Dictionary<string, UUID>();
 
-        public ImCommand(cogbot.TextForm testClient)
+        public ImCommand(BotClient testClient)
         {
-             testClient.client.Avatars.OnAvatarNameSearch += new AvatarManager.AvatarNameSearchCallback(Avatars_OnAvatarNameSearch);
+            testClient.Avatars.OnAvatarNameSearch += new AvatarManager.AvatarNameSearchCallback(Avatars_OnAvatarNameSearch);
 
             Name = "im";
             Description = "Instant message someone. Usage: im [firstname] [lastname] [message]";

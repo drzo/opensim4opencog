@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class DilationCommand : Command
     {
-		public DilationCommand(cogbot.TextForm testClient)
+		public DilationCommand(BotClient testClient)
         {
             Name = "dilation";
             Description = "Shows time dilation for current sim.";

@@ -10,7 +10,7 @@ namespace cogbot.Actions
     {
         uint SerialNum = 2;
 
-        public CloneCommand(cogbot.TextForm testClient)
+        public CloneCommand(BotClient testClient)
         {
             Name = "clone";
             Description = "Clone the appearance of a nearby avatar. Usage: clone [name]";
@@ -35,11 +35,11 @@ namespace cogbot.Actions
                 UUID target = matches[0].AgentID;
                 targetName += String.Format(" ({0})", target);
 
-                if (parent.Appearances.ContainsKey(target))
+                if (Client.Appearances.ContainsKey(target))
                 {
                     #region AvatarAppearance to AgentSetAppearance
 
-                    AvatarAppearancePacket appearance = parent.Appearances[target];
+                    AvatarAppearancePacket appearance = Client.Appearances[target];
 
                     AgentSetAppearancePacket set = new AgentSetAppearancePacket();
                     set.AgentData.AgentID = Client.Self.AgentID;

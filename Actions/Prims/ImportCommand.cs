@@ -41,13 +41,13 @@ namespace cogbot.Actions
         uint rootLocalID;
         ImporterState state = ImporterState.Idle;
 
-        public ImportCommand(cogbot.TextForm testClient)
+        public ImportCommand(BotClient testClient)
         {
             Name = "import";
             Description = "Import prims from an exported xml file. Usage: import inputfile.xml [usegroup]";
             Category = CommandCategory.Objects;
 
-             testClient.client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
+            testClient.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
@@ -56,7 +56,7 @@ namespace cogbot.Actions
                 return "Usage: import inputfile.xml [usegroup]";
 
             string filename = args[0];
-            UUID GroupID = (args.Length > 1) ? parent.GroupID : UUID.Zero;
+            UUID GroupID = (args.Length > 1) ? Client.GroupID : UUID.Zero;
             string xml;
             List<Primitive> prims;
 

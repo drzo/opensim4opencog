@@ -12,9 +12,9 @@ namespace cogbot.Actions
         Dictionary<UUID, Primitive> PrimsWaiting = new Dictionary<UUID, Primitive>();
         AutoResetEvent AllPropertiesReceived = new AutoResetEvent(false);
 
-        public FindObjectsCommand(cogbot.TextForm testClient)
+        public FindObjectsCommand(BotClient testClient)
         {
-             testClient.client.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
+            testClient.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
 
             Name = "findobjects";
             Description = "Finds all objects, which name contains search-string. " +

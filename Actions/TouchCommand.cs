@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class TouchCommand: Command
     {
-        public TouchCommand(cogbot.TextForm testClient)
+        public TouchCommand(BotClient testClient)
 		{
 			Name = "touch";
 			Description = "Attempt to touch a prim with specified UUID";

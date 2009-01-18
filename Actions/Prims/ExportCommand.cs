@@ -18,12 +18,12 @@ namespace cogbot.Actions
         Dictionary<UUID, Primitive> PrimsWaiting = new Dictionary<UUID, Primitive>();
         AutoResetEvent AllPropertiesReceived = new AutoResetEvent(false);
 
-        public ExportCommand(cogbot.TextForm testClient)
+        public ExportCommand(BotClient testClient)
         {
-             testClient.client.Objects.OnObjectPropertiesFamily += new ObjectManager.ObjectPropertiesFamilyCallback(Objects_OnObjectPropertiesFamily);
-             testClient.client.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
-             testClient.client.Assets.OnImageReceived += new AssetManager.ImageReceivedCallback(Assets_OnImageReceived);
-             testClient.client.Avatars.OnPointAt += new AvatarManager.PointAtCallback(Avatars_OnPointAt);
+            testClient.Objects.OnObjectPropertiesFamily += new ObjectManager.ObjectPropertiesFamilyCallback(Objects_OnObjectPropertiesFamily);
+            testClient.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
+            testClient.Assets.OnImageReceived += new AssetManager.ImageReceivedCallback(Assets_OnImageReceived);
+            testClient.Avatars.OnPointAt += new AvatarManager.PointAtCallback(Avatars_OnPointAt);
 
             Name = "export";
             Description = "Exports an object to an xml file. Usage: export uuid outputfile.xml";
@@ -75,8 +75,8 @@ namespace cogbot.Actions
                 else
                 {
                     GotPermissions = false;
-                    if (Properties.OwnerID != Client.Self.AgentID &&
-                        Properties.OwnerID != parent.MasterKey && 
+                    if (Properties.OwnerID != Client.Self.AgentID && 
+                        Properties.OwnerID != Client.MasterKey && 
                         Client.Self.AgentID != Client.Self.AgentID)
                     {
                         return "That object is owned by " + Properties.OwnerID + ", we don't have permission " +
@@ -131,7 +131,8 @@ namespace cogbot.Actions
                             }
                         }
 
-                        if (prim.Sculpt.SculptTexture != UUID.Zero && !Textures.Contains(prim.Sculpt.SculptTexture)) {
+                        if (prim.Sculpt != null && prim.Sculpt.SculptTexture != UUID.Zero && !Textures.Contains(prim.Sculpt.SculptTexture))
+                        {
                             Textures.Add(prim.Sculpt.SculptTexture);
                         }
                     }
@@ -209,7 +210,7 @@ namespace cogbot.Actions
         void Avatars_OnPointAt(UUID sourceID, UUID targetID, Vector3d targetPos, 
             PointAtType pointType, float duration, UUID id)
         {
-            if (sourceID == parent.MasterKey)
+            if (sourceID == Client.MasterKey)
             {
                 //Client.DebugLog("Master is now selecting " + targetID.ToString());
                 SelectedObject = targetID;
@@ -219,6 +220,7 @@ namespace cogbot.Actions
         void Objects_OnObjectPropertiesFamily(Simulator simulator, Primitive.ObjectProperties properties,
             ReportType type)
         {
+            Properties = new Primitive.ObjectProperties();
             Properties.SetFamilyProperties(properties);
             GotPermissions = true;
             GotPermissionsEvent.Set();

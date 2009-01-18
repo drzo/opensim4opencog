@@ -6,8 +6,8 @@ namespace cogbot.Actions
 {
     class Stop : Action
     {
-        public Stop(TextForm parent)
-            : base(parent)
+        public Stop(BotClient Client)
+            : base(Client)
         {
             helpString = "Cancels a particular action";
 			usageString = "To cancel a particular action, type \"stop <action>\"";
@@ -19,13 +19,13 @@ namespace cogbot.Actions
 
             if (args.objectPhrase.Length == 0)
             {
-                foreach (string action in parent.actions.Keys)
+                foreach (string action in Client.Commands.Keys)
                 {
-                    parent.output(action + ": " + parent.actions[action].makeHelpString());
+                    WriteLine(action + ": " + Client.Commands[action].makeHelpString());
                 }
             }
 
-            parent.describeNext = false;
+            Client.describeNext = false;
         }
     }
 }

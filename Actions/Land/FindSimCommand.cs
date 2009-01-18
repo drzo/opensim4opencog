@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class FindSimCommand : Command
     {
-        public FindSimCommand(cogbot.TextForm testClient)
+        public FindSimCommand(BotClient testClient)
         {
             Name = "findsim";
             Description = "Searches for a simulator and returns information about it. Usage: findsim [Simulator Name]";

@@ -5,13 +5,13 @@ namespace cogbot.Actions
 {
     public class GridLayerCommand : Command
     {
-        public GridLayerCommand(cogbot.TextForm testClient)
+        public GridLayerCommand(BotClient testClient)
         {
             Name = "gridlayer";
             Description = "Downloads all of the layer chunks for the grid object map";
             Category = CommandCategory.Simulator;
 
-             testClient.client.Grid.OnGridLayer += new GridManager.GridLayerCallback(Grid_OnGridLayer);
+            testClient.Grid.OnGridLayer += new GridManager.GridLayerCallback(Grid_OnGridLayer);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)

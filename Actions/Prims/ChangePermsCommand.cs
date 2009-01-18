@@ -14,9 +14,9 @@ namespace cogbot.Actions
         bool PermsSent = false;
         int PermCount = 0;
 
-        public ChangePermsCommand(cogbot.TextForm testClient)
+        public ChangePermsCommand(BotClient testClient)
         {
-             testClient.client.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
+            testClient.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
 
             Name = "changeperms";
             Description = "Recursively changes all of the permissions for child and task inventory objects. Usage prim-uuid [copy] [mod] [xfer]";

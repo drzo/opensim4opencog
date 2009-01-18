@@ -9,17 +9,17 @@ namespace cogbot.Actions
         Dictionary<UUID, UUID> alreadyRequested = new Dictionary<UUID, UUID>();
         bool enabled = false;
 
-        public TexturesCommand(cogbot.TextForm testClient)
+        public TexturesCommand(BotClient testClient)
         {
-            enabled =  testClient.GetTextures;
+            enabled = testClient.ClientManager.GetTextures;
 
             Name = "textures";
             Description = "Turns automatic texture downloading on or off. Usage: textures [on/off]";
             Category = CommandCategory.Objects;
 
-             Client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
-             Client.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
-             Client.Assets.OnImageReceived += new AssetManager.ImageReceivedCallback(Assets_OnImageReceived);
+            testClient.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
+            testClient.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
+            testClient.Assets.OnImageReceived += new AssetManager.ImageReceivedCallback(Assets_OnImageReceived);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
@@ -29,12 +29,12 @@ namespace cogbot.Actions
 
             if (args[0].ToLower() == "on")
             {
-                parent.GetTextures = enabled = true;
+                Client.ClientManager.GetTextures = enabled = true;
                 return "Texture downloading is on";
             }
             else if (args[0].ToLower() == "off")
             {
-                parent.GetTextures = enabled = false;
+                Client.ClientManager.GetTextures = enabled = false;
                 return "Texture downloading is off";
             }
             else
@@ -42,7 +42,6 @@ namespace cogbot.Actions
                 return "Usage: textures [on/off]";
             }
         }
-
 
         void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
         {

@@ -10,7 +10,7 @@ namespace cogbot.Actions
         System.Threading.AutoResetEvent waitQuery = new System.Threading.AutoResetEvent(false);
         int resultCount;
 
-        public SearchEventsCommand(cogbot.TextForm testClient)
+        public SearchEventsCommand(BotClient testClient)
         {
             Name = "searchevents";
             Description = "Searches Events list. Usage: searchevents [search text]";

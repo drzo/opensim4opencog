@@ -7,7 +7,7 @@ namespace cogbot.Actions.Movement
 {
     class MovetoCommand : Command
     {
-        public MovetoCommand(cogbot.TextForm client)
+        public MovetoCommand(BotClient client)
         {
             Name = "moveto";
             Description = "Moves the avatar to the specified global position using simulator autopilot. Usage: moveto x y z";

@@ -8,7 +8,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
+using cogbot.Actions;
 
 namespace cogbot.Actions
 {
@@ -109,11 +109,11 @@ namespace cogbot.Actions
 
         #endregion Properties
 
-        public BackupCommand(TextForm testClient)
+        public BackupCommand(BotClient testClient)
         {
             Name = "backuptext";
             Description = "Backup inventory to a folder on your hard drive. Usage: " + Name + " [to <directory>] | [abort] | [status]";
-            testClient .client.Assets.OnAssetReceived += new AssetManager.AssetReceivedCallback(Assets_OnAssetReceived);
+            testClient.Assets.OnAssetReceived += new AssetManager.AssetReceivedCallback(Assets_OnAssetReceived);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
@@ -165,7 +165,7 @@ namespace cogbot.Actions
         void bwQueueRunner_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             QueueWorker = null;
-            Console.WriteLine(BackgroundBackupStatus);
+            WriteLine(BackgroundBackupStatus);
         }
 
         void bwQueueRunner_DoWork(object sender, DoWorkEventArgs e)
@@ -219,7 +219,7 @@ namespace cogbot.Actions
 
         void bwBackup_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            Console.WriteLine(Name + ": Inventory walking thread done.");
+            WriteLine(Name + ": Inventory walking thread done.");
             BackupWorker = null;
         }
 
@@ -325,7 +325,8 @@ namespace cogbot.Actions
                     if (asset.Success)
                     {
                         // create the directory to put this in
-                        Directory.CreateDirectory(Path.GetDirectoryName(r.FileName));
+                        String dirname = Path.GetDirectoryName(r.FileName);
+                        if (!Directory.Exists(dirname)) Directory.CreateDirectory(dirname);
 
                         // write out the file
                         File.WriteAllBytes(r.FileName, asset.AssetData);
@@ -335,7 +336,7 @@ namespace cogbot.Actions
                     else
                     {
                         TextItemErrors++;
-                        Console.WriteLine("{0}: Download of asset {1} ({2}) failed with status {3}", Name, r.FileName,
+                        WriteLine("{0}: Download of asset {1} ({2}) failed with status {3}", Name, r.FileName,
                             r.AssetID.ToString(), asset.Status.ToString());
                     }
 

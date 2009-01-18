@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class SitOnCommand : Command
     {
-        public SitOnCommand(cogbot.TextForm testClient)
+        public SitOnCommand(BotClient testClient)
         {
             Name = "siton";
             Description = "Attempt to sit on a particular prim, with specified UUID";

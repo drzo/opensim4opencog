@@ -6,7 +6,7 @@ namespace cogbot.Actions
 {
     public class RegionInfoCommand : Command
     {
-        public RegionInfoCommand(cogbot.TextForm testClient)
+        public RegionInfoCommand(BotClient testClient)
 		{
 			Name = "regioninfo";
 			Description = "Prints out info about all the current region";

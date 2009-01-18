@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class StandCommand: Command
     {
-        public StandCommand(cogbot.TextForm testClient)
+        public StandCommand(BotClient testClient)
 	{
 		Name = "stand";
 		Description = "Stand";

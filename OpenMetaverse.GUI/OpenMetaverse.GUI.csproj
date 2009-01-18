@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{CF9D9827-F20E-47E1-B266-D984F75482E1}</ProjectGuid>
+    <ProjectGuid>{025F8B11-B3B3-4203-BE31-97A116AEC1FC}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -77,12 +77,12 @@
   <ItemGroup>
     <ProjectReference Include="..\OpenMetaverse\OpenMetaverse.csproj">
       <Name>OpenMetaverse</Name>
-      <Project>{6328D345-9C25-41F2-A962-008C9E4BAAEA}</Project>
+      <Project>{67428553-B58D-4FAD-9A70-668D53414780}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\OpenMetaverse\Types\OpenMetaverseTypes.csproj">
       <Name>OpenMetaverseTypes</Name>
-      <Project>{566B6671-36BE-4C0D-9AE0-F19A3B068E31}</Project>
+      <Project>{0EC53F0D-77AA-46E6-B280-0C5B5334E487}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
@@ -93,19 +93,19 @@
     <Compile Include="FriendList.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="GroupList.cs">
+    <Compile Include="StatusOutput.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AvatarList.cs">
+    <Compile Include="GroupList.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="LocalChat.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MiniMap.cs">
+    <Compile Include="AvatarList.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="StatusOutput.cs">
+    <Compile Include="MiniMap.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

@@ -13,9 +13,9 @@ namespace cogbot.Actions
     public class InventoryCommand : Command
     {
         private OpenMetaverse.Inventory Inventory;
-        private OpenMetaverse.InventoryManager Manager;
+        private InventoryManager Manager;
 
-        public InventoryCommand(TextForm testClient)
+        public InventoryCommand(BotClient testClient)
         {
             Name = "i";
             Description = "Prints out inventory.";

@@ -10,7 +10,7 @@ namespace cogbot.Actions
     {
         public DateTime Created = DateTime.Now;
 
-        public SetMasterKeyCommand(cogbot.TextForm testClient)
+        public SetMasterKeyCommand(BotClient testClient)
         {
             Name = "setMasterKey";
             Description = "Sets the key of the master user.  The master user can IM to run commands.";
@@ -19,7 +19,7 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            parent.MasterKey = UUID.Parse(args[0]);
+            Client.MasterKey = UUID.Parse(args[0]);
 
             lock (Client.Network.Simulators)
             {
@@ -28,7 +28,7 @@ namespace cogbot.Actions
                     Avatar master = Client.Network.Simulators[i].ObjectsAvatars.Find(
                         delegate(Avatar avatar)
                         {
-                            return avatar.ID == parent.MasterKey;
+                            return avatar.ID == Client.MasterKey;
                         }
                     );
 
@@ -41,7 +41,7 @@ namespace cogbot.Actions
                 }
             }
 
-            return "Master set to " + parent.MasterKey.ToString();
+            return "Master set to " + Client.MasterKey.ToString();
         }
     }
 }

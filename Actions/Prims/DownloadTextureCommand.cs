@@ -12,15 +12,15 @@ namespace cogbot.Actions
         ImageDownload Image;
         AssetTexture Asset;
 
-        public DownloadTextureCommand(cogbot.TextForm testClient)
+        public DownloadTextureCommand(BotClient testClient)
         {
             Name = "downloadtexture";
             Description = "Downloads the specified texture. " +
                 "Usage: downloadtexture [texture-uuid] [discardlevel]";
             Category = CommandCategory.Inventory;
 
-             testClient.client.Assets.OnImageReceiveProgress += new AssetManager.ImageReceiveProgressCallback(Assets_OnImageReceiveProgress);
-             testClient.client.Assets.OnImageReceived += new AssetManager.ImageReceivedCallback(Assets_OnImageReceived);
+            testClient.Assets.OnImageReceiveProgress += new AssetManager.ImageReceiveProgressCallback(Assets_OnImageReceiveProgress);
+            testClient.Assets.OnImageReceived += new AssetManager.ImageReceivedCallback(Assets_OnImageReceived);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)

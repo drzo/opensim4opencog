@@ -9,8 +9,8 @@ namespace cogbot.Actions
     {
         public bool sittingOnGround = false;
 
-        public Sit(TextForm parent)
-            : base(parent)
+        public Sit(BotClient Client)
+            : base(Client)
         {
             Client.Objects.OnAvatarSitChanged += new ObjectManager.AvatarSitChanged(Objects_OnAvatarSitChanged);
 
@@ -24,16 +24,18 @@ namespace cogbot.Actions
             if (avatar.Name == Client.Self.Name)
             {
                 if (sittingOn != 0)
-                    parent.output("You sat down.");
+                {
+                    WriteLine("You sat down.");
+                }
                 else
-                    parent.output("You stood up.");
+                    WriteLine("You stood up.");
             }
             else
             {
                 if (sittingOn != 0)
-                    parent.output(avatar.Name + " sat down.");
+                    WriteLine(avatar.Name + " sat down.");
                 else
-                    parent.output(avatar.Name + " stood up.");
+                    WriteLine(avatar.Name + " stood up.");
             }
         }
 
@@ -42,34 +44,34 @@ namespace cogbot.Actions
             //base.acceptInput(verb, args);
 
             if (Client.Self.SittingOn != 0 || sittingOnGround)
-                parent.output("You are already sitting.");
+                WriteLine("You are already sitting.");
             else
             {
                 if (args.prepPhrases["on"].Length > 0)
                 {
                     string on = args.prepPhrases["on"];
-                    Listeners.Objects objects = (Listeners.Objects)parent.listeners["objects"];
                     Primitive prim;
-                    if (objects.tryGetPrim(on, out prim))
+                    if (Client.WorldSystem.tryGetPrim(on, out prim))
                     {
-                        parent.output("Trying to sit on " + prim.Properties.Name + ".");
+                        WriteLine("Trying to sit on " + prim.Properties.Name + ".");
                         Client.Self.RequestSit(prim.ID, Vector3.Zero);
                         Client.Self.Sit();
+                        sittingOnGround = false;
                     }
                     else
                     {
-                        parent.output("I don't know what " + on + " is.");
+                        WriteLine("I don't know what " + on + " is.");
                     }
                 }
                 else
                 {
-                    parent.output("You sit on the ground.");
+                    WriteLine("You sit on the ground.");
                     Client.Self.SitOnGround();
                     sittingOnGround = true;
                 }
             }
 
-            parent.describeNext = true;
+            Client.describeNext = true;
         }
     }
 }

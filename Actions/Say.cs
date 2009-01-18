@@ -7,8 +7,8 @@ namespace cogbot.Actions
 {
     class Say : Action
     {
-        public Say(TextForm parent) 
-            : base(parent) 
+        public Say(BotClient Client) 
+            : base(Client) 
         {
             helpString = "Say a message for everyone to hear.";
             usageString = "To communicate to everyone, type \"say <message>\"";

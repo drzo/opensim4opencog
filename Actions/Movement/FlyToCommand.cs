@@ -14,13 +14,13 @@ namespace cogbot.Actions.Movement
         int startTime = 0;
         int duration = 10000;
 
-        public FlyToCommand(cogbot.TextForm testclient)
+        public FlyToCommand(BotClient client)
         {
             Name = "FlyTo";
             Description = "Fly the avatar toward the specified position for a maximum of seconds. Usage: FlyTo x y z [seconds]";
             Category = CommandCategory.Movement;
-           // Client = testclient.client;
-            Client.Objects.OnObjectUpdated += new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
+
+            client.Objects.OnObjectUpdated += new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)

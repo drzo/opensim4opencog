@@ -15,7 +15,7 @@ namespace cogbot.Actions
         UUID TextureID = UUID.Zero;
         DateTime start;
 
-        public UploadImageCommand(TextForm testClient)
+        public UploadImageCommand(BotClient testClient)
         {
             Name = "uploadimage";
             Description = "Upload an image to your inventory. Usage: uploadimage [inventoryname] [timeout] [filename]";
@@ -37,11 +37,11 @@ namespace cogbot.Actions
             if (!UInt32.TryParse(args[1], out timeout))
                 return "Usage: uploadimage [inventoryname] [timeout] [filename]";
 
-            Console.WriteLine("Loading image " + fileName);
+            WriteLine("Loading image " + fileName);
             byte[] jpeg2k = LoadImage(fileName);
             if (jpeg2k == null)
                 return "Failed to compress image to JPEG2000";
-            Console.WriteLine("Finished compressing image to JPEG2000, uploading...");
+            WriteLine("Finished compressing image to JPEG2000, uploading...");
             start = DateTime.Now;
             DoUpload(jpeg2k, inventoryName);
 
@@ -62,23 +62,23 @@ namespace cogbot.Actions
             {
                 string name = System.IO.Path.GetFileNameWithoutExtension(FileName);
 
-                Client.Inventory.RequestCreateItemFromAsset(UploadData, name, "Uploaded with TestClient",
+                Client.Inventory.RequestCreateItemFromAsset(UploadData, name, "Uploaded with BotClient",
                     AssetType.Texture, InventoryType.Texture, Client.Inventory.FindFolderForType(AssetType.Texture),
 
                     delegate(CapsClient client, long bytesReceived, long bytesSent, long totalBytesToReceive, long totalBytesToSend)
                     {
                         if (bytesSent > 0)
-                            Console.WriteLine(String.Format("Texture upload: {0} / {1}", bytesSent, totalBytesToSend));
+                            WriteLine(String.Format("Texture upload: {0} / {1}", bytesSent, totalBytesToSend));
                     },
 
                     delegate(bool success, string status, UUID itemID, UUID assetID)
                     {
-                        Console.WriteLine(String.Format(
+                        WriteLine(String.Format(
                             "RequestCreateItemFromAsset() returned: Success={0}, Status={1}, ItemID={2}, AssetID={3}",
                             success, status, itemID, assetID));
 
                         TextureID = assetID;
-                        Console.WriteLine(String.Format("Upload took {0}", DateTime.Now.Subtract(start)));
+                        WriteLine(String.Format("Upload took {0}", DateTime.Now.Subtract(start)));
                         UploadCompleteEvent.Set();
                     }
                 );
@@ -154,7 +154,7 @@ namespace cogbot.Actions
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString() + " SL Image Upload ");
+                WriteLine(ex.ToString() + " SL Image Upload ");
                 return null;
             }
             return UploadData;

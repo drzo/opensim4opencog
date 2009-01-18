@@ -7,9 +7,9 @@ namespace cogbot.Actions.Inventory.Shell
 {
     class GiveItemCommand : Command
     {
-        private OpenMetaverse.InventoryManager Manager;
+        private InventoryManager Manager;
         private OpenMetaverse.Inventory Inventory;
-        public GiveItemCommand(TextForm client)
+        public GiveItemCommand(BotClient client)
         {
             Name = "give";
             Description = "Gives items from the current working directory to an avatar.";
@@ -34,7 +34,7 @@ namespace cogbot.Actions.Inventory.Shell
             {
                 string inventoryName = args[i];
                 // WARNING: Uses local copy of inventory contents, need to download them first.
-                List<InventoryBase> contents = Inventory.GetContents(parent.CurrentDirectory);
+                List<InventoryBase> contents = Inventory.GetContents(Client.CurrentDirectory);
                 bool found = false;
                 foreach (InventoryBase b in contents)
                 {

@@ -13,8 +13,8 @@ namespace cogbot.Actions
         //public Vector3 LastTarget;
         public Thread thrTracker=null;
 
-        public Follow(TextForm parent)
-            : base(parent)
+        public Follow(BotClient Client)
+            : base(Client)
         {
             helpString = "Start or stop following a user.";
             usageString = "To start following an avatar, type \"follow <avatar name>\" \r\n" +
@@ -126,11 +126,10 @@ namespace cogbot.Actions
             {
                 string name = args.objectPhrase;
                 Avatar avatar;
-                Listeners.Avatars avatars = (Listeners.Avatars)parent.listeners["avatars"];
-                if (avatars.tryGetAvatar(name, out avatar))
+                if (Client.WorldSystem.tryGetAvatar(name, out avatar))
                 {
                     followAvatar = avatar;
-                    parent.output("You start to follow " + followAvatar.Name + ".");
+                    WriteLine("You start to follow " + followAvatar.Name + ".");
                     // The thread that accepts the Client and awaits messages
                     thrTracker= new Thread(tracker);
                     // The thread calls the tracker() method
@@ -139,23 +138,23 @@ namespace cogbot.Actions
                 }
                 else
                 {
-                    parent.output("I don't know who " + name + " is.");
+                    WriteLine("I don't know who " + name + " is.");
                 }
             }
             else if (verb == "stop-following") {
                 if (followAvatar != null)
                 {
-                    parent.output("You stop following " + followAvatar.Name + ".");
+                    WriteLine("You stop following " + followAvatar.Name + ".");
                     followAvatar = null;
                 }
                 else
                 {
-                    parent.output("You aren't following anyone.");
+                    WriteLine("You aren't following anyone.");
                 }
                 
             }
 
-            parent.describeNext = true;
+            Client.describeNext = true;
         }
     }
 }

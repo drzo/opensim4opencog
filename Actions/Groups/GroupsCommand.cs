@@ -12,9 +12,9 @@ namespace cogbot.Actions
         ManualResetEvent GetCurrentGroupsEvent = new ManualResetEvent(false);
         Dictionary<UUID, Group> groups = new Dictionary<UUID, Group>();
 
-        public GroupsCommand(cogbot.TextForm testClient)
+        public GroupsCommand(BotClient testClient)
         {
-             testClient.client.Groups.OnCurrentGroups += new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
+            testClient.Groups.OnCurrentGroups += new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
 
             Name = "groups";
             Description = "List avatar groups. Usage: groups";

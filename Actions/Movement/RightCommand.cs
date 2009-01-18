@@ -5,7 +5,7 @@ namespace cogbot.Actions.Movement
 {
     class RightCommand : Command
     {
-        public RightCommand(cogbot.TextForm client)
+        public RightCommand(BotClient client)
         {
             Name = "right";
             Description = "Sends the move right command to the server for a single packet or a given number of seconds. Usage: right [seconds]";

@@ -433,9 +433,9 @@ namespace cogbot.Actions.SimExport
             }
             else
             {
-                Console.WriteLine("Usage: SimExport.exe [OPTION]...");
-                Console.WriteLine("An interactive client for exporting assets");
-                Console.WriteLine("Options:");
+                WriteLine("Usage: SimExport.exe [OPTION]...");
+                WriteLine("An interactive client for exporting assets");
+                WriteLine("Options:");
                 argParser.WriteOptionDescriptions(Console.Out);
             }
         }

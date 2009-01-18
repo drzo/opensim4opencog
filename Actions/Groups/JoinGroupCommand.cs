@@ -16,7 +16,7 @@ namespace cogbot.Actions
         private string resolvedGroupName;
         private bool joinedGroup;
 
-        public JoinGroupCommand(cogbot.TextForm testClient)
+        public JoinGroupCommand(BotClient testClient)
         {
             Name = "joingroup";
             Description = "join a group. Usage: joingroup GroupName | joingroup UUID GroupId";

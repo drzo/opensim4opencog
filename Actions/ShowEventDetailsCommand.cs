@@ -7,7 +7,7 @@ namespace cogbot.Actions
 {
     class ShowEventDetailsCommand : Command
     {
-        public ShowEventDetailsCommand(cogbot.TextForm testClient)
+        public ShowEventDetailsCommand(BotClient testClient)
         {
             Name = "showevent";
             Description = "Shows an Events details. Usage: showevent [eventID]";

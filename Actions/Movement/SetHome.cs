@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class SetHomeCommand : Command
     {
-		public SetHomeCommand(cogbot.TextForm testClient)
+		public SetHomeCommand(BotClient testClient)
         {
             Name = "sethome";
             Description = "Sets home to the current location.";

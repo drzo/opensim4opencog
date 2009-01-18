@@ -16,7 +16,7 @@ namespace cogbot.Actions
         Dictionary<UUID, Group> groups = new Dictionary<UUID, Group>();
         string activeGroup;
 
-        public ActivateGroupCommand(cogbot.TextForm testClient)
+        public ActivateGroupCommand(BotClient testClient)
         {
             Name = "activategroup";
             Description = "Set a group as active. Usage: activategroup GroupName";

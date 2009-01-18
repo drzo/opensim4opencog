@@ -8,6 +8,12 @@ namespace cogbot.ScriptEngines
     {
         DotLisp.Interpreter dotLispInterpreter;
 
+        public bool DefinedFunction(string eventName)
+        {
+            eventName = eventName.ToLower();
+            return false;
+        }
+
         public CycInterpreter()
         {
             dotLispInterpreter = new DotLisp.Interpreter();

@@ -7,8 +7,8 @@ namespace cogbot.Actions
 {
     class Where : Action
     {
-        public Where(TextForm parent)
-            : base(parent)
+        public Where(BotClient Client)
+            : base(Client)
         {
             helpString = "Finds out in which direction an object or a building or a person is.";
             usageString = "To find out wher an object, building or a person is, type \"where is <object/person name>\"";
@@ -22,11 +22,11 @@ namespace cogbot.Actions
 
             if (args.prepPhrases["is"].Length == 0)
             {
-                parent.output("Provide something for which you need to know Where is it.");
+                WriteLine("Provide something for which you need to know Where is it.");
             }
             else
             {
-                if (((Listeners.Avatars)parent.listeners["avatars"]).tryGetAvatar(args.prepPhrases["is"], out avatar))
+                if ((Client.WorldSystem).tryGetAvatar(args.prepPhrases["is"], out avatar))
                 {
                     //Client.Self.Movement.Camera.AtAxis
                     Vector3 myPos = Client.Self.SimPosition;
@@ -36,29 +36,29 @@ namespace cogbot.Actions
 
                     Quaternion newRot1 = Vector3.RotationBetween(avatar.Position, Client.Self.RelativePosition);
                     double newDist = Vector3.Distance(avatar.Position, Client.Self.RelativePosition);
-                    parent.output(Client.Self.Movement.Camera.AtAxis + ", " + newRot2 + ", " + newDist);
+                    WriteLine(Client.Self.Movement.Camera.AtAxis + ", " + newRot2 + ", " + newDist);
 
-                    //parent.output(avatar.Position.X + ", " + avatar.Position.Y + ", " + avatar.Position.Z);
-                    //parent.output(Client.Self.RelativePosition.X + ", " + Client.Self.RelativePosition.Y + ", " + Client.Self.RelativePosition.Z +"\n");
+                    //WriteLine(avatar.Position.X + ", " + avatar.Position.Y + ", " + avatar.Position.Z);
+                    //WriteLine(Client.Self.RelativePosition.X + ", " + Client.Self.RelativePosition.Y + ", " + Client.Self.RelativePosition.Z +"\n");
 
-                    //parent.output(avatar.Rotation.X + ", " + avatar.Rotation.Y + ", " + avatar.Rotation.Z);
-                    //parent.output(Client.Self.RelativeRotation.X + ", " + Client.Self.RelativeRotation.Y + ", " + Client.Self.RelativeRotation.Z + "\n");
+                    //WriteLine(avatar.Rotation.X + ", " + avatar.Rotation.Y + ", " + avatar.Rotation.Z);
+                    //WriteLine(Client.Self.RelativeRotation.X + ", " + Client.Self.RelativeRotation.Y + ", " + Client.Self.RelativeRotation.Z + "\n");
                 }
-                else if (((Listeners.Objects)parent.listeners["objects"]).tryGetPrim(args.prepPhrases["is"], out prim))
+                else if ((Client.WorldSystem).tryGetPrim(args.prepPhrases["is"], out prim))
                 {
                     Quaternion newRot = Vector3.RotationBetween(prim.Position, Client.Self.RelativePosition);
                     double newDist = Vector3.Distance(prim.Position, Client.Self.RelativePosition);
-                    parent.output(newRot + ", " + newDist);
+                    WriteLine(newRot + ", " + newDist);
 
-                    //parent.output(prim.Position.X + ", " + prim.Position.Y + ", " + prim.Position.Z);
-                    //parent.output(Client.Self.RelativePosition.X + ", " + Client.Self.RelativePosition.Y + ", " + Client.Self.RelativePosition.Z + "\n");
+                    //WriteLine(prim.Position.X + ", " + prim.Position.Y + ", " + prim.Position.Z);
+                    //WriteLine(Client.Self.RelativePosition.X + ", " + Client.Self.RelativePosition.Y + ", " + Client.Self.RelativePosition.Z + "\n");
 
-                    //parent.output(prim.Rotation.X + ", " + prim.Rotation.Y + ", " + prim.Rotation.Z);
-                    //parent.output(Client.Self.RelativeRotation.X + ", " + Client.Self.RelativeRotation.Y + ", " + Client.Self.RelativeRotation.Z + "\n");
+                    //WriteLine(prim.Rotation.X + ", " + prim.Rotation.Y + ", " + prim.Rotation.Z);
+                    //WriteLine(Client.Self.RelativeRotation.X + ", " + Client.Self.RelativeRotation.Y + ", " + Client.Self.RelativeRotation.Z + "\n");
                 }
                 else
                 {
-                    parent.output("I don't know where is " + args.prepPhrases["is"] + ".");
+                    WriteLine("I don't know where is " + args.prepPhrases["is"] + ".");
                     return;
                 }
             }

@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class ParcelPrimOwnersCommand : Command
     {
-        public ParcelPrimOwnersCommand(cogbot.TextForm testClient)
+        public ParcelPrimOwnersCommand(BotClient testClient)
         {
             Name = "primowners";
             Description = "Displays a list of prim owners and prim counts on a parcel. Usage: primowners parcelID";

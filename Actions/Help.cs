@@ -6,8 +6,8 @@ namespace cogbot.Actions
 {
     class Help : Action
     {
-        public Help(TextForm parent)
-            : base(parent)
+        public Help(BotClient Client)
+            : base(Client)
         {
             helpString = "Print this help message.";
             usageString = helpString;
@@ -19,26 +19,26 @@ namespace cogbot.Actions
 
             if (args.objectPhrase.Length == 0)
             {
-                foreach (string action in parent.actions.Keys)
+                foreach (string action in Client.Commands.Keys)
                 {
-                    parent.output(action + ": " + parent.actions[action].makeHelpString());
+                    WriteLine(action + ": " + Client.Commands[action].makeHelpString());
                 }
-                foreach (string tutorial in parent.tutorials.Keys)
+                foreach (string tutorial in Client.tutorials.Keys)
                 {
-                    parent.output(tutorial + ": " + parent.tutorials[tutorial].makeHelpString());
+                    WriteLine(tutorial + ": " + Client.tutorials[tutorial].makeHelpString());
                 }
             }
             else
             {
-                if (parent.actions.ContainsKey(args.objectPhrase))
-                    parent.output(parent.actions[args.objectPhrase].makeUsageString());
-                else if (parent.tutorials.ContainsKey(args.objectPhrase))
-                    parent.output(parent.tutorials[args.objectPhrase].makeHelpString());
+                if (Client.Commands.ContainsKey(args.objectPhrase))
+                    WriteLine(Client.Commands[args.objectPhrase].makeUsageString());
+                else if (Client.tutorials.ContainsKey(args.objectPhrase))
+                    WriteLine(Client.tutorials[args.objectPhrase].makeHelpString());
                 else
-                    parent.output("I don't know about the verb " + args.objectPhrase + ".");
+                    WriteLine("I don't know about the verb " + args.objectPhrase + ".");
             }
 
-            parent.describeNext = false;
+            Client.describeNext = false;
         }
     }
 }
