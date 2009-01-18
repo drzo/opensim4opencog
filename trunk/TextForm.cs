@@ -37,11 +37,11 @@ namespace cogbot
         static public TextForm SingleInstance = null;
         public static int debugLevel = 2;
         //public bool GetTextures = false;
-        
+
         //public UUID GroupID = UUID.Zero;
         //public Dictionary<UUID, GroupMember> GroupMembers = null;// new Dictionary<UUID, GroupMember>();
         //public Dictionary<UUID, AvatarAppearancePacket> Appearances = null;// new Dictionary<UUID, AvatarAppearancePacket>();
-       // public Dictionary<string, cogbot.Actions.Action> Commands = null;//new Dictionary<string, cogbot.Actions.Action>();
+        // public Dictionary<string, cogbot.Actions.Action> Commands = null;//new Dictionary<string, cogbot.Actions.Action>();
         //public bool Running = true;
         //public bool GroupCommands = false;
         //public string MasterName = String.Empty;
@@ -57,7 +57,7 @@ namespace cogbot
         public DotCYC.CycConnectionForm cycConnection;
         ///public Dictionary<string, DescribeDelegate> describers;
 
-       // public Dictionary<string, Listeners.Listener> listeners;
+        // public Dictionary<string, Listeners.Listener> listeners;
         public Dictionary<string, Actions.Action> groupActions;
         public Dictionary<string, Tutorials.Tutorial> tutorials;
 
@@ -70,8 +70,6 @@ namespace cogbot
         public int RunningMode = (int)Modes.normal;
         public UUID AnimationFolder = UUID.Zero;
 
-        public Queue taskQueue;
-        public Thread thrJobQueue;
         //InventoryEval searcher =null; // new InventoryEval(this);
         //public Inventory Inventory;
         //public InventoryManager Manager;
@@ -87,27 +85,27 @@ namespace cogbot
             config.loadConfig();
             BotClient.nextTcpPort = config.tcpPort;
             //LoginDetails details = GetDetailsFromConfig(config);
-          //  CurrentClient = new BotClient(clientManager);// clientManager.Login(details);
-          //  CurrentClient.TextFormClient(this);
+            //  CurrentClient = new BotClient(clientManager);// clientManager.Login(details);
+            //  CurrentClient.TextFormClient(this);
             //GroupMembers = new Dictionary<UUID, GroupMember>();
             //Appearances = new Dictionary<UUID, AvatarAppearancePacket>();
 
-           // CurrentClient.Settings.ALWAYS_DECODE_OBJECTS = true;
-           // CurrentClient.Settings.ALWAYS_REQUEST_OBJECTS = true;
-          //  CurrentClient.Settings.OBJECT_TRACKING = true;
+            // CurrentClient.Settings.ALWAYS_DECODE_OBJECTS = true;
+            // CurrentClient.Settings.ALWAYS_REQUEST_OBJECTS = true;
+            //  CurrentClient.Settings.OBJECT_TRACKING = true;
 
             //Manager = CurrentClient.Inventory;
             //Inventory = Manager.Store;
             groupActions = new Dictionary<string, Action>();
             groupActions["login"] = new Login(null);
 
-         //   CurrentClient.Settings.LOGIN_SERVER = config.simURL;
-           // extraSettings();
+            //   CurrentClient.Settings.LOGIN_SERVER = config.simURL;
+            // extraSettings();
 
 
-           // CurrentClient.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
-           // CurrentClient.Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
-           // CurrentClient.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
+            // CurrentClient.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
+            // CurrentClient.Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
+            // CurrentClient.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
 
             outputDelegate = new OutputDelegate(doOutput);
 
@@ -122,33 +120,33 @@ namespace cogbot
 
 
             tutorials = new Dictionary<string, cogbot.Tutorials.Tutorial>();
-          //  tutorials["tutorial1"] = new Tutorials.Tutorial1(this);
-    
+            //  tutorials["tutorial1"] = new Tutorials.Tutorial1(this);
+
             describeNext = true;
 
             InitializeComponent();
             Show();
             consoleInputText.Enabled = true;
             consoleInputText.Focus();
-         //   RegisterAllCommands(Assembly.GetExecutingAssembly());
+            //   RegisterAllCommands(Assembly.GetExecutingAssembly());
 
-         //   UtilitiesTcpServer = new cogbot.Utilities.TcpServer(this);
+            //   UtilitiesTcpServer = new cogbot.Utilities.TcpServer(this);
             // Start the server
             ///UtilitiesTcpServer.startSocketListener();
-            taskQueue = new Queue();
-            thrJobQueue = new Thread(jobManager);
-            thrJobQueue.Start();
+
 
             //Client.Network.RegisterCallback(PacketType.AgentDataUpdate, new NetworkManager.PacketCallback(AgentDataUpdateHandler));
-          //  CurrentClient.Network.OnLogin += new NetworkManager.LoginCallback(LoginHandler);
+            //  CurrentClient.Network.OnLogin += new NetworkManager.LoginCallback(LoginHandler);
             //Client.Self.OnInstantMessage += new AgentManager.InstantMessageCallback(Self_OnInstantMessage);
             //Client.Groups.OnGroupMembers += new GroupManager.GroupMembersCallback(GroupMembersHandler);
             //Client.Inventory.OnObjectOffered += new InventoryManager.ObjectOfferedCallback(Inventory_OnInventoryObjectReceived);
 
             //Client.Network.RegisterCallback(PacketType.AvatarAppearance, new NetworkManager.PacketCallback(AvatarAppearanceHandler));
             //Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(AlertMessageHandler));
-
-
+            if (config.startupLisp.Length > 1)
+            {
+                evalLispString("(progn " + config.startupLisp + ")");
+            }
         }
 
         private LoginDetails GetDetailsFromConfig(Configuration config)
@@ -184,7 +182,7 @@ namespace cogbot
 
                     System.Threading.Thread.Sleep(3000);
 
-                   // describeSituation();
+                    // describeSituation();
 
                 }
             }
@@ -195,9 +193,9 @@ namespace cogbot
         }
         public bool ExecuteCommand(string text)
         {
-           text = text.Replace("\"", "");
-           output("textform> " + text);
-           string verb = text.Split(null)[0];
+            text = text.Replace("\"", "");
+            output("textform> " + text);
+            string verb = text.Split(null)[0];
             if (groupActions.ContainsKey(verb))
             {
                 if (text.Length > verb.Length)
@@ -209,12 +207,13 @@ namespace cogbot
             if (clientManager.BotByName.Count == 0) return clientManager.lastBotClient.ExecuteCommand(text);
             bool handled = false;
             foreach (BotClient CurrentClient in clientManager.BotByName.Values)
-            if (CurrentClient!=null)
+                if (CurrentClient != null)
+                {
+                    if (CurrentClient.ExecuteCommand(text)) handled = true;
+                }
+
+            if (!handled)
             {
-                if (CurrentClient.ExecuteCommand(text)) handled = true;
-            }
-            
-            if (!handled) {
                 output("I don't understand the verb " + verb + ".");
                 output("Type \"help\" for help.");
             }
@@ -236,7 +235,6 @@ namespace cogbot
                 CurrentClient.ShutDown();
             }
             Application.DoEvents();
-            thrJobQueue.Abort();
             Application.Exit();
             Application.ExitThread();
         }
@@ -248,7 +246,7 @@ namespace cogbot
 
         private void loginToolStripMenuItem_Click(object sender, EventArgs e)
         {
-             // LoginForm loginForm = new LoginForm(Client);
+            // LoginForm loginForm = new LoginForm(Client);
             foreach (BotClient CurrentClient in clientManager.Clients.Values)
             {
                 LoginForm loginForm = new LoginForm(CurrentClient, this);
@@ -265,7 +263,7 @@ namespace cogbot
         {
             foreach (BotClient CurrentClient in clientManager.Clients.Values)
                 if (CurrentClient.Network.Connected)
-                CurrentClient.Network.Logout();
+                    CurrentClient.Network.Logout();
             config.saveConfig();
         }
 
@@ -276,7 +274,7 @@ namespace cogbot
                 str = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
                 if (str.ToLower().Contains("look")) return;
                 if (IsDisposed) return; // for (un)clean exits
-                this.Invoke(outputDelegate,str);
+                this.Invoke(outputDelegate, str);
             }
             catch (Exception e)
             {
@@ -334,397 +332,63 @@ namespace cogbot
             if (Convert.ToInt32(e.KeyChar) == 13)
                 acceptConsoleInput();
         }
-        //public void describeAll()
-        //{
-        //    CurrentClient.describeAll();
-        //}
 
-        //public void describeSituation()
-        //{
-        //    CurrentClient.describeSituation();
-        //}
-    
-    
-        //public void msgClient(string serverMessage)
-        //{
-        //    if (debugLevel>1)
-        //    {
-        //        output("msgClient: " + serverMessage);                
-        //    } // if
-              
-           
-        // //   System.Console.Out.WriteLine("msgClient: " + serverMessage);
-        //    UtilitiesTcpServer.msgClient(serverMessage);
-
-        //}
-        public void overwrite2Hash(Hashtable hashTable, string key, string value)
-        {
-            if (hashTable.ContainsKey(key)) hashTable.Remove(key);
-            hashTable.Add(key, value);
-            //output("  +Hash :('" + key + "' , " + value + ")");
-        }
-
-        public string getWithDefault(Hashtable hashTable, string key, string defaultValue)
-        {
-            if (hashTable.ContainsKey(key)) return hashTable[key].ToString();
-            return defaultValue;
-        }
-
-        /// <summary>
-        /// (thisClient.XML2Lisp2 "http://myserver/myservice/?q=" chatstring) 
-        /// </summary>
-        /// <param name="URL"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-         public string XML2Lisp2(string URL, string args)
-         {
-            string xcmd = URL + args;
-            return XML2Lisp(xcmd);             
-         } // method: XML2Lisp2
-
-
-        public string XML2Lisp(string xcmd)
-        {
-            try
-            {
-                XmlDocument xdoc = new XmlDocument();
-                XmlTextReader reader;
-                StringReader stringReader;
-                if (xcmd.Contains("http:") || xcmd.Contains(".xml") || xcmd.Contains(".xlsp"))
-                {
-                    // assuming its a file
-                    xcmd = xcmd.Trim();
-                    reader = new XmlTextReader(xcmd);
-                    xdoc.Load(xcmd);
-                }
-                else
-                {
-                    // otherwise just use the string
-                    stringReader = new System.IO.StringReader(xcmd);
-                    reader = new XmlTextReader(stringReader);
-                    xdoc.LoadXml(xcmd);
-                }
-
-                Hashtable[] attributeStack = new Hashtable[64];
-                String lispCodeString = "";
-
-                for (int i = 0; i < 64; i++) { attributeStack[i] = new Hashtable(); }
-                int depth = 0;
-
-                while (reader.Read())
-                {
-                    depth = reader.Depth + 1;
-                    if (attributeStack[depth] == null) { attributeStack[depth] = new Hashtable(); }
-                    string tagname = reader.Name;
-                    switch (reader.NodeType)
-                    {
-
-                        case XmlNodeType.Element:
-                            if (reader.HasAttributes)
-                            {
-                                for (int i = 0; i < reader.AttributeCount; i++)
-                                {
-                                    reader.MoveToAttribute(i);
-                                    string attributeName = reader.Name;
-                                    string attributeValue = reader.Value;
-
-                                    overwrite2Hash(attributeStack[depth], attributeName, attributeValue);
-                                }
-                            }
-                           // output(" X2L Begin(" + depth.ToString() + ") " + attributeStack[depth]["name"].ToString());
-                            if (tagname == "op")
-                            {
-                                lispCodeString += "(" + getWithDefault(attributeStack[depth], "name", " ");
-                            }
-                            if (tagname == "opq")
-                            {
-                                lispCodeString += "'(" + getWithDefault(attributeStack[depth], "name", " ");
-                            }
-
-                            break;
-                        //
-                        //you can handle other cases here
-                        //
-
-                        case XmlNodeType.Text:
-                            //output(" X2L TEXT(" + depth.ToString() + ") " + reader.Name);
-
-                            // Todo
-                            lispCodeString += " " + reader.Value.ToString();
-                            break;
-
-                        case XmlNodeType.EndElement:
-
-                            if (tagname == "op")
-                            {
-                                lispCodeString += " )";
-                            }
-                            if (tagname == "opq")
-                            {
-                                lispCodeString += " )";
-                            }
-
-                            // Todo
-                            //depth--;
-                            break;
-
-                        default:
-                            break;
-                    } //switch
-                } //while
-                output("XML2Lisp =>'" + lispCodeString + "'");
-                //string results = evalLispString(lispCodeString);
-                string results = "'(enqueued)";
-                enqueueLispTask(lispCodeString);
-                return results;
-            } //try
-            catch (Exception e)
-            {
-                output("error occured: " + e.Message);
-                output("        Stack: " + e.StackTrace.ToString());
-                return "()";
-            }
-
-
-        }
-
-        //------------------------------------ 
-        // OUR NANO LISP JOB QUEUE SYSTEM
-        //------------------------------------
-        public class subtask
-        {
-            public Boolean requeue; // should we be re-entered to the queue
-            public String code;    // the lisp code as a string
-            public Object results; // the evaluation results as a string
-            public Object codeTree; // the lisp code as an evaluatable object
-
-        }
-        ScriptInterpreter taskInterperter;
-
-        public void initTaskInterperter()
-        {
-            try
-            {
-                taskQueue = new Queue();
-                output("Start Loading TaskInterperter ... '" + taskInterperterType + "' \n");
-                taskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
-                taskInterperter.LoadFile("boot.lisp");
-                taskInterperter.LoadFile("extra.lisp");
-                taskInterperter.LoadFile("cogbot.lisp");
-                // load the initialization string
-                if (config.startupLisp.Length > 1)
-                {
-                    enqueueLispTask("(progn " + config.startupLisp + ")");
-                }
-                output("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
-            }
-            catch (Exception e)
-            {
-                output("!Exception: " + e.GetBaseException().Message);
-                output("error occured: " + e.Message);
-                output("        Stack: " + e.StackTrace.ToString());
-            }
-
-        }
-
-        public Object genLispCodeTree(string lispCode)
-        {
-            Object codeTree = null;
-            try
-            {
-                StringReader stringCodeReader = new System.IO.StringReader(lispCode);
-                codeTree = taskInterperter.Read("console", stringCodeReader);
-                if (taskInterperter.Eof(codeTree))
-                    return null;
-            }
-            catch
-            {
-                throw;
-            }
-            return codeTree;
-        }
-
-        public void enqueueLispTask(string lispCode)
-        {
-            try
-            {
-                subtask thisTask = new subtask();
-                thisTask.requeue = false;
-                thisTask.code = lispCode;
-                thisTask.results = "";
-                thisTask.codeTree = genLispCodeTree(thisTask.code);
-                lock (taskQueue)
-                {
-                    taskQueue.Enqueue(thisTask);
-                }
-            }
-            catch (Exception e)
-            {
-                output("!Exception: " + e.GetBaseException().Message);
-                output("error occured: " + e.Message);
-                output("        Stack: " + e.StackTrace.ToString());
-                output("     LispCode: " + lispCode);
-            }
-        }
-
-        public void jobManager()
-        {
-            try
-            {
-                initTaskInterperter();
-                while (true)
-                {
-                    while (taskQueue.Count > 0)
-                    {
-                        taskTickForTCP();
-                        Thread.Sleep(1);
-                    }
-                    Thread.Sleep(50);
-                }
-            }
-            catch (Exception e)
-            {
-                output("!Exception: " + e.GetBaseException().Message);
-                output("error occured: " + e.Message);
-                output("        Stack: " + e.StackTrace.ToString());
-            }
-        }
-
-        public void taskTickForTCP()
-        {
-            string lastcode="";
-            try
-            {
-                // see if there is anything to process
-                if (taskQueue.Count == 0) return;
-
-                // if so then process it
-                //Interpreter lispInterperter = new Interpreter();
-                subtask thisTask;
-                lock (taskQueue)
-                {
-                    thisTask = (subtask)taskQueue.Dequeue();
-                }
-                // setup the local context
-                lastcode = thisTask.code;
-                string serverMessage = "";
-                thisTask.results = "'(unevaluated)";
-                taskInterperter.Intern("textForm", this);
-                taskInterperter.Intern("clientManager", clientManager);
-                taskInterperter.Intern("thisTask", thisTask);
-                //should make the following safer ...
-                //taskInterperter.Intern("tcpReader", tcpStreamReader);
-                //taskInterperter.Intern("tcpWriter", tcpStreamWriter);
-                //a safer way is to have a serverMessage string that is sent to the Client
-                // in a more thread safe async way
-                taskInterperter.Intern("serverMessage", serverMessage);
-                //interpreter.Intern("Client",Command.Client);
-
-                // EVALUATE !!!
-                Object x = taskInterperter.Eval(thisTask.codeTree);
-                thisTask.results = taskInterperter.Str(x);
-               // UtilitiesTcpServer.taskTick(serverMessage);
-
-                if (false)
-                {
-                    output(" taskcode: " + lastcode + " --> " + thisTask.results);
-                    //output(" taskTick Results>" + thisTask.results);
-                    //output(" taskTick continueTask=" + thisTask.requeue.ToString());
-                }
-
-                // Should we do again ?
-                if (thisTask.requeue == true)
-                {
-                    if (!lastcode.Equals(thisTask.code))
-                    {
-                        // not the same so must "re-compile"
-                        thisTask.codeTree = genLispCodeTree(thisTask.code);
-                    }
-                    lock (taskQueue)
-                    {
-                        taskQueue.Enqueue(thisTask);
-                    }
-                }
-                return;
-            }
-            catch (Exception e)
-            {
-                output("!Exception: " + e.GetBaseException().Message);
-                output("error occured: " + e.Message);
-                output("        Stack: " + e.StackTrace.ToString());
-                output("     LispCode: " + lastcode);
-            }
-
-        }
+        ScriptInterpreter interpreter = null;
 
         public string evalLispString(string lispCode)
         {
-            ScriptInterpreter interpreter = taskInterperter.newInterpreter();
-            StringReader stringCodeReader = new System.IO.StringReader(lispCode);
-            string results = "'(unevaluated)";
-            subtask thisTask = new subtask();
-            thisTask.requeue = false;
-
             try
             {
-                output("Load Boot:" + interpreter.LoadFile("boot.lisp").ToString());
-                output("Load Boot:" + interpreter.LoadFile("extra.lisp").ToString());
-                interpreter.Intern("thisClient", this);
-                interpreter.Intern("thisTask", thisTask);
+                if (lispCode == null || lispCode.Length == 0) return null;
 
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine(e.ToString());
-            }
-            try
-            {
-                //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;
+                if (interpreter == null)
+                {
+                    output("runTaskInterperter ... '" + taskInterperterType + "'");
+                    interpreter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
+                    interpreter.LoadFile("boot.lisp");
+                    interpreter.LoadFile("extra.lisp");
+                    interpreter.LoadFile("cogbot.lisp");
+                    interpreter.Intern("thisClient", this);
+                    interpreter.Intern("clientManager", clientManager);
 
+                }
+                //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
                 output("Eval> " + lispCode);
                 Object r = null;
-                try
-                {
-                    r = interpreter.Read("console", stringCodeReader);
-                    if (interpreter.Eof(r))
-                        return results;
-                }
-                catch
-                {
-                    throw;
-                }
-                Object x = interpreter.Eval(r);
-                results = interpreter.Str(x);
-                output("Results>" + results);
-                output("continueTask=" + thisTask.requeue.ToString());
-                return results;
+                StringReader stringCodeReader = new StringReader(lispCode);
+                r = interpreter.Read("console", stringCodeReader);
+                if (interpreter.Eof(r))
+                    return r.ToString();
+                return interpreter.Str(interpreter.Eval(r));
             }
             catch (Exception e)
             {
                 output("!Exception: " + e.GetBaseException().Message);
                 output("error occured: " + e.Message);
                 output("        Stack: " + e.StackTrace.ToString());
-                return results;
+                return null;
             }
-// TODO's
+        }
+
+        // TODO's
         // Play Animations
         // private static UUID type_anim_uuid = new UUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
         // Client.Self.AnimationStart(type_anim_uuid,false);
         // Client.Self.AnimationStop(type_anim_uuid,false);
 
-            // animationFolder = Client.Inventory.FindFolderForType(AssetType.Animation);
-            // animationUUID = Client.Inventory.FindObjectByPath(animationFolder, Client.Self.AgentID, AnimationPath, 500);
-            // Client.Self.AnimationStart(animationLLUUID,false);
-            // Client.Self.AnimationStop(animationLLUUID,false);
+        // animationFolder = Client.Inventory.FindFolderForType(AssetType.Animation);
+        // animationUUID = Client.Inventory.FindObjectByPath(animationFolder, Client.Self.AgentID, AnimationPath, 500);
+        // Client.Self.AnimationStart(animationLLUUID,false);
+        // Client.Self.AnimationStop(animationLLUUID,false);
 
-        
+
         // Reflect events into lisp
         // 
 
-        }
+
 
         private void TextForm_Load(object sender, EventArgs e)
-        {           
+        {
             //cycConnection = new DotCYC.CycConnectionForm();
         }
 
@@ -733,9 +397,22 @@ namespace cogbot
 
         }
 
+        private void TextForm_ResizeBegin(object sender, EventArgs e)
+        {
+
+        }
+        private void TextForm_ResizeEnd(object sender, EventArgs e)
+        {
+            consoleText.Size = new Size(this.Size.Width - 35, this.Size.Height - 100);
+            consoleInputText.Top = this.Size.Height - 60;
+            consoleInputText.Size = new Size(this.Size.Width - 125, consoleInputText.Height);
+            this.submitButton.Location = new System.Drawing.Point(this.Size.Width - 90, consoleInputText.Top);
+        }
+
+
         private void cycConnectionToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (cycConnection == null || cycConnection.IsDisposed) cycConnection = new DotCYC.CycConnectionForm();           
+            if (cycConnection == null || cycConnection.IsDisposed) cycConnection = new DotCYC.CycConnectionForm();
             cycConnection.Reactivate();
         }
 
@@ -836,9 +513,9 @@ namespace cogbot
         {
             try
             {
-                 Configuration.Serialize("botconfig.xml",this);
+                Configuration.Serialize("botconfig.xml", this);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
             }
 
@@ -894,7 +571,7 @@ namespace cogbot
             get { return _startupClientLisp; }
             set { _startupClientLisp = value; }
         }
-        
+
     }
     #endregion
 
