@@ -16,6 +16,8 @@ namespace cogbot.Utilities
         public Thread thrSvr;
         BotClient parent;
         GridClient client;
+        Queue<String> whileClientIsAway = new Queue<string>();
+
         public TcpServer(int port, BotClient botclient)
         {
             parent = botclient;
@@ -24,6 +26,8 @@ namespace cogbot.Utilities
 
 //            config = parent.config;
         }
+
+
 
         StreamReader tcpStreamReader = null;// = new StreamReader(ns);
         StreamWriter tcpStreamWriter = null;// = new StreamWriter(ns);
@@ -72,16 +76,18 @@ namespace cogbot.Utilities
                 tcpStreamReader = new StreamReader(ns);
                 tcpStreamWriter = new StreamWriter(ns);
 
-                string welcome = "<comment>Welcome to Cogbot</comment>";
-                data = Encoding.ASCII.GetBytes(welcome);
-                ns.Write(data, 0, data.Length);
-
+                string comment = "<comment>Welcome to Cogbot</comment>";
+                WriteStringToSocket(comment);
+                WriteStringToSocket("<whileAway>");
+                WriteStringToSocket(GetWhileAwayAndClear());
+                WriteStringToSocket("</whileAway>");
                 // Start loop and handle commands:
                 while (!_quitRequested)
                 {
                     clientMessage = tcpStreamReader.ReadLine();
                     parent.output("SockClient:" + clientMessage);
                     tcpStreamWriter.WriteLine();
+
                     if (clientMessage.Contains("xml") || clientMessage.Contains("http:"))
                     {
                         serverMessage = EvaluateXmlCommand(clientMessage);
@@ -112,6 +118,29 @@ namespace cogbot.Utilities
             catch (Exception e)
             {
             }
+        }
+
+        private void WriteStringToSocket(string msg)
+        {
+            byte[] data = Encoding.ASCII.GetBytes(msg);
+            ns.Write(data, 0, data.Length);
+        }
+
+        public String GetWhileAwayAndClear()
+        {
+            String allMsgs = "";
+            lock (whileClientIsAway)
+            {
+                while (whileClientIsAway.Count>0)
+                {
+                    String item = whileClientIsAway.Dequeue();
+                    allMsgs += "<msgClient>";
+                    allMsgs += item;
+                    allMsgs += "</msgClient>";
+                    allMsgs += '\n';
+                }                
+            }
+            return allMsgs;
         }
 
         public void closeTcpListener()
@@ -363,114 +392,13 @@ namespace cogbot.Utilities
         /// <returns></returns>
         public string XML2Lisp2(string URL, string args)
         {
-            string xcmd = URL + args;
-            return XML2Lisp(xcmd);
+            return parent.XML2Lisp2(URL,args);
         } // method: XML2Lisp2
 
 
         public string XML2Lisp(string xcmd)
         {
-            try
-            {
-                XmlDocument xdoc = new XmlDocument();
-                XmlTextReader reader;
-                StringReader stringReader;
-                if (xcmd.Contains("http:") || xcmd.Contains(".xml") || xcmd.Contains(".xlsp"))
-                {
-                    // assuming its a file
-                    xcmd = xcmd.Trim();
-                    reader = new XmlTextReader(xcmd);
-                    xdoc.Load(xcmd);
-                }
-                else
-                {
-                    // otherwise just use the string
-                    stringReader = new System.IO.StringReader(xcmd);
-                    reader = new XmlTextReader(stringReader);
-                    xdoc.LoadXml(xcmd);
-                }
-
-                Hashtable[] attributeStack = new Hashtable[64];
-                String lispCodeString = "";
-
-                for (int i = 0; i < 64; i++) { attributeStack[i] = new Hashtable(); }
-                int depth = 0;
-
-                while (reader.Read())
-                {
-                    depth = reader.Depth + 1;
-                    if (attributeStack[depth] == null) { attributeStack[depth] = new Hashtable(); }
-                    string tagname = reader.Name;
-                    switch (reader.NodeType)
-                    {
-
-                        case XmlNodeType.Element:
-                            if (reader.HasAttributes)
-                            {
-                                for (int i = 0; i < reader.AttributeCount; i++)
-                                {
-                                    reader.MoveToAttribute(i);
-                                    string attributeName = reader.Name;
-                                    string attributeValue = reader.Value;
-
-                                    overwrite2Hash(attributeStack[depth], attributeName, attributeValue);
-                                }
-                            }
-                            // output(" X2L Begin(" + depth.ToString() + ") " + attributeStack[depth]["name"].ToString());
-                            if (tagname == "op")
-                            {
-                                lispCodeString += "(" + getWithDefault(attributeStack[depth], "name", " ");
-                            }
-                            if (tagname == "opq")
-                            {
-                                lispCodeString += "'(" + getWithDefault(attributeStack[depth], "name", " ");
-                            }
-
-                            break;
-                        //
-                        //you can handle other cases here
-                        //
-
-                        case XmlNodeType.Text:
-                            //output(" X2L TEXT(" + depth.ToString() + ") " + reader.Name);
-
-                            // Todo
-                            lispCodeString += " " + reader.Value.ToString();
-                            break;
-
-                        case XmlNodeType.EndElement:
-
-                            if (tagname == "op")
-                            {
-                                lispCodeString += " )";
-                            }
-                            if (tagname == "opq")
-                            {
-                                lispCodeString += " )";
-                            }
-
-                            // Todo
-                            //depth--;
-                            break;
-
-                        default:
-                            break;
-                    } //switch
-                } //while
-                output("XML2Lisp =>'" + lispCodeString + "'");
-                //string results = evalLispString(lispCodeString);
-                string results = "'(enqueued)";
-                enqueueLispTask(lispCodeString);
-                return results;
-            } //try
-            catch (Exception e)
-            {
-                output("error occured: " + e.Message);
-                output("        Stack: " + e.StackTrace.ToString());
-                return "()";
-            }
-
-
+            return parent.XML2Lisp(xcmd);
         }
 
         private void enqueueLispTask(string lispCodeString)
@@ -480,9 +408,14 @@ namespace cogbot.Utilities
 
         internal void msgClient(string serverMessage)
         {
-
             //   System.Console.Out.WriteLine("msgClient: " + serverMessage);
-            if ((ns != null) && (tcpStreamWriter != null))
+            if (!IsClientConnected())
+            {
+                lock (whileClientIsAway)
+                whileClientIsAway.Enqueue(serverMessage);
+            return;
+            }
+            if (IsClientConnected())
             {
                 lock (tcpStreamWriter)
                 {
@@ -494,6 +427,11 @@ namespace cogbot.Utilities
                              0, serverMessage.Length);
                 }
             }
+        }
+
+        public bool IsClientConnected()
+        {
+            return (ns != null) && (tcpStreamWriter != null);
         }
 
         internal void taskTick(string serverMessage)
