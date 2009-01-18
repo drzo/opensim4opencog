@@ -179,12 +179,12 @@ namespace cogbot.Listeners
                 UUID oldAnim = avatarAminCurrent[avatar];
                 if (oldAnim != mostCurrentAnim)
                 {
-                    SendEvent("On-Avatar-Change-Animation", avatar, mostCurrentAnim);
+                    SendEvent("On-Object-Animation", avatar, mostCurrentAnim);
                 }
             }
             else
             {
-                SendEvent("On-Avatar-Change-Animation", avatar, mostCurrentAnim);
+                SendEvent("On-Object-Animation", avatar, mostCurrentAnim);
             }
             avatarAminCurrent[avatar] = mostCurrentAnim;
 
@@ -453,30 +453,46 @@ namespace cogbot.Listeners
 			prim.Textures = update.Textures;
 			prim.Velocity = update.Velocity;
 		}
-		delegate void DoWhat(Primitive objectUpdated, string p, Object vector3, Object vector3_4, Object diff);
+		delegate object DoWhat(Primitive objectUpdated, string p, Object vector3, Object vector3_4, Object diff);
+        public object InformUpdate(Primitive objectUpdated, string p, Object before, Object after, Object diff)
+        {
+            Console.WriteLine("{0} {1} DIFF {2} BEFORE {3} AFTER {4}", p, objectUpdated, diff, before, after);
+            if (diff is Vector3)
+            {
+                // if the change is too small skip the event
+                if ((1 > ((Vector3)diff).Length()))
+                {
+                  //  return after;
+                }
+            }
+            //  String lispName = "on-" + ((objectUpdated is Avatar) ? "avatar-" : "prim-") + p.ToLower() + "-updated";
+            String lispName = "on-object-" + p.ToLower();
+            SendEvent(lispName, objectUpdated, after);
+            return after;
+        }
 
 		Object notifyUpdate(Primitive objectUpdated, ObjectUpdate before, ObjectUpdate after, DoWhat didUpdate)
 		{
 			ObjectUpdate diff = updateDiff(before, after);
 			bool wasChanged = false;
 			if (before.Acceleration != after.Acceleration) {
-				didUpdate(objectUpdated, "Acceleration", before.Acceleration, after.Acceleration, diff.Acceleration);
+                after.Acceleration = (Vector3)didUpdate(objectUpdated, "Acceleration", before.Acceleration, after.Acceleration, diff.Acceleration);
 				wasChanged = true;
 			}
 			if (before.AngularVelocity != after.AngularVelocity) {
-				didUpdate(objectUpdated, "AngularVelocity", before.AngularVelocity, after.AngularVelocity, diff.AngularVelocity);
+                after.AngularVelocity = (Vector3)didUpdate(objectUpdated, "AngularVelocity", before.AngularVelocity, after.AngularVelocity, diff.AngularVelocity);
 				wasChanged = true;
 			}
 			if (before.CollisionPlane != after.CollisionPlane) {
-				didUpdate(objectUpdated, "CollisionPlane", before.CollisionPlane, after.CollisionPlane, diff.CollisionPlane);
+                after.CollisionPlane = (Vector4)didUpdate(objectUpdated, "CollisionPlane", before.CollisionPlane, after.CollisionPlane, diff.CollisionPlane);
 				wasChanged = true;
 			}
 			if (before.Position != after.Position) {
-				didUpdate(objectUpdated, "Position", before.Position, after.Position, diff.Position);
+                after.Position = (Vector3)didUpdate(objectUpdated, "Position", before.Position, after.Position, diff.Position);
 				wasChanged = true;
 			}
 			if (before.Rotation != after.Rotation) {
-				didUpdate(objectUpdated, "Rotation", before.Rotation, after.Rotation, diff.Rotation);
+                after.Rotation =(Quaternion) didUpdate(objectUpdated, "Rotation", before.Rotation, after.Rotation, diff.Rotation);
 				wasChanged = true;
 			}
 			if (before.State != after.State) {
@@ -488,15 +504,18 @@ namespace cogbot.Listeners
 				wasChanged = true;
 			}
 			if (before.Velocity != after.Velocity) {
-				didUpdate(objectUpdated, "Velocity", before.Velocity, after.Velocity, diff.Velocity);
+               // didUpdate(objectUpdated, "Velocity", before.Velocity, after.Velocity, diff.Velocity);
 				if (before.Velocity == Vector3.Zero) {
 					SendEvent("on-object-start-velosity", objectUpdated, after.Velocity);
+                    SendEvent("on-object-position", objectUpdated, after.Position);
 				} else
 					if (after.Velocity == Vector3.Zero) {
+                    SendEvent("on-object-position", objectUpdated, after.Position);
 					SendEvent("on-object-stop-velosity", objectUpdated, -before.Velocity);
 				} else {
 					//SendEvent("on-object-change-velosity", objectUpdated, after.Velocity);
-				}
+                    SendEvent("on-object-position", objectUpdated, after.Position);
+                }            
 				wasChanged = true;
 			}
 			if (!wasChanged) return null;
@@ -631,15 +650,6 @@ namespace cogbot.Listeners
 			client.SendEvent(eventName, args);
 		}
 
-		public void InformUpdate(Primitive objectUpdated, string p, Object vector3, Object vector3_4, Object diff)
-		{
-			Console.WriteLine("{0} {1} DIFF {2} BEFORE {3} AFTER {4}", p, objectUpdated, diff, vector3, vector3_4);
-		}
-
-		public void InformUpdateDiff(Primitive objectUpdated, string p, Object vector3, Object vector3_4, Object diff)
-		{
-			Console.WriteLine("REL {0} {1} {2} AFTER {3} DIFF {4}", objectUpdated, p, vector3, vector3_4, diff);
-		}
 
         public override void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)
 		{
