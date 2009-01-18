@@ -36,8 +36,9 @@ namespace cogbot.Listeners
 		DoubleDictionary<uint, UUID, Avatar> avatars = new DoubleDictionary<uint, UUID, Avatar>();
 		Dictionary<uint, ObjectUpdate> lastObjectUpdate = new Dictionary<uint, ObjectUpdate>();
 		Dictionary<uint, ObjectUpdate> lastObjectUpdateDiff = new Dictionary<uint, ObjectUpdate>();
-		Dictionary<Avatar, List<UUID>> avatarAminsSent = new Dictionary<Avatar, List<UUID>>();
-		//Dictionary<uint, uint> selectedPrims = new Dictionary<uint, uint>();
+        Dictionary<Avatar, List<UUID>> avatarAminsSent = new Dictionary<Avatar, List<UUID>>();
+        Dictionary<Avatar, UUID> avatarAminCurrent = new Dictionary<Avatar, UUID>();
+        //Dictionary<uint, uint> selectedPrims = new Dictionary<uint, uint>();
 		//Dictionary<UUID, UUID> texturesFinished = new Dictionary<UUID, UUID>();
 		List<Primitive> primsAwaitingSelect = new List<Primitive>();
 		List<Primitive> primsKnown = new List<Primitive>();
@@ -158,16 +159,40 @@ namespace cogbot.Listeners
 			Avatar avatar = GetAvatar(avatarID);
 			List<UUID> currents = new List<UUID>();
 			List<String> names = new List<String>();
-			foreach (UUID key in anims.Dictionary.Keys)
+            UUID mostCurrentAnim = UUID.Zero;
+            int mostCurrentSequence = -1;
+            lock (anims) 
+                foreach (UUID key in anims.Dictionary.Keys)
 			{
+                int animNumber = (int)anims[key];
+                if (animNumber >= mostCurrentSequence)
+                {
+                    mostCurrentSequence = animNumber;
+                    mostCurrentAnim = key;
+                }
 				currents.Add(key);
 				names.Add(GetAnimationName(key));
 			}
+            lock(avatarAminCurrent)
+            if (avatarAminCurrent.ContainsKey(avatar))
+            {
+                UUID oldAnim = avatarAminCurrent[avatar];
+                if (oldAnim != mostCurrentAnim)
+                {
+                    SendEvent("On-Avatar-Change-Animation", avatar, mostCurrentAnim);
+                }
+            }
+            else
+            {
+                SendEvent("On-Avatar-Change-Animation", avatar, mostCurrentAnim);
+            }
+            avatarAminCurrent[avatar] = mostCurrentAnim;
+
 
 			if (avatarAminsSent.ContainsKey(avatar)) {
 
 			}
-			SendEvent("On-Avatar-Animation", avatar, names);
+			//SendEvent("On-Avatar-Animation", avatar, names);
 		}
 
         public override void Self_OnAnimationsChanged(InternalDictionary<UUID, int> agentAnimations)
@@ -470,7 +495,7 @@ namespace cogbot.Listeners
 					if (after.Velocity == Vector3.Zero) {
 					SendEvent("on-object-stop-velosity", objectUpdated, -before.Velocity);
 				} else {
-					SendEvent("on-object-change-velosity", objectUpdated, after.Velocity);
+					//SendEvent("on-object-change-velosity", objectUpdated, after.Velocity);
 				}
 				wasChanged = true;
 			}

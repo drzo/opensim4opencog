@@ -52,9 +52,9 @@ namespace cogbot
         public Dictionary<string, DescribeDelegate> describers;
 
         //public Dictionary<string, Listeners.Listener> listeners;
-        public Dictionary<string, Actions.Action> Commands;
+        public SortedDictionary<string, Actions.Action> Commands;
         public Dictionary<string, Tutorials.Tutorial> tutorials;
-        public Utilities.TcpServer UtilitiesTcpServer;
+        //public Utilities.TcpServer UtilitiesTcpServer;
 
         public bool describeNext;
         private int describePos;
@@ -164,7 +164,7 @@ namespace cogbot
             //listeners["bump"] = new Listeners.Bump(this);
             //listeners["sound"] = new Listeners.Sound(this);
 
-            Commands = new Dictionary<string, cogbot.Actions.Action>();
+            Commands = new SortedDictionary<string, cogbot.Actions.Action>();
             Commands["login"] = new Actions.Login(this);
             Commands["logout"] = new Actions.Logout(this);
             Commands["stop"] = new Actions.Stop(this);
@@ -205,7 +205,7 @@ namespace cogbot
 
             // Start the server
             thisTcpPort = nextTcpPort;
-            UtilitiesTcpServer = new Utilities.TcpServer(nextTcpPort, this);
+            Utilities.TcpServer UtilitiesTcpServer = new Utilities.TcpServer(nextTcpPort, this);
             nextTcpPort++;
             UtilitiesTcpServer.startSocketListener();
 
@@ -1053,8 +1053,14 @@ namespace cogbot
 			if (debugLevel>1) {
 				output("msgClient: " + serverMessage);             
 			}
-			UtilitiesTcpServer.msgClient(serverMessage);
-		}
+            lock (lBotMsgSubscribers)
+            {
+                foreach (BotMessageSubscriber ms in lBotMsgSubscribers)
+                {
+                    ms.msgClient(serverMessage);
+                }
+            }
+        }
 
 		public void overwrite2Hash(Hashtable hashTable, string key, string value)
 		{
@@ -1304,8 +1310,16 @@ namespace cogbot
 				// EVALUATE !!!
 				Object x = taskInterperter.Eval(thisTask.codeTree);
 				thisTask.results = taskInterperter.Str(x);
-				if (UtilitiesTcpServer != null)	UtilitiesTcpServer.taskTick(serverMessage);
-
+                lock (lBotMsgSubscribers)
+                {
+                    foreach (BotMessageSubscriber ms in lBotMsgSubscribers)
+                    {
+                        if (ms is Utilities.TcpServer)
+                        {
+                           ((Utilities.TcpServer) ms).taskTick(serverMessage);
+                        }
+                    }
+                }
 				if (false) {
 					output(" taskcode: " + lastcode + " --> " + thisTask.results);
 					//output(" taskTick Results>" + thisTask.results);
@@ -1482,9 +1496,28 @@ namespace cogbot
 		{
 			logout();
 			thrJobQueue.Abort();
-			if (UtilitiesTcpServer != null)	UtilitiesTcpServer.closeTcpListener();
+            lock (lBotMsgSubscribers)
+            {
+                foreach (BotMessageSubscriber ms in lBotMsgSubscribers)
+                {
+                    ms.ShuttingDown();
+                }
+            }
 		}
-	}
+
+        List<BotMessageSubscriber> lBotMsgSubscribers = new List<BotMessageSubscriber>();
+        public interface BotMessageSubscriber
+        {
+            void msgClient(string serverMessage);
+            void ShuttingDown();
+        }
+        internal void AddBotMessageSubscriber(BotMessageSubscriber tcpServer)
+        {
+            lock (lBotMsgSubscribers)
+                lBotMsgSubscribers.Add(tcpServer);
+        }
+
+    }
 
 }
 
