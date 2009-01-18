@@ -5,7 +5,7 @@ namespace cogbot.Actions
 {
     public class FindTextureCommand : Command
     {
-        public FindTextureCommand(cogbot.TextForm testClient)
+        public FindTextureCommand(BotClient testClient)
         {
             Name = "findtexture";
             Description = "Checks if a specified texture is currently visible on a specified face. " +

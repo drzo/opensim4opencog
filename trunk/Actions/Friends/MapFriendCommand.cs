@@ -11,7 +11,7 @@ namespace cogbot.Actions
     {
         ManualResetEvent WaitforFriend = new ManualResetEvent(false);
 
-        public MapFriendCommand(cogbot.TextForm testClient)
+        public MapFriendCommand(BotClient testClient)
         {
             Name = "mapfriend";
             Description = "Show a friends location. Usage: mapfriend UUID";

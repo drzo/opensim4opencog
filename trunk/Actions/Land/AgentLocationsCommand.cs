@@ -10,7 +10,7 @@ namespace cogbot.Actions
     /// </summary>
     public class AgentLocationsCommand : Command
     {
-        public AgentLocationsCommand(cogbot.TextForm testClient)
+        public AgentLocationsCommand(BotClient testClient)
         {
             Name = "agentlocations";
             Description = "Downloads all of the agent locations in a specified region. Usage: agentlocations [regionhandle]";

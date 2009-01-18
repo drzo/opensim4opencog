@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class WhoCommand: Command
     {
-        public WhoCommand(cogbot.TextForm testClient)
+        public WhoCommand(BotClient testClient)
 		{
 			Name = "who";
 			Description = "Lists seen avatars.";

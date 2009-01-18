@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class ParcelSelectObjectsCommand : Command
     {
-        public ParcelSelectObjectsCommand(cogbot.TextForm testClient)
+        public ParcelSelectObjectsCommand(BotClient testClient)
         {
             Name = "selectobjects";
             Description = "Displays a list of prim localIDs on a given parcel with a specific owner. Usage: selectobjects parcelID OwnerUUID";

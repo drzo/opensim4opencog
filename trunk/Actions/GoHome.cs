@@ -5,7 +5,7 @@ namespace cogbot.Actions
 {
     public class GoHomeCommand : Command
     {
-		public GoHomeCommand(cogbot.TextForm testClient)
+		public GoHomeCommand(BotClient testClient)
         {
             Name = "gohome";
             Description = "Teleports home";

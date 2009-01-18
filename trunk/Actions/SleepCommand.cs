@@ -8,7 +8,7 @@ namespace cogbot.Actions
     {
         uint sleepSerialNum = 1;
 
-        public SleepCommand(cogbot.TextForm testClient)
+        public SleepCommand(BotClient testClient)
         {
             Name = "sleep";
             Description = "Uses AgentPause/AgentResume and sleeps for a given number of seconds. Usage: sleep [seconds]";

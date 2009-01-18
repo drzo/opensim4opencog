@@ -7,7 +7,7 @@ namespace cogbot.Actions
 {
     public class SayCommand: Command
     {
-        public SayCommand(cogbot.TextForm testClient)
+        public SayCommand(BotClient testClient)
 		{
 			Name = "say";
 			Description = "Say something.  (usage: say (optional channel) whatever)";

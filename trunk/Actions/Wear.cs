@@ -7,8 +7,8 @@ namespace cogbot.Actions
 {
     class Wear : Action
     {
-        public Wear(TextForm parent)
-            : base(parent)
+        public Wear(BotClient Client)
+            : base(Client)
         {
             helpString = "Usage: wear [outfit name] ";
             usageString = helpString + "\r\n you can type  'wear /My Outfit/Dance Party";
@@ -21,12 +21,12 @@ namespace cogbot.Actions
             bool bake = true;
             try
             {
-                parent.output("wear args =(" + args.str + ").");
+                WriteLine("wear args =(" + args.str + ").");
                 Client.Appearance.WearOutfit(args.str.Split('/'), bake);
             }
             catch (InvalidOutfitException ex)
             {
-                parent.output("Invalid outfit (" + ex.Message + ")" + args.str+".");
+                WriteLine("Invalid outfit (" + ex.Message + ")" + args.str+".");
             }
 
 

@@ -9,7 +9,7 @@ namespace cogbot.Actions
     /// </summary>
     public class AppearanceCommand : Command
     {
-		public AppearanceCommand(cogbot.TextForm testClient)
+		public AppearanceCommand(BotClient testClient)
         {
             Name = "appearance";
             Description = "Set your current appearance to your last saved appearance";

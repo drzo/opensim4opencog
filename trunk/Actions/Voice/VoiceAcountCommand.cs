@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using OpenMetaverse.Utilities;
 
 namespace cogbot.Actions
 {
@@ -14,25 +13,24 @@ namespace cogbot.Actions
         private string VoiceAccount = null;
         private string VoicePassword = null;
 
-        public VoiceAccountCommand(cogbot.TextForm testClient)
+        public VoiceAccountCommand(BotClient testClient)
         {
             Name = "voiceaccount";
             Description = "obtain voice account info. Usage: voiceaccount";
             Category = CommandCategory.Voice;
 
-           // Client = testClient;
+            Client = testClient;
         }
 
         private bool registered = false;
 
         private bool IsVoiceManagerRunning()
         {
-            VoiceManager voiceManager = parent.GetVoiceManager();
-            if (null == voiceManager) return false;
+            if (null == Client.VoiceManager) return false;
 
             if (!registered)
             {
-                voiceManager.OnProvisionAccount += Voice_OnProvisionAccount;
+                Client.VoiceManager.OnProvisionAccount += Voice_OnProvisionAccount;
                 registered = true;
             }
             return true;
@@ -40,11 +38,10 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            VoiceManager voiceManager = parent.GetVoiceManager();
             if (!IsVoiceManagerRunning())
                 return String.Format("VoiceManager not running for {0}", Client.Self.Name);
 
-            if (!voiceManager.RequestProvisionAccount())
+            if (!Client.VoiceManager.RequestProvisionAccount())
             {
                 return "RequestProvisionAccount failed. Not available for the current grid?";
             }

@@ -5,7 +5,7 @@ namespace cogbot.Actions
 {
     public class WindCommand : Command
     {
-        public WindCommand(cogbot.TextForm testClient)
+        public WindCommand(BotClient testClient)
         {
             Name = "wind";
             Description = "Displays current wind data";

@@ -6,7 +6,7 @@ namespace cogbot.Actions
 {
     public class ObjectInventoryCommand : Command
     {
-        public ObjectInventoryCommand(TextForm testClient)
+        public ObjectInventoryCommand(BotClient testClient)
         {
             Name = "objectinventory";
             Description = "Retrieves a listing of items inside an object (task inventory). Usage: objectinventory [objectID]";

@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class EchoMasterCommand: Command
     {
-        public EchoMasterCommand(cogbot.TextForm testClient)
+        public EchoMasterCommand(BotClient testClient)
 		{
 			Name = "echoMaster";
 			Description = "Repeat everything that master says.";
@@ -34,7 +34,7 @@ namespace cogbot.Actions
 		void Self_OnChat(string message, ChatAudibleLevel audible, ChatType type, 
             ChatSourceType sourcetype, string fromName, UUID id, UUID ownerid, Vector3 position)
 		{
-            if (message.Length > 0 && (parent.MasterKey == id || (parent.MasterName == fromName && !parent.AllowObjectMaster)))
+			if (message.Length > 0 && (Client.MasterKey == id || (Client.MasterName == fromName && !Client.AllowObjectMaster)))
 			    Client.Self.Chat(message, 0, ChatType.Normal);
 		}
     }

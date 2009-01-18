@@ -14,7 +14,7 @@ namespace cogbot.Actions
         private ManualResetEvent keyResolution = new ManualResetEvent(false);
         private UUID query = UUID.Zero;
 
-        public SetMasterCommand(cogbot.TextForm testClient)
+        public SetMasterCommand(BotClient testClient)
 		{
 			Name = "setmaster";
             Description = "Sets the user name of the master user. The master user can IM to run commands. Usage: setmaster [name]";
@@ -38,7 +38,7 @@ namespace cogbot.Actions
 
             if (keyResolution.WaitOne(TimeSpan.FromMinutes(1), false))
             {
-                parent.MasterKey = resolvedMasterKey;
+                Client.MasterKey = resolvedMasterKey;
                 keyResolution.Reset();
                 Client.Directory.OnDirPeopleReply -= callback;
             }
@@ -51,9 +51,9 @@ namespace cogbot.Actions
             
             // Send an Online-only IM to the new master
             Client.Self.InstantMessage(
-                parent.MasterKey, "You are now my master.  IM me with \"help\" for a command list.");
+                Client.MasterKey, "You are now my master.  IM me with \"help\" for a command list.");
 
-            return String.Format("Master set to {0} ({1})", masterName, parent.MasterKey.ToString());
+            return String.Format("Master set to {0} ({1})", masterName, Client.MasterKey.ToString());
 		}
 
         private void KeyResolvHandler(UUID queryid, List<DirectoryManager.AgentSearchData> matches)

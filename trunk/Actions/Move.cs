@@ -13,11 +13,11 @@ namespace cogbot.Actions
         float moveDist=0;
         string moveTo;
         int precision = 2;
-        public Move(TextForm parent)
-            : base(parent)
+        public Move(BotClient Client)
+            : base(Client)
         {
-            helpString = "Move to a person or object, or in a direction: west, east, north or south."; //parent.RM.GetString("smove");
-            usageString = "Type \"west/east/north/south\" to move 5 meters in a direction. Or Type \"west distance/east distance/north distance/south distance\" to move a specific distance in that direction.";// parent.RM.GetString("umove");
+            helpString = "Move to a person or object, or in a direction: west, east, north or south."; //Client.RM.GetString("smove");
+            usageString = "Type \"west/east/north/south\" to move 5 meters in a direction. Or Type \"west distance/east distance/north distance/south distance\" to move a specific distance in that direction.";// Client.RM.GetString("umove");
             Client.Self.OnAlertMessage += new AgentManager.AlertMessageCallback(Self_OnAlertMessage);
         }
 
@@ -29,26 +29,26 @@ namespace cogbot.Actions
                 if (moveDist >= precision)
                 {
                     System.Threading.Thread.Sleep(1000);
-                    //parent.output("Prev: " + PrevPosition.ToString() + " Now: " + client.Self.SimPosition.ToString());
+                    //WriteLine("Prev: " + PrevPosition.ToString() + " Now: " + CurrentClient.Self.SimPosition.ToString());
                     if (moveTo == "west")
                     {
                         if (!((PrevPosition.X - client.Self.SimPosition.X) > precision))
-                            parent.output("You bumped into something, Please try moving in a different direction!");
+                            WriteLine("You bumped into something, Please try moving in a different direction!");
                     }
                     else if (moveTo == "east")
                     {
                         if (!((client.Self.SimPosition.X - PrevPosition.X) > precision))
-                            parent.output("You bumped into something, Please try moving in a different direction!");
+                            WriteLine("You bumped into something, Please try moving in a different direction!");
                     }
                     else if (moveTo == "north")
                     {
                         if (!((client.Self.SimPosition.Y - PrevPosition.Y) > precision))
-                            parent.output("You bumped into something, Please try moving in a different direction!");
+                            WriteLine("You bumped into something, Please try moving in a different direction!");
                     }
                     else if (moveTo == "south")
                     {
                         if (!((PrevPosition.Y - client.Self.SimPosition.Y) > precision))
-                            parent.output("You bumped into something, Please try moving in a different direction!");
+                            WriteLine("You bumped into something, Please try moving in a different direction!");
                     }
                 } 
             }
@@ -59,10 +59,10 @@ namespace cogbot.Actions
             GridClient client = Client;
             string temp;
            // base.acceptInput(verb, args);
-            Sit sit = (Sit)parent.actions["sit"];
+            Sit sit = (Sit)Client.Commands["sit"];
 
             if (client.Self.SittingOn != 0 || sit.sittingOnGround)
-                parent.output("You are sitting, Please stand up to move.");
+                WriteLine("You are sitting, Please stand up to move.");
             else
             {                
                 Vector3 moveVec, TurnTo;
@@ -109,24 +109,24 @@ namespace cogbot.Actions
 
                 if (args.prepPhrases["to"].Length > 0)
                 {
-                    if (((Listeners.Avatars)parent.listeners["avatars"]).tryGetAvatar(args.prepPhrases["to"], out avatar))
+                    if ((Client.WorldSystem).tryGetAvatar(args.prepPhrases["to"], out avatar))
                     {
-                        parent.output("Moving to person " + avatar.Name + ".");
+                        WriteLine("Moving to person " + avatar.Name + ".");
                         client.Self.AutoPilotLocal((int)avatar.Position.X,
                             (int)avatar.Position.Y, avatar.Position.Z);
                         client.Self.Movement.TurnToward(avatar.Position);
                         return;
                     }
-                    else if (((Listeners.Objects)parent.listeners["objects"]).tryGetPrim(args.prepPhrases["to"], out prim))
+                    else if ((Client.WorldSystem).tryGetPrim(args.prepPhrases["to"], out prim))
                     {
-                        parent.output("Moving to object " + prim.Properties.Name + ".");
+                        WriteLine("Moving to object " + prim.Properties.Name + ".");
                         client.Self.AutoPilotLocal((int)prim.Position.X, (int)prim.Position.Y, prim.Position.Z);
                         client.Self.Movement.TurnToward(prim.Position);
                         return;
                     }
                     else
                     {
-                        parent.output("I don't know how to move to " + args.prepPhrases["to"] + ".");
+                        WriteLine("I don't know how to move to " + args.prepPhrases["to"] + ".");
                         return;
                     }
                 }
@@ -152,7 +152,7 @@ namespace cogbot.Actions
                 }
                 else
                 {
-                    parent.output("I don't understand how to move " + args.str);
+                    WriteLine("I don't understand how to move " + args.str);
                     return;
                 }
 
@@ -163,7 +163,7 @@ namespace cogbot.Actions
                 Client.Self.Movement.SendUpdate();
                 Client.Self.AutoPilotLocal((int)dest.X, (int)dest.Y, dest.Z);
                 Client.Self.Movement.SendUpdate();
-                parent.output("moving " + moveDist + " m towards " + tokens[0]);
+                WriteLine("moving " + moveDist + " m towards " + tokens[0]);
             }
         }
     }

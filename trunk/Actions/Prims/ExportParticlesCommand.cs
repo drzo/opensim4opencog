@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class ExportParticlesCommand : Command
     {
-        public ExportParticlesCommand(cogbot.TextForm testClient)
+        public ExportParticlesCommand(BotClient testClient)
         {
             Name = "exportparticles";
             Description = "Reverse engineers a prim with a particle system to an LSL script. Usage: exportscript [prim-uuid]";

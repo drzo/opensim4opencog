@@ -7,15 +7,15 @@ namespace cogbot.Actions
     {
         bool ShowEffects = false;
 
-        public ShowEffectsCommand(cogbot.TextForm testClient)
+        public ShowEffectsCommand(BotClient testClient)
         {
             Name = "showeffects";
             Description = "Prints out information for every viewer effect that is received. Usage: showeffects [on/off]";
             Category = CommandCategory.Other;
 
-             testClient.client.Avatars.OnEffect += new AvatarManager.EffectCallback(Avatars_OnEffect);
-             testClient.client.Avatars.OnLookAt += new AvatarManager.LookAtCallback(Avatars_OnLookAt);
-             testClient.client.Avatars.OnPointAt += new AvatarManager.PointAtCallback(Avatars_OnPointAt);
+            testClient.Avatars.OnEffect += new AvatarManager.EffectCallback(Avatars_OnEffect);
+            testClient.Avatars.OnLookAt += new AvatarManager.LookAtCallback(Avatars_OnLookAt);
+            testClient.Avatars.OnPointAt += new AvatarManager.PointAtCallback(Avatars_OnPointAt);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)

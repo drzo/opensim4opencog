@@ -7,7 +7,7 @@ namespace cogbot.Actions
 {
     public class BalanceCommand: Command
     {
-        public BalanceCommand(TextForm testClient)
+        public BalanceCommand(BotClient testClient)
 		{
 			Name = "balance";
 			Description = "Shows the amount of L$.";
@@ -24,7 +24,7 @@ namespace cogbot.Actions
             if (waitBalance.WaitOne(10000, false))
             {
                 result = Client.ToString() + " has L$: " + Client.Self.Balance;
-            }
+            }            
             Client.Self.OnBalanceUpdated -= del;
             return result;
 

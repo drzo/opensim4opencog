@@ -12,7 +12,7 @@ namespace cogbot.Actions
         List<UUID> OutfitAssets = new List<UUID>();
         AssetManager.ImageReceivedCallback ImageReceivedHandler;
 
-        public DumpOutfitCommand(TextForm testClient)
+        public DumpOutfitCommand(BotClient testClient)
         {
             Name = "dumpoutfit";
             Description = "Dumps all of the textures from an avatars outfit to the hard drive. Usage: dumpoutfit [avatar-uuid]";
@@ -97,22 +97,22 @@ namespace cogbot.Actions
                         try
                         {
                             File.WriteAllBytes(image.ID.ToString() + ".jp2", image.AssetData);
-                            Console.WriteLine("Wrote JPEG2000 image " + image.ID.ToString() + ".jp2");
+                            WriteLine("Wrote JPEG2000 image " + image.ID.ToString() + ".jp2");
 
                             ManagedImage imgData;
                             OpenJPEG.DecodeToImage(image.AssetData, out imgData);
                             byte[] tgaFile = imgData.ExportTGA();
                             File.WriteAllBytes(image.ID.ToString() + ".tga", tgaFile);
-                            Console.WriteLine("Wrote TGA image " + image.ID.ToString() + ".tga");
+                            WriteLine("Wrote TGA image " + image.ID.ToString() + ".tga");
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine(e.ToString());
+                            WriteLine(e.ToString());
                         }
                     }
                     else
                     {
-                        Console.WriteLine("Failed to download image " + image.ID.ToString());
+                        WriteLine("Failed to download image " + image.ID.ToString());
                     }
 
                     OutfitAssets.Remove(image.ID);

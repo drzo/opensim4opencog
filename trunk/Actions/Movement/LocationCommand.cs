@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class LocationCommand: Command
     {
-        public LocationCommand(cogbot.TextForm testClient)
+        public LocationCommand(BotClient testClient)
 		{
 			Name = "location";
 			Description = "Show current location of avatar.";

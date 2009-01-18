@@ -58,8 +58,8 @@ namespace cogbot.Actions.SimExport
             // Delete all of the old linkset files
             try
             {
-                Directory.Delete(path, true);
-                Directory.CreateDirectory(path);
+                if (false) Directory.Delete(path, true);
+                if (!Directory.Exists(path))Directory.CreateDirectory(path);
             }
             catch (Exception ex)
             {
@@ -122,7 +122,7 @@ namespace cogbot.Actions.SimExport
             writer.WriteEndElement();
         }
 
-        static void SOPToXml(XmlTextWriter writer, Primitive prim, Primitive parent)
+        static void SOPToXml(XmlTextWriter writer, Primitive prim, Primitive Client)
         {
             writer.WriteStartElement("SceneObjectPart");
             writer.WriteAttributeString("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
@@ -141,10 +141,10 @@ namespace cogbot.Actions.SimExport
             writer.WriteElementString("ScriptAccessPin", "0");
 
             Vector3 groupPosition;
-            if (parent == null)
+            if (Client == null)
                 groupPosition = prim.Position;
             else
-                groupPosition = parent.Position;
+                groupPosition = Client.Position;
 
             WriteVector(writer, "GroupPosition", groupPosition);
             WriteVector(writer, "OffsetPosition", groupPosition - prim.Position);
@@ -165,8 +165,8 @@ namespace cogbot.Actions.SimExport
             writer.WriteElementString("TouchName", prim.Properties.TouchName);
 
             uint linknum = 0;
-            //if (parent != null)
-            //    linknum = prim.LocalID - parent.LocalID;
+            //if (Client != null)
+            //    linknum = prim.LocalID - Client.LocalID;
 
             writer.WriteElementString("LinkNum", linknum.ToString());
             writer.WriteElementString("ClickAction", ((int)prim.ClickAction).ToString());

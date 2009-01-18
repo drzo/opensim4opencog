@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class LoginCommand : Command
     {
-        public LoginCommand(cogbot.TextForm testClient)
+        public LoginCommand(BotClient testClient)
         {
             Name = "login";
             Description = "Logs in another avatar. Usage: login firstname lastname password [simname] [loginuri]";

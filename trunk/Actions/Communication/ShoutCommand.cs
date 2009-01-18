@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class ShoutCommand : Command
     {
-        public ShoutCommand(cogbot.TextForm testClient)
+        public ShoutCommand(BotClient testClient)
         {
             Name = "shout";
             Description = "Shout something.";

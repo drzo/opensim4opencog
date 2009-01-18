@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class SitCommand: Command
     {
-        public SitCommand(cogbot.TextForm testClient)
+        public SitCommand(BotClient testClient)
 		{
 			Name = "sit";
 			Description = "Attempt to sit on the closest prim";

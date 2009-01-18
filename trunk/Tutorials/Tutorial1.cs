@@ -8,9 +8,10 @@ namespace cogbot.Tutorials
 {
     class Tutorial1 : Tutorial
     {
-        private int CommandIdx = 0;         
+        private int CommandIdx = 0;
 
-        public Tutorial1(TextForm parent): base(Directory.GetParent(Directory.GetCurrentDirectory()) + "\\XMLTutorials\\tutorial1.xml", parent)
+        public Tutorial1(TextForm parent, BotClient botcleint)
+            : base(Directory.GetParent(Directory.GetCurrentDirectory()) + "\\XMLTutorials\\tutorial1.xml", parent,botcleint)
         {
             helpString = "Teaches you how to navigate using basic commands move, sit, stand";
             usageString = helpString;
@@ -33,7 +34,7 @@ namespace cogbot.Tutorials
                 SetModeTutorial();
 
                 parent.output("Welcome to your first Tutorial!");
-                parent.actions["mute"].acceptInputWrapper("mute", "all");
+                parent.groupActions["mute"].acceptInputWrapper("mute", "all");
                 
                 SetNextCommand();
                 CommandIdx++;
@@ -54,7 +55,7 @@ namespace cogbot.Tutorials
                             RestoreMode();
                             CommandIdx = 0;
                             parent.output("Congratulations!! You completed your first Tutorial! ");
-                            parent.actions["mute"].acceptInputWrapper("mute", "all");
+                            parent.groupActions["mute"].acceptInputWrapper("mute", "all");
                         }                     
                     }
                 }

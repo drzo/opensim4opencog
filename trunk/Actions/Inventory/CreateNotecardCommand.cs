@@ -7,7 +7,7 @@ namespace cogbot.Actions
 {
     public class CreateNotecardCommand : Command
     {
-        public CreateNotecardCommand(TextForm testClient)
+        public CreateNotecardCommand(BotClient testClient)
         {
             Name = "createnotecard";
             Description = "Creates a notecard from a local text file.";
@@ -17,7 +17,7 @@ namespace cogbot.Actions
         void OnNoteUpdate(bool success, string status, UUID itemID, UUID assetID)
         {
             if (success)
-                Console.WriteLine("Notecard successfully uploaded, ItemID {0} AssetID {1}", itemID, assetID);
+                WriteLine("Notecard successfully uploaded, ItemID {0} AssetID {1}", itemID, assetID);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
@@ -30,7 +30,7 @@ namespace cogbot.Actions
                 file = file + args[ct] + " ";
             file = file.TrimEnd();
 
-            Console.WriteLine("Filename: {0}", file);
+            WriteLine("Filename: {0}", file);
             if (!File.Exists(file))
                 return String.Format("Filename '{0}' does not exist", file);
 
@@ -40,7 +40,7 @@ namespace cogbot.Actions
             // FIXME: Upload the notecard asset first. When that completes, call RequestCreateItem
             try
             {
-                string desc = String.Format("{0} created by OpenMetaverse TestClient {1}", file, DateTime.Now);
+                string desc = String.Format("{0} created by OpenMetaverse BotClient {1}", file, DateTime.Now);
                 // create the asset
 
                 Client.Inventory.RequestCreateItem(Client.Inventory.FindFolderForType(AssetType.Notecard),

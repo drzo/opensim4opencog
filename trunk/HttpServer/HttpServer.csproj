@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{E110C7D5-41FC-4FF9-B1AD-1EC62C786F3D}</ProjectGuid>
+    <ProjectGuid>{2B76669F-05CB-487B-AC83-82E09B1CB39E}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -71,46 +71,28 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HttpRequestHandler.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ResponseCookies.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Check.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="HttpInputItem.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="HttpHelper.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="HttpFile.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ExceptionHandler.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="RequestCookie.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="HttpListener.cs">
+    <Compile Include="HttpInput.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ClientAcceptedEventArgs.cs">
+    <Compile Include="Check.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ILogWriter.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="HttpRequest.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ResponseCookie.cs">
+    <Compile Include="HttpRequestHandler.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="HttpClientContextImp.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ExceptionHandler.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="IHttpClientContext.cs">
@@ -119,22 +101,43 @@
     <Compile Include="HttpResponse.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="HttpInput.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="HttpParam.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="IHttpRequest.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="HttpForm.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="WebServer.cs">
+    <Compile Include="HttpRequestParser.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="HttpRequestParser.cs">
+    <Compile Include="HttpRequestSignature.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ResponseCookies.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ClientAcceptedEventArgs.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="HttpInputItem.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="HttpListener.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ResponseCookie.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ILogWriter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="HttpRequest.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="IHttpRequest.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="WebServer.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="RequestCookies.cs">
@@ -143,7 +146,25 @@
     <Compile Include="IHttpResponse.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="HttpRequestSignature.cs">
+    <Compile Include="Exceptions\ForbiddenException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Exceptions\NotFoundException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Exceptions\InternalServerException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Exceptions\BadRequestException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Exceptions\HttpException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Exceptions\UnauthorizedException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="FormDecoders\MultipartDecoder.cs">
@@ -162,27 +183,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="FormDecoders\FormDecoder.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Exceptions\InternalServerException.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Exceptions\ForbiddenException.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Exceptions\NotFoundException.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Exceptions\BadRequestException.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Exceptions\HttpException.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Exceptions\UnauthorizedException.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

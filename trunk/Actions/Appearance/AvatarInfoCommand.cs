@@ -7,7 +7,7 @@ namespace cogbot.Actions.Appearance
 {
     public class AvatarInfoCommand : Command
     {
-        public AvatarInfoCommand(cogbot.TextForm testClient)
+        public AvatarInfoCommand(BotClient testClient)
         {
             Name = "avatarinfo";
             Description = "Print out information on a nearby avatar. Usage: avatarinfo [firstname] [lastname]";

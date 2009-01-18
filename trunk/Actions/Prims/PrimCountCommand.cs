@@ -5,7 +5,7 @@ namespace cogbot.Actions
 {
     public class PrimCountCommand: Command
     {
-        public PrimCountCommand(cogbot.TextForm testClient)
+        public PrimCountCommand(BotClient testClient)
 		{
 			Name = "primcount";
 			Description = "Shows the number of objects currently being tracked.";
@@ -20,11 +20,10 @@ namespace cogbot.Actions
             {
                 for (int i = 0; i < Client.Network.Simulators.Count; i++)
                 {
-                    Simulator sim = Client.Network.Simulators[i];
-                    int avcount = sim.ObjectsAvatars.Count;
-                    int primcount = sim.ObjectsPrimitives.Count;
+                    int avcount = Client.Network.Simulators[i].ObjectsAvatars.Count;
+                    int primcount = Client.Network.Simulators[i].ObjectsPrimitives.Count;
 
-                    WriteLine("" + sim + " {0} (Avatars: {1} Primitives: {2})", 
+                    WriteLine("{0} (Avatars: {1} Primitives: {2})", 
                         Client.Network.Simulators[i].Name, avcount, primcount);
 
                     count += avcount;

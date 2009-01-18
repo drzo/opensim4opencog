@@ -5,7 +5,7 @@ namespace cogbot.Actions
 {
     public class FlyCommand : Command
     {
-        public FlyCommand(cogbot.TextForm testClient)
+        public FlyCommand(BotClient testClient)
         {
             Name = "fly";
             Description = "Starts or stops flying. Usage: fly [start/stop]";

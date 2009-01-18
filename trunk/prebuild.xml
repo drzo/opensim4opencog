@@ -358,7 +358,10 @@
       <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
       <Files>
           <Match path="Actions" pattern="*.cs" recurse="true"/>
-          <Match path="Listeners" pattern="*.cs" recurse="true"/>
+          <Match path="Bots" pattern="*.cs" recurse="true"/>
+          <Match path="Listeners" pattern="*List*.cs" recurse="true"/>
+          <Match path="Listeners" pattern="*Events.cs" recurse="true"/>
+          <Match path="Listeners" pattern="World*.cs" recurse="true"/>
           <Match path="Properties" pattern="*.cs" recurse="true"/>
           <Match path="Tutorials" pattern="*.cs" recurse="true"/>
           <Match path="Utilities" pattern="*.cs" recurse="true"/>
@@ -366,10 +369,38 @@
           <Match path="DotCYC" pattern="CycConnectionForm.cs" recurse="false"/>
           <Match path="DotCYC" pattern="CycConnectionForm.Designer.cs" recurse="false"/>
           <Match path="ScriptEngines" pattern="*.cs" recurse="true"/>
+     <!--     <Match path="MDI" pattern="*.cs" recurse="true"/>
+          <Match path="MDI" pattern="*.resx" recurse="true"/> -->
           <Match path="." pattern="*.cs"  recurse="false"/>
           <Match path="." pattern="*.resx"  recurse="false"/>
       </Files>
     </Project>
+   <Project name="TestClient" path="TestClient" type="Exe">
+     <Configuration name="Debug">
+       <Options>
+         <OutputPath>../../../bin/</OutputPath>
+       </Options>
+     </Configuration>
+     <Configuration name="Release">
+       <Options>
+         <OutputPath>../../../bin/</OutputPath>
+       </Options>
+     </Configuration>
+
+     <ReferencePath>../../../bin/</ReferencePath>
+     <Reference name="System"/>
+     <Reference name="System.Xml"/>
+     <Reference name="System.Drawing"/>
+     <Reference name="OpenMetaverse"/>
+     <Reference name="OpenMetaverseTypes"/>
+     <Reference name="OpenMetaverse.Utilities"/>
+     <Reference name="OpenMetaverse.StructuredData"/>
+     <Reference name="OpenMetaverse.Http"/>
+
+     <Files>
+       <Match pattern="*.cs" recurse="true"/>
+     </Files>
+   </Project>
 
   </Solution>
 </Prebuild>

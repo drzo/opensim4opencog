@@ -7,13 +7,13 @@ namespace cogbot.Listeners
 {
     public class Listener
     {
-        protected TextForm parent;
-        protected GridClient client;
+     //   protected TextForm botclient;
+        protected BotClient client;
 
-        public Listener(TextForm _parent)
+        public Listener(BotClient _parent)
         {
-            parent = _parent;
-            client = parent.client;
+            //botclient = _parent;
+            client = _parent;//.CurrentClient;
         }
     }
 }

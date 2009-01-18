@@ -7,15 +7,15 @@ namespace cogbot.Actions
 {
     class Eval : Action
     {
-       public Eval(TextForm parent)
-            : base(parent)
+       public Eval(BotClient Client)
+            : base(Client)
         {
             helpString = " eval: Enqueue a lisp task. Eval <lisp expression>";
         }
        public override void acceptInput(string verb, Parser args)
        {
            //base.acceptInput(verb, args);
-           parent.enqueueLispTask(args.str);
+           Client.enqueueLispTask(args.str);
        }
     }
 }

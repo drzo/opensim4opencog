@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class GotoLandmarkCommand : Command
     {
-        public GotoLandmarkCommand(cogbot.TextForm testClient)
+        public GotoLandmarkCommand(BotClient testClient)
         {
             Name = "goto_landmark";
             Description = "Teleports to a Landmark. Usage: goto_landmark [UUID]";

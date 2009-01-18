@@ -10,7 +10,7 @@ namespace cogbot.Actions
     {
         public DateTime Created = DateTime.Now;
 
-        public UptimeCommand(cogbot.TextForm testClient)
+        public UptimeCommand(BotClient testClient)
         {
             Name = "uptime";
             Description = "Shows the login name, login time and length of time logged on.";

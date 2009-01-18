@@ -9,7 +9,7 @@ namespace cogbot.Actions.SimExport
 {
     public class SimExportCommand : cogbot.Actions.Command
     {
-        public SimExportCommand(TextForm parent)
+        public SimExportCommand(BotClient Client)
         {
 
             Name = "simexport";
@@ -17,28 +17,33 @@ namespace cogbot.Actions.SimExport
             Category = CommandCategory.TestClient;
             helpString = "Exports parts of the Sim to TGZ file.";
             usageString = "simexport help";
-            //client = parent.client;
-            Client.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);      
-            SetUpSimExportCommand(parent.client);
+           // return;
+            //CurrentClient = Client.CurrentClient;
+            return;
+            Client.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
+            SetUpSimExportCommand(Client);
         }
 
         void Network_OnLogin(LoginStatus login, string message)
         {
-            try
+            WriteLine("SimExportCommand Logging In [" + login.ToString() + "] for MonitorPrimsAwaitingSelect");
+            if (login == LoginStatus.Success)
             {
-                //throw new NotImplementedException();
-                            Thread thread = new Thread(new ThreadStart(MonitorPrimsAwaitingSelect));
-                          thread.Start();
-                WriteLine("SimExportCommand Logging In [" + login.ToString() + "] for MonitorPrimsAwaitingSelect");
-                //SetUpSimExportCommand(parent.client);
-            }
-            catch (Exception e)
-            {
+                try
+                {
+                    //throw new NotImplementedException();
+                    Thread thread = new Thread(new ThreadStart(MonitorPrimsAwaitingSelect));
+                    thread.Start();
+                   // SetUpSimExportCommand(Client);
+                }
+                catch (Exception e)
+                {
+                }
             }
           
         }
 
-        //GridClient client;
+        //GridClient CurrentClient;
         TexturePipeline texturePipeline;
         volatile bool running;
 
@@ -54,11 +59,11 @@ namespace cogbot.Actions.SimExport
         public void SetUpSimExportCommand(GridClient client)
             //string firstName, string lastName, string password, string loginServer, string regionName, string filename)
         {
-            //client = client;
+            //CurrentClient = CurrentClient;
       
             running = true;
 
-            //client = new GridClient();
+            //CurrentClient = new GridClient();
             texturePipeline = new TexturePipeline(client, 10);
             texturePipeline.OnDownloadFinished += new TexturePipeline.DownloadFinishedCallback(texturePipeline_OnDownloadFinished);
             
@@ -70,6 +75,7 @@ namespace cogbot.Actions.SimExport
             client.Settings.ALWAYS_REQUEST_OBJECTS = true;
             client.Settings.STORE_LAND_PATCHES = true;
             client.Settings.SEND_AGENT_UPDATES = true;
+            client.Settings.OBJECT_TRACKING = true;
             client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
 
             client.Network.OnCurrentSimChanged += Network_OnCurrentSimChanged;
@@ -79,19 +85,19 @@ namespace cogbot.Actions.SimExport
             client.Objects.OnObjectUpdated += Objects_OnObjectUpdated;
             client.Parcels.OnSimParcelsDownloaded += new ParcelManager.SimParcelsDownloaded(Parcels_OnSimParcelsDownloaded);
             client.Parcels.OnParcelProperties += new ParcelManager.ParcelPropertiesCallback( On_ParcelProperties);
-              //client.Parcels.OnParcelProperties 
+              //CurrentClient.Parcels.OnParcelProperties 
 
-            //LoginParams loginParams = client.Network.DefaultLoginParams(firstName, lastName, password, "SimExport", "0.0.1");
+            //LoginParams loginParams = CurrentClient.Network.DefaultLoginParams(firstName, lastName, password, "SimExport", "0.0.1");
             //loginParams.URI = loginServer;
             //loginParams.Start = NetworkManager.StartLocation(regionName, 128, 128, 40);
 
-            //if (client.Network.Login(loginParams))
+            //if (CurrentClient.Network.Login(loginParams))
            // {
                 //Run();
            // }
             //else
             //{
-              //  WriteLine(String.Format("Login failed ({0}: {1}", client.Network.LoginErrorKey, client.Network.LoginMessage),
+              //  WriteLine(String.Format("Login failed ({0}: {1}", CurrentClient.Network.LoginErrorKey, CurrentClient.Network.LoginMessage),
                 //    Helpers.LogLevel.Error);
             //}
         }
@@ -348,12 +354,12 @@ namespace cogbot.Actions.SimExport
         {
             texturePipeline.Shutdown();
 
-            if (client.Network.Connected)
+            if (CurrentClient.Network.Connected)
             {
                 if (Program.Verbosity > 0)
                     WriteLine("Logging out");
 
-                client.Network.Logout();
+                CurrentClient.Network.Logout();
             }
 
             running = false;
@@ -365,16 +371,20 @@ namespace cogbot.Actions.SimExport
             {
                 try
                 {
-                    Primitive prim = primsAwaitingSelect.Dequeue(250);
-
-                    if (!prims.ContainsKey(prim.LocalID) && prim != null)
+                    if (primsAwaitingSelect.Count > 0)
                     {
-                        Client.Objects.SelectObject(Client.Network.CurrentSim, prim.LocalID);
-                        Thread.Sleep(20); // Hacky rate limiting
+                        Primitive prim = primsAwaitingSelect.Dequeue(250);
+
+                        if (!prims.ContainsKey(prim.LocalID) && prim != null)
+                        {
+                            Client.Objects.SelectObject(Client.Network.CurrentSim, prim.LocalID);
+                            Thread.Sleep(20); // Hacky rate limiting
+                        }
                     }
                 }
                 catch (InvalidOperationException)
                 {
+                    Thread.Sleep(20); // Hacky rate limiting
                 }
             }
         }
@@ -501,7 +511,7 @@ namespace cogbot.Actions.SimExport
             else
             {
                 Console.WriteLine("Usage: SimExport.exe [OPTION]...");
-                Console.WriteLine("An interactive client for exporting assets");
+                Console.WriteLine("An interactive CurrentClient for exporting assets");
                 Console.WriteLine("Options:");
                 argParser.WriteOptionDescriptions(Console.Out);
             }

@@ -5,7 +5,7 @@ namespace cogbot.Actions
 {
     public class MD5Command : Command
     {
-        public MD5Command(cogbot.TextForm testClient)
+        public MD5Command(BotClient testClient)
         {
             Name = "md5";
             Description = "Creates an MD5 hash from a given password. Usage: md5 [password]";

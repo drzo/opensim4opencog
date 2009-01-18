@@ -7,7 +7,7 @@ namespace cogbot.Actions
 {
     public class DebugCommand : Command
     {
-        public DebugCommand(cogbot.TextForm testClient)
+        public DebugCommand(BotClient testClient)
         {
             Name = "debug";
             Description = "Turn debug messages on or off. Usage: debug [level] where level is one of None, Debug, Error, Info, Warn";

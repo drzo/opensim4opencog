@@ -7,8 +7,8 @@ namespace cogbot.Actions
 {
     class Fly : Action
     {
-        public Fly(TextForm parent)
-            : base(parent)
+        public Fly(BotClient Client)
+            : base(Client)
         {
             helpString = "You start flying.";
             usageString = "To start flying type: \"fly\"";
@@ -18,7 +18,7 @@ namespace cogbot.Actions
         {
           //  base.acceptInput(verb, args);
 
-            parent.output("You are flying.");
+            WriteLine("You are flying.");
 
             if (args.str == "up")
             {
@@ -35,7 +35,7 @@ namespace cogbot.Actions
                 Client.Self.Fly(true);
             }
 
-            parent.describeNext = true;
+            Client.describeNext = true;
         }
     }
 }

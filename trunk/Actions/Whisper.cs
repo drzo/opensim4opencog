@@ -10,8 +10,8 @@ namespace cogbot.Actions
         public UUID currentAvatar;
         public UUID currentSession;
 
-        public Whisper(TextForm parent)
-            : base(parent)
+        public Whisper(BotClient Client)
+            : base(Client)
         {
             helpString = "Whisper a message to a user.";
             usageString = "To whisper a message to an avatar, type \"whisper to <avatar name>\"";
@@ -28,17 +28,16 @@ namespace cogbot.Actions
 
             if (to.Length > 0) {
                 Avatar avatar;
-                Listeners.Avatars avatars = (Listeners.Avatars)parent.listeners["avatars"];
-                if (!avatars.tryGetAvatar(to, out avatar))
+                if (!Client.WorldSystem.tryGetAvatar(to, out avatar))
                 {
-                    parent.output("I don't know who " + to + "is.");
+                    WriteLine("I don't know who " + to + "is.");
                     return;
                 }
                 currentAvatar = avatar.ID;
             }
             else if (currentAvatar == UUID.Zero)
             {
-                parent.output("Please provide a name to whisper to.");
+                WriteLine("Please provide a name to whisper to.");
                 return;
             }
 

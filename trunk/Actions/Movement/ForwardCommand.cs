@@ -5,7 +5,7 @@ namespace cogbot.Actions.Movement
 {
     class ForwardCommand : Command
     {
-        public ForwardCommand(cogbot.TextForm client)
+        public ForwardCommand(BotClient client)
         {
             Name = "forward";
             Description = "Sends the move forward command to the server for a single packet or a given number of seconds. Usage: forward [seconds]";

@@ -19,7 +19,7 @@ namespace OpenMetaverse.TestClient
         public string MasterName = String.Empty;
         public UUID MasterKey = UUID.Zero;
         public bool AllowObjectMaster = false;
-      //  public cogbot.TextForm ClientManager;
+      //  public cogbot.BotClient ClientManager;
         public VoiceManager VoiceManager;
         // Shell-like inventory commands need to be aware of the 'current' inventory folder.
         public InventoryFolder CurrentDirectory = null;
@@ -39,7 +39,7 @@ namespace OpenMetaverse.TestClient
 
             updateTimer = new System.Timers.Timer(500);
             updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(updateTimer_Elapsed);
-            Commands = cogbot.TextForm.SingleInstance.actions;
+            Commands = cogbot.BotClient.SingleInstance.actions;
             RegisterAllCommands(Assembly.GetExecutingAssembly());
 
             Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
@@ -94,7 +94,7 @@ namespace OpenMetaverse.TestClient
                         }
                         catch (Exception e)
                         {
-                            System.Console.WriteLine(e.ToString()+
+                            System.WriteLine(e.ToString()+
                             e.GetBaseException().ToString()+"\r\n In " + t.Name);
 
                         }
@@ -102,7 +102,7 @@ namespace OpenMetaverse.TestClient
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.ToString());
+                    WriteLine(e.ToString());
                 }
             }
         }
@@ -147,7 +147,7 @@ namespace OpenMetaverse.TestClient
             AgentDataUpdatePacket p = (AgentDataUpdatePacket)packet;
             if (p.AgentData.AgentID == sim.Client.Self.AgentID)
             {
-                Console.WriteLine("Got the group ID for " + sim.Client.ToString() + ", requesting group members...");
+                WriteLine("Got the group ID for " + sim.Client.ToString() + ", requesting group members...");
                 GroupID = p.AgentData.ActiveGroupID;
 
                 sim.Client.Groups.RequestGroupMembers(GroupID);
@@ -156,7 +156,7 @@ namespace OpenMetaverse.TestClient
 
         private void GroupMembersHandler(Dictionary<UUID, GroupMember> members)
         {
-            Console.WriteLine("Got " + members.Count + " group members.");
+            WriteLine("Got " + members.Count + " group members.");
             GroupMembers = members;
         }
 
@@ -181,11 +181,11 @@ namespace OpenMetaverse.TestClient
             if (im.FromAgentID == MasterKey || (GroupCommands && groupIM))
             {
                 // Received an IM from someone that is authenticated
-                Console.WriteLine("<{0} ({1})> {2}: {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM", im.Dialog, im.FromAgentName, im.Message, im.RegionID, im.Position);
+                WriteLine("<{0} ({1})> {2}: {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM", im.Dialog, im.FromAgentName, im.Message, im.RegionID, im.Position);
 
                 if (im.Dialog == InstantMessageDialog.RequestTeleport)
                 {
-                    Console.WriteLine("Accepting teleport lure.");
+                    WriteLine("Accepting teleport lure.");
                     Self.TeleportLureRespond(im.FromAgentID, true);
                 }
                 else if (
@@ -198,7 +198,7 @@ namespace OpenMetaverse.TestClient
             else
             {
                 // Received an IM from someone that is not the bot's master, ignore
-                Console.WriteLine("<{0} ({1})> {2} (not master): {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM", im.Dialog, im.FromAgentName, im.Message,
+                WriteLine("<{0} ({1})> {2} (not master): {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM", im.Dialog, im.FromAgentName, im.Message,
                     im.RegionID, im.Position);
                 return;
             }
@@ -220,9 +220,9 @@ namespace OpenMetaverse.TestClient
             return true;
         }
 
-        internal cogbot.TextForm GetClientManager()
+        internal cogbot.BotClient GetClientManager()
         {
-            return cogbot.TextForm.SingleInstance;
+            return cogbot.BotClient.SingleInstance;
         }
     }
 }

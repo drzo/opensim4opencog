@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class LogoutCommand : Command
     {
-        public LogoutCommand(cogbot.TextForm testClient)
+        public LogoutCommand(BotClient testClient)
         {
             Name = "logout";
             Description = "Log this avatar out";
@@ -18,7 +18,7 @@ namespace cogbot.Actions
         public override string Execute(string[] args, UUID fromAgentID)
         {
             string name = Client.ToString();
-            parent.LogOut(Client);
+			Client.ClientManager.Logout(Client);
             return "Logged " + name + " out";
         }
     }

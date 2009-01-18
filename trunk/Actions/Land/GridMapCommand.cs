@@ -8,7 +8,7 @@ namespace cogbot.Actions
 {
     public class GridMapCommand : Command
     {
-        public GridMapCommand(cogbot.TextForm testClient)
+        public GridMapCommand(BotClient testClient)
         {
             Name = "gridmap";
             Description = "Downloads all visible information about the grid map";

@@ -10,7 +10,7 @@ namespace cogbot.Actions
     {
         UUID ToGroupID = UUID.Zero;
         ManualResetEvent WaitForSessionStart = new ManualResetEvent(false);
-        public ImGroupCommand(cogbot.TextForm testClient)
+        public ImGroupCommand(BotClient testClient)
         {
 
             Name = "imgroup";

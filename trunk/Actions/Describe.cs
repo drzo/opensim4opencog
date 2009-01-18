@@ -7,30 +7,30 @@ namespace cogbot.Actions
 {
     class Describe : Action
     {
-        public Describe(TextForm parent)
-            : base(parent)
+        public Describe(BotClient Client)
+            : base(Client)
         {
         }
 
         public override string makeHelpString()
         {
             string str = "Describe ";
-            string[] names = new string[parent.describers.Count];
-            parent.describers.Keys.CopyTo(names, 0);
-            for (int i = 0; i < parent.describers.Count - 1; ++i)
+            string[] names = new string[Client.describers.Count];
+            Client.describers.Keys.CopyTo(names, 0);
+            for (int i = 0; i < Client.describers.Count - 1; ++i)
                 str += names[i] + ", ";
-            str += "or " + names[parent.describers.Count - 1] + ".";
+            str += "or " + names[Client.describers.Count - 1] + ".";
             return str;
         }
 
         public override string makeUsageString()
         {
             string str = "\"describe\": describes everything around you \r\n you can also type ";
-            string[] names = new string[parent.describers.Count];
-            parent.describers.Keys.CopyTo(names, 0);
-            for (int i = 0; i < parent.describers.Count - 1; ++i)
+            string[] names = new string[Client.describers.Count];
+            Client.describers.Keys.CopyTo(names, 0);
+            for (int i = 0; i < Client.describers.Count - 1; ++i)
                 str += "\"describe " + names[i] + "\", ";
-            str += "or \"describe " + names[parent.describers.Count - 1] + "\" to describe them respectively.";
+            str += "or \"describe " + names[Client.describers.Count - 1] + "\" to describe them respectively.";
 
             return str;
         }
@@ -42,40 +42,38 @@ namespace cogbot.Actions
             string subject = args.objectPhrase;
             if (subject.Length == 0)
             {
-                parent.describeAll();
-                parent.describeSituation();
+                Client.describeAll();
+                Client.describeSituation();
             }
             else
             {
-                if (parent.describers.ContainsKey(subject))
-                    parent.describers[subject].Invoke(true);
+                if (Client.describers.ContainsKey(subject))
+                    Client.describers[subject].Invoke(true);
                 else
                 {
                     Avatar avatar;
-                    Listeners.Avatars avatars = (Listeners.Avatars)parent.listeners["avatars"];
-                    if (avatars.tryGetAvatar(subject, out avatar))
-                        avatars.describeAvatar(avatar);
+                    if (Client.WorldSystem.tryGetAvatar(subject, out avatar))
+                        Client.WorldSystem.describeAvatar(avatar);
                     else
                     {
                         Primitive prim;
-                        Listeners.Objects objects = (Listeners.Objects)parent.listeners["objects"];
-                        if (objects.tryGetPrim(subject, out prim))
-                            objects.describePrim(prim);
+                        if (Client.WorldSystem.tryGetPrim(subject, out prim))
+                            Client.WorldSystem.describePrim(prim);
                         else
                         {
                             if (subject == "inventory")
                             {
-                                //parent.ListObjectsFolder();
-                                parent.PrintInventoryAll();
+                                //Client.ListObjectsFolder();
+                                Client.PrintInventoryAll();
                             }
                             else
-                            parent.output("I don't know about " + subject + ".");
+                            WriteLine("I don't know about " + subject + ".");
                         }
                     }
                 }
             }
 
-            parent.describeNext = false;
+            Client.describeNext = false;
         }
     }
 }

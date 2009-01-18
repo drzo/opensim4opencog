@@ -5,7 +5,7 @@ namespace cogbot.Actions.Movement
 {
     class RotateCommand : Command
     {
-        public RotateCommand(cogbot.TextForm client)
+        public RotateCommand(BotClient client)
         {
             Name = "rotate";
             Description = "Sends the RotateCommand command to the server for a single packet or a given number of seconds. Usage: rotate [180]";

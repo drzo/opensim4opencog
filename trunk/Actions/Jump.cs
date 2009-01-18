@@ -6,8 +6,8 @@ namespace cogbot.Actions
 {
     class Jump : Action
     {
-        public Jump(TextForm parent)
-            : base(parent)
+        public Jump(BotClient Client)
+            : base(Client)
         {
             helpString = "Jump.";
             usageString = "to Jump type \"jump\""; ;
@@ -17,10 +17,12 @@ namespace cogbot.Actions
         {
           //  base.acceptInput(verb, args);
 
-            parent.output("You jumped.");
+            WriteLine("You jumped.");
             Client.Self.Jump(true);
+            System.Threading.Thread.Sleep(500);
+            Client.Self.Jump(false);
 
-            parent.describeNext = true;
+            Client.describeNext = true;
         }
     }
 }

@@ -6,10 +6,10 @@ namespace cogbot.Actions
 {
     public class ScriptCommand : Command
     {
-        public ScriptCommand(cogbot.TextForm testClient)
+        public ScriptCommand(BotClient testClient)
         {
             Name = "script";
-            Description = "Reads cogbot.TextForm commands from a file. One command per line, arguments separated by spaces. Usage: script [filename]";
+            Description = "Reads BotClient commands from a file. One command per line, arguments separated by spaces. Usage: script [filename]";
             Category = CommandCategory.TestClient;
         }
 

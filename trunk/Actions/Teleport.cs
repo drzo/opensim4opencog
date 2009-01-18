@@ -8,8 +8,8 @@ namespace cogbot.Actions
 #pragma warning disable 0168
     class Teleport : Action
     {
-        public Teleport(TextForm parent)
-            : base(parent)
+        public Teleport(BotClient Client)
+            : base(Client)
         {
             helpString = "Teleport to a location.";
             usageString = "To teleport to a location, type \"teleport to <location name>\"";
@@ -18,13 +18,13 @@ namespace cogbot.Actions
 
         public void On_Teleport(string message, AgentManager.TeleportStatus status, AgentManager.TeleportFlags flags)
         {            
-            parent.describeNext = false;
+            Client.describeNext = false;
             if (status == AgentManager.TeleportStatus.Finished)
             {
-                parent.output(message);
-                parent.describePeople(false);
-                parent.describeObjects(false);
-                parent.describeBuildings(false);
+                WriteLine(message);
+                Client.describePeople(false);
+                Client.describeObjects(false);
+                Client.describeBuildings(false);
             }
         }
 
@@ -35,7 +35,7 @@ namespace cogbot.Actions
             string[] tokens = args.prepPhrases["to"].Split(null);
             if (tokens.Length == 0)
             {
-                parent.output("Provide somewhere to teleport to.");
+                WriteLine("Provide somewhere to teleport to.");
             }
             else
             {
@@ -67,11 +67,11 @@ namespace cogbot.Actions
                         to += tokens[i] + " ";
                     to = to.Trim();
                 }
-                parent.output("Trying to teleport to " + to + ".");
+                WriteLine("Trying to teleport to " + to + ".");
                 Client.Self.Teleport(to, new Vector3(128, 128, 0));
             }
 
-            parent.describeNext = false;
+            Client.describeNext = false;
         }
     }
 #pragma warning restore 0168

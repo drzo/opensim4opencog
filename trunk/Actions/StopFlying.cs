@@ -6,8 +6,8 @@ namespace cogbot.Actions
 {
     class StopFlying : Action
     {
-        public StopFlying(TextForm parent)
-            : base(parent)
+        public StopFlying(BotClient Client)
+            : base(Client)
         {
             helpString = "You stop flying.";
             usageString = "To stop flying type: \"stop-flying\"";
@@ -17,10 +17,10 @@ namespace cogbot.Actions
         {
          //   base.acceptInput(verb, args);
 
-            parent.output("You stopped flying.");
+            WriteLine("You stopped flying.");
             Client.Self.Fly(false);
 
-            parent.describeNext = true;
+            Client.describeNext = true;
         }
     }
 }

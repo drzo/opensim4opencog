@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using OpenMetaverse.Utilities;
 
 namespace cogbot.Actions
 {
@@ -14,27 +13,24 @@ namespace cogbot.Actions
         private int VoiceLocalID = -1;
         private string VoiceChannelURI = null;
 
-        public ParcelVoiceInfoCommand(cogbot.TextForm testClient)
+        public ParcelVoiceInfoCommand(BotClient testClient)
         {
             Name = "voiceparcel";
             Description = "obtain parcel voice info. Usage: voiceparcel";
             Category = CommandCategory.Other;
 
-          //  Client = testClient;
+            Client = testClient;
         }
 
         private bool registered = false;
 
         private bool IsVoiceManagerRunning() 
         {
-            VoiceManager voiceManager = parent.GetVoiceManager();
-
-            if (null == voiceManager) return false;
+            if (null == Client.VoiceManager) return false;
             
             if (!registered)
             {
-
-                voiceManager.OnParcelVoiceInfo += Voice_OnParcelVoiceInfo;
+                Client.VoiceManager.OnParcelVoiceInfo += Voice_OnParcelVoiceInfo;
                 registered = true;
             }
             return true;           
@@ -43,12 +39,10 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            VoiceManager voiceManager = parent.GetVoiceManager();
-
             if (!IsVoiceManagerRunning()) 
                 return String.Format("VoiceManager not running for {0}", fromAgentID);
 
-            if (!voiceManager.RequestParcelVoiceInfo()) 
+            if (!Client.VoiceManager.RequestParcelVoiceInfo()) 
             {
                 return "RequestParcelVoiceInfo failed. Not available for the current grid?";
             }

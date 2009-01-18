@@ -5,7 +5,7 @@ namespace cogbot.Actions
 {
     public class PrimInfoCommand : Command
     {
-        public PrimInfoCommand(cogbot.TextForm testClient)
+        public PrimInfoCommand(BotClient testClient)
         {
             Name = "priminfo";
             Description = "Dumps information about a specified prim. " + "Usage: priminfo [prim-uuid]";
@@ -27,32 +27,7 @@ namespace cogbot.Actions
 
                 if (target != null)
                 {
-                    Logger.Log("Light: " + target.Light.ToString(), Helpers.LogLevel.Info, Client);
-
-                    if (target.ParticleSys.CRC != 0)
-                        Logger.Log("Particles: " + target.ParticleSys.ToString(), Helpers.LogLevel.Info, Client);
-
-                    Logger.Log("TextureEntry:", Helpers.LogLevel.Info, Client);
-                    if (target.Textures != null)
-                    {
-                        Logger.Log(String.Format("Default texure: {0}",
-                            target.Textures.DefaultTexture.TextureID.ToString()),
-                            Helpers.LogLevel.Info);
-
-                        for (int i = 0; i < target.Textures.FaceTextures.Length; i++)
-                        {
-                            if (target.Textures.FaceTextures[i] != null)
-                            {
-                                Logger.Log(String.Format("Face {0}: {1}", i,
-                                    target.Textures.FaceTextures[i].TextureID.ToString()),
-                                    Helpers.LogLevel.Info, Client);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Logger.Log("null", Helpers.LogLevel.Info, Client);
-                    }
+                    decscribePrim(target);
 
                     return "Done.";
                 }
@@ -64,6 +39,36 @@ namespace cogbot.Actions
             else
             {
                 return "Usage: priminfo [prim-uuid]";
+            }
+        }
+
+        private void decscribePrim(Primitive target)
+        {
+            WriteLine("PrimInfo: " + target.ToString());
+            WriteLine(" Type: " + Client.WorldSystem.primType(target));
+            WriteLine(" Light: " + target.Light);
+
+            if (target.ParticleSys.CRC != 0)
+                WriteLine("Particles: " + target.ParticleSys);
+
+            WriteLine(" TextureEntry:");
+            if (target.Textures != null)
+            {
+                WriteLine(String.Format("  Default texure: {0}",
+                    target.Textures.DefaultTexture.TextureID.ToString()));
+
+                for (int i = 0; i < target.Textures.FaceTextures.Length; i++)
+                {
+                    if (target.Textures.FaceTextures[i] != null)
+                    {
+                        WriteLine(String.Format("  Face {0}: {1}", i,
+                            target.Textures.FaceTextures[i].TextureID.ToString()));
+                    }
+                }
+            }
+            else
+            {
+                Logger.Log("decscribePrim null", Helpers.LogLevel.Info, Client);
             }
         }
     }

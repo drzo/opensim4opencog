@@ -9,9 +9,9 @@ namespace cogbot.Actions
         protected string firstName = "Eelke";
 		protected string lastName = "Forder";
 		protected string password = "geheim";
-        
-		public Login(TextForm parent)
-            : base(parent)
+
+        public Login(BotClient Client)
+            : base(Client)
         {
             helpString = "Login to Secondlife";
 			usageString = "login <first name> <last name> <password>";
@@ -24,31 +24,34 @@ namespace cogbot.Actions
 
             if ((tokens.Length!=1)&& (tokens.Length != 3))
             {
-                parent.output("Please enter login FirstName LastName and Password to login to the SL");
+                WriteLine("Please enter login FirstName LastName and Password to login to the SL");
                 return;
             }
             else
             {
-                if (tokens.Length == 3)
+                if (tokens.Length > 0 && !String.IsNullOrEmpty(tokens[0]))
                 {
-                    firstName = tokens[0];
-                    lastName = tokens[1];
-                    password = tokens[2];
+                    Client.BotLoginParams.FirstName = tokens[0];
+                }
+                if (tokens.Length > 1)
+                {
+                    Client.BotLoginParams.LastName = tokens[1];
+                }
+                if (tokens.Length > 2)
+                {
+                    Client.BotLoginParams.Password = tokens[2];
+                }
+                if (tokens.Length > 3)
+                {
+                    Client.BotLoginParams.URI = tokens[3];
+                }
+                if (!Client.Network.Connected && !Client.Network.LoginMessage.StartsWith("Logging"))
+                {
+                    Client.Settings.LOGIN_SERVER = Client.BotLoginParams.URI;// TextForm.SingleInstance.config.simURL; // "http://127.0.0.1:8002/";
+                    Client.Network.Login(Client.BotLoginParams.FirstName, Client.BotLoginParams.LastName, Client.BotLoginParams.Password, "OnRez", "UNR");
                 }
                 else
-                {
-                 firstName = parent.config.firstName;// "Eelke";
-		         lastName = parent.config.lastName; //"Forder";
-		         password = parent.config.password; //"geheim";
-
-                }
-                if (!Client.Network.Connected)
-                {
-                    Client.Settings.LOGIN_SERVER = parent.config.simURL; // "http://127.0.0.1:8002/";
-                    Client.Network.Login(firstName, lastName, password, "TextSL", "UNR");
-                }
-                else
-                    parent.output("You are already logged in.");
+                    WriteLine("You are already logged in.");
             }
 		}
     }

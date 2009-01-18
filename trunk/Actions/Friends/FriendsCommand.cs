@@ -5,7 +5,7 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
 
-// the Namespace used for all cogbot.TextForm commands
+// the Namespace used for all BotClient commands
 namespace cogbot.Actions
 {
     /// <summary>
@@ -16,8 +16,8 @@ namespace cogbot.Actions
         /// <summary>
         /// Constructor for FriendsCommand class
         /// </summary>
-        /// <param name="testClient">A reference to the cogbot.TextForm object</param>
-        public FriendsCommand(cogbot.TextForm testClient)
+        /// <param name="testClient">A reference to the BotClient object</param>
+        public FriendsCommand(BotClient testClient)
         {
             // The name of the command
             Name = "friends";

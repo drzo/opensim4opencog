@@ -23,7 +23,7 @@ namespace cogbot.Tutorials
         private int CommandCnt = 0;
         private int prevMode; 
 
-        public Tutorial(string TutorialPath, TextForm _parent)
+        public Tutorial(string TutorialPath, TextForm _parent, BotClient botclient)
         {
             helpString = "No information for what this tutorial will teach.";
             usageString = "No usage instruction for this tutorial.";
@@ -31,7 +31,7 @@ namespace cogbot.Tutorials
                 XMLTutorial = new XmlReader(TutorialPath);
             else { };
             parent = _parent;
-            client = parent.client;                   
+            client = botclient;// parent.CurrentClient;                   
         }
 
         public virtual string makeHelpString()

@@ -5,7 +5,7 @@ namespace cogbot.Actions
 {
     public class PacketLogCommand : Command
     {
-        public PacketLogCommand(cogbot.TextForm testClient)
+        public PacketLogCommand(BotClient testClient)
         {
             Name = "packetlog";
             Description = "Logs a given number of packets to an xml file. Usage: packetlog 10 tenpackets.xml";

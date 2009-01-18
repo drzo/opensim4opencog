@@ -8,10 +8,10 @@ namespace cogbot.Actions
     public class ViewNotecardCommand : Command
     {
         /// <summary>
-        /// TestClient command to download and display a notecard asset
+        /// BotClient command to download and display a notecard asset
         /// </summary>
         /// <param name="testClient"></param>
-        public ViewNotecardCommand(TextForm testClient)
+        public ViewNotecardCommand(BotClient testClient)
         {
             Name = "viewnote";
             Description = "Downloads and displays a notecard asset";
