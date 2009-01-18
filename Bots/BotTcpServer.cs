@@ -11,7 +11,7 @@ using OpenMetaverse;
 
 namespace cogbot.Utilities
 {
-    public class TcpServer
+    public class TcpServer : BotClient.BotMessageSubscriber
     {
         public Thread thrSvr;
         BotClient parent;
@@ -23,6 +23,7 @@ namespace cogbot.Utilities
             parent = botclient;
             client = botclient;
             serverPort = port;
+            botclient.AddBotMessageSubscriber(this);
 
 //            config = parent.config;
         }
@@ -142,6 +143,7 @@ namespace cogbot.Utilities
             }
             return allMsgs;
         }
+
 
         public void closeTcpListener()
         {
@@ -406,14 +408,16 @@ namespace cogbot.Utilities
             parent.enqueueLispTask(lispCodeString);
         }
 
-        internal void msgClient(string serverMessage)
+        #region BotMessageSubscriber Members
+
+        void BotClient.BotMessageSubscriber.msgClient(string serverMessage)
         {
             //   System.Console.Out.WriteLine("msgClient: " + serverMessage);
             if (!IsClientConnected())
             {
                 lock (whileClientIsAway)
-                whileClientIsAway.Enqueue(serverMessage);
-            return;
+                    whileClientIsAway.Enqueue(serverMessage);
+                return;
             }
             if (IsClientConnected())
             {
@@ -427,7 +431,20 @@ namespace cogbot.Utilities
                              0, serverMessage.Length);
                 }
             }
+
         }
+
+        #endregion
+
+        #region BotMessageSubscriber Members
+
+
+        void BotClient.BotMessageSubscriber.ShuttingDown()
+        {
+            ((TcpServer)this).closeTcpListener();
+        }
+
+        #endregion
 
         public bool IsClientConnected()
         {
@@ -436,17 +453,12 @@ namespace cogbot.Utilities
 
         internal void taskTick(string serverMessage)
         {
-            if ((serverMessage != "") && (ns != null) && (tcpStreamWriter != null))
+            if (serverMessage != "")
             {
-                // lock it only if we need to and its there to use
-                lock (tcpStreamWriter)
-                {
-
-                    tcpStreamWriter.WriteLine(serverMessage);
-                    tcpStreamWriter.WriteLine();
-                    ns.Write(Encoding.ASCII.GetBytes(serverMessage.ToCharArray()), 0, serverMessage.Length);
-                }
+                ((BotClient.BotMessageSubscriber)this).msgClient(serverMessage);
             }        
         }
+
+
     }
 }
