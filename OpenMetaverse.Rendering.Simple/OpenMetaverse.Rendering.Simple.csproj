@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{7CF114AA-9506-466F-8F8B-BC1F53347DBC}</ProjectGuid>
+    <ProjectGuid>{7A449F51-FACC-43F9-AA00-B11FBEC062C5}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -68,12 +68,12 @@
   <ItemGroup>
     <ProjectReference Include="..\OpenMetaverse\OpenMetaverse.csproj">
       <Name>OpenMetaverse</Name>
-      <Project>{67428553-B58D-4FAD-9A70-668D53414780}</Project>
+      <Project>{8EE3A1D5-0E67-4BCF-9D2D-ED743DD553CB}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\OpenMetaverse\Types\OpenMetaverseTypes.csproj">
       <Name>OpenMetaverseTypes</Name>
-      <Project>{0EC53F0D-77AA-46E6-B280-0C5B5334E487}</Project>
+      <Project>{F9C34C5E-1F43-4C66-8B13-5D00C6D8B1F4}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>

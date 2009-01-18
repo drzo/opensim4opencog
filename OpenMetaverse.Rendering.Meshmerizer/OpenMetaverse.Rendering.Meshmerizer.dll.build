@@ -11,14 +11,14 @@
 			  <fileset basedir=".">
 			  </fileset>
 		  </copy>
-		  <csc target="library" debug="${build.debug}" unsafe="True" warnaserror="False" define="TRACE;DEBUG" nostdlib="False" main="" output="${build.dir}/${project::get-name()}.dll">
+		  <csc target="library" debug="${build.debug}" unsafe="True" warnaserror="False" define="TRACE" nostdlib="False" main="" output="${build.dir}/${project::get-name()}.dll">
 			  <resources prefix="OpenMetaverse.Rendering.Meshmerizer" dynamicprefix="true" >
 			  </resources>
 			  <sources failonempty="true">
+				  <include name="Extruder.cs" />
+				  <include name="Meshmerizer.cs" />
 				  <include name="MeshmerizerTypes.cs" />
 				  <include name="PrimMesher.cs" />
-				  <include name="Meshmerizer.cs" />
-				  <include name="Extruder.cs" />
 			  </sources>
 			  <references basedir="${project::get-base-directory()}">
 				  <lib>
