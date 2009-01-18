@@ -1215,6 +1215,9 @@ namespace cogbot
 				if (TextForm.SingleInstance.config.startupClientLisp.Length > 1) {
 					enqueueLispTask("(progn "+TextForm.SingleInstance.config.startupClientLisp+")");
 				}
+                taskInterperter.Intern("clientManager", ClientManager);
+                taskInterperter.Intern("Client", this);
+                taskInterperter.Intern("thisClient", this);
 				output("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
 			} catch (Exception e) {
 				output("!Exception: " + e.GetBaseException().Message);
@@ -1295,9 +1298,6 @@ namespace cogbot
 				lastcode = thisTask.code;
 				string serverMessage = "";
 				thisTask.results = "'(unevaluated)";
-				taskInterperter.Intern("clientManager", ClientManager);
-				taskInterperter.Intern("Client", this);
-				taskInterperter.Intern("thisClient", this);
 				taskInterperter.Intern("thisTask", thisTask);
 				//should make the following safer ...
 				//taskInterperter.Intern("tcpReader", tcpStreamReader);
