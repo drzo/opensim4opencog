@@ -12,7 +12,10 @@ namespace cogbot.Listeners
             RegisterAll();
         }
 
-
+        ~DebugAllEvents()
+        {
+            UnregisterAll();
+        }
 
         public override bool BooleanOnEvent(string eventName, string[] paramNames, Type[] paramTypes, params object[] parameters)
         {
