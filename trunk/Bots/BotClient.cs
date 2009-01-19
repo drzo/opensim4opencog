@@ -1359,47 +1359,42 @@ namespace cogbot
 
 		}
 
-		public string evalLispString(string lispCode)
-		{
-			ScriptInterpreter interpreter = taskInterperter.newInterpreter();
-			StringReader stringCodeReader = new System.IO.StringReader(lispCode);
-			string results = "'(unevaluated)";
-			subtask thisTask = new subtask();
-			thisTask.requeue = false;
+        public string evalLispString(string lispCode)
+        {
+            try
+            {
+                if (lispCode == null || lispCode.Length == 0) return null;
+                if (taskInterperter == null)
+                {
+                    output("runTaskInterperter ... '" + taskInterperterType + "'");
+                    taskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
+                    taskInterperter.LoadFile("boot.lisp");
+                    taskInterperter.LoadFile("extra.lisp");
+                    taskInterperter.LoadFile("cogbot.lisp");
+                    taskInterperter.Intern("thisClient", this);
+                    taskInterperter.Intern("clientManager", ClientManager);
 
-			try {
-				output("Load Boot:" + interpreter.LoadFile("boot.lisp").ToString());
-				output("Load Boot:" + interpreter.LoadFile("extra.lisp").ToString());
-				interpreter.Intern("thisClient", this);
-				interpreter.Intern("thisTask", thisTask);
+                }
+                //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
+                output("Eval> " + lispCode);
+                Object r = null;
+                StringReader stringCodeReader = new StringReader(lispCode);
+                r = taskInterperter.Read("console", stringCodeReader);
+                if (taskInterperter.Eof(r))
+                    return r.ToString();
+                return taskInterperter.Str(taskInterperter.Eval(r));
+            }
+            catch (Exception e)
+            {
+                output("!Exception: " + e.GetBaseException().Message);
+                output("error occured: " + e.Message);
+                output("        Stack: " + e.StackTrace.ToString());
+                return null;
+            }
+        }
 
-			} catch (Exception e) {
-				Console.Error.WriteLine(e.ToString());
-			}
-			try {
-				//lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;
-
-				output("Eval> " + lispCode);
-				Object r = null;
-				try {
-					r = interpreter.Read("console", stringCodeReader);
-					if (interpreter.Eof(r))
-						return results;
-				} catch {
-					throw;
-				}
-				Object x = interpreter.Eval(r);
-				results = interpreter.Str(x);
-				output("Results>" + results);
-				output("continueTask=" + thisTask.requeue.ToString());
-				return results;
-			} catch (Exception e) {
-				output("!Exception: " + e.GetBaseException().Message);
-				output("error occured: " + e.Message);
-				output("        Stack: " + e.StackTrace.ToString());
-				return results;
-			}
-// TODO's
+	
+        // TODO's
 			// Play Animations
 			// private static UUID type_anim_uuid = new UUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
 			// Client.Self.AnimationStart(type_anim_uuid,false);
@@ -1414,7 +1409,7 @@ namespace cogbot
 			// Reflect events into lisp
 			// 
 
-		}
+
 
 		/// <summary>
 		/// Initialize everything that needs to be initialized once we're logged in.

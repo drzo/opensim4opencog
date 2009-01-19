@@ -6,7 +6,10 @@
 
 (def (create-httpserver port &opt (botname ""))
     (clientManager.CreateHttpServer port botname))
-    
+
+(def-macro (enqueue lispTask)
+    `(thisClient.enqueueLispTask (str ~lispTask)))
+        
 ;----------------------------------
 ; Login and Network events
 ;----------------------------------
