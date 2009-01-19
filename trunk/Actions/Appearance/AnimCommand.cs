@@ -1,5 +1,7 @@
 using System;
 using OpenMetaverse;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace cogbot.Actions
 {
@@ -12,39 +14,51 @@ namespace cogbot.Actions
             Description = "Do a amination or gesture.  Usage:  anim [1-10] aminname";
             Category = CommandCategory.Appearance;
         }
-
+       
         public override string Execute(string[] args, UUID fromAgentID)
         {
             if (args.Length < 1)
-                return  "Usage:  anim [1-10] HOVER";
-            int time = 1;
+            {
+                ICollection<string> list = Listeners.WorldObjects.GetAnimationList();
+               WriteLine(Client.argsListString(list));
+               return "Usage:  anim [seconds] HOVER [seconds] CLAP JUMP STAND";
+           }
+            int time = 1300; //should be long enbough for most animations
+            List<KeyValuePair<UUID, int>> amins = new List<KeyValuePair<UUID, int>>();
             for (int i = 0; i < args.Length; i++)
             {
+                string a = args[i];
+                try
+                {
+                    float ia = float.Parse(a);
+                    if (ia > 0.0)
+                    {
+                        time = (int)(ia * 1000);
+                        continue;
+                    }
+                }
+                catch (Exception) { }
+                UUID anim = Listeners.WorldObjects.GetAnimationUUID(a);
 
+                if (anim == UUID.Zero)
+                {
+                    if (a.Contains("-")) 
+                    anim = UUID.Parse(a);
+                }
+                if (anim == UUID.Zero)
+                {
+                    WriteLine("unknown animation " + a);
+                    continue;
+                }
+                amins.Add(new KeyValuePair<UUID,int>(anim,time));
             }
-            string target = String.Empty;
-            bool bake = true;
-
-            for (int ct = 0; ct < args.Length; ct++)
-            {
-                if (args[ct].Equals("nobake"))
-                    bake = false;
-                else
-                    target = target + args[ct] + " ";
+            foreach(KeyValuePair<UUID,int> anim in amins) {
+                Client.Self.AnimationStart(anim.Key, true);
+                WriteLine("Run anim " + Listeners.WorldObjects.GetAnimationName(anim.Key) + " for " + anim.Value/1000 + " seconds.");
+                Thread.Sleep(anim.Value);
+                Client.Self.AnimationStop(anim.Key, true);
             }
-
-            target = target.TrimEnd();
-
-            try
-            {
-                Client.Appearance.WearOutfit(target.Split('/'), bake);
-            }
-            catch (InvalidOutfitException ex)
-            {
-                return "Invalid outfit (" + ex.Message + ")";
-            }
-
-            return String.Empty;
+            return "Ran "+amins.Count+" amins";
         }
     }
 }

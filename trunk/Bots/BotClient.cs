@@ -443,22 +443,19 @@ namespace cogbot
                 msgClient(msg);
 			}
 		}
-		public string argsListString(Array args)
-		{
-			switch (args.Length) {
-			case 0:
-				return "";
-			case 1:
-				return argString(args.GetValue(0));
-			default:
-				String msg = argString(args.GetValue(0));
-				for (int i = 1; i < args.Length; i++) {
-					msg += " ";
-					msg += argString(args.GetValue(i));
-				}
-				return msg;
-			}
-		}
+        public string argsListString(IEnumerable args)
+        {
+            IEnumerator enumer = args.GetEnumerator();
+            if (!enumer.MoveNext()) return "";
+            String msg = argString(enumer.Current);
+            while (enumer.MoveNext())
+            {
+                msg += " ";
+                msg += argString(enumer.Current);
+            }
+            return msg;
+
+        }
 
 		public string argString(object arg)
 		{
@@ -553,6 +550,11 @@ namespace cogbot
 			if (type.Namespace.StartsWith("System")) {
 				return "" + arg;
 			}
+            if (arg is IEnumerable)
+            {
+                IEnumerable a = (IEnumerable)arg;
+                return "'(/*" + type + "*/" + argsListString(a) + ")";
+            }
 			if (type.IsValueType) {
 				String tostr = "{" + arg + "";
 				foreach (FieldInfo fi in type.GetFields())

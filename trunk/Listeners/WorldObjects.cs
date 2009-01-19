@@ -783,23 +783,6 @@ namespace cogbot.Listeners
 
 		}
 
-		static Dictionary<string, string> animationName = new Dictionary<string, string>();
-		static String GetAnimationName(UUID uuid)
-		{
-			String uuidname = uuid.ToString();
-			if (animationName.ContainsKey(uuidname)) {
-				return animationName[uuidname];
-			}
-			foreach (FieldInfo fi in typeof(Animations).GetFields())
-			{
-				if (fi.GetValue(null).Equals(uuid)) {
-					animationName[uuidname] = fi.Name;
-					return fi.Name;
-				}
-			}
-			return uuidname;
-		}
-
 		public void CalcStats(Primitive prim)
 		{
 			if (prim is Avatar)	return;
@@ -1218,5 +1201,76 @@ namespace cogbot.Listeners
 
 		}
 
-	}
+        static Dictionary<string, string> animationName = new Dictionary<string, string>();
+        static Dictionary<string, string> nameAnimation = new Dictionary<string, string>();
+
+        static void FillAnimationNames()
+        {
+            lock (animationName)
+            {
+                if (animationName.Count > 0) return;
+
+
+                foreach (FieldInfo fi in typeof(Animations).GetFields())
+                {
+                    string uid = "" + fi.GetValue(null);
+                    animationName[uid] = fi.Name;
+                    nameAnimation[fi.Name] = uid;
+                }
+            }
+        }
+        public static ICollection<string> GetAnimationList()
+        {
+            FillAnimationNames();
+            return nameAnimation.Keys;
+        }
+        public static String GetAnimationName(UUID uuid)
+        {
+            FillAnimationNames();
+            String uuidname = uuid.ToString();
+            if (animationName.ContainsKey(uuidname))
+            {
+                return animationName[uuidname];
+            }
+            return uuidname;
+        }
+
+
+        public static UUID GetAnimationUUID(string a)
+        {
+            a = a.ToLower();
+            FillAnimationNames();
+            foreach (String name in nameAnimation.Keys)
+            {
+                if (name.ToLower().Equals(a))
+                {
+                    return UUID.Parse(nameAnimation[name]);
+                }
+            }
+
+            foreach (String uuidname in animationName.Keys)
+            {
+                if (animationName[uuidname].ToLower().Equals(a))
+                {
+                    return UUID.Parse(uuidname);
+                }
+            }
+            foreach (String name in nameAnimation.Keys)
+            {
+                if (name.ToLower().Contains(a))
+                {
+                    return UUID.Parse(nameAnimation[name]);
+                }
+            }
+            foreach (String uuidname in animationName.Keys)
+            {
+                if (animationName[uuidname].ToLower().Contains(a))
+                {
+                    return UUID.Parse(uuidname);
+                }
+            }
+            return UUID.Zero;
+
+        }
+    }
 }

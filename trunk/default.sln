@@ -10,7 +10,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenMetaverse.Utilities", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotLisp", "dotlisp\DotLisp.csproj", "{8847E790-0CC0-4D8F-A9BA-2AD19164FD50}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cogbot", "..\opensim4opencog\cogbot.csproj", "{2022AD56-9913-468C-9D3B-42172FFC9FE4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cogbot", "cogbot.csproj", "{2022AD56-9913-468C-9D3B-42172FFC9FE4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenMetaverse.Http", "OpenMetaverse.Http\OpenMetaverse.Http.csproj", "{CBCE0673-F28A-4FED-BDA3-4BFC38426F44}"
 EndProject
@@ -23,6 +23,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenMetaverse.GUI", "OpenMetaverse.GUI\OpenMetaverse.GUI.csproj", "{63ED1F28-3564-41E6-BF07-4222E07EE837}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Files", "Solution Files", "{C52B6280-0FE2-46B8-9D3C-D8364C1DB8D9}"
+EndProject
+Project("{4F174C21-8C12-11D0-8340-0000F80270F8}") = "Bin Config", "bin\Bin Config.dbp", "{96AF3B5A-F009-4124-B31F-300795FA5146}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -74,5 +76,8 @@ Global
 		{63ED1F28-3564-41E6-BF07-4222E07EE837}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63ED1F28-3564-41E6-BF07-4222E07EE837}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63ED1F28-3564-41E6-BF07-4222E07EE837}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal
