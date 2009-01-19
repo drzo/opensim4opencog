@@ -1389,7 +1389,7 @@ namespace cogbot
                 output("!Exception: " + e.GetBaseException().Message);
                 output("error occured: " + e.Message);
                 output("        Stack: " + e.StackTrace.ToString());
-                return null;
+                throw e;
             }
         }
 
