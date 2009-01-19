@@ -249,7 +249,7 @@ namespace cogbot.Listeners
 		static readonly Type[] paramTypesOnObjectUpdated = new Type[] { typeof(Simulator), typeof(ObjectUpdate), typeof(ulong), typeof(ushort)};
 
 
-        public override  void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
+        public override void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
 		{
             lock (primsAwaitingSelect)
             {
@@ -266,7 +266,13 @@ namespace cogbot.Listeners
             SendEvent("On-Avatar-Properties", GetAvatar(avatarID), properties);
         }
 
+        object Objects_OnObjectPropertiesLock = new object();
         public override void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties props)
+        {
+            lock (Objects_OnObjectPropertiesLock)
+                Objects_OnObjectProperties1(simulator, props);
+        }
+        private void Objects_OnObjectProperties1(Simulator simulator, Primitive.ObjectProperties props)
         {
             Primitive prim;
 
@@ -296,7 +302,13 @@ namespace cogbot.Listeners
 
         }
 
+        object Objects_OnNewAvatarLock = new object();
         public override void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
+        {
+            lock (Objects_OnNewAvatarLock)
+                Objects_OnNewAvatar1(simulator, avatar, regionHandle, timeDilation);
+        }
+        private void Objects_OnNewAvatar1(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
         {
             lock (avatars)
                 avatars.Add(avatar.LocalID, avatar.ID, avatar);
@@ -767,11 +779,36 @@ namespace cogbot.Listeners
             }
             return null;
         }
+
+        Dictionary<Primitive, Vector3> primVect = new Dictionary<Primitive, Vector3>();
 		public void SendEvent(string eventName, params object[] args)
 		
         {
             if (eventName.Contains("on-avatar-look")) return;
 			Console.WriteLine(eventName + " " + client.argsListString(args));
+            String evtStr = eventName.ToString();
+            if (evtStr=="on-object-position")
+            {
+                Primitive prim = (Primitive)args[0];
+                Vector3 vect = (Vector3)args[1];
+
+                if (!primVect.ContainsKey(prim))
+                {
+                    primVect[prim] = vect;
+                    client.SendEvent(eventName, args);
+                }
+                else
+                {
+                    Vector3 v3 = primVect[prim]-vect;
+                    if (v3.Length() > 0.5)
+                    {
+                        client.SendEvent(eventName, args);
+                        primVect[prim] = vect;
+                    }
+                }
+                return;
+
+            }
 			client.SendEvent(eventName, args);
 		}
 
