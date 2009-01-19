@@ -22,7 +22,8 @@ namespace cogbot.Actions
             objectPhrase = "";
 
             string currentPrep = "";
-            tokens = str.Split(new char[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
+            //tokens = str.Split(new char[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
+            tokens = Parsing.ParseArguments(str);
             bool firstTok = true;
 
             for (int i = 0; i < tokens.Length; ++i)
