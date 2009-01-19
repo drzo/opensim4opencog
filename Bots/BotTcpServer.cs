@@ -91,24 +91,23 @@ namespace cogbot.Utilities
 
         void OneClient()
         {
-            NewClient(ClientHandle);
+            TcpClient this_client = ClientHandle;
+            try
+            {
+                NewClient(this_client);
+            }
+            catch (Exception e)
+            {
+                output(""+this_client+ " caused " + e.ToString());
+            }
         }
 
         TcpClient ClientHandle;
         object ClientHandlerLock = new object();
 
-        void probeQueue(NetworkStream ns)
-        {
-            WriteStringToSocket(ns, "<whileAway>");
-            WriteStringToSocket(ns, GetWhileAwayAndClear());
-            WriteStringToSocket(ns, "</whileAway>");
-        }
-
         private void NewClient(TcpClient tcp_client)
         {
-            bool _quitRequested = false;
             string clientMessage = string.Empty;
-            string serverMessage = string.Empty;
 
             StreamReader tcpStreamReader = null;// = new StreamReader(ns);
             StreamWriter tcpStreamWriter = null;// = new StreamWriter(ns);
@@ -116,51 +115,52 @@ namespace cogbot.Utilities
             tcpStreamReader = new StreamReader(ns);
             tcpStreamWriter = new StreamWriter(ns);
 
-            string comment = "<comment>Welcome to Cogbot</comment>";
-            WriteStringToSocket(ns, comment);
+            tcpStreamWriter.WriteLine("<comment>Welcome to Cogbot</comment>");
+            tcpStreamWriter.Flush();
             // Start loop and handle commands:
+            bool _quitRequested = false;
             while (!_quitRequested)
             {
+
                 clientMessage = tcpStreamReader.ReadLine().Trim();
                 parent.output("SockClient:" + clientMessage);
                 tcpStreamWriter.WriteLine();
                 String lowerCmd = clientMessage.ToLower();
-                if (lowerCmd == "bye")
+
+                try
                 {
-                    _quitRequested = true;
-                }
-                else if (lowerCmd == "currentevents")
-                {
-                    probeQueue(ns);
-                }
-                else {
-                    if (clientMessage.StartsWith("("))                    
+
+                    if (lowerCmd == "bye")
                     {
-                        parent.enqueueLispTask(clientMessage);
-                    } 
-                    else
-                    if (clientMessage.Contains("xml") || clientMessage.Contains("http:"))
+                        _quitRequested = true;
+                    }
+                    else if (lowerCmd == "currentevents")
                     {
-                        serverMessage = EvaluateXmlCommand(clientMessage);
+                        GetWhileAwayAndClear(tcpStreamWriter);
                     }
                     else
                     {
-                        serverMessage = EvaluateCommand(clientMessage);
-                    }
-                    lock (tcpStreamWriter)
-                    {
-                        if (serverMessage != "")
+                        if (clientMessage.StartsWith("("))
                         {
-                            ns.Write(Encoding.ASCII.GetBytes(serverMessage.ToCharArray()), 0, serverMessage.Length);
-                            tcpStreamWriter.WriteLine();
+                            tcpStreamWriter.WriteLine("200 " + parent.evalLispString(clientMessage));
+
                         }
-                        lock (whileClientIsAway)
-                        {
-                           // probeQueue(ns);
-                            tcpStreamWriter.WriteLine();
-                        }
+                        else
+                            if (clientMessage.Contains("xml") || clientMessage.Contains("http:"))
+                            {
+                                tcpStreamWriter.WriteLine(EvaluateXmlCommand(clientMessage));
+                            }
+                            else
+                            {
+                                tcpStreamWriter.WriteLine(EvaluateCommand(clientMessage));
+                            }
                     }
                 }
+                catch (Exception e)
+                {
+                    tcpStreamWriter.WriteLine("500 " + parent.argString(e.ToString()));
+                }
+                tcpStreamWriter.Flush();
             }
 
             //data = new byte[1024];
@@ -179,27 +179,19 @@ namespace cogbot.Utilities
             catch (Exception) { }
         }
 
-        private void WriteStringToSocket(NetworkStream ns, string msg)
-        {
-            byte[] data = Encoding.ASCII.GetBytes(msg);
-            ns.Write(data, 0, data.Length);
-        }
 
-        public String GetWhileAwayAndClear()
+        public void GetWhileAwayAndClear(TextWriter tw)
         {
-            String allMsgs = "";
             lock (whileClientIsAway)
             {
                 while (whileClientIsAway.Count>0)
                 {
-                    String item = whileClientIsAway.Dequeue();
-                    allMsgs += "<msgClient>";
-                    allMsgs += item;
-                    allMsgs += "</msgClient>";
-                    allMsgs += "\r\n";
+                    tw.Write("<msgClient>");
+                    tw.Write(whileClientIsAway.Dequeue());
+                    tw.WriteLine("</msgClient>");
                 }                
             }
-            return allMsgs;
+            tw.Flush();
         }
 
 
