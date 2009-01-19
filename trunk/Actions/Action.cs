@@ -69,7 +69,7 @@ namespace cogbot.Actions
         {
             Parser p = new Parser(String.Join(" ", args));
             p.tokens = args;
-            acceptInput(Name, parser);
+            acceptInput(Name, p);
             return String.Empty;
         }
 
