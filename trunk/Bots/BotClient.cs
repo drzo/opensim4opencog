@@ -440,7 +440,7 @@ namespace cogbot
 			if (taskInterperter.DefinedFunction(eventName)) {
 				enqueueLispTask(msg);
 			} else {
-				output(msg);
+                msgClient(msg);
 			}
 		}
 		public string argsListString(Array args)
@@ -1063,7 +1063,7 @@ namespace cogbot
 		public void msgClient(string serverMessage)
 		{
 			if (debugLevel>1) {
-				output("msgClient: " + serverMessage);             
+				output(serverMessage);             
 			}
             lock (lBotMsgSubscribers)
             {
@@ -1328,7 +1328,7 @@ namespace cogbot
                     {
                         if (ms is Utilities.TcpServer)
                         {
-                           ((Utilities.TcpServer) ms).taskTick(serverMessage);
+                            ((Utilities.TcpServer)ms).taskTick(thisTask.results);
                         }
                     }
                 }

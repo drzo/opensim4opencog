@@ -156,7 +156,7 @@ namespace cogbot.Utilities
                         }
                         lock (whileClientIsAway)
                         {
-                            probeQueue(ns);
+                           // probeQueue(ns);
                             tcpStreamWriter.WriteLine();
                         }
                     }
@@ -196,7 +196,7 @@ namespace cogbot.Utilities
                     allMsgs += "<msgClient>";
                     allMsgs += item;
                     allMsgs += "</msgClient>";
-                    allMsgs += '\n';
+                    allMsgs += "\r\n";
                 }                
             }
             return allMsgs;
