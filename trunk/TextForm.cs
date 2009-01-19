@@ -125,6 +125,9 @@ namespace cogbot
             describeNext = true;
 
             InitializeComponent();
+            this.Size = new Size(this.Size.Width + 300, this.Size.Height);
+            this.ResizeEnd += TextForm_ResizeEnd;
+            TextForm_ResizeEnd(null, null);
             Show();
             consoleInputText.Enabled = true;
             consoleInputText.Focus();
@@ -576,5 +579,4 @@ namespace cogbot
     #endregion
 
 #pragma warning restore 0168
-
 }

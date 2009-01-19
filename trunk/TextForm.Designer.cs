@@ -1,7 +1,8 @@
 using System.Windows.Forms;
 namespace cogbot
 {
-    partial class TextForm {
+    partial class TextForm 
+    {
         /// <summary>
         /// Required designer variable.
         /// </summary>
@@ -144,8 +145,6 @@ namespace cogbot
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(596, 386);
-            this.ResizeEnd += new System.EventHandler(TextForm_ResizeEnd);
-            this.ResizeEnd += new System.EventHandler(TextForm_ResizeBegin);
             this.Controls.Add(this.submitButton);
             this.Controls.Add(this.consoleInputText);
             this.Controls.Add(this.consoleText);
