@@ -627,7 +627,7 @@ namespace cogbot
 
 		public bool ExecuteCommand(string text)
 		{
-			text = text.Replace("\"", "");
+			//text = text.Replace("\"", "");
 			string verb = text.Split(null)[0];
 			if (Commands.ContainsKey(verb)) {
 				if (text.Length > verb.Length)
