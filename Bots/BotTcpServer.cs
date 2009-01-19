@@ -29,10 +29,6 @@ namespace cogbot.Utilities
         }
 
 
-
-        StreamReader tcpStreamReader = null;// = new StreamReader(ns);
-        StreamWriter tcpStreamWriter = null;// = new StreamWriter(ns);
-        NetworkStream ns = null;
         int serverPort = -1;
         ///Configuration config;
 
@@ -53,15 +49,12 @@ namespace cogbot.Utilities
         // External XML socket server
         //------------------------------------
         TcpListener tcp_socket = null;
-        TcpClient tcp_client = null;
+    //    TcpClient tcp_client = null;
         private void tcpSrv()
         {
 
             try
             {
-                bool _quitRequested = false;
-                string clientMessage = string.Empty;
-                string serverMessage = string.Empty;
 
                 //int receivedDataLength;
                 byte[] data = new byte[1024];
@@ -71,24 +64,81 @@ namespace cogbot.Utilities
                 parent.output("About to initialize port.");
                 tcp_socket.Start();
                 parent.output("Listening for a connection... port=" + PortNumber);
-
-                tcp_client = tcp_socket.AcceptTcpClient();
-                ns = tcp_client.GetStream();
-                tcpStreamReader = new StreamReader(ns);
-                tcpStreamWriter = new StreamWriter(ns);
-
-                string comment = "<comment>Welcome to Cogbot</comment>";
-                WriteStringToSocket(comment);
-                WriteStringToSocket("<whileAway>");
-                WriteStringToSocket(GetWhileAwayAndClear());
-                WriteStringToSocket("</whileAway>");
-                // Start loop and handle commands:
-                while (!_quitRequested)
+                while (true)
                 {
-                    clientMessage = tcpStreamReader.ReadLine();
-                    parent.output("SockClient:" + clientMessage);
-                    tcpStreamWriter.WriteLine();
+                    try
+                    {
+                        lock (ClientHandlerLock)
+                        {
+                            ClientHandle = tcp_socket.AcceptTcpClient();
+                            new Thread(new ThreadStart(OneClient)).Start();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        output(e.ToString());
+                    }
+                }
+              //  tcp_socket.Stop();
+               // thrSvr.Abort();
 
+            }
+            catch (Exception ee)
+            {
+                output(ee.ToString());
+            }
+        }
+
+        void OneClient()
+        {
+            NewClient(ClientHandle);
+        }
+
+        TcpClient ClientHandle;
+        object ClientHandlerLock = new object();
+
+        void probeQueue(NetworkStream ns)
+        {
+            WriteStringToSocket(ns, "<whileAway>");
+            WriteStringToSocket(ns, GetWhileAwayAndClear());
+            WriteStringToSocket(ns, "</whileAway>");
+        }
+
+        private void NewClient(TcpClient tcp_client)
+        {
+            bool _quitRequested = false;
+            string clientMessage = string.Empty;
+            string serverMessage = string.Empty;
+
+            StreamReader tcpStreamReader = null;// = new StreamReader(ns);
+            StreamWriter tcpStreamWriter = null;// = new StreamWriter(ns);
+            NetworkStream ns = tcp_client.GetStream();
+            tcpStreamReader = new StreamReader(ns);
+            tcpStreamWriter = new StreamWriter(ns);
+
+            string comment = "<comment>Welcome to Cogbot</comment>";
+            WriteStringToSocket(ns, comment);
+            // Start loop and handle commands:
+            while (!_quitRequested)
+            {
+                clientMessage = tcpStreamReader.ReadLine().Trim();
+                parent.output("SockClient:" + clientMessage);
+                tcpStreamWriter.WriteLine();
+                String lowerCmd = clientMessage.ToLower();
+                if (lowerCmd == "bye")
+                {
+                    _quitRequested = true;
+                }
+                else if (lowerCmd == "currentevents")
+                {
+                    probeQueue(ns);
+                }
+                else {
+                    if (clientMessage.StartsWith("("))                    
+                    {
+                        parent.enqueueLispTask(clientMessage);
+                    } 
+                    else
                     if (clientMessage.Contains("xml") || clientMessage.Contains("http:"))
                     {
                         serverMessage = EvaluateXmlCommand(clientMessage);
@@ -100,28 +150,36 @@ namespace cogbot.Utilities
                     lock (tcpStreamWriter)
                     {
                         if (serverMessage != "")
-                            tcpStreamWriter.WriteLine(serverMessage);
-                        tcpStreamWriter.WriteLine();
-                        ns.Write(Encoding.ASCII.GetBytes(serverMessage.ToCharArray()), 0, serverMessage.Length);
+                        {
+                            ns.Write(Encoding.ASCII.GetBytes(serverMessage.ToCharArray()), 0, serverMessage.Length);
+                            tcpStreamWriter.WriteLine();
+                        }
+                        lock (whileClientIsAway)
+                        {
+                            probeQueue(ns);
+                            tcpStreamWriter.WriteLine();
+                        }
                     }
-                    if (clientMessage == "quit") _quitRequested = true;
                 }
+            }
 
-                //data = new byte[1024];
-                //receivedDataLength = ns.Read(data, 0, data.Length);
-                //WriteLine(Encoding.ASCII.GetString(data, 0, receivedDataLength));
-                //ns.Write(data, 0, receivedDataLength);
-                ns.Close();
-                tcp_client.Close();
-                tcp_socket.Stop();
-                thrSvr.Abort();
-            }
-            catch (Exception e)
+            //data = new byte[1024];
+            //receivedDataLength = ns.Read(data, 0, data.Length);
+            //WriteLine(Encoding.ASCII.GetString(data, 0, receivedDataLength));
+            //ns.Write(data, 0, receivedDataLength);\
+            try
             {
+                ns.Close();
             }
+            catch (Exception) { }
+            try
+            {
+                tcp_client.Close();
+            }
+            catch (Exception) { }
         }
 
-        private void WriteStringToSocket(string msg)
+        private void WriteStringToSocket(NetworkStream ns, string msg)
         {
             byte[] data = Encoding.ASCII.GetBytes(msg);
             ns.Write(data, 0, data.Length);
@@ -147,8 +205,8 @@ namespace cogbot.Utilities
 
         public void closeTcpListener()
         {
-            if (ns != null) ns.Close();
-            if (tcp_client != null) tcp_client.Close();
+        //    if (ns != null) ns.Close();
+          //  if (tcp_client != null) tcp_client.Close();
             if (tcp_socket != null) tcp_socket.Stop();
             if (thrSvr != null) thrSvr.Abort();
             if (parent.thrJobQueue != null) parent.thrJobQueue.Abort();
@@ -412,25 +470,25 @@ namespace cogbot.Utilities
 
         void BotClient.BotMessageSubscriber.msgClient(string serverMessage)
         {
-            //   System.Console.Out.WriteLine("msgClient: " + serverMessage);
-            if (!IsClientConnected())
-            {
+            ////   System.Console.Out.WriteLine("msgClient: " + serverMessage);
+            //if (!IsEventClientConnected())
+            //{
                 lock (whileClientIsAway)
                     whileClientIsAway.Enqueue(serverMessage);
                 return;
-            }
-            if (IsClientConnected())
-            {
-                lock (tcpStreamWriter)
-                {
-                    if (serverMessage != "")
-                        tcpStreamWriter.WriteLine(serverMessage);
+            //}
+            //if (IsEventClientConnected())
+            //{
+            //    lock (tcpStreamWriter)
+            //    {
+            //        if (serverMessage != "")
+            //            tcpStreamWriter.WriteLine(serverMessage);
 
-                    tcpStreamWriter.WriteLine();
-                    ns.Write(Encoding.ASCII.GetBytes(serverMessage.ToCharArray()),
-                             0, serverMessage.Length);
-                }
-            }
+            //        tcpStreamWriter.WriteLine();
+            //        ns.Write(Encoding.ASCII.GetBytes(serverMessage.ToCharArray()),
+            //                 0, serverMessage.Length);
+            //    }
+            //}
 
         }
 
@@ -446,10 +504,10 @@ namespace cogbot.Utilities
 
         #endregion
 
-        public bool IsClientConnected()
-        {
-            return (ns != null) && (tcpStreamWriter != null);
-        }
+        //public bool IsClientConnected()
+        //{
+        //    return (ns != null) && (tcpStreamWriter != null);
+        //}
 
         internal void taskTick(string serverMessage)
         {

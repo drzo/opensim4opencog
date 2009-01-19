@@ -102,20 +102,14 @@ namespace cogbot.Listeners
 			client.output(p);
 		}
 
-		private void enqueueLispTask(string p)
-		{
-			//client.enqueueLispTask(p);
-		}
-
-
         public override void Self_OnMeanCollision(MeanCollisionType type, UUID perp, UUID victim, float magnitude, DateTime time)
 		{
 			Avatar perpAv, victimAv;
 			if (client.WorldSystem.tryGetAvatarById(perp, out perpAv) && client.WorldSystem.tryGetAvatarById(victim, out victimAv)) {
 				if (victimAv.Name == client.Self.Name)
-					output(perpAv.Name + " bumped into you.");
+					output(perpAv.Name + " bumped into $bot.");
 				else if (perpAv.Name == client.Self.Name)
-					output("You bumped into " + victimAv.Name + ".");
+					output("$bot bumped into " + victimAv.Name + ".");
 
 				SendEvent("on-meanCollision", perpAv.Name , victimAv.Name, magnitude);
 
@@ -204,7 +198,7 @@ namespace cogbot.Listeners
 
                 //for (int i = 0; i < coarse.Location.Length; i++)
                 //{
-                //    if (i == coarse.Index.You)
+                //    if (i == coarse.Index.$bot)
                 //    {
                 //        simulator.positionIndexYou = i;
                 //    }
@@ -267,7 +261,133 @@ namespace cogbot.Listeners
 			//UpdateTextureQueue(prim.Textures);
 		}
 
+        public override void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)
+        {
+            SendEvent("On-Avatar-Properties", GetAvatar(avatarID), properties);
+        }
 
+        public override void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties props)
+        {
+            Primitive prim;
+
+            if (prims.TryGetValue(props.ObjectID, out prim))
+            {
+                if (primsAwaitingSelect.Contains(prim))
+                {
+                    primsAwaitingSelect.Remove(prim);
+                }
+                //if (Program.Verbosity > 2)
+                ///botoutput("Received properties for " + props.ObjectID.ToString());               
+                //lock (prim)  prim.Properties = props;
+                lock (primsKnown)
+                    if (!primsKnown.Contains(prim))
+                    {
+                        primsKnown.Add(prim);
+                        SendEvent("on-new-prim", props.Name, props.ObjectID.ToString(), props.Description);
+                    }
+                CalcStats(prim);
+                describePrimToAI(prim);
+
+            }
+            else
+            {
+                output("Received object properties for untracked object " + props.ObjectID.ToString());
+            }
+
+        }
+
+        public override void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
+        {
+            lock (avatars)
+                avatars.Add(avatar.LocalID, avatar.ID, avatar);
+            try
+            {
+                lock (avatarCache)
+                {
+                    if (avatar != null)
+                    {
+                        if (!avatarCache.ContainsKey(avatar.Name))
+                        {
+                            avatarCache[avatar.Name] = avatar;
+                        }
+                    }
+                }
+                describeAvatarToAI(avatar);
+            }
+            catch (Exception e)
+            {
+                output("err :" + e.StackTrace);
+            }
+        }
+        //void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties properties)
+        //{
+        //    sim = simulator;
+        //    lock (pendingPrims)
+        //    {
+        //        if (pendingPrims.ContainsKey(properties.ObjectID))
+        //        {
+        //            lock (prims)
+        //            {
+        //                Primitive p = pendingPrims[properties.ObjectID];
+        //                prims[properties.Name] = p;
+        //                primsByLocalID[p.LocalID] = p;
+        //                p.Properties = properties;
+        //                describePrimToAI(p);
+        //                pendingPrims.Remove(properties.ObjectID);
+
+        //                UUID groupId = properties.GroupID;
+        //                if (groupId != UUID.Zero)
+        //                {
+        //                    lock (primGroups)
+        //                    {
+        //                        if (!primGroups.ContainsKey(groupId))
+        //                            primGroups[groupId] = new List<Primitive>();
+        //                        primGroups[groupId].Add(prims[properties.Name]);
+        //                        //botoutput("group count " + groupId + " " + primGroups[groupId].Count);
+        //                    }
+        //                }
+        //            }
+        //            if (maxNameLength == -1 || properties.Name.Length > maxNameLength)
+        //                maxNameLength = properties.Name.Length;
+        //        }
+        //    }
+        //}
+
+        //void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
+        //{
+        //    sim = simulator;
+        //    try
+        //    {
+        //        lock (newLock)
+        //        {
+        //            primsAwaitingSelect.Add(prim);
+        //            CalcStats(prim);
+
+        //            TimeSpan dtime = DateTime.Now - burstStartTime;
+        //            if (primsAwaitingSelect.Count >= burstSize && dtime > burstInterval)
+        //            {
+        //                burstStartTime = DateTime.Now;
+
+        //                uint[] ids = new uint[burstSize];
+        //                for (int i = 0; i < burstSize; ++i)
+        //                {
+        //                    ids[i] = primsAwaitingSelect[i].LocalID;
+        //                    pendingPrims[primsAwaitingSelect[i].ID] = primsAwaitingSelect[i];
+        //                }
+
+        //                botclient.Objects.SelectObjects(simulator, ids);
+        //                primsAwaitingSelect.RemoveRange(0, burstSize);
+        //                //primsAwaitingSelect.Clear();
+        //            }
+        //        }
+        //CalcStats(prim);
+        //        describePrimToAI(prim);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        botoutput("ERR:" + e.StackTrace);
+        //    }
+        //}
 
 		object Objects_OnObjectUpdated1Sync = new Object();
         public override void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
@@ -366,94 +486,8 @@ namespace cogbot.Listeners
 				lastObjectUpdate[update.LocalID] = update;
 			}
 		}
-		//removes from taintable
-		public String OSDDiff(OSDMap before, OSDMap after)
-		{
-			string xmlBefore = OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(before);
-			string xmlAfter = OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(after);
-			if (xmlBefore.Equals(xmlAfter))	return "";
-			return "\n\n\n\nBEFORE\n" + before + "\n\nAFTER\n" + after;
-		}
-
-		class SomeChange {
-			Object before;
-			Object after;
-			String named;
-			SomeChange(String _named, Object _before, Object _after)
-			{
-				named = _named;
-				before = _before;
-				after = _after;
-			}
-			public override string ToString()
-			{
-				return "SomeChange " + named + " from " + before + " to " + after;
-			}
-
-		}
-
-
-		public Primitive deepCopy(Primitive objectUpdated)
-		{
-			OpenMetaverse.StructuredData.OSD osd = objectUpdated.GetOSD();
-			if (objectUpdated is Avatar) {
-				return Avatar.FromOSD(osd);
-			}
-			return Primitive.FromOSD(osd);
-		}
-
-		public void someThingElseNeedsUpdate(Primitive objectUpdated)
-		{
-			//throw new Exception("The method or operation is not implemented.");
-		}
-
-		public ObjectUpdate updatFromPrim(Primitive fromPrim)
-		{
-			ObjectUpdate update = new ObjectUpdate();
-			update.Acceleration = fromPrim.Acceleration;
-			update.AngularVelocity = fromPrim.AngularVelocity;
-			update.CollisionPlane = fromPrim.CollisionPlane;
-			update.Position = fromPrim.Position;
-			update.Rotation = fromPrim.Rotation;
-			update.State = fromPrim.PrimData.State;
-			update.Textures = fromPrim.Textures;
-			update.Velocity = fromPrim.Velocity;
-			update.LocalID = fromPrim.LocalID;
-			update.Avatar = (fromPrim is Avatar);
-			return update;
-		}
-
-
-
-		public ObjectUpdate updateDiff(ObjectUpdate fromPrim, ObjectUpdate diff)
-		{
-			ObjectUpdate update = new ObjectUpdate();
-			update.LocalID = fromPrim.LocalID;
-			update.Avatar = fromPrim.Avatar;
-			update.Acceleration = fromPrim.Acceleration - diff.Acceleration;
-			update.AngularVelocity = fromPrim.AngularVelocity - diff.AngularVelocity;
-			update.CollisionPlane = fromPrim.CollisionPlane - diff.CollisionPlane;
-			update.Position = fromPrim.Position - diff.Position;
-			update.Rotation = fromPrim.Rotation - diff.Rotation;
-			update.State = (byte)(fromPrim.State - diff.State);
-			update.Textures = fromPrim.Textures != diff.Textures ? diff.Textures : null;
-			update.Velocity = fromPrim.Velocity - diff.Velocity;
-			return update;
-		}
-
-
-		public void updateToPrim(Primitive prim, ObjectUpdate update)
-		{
-			prim.Acceleration = update.Acceleration;
-			prim.AngularVelocity = update.AngularVelocity;
-			prim.CollisionPlane = update.CollisionPlane;
-			prim.Position = update.Position;
-			prim.Rotation = update.Rotation;
-			prim.PrimData.State = update.State;
-			prim.Textures = update.Textures;
-			prim.Velocity = update.Velocity;
-		}
-		delegate object DoWhat(Primitive objectUpdated, string p, Object vector3, Object vector3_4, Object diff);
+	
+        delegate object DoWhat(Primitive objectUpdated, string p, Object vector3, Object vector3_4, Object diff);
         public object InformUpdate(Primitive objectUpdated, string p, Object before, Object after, Object diff)
         {
             Console.WriteLine("{0} {1} DIFF {2} BEFORE {3} AFTER {4}", p, objectUpdated, diff, before, after);
@@ -475,6 +509,7 @@ namespace cogbot.Listeners
 		{
 			ObjectUpdate diff = updateDiff(before, after);
 			bool wasChanged = false;
+            bool wasPositionUpdateSent = false;
 			if (before.Acceleration != after.Acceleration) {
                 after.Acceleration = (Vector3)didUpdate(objectUpdated, "Acceleration", before.Acceleration, after.Acceleration, diff.Acceleration);
 				wasChanged = true;
@@ -490,7 +525,8 @@ namespace cogbot.Listeners
 			if (before.Position != after.Position) {
                 after.Position = (Vector3)didUpdate(objectUpdated, "Position", before.Position, after.Position, diff.Position);
 				wasChanged = true;
-			}
+                wasPositionUpdateSent = true;
+            }
 			if (before.Rotation != after.Rotation) {
                 after.Rotation =(Quaternion) didUpdate(objectUpdated, "Rotation", before.Rotation, after.Rotation, diff.Rotation);
 				wasChanged = true;
@@ -507,20 +543,109 @@ namespace cogbot.Listeners
                // didUpdate(objectUpdated, "Velocity", before.Velocity, after.Velocity, diff.Velocity);
 				if (before.Velocity == Vector3.Zero) {
 					SendEvent("on-object-start-velosity", objectUpdated, after.Velocity);
-                    SendEvent("on-object-position", objectUpdated, after.Position);
-				} else
-					if (after.Velocity == Vector3.Zero) {
-                    SendEvent("on-object-position", objectUpdated, after.Position);
-					SendEvent("on-object-stop-velosity", objectUpdated, -before.Velocity);
+                    if (!wasPositionUpdateSent) SendEvent("on-object-position", objectUpdated, after.Position);
+				} else if (after.Velocity == Vector3.Zero) {                        
+                    if (!wasPositionUpdateSent) SendEvent("on-object-position", objectUpdated, after.Position);					                    
+                    SendEvent("on-object-stop-velosity", objectUpdated, -before.Velocity);
 				} else {
 					//SendEvent("on-object-change-velosity", objectUpdated, after.Velocity);
-                    SendEvent("on-object-position", objectUpdated, after.Position);
+                    if (!wasPositionUpdateSent) SendEvent("on-object-position", objectUpdated, after.Position);
                 }            
 				wasChanged = true;
 			}
 			if (!wasChanged) return null;
 			return diff;
 		}
+
+        //removes from taintable
+        public String OSDDiff(OSDMap before, OSDMap after)
+        {
+            string xmlBefore = OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(before);
+            string xmlAfter = OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(after);
+            if (xmlBefore.Equals(xmlAfter)) return "";
+            return "\n\n\n\nBEFORE\n" + before + "\n\nAFTER\n" + after;
+        }
+
+        class SomeChange
+        {
+            Object before;
+            Object after;
+            String named;
+            SomeChange(String _named, Object _before, Object _after)
+            {
+                named = _named;
+                before = _before;
+                after = _after;
+            }
+            public override string ToString()
+            {
+                return "SomeChange " + named + " from " + before + " to " + after;
+            }
+
+        }
+
+
+        public Primitive deepCopy(Primitive objectUpdated)
+        {
+            OpenMetaverse.StructuredData.OSD osd = objectUpdated.GetOSD();
+            if (objectUpdated is Avatar)
+            {
+                return Avatar.FromOSD(osd);
+            }
+            return Primitive.FromOSD(osd);
+        }
+
+        public void someThingElseNeedsUpdate(Primitive objectUpdated)
+        {
+            //throw new Exception("The method or operation is not implemented.");
+        }
+
+        public ObjectUpdate updatFromPrim(Primitive fromPrim)
+        {
+            ObjectUpdate update = new ObjectUpdate();
+            update.Acceleration = fromPrim.Acceleration;
+            update.AngularVelocity = fromPrim.AngularVelocity;
+            update.CollisionPlane = fromPrim.CollisionPlane;
+            update.Position = fromPrim.Position;
+            update.Rotation = fromPrim.Rotation;
+            update.State = fromPrim.PrimData.State;
+            update.Textures = fromPrim.Textures;
+            update.Velocity = fromPrim.Velocity;
+            update.LocalID = fromPrim.LocalID;
+            update.Avatar = (fromPrim is Avatar);
+            return update;
+        }
+
+
+
+        public ObjectUpdate updateDiff(ObjectUpdate fromPrim, ObjectUpdate diff)
+        {
+            ObjectUpdate update = new ObjectUpdate();
+            update.LocalID = fromPrim.LocalID;
+            update.Avatar = fromPrim.Avatar;
+            update.Acceleration = fromPrim.Acceleration - diff.Acceleration;
+            update.AngularVelocity = fromPrim.AngularVelocity - diff.AngularVelocity;
+            update.CollisionPlane = fromPrim.CollisionPlane - diff.CollisionPlane;
+            update.Position = fromPrim.Position - diff.Position;
+            update.Rotation = fromPrim.Rotation - diff.Rotation;
+            update.State = (byte)(fromPrim.State - diff.State);
+            update.Textures = fromPrim.Textures != diff.Textures ? diff.Textures : null;
+            update.Velocity = fromPrim.Velocity - diff.Velocity;
+            return update;
+        }
+
+
+        public void updateToPrim(Primitive prim, ObjectUpdate update)
+        {
+            prim.Acceleration = update.Acceleration;
+            prim.AngularVelocity = update.AngularVelocity;
+            prim.CollisionPlane = update.CollisionPlane;
+            prim.Position = update.Position;
+            prim.Rotation = update.Rotation;
+            prim.PrimData.State = update.State;
+            prim.Textures = update.Textures;
+            prim.Velocity = update.Velocity;
+        }
 
         public override void Terrain_OnLandPatch(Simulator simulator, int x, int y, int width, float[] data)
         {
@@ -651,40 +776,10 @@ namespace cogbot.Listeners
 		}
 
 
-        public override void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)
-		{
-            SendEvent("On-Avatar-Properties", GetAvatar(avatarID), properties);
-		}
-
-        public override void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties props)
-		{
-			Primitive prim;
-
-			if (prims.TryGetValue(props.ObjectID, out prim)) {
-				if (primsAwaitingSelect.Contains(prim)) {
-					primsAwaitingSelect.Remove(prim);
-				}
-				//if (Program.Verbosity > 2)
-				///botoutput("Received properties for " + props.ObjectID.ToString());               
-				//lock (prim)  prim.Properties = props;
-				lock(primsKnown)
-				if (!primsKnown.Contains(prim)) {
-					primsKnown.Add(prim);
-					SendEvent("on-new-prim", props.Name, props.ObjectID.ToString(), props.Description);
-				}
-				CalcStats(prim);
-				describePrimToAI(prim);
-
-			} else {
-				output("Received object properties for untracked object " + props.ObjectID.ToString());
-			}
-
-		}
-
 		void Avatars_OnAnimationsChanged(InternalDictionary<UUID, int> agentAnimations)
 		{
 
-
+            // this was ourself and is now handled in Avatar Animations Changed
 
 		}
 
@@ -705,77 +800,6 @@ namespace cogbot.Listeners
 			return uuidname;
 		}
 
-
-
-		//void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties properties)
-		//{
-		//    sim = simulator;
-		//    lock (pendingPrims)
-		//    {
-		//        if (pendingPrims.ContainsKey(properties.ObjectID))
-		//        {
-		//            lock (prims)
-		//            {
-		//                Primitive p = pendingPrims[properties.ObjectID];
-		//                prims[properties.Name] = p;
-		//                primsByLocalID[p.LocalID] = p;
-		//                p.Properties = properties;
-		//                describePrimToAI(p);
-		//                pendingPrims.Remove(properties.ObjectID);
-
-		//                UUID groupId = properties.GroupID;
-		//                if (groupId != UUID.Zero)
-		//                {
-		//                    lock (primGroups)
-		//                    {
-		//                        if (!primGroups.ContainsKey(groupId))
-		//                            primGroups[groupId] = new List<Primitive>();
-		//                        primGroups[groupId].Add(prims[properties.Name]);
-		//                        //botoutput("group count " + groupId + " " + primGroups[groupId].Count);
-		//                    }
-		//                }
-		//            }
-		//            if (maxNameLength == -1 || properties.Name.Length > maxNameLength)
-		//                maxNameLength = properties.Name.Length;
-		//        }
-		//    }
-		//}
-
-		//void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
-		//{
-		//    sim = simulator;
-		//    try
-		//    {
-		//        lock (newLock)
-		//        {
-		//            primsAwaitingSelect.Add(prim);
-		//            CalcStats(prim);
-
-		//            TimeSpan dtime = DateTime.Now - burstStartTime;
-		//            if (primsAwaitingSelect.Count >= burstSize && dtime > burstInterval)
-		//            {
-		//                burstStartTime = DateTime.Now;
-
-		//                uint[] ids = new uint[burstSize];
-		//                for (int i = 0; i < burstSize; ++i)
-		//                {
-		//                    ids[i] = primsAwaitingSelect[i].LocalID;
-		//                    pendingPrims[primsAwaitingSelect[i].ID] = primsAwaitingSelect[i];
-		//                }
-
-		//                botclient.Objects.SelectObjects(simulator, ids);
-		//                primsAwaitingSelect.RemoveRange(0, burstSize);
-		//                //primsAwaitingSelect.Clear();
-		//            }
-		//        }
-		//CalcStats(prim);
-		//        describePrimToAI(prim);
-		//    }
-		//    catch (Exception e)
-		//    {
-		//        botoutput("ERR:" + e.StackTrace);
-		//    }
-		//}
 		public void CalcStats(Primitive prim)
 		{
 			if (prim is Avatar)	return;
@@ -1043,24 +1067,6 @@ namespace cogbot.Listeners
 
 		}
 
-        public override void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
-		{
-            lock (avatars)
-                avatars.Add(avatar.LocalID, avatar.ID, avatar);
-			try {
-				lock (avatarCache)
-				{
-					if (avatar != null) {
-						if (!avatarCache.ContainsKey(avatar.Name)) {
-							avatarCache[avatar.Name] = avatar;
-						}
-					}
-				}
-				describeAvatarToAI(avatar);
-			} catch (Exception e) {
-				output("err :" + e.StackTrace);
-			}
-		}
 
 		public int numAvatars()
 		{

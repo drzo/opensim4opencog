@@ -469,7 +469,7 @@ namespace cogbot
 			}
 			if (arg is Avatar) {
 				Avatar prim = (Avatar)arg;
-				arg = "'(avatar " + argString(prim.ID.ToString());
+                arg = "'(avatar"; //+ argString(prim.ID.ToString());
 				if (prim.Name != null) {
 					arg = arg + " " + argString(prim.Name);
 				}
@@ -525,15 +525,23 @@ namespace cogbot
 				Vector3 vect = (Vector3)arg;
 				return "'(Vector3 " + vect.X + " " + vect.Y + " " + vect.Z + ")";
 			} else
-				if (arg is Vector2) {
-				Vector2 vect = (Vector2)arg;
-				return "'(Vector2 " + vect.X + " " + vect.Y + ")";
-			} else
-				if (arg is Vector3d) {
-				Vector3d vect = (Vector3d)arg;
-				return "'(Vector3d " + vect.X + " " + vect.Y + " " + vect.Z + ")";
-			}
-
+                if (arg is Vector2)
+                {
+                    Vector2 vect = (Vector2)arg;
+                    return "'(Vector2 " + vect.X + " " + vect.Y + ")";
+                }
+                else
+                    if (arg is Vector3d)
+                    {
+                        Vector3d vect = (Vector3d)arg;
+                        return "'(Vector3d " + vect.X + " " + vect.Y + " " + vect.Z + ")";
+                    }
+                    else
+                        if (arg is Quaternion)
+                        {
+                            Quaternion vect = (Quaternion)arg;
+                            return "'(Quaternion " + vect.X + " " + vect.Y + " " + vect.Z + " " + vect.W +")";
+                        }
 
 			if (type.IsArray) {
 				Array a = (Array)arg;
@@ -976,7 +984,11 @@ namespace cogbot
 		public void output(string str)
 		{
 			try {
-				parentTextForm.output(Self.Name + ": " + str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n"));
+                string toprint = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
+                toprint = toprint.Replace("$bot", Self.Name);
+                toprint = toprint.Replace("You", Self.Name);
+                toprint = toprint.Replace("you", Self.Name);
+                parentTextForm.output(Self.Name + ": " + toprint);
 			} catch (Exception) {
 			}
 		}
