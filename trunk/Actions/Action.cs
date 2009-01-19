@@ -67,8 +67,10 @@ namespace cogbot.Actions
 
         public virtual string Execute(string[] args, UUID fromAgentID)
         {
-            acceptInput(args[0], new Parser(String.Join("", args, 1, args.Length - 1)));
-            return "";
+            Parser p = new Parser(String.Join(" ", args));
+            p.tokens = args;
+            acceptInput(Name, parser);
+            return String.Empty;
         }
 
         public abstract void acceptInput(string verb, Parser args);
