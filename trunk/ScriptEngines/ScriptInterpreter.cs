@@ -20,7 +20,7 @@ namespace cogbot.ScriptEngines
 
         ScriptInterpreter newInterpreter();
 
-        bool DefinedFunction(string eventName);
+        bool IsSubscriberOf(string eventName);
 
 
     }

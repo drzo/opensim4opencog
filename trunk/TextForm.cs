@@ -78,6 +78,8 @@ namespace cogbot
         public String taskInterperterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
         static List<LoginDetails> accounts = new List<LoginDetails>();
         public static ClientManager clientManager = new ClientManager(accounts, false);
+        public static Simian.Simian simulator = new Simian.Simian();
+
         public TextForm()
         {
             SingleInstance = this;

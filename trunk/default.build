@@ -56,6 +56,7 @@
         <echo message="Deleting all builds from all configurations" />
         <delete dir="${bin.dir}" failonerror="false" />
         <delete dir="${obj.dir}" failonerror="false" />
+        <nant buildfile="../opensim4opencog/cogbot_staticomv.exe.build" target="clean" />
         <nant buildfile="OpenMetaverse.Utilities/OpenMetaverse.Utilities.dll.build" target="clean" />
         <nant buildfile="OpenMetaverse/Types/OpenMetaverseTypes.dll.build" target="clean" />
         <nant buildfile="OpenMetaverse.GUI/OpenMetaverse.GUI.dll.build" target="clean" />
@@ -81,6 +82,7 @@
         <nant buildfile="OpenMetaverse.GUI/OpenMetaverse.GUI.dll.build" target="build" />
         <nant buildfile="dotlisp/DotLisp.dll.build" target="build" />
         <nant buildfile="../opensim4opencog/cogbot.exe.build" target="build" />
+        <nant buildfile="../opensim4opencog/cogbot_staticomv.exe.build" target="build" />
     </target>
 
     <target name="build-release" depends="Release, init, build" description="Builds in Release mode" />
@@ -91,6 +93,7 @@
 
     <target name="doc" depends="build-release">
         <echo message="Generating all documentation from all builds" />
+        <nant buildfile="../opensim4opencog/cogbot_staticomv.exe.build" target="doc" />
         <nant buildfile="OpenMetaverse.Utilities/OpenMetaverse.Utilities.dll.build" target="doc" />
         <nant buildfile="OpenMetaverse/Types/OpenMetaverseTypes.dll.build" target="doc" />
         <nant buildfile="OpenMetaverse.GUI/OpenMetaverse.GUI.dll.build" target="doc" />

@@ -102,10 +102,14 @@ namespace cogbot.ScriptEngines
 
     public class ABCLInterpreter : ScriptInterpreter
     {
-        public bool DefinedFunction(string eventName)
+        public bool IsSubscriberOf(string eventName)
         {
-            eventName = eventName.ToLower();
-            return false;
+            eventName = eventName.ToUpper();
+            Symbol s = Package.getCurrentPackage().findAccessibleSymbol(eventName);
+            LispObject fun = s.getSymbolFunction();
+            if (fun==null || fun == Lisp.NIL)            
+                return false;        
+            return true;
         }
 
         public static bool IsSubThreadInDebug = false;

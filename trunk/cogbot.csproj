@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{2022AD56-9913-468C-9D3B-42172FFC9FE4}</ProjectGuid>
+    <ProjectGuid>{0A1D0F95-039D-405A-A56B-93FF760B229E}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
@@ -69,6 +69,9 @@
     <Reference Include="log4net.dll">
       <Name>log4net.dll</Name>
     </Reference>
+    <Reference Include="Mono.Security.dll">
+      <Name>Mono.Security.dll</Name>
+    </Reference>
     <Reference Include="System">
       <Name>System</Name>
     </Reference>
@@ -98,34 +101,39 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\opensim4opencog\dotlisp\DotLisp.csproj">
-      <Name>DotLisp</Name>
-      <Project>{8847E790-0CC0-4D8F-A9BA-2AD19164FD50}</Project>
+    <ProjectReference Include="..\opensim4opencog\OpenMetaverse\OpenMetaverse.csproj">
+      <Name>OpenMetaverse</Name>
+      <Project>{A103BFB0-2A76-4C69-9F42-3B604C9B0F0B}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\opensim4opencog\OpenMetaverse\Types\OpenMetaverseTypes.csproj">
       <Name>OpenMetaverseTypes</Name>
-      <Project>{B2D0B418-DB90-434D-A492-12007D94EC32}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\opensim4opencog\OpenMetaverse\OpenMetaverse.csproj">
-      <Name>OpenMetaverse</Name>
-      <Project>{B3170557-F98A-4DCB-B8B3-047606015389}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\opensim4opencog\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj">
-      <Name>OpenMetaverse.StructuredData</Name>
-      <Project>{FC2FD239-1DDB-4732-858B-53963267079D}</Project>
+      <Project>{2A67240A-C28F-410B-A110-D37145A794EA}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\opensim4opencog\OpenMetaverse.Utilities\OpenMetaverse.Utilities.csproj">
       <Name>OpenMetaverse.Utilities</Name>
-      <Project>{7B090B77-12B2-43CA-BE5B-BF1222D7B637}</Project>
+      <Project>{DEE959A4-32E3-4048-AB12-0A3AB8C12139}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\opensim4opencog\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj">
+      <Name>OpenMetaverse.StructuredData</Name>
+      <Project>{BBFD846B-C182-4DDB-B613-1D5A0A8F49DD}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\opensim4opencog\OpenMetaverse.Http\OpenMetaverse.Http.csproj">
       <Name>OpenMetaverse.Http</Name>
-      <Project>{CBCE0673-F28A-4FED-BDA3-4BFC38426F44}</Project>
+      <Project>{18961450-AA45-4343-A8D9-968DBCD9AF96}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\opensim4opencog\HttpServer\HttpServer.csproj">
+      <Name>HttpServer</Name>
+      <Project>{905205BF-86C9-4DA1-A12D-8E1287C4C8A1}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\opensim4opencog\dotlisp\DotLisp.csproj">
+      <Name>DotLisp</Name>
+      <Project>{61B61B14-9744-48B0-8977-2818B6FE3793}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
@@ -236,6 +244,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Actions\Where.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Actions\ThreadCommand.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Actions\Mute.cs">
@@ -520,6 +531,9 @@
     <Compile Include="Bots\BotTcpServer.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Bots\BotInventoryEval.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Listeners\Listener.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -527,6 +541,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Listeners\DebugAllEvents.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Listeners\EventPipelines.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Listeners\WorldObjects.cs">
@@ -581,6 +598,243 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ScriptEngines\ScriptInterpreter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ScriptEngines\ScriptEventListener.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Agent.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Main.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\EventDictionary.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\InventoryDefinitions.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\AnimationSet.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\SimulationObject.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Simian.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\ParcelManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\InventoryManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\FriendManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\SceneManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\XMLPersistence.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\ObjectManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\Money.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\RenderingPluginMesher.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\PeriscopeMovement.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\TransferManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\PeriscopeImageDelivery.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\AccountManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\PeriscopeTransferManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\UDPManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\Periscope.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\ConnectionManagement.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\AuthFreeForAll.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\ImageDelivery.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\Messaging.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\CapsManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\AvatarManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\Movement.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Extensions\AssetManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Interfaces\IAuthenticationProvider.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Interfaces\ICapabilitiesProvider.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Interfaces\IPersistable.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Interfaces\IPersistenceProvider.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Interfaces\IAvatarProvider.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Interfaces\IAccountProvider.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Interfaces\IUDPProvider.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Interfaces\ISceneProvider.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Interfaces\IMeshingProvider.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Interfaces\IInventoryProvider.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Interfaces\IAssetProvider.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\Interfaces\IParcelProvider.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\ExtensionLoader.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\IExtension.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Util\OrderedList.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Util\OrderedListEnumerator.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Nini\Util\OrderedList.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Nini\Util\OrderedListEnumerator.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Nini\Config\IConfigSource.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Nini\Config\IConfig.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Nini\Config\AliasText.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Nini\Config\ConfigSourceBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Nini\Config\ConfigBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Nini\Config\ConfigCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Nini\Config\IniConfig.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Nini\Config\IniConfigSource.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Nini\Ini\IniException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Nini\Ini\IniWriter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Nini\Ini\IniDocument.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Nini\Ini\IniItem.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Nini\Ini\IniReader.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Nini\Ini\IniSectionCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Nini\Ini\IniSection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Config\IConfigSource.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Config\IConfig.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Config\AliasText.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Config\ConfigCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Config\ConfigBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Config\ConfigSourceBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Config\IniConfig.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Config\IniConfigSource.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Ini\IniException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Ini\IniWriter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Ini\IniDocument.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Ini\IniItem.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Ini\IniSectionCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Ini\IniReader.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Simian\ExtensionLoader\Ini\IniSection.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="LoginForm.cs">

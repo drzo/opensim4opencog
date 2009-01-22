@@ -8,7 +8,7 @@ namespace cogbot.ScriptEngines
     {
         DotLisp.Interpreter dotLispInterpreter;
 
-        public bool DefinedFunction(string eventName)
+        public bool IsSubscriberOf(string eventName)
         {
             eventName = eventName.ToLower();
             DotLisp.Symbol o = dotLispInterpreter.intern(eventName);//.Read("DefinedFunction", new System.IO.StringReader(eventName));           
