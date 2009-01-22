@@ -8,10 +8,11 @@ using System.Net.Sockets;
 using System.Net;
 using System.Xml;
 using OpenMetaverse;
+using cogbot.Listeners;
 
 namespace cogbot.Utilities
 {
-    public class TcpServer : BotClient.BotMessageSubscriber
+    public class TcpServer : SimEventSubscriber
     {
         public Thread thrSvr;
         BotClient parent;
@@ -129,32 +130,11 @@ namespace cogbot.Utilities
 
                 try
                 {
-
                     if (lowerCmd == "bye")
                     {
                         _quitRequested = true;
                     }
-                    else if (lowerCmd == "currentevents")
-                    {
-                        GetWhileAwayAndClear(tcpStreamWriter);
-                    }
-                    else
-                    {
-                        if (clientMessage.StartsWith("("))
-                        {
-                            tcpStreamWriter.WriteLine("200 " + parent.evalLispString(clientMessage));
-
-                        }
-                        else
-                            if (clientMessage.Contains("xml") || clientMessage.Contains("http:"))
-                            {
-                                tcpStreamWriter.WriteLine(EvaluateXmlCommand(clientMessage));
-                            }
-                            else
-                            {
-                                tcpStreamWriter.WriteLine(EvaluateCommand(clientMessage));
-                            }
-                    }
+                    else ProcessHttpCommand(tcpStreamWriter, clientMessage);
                 }
                 catch (Exception e)
                 {
@@ -179,6 +159,32 @@ namespace cogbot.Utilities
             catch (Exception) { }
         }
 
+        public void ProcessHttpCommand(TextWriter tcpStreamWriter, string clientMessage)
+        {
+            clientMessage = clientMessage.Trim();
+            if (clientMessage.ToLower() == "currentevents")
+            {
+                GetWhileAwayAndClear(tcpStreamWriter);
+            }
+            else
+            {
+                if (clientMessage.StartsWith("("))
+                {
+                    tcpStreamWriter.WriteLine("200 " + parent.evalLispString(clientMessage));
+
+                }
+                else
+                    if (clientMessage.Contains("xml") || clientMessage.Contains("http:"))
+                    {
+                        tcpStreamWriter.WriteLine(EvaluateXmlCommand(clientMessage));
+                    }
+                    else
+                    {
+                        tcpStreamWriter.WriteLine(EvaluateCommand(clientMessage));
+                    }
+            }
+        }
+
 
         public void GetWhileAwayAndClear(TextWriter tw)
         {
@@ -201,7 +207,7 @@ namespace cogbot.Utilities
           //  if (tcp_client != null) tcp_client.Close();
             if (tcp_socket != null) tcp_socket.Stop();
             if (thrSvr != null) thrSvr.Abort();
-            if (parent.thrJobQueue != null) parent.thrJobQueue.Abort();
+           // if (parent.thrJobQueue != null) parent.thrJobQueue.Abort();
 
         }
 
@@ -453,62 +459,76 @@ namespace cogbot.Utilities
             return parent.XML2Lisp(xcmd);
         }
 
-        private void enqueueLispTask(string lispCodeString)
-        {
-            parent.enqueueLispTask(lispCodeString);
-        }
+       // private void enqueueLispTask(string lispCodeString)
+       // {
+        //    parent.enqueueLispTask(lispCodeString);
+        //}
 
-        #region BotMessageSubscriber Members
+        //#region BotMessageSubscriber Members
 
-        void BotClient.BotMessageSubscriber.msgClient(string serverMessage)
-        {
-            ////   System.Console.Out.WriteLine("msgClient: " + serverMessage);
-            //if (!IsEventClientConnected())
-            //{
-                lock (whileClientIsAway)
-                    whileClientIsAway.Enqueue(serverMessage);
-                return;
-            //}
-            //if (IsEventClientConnected())
-            //{
-            //    lock (tcpStreamWriter)
-            //    {
-            //        if (serverMessage != "")
-            //            tcpStreamWriter.WriteLine(serverMessage);
+        //void BotClient.BotMessageSubscriber.msgClient(string serverMessage)
+        //{
+        //    ////   System.Console.Out.WriteLine("msgClient: " + serverMessage);
+        //    //if (!IsEventClientConnected())
+        //    //{
+        //        lock (whileClientIsAway)
+        //            whileClientIsAway.Enqueue(serverMessage);
+        //        return;
+        //    //}
+        //    //if (IsEventClientConnected())
+        //    //{
+        //    //    lock (tcpStreamWriter)
+        //    //    {
+        //    //        if (serverMessage != "")
+        //    //            tcpStreamWriter.WriteLine(serverMessage);
 
-            //        tcpStreamWriter.WriteLine();
-            //        ns.Write(Encoding.ASCII.GetBytes(serverMessage.ToCharArray()),
-            //                 0, serverMessage.Length);
-            //    }
-            //}
+        //    //        tcpStreamWriter.WriteLine();
+        //    //        ns.Write(Encoding.ASCII.GetBytes(serverMessage.ToCharArray()),
+        //    //                 0, serverMessage.Length);
+        //    //    }
+        //    //}
 
-        }
+        //}
 
-        #endregion
+        //#endregion
 
-        #region BotMessageSubscriber Members
+        //#region BotMessageSubscriber Members
 
 
-        void BotClient.BotMessageSubscriber.ShuttingDown()
-        {
-            ((TcpServer)this).closeTcpListener();
-        }
+        //void BotClient.BotMessageSubscriber.ShuttingDown()
+        //{
+        //    ((TcpServer)this).closeTcpListener();
+        //}
 
-        #endregion
+       // #endregion
 
         //public bool IsClientConnected()
         //{
         //    return (ns != null) && (tcpStreamWriter != null);
         //}
 
-        internal void taskTick(string serverMessage)
+        //internal void taskTick(string serverMessage)
+        //{
+        //    if (serverMessage != "")
+        //    {
+        //        ((BotClient.BotMessageSubscriber)this).msgClient(serverMessage);
+        //    }        
+        //}
+
+
+
+        #region SimEventSubscriber Members
+
+        void SimEventSubscriber.OnEvent(SimEvent evt)
         {
-            if (serverMessage != "")
-            {
-                ((BotClient.BotMessageSubscriber)this).msgClient(serverMessage);
-            }        
+            whileClientIsAway.Enqueue("("+evt.GetName()+" "+parent.argsListString(evt.GetArgs())+")");
         }
 
+        void SimEventSubscriber.ShuttingDown()
+        {
+            ((TcpServer)this).closeTcpListener();
+        }
 
+        #endregion
     }
 }

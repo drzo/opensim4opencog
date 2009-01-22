@@ -338,8 +338,16 @@
         </Options>
       </Configuration>
 
+
       <ReferencePath>bin/</ReferencePath>
       <Reference name="log4net.dll" localCopy="true"/>
+      <Reference name="Mono.Security.dll" localCopy="true"/>
+      <Reference name="OpenMetaverse" localCopy="false"/>
+      <Reference name="OpenMetaverseTypes" localCopy="false"/>
+      <Reference name="OpenMetaverse.Utilities" localCopy="false"/>
+      <Reference name="OpenMetaverse.StructuredData" localCopy="false"/>
+      <Reference name="OpenMetaverse.Http" localCopy="false"/>
+      <Reference name="HttpServer" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
       <Reference name="DotLisp" localCopy="false"/>
       <Reference name="System.Drawing" localCopy="false"/>
@@ -347,11 +355,6 @@
      <!-- <Reference name="System.Text" localCopy="false"/> -->
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
-      <Reference name="OpenMetaverseTypes" localCopy="false"/>
-      <Reference name="OpenMetaverse" localCopy="false"/>
-      <Reference name="OpenMetaverse.StructuredData" localCopy="false"/>
-      <Reference name="OpenMetaverse.Utilities" localCopy="false"/>
-      <Reference name="OpenMetaverse.Http" localCopy="false"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="ABCL.Net.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
@@ -360,7 +363,7 @@
           <Match path="Actions" pattern="*.cs" recurse="true"/>
           <Match path="Bots" pattern="*.cs" recurse="true"/>
           <Match path="Listeners" pattern="*List*.cs" recurse="true"/>
-          <Match path="Listeners" pattern="*Events.cs" recurse="true"/>
+          <Match path="Listeners" pattern="*Event*.cs" recurse="true"/>
           <Match path="Listeners" pattern="World*.cs" recurse="true"/>
           <Match path="Properties" pattern="*.cs" recurse="true"/>
           <Match path="Tutorials" pattern="*.cs" recurse="true"/>
@@ -369,38 +372,82 @@
           <Match path="DotCYC" pattern="CycConnectionForm.cs" recurse="false"/>
           <Match path="DotCYC" pattern="CycConnectionForm.Designer.cs" recurse="false"/>
           <Match path="ScriptEngines" pattern="*.cs" recurse="true"/>
+          <Match path="Simian" pattern="*.cs" recurse="true">
+              <Exclude name="AssemblyInfo.cs"/>
+              <Exclude name="Options.cs"/>
+          </Match>
+     <!--     <Match path="MDI" pattern="*.cs" recurse="true"/>
+          <Match path="MDI" pattern="*.resx" recurse="true"/> -->
+          <Match path="." pattern="*.cs"  recurse="false"/>
+          <Match path="." pattern="*.resx"  recurse="false"/>
+      </Files>
+  </Project>
+
+   <Project name="cogbot_staticomv" path="." type="Exe">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>bin/</ReferencePath>
+      <Reference name="log4net.dll" localCopy="true"/>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Drawing" localCopy="false"/>
+      <Reference name="System.Windows.Forms" localCopy="false"/>
+       <Reference name="Mono.Security.dll" localCopy="true"/>
+     <!-- <Reference name="System.Text" localCopy="false"/> -->
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="System.Web" localCopy="false"/>
+      <Reference name="OpenCyc.dll" localCopy="false"/>
+      <Reference name="ABCL.Net.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+      <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+      <Files>
+          <Match path="dotlisp" pattern="*.cs" recurse="false">
+              <Exclude name="AssemblyInfo.cs"/>
+          </Match>
+          <Match path="Actions" pattern="*.cs" recurse="true"/>
+          <Match path="Bots" pattern="*.cs" recurse="true"/>
+          <Match path="Listeners" pattern="*List*.cs" recurse="true"/>
+          <Match path="Listeners" pattern="*Event*.cs" recurse="true"/>
+          <Match path="Listeners" pattern="World*.cs" recurse="true"/>
+          <Match path="Properties" pattern="*.cs" recurse="true"/>
+          <Match path="Tutorials" pattern="*.cs" recurse="true"/>
+          <Match path="Utilities" pattern="*.cs" recurse="true"/>
+          <Match path="DotCYC" pattern="CycConnectionForm.resx" recurse="false"/>
+          <Match path="DotCYC" pattern="CycConnectionForm.cs" recurse="false"/>
+          <Match path="DotCYC" pattern="CycConnectionForm.Designer.cs" recurse="false"/>
+          <Match path="ScriptEngines" pattern="*.cs" recurse="true"/>
+          <Match path="OpenMetaverse/Types"  pattern="*.cs" recurse="true">
+              <Exclude name="AssemblyInfo.cs"/>
+          </Match>
+          <Match path="OpenMetaverse" pattern="*.cs" recurse="true">
+              <Exclude name="AssemblyInfo.cs"/>
+          </Match>
+          <Match path="OpenMetaverse.StructuredData" pattern="*.cs" recurse="true"/>
+          <Match path="OpenMetaverse.Utilities" pattern="*.cs" recurse="false"/>
+          <Match path="OpenMetaverse.Http" pattern="*.cs" recurse="true"/>
+          <Match path="HttpServer" pattern="*.cs" recurse="true">
+              <Exclude name="AssemblyInfo.cs"/>
+          </Match>
+          <Match path="Simian" pattern="*.cs" recurse="true">
+              <Exclude name="AssemblyInfo.cs"/>
+              <Exclude name="Options.cs"/>
+          </Match>
      <!--     <Match path="MDI" pattern="*.cs" recurse="true"/>
           <Match path="MDI" pattern="*.resx" recurse="true"/> -->
           <Match path="." pattern="*.cs"  recurse="false"/>
           <Match path="." pattern="*.resx"  recurse="false"/>
       </Files>
     </Project>
-   <Project name="TestClient" path="TestClient" type="Exe">
-     <Configuration name="Debug">
-       <Options>
-         <OutputPath>../../../bin/</OutputPath>
-       </Options>
-     </Configuration>
-     <Configuration name="Release">
-       <Options>
-         <OutputPath>../../../bin/</OutputPath>
-       </Options>
-     </Configuration>
 
-     <ReferencePath>../../../bin/</ReferencePath>
-     <Reference name="System"/>
-     <Reference name="System.Xml"/>
-     <Reference name="System.Drawing"/>
-     <Reference name="OpenMetaverse"/>
-     <Reference name="OpenMetaverseTypes"/>
-     <Reference name="OpenMetaverse.Utilities"/>
-     <Reference name="OpenMetaverse.StructuredData"/>
-     <Reference name="OpenMetaverse.Http"/>
-
-     <Files>
-       <Match pattern="*.cs" recurse="true"/>
-     </Files>
-   </Project>
 
   </Solution>
 </Prebuild>

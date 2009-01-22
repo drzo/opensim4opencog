@@ -33,7 +33,7 @@ namespace cogbot.Listeners
 		Simulator sim;
 
 		DoubleDictionary<uint, UUID, Primitive> prims = new DoubleDictionary<uint, UUID, Primitive>();
-		DoubleDictionary<uint, UUID, Avatar> avatars = new DoubleDictionary<uint, UUID, Avatar>();
+		//DoubleDictionary<uint, UUID, Avatar> prims = new DoubleDictionary<uint, UUID, Avatar>();
 		Dictionary<uint, ObjectUpdate> lastObjectUpdate = new Dictionary<uint, ObjectUpdate>();
 		Dictionary<uint, ObjectUpdate> lastObjectUpdateDiff = new Dictionary<uint, ObjectUpdate>();
         Dictionary<Avatar, List<UUID>> avatarAminsSent = new Dictionary<Avatar, List<UUID>>();
@@ -95,7 +95,59 @@ namespace cogbot.Listeners
 			// parent.Avatars.OnAvatarAppearance += new AvatarManager.AvatarAppearanceCallback(Avatars_OnAvatarAppearance);
 			//AgentManager..AvatarSitChanged(Objects_OnAvatarSitChanged);
 			// new DebugAllEvents(client);
+            texturePipeline = new TexturePipeline(client, 10);
+            texturePipeline.OnDownloadFinished += new TexturePipeline.DownloadFinishedCallback(texturePipeline_OnDownloadFinished);
 		}
+
+       // Dictionary<UUID, Parcel> uuidParcels = new Dictionary<UUID, Parcel>();
+        Dictionary<UUID, ImageDownload> uuidTextures = new Dictionary<UUID, ImageDownload>();
+        TexturePipeline texturePipeline;
+            //CurrentClient = new GridClient();
+        /*
+         On-Image-Received
+ image: "{OpenMetaverse.ImageDownload,PacketCount=33,Codec=J2C,NotFound=False,Simulator=OpenSim Test (71.197.210.170:9000),PacketsSeen=System.Collections.Generic.SortedList`2[System.UInt16,System.UInt16],ImageType=Normal,DiscardLevel=-1,Priority=1013000,ID=728dd7fa-a688-432d-a4f7-4263b1f97395,Size=33345,AssetData=System.Byte[],Transferred=33345,Success=True,AssetType=Texture}"
+ asset: "{OpenMetaverse.AssetTexture,Image=,LayerInfo=,Components=0,AssetData=System.Byte[],Temporary=False}"
+41031 [9] DEBUG - Worker 3 Downloaded texture 728dd7fa-a688-432d-a4f7-4263b1f97395
+         */
+        public override void Assets_OnImageReceived(ImageDownload image, AssetTexture asset)
+        {
+            lock (uuidTextures) uuidTextures[image.ID] = image;
+            //base.Assets_OnImageReceived(image, asset);
+        }
+        void texturePipeline_OnDownloadFinished(UUID id, bool success)
+        {
+            if (success)
+            {
+                // Save this texture to the hard drive
+                ImageDownload image = texturePipeline.GetTextureToRender(id);
+                try
+                {
+                    lock (uuidTextures) uuidTextures[id] = image;
+                }
+                catch (Exception)
+                {
+                }
+            }
+            else
+            {
+             //   WriteLine("Texture failed to download: " + id.ToString(), Helpers.LogLevel.Warning);
+            }
+        }
+        //public override void Parcels_OnSimParcelsDownloaded(Simulator simulator, InternalDictionary<int, Parcel> simParcels, int[,] parcelMap)
+        //{
+        //    lock (totalPrimsLock)
+        //    {
+        //        totalPrims = 0;
+        //        simParcels.ForEach(
+        //            delegate(Parcel parcel)
+        //            { 
+        //                uuidParcels[parcel.LocalID]
+        //              //  totalPrims += parcel.TotalPrims;
+        //            });
+        //    }
+        //    base.Parcels_OnSimParcelsDownloaded(simulator, simParcels, parcelMap);
+        //}
+
 
 		private void output(string p)
 		{
@@ -111,7 +163,7 @@ namespace cogbot.Listeners
 				else if (perpAv.Name == client.Self.Name)
 					output("$bot bumped into " + victimAv.Name + ".");
 
-				SendEvent("on-meanCollision", perpAv.Name , victimAv.Name, magnitude);
+				SendNewEvent("on-meanCollision", perpAv.Name , victimAv.Name, magnitude);
 
 			}
 		}
@@ -119,7 +171,7 @@ namespace cogbot.Listeners
         public override  void Sound_OnSoundTrigger(UUID soundID, UUID ownerID, UUID objectID, UUID parentID, float gain, ulong regionHandle, Vector3 position)
         {
             //throw new NotImplementedException();
-            SendEvent("On-Sound-Trigger", soundID, soundID, ownerID, objectID, parentID, gain, regionHandle, position);
+            SendNewEvent("On-Sound-Trigger", soundID, soundID, ownerID, objectID, parentID, gain, regionHandle, position);
         }
 
 
@@ -173,12 +225,12 @@ namespace cogbot.Listeners
                 UUID oldAnim = avatarAminCurrent[avatar];
                 if (oldAnim != mostCurrentAnim)
                 {
-                    SendEvent("On-Object-Animation", avatar, mostCurrentAnim);
+                    SendNewEvent("On-Object-Animation", avatar, mostCurrentAnim);
                 }
             }
             else
             {
-                SendEvent("On-Object-Animation", avatar, mostCurrentAnim);
+                SendNewEvent("On-Object-Animation", avatar, mostCurrentAnim);
             }
             avatarAminCurrent[avatar] = mostCurrentAnim;
 
@@ -186,7 +238,7 @@ namespace cogbot.Listeners
 			if (avatarAminsSent.ContainsKey(avatar)) {
 
 			}
-			//SendEvent("On-Avatar-Animation", avatar, names);
+			//SendNewEvent("On-Avatar-Animation", avatar, names);
 		}
 
         public override void Self_OnAnimationsChanged(InternalDictionary<UUID, int> agentAnimations)
@@ -216,22 +268,78 @@ namespace cogbot.Listeners
 
 		public Avatar GetAvatar(UUID avatarID)
 		{
-			Avatar prim;
-			if (avatars.TryGetValue(avatarID, out prim)) {
-				return prim;
+			Primitive prim;
+            bool b;
+            lock (prims)
+                b = prims.TryGetValue(avatarID, out prim);
+			if (b) {
+                if (!(prim is Avatar)) return null;
+				return (Avatar)prim;
 			}
 			return null;
 		}
 
+        public Type GetType(UUID uuid)
+        {
+            Object found ;
+            lock(uuidType)
+                if (uuidType.ContainsKey(uuid))
+                {
+                    found = uuidType[uuid];
+                    if (found is Type) return (Type)found;
+                    return found.GetType();
+                }
+
+            found  = GetObject(uuid);
+            if (found == null) return null;
+            //lock (uuidType) uuidType[uuid] = found;
+            if (found is Type) return (Type)found;
+            return found.GetType();
+        }
+
 		static readonly string[] paramNamesOnObjectKilled = new string[] { "simulator", "objectID"};
 		static readonly Type[] paramTypesOnObjectKilled = new Type[] { typeof(Simulator), typeof(uint)};
 
-		//public void Objects_OnObjectKilled(Simulator simulator, uint objectID) {
-		//    Primitive p = primsByLocalID[objectID];
-		//    prims[p.Properties.Name] = null;
-		//    primsByLocalID[objectID] = null;
-		//}
+        public override void Objects_OnObjectKilled(Simulator simulator, uint objectID)
+        {
 
+            Primitive p;
+            if (prims.TryGetValue(objectID, out p))
+            {
+                SendNewEvent("on-prim-killed", p);
+            }
+            else
+            {
+                base.Objects_OnObjectKilled(simulator, objectID);
+            }
+        }
+/*
+On-Effect
+type: "Sphere"
+sourceID: "00000000-0000-0000-0000-000000000000"
+targetID: "00000000-0000-0000-0000-000000000000"
+targetPos: '(Vector3d 256126.750573638 256129.791631699 25.2663780227304)
+duration: 0.25
+id: "a31efee6-a426-65a6-5ef2-d1345be49233"
+ */
+        public override void Avatars_OnEffect(EffectType type, UUID sourceID, UUID targetID, Vector3d targetPos, float duration, UUID id)
+        {
+//            SendNewEvent("on-effect",targetPos,id)
+            lock (uuidType) uuidType[id] = type;
+            base.Avatars_OnEffect(type, sourceID, targetID, targetPos, duration, id);
+        }
+/*
+         
+ On-Folder-Updated
+folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
+ */
+
+        static Dictionary<UUID, object> uuidType = new Dictionary<UUID, object>();
+        public override void Inventory_OnFolderUpdated(UUID folderID)
+        {
+            lock (uuidType) uuidType[folderID] = typeof(InventoryFolder);
+            //base.Inventory_OnFolderUpdated(folderID);
+        }
 		static readonly string[] paramNamesOnObjectPropertiesFamily = new string[] { "simulator", "props", "type"};
 		static readonly Type[] paramTypesOnObjectPropertiesFamily = new Type[] { typeof(Simulator), typeof(Primitive.ObjectProperties), typeof(ReportType)};
 
@@ -242,18 +350,18 @@ namespace cogbot.Listeners
            // GotPermissions = true;
            // GotPermissionsEvent.Set();        
 			//Objects_OnObjectProperties(simulator, props);
-            SendEvent("On-Object-PropertiesFamily",simulator, props, type);
+            SendNewEvent("On-Object-PropertiesFamily",simulator, props, type);
 		}
 
 		static readonly string[] paramNamesOnObjectUpdated = new string[] { "simulator", "update", "regionHandle", "timeDilation"};
 		static readonly Type[] paramTypesOnObjectUpdated = new Type[] { typeof(Simulator), typeof(ObjectUpdate), typeof(ulong), typeof(ushort)};
 
-
         public override void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
 		{
             lock (primsAwaitingSelect)
             {
-                prims.Add(prim.LocalID, prim.ID, prim);
+               lock (prim)
+                   prims.Add(prim.LocalID, prim.ID, prim);
                 primsAwaitingSelect.Add(prim);
                 client.Objects.SelectObject(simulator, prim.LocalID);
             }
@@ -263,7 +371,7 @@ namespace cogbot.Listeners
 
         public override void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)
         {
-            SendEvent("On-Avatar-Properties", GetAvatar(avatarID), properties);
+            SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID), properties);
         }
 
         object Objects_OnObjectPropertiesLock = new object();
@@ -276,7 +384,10 @@ namespace cogbot.Listeners
         {
             Primitive prim;
 
-            if (prims.TryGetValue(props.ObjectID, out prim))
+            bool b;
+            lock (prims) 
+                b = prims.TryGetValue(props.ObjectID, out prim);
+            if (b)
             {
                 if (primsAwaitingSelect.Contains(prim))
                 {
@@ -289,7 +400,7 @@ namespace cogbot.Listeners
                     if (!primsKnown.Contains(prim))
                     {
                         primsKnown.Add(prim);
-                        SendEvent("on-new-prim", props.Name, props.ObjectID.ToString(), props.Description);
+                        SendNewEvent("on-new-prim", props.Name, props.ObjectID.ToString(), props.Description);
                     }
                 CalcStats(prim);
                 describePrimToAI(prim);
@@ -310,8 +421,10 @@ namespace cogbot.Listeners
         }
         private void Objects_OnNewAvatar1(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
         {
-            lock (avatars)
-                avatars.Add(avatar.LocalID, avatar.ID, avatar);
+            //lock (prims)
+               // prims.Add(avatar.LocalID, avatar.ID, avatar);
+            //lock (prims)  prims.Add(avatar.LocalID, avatar.ID, avatar);
+            Objects_OnNewPrim(simulator, avatar, regionHandle, timeDilation);
             try
             {
                 lock (avatarCache)
@@ -413,8 +526,8 @@ namespace cogbot.Listeners
 			Primitive objectUpdated = null;
 			//Console.WriteLine("timeDilation " + timeDilation);
 			if (update.Avatar) {
-				Avatar prim;
-				if (avatars.TryGetValue(update.LocalID, out prim)) {
+				Primitive prim;
+				if (prims.TryGetValue(update.LocalID, out prim)) {
 					objectUpdated = prim;
 					lock (prim)
 					{
@@ -472,7 +585,7 @@ namespace cogbot.Listeners
 					needsOsdDiff = true;
 				}
 				// BlockUntilProperties(objectUpdated);
-				if (objectUpdated.Properties != null) {
+				if (false && objectUpdated.Properties != null) {
 					OSDMap after = (OSDMap)objectUpdated.GetOSD();
 					//  Console.WriteLine(OSDParser.SerializeLLSDXmlString(after));
 					if (lastOSD.ContainsKey(update.LocalID)) {
@@ -513,7 +626,7 @@ namespace cogbot.Listeners
             }
             //  String lispName = "on-" + ((objectUpdated is Avatar) ? "avatar-" : "prim-") + p.ToLower() + "-updated";
             String lispName = "on-object-" + p.ToLower();
-            SendEvent(lispName, objectUpdated, after);
+            SendNewEvent(lispName, objectUpdated, after);
             return after;
         }
 
@@ -554,14 +667,14 @@ namespace cogbot.Listeners
 			if (before.Velocity != after.Velocity) {
                // didUpdate(objectUpdated, "Velocity", before.Velocity, after.Velocity, diff.Velocity);
 				if (before.Velocity == Vector3.Zero) {
-					SendEvent("on-object-start-velosity", objectUpdated, after.Velocity);
-                    if (!wasPositionUpdateSent) SendEvent("on-object-position", objectUpdated, after.Position);
+					SendNewEvent("on-object-start-velosity", objectUpdated, after.Velocity);
+                    if (!wasPositionUpdateSent) SendNewEvent("on-object-position", objectUpdated, after.Position);
 				} else if (after.Velocity == Vector3.Zero) {                        
-                    if (!wasPositionUpdateSent) SendEvent("on-object-position", objectUpdated, after.Position);					                    
-                    SendEvent("on-object-stop-velosity", objectUpdated, -before.Velocity);
+                    if (!wasPositionUpdateSent) SendNewEvent("on-object-position", objectUpdated, after.Position);					                    
+                    SendNewEvent("on-object-stop-velosity", objectUpdated, -before.Velocity);
 				} else {
-					//SendEvent("on-object-change-velosity", objectUpdated, after.Velocity);
-                    if (!wasPositionUpdateSent) SendEvent("on-object-position", objectUpdated, after.Position);
+					//SendNewEvent("on-object-change-velosity", objectUpdated, after.Velocity);
+                    if (!wasPositionUpdateSent) SendNewEvent("on-object-position", objectUpdated, after.Position);
                 }            
 				wasChanged = true;
 			}
@@ -577,7 +690,14 @@ namespace cogbot.Listeners
             if (xmlBefore.Equals(xmlAfter)) return "";
             return "\n\n\n\nBEFORE\n" + before + "\n\nAFTER\n" + after;
         }
-
+        /*
+         * TODO
+         On-Avatar-Sit-Changed
+ simulator: "OpenSim Test"
+ avatar: '(avatar "Nephrael Rae")
+ sittingOn: 3135593693
+ oldSeat: 0
+         */
         class SomeChange
         {
             Object before;
@@ -595,7 +715,19 @@ namespace cogbot.Listeners
             }
 
         }
+        public Vector3 QuatToRotation(Quaternion quat)
+        {
 
+
+            float X,Y,Z;
+    //        quat.GetAxisAngle(CoordinateFrame.Z_AXIS, out Z);
+  //          quat.GetAxisAngle(CoordinateFrame.X_AXIS, out X);
+//            quat.GetAxisAngle(CoordinateFrame.Y_AXIS, out Y);
+
+            float r2d = 57.29577951F;
+            quat.GetEulerAngles(out X,out Y,out Z);
+            return new Vector3(X * r2d, Y * r2d, Z * r2d);
+        }
 
         public Primitive deepCopy(Primitive objectUpdated)
         {
@@ -662,20 +794,20 @@ namespace cogbot.Listeners
         public override void Terrain_OnLandPatch(Simulator simulator, int x, int y, int width, float[] data)
         {
             //throw new NotImplementedException();
-         //   SendEvent("On-Land-Patch", x, y, width, data);
+         //   SendNewEvent("On-Land-Patch", x, y, width, data);
             //            output("TextForm Terrain_OnLandPatch: "+simulator.ToString()+"/"+x.ToString()+"/"+y.ToString()+" w="+width.ToString());
         }
 
         //void Self_OnAnimationsChanged(InternalDictionary<UUID, int> agentAnimations)
         //{
         //    //throw new NotImplementedException();
-        //    SendEvent("On-Animations-Changed", agentAnimations);
+        //    SendNewEvent("On-Animations-Changed", agentAnimations);
         //    //           output("TextForm Self_OnAnimationsChanged: ");
         //}
 
         //void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties properties)
         //{
-        //    SendEvent("On-Object-Properties", simulator, properties);
+        //    SendNewEvent("On-Object-Properties", simulator, properties);
         //    // Handled by Object Listener
         //    //throw new NotImplementedException();
         //    //           output("TextForm Objects_OnObjectProperties: ");
@@ -683,7 +815,7 @@ namespace cogbot.Listeners
 
         //void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
         //{
-        //    SendEvent("On-Object-Updated", simulator, update, regionHandle, timeDilation);
+        //    SendNewEvent("On-Object-Updated", simulator, update, regionHandle, timeDilation);
         //    //throw new NotImplementedException();
         //    //            output("TextForm Objects_OnObjectUpdated: ");
         //}
@@ -691,7 +823,7 @@ namespace cogbot.Listeners
         //void Objects_OnObjectKilled(Simulator simulator, uint objectID)
         //{
         //    //throw new NotImplementedException();
-        //    SendEvent("On-Object-Killed", simulator, objectID);
+        //    SendNewEvent("On-Object-Killed", simulator, objectID);
         //}
 
         //void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
@@ -703,8 +835,8 @@ namespace cogbot.Listeners
         //    //objects.SetCurrentSimulator(simulator);
         //    //objects.BlockUntilProperties(prim);
         //    //if (prim.Properties.Name != null)
-        //    //    SendEvent("on-new-prim",prim.Properties.Name,prim.Properties.ObjectID,prim.Properties.Description);
-        //    //else SendEvent("On-New-Prim", simulator, prim, regionHandle, timeDilation);
+        //    //    SendNewEvent("on-new-prim",prim.Properties.Name,prim.Properties.ObjectID,prim.Properties.Description);
+        //    //else SendNewEvent("On-New-Prim", simulator, prim, regionHandle, timeDilation);
 
         //}
 
@@ -718,15 +850,15 @@ namespace cogbot.Listeners
         //    objects.BlockUntilProperties(foliage);
 
         //    if (foliage.Properties.Name != null)
-        //        SendEvent("on-new-foliage",foliage.Properties.Name,foliage.Properties.ObjectID,foliage.Properties.Description);
-        //    else SendEvent("On-New-Foliage", simulator, foliage, regionHandle, timeDilation);
+        //        SendNewEvent("on-new-foliage",foliage.Properties.Name,foliage.Properties.ObjectID,foliage.Properties.Description);
+        //    else SendNewEvent("On-New-Foliage", simulator, foliage, regionHandle, timeDilation);
         //}
 
         //void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
         //{
         //    //throw new NotImplementedException();
-        //    SendEvent("On-New-Avatar-Hook", simulator, avatar, regionHandle, timeDilation);
-        //    SendEvent("on-new-avatar",avatar.Name,avatar.ID);
+        //    SendNewEvent("On-New-Avatar-Hook", simulator, avatar, regionHandle, timeDilation);
+        //    SendNewEvent("on-new-avatar",avatar.Name,avatar.ID);
         //}
 
         //void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)
@@ -741,11 +873,10 @@ namespace cogbot.Listeners
             if (targetID == client.Self.AgentID)
             {
                 output("  (TARGET IS SELF)");
-                SendEvent("on-self-point-target", GetObject(sourceID), lookType);
+                SendNewEvent("on-self-point-target", GetObject(sourceID), lookType);
             }
-            SendEvent("on-avatar-point", GetObject(sourceID), GetObject(targetID), targetPos, lookType.ToString(), duration, GetObject(id));
+            SendNewEvent("on-avatar-point", GetObject(sourceID), GetObject(targetID), targetPos, lookType.ToString(), duration, GetObject(id));
         }
-
 
         public override void Avatars_OnLookAt(UUID sourceID, UUID targetID, Vector3d targetPos, LookAtType lookType, float duration, UUID id)
         {
@@ -754,9 +885,9 @@ namespace cogbot.Listeners
             if (targetID == client.Self.AgentID)
             {
                 output("  (TARGET IS SELF)");
-                SendEvent("on-self-look-target", GetObject(sourceID), lookType);
+                SendNewEvent("on-self-look-target", GetObject(sourceID), lookType);
             }
-            SendEvent("on-avatar-look", GetObject(sourceID), GetObject(targetID), targetPos, lookType.ToString(), duration, GetObject(id));
+            SendNewEvent("on-avatar-look", GetObject(sourceID), GetObject(targetID), targetPos, lookType.ToString(), duration, GetObject(id));
         }
 
         public object GetObject(UUID id)
@@ -781,7 +912,7 @@ namespace cogbot.Listeners
         }
 
         Dictionary<Primitive, Vector3> primVect = new Dictionary<Primitive, Vector3>();
-		public void SendEvent(string eventName, params object[] args)
+		public void SendNewEvent(string eventName, params object[] args)
 		
         {
             if (eventName.Contains("on-avatar-look")) return;
@@ -795,21 +926,21 @@ namespace cogbot.Listeners
                 if (!primVect.ContainsKey(prim))
                 {
                     primVect[prim] = vect;
-                    client.SendEvent(eventName, args);
+                    client.SendNewEvent(eventName, args);
                 }
                 else
                 {
                     Vector3 v3 = primVect[prim]-vect;
                     if (v3.Length() > 0.5)
                     {
-                        client.SendEvent(eventName, args);
+                        client.SendNewEvent(eventName, args);
                         primVect[prim] = vect;
                     }
                 }
                 return;
 
             }
-			client.SendEvent(eventName, args);
+			client.SendNewEvent(eventName, args);
 		}
 
 
@@ -887,9 +1018,9 @@ namespace cogbot.Listeners
 			BlockUntilProperties(prim);
 			if (prim.Properties.Name != null) {
 				//botenqueueLispTask("(on-prim-description '(" + prim.Properties.Name + ") '" + prim.Properties.Description + "' )");
-				SendEvent("on-prim-dist", prim, Vector3.Distance(client.Self.SimPosition, prim.Position));
-				SendEvent("on-prim-pos", prim, prim.Position);
-				SendEvent("on-prim-description", prim, "" + prim.Properties.Description);
+				SendNewEvent("on-prim-dist", prim, Vector3.Distance(client.Self.SimPosition, prim.Position));
+				SendNewEvent("on-prim-pos", prim, prim.Position);
+				SendNewEvent("on-prim-description", prim, "" + prim.Properties.Description);
 				//botoutput(prim.Properties.Name + ": " + prim.Properties.Description);
 				//if (prim.Sound != UUID.Zero)
 				//    botoutput("This object makes sound.");
@@ -1216,9 +1347,9 @@ namespace cogbot.Listeners
 			//     verb = "sitting";
 			//botoutput(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
 			//botoutput(avatar.Name + " is " + Vector3.Distance(Client.Self.SimPosition, avatar.Position).ToString() + " distant.");
-			SendEvent("on-avatar-dist", avatar, Vector3.Distance(client.Self.SimPosition, avatar.Position));
-			SendEvent("on-avatar-pos", avatar, avatar.Position);
-			SendEvent("on-avatar-description", avatar, avatar.GroupName);
+			SendNewEvent("on-avatar-dist", avatar, Vector3.Distance(client.Self.SimPosition, avatar.Position));
+			SendNewEvent("on-avatar-pos", avatar, avatar.Position);
+			SendNewEvent("on-avatar-description", avatar, avatar.GroupName);
 			//  botenqueueLispTask("(on-avatar-posture (@\"" + avatar.Name + "\") (@\"" + verb + "\") )");
 
 			/*

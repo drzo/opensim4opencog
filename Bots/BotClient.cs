@@ -10,13 +10,15 @@ using System.Threading;
 using System.Collections;
 using cogbot.ScriptEngines;
 using System.IO;
+using cogbot.Listeners;
 
 namespace cogbot
 {
-	public class BotClient : GridClient {
+	public class BotClient : GridClient,SimEventSubscriber {
 		public static int nextTcpPort = 5555;
 		int thisTcpPort;
 		public OpenMetaverse.LoginParams BotLoginParams;// = null;
+        SimEventPublisher botPipeline = new SimEventMulticastPipeline();
 		public UUID GroupID = UUID.Zero;
 		public Dictionary<UUID, GroupMember> GroupMembers = null; // intialized from a callback
 		public Dictionary<UUID, AvatarAppearancePacket> Appearances = new Dictionary<UUID, AvatarAppearancePacket>();
@@ -65,13 +67,12 @@ namespace cogbot
         public int RunningMode = (int)Modes.normal;
         public UUID AnimationFolder = UUID.Zero;
 
-        public Queue taskQueue = null;// new Queue();
-        public Thread thrJobQueue = null;
         InventoryEval searcher = null; // new InventoryEval(this);
         //public Inventory Inventory;
         //public InventoryManager Manager;
         // public Configuration config;
         public String taskInterperterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
+        ScriptEventListener scriptEventListener = null;
         public TextForm parentTextForm = null;
         public List<string> muteList;
         public bool muted = false;
@@ -109,12 +110,16 @@ namespace cogbot
 			SetDefaultLoginDetails(TextForm.SingleInstance.config);
 		}
 
+
+
         public void TextFormClient(TextForm parent)
         {
+            botPipeline.AddSubscriber(new SimEventTextSubscriber(parent,this));
             // SingleInstance = this;
             ///this = this;// new GridClient();
             parentTextForm = parent;
 
+        
 
             //            Appearances = new Dictionary<UUID, AvatarAppearancePacket>();
 
@@ -218,7 +223,6 @@ namespace cogbot
 
             Inventory.OnObjectOffered += new InventoryManager.ObjectOfferedCallback(Inventory_OnInventoryObjectReceived);
             Groups.OnGroupMembers += new GroupManager.GroupMembersCallback(GroupMembersHandler);
-            Inventory.OnObjectOffered += new InventoryManager.ObjectOfferedCallback(Inventory_OnInventoryObjectReceived);
             Logger.OnLogMessage += new Logger.LogCallback(client_OnLogMessage);
             Network.OnEventQueueRunning += new NetworkManager.EventQueueRunningCallback(Network_OnEventQueueRunning);
             Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
@@ -235,8 +239,7 @@ namespace cogbot
 
             updateTimer.Start();
             searcher = new InventoryEval(this);
-            thrJobQueue = new Thread(jobManager);
-            thrJobQueue.Start();
+            initTaskInterperter();
         }
 
 
@@ -324,8 +327,8 @@ namespace cogbot
             if (message.Length > 0 && sourceType == ChatSourceType.Agent && !muteList.Contains(fromName))
             {
                 output(fromName + " says, \"" + message + "\".");
-                //botenqueueLispTask("(thisClient.msgClient \"(heard (" + fromName + ") '" + message + "' )\" )");
-                SendEvent("on-chat", fromName, message);
+                //botenqueueLispEvent("(thisClient.msgClient \"(heard (" + fromName + ") '" + message + "' )\" )");
+                SendNewEvent("on-chat", fromName, message);
             }
         }
 
@@ -334,7 +337,7 @@ namespace cogbot
             if (im.Message.Length > 0 && im.Dialog == InstantMessageDialog.MessageFromAgent)
             {
                 output(im.FromAgentName + " whispers, \"" + im.Message + "\".");
-                SendEvent("on-instantmessage", im.FromAgentName, im.Message);
+                SendNewEvent("on-instantmessage", im.FromAgentName, im.Message);
 
                 Actions.Whisper whisper = (Actions.Whisper)Commands["whisper"];
                 whisper.currentAvatar = im.FromAgentID;
@@ -365,19 +368,20 @@ namespace cogbot
 
         void Self_OnScriptQuestion(Simulator simulator, UUID taskID, UUID itemID, string objectName, string objectOwner, ScriptPermission questions)
         {
-            SendEvent("On-Script-Question", simulator, taskID, itemID, objectName, objectOwner, questions);
+            SendNewEvent("On-Script-Question", simulator, taskID, itemID, objectName, objectOwner, questions);
             //throw new NotImplementedException();
         }
 
         void Self_OnScriptDialog(string message, string objectName, UUID imageID, UUID objectID, string firstName, string lastName, int chatChannel, List<string> buttons)
         {
-            SendEvent("On-Script-Dialog", message, objectName, imageID, objectID, firstName, lastName, chatChannel, buttons);
+            SendNewEvent("On-Script-Dialog", message, objectName, imageID, objectID, firstName, lastName, chatChannel, buttons);
             //throw new NotImplementedException();
         }
 
         private bool Inventory_OnInventoryObjectReceived(InstantMessage offer, AssetType type,
 														 UUID objectID, bool fromTask)
 		{
+            if (true) return true; // accept everything
 			if (MasterKey != UUID.Zero) {
 				if (offer.FromAgentID != MasterKey)
 					return false;
@@ -397,7 +401,7 @@ namespace cogbot
 				else
 					output("Disconnected from server. " + reason);
 
-				SendEvent("on-network-disconnected",reason,message);
+				SendNewEvent("on-network-disconnected",reason,message);
 
 				output("Bad Names: " + BoringNamesCount);
 				output("Good Names: " + GoodNamesCount);
@@ -413,7 +417,7 @@ namespace cogbot
 
 				//  describeAll();
 				//  describeSituation();
-				SendEvent("on-network-connected");
+				SendNewEvent("on-network-connected");
 
 			} catch (Exception e) {
 			}
@@ -421,175 +425,14 @@ namespace cogbot
 
 
 
-		public void SendEvent(string eventName, params object[] args)
-		{
-			eventName = eventName.ToLower();
-			String msg = "(" + eventName.ToLower();
-			int start = 0;
-			if (args.Length > 1) {
-				if (args[0] is Simulator) {
-					start = 1;
-				}
-			}
-			for (int i = start; i < args.Length; i++) {
-				msg += " ";
-				msg += argString(args[i]);
-			}
-
-			msg += ")";
-			if (taskInterperter.DefinedFunction(eventName)) {
-				enqueueLispTask(msg);
-			} else {
-                msgClient(msg);
-			}
-		}
-        public string argsListString(IEnumerable args)
-        {
-            IEnumerator enumer = args.GetEnumerator();
-            if (!enumer.MoveNext()) return "";
-            String msg = argString(enumer.Current);
-            while (enumer.MoveNext())
-            {
-                msg += " ";
-                msg += argString(enumer.Current);
-            }
-            return msg;
-
-        }
-
-		public string argString(object arg)
-		{
-			if (arg == null) return "NIL";
-			Type type = arg.GetType();
-			if (arg is Simulator) {
-				return argString(((Simulator)arg).Name);
-			}
-			if (arg is Avatar) {
-				Avatar prim = (Avatar)arg;
-                arg = "'(avatar"; //+ argString(prim.ID.ToString());
-				if (prim.Name != null) {
-					arg = arg + " " + argString(prim.Name);
-				}
-				return arg + ")";
-			}
-
-			if (arg is Primitive) {
-				Primitive prim = (Primitive)arg;
-                arg = "'(prim " + argString(prim.ID.ToString());
-				if (prim.Properties != null) {
-					arg = arg + " " + argString(prim.Properties.Name);
-				}
-				return arg + ")";
-			}
-			if (type.IsEnum) {
-				return argString(arg.ToString());
-			}
-			//InternalDictionary
-			if (arg is IList) {
-				String dictname = "'(list " + type.Name;
-				IList list = (IList)arg;
-				foreach (object key in list)
-				{
-					dictname += " " + argString(key);
-				}
-				return dictname + ")";
-
-
-			}
-			if (arg is IDictionary) {
-				String dictname = "'(dict " + type.Name;
-				IDictionary dict = (IDictionary)arg;
-                lock (dict)
-                {
-                    foreach (object key in dict.Keys)
-                    {
-                        Object o = dict[key];
-                        dictname += " " + argString(key) + "=" + argString(o);
-                    }
-                    return dictname + ")";
-                }
-
-			}
-			if (arg is UUID) {
-                object found = WorldSystem.GetObject((UUID)arg);
-                if (found == null || found == arg)
-                {
-                    return argString(arg.ToString());
-                }
-                return argString(found);
-			} else
-				if (arg is Vector3) {
-				Vector3 vect = (Vector3)arg;
-				return "'(Vector3 " + vect.X + " " + vect.Y + " " + vect.Z + ")";
-			} else
-                if (arg is Vector2)
-                {
-                    Vector2 vect = (Vector2)arg;
-                    return "'(Vector2 " + vect.X + " " + vect.Y + ")";
-                }
-                else
-                    if (arg is Vector3d)
-                    {
-                        Vector3d vect = (Vector3d)arg;
-                        return "'(Vector3d " + vect.X + " " + vect.Y + " " + vect.Z + ")";
-                    }
-                    else
-                        if (arg is Quaternion)
-                        {
-                            Quaternion vect = (Quaternion)arg;
-                            return "'(Quaternion " + vect.X + " " + vect.Y + " " + vect.Z + " " + vect.W +")";
-                        }
-
-			if (type.IsArray) {
-				Array a = (Array)arg;
-				return "#{/*"+type+"*/"+ argsListString(a) + "}";
-			}
-			if (arg is String) {
-				return "\"" + arg.ToString().Replace("\"", "\\\"") + "\"";
-			}
-			if (type.Namespace.StartsWith("System")) {
-				return "" + arg;
-			}
-            if (arg is IEnumerable)
-            {
-                IEnumerable a = (IEnumerable)arg;
-                return "'(/*" + type + "*/" + argsListString(a) + ")";
-            }
-			if (type.IsValueType) {
-				String tostr = "{" + arg + "";
-				foreach (FieldInfo fi in type.GetFields())
-				{
-					if (!fi.IsStatic) {
-						tostr += ",";
-						tostr += fi.Name + "=";
-						tostr += argString(fi.GetValue(arg));
-					}
-				}
-				return argString(tostr + "}");
-			}
-			if (!type.IsValueType) {
-				String tostr = "{" + arg + "";
-				foreach (FieldInfo fi in type.GetFields())
-				{
-					if (!fi.IsStatic) {
-						tostr += ",";
-						tostr += fi.Name + "=";
-						tostr += fi.GetValue(arg);
-					}
-				}
-				return argString(tostr + "}");
-			}
-			return "" + arg;
-		}
-
 		void Appearance_OnAppearanceUpdated(Primitive.TextureEntry te)
 		{
-			SendEvent("On-Appearance-Updated", te);
+			SendNewEvent("On-Appearance-Updated", te);
 		}
 
 		void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
 		{
-			SendEvent("On-Sim-Disconnected", simulator, reason);
+			SendNewEvent("On-Sim-Disconnected", simulator, reason);
 		}
 
 		void client_OnLogMessage(object message, Helpers.LogLevel level)
@@ -600,46 +443,32 @@ namespace cogbot
 			if (msg.Contains("Rate limit"))	return;
 			if (debugLevel < 3 && msg.Contains("Array index is out of range")) return;
 			if (debugLevel < 3 && (msg.Contains("nloadi") || msg.Contains("ransfer"))) return;
-			SendEvent("On-Log-Message", message, level);
+			SendNewEvent("On-Log-Message", message, level);
 		}
 
 		void Network_OnEventQueueRunning(Simulator simulator)
 		{
-			SendEvent("On-Event-Queue-Running", simulator);
+			SendNewEvent("On-Event-Queue-Running", simulator);
 		}
 
 		void Network_OnSimConnected(Simulator simulator)
 		{
-			SendEvent("On-Simulator-Connected", simulator);
-//            SendEvent("on-simulator-connected",simulator);
+			SendNewEvent("On-Simulator-Connected", simulator);
+//            SendNewEvent("on-simulator-connected",simulator);
 		}
 
 		bool Network_OnSimConnecting(Simulator simulator)
 		{
-			SendEvent("On-simulator-Connecing", simulator);
+			SendNewEvent("On-simulator-Connecing", simulator);
 			return true;
 		}
 
 		void Network_OnLogoutReply(List<UUID> inventoryItems)
 		{
-			SendEvent("On-Logout-Reply", inventoryItems);
+			SendNewEvent("On-Logout-Reply", inventoryItems);
 		}
 
-		public bool ExecuteCommand(string text)
-		{
-			//text = text.Replace("\"", "");
-			string verb = text.Split(null)[0];
-			if (Commands.ContainsKey(verb)) {
-				if (text.Length > verb.Length)
-					Commands[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1));
-				else
-					Commands[verb].acceptInputWrapper(verb, "");
-				return true;
-			} else {
-				return false;
-			}
-		}
-//=====================
+        //=====================
 		// 
 		// Notes:
 		//   1. When requesting folder contents Opensim/libomv may react differently than SL/libomv
@@ -661,8 +490,6 @@ namespace cogbot
 			//InventoryEval searcher = new InventoryEval(this);
 			searcher.evalOnFolders(rootFolder, usage, itemName);
 		}
-
-
 
 		public void ListObjectsFolder()
 		{
@@ -732,251 +559,7 @@ namespace cogbot
 
 		}
 
-		public class InventoryEval {
-			// recursive evaluator
-			public string current_operation = "";
-			public string current_itemName = "";
-			//   protected TextForm botclient;
-			protected BotClient botclient;
-			public Hashtable hooked = new Hashtable();
-			//private Inventory Inventory;
-			//private InventoryManager Manager;
-
-			public InventoryEval(BotClient _c)
-			{
-				//  botclient = _c.botclient;
-				botclient = _c;// botclient.CurrentClient;
-
-			}
-
-			public void regFolderHook(InventoryFolder folder)
-			{
-				if (!hooked.ContainsKey(folder.UUID)) {
-					hooked.Add(folder.UUID, folder.Name);
-					botclient.output("  regFolderHook " + folder.Name);
-				}
-
-			}
-
-			public void appendFolderHook(InventoryFolder folder)
-			{
-				if (!hooked.ContainsKey(folder.UUID)) {
-					hooked.Add(folder.UUID, folder.Name);
-					// folder.OnContentsRetrieved += new InventoryFolder.ContentsRetrieved(myfolder_OnContentsRetrieved);
-					botclient.output("  appendFolderHook " + folder.Name);
-				}
-
-			}
-
-			public void myfolder_OnContentsRetrieved(InventoryFolder folder)
-			{
-				regFolderHook(folder);
-				// folder.DownloadContentsOpenSim(TimeSpan.FromSeconds(60));
-				// botclient.output("    myfolder_OnContentsRetrieved [" + folder.Name + "] = " + folder.UUID.ToString()+ " with count="+folder.Contents.Count.ToString());
-				List<InventoryBase> folderContents = botclient.Inventory.FolderContents(folder.UUID, botclient.Self.AgentID,
-																						true, true, InventorySortOrder.ByName, 3000);
-				if (folderContents != null) {
-
-					foreach (InventoryBase ib in folderContents)
-					{
-						if (ib is InventoryItem) {
-							InventoryItem ii = ib as InventoryItem;
-							if (current_operation == "print") {
-								//int indent = 1;
-								//StringBuilder result = new StringBuilder();
-								//result.AppendFormat("{0}{1} ({2})\n", new String(' ', indent * 2), ii.Name, ii.UUID.ToString());
-								//output(result.ToString());
-								botclient.output("   [Inventory Item] Name: " + ii.Name + " <==> " + ii.UUID.ToString() + " in folder[" + folder.Name + "]");
-							}
-
-
-							if (ii.Name == current_itemName) {
-								// we found a matcher so lets do our ops
-								if (current_operation == "wear") botclient.Appearance.WearOutfit(ii.UUID, false);
-								if (current_operation == "animationStart") botclient.Self.AnimationStart(ii.UUID, false);
-								if (current_operation == "animationStop") botclient.Self.AnimationStop(ii.UUID, false);
-								if (current_operation == "attach") botclient.Appearance.Attach(ii, AttachmentPoint.Default);
-							}
-						}
-					}
-					// now run any subfolders
-					foreach (InventoryBase ib in folderContents)
-					{
-						if (ib is InventoryFolder) {
-							InventoryFolder fld = (InventoryFolder)ib;
-
-							botclient.output(" [Folder] Name: " + ib.Name + " <==> " + ib.UUID.ToString() + " in folder[" + folder.Name + "]");
-
-							//evalOnFolders(ib as InventoryFolder, operation, itemName);
-							appendFolderHook(fld);
-							//fld.RequestContents();
-
-						}
-					}
-				}
-
-			}
-
-			public void evalOnFolders(InventoryFolder folder, string operation, string itemName)
-			{
-
-				current_itemName = itemName;
-				current_operation = operation;
-
-				try {
-					/*
-				 //   botclient.output("examining folder [" + folder.Name + "] = " + folder.UUID.ToString());
-					bool success = false;
-					if (folder.IsStale)
-					{
-						for (int wait = 5; ((wait < 10) && (!success)&&(folder.Contents.Count==0)); wait += 5)
-						{
-							success = folder.DownloadContentsOpenSim(TimeSpan.FromSeconds(wait));
-							//success = folder.DownloadContents(TimeSpan.FromSeconds(wait));
-							botclient.output(" DownloadContentets returned " + success.ToString());
-							botclient.output(" Contents.count = " + folder.Contents.Count.ToString());
-						}
-					//appendFolderHook(folder);
-					//folder.RequestContents();
-					}
-					//else
-					//{
-					//    output(" Claim is folder is fresh...");
-					//}
-					*/
-
-					List<InventoryBase> folderContents = botclient.Inventory.FolderContents(folder.UUID, botclient.Self.AgentID,
-																							true, true, InventorySortOrder.ByName, 3000);
-					if (folderContents != null) {
-
-						// first scan this folder for objects
-
-						foreach (InventoryBase ib in folderContents)
-						{
-							//botclient.output(" [InvAll] Name: " + ib.Name + " <==> " + ib.ToString());
-							if (ib is InventoryItem) {
-								InventoryItem ii = ib as InventoryItem;
-								if (operation == "print") {
-									//int indent = 1;
-									//StringBuilder result = new StringBuilder();
-									//result.AppendFormat("{0}{1} ({2})\n", new String(' ', indent * 2), ii.Name, ii.UUID.ToString());
-									//output(result.ToString());
-									botclient.output(" [Inventory Item] Name: " + ii.Name + " <==> " + ii.UUID.ToString());
-								}
-
-
-								if (String.Compare(ii.Name,itemName,true)==0) {
-									// we found a matcher so lets do our ops
-									if (operation == "wear") botclient.Appearance.WearOutfit(ii.UUID, false);
-									if (operation == "animationStart") botclient.Self.AnimationStart(ii.UUID, false);
-									if (operation == "animationStop") botclient.Self.AnimationStop(ii.UUID, false);
-									if (operation == "attach") botclient.Appearance.Attach(ii, AttachmentPoint.Default);
-									return;
-								}
-							}
-						}
-						// now run any subfolders
-						foreach (InventoryBase ib in folderContents)
-						{
-
-							if (ib is InventoryFolder) {
-								botclient.output(" [Folder] Name: " + ib.Name + " <==> " + ib.UUID.ToString());
-								InventoryFolder fld = (InventoryFolder)ib;
-								//appendFolderHook(fld);
-								//fld.RequestContents();
-								if ((operation == "wear") && (ib.Name == itemName)) {
-									botclient.Appearance.WearOutfit(ib.UUID, false);
-									botclient.output(" [WEAR] Name: " + ib.Name + " <==> " + ib.UUID.ToString());
-									return;
-								}
-								evalOnFolders(ib as InventoryFolder, operation, itemName);
-							}
-						}
-					}
-				} catch (Exception e) {
-					botclient.output("Search Exception :" + e.StackTrace);
-					botclient.output("  msg:" + e.Message);
-
-				}
-			}
-
-
-
-			// Recursively generates lispTasks for items that match itemName in the inventory
-			// like evalLispOnFolders(root,"(Console.Write 'OBJNAME is OBJUUID')","Shoes")
-			public void evalLispOnFolders(InventoryFolder folder, string lispOperation, string itemName)
-			{
-				try {
-					//if (folder.IsStale)
-					//    folder.DownloadContentsOpenSim(TimeSpan.FromSeconds(10));
-					// first scan this folder for text
-					List<InventoryBase> folderContents = botclient.Inventory.FolderContents(folder.UUID, botclient.Self.AgentID,
-																							true, true, InventorySortOrder.ByName, 3000);
-					if (folderContents != null) {
-
-						foreach (InventoryBase ib in folderContents)
-						{
-							if (ib is InventoryItem) {
-								InventoryItem ii = ib as InventoryItem;
-								if (ii.Name == itemName) {
-									String lispCode = lispOperation;
-									lispCode.Replace("OBJUUID", ii.UUID.ToString());
-									lispCode.Replace("OBJNAME", ii.Name);
-									botclient.enqueueLispTask(lispCode);
-								}
-							}
-						}
-						// now run any subfolders
-						foreach (InventoryBase ib in folderContents)
-						{
-							if (ib is InventoryFolder)
-								evalLispOnFolders(ib as InventoryFolder, lispOperation, itemName);
-						}
-					}
-				} catch (Exception e) {
-				}
-			}
-
-
-			// recursive finder
-			public UUID findInFolders(InventoryFolder folder, string itemName)
-			{
-				try {
-
-					List<InventoryBase> folderContents = botclient.Inventory.FolderContents(folder.UUID, botclient.Self.AgentID,
-																							true, true, InventorySortOrder.ByName, 3000);
-					//if (folder.IsStale)
-					//    folder.DownloadContentsOpenSim(TimeSpan.FromSeconds(10));
-					// first scan this folder for text
-					if (folderContents != null) {
-						foreach (InventoryBase ib in folderContents)
-						{
-							if (ib is InventoryItem) {
-								InventoryItem ii = ib as InventoryItem;
-								if (ii.Name == itemName) {
-									return ii.UUID;
-								}
-							}
-						}
-						// now run any subfolders
-						foreach (InventoryBase ib in folderContents)
-						{
-							if (ib is InventoryFolder) {
-								UUID ANS = findInFolders(ib as InventoryFolder, itemName);
-								if (ANS != UUID.Zero) return ANS;
-							}
-						}
-					}
-
-				} catch (Exception e) {
-				}
-				return UUID.Zero;
-
-			}
-		}
-
-		//================
-
+	
 		public void logout()
 		{
 			if (Network.Connected)
@@ -1062,19 +645,19 @@ namespace cogbot
 		// External XML socket server
 		//------------------------------------
 
-		public void msgClient(string serverMessage)
-		{
-			if (debugLevel>1) {
-				output(serverMessage);             
-			}
-            lock (lBotMsgSubscribers)
-            {
-                foreach (BotMessageSubscriber ms in lBotMsgSubscribers)
-                {
-                    ms.msgClient(serverMessage);
-                }
-            }
-        }
+        //public void msgClient(string serverMessage)
+        //{
+        //    if (debugLevel>1) {
+        //        output(serverMessage);             
+        //    }
+        //    lock (lBotMsgSubscribers)
+        //    {
+        //        foreach (BotMessageSubscriber ms in lBotMsgSubscribers)
+        //        {
+        //            ms.msgClient(serverMessage);
+        //        }
+        //    }
+        //}
 
 		public void overwrite2Hash(Hashtable hashTable, string key, string value)
 		{
@@ -1200,9 +783,9 @@ namespace cogbot
 				} //while
 				output("XML2Lisp =>'" + lispCodeString + "'");
 				//string results = evalLispString(lispCodeString);
-				string results = "'(enqueued)";
-				enqueueLispTask(lispCodeString);
-				return results;
+				//string results = "'(enqueued)";
+				return evalLispString(lispCodeString);
+				//return results;
 			} //try
 			catch (Exception e) {
 				output("error occured: " + e.Message);
@@ -1214,177 +797,56 @@ namespace cogbot
 		}
 
 
-		ScriptInterpreter taskInterperter;
+        ScriptInterpreter lispTaskInterperter;
 
 		public void initTaskInterperter()
-		{
-			try {
-				taskQueue = new Queue();
+		{    
+            try
+            {
 				output("Start Loading TaskInterperter ... '" + taskInterperterType + "' \n");
-				taskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
-				taskInterperter.LoadFile("boot.lisp");
-				taskInterperter.LoadFile("extra.lisp");
-				taskInterperter.LoadFile("cogbot.lisp");
-				// load the initialization string
+                lispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
+                lispTaskInterperter.LoadFile("boot.lisp");
+                lispTaskInterperter.LoadFile("extra.lisp");
+                lispTaskInterperter.LoadFile("cogbot.lisp");
+                lispTaskInterperter.Intern("clientManager", ClientManager);
+                scriptEventListener = new ScriptEventListener(lispTaskInterperter,this);
+                botPipeline.AddSubscriber(scriptEventListener);
+
+                output("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
+                // load the initialization string
 				if (TextForm.SingleInstance.config.startupClientLisp.Length > 1) {
-					enqueueLispTask("(progn "+TextForm.SingleInstance.config.startupClientLisp+")");
-				}
-                taskInterperter.Intern("clientManager", ClientManager);
-                taskInterperter.Intern("Client", this);
-                taskInterperter.Intern("thisClient", this);
-				output("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
-			} catch (Exception e) {
-				output("!Exception: " + e.GetBaseException().Message);
-				output("error occured: " + e.Message);
-				output("        Stack: " + e.StackTrace.ToString());
-			}
-
-		}
-
-		public Object genLispCodeTree(string lispCode)
-		{
-			Object codeTree = null;
-			try {
-				StringReader stringCodeReader = new System.IO.StringReader(lispCode);
-				codeTree = taskInterperter.Read("console", stringCodeReader);
-				if (taskInterperter.Eof(codeTree))
-					return null;
-			} catch {
-				throw;
-			}
-			return codeTree;
-		}
-
-		public void enqueueLispTask(string lispCode)
-		{
-			output(":: " + lispCode);
-			try {
-				subtask thisTask = new subtask();
-				thisTask.requeue = false;
-				thisTask.code = lispCode;
-				thisTask.results = "";
-				thisTask.codeTree = genLispCodeTree(thisTask.code);
-				lock (taskQueue)
-				{
-					taskQueue.Enqueue(thisTask);
-				}
-			} catch (Exception e) {
-				output("!Exception: " + e.GetBaseException().Message);
-				output("error occured: " + e.Message);
-				output("        Stack: " + e.StackTrace.ToString());
-				output("     LispCode: " + lispCode);
-			}
-		}
-
-		public void jobManager()
-		{
-			try {
-				initTaskInterperter();
-				while (true) {
-					while (taskQueue.Count > 0) {
-						taskTick();
-						Thread.Sleep(1);
-					}
-					Thread.Sleep(50);
+                    scriptEventListener.enqueueLispEvent("(progn " + TextForm.SingleInstance.config.startupClientLisp + ")");
 				}
 			} catch (Exception e) {
 				output("!Exception: " + e.GetBaseException().Message);
 				output("error occured: " + e.Message);
 				output("        Stack: " + e.StackTrace.ToString());
 			}
-		}
-
-		public void taskTick()
-		{
-			string lastcode="";
-			try {
-				// see if there is anything to process
-				if (taskQueue.Count == 0) return;
-
-				// if so then process it
-				//Interpreter lispInterperter = new Interpreter();
-				subtask thisTask;
-				lock (taskQueue)
-				{
-					thisTask = (subtask)taskQueue.Dequeue();
-				}
-				// setup the local context
-				lastcode = thisTask.code;
-				string serverMessage = "";
-				thisTask.results = "'(unevaluated)";
-				taskInterperter.Intern("thisTask", thisTask);
-				//should make the following safer ...
-				//taskInterperter.Intern("tcpReader", tcpStreamReader);
-				//taskInterperter.Intern("tcpWriter", tcpStreamWriter);
-				//a safer way is to have a serverMessage string that is sent to the Client
-				// in a more thread safe async way
-				taskInterperter.Intern("serverMessage", serverMessage);
-				//interpreter.Intern("Client",Command.Client);
-
-				// EVALUATE !!!
-				Object x = taskInterperter.Eval(thisTask.codeTree);
-				thisTask.results = taskInterperter.Str(x);
-                lock (lBotMsgSubscribers)
-                {
-                    foreach (BotMessageSubscriber ms in lBotMsgSubscribers)
-                    {
-                        if (ms is Utilities.TcpServer)
-                        {
-                            ((Utilities.TcpServer)ms).taskTick(thisTask.results);
-                        }
-                    }
-                }
-				if (false) {
-					output(" taskcode: " + lastcode + " --> " + thisTask.results);
-					//output(" taskTick Results>" + thisTask.results);
-					//output(" taskTick continueTask=" + thisTask.requeue.ToString());
-				}
-
-				// Should we do again ?
-				if (thisTask.requeue == true) {
-					if (!lastcode.Equals(thisTask.code)) {
-						// not the same so must "re-compile"
-						thisTask.codeTree = genLispCodeTree(thisTask.code);
-					}
-					lock (taskQueue)
-					{
-						taskQueue.Enqueue(thisTask);
-					}
-				}
-				return;
-			} catch (Exception e) {
-				output("!Exception: " + e.GetBaseException().Message);
-				output("error occured: " + e.Message);
-				output("        Stack: " + e.StackTrace.ToString());
-				output("     LispCode: " + lastcode);
-			}
 
 		}
+
+        public void enqueueLispTask(object p)
+        {
+            scriptEventListener.enqueueLispTask(p);
+        }
 
         public string evalLispString(string lispCode)
         {
             try
             {
                 if (lispCode == null || lispCode.Length == 0) return null;
-                if (taskInterperter == null)
+                if (lispTaskInterperter == null)
                 {
-                    output("runTaskInterperter ... '" + taskInterperterType + "'");
-                    taskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
-                    taskInterperter.LoadFile("boot.lisp");
-                    taskInterperter.LoadFile("extra.lisp");
-                    taskInterperter.LoadFile("cogbot.lisp");
-                    taskInterperter.Intern("thisClient", this);
-                    taskInterperter.Intern("clientManager", ClientManager);
-
+                    initTaskInterperter();
                 }
                 //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
                 output("Eval> " + lispCode);
                 Object r = null;
                 StringReader stringCodeReader = new StringReader(lispCode);
-                r = taskInterperter.Read("console", stringCodeReader);
-                if (taskInterperter.Eof(r))
+                r = lispTaskInterperter.Read("console", stringCodeReader);
+                if (lispTaskInterperter.Eof(r))
                     return r.ToString();
-                return taskInterperter.Str(taskInterperter.Eval(r));
+                return lispTaskInterperter.Str(lispTaskInterperter.Eval(r));
             }
             catch (Exception e)
             {
@@ -1409,9 +871,13 @@ namespace cogbot
 
 
 			// Reflect events into lisp
-			// 
+			//        
 
-
+        public void Login() {
+            TextForm.simulator.periscopeClient = this;
+            TextForm.simulator.Start();
+            Network.Login(BotLoginParams.FirstName, BotLoginParams.LastName, BotLoginParams.Password, "OnRez", "UNR");
+        }
 
 		/// <summary>
 		/// Initialize everything that needs to be initialized once we're logged in.
@@ -1425,18 +891,18 @@ namespace cogbot
 				CurrentDirectory = Inventory.Store.RootFolder;//.RootFolder;
 			}
 //            output("TextForm Network_OnLogin : [" + login.ToString() + "] " + message);
-			//SendEvent("On-Login", login, message);
+			//SendNewEvent("On-Login", login, message);
 
 			if (login == LoginStatus.Failed) {
 				output("Not able to login");
-				// SendEvent("on-login-fail",login,message);
-				SendEvent("On-Login-Fail", login, message);
+				// SendNewEvent("on-login-fail",login,message);
+				SendNewEvent("On-Login-Fail", login, message);
 			} else if (login == LoginStatus.Success) {
 				output("Logged in successfully");
-				SendEvent("On-Login-Success", login, message);
-//                SendEvent("on-login-success",login,message);
+				SendNewEvent("On-Login-Success", login, message);
+//                SendNewEvent("on-login-success",login,message);
 			} else {
-				SendEvent("On-Login", login, message);
+				SendNewEvent("On-Login", login, message);
 			}
 
 		}
@@ -1487,13 +953,13 @@ namespace cogbot
 
 		internal void DoCommandAll(string line, UUID uUID)
 		{
-			ExecuteCommand(line);
+			ClientManager.DoCommandAll(line,uUID);
 		}
 
-		internal void LogOut(GridClient Client)
-		{
-			Client.Network.Logout();
-		}
+		//internal void LogOut(GridClient Client)
+		//{
+			//Client.Network.Logout();
+		//}
 
 		internal OpenMetaverse.Utilities.VoiceManager GetVoiceManager()
 		{
@@ -1503,29 +969,81 @@ namespace cogbot
 
 		internal void ShutDown()
 		{
+            //scriptEventListener.
 			logout();
-			thrJobQueue.Abort();
-            lock (lBotMsgSubscribers)
-            {
-                foreach (BotMessageSubscriber ms in lBotMsgSubscribers)
-                {
-                    ms.ShuttingDown();
-                }
-            }
+            //botPipeline.Shut
+			//thrJobQueue.Abort();
+            //lock (lBotMsgSubscribers)
+            //{
+              //  foreach (BotMessageSubscriber ms in lBotMsgSubscribers)
+                //{
+                  //  ms.ShuttingDown();
+               // }
+           // }
 		}
 
-        List<BotMessageSubscriber> lBotMsgSubscribers = new List<BotMessageSubscriber>();
+        //List<BotMessageSubscriber> lBotMsgSubscribers = new List<BotMessageSubscriber>();
         public interface BotMessageSubscriber
         {
             void msgClient(string serverMessage);
             void ShuttingDown();
         }
-        internal void AddBotMessageSubscriber(BotMessageSubscriber tcpServer)
+        internal void AddBotMessageSubscriber(SimEventSubscriber tcpServer)
         {
-            lock (lBotMsgSubscribers)
-                lBotMsgSubscribers.Add(tcpServer);
+            botPipeline.AddSubscriber(tcpServer);
         }
 
+        public void SendNewEvent(string eventName, params object[] args)
+        {
+            SimEvent evt = botPipeline.CreateEvent(eventName, args);
+            botPipeline.SendEvent(evt);
+        }
+
+
+        internal string argsListString(IEnumerable list)
+        {
+            return scriptEventListener.argsListString(list);
+        }
+
+        internal string argString(object p)
+        {
+            return scriptEventListener.argString(p);
+        }
+
+        public bool ExecuteCommand(string text)
+        {
+            //text = text.Replace("\"", "");
+            string verb = text.Split(null)[0];
+            if (Commands.ContainsKey(verb))
+            {
+                if (text.Length > verb.Length)
+                    Commands[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1));
+                else
+                    Commands[verb].acceptInputWrapper(verb, "");
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        #region SimEventSubscriber Members
+
+        void SimEventSubscriber.OnEvent(SimEvent evt)
+        {
+            if (evt.GetName() == "On-Execute-Command")
+            {
+               ((BotClient)this).ExecuteCommand(evt.GetArgs()[0].ToString());
+            }
+        }
+
+        void SimEventSubscriber.ShuttingDown()
+        {
+            ((BotClient)this).ShutDown();
+        }
+
+        #endregion
     }
 
 }

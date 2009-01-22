@@ -17,11 +17,7 @@ namespace cogbot.Actions.SimExport
             Category = CommandCategory.TestClient;
             helpString = "Exports parts of the Sim to TGZ file.";
             usageString = "simexport help";
-           // return;
-            //CurrentClient = Client.CurrentClient;
-            return;
-            Client.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
-            SetUpSimExportCommand(Client);
+            //SetUp();
         }
 
         void Network_OnLogin(LoginStatus login, string message)
@@ -45,7 +41,7 @@ namespace cogbot.Actions.SimExport
 
         //GridClient CurrentClient;
         TexturePipeline texturePipeline;
-        volatile bool running;
+        volatile bool running = false;
 
         int totalPrims = -1;
         object totalPrimsLock = new object();
@@ -56,6 +52,12 @@ namespace cogbot.Actions.SimExport
         string filename = "simexport.tgz";
         string directoryname = "simexport";
 
+
+        public void SetUp() {
+            if (running) return;
+            Client.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
+            SetUpSimExportCommand(Client);
+        }
         public void SetUpSimExportCommand(GridClient client)
             //string firstName, string lastName, string password, string loginServer, string regionName, string filename)
         {

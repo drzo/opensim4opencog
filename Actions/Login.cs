@@ -48,7 +48,8 @@ namespace cogbot.Actions
                 if (!Client.Network.Connected && !Client.Network.LoginMessage.StartsWith("Logging"))
                 {
                     Client.Settings.LOGIN_SERVER = Client.BotLoginParams.URI;// TextForm.SingleInstance.config.simURL; // "http://127.0.0.1:8002/";
-                    Client.Network.Login(Client.BotLoginParams.FirstName, Client.BotLoginParams.LastName, Client.BotLoginParams.Password, "OnRez", "UNR");
+///                    Client.Network.Login(Client.BotLoginParams.FirstName, Client.BotLoginParams.LastName, Client.BotLoginParams.Password, "OnRez", "UNR");
+                    Client.Login();
                 }
                 else
                     WriteLine("You are already logged in.");

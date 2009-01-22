@@ -15,7 +15,7 @@ namespace cogbot.Actions
        public override void acceptInput(string verb, Parser args)
        {
            //base.acceptInput(verb, args);
-           Client.enqueueLispTask(args.str);
+           WriteLine(Client.evalLispString(args.str));
        }
     }
 }
