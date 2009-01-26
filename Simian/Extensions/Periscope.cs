@@ -214,8 +214,10 @@ namespace Simian.Extensions
                 server.Avatars.SendAnimations(agent);
             }
 
-            if (animations.Sender.ID == client.Self.AgentID)
+            if (animations.Sender.ID == client.Self.AgentID)            
             {
+                if (MasterAgent == null) MasterAgent = agent;
+
                 MasterAgent.Animations.Clear();
 
                 for (int i = 0; i < animations.AnimationList.Length; i++)

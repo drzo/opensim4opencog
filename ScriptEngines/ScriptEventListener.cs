@@ -21,7 +21,7 @@ namespace cogbot.ScriptEngines
             taskInterperter = interp;
             taskInterperter.Intern("Client", client);
             taskInterperter.Intern("thisClient", client);
-            WorldSystem = client.WorldSystem;
+            if (client!=null) WorldSystem = client.WorldSystem;
 
             thrJobQueue = new Thread(jobManager);
             thrJobQueue.Start();

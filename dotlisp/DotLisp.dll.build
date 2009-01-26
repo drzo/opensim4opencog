@@ -1,63 +1,72 @@
 <?xml version="1.0" ?>
 <project name="DotLisp" default="build">
-	  <target name="build">
-		  <echo message="Build Directory is ${build.dir}" />
-		  <mkdir dir="${build.dir}" />
-		  <copy todir="${build.dir}" flatten="true">
-			  <fileset basedir="${project::get-base-directory()}">
-			  </fileset>
-		  </copy>
-		  <copy todir="${build.dir}">
-			  <fileset basedir=".">
-			  </fileset>
-		  </copy>
-		  <csc target="library" debug="${build.debug}" unsafe="True" warnaserror="False" define="TRACE" nostdlib="False" main="" output="${build.dir}/${project::get-name()}.dll">
-			  <resources prefix="DotLisp" dynamicprefix="true" >
-			  </resources>
-			  <sources failonempty="true">
-				  <include name="AssemblyInfo.cs" />
-				  <include name="BacktraceException.cs" />
-				  <include name="CLSConstructor.cs" />
-				  <include name="CLSField.cs" />
-				  <include name="CLSLateBoundMember.cs" />
-				  <include name="CLSMember.cs" />
-				  <include name="CLSMethod.cs" />
-				  <include name="CLSProperty.cs" />
-				  <include name="CLSSymbols.cs" />
-				  <include name="Closure.cs" />
-				  <include name="Cons.cs" />
-				  <include name="DynamicEnvironment.cs" />
-				  <include name="Environment.cs" />
-				  <include name="Expressions.cs" />
-				  <include name="FnEnumerator.cs" />
-				  <include name="Function.cs" />
-				  <include name="GenericFunction.cs" />
-				  <include name="Interpreter.cs" />
-				  <include name="Keyword.cs" />
-				  <include name="LocalVariable.cs" />
-				  <include name="Macro.cs" />
-				  <include name="Param.cs" />
-				  <include name="Primitives.cs" />
-				  <include name="Reader.cs" />
-				  <include name="Record.cs" />
-				  <include name="Symbol.cs" />
-				  <include name="Util.cs" />
-			  </sources>
-			  <references basedir="${project::get-base-directory()}">
-				  <lib>
-					  <include name="${project::get-base-directory()}" />
-					  <include name="${build.dir}" />
-				  </lib>
-				  <include name="System.dll" />
-				  <include name="System.Data.dll" />
-				  <include name="System.Xml.dll" />
-			  </references>
-		  </csc>
-	  </target>
-	  <target name="clean">
-		  <delete dir="${bin.dir}" failonerror="false" />
-		  <delete dir="${obj.dir}" failonerror="false" />
-	  </target>
-	  <target name="doc" description="Creates documentation.">
-	  </target>
+    <target name="build">
+        <echo message="Build Directory is ${project::get-base-directory()}/${build.dir}" />
+        <mkdir dir="${project::get-base-directory()}/${build.dir}" />
+        <copy todir="${project::get-base-directory()}/${build.dir}" flatten="true">
+            <fileset basedir="${project::get-base-directory()}">
+            </fileset>
+        </copy>
+        <copy todir="${project::get-base-directory()}/${build.dir}">
+            <fileset basedir=".">
+            </fileset>
+        </copy>
+        <csc target="library" debug="${build.debug}" unsafe="True" warnaserror="False" define="TRACE;DEBUG" main="" output="${project::get-base-directory()}/${build.dir}/${project::get-name()}.dll">
+            <resources prefix="DotLisp" dynamicprefix="true" >
+            </resources>
+            <sources failonempty="true">
+                <include name="AssemblyInfo.cs" />
+                <include name="BacktraceException.cs" />
+                <include name="CLSConstructor.cs" />
+                <include name="CLSField.cs" />
+                <include name="CLSLateBoundMember.cs" />
+                <include name="CLSMember.cs" />
+                <include name="CLSMethod.cs" />
+                <include name="CLSProperty.cs" />
+                <include name="CLSSymbols.cs" />
+                <include name="Closure.cs" />
+                <include name="Cons.cs" />
+                <include name="DynamicEnvironment.cs" />
+                <include name="Environment.cs" />
+                <include name="Expressions.cs" />
+                <include name="FnEnumerator.cs" />
+                <include name="Function.cs" />
+                <include name="GenericFunction.cs" />
+                <include name="Interpreter.cs" />
+                <include name="Keyword.cs" />
+                <include name="LocalVariable.cs" />
+                <include name="Macro.cs" />
+                <include name="Param.cs" />
+                <include name="Primitives.cs" />
+                <include name="Reader.cs" />
+                <include name="Record.cs" />
+                <include name="Symbol.cs" />
+                <include name="Util.cs" />
+            </sources>
+            <references basedir="${project::get-base-directory()}">
+                <lib>
+                    <include name="${project::get-base-directory()}" />
+                    <include name="${project::get-base-directory()}/${build.dir}" />
+                </lib>
+                <include name="System.dll" />
+                <include name="System.Data.dll" />
+                <include name="System.Xml.dll" />
+            </references>
+        </csc>
+        <echo message="Copying from [${project::get-base-directory()}/${build.dir}/] to [${project::get-base-directory()}/../bin/" />
+        <mkdir dir="${project::get-base-directory()}/../bin/"/>
+        <copy todir="${project::get-base-directory()}/../bin/">
+            <fileset basedir="${project::get-base-directory()}/${build.dir}/" >
+                <include name="*.dll"/>
+                <include name="*.exe"/>
+                <include name="*.mdb" if='${build.debug}'/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="${obj.dir}" failonerror="false" />
+        <delete dir="${bin.dir}" failonerror="false" />
+    </target>
+    <target name="doc" description="Creates documentation.">
+    </target>
 </project>

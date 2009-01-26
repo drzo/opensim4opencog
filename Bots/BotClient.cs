@@ -11,6 +11,7 @@ using System.Collections;
 using cogbot.ScriptEngines;
 using System.IO;
 using cogbot.Listeners;
+using Action=cogbot.Actions.Action;
 
 namespace cogbot
 {
@@ -209,11 +210,13 @@ namespace cogbot
 
 
             // Start the server
-            thisTcpPort = nextTcpPort;
-            Utilities.TcpServer UtilitiesTcpServer = new Utilities.TcpServer(nextTcpPort, this);
-            nextTcpPort++;
-            UtilitiesTcpServer.startSocketListener();
-
+            lock (TextForm.SingleInstance.config)
+            {
+                thisTcpPort = nextTcpPort;
+                nextTcpPort += TextForm.SingleInstance.config.tcpPortOffset;
+                Utilities.TcpServer UtilitiesTcpServer = new Utilities.TcpServer(nextTcpPort, this);
+                UtilitiesTcpServer.startSocketListener();
+            }
 
             Network.RegisterCallback(PacketType.AgentDataUpdate, new NetworkManager.PacketCallback(AgentDataUpdateHandler));
             Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(AlertMessageHandler));
@@ -843,7 +846,7 @@ namespace cogbot
                 output("Eval> " + lispCode);
                 Object r = null;
                 StringReader stringCodeReader = new StringReader(lispCode);
-                r = lispTaskInterperter.Read("console", stringCodeReader);
+                r = lispTaskInterperter.Read("evalLispString", stringCodeReader);
                 if (lispTaskInterperter.Eof(r))
                     return r.ToString();
                 return lispTaskInterperter.Str(lispTaskInterperter.Eval(r));
@@ -1044,6 +1047,12 @@ namespace cogbot
         }
 
         #endregion
+
+
+        public void Talk(string str)
+        {
+          Self.Chat(str, 0, ChatType.Normal);
+        }
     }
 
 }

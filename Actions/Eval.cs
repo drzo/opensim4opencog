@@ -10,6 +10,7 @@ namespace cogbot.Actions
        public Eval(BotClient Client)
             : base(Client)
         {
+            Name = "eval";
             helpString = " eval: Enqueue a lisp task. Eval <lisp expression>";
         }
        public override void acceptInput(string verb, Parser args)

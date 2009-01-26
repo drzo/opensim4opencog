@@ -4,7 +4,8 @@ using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System.Reflection;
-using OpenMetaverse.Packets; //using libsecondlife;
+using OpenMetaverse.Packets;
+using cogbot.TheSims; //using libsecondlife;
 
 namespace cogbot.Listeners
 {
@@ -30,7 +31,7 @@ namespace cogbot.Listeners
 		public Dictionary<string, string> reverseShortNames;
 		public List<string> numberedObjects;
 		public Dictionary<uint, OSDMap> lastOSD = new Dictionary<uint, OSDMap>();
-		Simulator sim;
+        Simulator sim;
 
 		DoubleDictionary<uint, UUID, Primitive> prims = new DoubleDictionary<uint, UUID, Primitive>();
 		//DoubleDictionary<uint, UUID, Avatar> prims = new DoubleDictionary<uint, UUID, Avatar>();
@@ -203,12 +204,13 @@ namespace cogbot.Listeners
         public override void Avatars_OnAvatarAnimation(UUID avatarID, InternalDictionary<UUID, int> anims)
 		{
 			Avatar avatar = GetAvatar(avatarID);
+            if (avatar == null) return;
 			List<UUID> currents = new List<UUID>();
 			List<String> names = new List<String>();
             UUID mostCurrentAnim = UUID.Zero;
             int mostCurrentSequence = -1;
             lock (anims) 
-                foreach (UUID key in anims.Dictionary.Keys)
+                foreach (UUID key in anims.Keys)
 			{
                 int animNumber = (int)anims[key];
                 if (animNumber >= mostCurrentSequence)
@@ -615,7 +617,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
         delegate object DoWhat(Primitive objectUpdated, string p, Object vector3, Object vector3_4, Object diff);
         public object InformUpdate(Primitive objectUpdated, string p, Object before, Object after, Object diff)
         {
-            Console.WriteLine("{0} {1} DIFF {2} BEFORE {3} AFTER {4}", p, objectUpdated, diff, before, after);
+            //Console.WriteLine("{0} {1} DIFF {2} BEFORE {3} AFTER {4}", p, objectUpdated, diff, before, after);
             if (diff is Vector3)
             {
                 // if the change is too small skip the event
@@ -901,7 +903,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             return id;
         }
 
-        public object GetPrimitive(UUID id)
+        public Primitive GetPrimitive(UUID id)
         {
             Primitive prim;
             if (prims.TryGetValue(id, out prim))
@@ -911,12 +913,22 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             return null;
         }
 
+        public Primitive GetPrimitive(uint id)
+        {
+            Primitive prim;
+            if (prims.TryGetValue(id, out prim))
+            {
+                return prim;
+            }
+            return null;
+        }
         Dictionary<Primitive, Vector3> primVect = new Dictionary<Primitive, Vector3>();
 		public void SendNewEvent(string eventName, params object[] args)
 		
         {
+            if (true) return;
             if (eventName.Contains("on-avatar-look")) return;
-			Console.WriteLine(eventName + " " + client.argsListString(args));
+		//	Console.WriteLine(eventName + " " + client.argsListString(args));
             String evtStr = eventName.ToString();
             if (evtStr=="on-object-position")
             {
@@ -1091,6 +1103,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 
 		float nameLengthHeuristic(Primitive prim)
 		{
+            BlockUntilProperties(prim);
 			if ((prim != null) && (prim.Properties.Name != null)) {
 				return(float)prim.Properties.Name.Length / (float)maxNameLength;
 			} else
@@ -1210,7 +1223,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 			}
 		}
 
-		public string primType(Primitive target)
+		public string GetPrimTypeName(Primitive target)
 		{
 			if (target.PrimData.PCode == PCode.Prim)
 				return target.PrimData.Type.ToString();

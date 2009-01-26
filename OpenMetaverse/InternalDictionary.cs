@@ -290,7 +290,7 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="key">The key</param>
         /// <returns>The value</returns>
-        internal TValue this[TKey key]
+        public TValue this[TKey key]
         {
             get { return Dictionary[key]; }
             set { Dictionary[key] = value; }

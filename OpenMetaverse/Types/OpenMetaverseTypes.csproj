@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{2A67240A-C28F-410B-A110-D37145A794EA}</ProjectGuid>
+    <ProjectGuid>{4A2D9B05-DF38-454B-BBD7-F0394DFECD19}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -74,10 +74,10 @@
     <Compile Include="Vector2.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Vector3.cs">
+    <Compile Include="BlockingQueue.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="BlockingQueue.cs">
+    <Compile Include="Vector3.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Vector4.cs">
@@ -89,19 +89,19 @@
     <Compile Include="Vector3d.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="UtilsConversions.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Ray.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Color4.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Utils.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="UtilsConversions.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="DoubleDictionary.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Color4.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="UUID.cs">
