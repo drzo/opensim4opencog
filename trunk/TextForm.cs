@@ -20,6 +20,7 @@ using System.Collections;
 using cogbot.ScriptEngines;
 using OpenMetaverse.Packets;
 using cogbot.Actions;
+using Action=cogbot.Actions.Action;
 //using DotLisp;
 
 
@@ -338,43 +339,64 @@ namespace cogbot
                 acceptConsoleInput();
         }
 
-        ScriptInterpreter interpreter = null;
+        ScriptEventListener scriptEventListener = null;
+        ScriptInterpreter lispTaskInterperter;
 
-        public string evalLispString(string lispCode)
+        public void initTaskInterperter()
         {
             try
             {
-                if (lispCode == null || lispCode.Length == 0) return null;
-
-                if (interpreter == null)
-                {
-                    output("runTaskInterperter ... '" + taskInterperterType + "'");
-                    interpreter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
-                    interpreter.LoadFile("boot.lisp");
-                    interpreter.LoadFile("extra.lisp");
-                    interpreter.LoadFile("cogbot.lisp");
-                    interpreter.Intern("thisClient", this);
-                    interpreter.Intern("clientManager", clientManager);
-
-                }
-                //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
-                output("Eval> " + lispCode);
-                Object r = null;
-                StringReader stringCodeReader = new StringReader(lispCode);
-                r = interpreter.Read("console", stringCodeReader);
-                if (interpreter.Eof(r))
-                    return r.ToString();
-                return interpreter.Str(interpreter.Eval(r));
+                output("Start Loading TaskInterperter ... '" + taskInterperterType + "' \n");
+                lispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
+                lispTaskInterperter.LoadFile("boot.lisp");
+                lispTaskInterperter.LoadFile("extra.lisp");
+                lispTaskInterperter.LoadFile("cogbot.lisp");
+                lispTaskInterperter.Intern("clientManager", clientManager);
+                scriptEventListener = new ScriptEventListener(lispTaskInterperter, null);
+                lispTaskInterperter.Intern("thisClient", this);
+                output("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
+                // load the initialization string
             }
             catch (Exception e)
             {
                 output("!Exception: " + e.GetBaseException().Message);
                 output("error occured: " + e.Message);
                 output("        Stack: " + e.StackTrace.ToString());
-                return null;
             }
+
         }
 
+        public void enqueueLispTask(object p)
+        {
+            scriptEventListener.enqueueLispTask(p);
+        }
+
+        public string evalLispString(string lispCode)
+        {
+            try
+            {
+                if (lispCode == null || lispCode.Length == 0) return null;
+                if (lispTaskInterperter == null)
+                {
+                    initTaskInterperter();
+                }
+                //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
+                output("Eval> " + lispCode);
+                Object r = null;
+                StringReader stringCodeReader = new StringReader(lispCode);
+                r = lispTaskInterperter.Read("evalLispString", stringCodeReader);
+                if (lispTaskInterperter.Eof(r))
+                    return r.ToString();
+                return lispTaskInterperter.Str(lispTaskInterperter.Eval(r));
+            }
+            catch (Exception e)
+            {
+                output("!Exception: " + e.GetBaseException().Message);
+                output("error occured: " + e.Message);
+                output("        Stack: " + e.StackTrace.ToString());
+                throw e;
+            }
+        }
         // TODO's
         // Play Animations
         // private static UUID type_anim_uuid = new UUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");

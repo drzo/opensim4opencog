@@ -33,7 +33,7 @@ namespace cogbot
          private static void Usage()
          {
              Console.WriteLine("Usage: " + Environment.NewLine +
-                     "BotClient.exe --first firstname --last lastname --pass password [--loginuri=\"uri\"] [--startpos \"sim/x/y/z\"] [--master \"master name\"] [--masterkey \"master uuid\"] [--gettextures] [--scriptfile \"filename\"]");
+                     "cogbot.exe --first firstname --last lastname --pass password [--loginuri=\"uri\"] [--startpos \"sim/x/y/z\"] [--master \"master name\"] [--masterkey \"master uuid\"] [--gettextures] [--scriptfile \"filename\"]");
          }
 
          static void MainUnused(string[] args)

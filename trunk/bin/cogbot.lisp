@@ -8,7 +8,7 @@
     (clientManager.CreateHttpServer port botname))
 
 (def-macro (enqueue lispTask)
-    `(thisClient.enqueueLispTask lispTask))
+    `(thisClient.enqueueLispTask ~lispTask))
         
 ;----------------------------------
 ; Login and Network events

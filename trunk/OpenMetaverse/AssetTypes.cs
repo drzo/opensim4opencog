@@ -394,19 +394,20 @@ namespace OpenMetaverse
                             for (; stri < count; )
                             {
                                 stri++;
+                                if (stri >= lines.Length) break;
                                 line = lines[stri].Trim();
                                 fields = line.Split(' ');
 
                                 try
                                 {
-                                    if (fields[0].StartsWith("textures")) continue;
-                                    if (fields.Length < 2) continue;
+                                    if (fields[0].StartsWith("textures")) break;
+                                    if (fields.Length < 2) break;
                                     int id = Int32.Parse(fields[0]);
                                     if (fields[1] == ",")
                                         fields[1] = "0";
                                     else
                                         fields[1] = fields[1].Replace(',', '.');
-
+                                    if (fields[1].ToCharArray()[0] == '\0') break;
                                     float weight = float.Parse(fields[1], System.Globalization.NumberStyles.Float,
                                         Utils.EnUsCulture.NumberFormat);
 
@@ -414,7 +415,7 @@ namespace OpenMetaverse
                                 }
                                 catch (FormatException fe)
                                 {
-                                    continue;
+                                    break;
                                 }
                             }
                         }

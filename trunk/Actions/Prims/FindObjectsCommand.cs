@@ -55,7 +55,7 @@ namespace cogbot.Actions
                 foreach (UUID uuid in PrimsWaiting.Keys)
                     WriteLine(uuid.ToString());
             }
-
+            
             return "Done searching";
         }
 

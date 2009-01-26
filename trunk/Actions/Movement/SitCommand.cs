@@ -19,8 +19,13 @@ namespace cogbot.Actions
 		{
             Primitive closest = null;
 		    double closestDistance = Double.MaxValue;
-
-            Client.Network.CurrentSim.ObjectsPrimitives.ForEach(
+            Simulator sim = Client.Network.CurrentSim;
+            if (sim == null)
+            {
+                sim = Client.Network.Simulators[0];
+                Client.Network.CurrentSim = sim;
+            }
+            sim.ObjectsPrimitives.ForEach(
                 delegate(Primitive prim)
                 {
                     float distance = Vector3.Distance(Client.Self.SimPosition, prim.Position);
