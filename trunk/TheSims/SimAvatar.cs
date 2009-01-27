@@ -128,21 +128,24 @@ namespace cogbot.TheSims
             return ObjectType.GetSimObjectUsage(GetDefaultUse());
         }
 
-        public float GetSizeDistance()
+        public virtual float GetSizeDistance()
         {
-            float fx = thePrim.Scale.X;
+            float fx = thePrim.Scale.X;            
             float fy = thePrim.Scale.Y;
-            return (fx > fy) ? fx:fy;
+            return (((fx > fy) ? fx : fy) * 2) + 1;
         }
     }
+
     // most object have use that advertises ChangePromise but actually calls ChangeActual
     public class SimObjectUsage
     {
-        public int maximumDistance = 1;  // the maximum distance the user can be away
+        public int maximumDistance = 1;  // the maximum distance the user can be away scaled on object distance
+        public int totalTimeMS = 14000;  // the time this usage takes
         public BotNeeds ChangePromise = new BotNeeds(0.0F); // what most users think will happen by default
         public BotNeeds ChangeActual = new BotNeeds(0.0F); //what really happens ofter 1 minute use
         public string TextName = "use"; // the scripting verb name
-        public Cons script = null; // the lisp code that does the animation effects
+        public bool UseSit = false; 
+        public Object script = null; // the lisp code that does the animation effects
     }
 
     abstract public class BotAction : BotMentalAspect
@@ -173,10 +176,9 @@ namespace cogbot.TheSims
 
         public override void InvokeReal()
         {
-            String use = Usage.TextName;
+            String use = Usage.TextName;            
             TheBot.Approach(use, Target);
-            TheBot.Debug(ToString());
-            Thread.Sleep(8000);
+            TheBot.Debug(ToString());     
             //User.ApplyUpdate(use, simObject);
             BotNeeds CurrentNeeds = TheBot.CurrentNeeds;
             BotNeeds needsBefore = CurrentNeeds.Copy();
@@ -186,6 +188,7 @@ namespace cogbot.TheSims
             CurrentNeeds.SetRange(0.0F, 100.0F);
             BotNeeds difNeeds = CurrentNeeds.Minus(needsBefore);
             TheBot.Debug(ToString() + "\n\t=> " + difNeeds.ShowNonZeroNeeds());
+            Thread.Sleep(Usage.totalTimeMS);
         }
 
         public override BotNeeds ProposedChange()
@@ -513,23 +516,25 @@ namespace cogbot.TheSims
                     }
                 }
         }
+
+        // Avatars approach distance
+        public override float GetSizeDistance()
+        {
+            return 3f;
+        }
+
         public void Approach(string verb, SimObject obj)
         {
+            // stand up first
             if (Client.Self.SittingOn != 0 || Client.Self.Movement.SitOnGround)
             {
                 Client.Self.Stand();
             }
-            float dist = 1.0F;
-            if (obj is SimAvatar)
-            {
-                dist = 2.0F;
-            }
-            else
-            {
-                dist = obj.GetSizeDistance() + dist;
-            }
+
+            float dist = obj.GetSizeDistance();
+
             Vector3 vector3 = obj.GetUsePosition();
-            Debug("Approaching " + vector3 + " for " + verb + " " + obj);
+            Debug("Approaching " + vector3 + " distance=" + dist + " for " + verb + " " + obj);
             MovementToVector.MoveTo(Client, vector3, dist);
             Client.Self.Movement.TurnToward(obj.GetPosition());
             Thread.Sleep(2000);
