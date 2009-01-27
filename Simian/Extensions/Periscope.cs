@@ -211,6 +211,7 @@ namespace Simian.Extensions
                     agent.Animations.Add(block.AnimID, block.AnimSequenceID);
                 }
 
+
                 server.Avatars.SendAnimations(agent);
             }
 
@@ -218,15 +219,15 @@ namespace Simian.Extensions
             {
                 if (MasterAgent == null) MasterAgent = agent;
 
-                MasterAgent.Animations.Clear();
+                if (MasterAgent!=null) MasterAgent.Animations.Clear();
 
                 for (int i = 0; i < animations.AnimationList.Length; i++)
                 {
                     AvatarAnimationPacket.AnimationListBlock block = animations.AnimationList[i];
-                    MasterAgent.Animations.Add(block.AnimID, block.AnimSequenceID);
+                    if (MasterAgent != null) MasterAgent.Animations.Add(block.AnimID, block.AnimSequenceID);
                 }
 
-                server.Avatars.SendAnimations(MasterAgent);
+                if (MasterAgent != null) server.Avatars.SendAnimations(MasterAgent);
             }
         }
 
