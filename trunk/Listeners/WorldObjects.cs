@@ -5,7 +5,8 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System.Reflection;
 using OpenMetaverse.Packets;
-using cogbot.TheSims; //using libsecondlife;
+using cogbot.TheSims;
+using Simian; //using libsecondlife;
 
 namespace cogbot.Listeners
 {
@@ -311,7 +312,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
         static Dictionary<UUID, object> uuidType = new Dictionary<UUID, object>();
         public override void Inventory_OnFolderUpdated(UUID folderID)
         {
-            lock (uuidType) uuidType[folderID] = typeof(InventoryFolder);
+            lock (uuidType) uuidType[folderID] = typeof(OpenMetaverse.InventoryFolder);
             //base.Inventory_OnFolderUpdated(folderID);
         }
 		static readonly string[] paramNamesOnObjectPropertiesFamily = new string[] { "simulator", "props", "type"};
@@ -896,7 +897,13 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
         private Asset GetAsset(UUID id)
         {
             Asset asset;
-           TextForm.simulator.Assets.TryGetAsset(id, out asset);
+           IAssetProvider assetProvider =  TextForm.simulator.Assets;
+           if (assetProvider == null)
+           {
+               Console.WriteLine("Asset Provider still offline for " + id);
+               return null;
+           }
+            assetProvider.TryGetAsset(id, out asset);
             if (asset != null)
             {
                 uuidType[id] = asset;
