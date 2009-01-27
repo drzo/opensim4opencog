@@ -159,8 +159,9 @@ namespace cogbot.ScriptEngines
             if (arg is IDictionary)
             {
                 String dictname = "'(dict " + type.Name;
-                IDictionary dict = (IDictionary)arg;
-                lock (dict)
+                IDictionary dict0 = (IDictionary)arg;
+                IDictionary dict = dict0;
+                lock (dict.SyncRoot)
                 {
                     foreach (object key in dict.Keys)
                     {
