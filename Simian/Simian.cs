@@ -80,7 +80,8 @@ namespace Simian
                 List<string> references = new List<string>();
                // references.Add("OpenMetaverseTypes.dll");
                // references.Add("OpenMetaverse.dll");
-                references.Add("superCogbot.exe");
+                //references.Add("superCogbot.exe");
+                references.Add("cogbot.exe");
 
                 List<FieldInfo> assignables = ExtensionLoader<Simian>.GetInterfaces(this);
 

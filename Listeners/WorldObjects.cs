@@ -202,46 +202,48 @@ namespace cogbot.Listeners
 		}
 
         public override void Avatars_OnAvatarAnimation(UUID avatarID, InternalDictionary<UUID, int> anims)
-		{
-			Avatar avatar = GetAvatar(avatarID);
+        {
+            Avatar avatar = GetAvatar(avatarID);
             if (avatar == null) return;
-			List<UUID> currents = new List<UUID>();
-			List<String> names = new List<String>();
+            List<UUID> currents = new List<UUID>();
+            List<String> names = new List<String>();
             UUID mostCurrentAnim = UUID.Zero;
             int mostCurrentSequence = -1;
-            lock (anims) 
-                foreach (UUID key in anims.Keys)
-			{
-                int animNumber = (int)anims[key];
-                if (animNumber >= mostCurrentSequence)
+
+
+            anims.ForEach(delegate(UUID key)
                 {
-                    mostCurrentSequence = animNumber;
-                    mostCurrentAnim = key;
+                    int animNumber = (int)anims[key];
+                    if (animNumber >= mostCurrentSequence)
+                    {
+                        mostCurrentSequence = animNumber;
+                        mostCurrentAnim = key;
+                    }
+                    currents.Add(key);
+                    names.Add(GetAnimationName(key));
+                });
+            lock (avatarAminCurrent)
+                if (avatarAminCurrent.ContainsKey(avatar))
+                {
+                    UUID oldAnim = avatarAminCurrent[avatar];
+                    if (oldAnim != mostCurrentAnim)
+                    {
+                        SendNewEvent("On-Object-Animation", avatar, mostCurrentAnim);
+                    }
                 }
-				currents.Add(key);
-				names.Add(GetAnimationName(key));
-			}
-            lock(avatarAminCurrent)
-            if (avatarAminCurrent.ContainsKey(avatar))
-            {
-                UUID oldAnim = avatarAminCurrent[avatar];
-                if (oldAnim != mostCurrentAnim)
+                else
                 {
                     SendNewEvent("On-Object-Animation", avatar, mostCurrentAnim);
                 }
-            }
-            else
-            {
-                SendNewEvent("On-Object-Animation", avatar, mostCurrentAnim);
-            }
             avatarAminCurrent[avatar] = mostCurrentAnim;
 
 
-			if (avatarAminsSent.ContainsKey(avatar)) {
+            if (avatarAminsSent.ContainsKey(avatar))
+            {
 
-			}
-			//SendNewEvent("On-Avatar-Animation", avatar, names);
-		}
+            }
+            //SendNewEvent("On-Avatar-Animation", avatar, names);
+        }
 
         public override void Self_OnAnimationsChanged(InternalDictionary<UUID, int> agentAnimations)
         {
@@ -268,36 +270,6 @@ namespace cogbot.Listeners
         }
 
 
-		public Avatar GetAvatar(UUID avatarID)
-		{
-			Primitive prim;
-            bool b;
-            lock (prims)
-                b = prims.TryGetValue(avatarID, out prim);
-			if (b) {
-                if (!(prim is Avatar)) return null;
-				return (Avatar)prim;
-			}
-			return null;
-		}
-
-        public Type GetType(UUID uuid)
-        {
-            Object found ;
-            lock(uuidType)
-                if (uuidType.ContainsKey(uuid))
-                {
-                    found = uuidType[uuid];
-                    if (found is Type) return (Type)found;
-                    return found.GetType();
-                }
-
-            found  = GetObject(uuid);
-            if (found == null) return null;
-            //lock (uuidType) uuidType[uuid] = found;
-            if (found is Type) return (Type)found;
-            return found.GetType();
-        }
 
 		static readonly string[] paramNamesOnObjectKilled = new string[] { "simulator", "objectID"};
 		static readonly Type[] paramTypesOnObjectKilled = new Type[] { typeof(Simulator), typeof(uint)};
@@ -362,8 +334,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 		{
             lock (primsAwaitingSelect)
             {
-               lock (prim)
-                   prims.Add(prim.LocalID, prim.ID, prim);
+               //lock (prim)                   prims.Add(prim.LocalID, prim.ID, prim);
                 primsAwaitingSelect.Add(prim);
                 client.Objects.SelectObject(simulator, prim.LocalID);
             }
@@ -384,36 +355,27 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
         }
         private void Objects_OnObjectProperties1(Simulator simulator, Primitive.ObjectProperties props)
         {
-            Primitive prim;
+            Primitive prim = GetPrimitive(props.ObjectID);
 
-            bool b;
-            lock (prims) 
-                b = prims.TryGetValue(props.ObjectID, out prim);
-            if (b)
+            if (primsAwaitingSelect.Contains(prim))
             {
-                if (primsAwaitingSelect.Contains(prim))
+                primsAwaitingSelect.Remove(prim);
+            }
+            //if (Program.Verbosity > 2)
+            ///botoutput("Received properties for " + props.ObjectID.ToString());               
+            //lock (prim)  prim.Properties = props;
+            lock (primsKnown)
+                if (!primsKnown.Contains(prim))
                 {
-                    primsAwaitingSelect.Remove(prim);
+                    primsKnown.Add(prim);
+                    SendNewEvent("on-new-prim", props.Name, props.ObjectID.ToString(), props.Description, prim.Position);
+                    CalcStats(prim);
                 }
-                //if (Program.Verbosity > 2)
-                ///botoutput("Received properties for " + props.ObjectID.ToString());               
-                //lock (prim)  prim.Properties = props;
-                lock (primsKnown)
-                    if (!primsKnown.Contains(prim))
-                    {
-                        primsKnown.Add(prim);
-                        SendNewEvent("on-new-prim", props.Name, props.ObjectID.ToString(), props.Description);
-                    }
-                CalcStats(prim);
-                describePrimToAI(prim);
-
-            }
-            else
-            {
-                output("Received object properties for untracked object " + props.ObjectID.ToString());
-            }
+            describePrimToAI(prim);
 
         }
+
+   
 
         object Objects_OnNewAvatarLock = new object();
         public override void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
@@ -550,7 +512,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 					lock (prim)
 					{
 
-						output("Updating state for Prim " + prim);
+						///output("Updating state for Prim " + prim);
 						updateToPrim(prim, update);
 					}
 					if (prim.Properties != null) {
@@ -892,26 +854,56 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             SendNewEvent("on-avatar-look", GetObject(sourceID), GetObject(targetID), targetPos, lookType.ToString(), duration, GetObject(id));
         }
 
+        public Avatar GetAvatar(UUID avatarID)
+        {
+            Primitive prim = GetPrimitive(avatarID);
+            if (prim is Avatar) return (Avatar)prim;
+            prim = GetPrimitive(avatarID);
+            return null;
+        }
+
+        public Type GetType(UUID uuid)
+        {
+            Object found;
+            lock (uuidType)
+                if (uuidType.ContainsKey(uuid))
+                {
+                    found = uuidType[uuid];
+                    if (found is Type) return (Type)found;
+                    return found.GetType();
+                }
+
+            found = GetObject(uuid);
+            if (found == null) return null;
+            //lock (uuidType) uuidType[uuid] = found;
+            if (found is Type) return (Type)found;
+            return found.GetType();
+        }
+
         public object GetObject(UUID id)
         {
             object ret = GetPrimitive(id);
             if (ret != null) return ret;
-            ret = GetAvatar(id);
+            //ret = GetAvatar(id);
+            //if (ret != null) return ret;
+            ret = GetAsset(id);
             if (ret != null) return ret;
             ret = GetAnimationName(id);
             if (ret != null) return ret;
             return id;
         }
 
-        public Primitive GetPrimitive(UUID id)
+        private Asset GetAsset(UUID id)
         {
-            Primitive prim;
-            if (prims.TryGetValue(id, out prim))
+            Asset asset;
+           TextForm.simulator.Assets.TryGetAsset(id, out asset);
+            if (asset != null)
             {
-                return prim;
+                uuidType[id] = asset;
             }
-            return null;
+            return asset;
         }
+
 
         public Primitive GetPrimitive(uint id)
         {
@@ -920,13 +912,77 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             {
                 return prim;
             }
-            return null;
+            Primitive found = GetCurrentSim().ObjectsPrimitives.Find(delegate(Primitive prim0)
+            {
+                return (prim0.LocalID == id);
+            });
+            if (found == null) found = GetCurrentSim().ObjectsAvatars.Find(delegate(Avatar prim0)
+            {
+                if (prim0.LocalID == id)
+                {
+                    AvatarCacheAdd(prim0.Name, prim0);
+                    return true;
+                }
+                return false;
+            });
+            if (found != null)
+            {
+                lock (prims) prims.Add(found.LocalID, found.ID, found);
+            }
+            return found;
         }
+
+        private void AvatarCacheAdd(string p, Avatar prim0)
+        {
+            lock (avatarCache)
+            {
+                if (!avatarCache.ContainsKey(p))
+                avatarCache[p] = prim0;
+            }
+            uuidType[prim0.ID] = prim0;
+        }
+        public Primitive GetPrimitive(UUID id)
+        {
+            Primitive prim;
+            if (prims.TryGetValue(id, out prim))
+            {
+                uuidType[id] = prim;
+                return prim;
+            }
+            Primitive found = GetCurrentSim().ObjectsPrimitives.Find(delegate(Primitive prim0)
+            {
+                return (prim0.ID == id);
+            });
+            if (found == null) found = GetCurrentSim().ObjectsAvatars.Find(delegate(Avatar prim0)
+            {
+                if (prim0.ID == id)
+                {
+                    AvatarCacheAdd(prim0.Name, prim0);
+                    return true;
+                }
+                return false;
+            });
+            if (found != null)
+            {
+                lock (prims) prims.Add(found.LocalID, found.ID, found);
+            }
+            return found;
+        }
+
+        private Simulator GetCurrentSim()
+        {
+            Simulator cs = client.Network.CurrentSim;
+            if (cs != null) return cs;
+            cs = client.Network.Simulators[0];
+            return cs;
+        }
+
+
         Dictionary<Primitive, Vector3> primVect = new Dictionary<Primitive, Vector3>();
 		public void SendNewEvent(string eventName, params object[] args)
 		
         {
-            if (true) return;
+           // if (true) return;
             if (eventName.Contains("on-avatar-look")) return;
 		//	Console.WriteLine(eventName + " " + client.argsListString(args));
             String evtStr = eventName.ToString();
@@ -1026,6 +1082,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 				describeAvatarToAI(avatar);
 				return;
 			}
+            if (true) return;
 			if (!primsKnown.Contains(prim))	return;
 			BlockUntilProperties(prim);
 			if (prim.Properties.Name != null) {

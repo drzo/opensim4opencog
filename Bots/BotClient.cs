@@ -16,7 +16,33 @@ using Action=cogbot.Actions.Action;
 namespace cogbot
 {
 	public class BotClient : GridClient,SimEventSubscriber {
-		public static int nextTcpPort = 5555;
+
+        // TODO's
+        // Play Animations
+        // private static UUID type_anim_uuid = new UUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
+        // Client.Self.AnimationStart(type_anim_uuid,false);
+        // Client.Self.AnimationStop(type_anim_uuid,false);
+
+        // animationFolder = Client.Inventory.FindFolderForType(AssetType.Animation);
+        // animationUUID = Client.Inventory.FindObjectByPath(animationFolder, Client.Self.AgentID, AnimationPath, 500);
+        // Client.Self.AnimationStart(animationLLUUID,false);
+        // Client.Self.AnimationStop(animationLLUUID,false);
+
+
+        // Reflect events into lisp
+        //        
+
+        public void Login()
+        {
+            if (TextForm.simulator.periscopeClient == null)
+            {
+                TextForm.simulator.periscopeClient = this;
+                TextForm.simulator.Start();
+                Settings.LOG_LEVEL = Helpers.LogLevel.Info;
+            }
+            Network.Login(BotLoginParams.FirstName, BotLoginParams.LastName, BotLoginParams.Password, "OnRez", "UNR");
+        }
+
 		int thisTcpPort;
 		public OpenMetaverse.LoginParams BotLoginParams;// = null;
         SimEventPublisher botPipeline = new SimEventMulticastPipeline();
@@ -29,7 +55,6 @@ namespace cogbot
 		public string MasterName = String.Empty;
 		public UUID MasterKey = UUID.Zero;
 		public bool AllowObjectMaster = false;
-		public ClientManager ClientManager;
 		public VoiceManager VoiceManager;
 		// Shell-like inventory commands need to be aware of the 'current' inventory folder.
 		public InventoryFolder CurrentDirectory = null;
@@ -74,14 +99,15 @@ namespace cogbot
         // public Configuration config;
         public String taskInterperterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
         ScriptEventListener scriptEventListener = null;
-        public TextForm parentTextForm = null;
+        public TextForm ClientManager;
+
         public List<string> muteList;
         public bool muted = false;
 
 		/// <summary>
 		/// 
 		/// </summary>
-		public BotClient(ClientManager manager)
+		public BotClient(TextForm manager)
 		{
 			ClientManager = manager;
 			manager.lastBotClient = this;
@@ -93,7 +119,7 @@ namespace cogbot
 //            manager.AddTextFormCommands(this);
 			//          RegisterAllCommands(Assembly.GetExecutingAssembly());
 
-			Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
+			Settings.LOG_LEVEL = Helpers.LogLevel.Info;
 			Settings.LOG_RESENDS = false;
 			Settings.STORE_LAND_PATCHES = true;
 			Settings.ALWAYS_DECODE_OBJECTS = true;
@@ -118,7 +144,7 @@ namespace cogbot
             botPipeline.AddSubscriber(new SimEventTextSubscriber(parent,this));
             // SingleInstance = this;
             ///this = this;// new GridClient();
-            parentTextForm = parent;
+            ClientManager = parent;
 
         
 
@@ -212,9 +238,9 @@ namespace cogbot
             // Start the server
             lock (TextForm.SingleInstance.config)
             {
-                thisTcpPort = nextTcpPort;
-                nextTcpPort += TextForm.SingleInstance.config.tcpPortOffset;
-                Utilities.TcpServer UtilitiesTcpServer = new Utilities.TcpServer(nextTcpPort, this);
+                thisTcpPort = TextForm.nextTcpPort;
+                TextForm.nextTcpPort += TextForm.SingleInstance.config.tcpPortOffset;
+                Utilities.TcpServer UtilitiesTcpServer = new Utilities.TcpServer(thisTcpPort, this);
                 UtilitiesTcpServer.startSocketListener();
             }
 
@@ -306,7 +332,7 @@ namespace cogbot
 		{
 			AlertMessagePacket message = (AlertMessagePacket)packet;
 
-			Logger.Log("[AlertMessage] " + Utils.BytesToString(message.AlertData.Message), Helpers.LogLevel.Info, this);
+			output("[AlertMessage] " + Utils.BytesToString(message.AlertData.Message));
 		}
 
 
@@ -359,7 +385,7 @@ namespace cogbot
 				} else if (
 						  im.Dialog == InstantMessageDialog.MessageFromAgent ||
 						  im.Dialog == InstantMessageDialog.MessageFromObject) {
-					ClientManagerRef.ClientManager.DoCommandAll(im.Message, im.FromAgentID);
+					ClientManager.DoCommandAll(im.Message, im.FromAgentID);
 				}
 			} else {
 				// Received an IM from someone that is not the bot's master, ignore
@@ -576,7 +602,7 @@ namespace cogbot
                 toprint = toprint.Replace("$bot", Self.Name);
                 toprint = toprint.Replace("You", Self.Name);
                 toprint = toprint.Replace("you", Self.Name);
-                parentTextForm.output(Self.Name + ": " + toprint);
+                ClientManager.output(Self.Name + ": " + toprint);
 			} catch (Exception) {
 			}
 		}
@@ -858,28 +884,6 @@ namespace cogbot
                 output("        Stack: " + e.StackTrace.ToString());
                 throw e;
             }
-        }
-
-	
-        // TODO's
-			// Play Animations
-			// private static UUID type_anim_uuid = new UUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
-			// Client.Self.AnimationStart(type_anim_uuid,false);
-			// Client.Self.AnimationStop(type_anim_uuid,false);
-
-			// animationFolder = Client.Inventory.FindFolderForType(AssetType.Animation);
-			// animationUUID = Client.Inventory.FindObjectByPath(animationFolder, Client.Self.AgentID, AnimationPath, 500);
-			// Client.Self.AnimationStart(animationLLUUID,false);
-			// Client.Self.AnimationStop(animationLLUUID,false);
-
-
-			// Reflect events into lisp
-			//        
-
-        public void Login() {
-            TextForm.simulator.periscopeClient = this;
-            TextForm.simulator.Start();
-            Network.Login(BotLoginParams.FirstName, BotLoginParams.LastName, BotLoginParams.Password, "OnRez", "UNR");
         }
 
 		/// <summary>

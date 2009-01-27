@@ -326,40 +326,57 @@ namespace Simian.Extensions
 
                 if (server.Agents.TryGetValue(kvp.Key, out agent))
                 {
-                    if (transfer.Success)
-                    {
-                        server.Assets.StoreAsset(asset);
-                        TransferToClient(asset, agent, kvp.Value);
-                    }
-                    else
-                    {
-                        Logger.Log("Request for missing asset " + transfer.AssetID.ToString(), Helpers.LogLevel.Warning);
-
-                        // Asset not found
-                        TransferInfoPacket response = new TransferInfoPacket();
-                        response.TransferInfo = new TransferInfoPacket.TransferInfoBlock();
-                        response.TransferInfo.TransferID = kvp.Value;
-
-                        response.TransferInfo.Params = new byte[20];
-                        Buffer.BlockCopy(transfer.AssetID.GetBytes(), 0, response.TransferInfo.Params, 0, 16);
-                        Buffer.BlockCopy(Utils.IntToBytes((int)transfer.AssetType), 0, response.TransferInfo.Params, 16, 4);
-
-                        response.TransferInfo.ChannelType = (int)ChannelType.Asset;
-                        response.TransferInfo.Size = 0;
-                        response.TransferInfo.Status = (int)StatusCode.UnknownSource;
-                        response.TransferInfo.TargetType = (int)TargetType.Unknown;
-
-                        server.UDP.SendPacket(agent.Avatar.ID, response, PacketCategory.Asset);
-                    }
+                    serverAssetsStoreAsset(transfer, asset, agent, kvp);
                 }
                 else
                 {
                     Logger.Log("Asset transfer finished for an untracked agent, ignoring", Helpers.LogLevel.Warning);
+                    serverAssetsStoreAsset(transfer, asset, agent, kvp);
                 }
             }
             else
             {
                 Logger.Log("Asset transfer finished for an untracked download, ignoring", Helpers.LogLevel.Warning);
+                serverAssetsStoreAsset(transfer, asset, null, kvp);
+            }
+        }
+
+        private void serverAssetsStoreAsset(AssetDownload transfer, Asset asset, Agent agent, KeyValuePair<UUID, UUID> kvp)
+        {
+            if (transfer.Success)
+            {
+                server.Assets.StoreAsset(asset);
+                if (agent != null && kvp.Key != null)
+                {
+                    Logger.Log("Relay asset " + transfer.AssetID.ToString(), Helpers.LogLevel.Info);
+                    TransferToClient(asset, agent, kvp.Value);
+                }
+                else
+                {
+                    Logger.Log("Storing asset " + transfer.AssetID.ToString(), Helpers.LogLevel.Info);
+                }
+            }
+            else
+            {
+                Logger.Log("Request for missing asset " + transfer.AssetID.ToString(), Helpers.LogLevel.Warning);
+                if (agent != null && kvp.Key != null)
+                {
+                    // Asset not found
+                    TransferInfoPacket response = new TransferInfoPacket();
+                    response.TransferInfo = new TransferInfoPacket.TransferInfoBlock();
+                    response.TransferInfo.TransferID = kvp.Value;
+
+                    response.TransferInfo.Params = new byte[20];
+                    Buffer.BlockCopy(transfer.AssetID.GetBytes(), 0, response.TransferInfo.Params, 0, 16);
+                    Buffer.BlockCopy(Utils.IntToBytes((int)transfer.AssetType), 0, response.TransferInfo.Params, 16, 4);
+
+                    response.TransferInfo.ChannelType = (int)ChannelType.Asset;
+                    response.TransferInfo.Size = 0;
+                    response.TransferInfo.Status = (int)StatusCode.UnknownSource;
+                    response.TransferInfo.TargetType = (int)TargetType.Unknown;
+
+                    server.UDP.SendPacket(agent.Avatar.ID, response, PacketCategory.Asset);
+                }
             }
         }
 

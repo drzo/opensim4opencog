@@ -38,7 +38,15 @@ internal class CLSMethod : CLSMember
 		if(methods.Length == 1)	//it's not overloaded
 			{
 			mi = (MethodInfo)methods[0];
-			return mi.Invoke(target,argarray);
+            try
+            {
+                return mi.Invoke(target, argarray);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                throw e;
+            }
 			}
 		else
 			{

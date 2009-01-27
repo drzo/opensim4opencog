@@ -30,7 +30,7 @@ namespace Simian.Extensions
             client = server.periscopeClient;
             Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
             client.Settings.MULTIPLE_SIMS = false;
-            client.Settings.SEND_AGENT_UPDATES = false;
+            //client.Settings.SEND_AGENT_UPDATES = false;
 
             client.Network.OnCurrentSimChanged += Network_OnCurrentSimChanged;
             client.Objects.OnNewPrim += Objects_OnNewPrim;
