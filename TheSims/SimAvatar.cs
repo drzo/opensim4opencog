@@ -127,6 +127,13 @@ namespace cogbot.TheSims
         {
             return ObjectType.GetSimObjectUsage(GetDefaultUse());
         }
+
+        public float GetSizeDistance()
+        {
+            float fx = thePrim.Scale.X;
+            float fy = thePrim.Scale.Y;
+            return (fx > fy) ? fx:fy;
+        }
     }
     // most object have use that advertises ChangePromise but actually calls ChangeActual
     public class SimObjectUsage
@@ -512,10 +519,14 @@ namespace cogbot.TheSims
             {
                 Client.Self.Stand();
             }
-            float dist = 2.0F;
+            float dist = 1.0F;
             if (obj is SimAvatar)
             {
-                dist = 4.0F;
+                dist = 2.0F;
+            }
+            else
+            {
+                dist = obj.GetSizeDistance() + dist;
             }
             Vector3 vector3 = obj.GetUsePosition();
             Debug("Approaching " + vector3 + " for " + verb + " " + obj);

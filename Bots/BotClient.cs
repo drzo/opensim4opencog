@@ -34,13 +34,13 @@ namespace cogbot
 
         public void Login()
         {
+            Network.Login(BotLoginParams.FirstName, BotLoginParams.LastName, BotLoginParams.Password, "OnRez", "UNR");
             if (TextForm.simulator.periscopeClient == null)
             {
                 TextForm.simulator.periscopeClient = this;
                 TextForm.simulator.Start();
                 Settings.LOG_LEVEL = Helpers.LogLevel.Info;
             }
-            Network.Login(BotLoginParams.FirstName, BotLoginParams.LastName, BotLoginParams.Password, "OnRez", "UNR");
         }
 
 		int thisTcpPort;
