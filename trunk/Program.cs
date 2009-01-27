@@ -40,7 +40,7 @@ namespace cogbot
          {
              Arguments arguments = new Arguments(args);
 
-             ClientManager manager;
+             TextForm manager;
              List<LoginDetails> accounts = new List<LoginDetails>();
              LoginDetails account;
              bool groupCommands = false;
@@ -166,7 +166,7 @@ namespace cogbot
              }
 
              // Login the accounts and run the input loop
-             manager = new ClientManager(accounts, getTextures);
+             manager = new TextForm(accounts, getTextures);
 
              if (!String.IsNullOrEmpty(scriptFile))
                  manager.DoCommandAll("script " + scriptFile, UUID.Zero);
