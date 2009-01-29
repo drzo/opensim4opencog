@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
-using cogbot.TheSims;
+using cogbot.TheOpenSims;
 using System.Threading; //using libsecondlife;
 
 namespace cogbot.Actions
@@ -13,9 +13,9 @@ namespace cogbot.Actions
         BotRegionModel BRM;
         public TheSims(BotClient Client)           
         {
-            Name = "thesims";
-            helpString = "Start theSims type AI.";
-            usageString = "thesims [on|off|status|think|stats]";
+            Name = "simbot";
+            helpString = "Start theOpenSims type AI.";
+            usageString = "simbot [on|start|stop|off|think]";
            
         }
 
