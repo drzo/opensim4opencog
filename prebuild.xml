@@ -372,7 +372,7 @@
           <Match path="DotCYC" pattern="CycConnectionForm.cs" recurse="false"/>
           <Match path="DotCYC" pattern="CycConnectionForm.Designer.cs" recurse="false"/>
           <Match path="ScriptEngines" pattern="*.cs" recurse="true"/>
-          <Match path="TheSims" pattern="*.cs" recurse="true"/>
+          <Match path="TheOpenSims" pattern="*.cs" recurse="true"/>
           <Match path="Simian" pattern="*.cs" recurse="true">
               <Exclude name="AssemblyInfo.cs"/>
               <Exclude name="Options.cs"/>
@@ -426,7 +426,7 @@
           <Match path="DotCYC" pattern="CycConnectionForm.cs" recurse="false"/>
           <Match path="DotCYC" pattern="CycConnectionForm.Designer.cs" recurse="false"/>
           <Match path="ScriptEngines" pattern="*.cs" recurse="true"/>
-           <Match path="TheSims" pattern="*.cs" recurse="true"/>
+           <Match path="TheOpenSims" pattern="*.cs" recurse="true"/>
             
 
           <Match path="OpenMetaverse/Types"  pattern="*.cs" recurse="true">
