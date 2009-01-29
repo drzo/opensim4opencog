@@ -1499,6 +1499,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                 {
                     return UUID.Parse(uuidname);
                 }
+                if (uuidname == a) return UUID.Parse(uuidname);
             }
             foreach (String name in nameAnimation.Keys)
             {

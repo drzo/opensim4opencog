@@ -5,6 +5,7 @@ using OpenMetaverse;
 using OpenMetaverse.Http;
 using System.Threading;
 using System.Windows.Forms;
+using Logger = OpenMetaverse.Logger;
 
 namespace cogbot.Actions
 {

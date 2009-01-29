@@ -40,11 +40,14 @@ namespace cogbot.TheSims
 
         public float RateIt(BotNeeds againsNeeds, SimAvatar avatar)
         {
-            GetMenu(avatar);
-            return ObjectType.RateIt(againsNeeds, GetDefaultUse()) * scaleOnNeeds;
+           // GetMenu(avatar);
+            return ObjectType.RateIt(againsNeeds, GetDefaultUsage()) * scaleOnNeeds;
         }
 
-
+        public List<SimObjectUsage> GetUsages()
+        {
+            return ObjectType.GetUsages();
+        }
         public List<string> GetMenu(SimAvatar avatar)
         {
             //props.Permissions = new Permissions(objectData.BaseMask, objectData.EveryoneMask, objectData.GroupMask,
@@ -52,7 +55,7 @@ namespace cogbot.TheSims
             List<string> list = new List<string>();
             if (thePrim.Properties != null)
             {
-                //  if (thePrim.Properties.TouchName != "")
+                //  if (thePrim.Properties.TextName != "")
                 list.Add("grab");
                 //   if (thePrim.Properties.SitName != "")
                 list.Add("sit");
@@ -113,9 +116,9 @@ namespace cogbot.TheSims
         }
 
 
-        public string GetDefaultUse()
+        public SimObjectUsage GetDefaultUsage()
         {
-            return ObjectType.GetDefaultUse();
+            return ObjectType.GetDefaultUsage();
         }
 
         public Vector3 GetUsePosition()
@@ -128,10 +131,10 @@ namespace cogbot.TheSims
             return ObjectType.GetUsagePromise(p).Magnify(scaleOnNeeds);
         }
 
-        public SimObjectUsage GetSimObjectUsage(SimAvatar simAvatar)
-        {
-            return ObjectType.GetSimObjectUsage(GetDefaultUse());
-        }
+        //public SimObjectUsage FindObjectUsage(SimAvatar simAvatar)
+        //{
+        //    return ObjectType.FindObjectUsage(GetDefaultUsage());
+        //}
 
         public virtual float GetSizeDistance()
         {
@@ -144,15 +147,25 @@ namespace cogbot.TheSims
     // most object have use that advertises ChangePromise but actually calls ChangeActual
     public class SimObjectUsage
     {
-        public int maximumDistance = 1;  // the maximum distance the user can be away scaled on object distance
+        public SimObjectUsage(String name)
+        {
+            UsageName = name;
+        }
+        // the maximum distance the user can be away scaled on object size
+        public String UsageName;
+        public int maximumDistance = 1;  
         public int totalTimeMS = 14000;  // the time this usage takes
         public BotNeeds ChangePromise = new BotNeeds(0.0F); // what most users think will happen by default
         public BotNeeds ChangeActual = new BotNeeds(0.0F); //what really happens ofter 1 minute use
         public string TextName = ""; // the scripting verb name
+        // if true the avatar will attempt to sit on the object for the duration
         public bool UseSit = false;
+        // if true the client will attempt to invoke the "touch/grab" for the duration
         public bool UseGrab = false;
+        // if "KICK" or another Anim the avatar will play this anim
         public String UseAnim = null;
-        public Object LispScript = null; // the lisp code that does the animation effects
+        // if set the client will attempt to run
+        public String LispScript = null; // the lisp code that does the animation effects
     }
 
     abstract public class BotAction : BotMentalAspect
@@ -229,51 +242,44 @@ namespace cogbot.TheSims
 
         public override void InvokeReal()
         {
+
             String use = Usage.TextName;
-            TheBot.Approach(Target);
-            if (use == "sit" || Usage.UseSit)
+            
+            // Approach Target
+            float howClose = TheBot.Approach(Target);            
+
+            if (howClose > Usage.maximumDistance)
             {
-                TheBot.SitOn(Target, new ThreadStart(DoSideEffects));
+                // maybe get closer or fail
+            }
+
+            // Create the Side-Effect closure
+            ThreadStart closure = new ThreadStart(DoSideEffects);
+
+            // IF UseAnim was specified
+            if (!String.IsNullOrEmpty(Usage.UseAnim))
+            {
+                UUID animID = TheBot.FindAnimUUID(Usage.UseAnim);
+                if (animID != UUID.Zero)
+                    closure = TheBot.WithAnim(animID, closure);
             }
             else
-                if (use == "touch" || use == "grab" || Usage.UseGrab)
-                {
-                    TheBot.GrabAt(Target, new ThreadStart(DoSideEffects));
-                }
-                else if (!String.IsNullOrEmpty(Usage.UseAnim))
-                {
-                    AnimThread animThread = TheBot.CreateAnimation(Usage.UseAnim);
-                    try
-                    {
-                        animThread.Start();
-                        DoSideEffects();
-                    }
-                    finally
-                    {
-                        animThread.Stop();
-                    }
-                }
-                else
-                {
-                    UUID animID = TheBot.FindAnimUUID(use);
-                    if (animID != UUID.Zero)
-                    {
-                        AnimThread animThread = TheBot.CreateAnimation(animID);
-                        try
-                        {
-                            animThread.Start();
-                            DoSideEffects();
-                        }
-                        finally
-                        {
-                            animThread.Stop();
-                        }
-                    }
-                    else //just 
-                    {
-                        DoSideEffects();
-                    }
-                }
+            {
+                //ELSE look for Verb coverage for an anim
+                UUID animID = TheBot.FindAnimUUID(use);
+                if (animID != UUID.Zero)
+                    closure = TheBot.WithAnim(animID, closure);
+            }
+
+            // Surround with tough/grab if needed
+            if (use == "touch" || use == "grab" || Usage.UseGrab)
+                closure = TheBot.WithGrabAt(Target, closure);
+
+            // Surround with Sit if needed
+            if (use == "sit" || Usage.UseSit)
+                closure = TheBot.WithSitOn(Target, closure);
+
+            closure.Invoke();
         }
 
 
@@ -334,7 +340,7 @@ namespace cogbot.TheSims
                 TheBot.Approach(Victem);
                 TheBot.Debug(ToString());
                 CurrentTopic = TheBot.GetNextInterestingObject();
-                TheBot.TalkAbout(Victem,CurrentTopic);
+                TheBot.TalkTo(Victem,CurrentTopic);
                 Thread.Sleep(8000);
                 //User.ApplyUpdate(use, simObject);
             }
@@ -362,7 +368,7 @@ namespace cogbot.TheSims
 
         public Avatar theAvatar = null;
 
-        public SimObject InDialogWith = null;
+        public SimAvatar InDialogWith = null;
 
         public BotNeeds CurrentNeeds;
 
@@ -384,7 +390,7 @@ namespace cogbot.TheSims
         public Dictionary<SimObjectType, BotNeeds> Assumptions = new Dictionary<SimObjectType, BotNeeds>();
 
 
-        public BotAction CurrentMentalEvent = null;
+        public BotAction CurrentAction = null;
 
 
 
@@ -467,10 +473,10 @@ namespace cogbot.TheSims
         {
             while (true)
             {
-                CurrentNeeds.AddFrom(BotRegionModel.BotWorld.GetObjectType("OnMinuteTimer").GetUsageActual("near"));
+                CurrentNeeds.AddFrom(BotRegionModel.BotWorld.GetObjectType("OnMinuteTimer").GetUsageActual("OnMinuteTimer"));
                 CurrentNeeds.SetRange(0.0F, 100.0F);
                 Thread.Sleep(60000); // one minute
-                Debug(CurrentNeeds.ToString());
+               // Debug(CurrentNeeds.ToString());
             }
         }
 
@@ -480,16 +486,16 @@ namespace cogbot.TheSims
             ScanNewObjects();
 
             Thread.Sleep(2000);
-            CurrentMentalEvent = GetNextAction();
-            if (CurrentMentalEvent != null)
+            CurrentAction = GetNextAction();
+            if (CurrentAction != null)
             {
-                UseAspect(CurrentMentalEvent);
+                UseAspect(CurrentAction);
             }
         }
 
         private BotAction GetNextAction()
         {
-            BotAction act = CurrentMentalEvent;
+            BotAction act = CurrentAction;
             SimObject neat = GetNextInterestingObject();
             if (neat == this)
             {
@@ -497,12 +503,15 @@ namespace cogbot.TheSims
             }
             if (neat is SimAvatar)
             {
-                SimObjectUsage usage = neat.ObjectType.GetSimObjectUsage("talk");
+                SimObjectUsage usage = neat.ObjectType.FindObjectUsage("talk");
                 act = new BotSocialAction(this, usage, (SimAvatar)neat);
                 return act;
             }
-            SimObjectUsage use = neat.GetSimObjectUsage(this);
-            return new BotObjectAction(this, use, neat);
+            else
+            {
+                SimObjectUsage use = neat.GetDefaultUsage();
+                return new BotObjectAction(this, use, neat);
+            }
         }
 
         public void UseAspect(BotMentalAspect someAspect)
@@ -515,7 +524,7 @@ namespace cogbot.TheSims
             }
             if (InDialogWith != null)
             {
-                TalkAbout(InDialogWith, someAspect);
+                TalkTo(InDialogWith, someAspect);
                 return;
             }
             else
@@ -535,12 +544,12 @@ namespace cogbot.TheSims
         //    Debug("TalkTo... "+verb+ " " + simAvatar);
         //    Thread.Sleep(4000);
         //    TalkTimeRemaining = (new Random()).Next(2)+2;
-        //    CurrentMentalEvent = null;
+        //    CurrentAction = null;
         //    ApplyUpdate("talk", InDialogWith);
         //}
         //public void UseObject(SimObject simObject)
         //{
-        //    String use = simObject.GetDefaultUse();
+        //    String use = simObject.GetDefaultUsage();
         //    Approach(use, simObject);
         //    Debug("Using... " + use + " " + simObject);
         //    Thread.Sleep(8000);
@@ -643,14 +652,29 @@ namespace cogbot.TheSims
             Thread.Sleep(2000);
             return dist;
         }
-        public void TalkAbout(SimObject avatar, BotMentalAspect talkAbout)
+
+        public void TalkTo(SimAvatar avatar, String talkAbout)
         {
-            SimObject wasInDialogWith = InDialogWith;
-            InDialogWith = avatar;
-            Client.Self.Movement.TurnToward(InDialogWith.GetPosition());
-            Client.Talk(InDialogWith + ": " + talkAbout);
-            Thread.Sleep(3000);
-            InDialogWith = wasInDialogWith;
+            SimAvatar avatarWasInDialogWith = avatar.InDialogWith;
+            SimAvatar wasInDialogWith = InDialogWith;
+            try
+            {
+                InDialogWith = avatar;
+                Client.Self.Movement.TurnToward(InDialogWith.GetPosition());
+                Client.Talk(InDialogWith + ": " + talkAbout);
+                Thread.Sleep(3000);
+            }
+            finally
+            {
+                InDialogWith = wasInDialogWith;
+                avatar.InDialogWith = avatarWasInDialogWith;
+            }
+        }
+        public void TalkTo(SimAvatar avatar, BotMentalAspect talkAbout)
+        {
+            // closure add a thought bubble maybe
+            // closure find a better text represantation
+            TalkTo(avatar, "" + talkAbout);
         }
 
         public void Debug(string p)
@@ -660,43 +684,56 @@ namespace cogbot.TheSims
         }
 
 
-        public void SitOn(SimObject obj, ThreadStart todo )
+        public ThreadStart WithSitOn(SimObject obj, ThreadStart closure)
         {
-            Primitive targetPrim = obj.thePrim;
-            Client.Self.RequestSit(targetPrim.ID, Vector3.Zero);
-            Client.Self.Sit();
-            todo();
-            Client.Self.Stand();
-        }
-
-        public void GrabAt(SimObject obj, ThreadStart todo)
-        {
-            Primitive targetPrim = obj.thePrim;
-            uint objectLocalID = targetPrim.LocalID;
-            Client.Self.Grab(objectLocalID);
-            todo();
-            Client.Self.DeGrab(objectLocalID);
-        }
-
-        public AnimThread CreateAnimation(string p)
-        {
-            UUID anim = FindAnimUUID(p);
-            if (anim == UUID.Zero)
+            return new ThreadStart(delegate()
             {
-                throw new InvalidOperationException("Amination not found " + p);
-            }
-            return CreateAnimation(anim);
+                Primitive targetPrim = obj.thePrim;
+                Client.Self.RequestSit(targetPrim.ID, Vector3.Zero);
+                Client.Self.Sit();
+                closure.Invoke();
+                Client.Self.Stand();
+            });
+        }
+
+        public ThreadStart WithGrabAt(SimObject obj, ThreadStart closure)
+        {
+            return new ThreadStart(delegate()
+            {
+                Primitive targetPrim = obj.thePrim;
+                uint objectLocalID = targetPrim.LocalID;
+                try
+                {
+                    Client.Self.Grab(objectLocalID);
+                    closure.Invoke();
+                }
+                finally
+                {
+                    Client.Self.DeGrab(objectLocalID);
+                }
+            });
+        }
+
+        public ThreadStart WithAnim(UUID anim, ThreadStart closure)
+        {
+            return new ThreadStart(delegate()
+            {
+                AnimThread animThread = new AnimThread(Client, anim);
+                try
+                {
+                    animThread.Start();
+                    closure.Invoke();
+                }
+                finally
+                {
+                    animThread.Stop();
+                }
+            });
         }
 
         public UUID FindAnimUUID(string use)
         {
             return WorldObjects.GetAnimationUUID(use);
-        }
-
-        public AnimThread CreateAnimation(UUID anim)
-        {
-            return new AnimThread(Client, anim);
-
         }
 
         public void ExecuteLisp(BotObjectAction botObjectAction, object lisp)
@@ -716,6 +753,7 @@ namespace cogbot.TheSims
             Client.lispTaskInterperter.Intern("botObjectAction", botObjectAction);
             Client.lispTaskInterperter.Eval(lisp);
         }
+
     }
 
     public class SimObjectType : BotMentalAspect
@@ -737,54 +775,68 @@ namespace cogbot.TheSims
         public SimObjectType(string name):base(name)
         {
             AspectName = name;
-            TouchName = "";
-            SitName = "";
             // Object "use"
            // AddUse(SitName, new SimObjectUsage());
             // Object area effect "near"
-            AddUse(SitName, new SimObjectUsage());
-            GetSimObjectUsage("near").maximumDistance = 10;
         }
 
-        public SimObjectUsage RenameUse(string verb, string newName)
+        public SimObjectUsage FindObjectUsage(string verb)
         {
-            SimObjectUsage simObjectUsage = GetSimObjectUsage(verb);
-            usageAffect.Remove(verb);
-            simObjectUsage.TextName = newName;
-            if (!usageAffect.ContainsKey(newName))
+
+            List<SimObjectUsage> usages = new List<SimObjectUsage>();
+
+            if (usageAffect.ContainsKey(verb))
+               usages.Add(usageAffect[verb]);
+
+            foreach (SimObjectType type in SuperTypes)
             {
-                usageAffect.Add(newName, simObjectUsage);
-
+                SimObjectUsage find = type.FindObjectUsage(verb);
+                if (find != null)
+                {
+                    usages.Add(find);
+                }
             }
-            else
+
+            if (usages.Count == 0) return null;
+
+            SimObjectUsage newUse = new SimObjectUsage(verb);
+
+            foreach (SimObjectUsage use in usages)
             {
-                simObjectUsage = GetSimObjectUsage(newName);
+                if (String.IsNullOrEmpty(newUse.TextName))
+                    newUse.TextName = use.TextName;
+                if (use.UseGrab)
+                    newUse.UseGrab = true;
+                if (use.UseSit)
+                    newUse.UseSit = true;
+                if (String.IsNullOrEmpty(newUse.LispScript))
+                    newUse.LispScript = use.LispScript;
+                if (String.IsNullOrEmpty(newUse.UseAnim))
+                    newUse.UseAnim = use.UseAnim;
+                newUse.ChangeActual = newUse.ChangeActual.Copy();
+                newUse.ChangeActual.AddFrom(use.ChangeActual);
+                newUse.ChangePromise = newUse.ChangePromise.Copy();
+                newUse.ChangePromise.AddFrom(use.ChangePromise);
             }
-            simObjectUsage.TextName = newName;
-            return simObjectUsage;
+            // maybe store for later
+            //usageAffect[verb] = newUse;
+
+            return newUse;
         }
 
-        public void AddUse(string verb, SimObjectUsage simObjectUsage)
+        public SimObjectUsage CreateObjectUsage(string verb)
         {
-            usageAffect.Add(verb, simObjectUsage);
-            simObjectUsage.TextName = verb;
-        }
-
-        public SimObjectUsage GetSimObjectUsage(string verb)
-        {
-            if (verb == null || verb == "use") verb = "sit";
             if (usageAffect.ContainsKey(verb))
                 return usageAffect[verb];
-            SimObjectUsage sou = new SimObjectUsage();
-            sou.TextName = verb;
+            SimObjectUsage sou = new SimObjectUsage(verb);
+          //  sou.TextName = verb;
             usageAffect[verb] = sou;
             return sou;
         }
 
-        public ListAsSet<string> GetVerbs()
+        public ListAsSet<SimObjectUsage> GetUsages()
         {
-            ListAsSet<string> verbs = new ListAsSet<string>();
-            verbs.AddTo(SitName);
+            ListAsSet<string> verbs = new ListAsSet<string>();    
             foreach (string key in usageAffect.Keys)
             {
                 if (!verbs.Contains(key))
@@ -794,31 +846,33 @@ namespace cogbot.TheSims
             }
             foreach (SimObjectType st in SuperTypes)
             {
-                foreach (string v in st.GetVerbs())
+                foreach (SimObjectUsage v in st.GetUsages())
                 {
-                    if (!verbs.Contains(v))
+                    if (!verbs.Contains(v.UsageName))
                     {
-                        verbs.AddTo(v);
+                        verbs.AddTo(v.UsageName);
                     }
                 }
             }
-            return verbs;
+            ListAsSet<SimObjectUsage> usages = new ListAsSet<SimObjectUsage>();
+            foreach (string st in verbs)
+            {
+                usages.AddTo(FindObjectUsage(st));
+            }
+            return usages;            
         }
 
         public BotNeeds GetUsagePromise(string verb)
         {
-            verb = UsageVerb(verb);
-            BotNeeds updateOfNeeds = GetSimObjectUsage(verb).ChangePromise.Copy();
-            foreach (SimObjectType st in SuperTypes)
-            {
-                updateOfNeeds.AddFrom(st.GetUsagePromise(verb));
-            }
-            return updateOfNeeds;
+            SimObjectUsage use =FindObjectUsage(verb);
+            if (use==null) return BotNeeds.ZERO;
+            return use.ChangePromise;
+
         }
 
-        public float RateIt(BotNeeds from, string verb)
+        public float RateIt(BotNeeds from, SimObjectUsage verb)
         {
-            BotNeeds sat = GetUsagePromise(verb).Copy();
+            BotNeeds sat = GetUsagePromise(verb.UsageName).Copy();
             sat.AddFrom(from);
             sat.SetRange(0.0F, 100.0F);
             return sat.RateIt();
@@ -826,51 +880,55 @@ namespace cogbot.TheSims
 
         public BotNeeds GetUsageActual(string verb)
         {
-            verb = UsageVerb(verb);
-            BotNeeds updateOfNeeds = GetSimObjectUsage(verb).ChangeActual.Copy();
-            foreach (SimObjectType st in SuperTypes)
-            {
-                updateOfNeeds.AddFrom(st.GetUsageActual(verb));
-            }
-            return updateOfNeeds;
+            SimObjectUsage use = FindObjectUsage(verb);
+            if (use == null) return BotNeeds.ZERO;
+            return use.ChangeActual;
         }
 
-        private string UsageVerb(string verb)
-        {
-            if (verb == "sit") return verb;
-            if (verb == "touch") return verb;
-            string sitverb = GetSitName();
-            if (verb == sitverb) return "sit";
-            string grabverb = GetTouchName();
-            if (verb == sitverb) return "touch";
-            return verb;
-        }
 
         public string GetTypeName()
         {
             return AspectName;
         }
 
-        public void ParseAffect(String verb, object[] parseStr)
+        public void ParseAffect(SimObjectUsage usage, object[] parseStr)
         {
             SimObjectType type = this;
             int i = 0;
-            SimObjectUsage usage = null;
+
             while (i < parseStr.Length)
             {
-                if (parseStr[i] == null) return;
+                if (parseStr[i] == null)
+                {
+                    i++;
+                    continue;
+                }
                 string s = (string)parseStr[i++];//.ToString();
                 if (s == "SuperType")
                 {
-                    SuperTypes.AddTo(BotRegionModel.BotWorld.GetObjectType(parseStr[i++].ToString()));
+                    String arg = parseStr[i++].ToString();
+                    SimObjectType test = BotRegionModel.BotWorld.FindObjectType(arg);
+                    if (test == null)
+                    {
+                        throw new Exception("unkown supertype " + arg + " for " + type);
+                    }
+                    SuperTypes.AddTo(test);
+                    usage = type.CreateObjectUsage(arg);
+                    continue;
+                }
+                if (s == "Verb")
+                {
+                    String arg = parseStr[i++].ToString();
+                    SimObjectType superType = BotRegionModel.BotWorld.GetObjectType(arg);
+                    superType.CreateObjectUsage(arg);
+                    SuperTypes.AddTo(superType);
+                    usage = type.CreateObjectUsage(arg);
                     continue;
                 }
                 if (s == "SitName")
                 {
                     s = parseStr[i++].ToString();
                     type.SitName = s;
-                    verb = "sit";
-                    usage = type.GetSimObjectUsage(verb.ToString());
                     usage.TextName = s;
                     usage.UseSit = true;
                     continue;
@@ -879,32 +937,37 @@ namespace cogbot.TheSims
                 {
                     s = parseStr[i++].ToString();
                     type.TouchName = s;
-                    verb = "grab";
-                    usage = type.GetSimObjectUsage(verb.ToString());
                     usage.TextName = s;
-                    usage.UseSit = true;
+                    usage.UseGrab = true;
                     continue;
                 }
           
-                if (s == "Verb")
-                {
-                    verb = parseStr[i++].ToString();
-                    usage = type.GetSimObjectUsage(verb.ToString());
-                    usage.TextName = verb;
-                    continue;
-                }
                 // usage / distanceToExcite / etc
                 FieldInfo fi = type.GetType().GetField(s);
                 if (fi != null)
                 {
-                    fi.SetValue(type, parseStr[i++]);
+                    if (fi.FieldType == typeof(String))
+                    {
+                        fi.SetValue(type, parseStr[i++].ToString());
+                    }
+                    else
+                    {
+                        fi.SetValue(type, parseStr[i++]);
+                    }
                     continue;
                 }
-                usage = type.GetSimObjectUsage(verb.ToString()); 
+
                 fi = usage.GetType().GetField(s);
                 if (fi != null)
                 {
-                    fi.SetValue(usage, parseStr[i++]);
+                    if (fi.FieldType == typeof(String))
+                    {
+                        fi.SetValue(usage, parseStr[i++].ToString());
+                    }
+                    else
+                    {
+                        fi.SetValue(usage, parseStr[i++]);
+                    }
                     continue;
                 }
 
@@ -923,20 +986,12 @@ namespace cogbot.TheSims
         }
 
 
-        internal string GetDefaultUse()
+        public SimObjectUsage GetDefaultUsage()
         {
-            List<String> verbs = GetVerbs();
-            if (verbs.Contains("near"))
-            {
-                verbs.Remove("near");
-            }
-            int item = (new Random()).Next(0, verbs.Count - 1);
-            string def = verbs[item];
-            if (SitName == "near")
-            {
-                SitName = def;
-            }
-            return def;
+            List<SimObjectUsage> usages = GetUsages();
+            if (usages.Count == 0) return null;
+            int item = (new Random()).Next(0, usages.Count - 1);
+            return usages[item];
         }
 
         public string GetTouchName()
@@ -960,6 +1015,7 @@ namespace cogbot.TheSims
             });
             return pt == null ? SitName : pt.GetSitName();
         }
+
     }
 
 
@@ -1119,7 +1175,7 @@ namespace cogbot.TheSims
                     prim.Properties.TouchName = otype.GetTouchName();
                     if (!String.IsNullOrEmpty(prim.Properties.TouchName))
                     {
-                        Console.WriteLine("[TODO] SetTouchName(" + prim + "," + otype.GetTouchName());
+                        Console.WriteLine("[TODO] SetTextName(" + prim + "," + otype.GetTouchName());
                     }
                 }
             }
@@ -1127,10 +1183,15 @@ namespace cogbot.TheSims
 
         public void LoadDefaultTypes()
         {
-
-            CreateObjectType("OnMinuteTimer", //  Just being alive
-
-                    "Verb", "near",
+            /*
+            
+             Format of loader
+            
+             * 
+            
+            
+             */
+            CreateObjectUse("OnMinuteTimer", //  Just being alive
                     "maximumDistance", 1000, // mostly anywhere
                     "Energy", -0.1, -0.1, //  needs rest every 1000 minutes
                     "Hunger", -1, -1, // hungry every 100 minutes
@@ -1145,100 +1206,146 @@ namespace cogbot.TheSims
 
 
             // CLASSES
-            CreateObjectSitUse("Seating", "Sit on",// Chairs/Couches
-                    "maximumDistance", 0, // must be 0=sitting on
+            CreateObjectUse("Sittable",
+                    "TextName", "Sit on",// Chairs/Couches
+                    "maximumDistance", 1, // close enough?
+                    "UseSit", true,
+                    "UseAnim", Animations.SIT,
                     "Comfort", 1, 0, // 100 minutes till comfort bliss? 
                     null);
 
 
-            CreateObjectSitUse("Sleeping", "Lay on",// Beds/Couches
-                    "maximumDistance", 0, // must be 0=sitting on
-                    "Comfort", 5,5, // 100 minutes till comfort bliss? 
+            CreateObjectUse("Sleepable",
+                    "TextName", "Lay on",// Beds/Couches
+                    "maximumDistance", 1, // close enough?
+                    "UseSit", true,
+                    "UseAnim", Animations.SLEEP,
+                    "Comfort", 5, 5, // 100 minutes till comfort bliss? 
                     "Energy", 20, 20, // 100 minutes till comfort bliss? 
                     null);
 
-            CreateObjectGrabUse("Cleanable", "Clean",// Anything with Touch
+            CreateObjectUse("Cleanable",
+                    "TextName", "Clean",// Anything with Touch
                     "maximumDistance", 1, // must be 1 near
-                    "Fun", 2, 1, // fun to touch
+                    "UseAnim", Animations.FINGER_WAG,
+                    "Fun", -2, 2, // fun to do but not to think about doing
                     "Energy", 0, -1, // uses energy 
                     null);
 
-            CreateObjectGrabUse("Observable", "Look at",//  TVs/Radios/Art/Pictures
+            CreateObjectUse("Observable",
+                    "TextName", "Observe",//  TVs/Radios/Art/Pictures
                     "maximumDistance", 5, // must be 1 near
+                    "UseAnim", Animations.CLAP,
                     "Fun", 2, 1, // fun to look at
                     "Energy", 0, -1, // uses energy 
                     null);
 
             // We overuse "sit" allot becasue thats how most animations work
-            CreateObjectSitUse("BodyCleaner", "Wash",// Sinks/Tubs/Showers
-                    "maximumDistance", 0, // must be 0=sitting on
+            CreateObjectUse("BodyCleaner",
+                    "TextName", "Wash",// Sinks/Tubs/Showers
+                    "maximumDistance", 1, // close enough?
+                    "UseAnim", Animations.RPS_PAPER,
                     "Comfort", 0, 10,
                     "Hygiene", 20, 10,
                     null);
 
-            CreateObjectSitUse("Gym", "Excersize",// Excersize bikes/ Dance floors/ treadmills
-                    "maximumDistance", 0, // must be 0=sitting on
+            CreateObjectUse("Excersizable",
+                    "TextName", "Excersize",// Excersize bikes/ Dance floors/ treadmills
+                    "maximumDistance", 1, // close enough?
+                    "UseAnim", Animations.ONETWO_PUNCH,
                     "Fun", 10, 10,
                     "Hygiene", -10, -10,
                     null);
 
-            CreateObjectSitUse("Toys", "Play with",// Dance floors/ Pools / Pooltables
-                    "maximumDistance", 0, // must be 0=sitting on
+            CreateObjectUse("Toyable",
+                    "TextName", "Play with",// Dance floors/ Pools / Pooltables
+                    "maximumDistance", 1, // close enough?
+                    "UseAnim", Animations.SHOOT_BOW_L,
                     "Energy", -10, -10,
                     "Fun", 20, 10,
                     null);
 
-            CreateObjectType("Unknown",//  touch
-                    "SitName", "sit",
-                    "maximumDistance", 1, // must be 0=sitting on
-                            // "Comfort", 10, 10, // 10 minutes till comfort bliss?
-                    null);
-          
 
-            // TYPES
-            CreateObjectType("Shower",//  sit on
-                    "SuperType", "BodyCleaner",
-                    "SuperType", "Washable",
-
-                    "SitName", "Take a Shower",
-                    "maximumDistance", 0, // must be 0=sitting on
-                    "Comfort", 10, 10,
-                    "Hygiene", 20, 20,
+            CreateObjectUse("FoodStore",
+                    "TextName", "Eat from",// Refrigerators and cupboards
+                    "maximumDistance", 1, // close enough?
+                    "UseAnim", Animations.BLOW_KISS,
+                    "Hygiene", 0, -5, // should wash hands after
+                    "Hunger", 40, 20, // fullfills some huger
                     null);
 
-            CreateObjectType("Bath",//  sit on
-                    "SuperType", "BodyCleaner",
-                    "SuperType", "Washable",
-
-                    "SitName", "Take a Bath",
-                    "maximumDistance", 0, // must be 0=sitting on
-                    "Comfort", 10, 30,
-                    "Hygiene", 30, 30,
+            CreateObjectUse("Unknown",
+                    "TextName", "Think about",
+                    "maximumDistance", 1, // close enough?
+                    "UseAnim", Animations.AFRAID,
                     null);
 
-            CreateObjectType("Sink",//  sit on
-                    "SuperType", "BodyCleaner",
-                    "SuperType", "Washable",
 
-                    "SitName", "Wash hands",
-                    "maximumDistance", 0, // must be 0=sitting on
-                    "Comfort", 10, 10,
-                    "Hygiene", 10, 10,
+            // Body cleaning types
+            CreateObjectType("Shower",//  What it is
+                    "SuperType", "BodyCleaner", // Use as body cleaner
+                    "TextName", "Take a Shower", // The name
+                    "maximumDistance", 1, // must be near enouch
+                    "Comfort", 10, 10, // showers little less than batch
+                    "Hygiene", 30, 30,// showers little less than batch
+                    "SuperType", "Cleanable", // allow object to be cleaned
                     null);
 
-            CreateObjectType("Bed",//  sit on
-                    "SuperType", "Sleeping",
+            CreateObjectType("Bath",//  What it is
+                    "SuperType", "BodyCleaner", // Use as body cleaner
+                    "TextName", "Take a Bath", // The name
+                    "UseSit",  true,
+                    "maximumDistance", 1, // must be near enouch
+                    "Comfort", 20, 20, // showers little less than batch
+                    "Hygiene", 100, 100,// showers little less than batch
+                    "SuperType", "Cleanable", // allow object to be cleaned
+                    null);
 
+            CreateObjectType("Sink",//  What it is
+                    "SuperType", "BodyCleaner", // Use as body cleaner
+                    "TextName", "Wash Hands", // The name
+                    "maximumDistance", 1, // must be near enouch
+                    "Comfort", 0, 0, // no comfort
+                    "Hygiene", 10, 10,// provides some hygiene
+                    "SuperType", "Cleanable", // allow object to be cleaned
+                    null);
+
+            // Lounging on types
+            CreateObjectType("Bed",// Lay on
+                    "SuperType", "Sleepable",
                     "SitName", "Sleep a few",
-                    "maximumDistance", 0, // must be 0=sitting on
+                    "UseSit", true, // for sleep scripts
+                    "UseAnim", Animations.SLEEP, // look like sleeping
+                    "maximumDistance", 1, // close enough?
                     "Comfort", 10, 30,
-                    "Energy", 30, 30,
+                    "Energy", 100, 80,
                     null);
 
+            CreateObjectType("Chair",//  sit on
+                    "SuperType", "Sittable",
+                    "SitName", "Sit down",
+                    "UseSit", true, // for sit scripts
+                    "UseAnim", Animations.SMOKE_IDLE, // look like 
+                    "maximumDistance", 1, // close enough?
+                    "Comfort", 15, 10, // 10 minutes till comfort bliss? (secretly not much better than couch)
+                    "Energy", 10, 20,
+                    null);
+
+            CreateObjectType("Couch",//  sit on
+                    "SuperType", "Sittable",
+                    "SitName", "Sit down",
+                    "UseSit", true, // for sit scripts
+                    "UseAnim", Animations.SMOKE_IDLE, // look like 
+                    "maximumDistance", 1, // close enough?
+                    "Comfort", 20, 20,
+                    "Energy", 10, 20,
+                    null);
+
+            // Observable on types
             CreateObjectType("Television", //  watching tv
                     "SuperType", "Observable",
 
-                    "TouchName", "Watch TV",
+                    "TextName", "Watch TV",
                     "maximumDistance", 4, // must be 4 meters near to use
                     "Hunger", 1, -1, // pretends will feed but just makes you hngrier due to comercials
                     "Bladder", 0, 0, // doesnt change toilet needs
@@ -1252,8 +1359,7 @@ namespace cogbot.TheSims
 
             CreateObjectType("Radio",//  watching tv
                     "SuperType", "Observable",
-
-                    "TouchName", "Listen to Radio",
+                    "TextName", "Listen to Radio",
                     "maximumDistance", 4, // must be 4 meters near to use
                     "Room", 1, 0, // shows you pictures of spacious life but does nothing relaly
                     "Fun", 10, 10, // advertses more excitement then it fullfills
@@ -1263,35 +1369,23 @@ namespace cogbot.TheSims
 
 
             CreateObjectType("Toilet",//  sitting on toilet
-                    "SuperType", "Seating",
-                    "SuperType", "Cleanable",
-
+                    "SuperType", "Sittable",
                     "SitName", "Go potty",
-                    "maximumDistance", 0, // must be 0=sitting on
+                    "maximumDistance", 1, // close enough?
                     "Bladder", 100, 100, // you are fully satified
                     "Hygiene", 0, -10, // make you dirty:  10 potties = need one baths
 
                 // Flushing the toilet
-                    "TouchName", "Flush it",
+                    "SuperType", "Cleanable",
+                    "TextName", "Flush it",
+                    "UseAnim", "POINT_YOU",
                     "maximumDistance", 1, // must be 1 away
                     "Hygiene", 1, 4, // makes you cleaner than you thought
                     "Fun", 5, 4, // watching water spin is mildly exciting
                     null);
 
-            CreateObjectType("Chair",//  sit on
-                    "SuperType", "Seating",
-
-                    "SitName", "Sit down",
-                    "maximumDistance", 0, // must be 0=sitting on
-                    "Comfort", 10, 10, // 10 minutes till comfort bliss?
-                    null);
-
-            CreateObjectType("Couch",//  sit on
-                    "SuperType", "Seating",
-
-                    "SitName", "Lounge on",
-                    "maximumDistance", 0, // must be 0=sitting on
-                    "Comfort", 15, 10, // 10 minutes till comfort bliss? (secretly not much better than couch)
+            CreateObjectType("Fridg",//  sit on
+                    "SuperType", "FoodStore",
                     null);
 
             CreateObjectType("Avatar",//  talk to
@@ -1321,19 +1415,13 @@ namespace cogbot.TheSims
 
         }
 
-        private void CreateObjectGrabUse(string name, string grabname, params object[] defs)
+        private void CreateObjectUse(string classname, params object[] defs)
         {
-            SimObjectType type = GetObjectType(name);
-            type.TouchName = grabname;
-            type.ParseAffect("grab", defs);
+            SimObjectType type = GetObjectType(classname);            
+            SimObjectUsage usage = type.CreateObjectUsage(classname);
+            type.ParseAffect(usage, defs);
         }
 
-        private void CreateObjectSitUse(string name, string sitname, params object[] defs)
-        {
-            SimObjectType type = GetObjectType(name);
-            type.SitName = sitname;
-            type.ParseAffect("sit", defs);
-        }
         public void CreateObjectType(string aspectName, params object[] parseStr)
         {
             SimObjectType type = GetObjectType(aspectName);
@@ -1383,6 +1471,11 @@ namespace cogbot.TheSims
     // These needs are 0 - 100.0F     100.0 = satiafied (on the positive end i.g. less thirsty)
     public class BotNeeds
     {
+
+        static public BotNeeds ZERO
+        {
+            get { return new BotNeeds(0.0f); }
+        }
 
         public IEnumerable<Object> GetNeeds()
         {
