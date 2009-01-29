@@ -29,6 +29,14 @@ namespace cogbot.TheOpenSims
     //TheSims-like object
     public class SimObject : BotMentalAspect
     {
+        public SimObject(string name, Primitive prim)
+            : base(name)
+        {
+            thePrim = prim;
+            ObjectType = BotRegionModel.BotWorld.GetObjectType(prim.ID.ToString());
+            UpdateProperties(thePrim.Properties);
+        }
+
         public string DebugInfo()
         {
             return ToString();
@@ -36,7 +44,7 @@ namespace cogbot.TheOpenSims
 
         public Primitive thePrim; // the prim in Secondlife
         Vector3 lastPos = Vector3.Zero;
-        public float scaleOnNeeds = 0.99F; // the bonus or handicap the object has compared to the defination (more expensive chair might have more effect)
+        public float scaleOnNeeds = 1.11F; // the bonus or handicap the object has compared to the defination (more expensive chair might have more effect)
 
         public float RateIt(BotNeeds againsNeeds, SimAvatar avatar)
         {
@@ -75,27 +83,17 @@ namespace cogbot.TheOpenSims
             }
             return list;
         }
-        public SimObject(string name, Primitive prim)
-            : base(name)
+
+        public void UpdateProperties(Primitive.ObjectProperties objectProperties)
         {
-            thePrim = prim;
-            m_objectType = BotRegionModel.BotWorld.GetObjectType(name);
-            if (prim.Properties != null)
+            if (objectProperties != null)
             {
-                m_objectType.SitName = thePrim.Properties.SitName;
-                m_objectType.TouchName = thePrim.Properties.TouchName;
+                ObjectType.SitName = objectProperties.SitName;
+                ObjectType.TouchName = objectProperties.TouchName;
             }
-            //SimObjectType ot = ObjectType;
+            ObjectType.SuperTypes = BotRegionModel.BotWorld.GuessSimObjectTypes(thePrim);
         }
-        readonly private SimObjectType m_objectType;
-        public SimObjectType ObjectType
-        {
-            get
-            {
-                m_objectType.SuperTypes = BotRegionModel.BotWorld.GuessSimObjectTypes(thePrim);
-                return m_objectType;
-            }
-        } // the class definations
+        readonly public SimObjectType ObjectType;
 
         public override string ToString()
         {
@@ -157,7 +155,7 @@ namespace cogbot.TheOpenSims
         public int totalTimeMS = 14000;  // the time this usage takes
         public BotNeeds ChangePromise = new BotNeeds(0.0F); // what most users think will happen by default
         public BotNeeds ChangeActual = new BotNeeds(0.0F); //what really happens ofter 1 minute use
-        public string TextName = ""; // the scripting verb name
+        public string TextName = ""; // the scripting usename name
         // if true the avatar will attempt to sit on the object for the duration
         public bool UseSit = false;
         // if true the client will attempt to invoke the "touch/grab" for the duration
@@ -181,6 +179,14 @@ namespace cogbot.TheOpenSims
         // the needs are really changed;
         public abstract void InvokeReal();
 
+        public float RateIt()
+        {
+            BotNeeds bn = TheBot.CurrentNeeds.Copy();
+            BotNeeds pc = ProposedChange();
+            bn.AddFrom(pc);
+            bn.SetRange(0f, 100f);
+            return bn.RateIt();
+        }
     }
 
     public class AnimThread
@@ -208,6 +214,7 @@ namespace cogbot.TheOpenSims
                     // remind the server we still want to be ussing it 
                     // like Laugh .. lasts for about .9 seconds
                     //12000 is a estimate avage
+                    Client.Self.AnimationStop(anim, true);
                     Client.Self.AnimationStart(anim, true);
                     Thread.Sleep(1200);
                 }
@@ -497,22 +504,81 @@ namespace cogbot.TheOpenSims
         private BotAction GetNextAction()
         {
             BotAction act = CurrentAction;
-            SimObject neat = GetNextInterestingObject();
-            if (neat == this)
+
+            List<BotAction> acts = GetPossibleActions();
+
+            if (acts.Count > 0)
             {
-                neat = GetNextInterestingObject();
+                act = BestAct(acts);
+                acts.Remove(act);
             }
-            if (neat is SimAvatar)
+
+
+            //SimObject neat = GetNextInterestingObject();
+            //if (neat == this)
+            //{
+            //    neat = GetNextInterestingObject();
+            //}
+            //if (neat is SimAvatar)
+            //{
+            //    SimObjectUsage usage = neat.ObjectType.FindObjectUsage("talk");
+            //    act = new BotSocialAction(this, usage, (SimAvatar)neat);
+            //    return act;
+            //}
+            //else
+            //{
+            //    SimObjectUsage use = neat.GetDefaultUsage();
+            //    return new BotObjectAction(this, use, neat);
+            //}
+            return act;
+        }
+
+        private BotAction BestAct(List<BotAction> acts)
+        {
+            if (acts.Count == 0) return null;
+            BotAction bestAct = acts[0];
+            if (acts.Count == 1) return bestAct; 
+            float bestRate = bestAct.RateIt();            
+            foreach (BotAction b in acts)
             {
-                SimObjectUsage usage = neat.ObjectType.FindObjectUsage("talk");
-                act = new BotSocialAction(this, usage, (SimAvatar)neat);
-                return act;
+                float brate = b.RateIt();
+                if (brate>bestRate) {
+                    bestAct = b;
+                    bestRate = brate;
+                }
             }
-            else
+            return bestAct;
+        }
+
+        List<BotAction> AllPossibleActions = new List<BotAction>();
+
+        public List<BotAction> GetPossibleActions()
+        {
+            if (AllPossibleActions.Count < 2)
             {
-                SimObjectUsage use = neat.GetDefaultUsage();
-                return new BotObjectAction(this, use, neat);
+                AllPossibleActions = GetPossibleActions0();                
             }
+            return AllPossibleActions;
+        }
+
+        private List<BotAction> GetPossibleActions0()
+        {
+            List<SimObject> knowns = GetKnownObjects();
+
+            List<BotAction> acts = new List<BotAction>();
+            foreach (SimObject obj in knowns)
+            {
+                foreach (SimObjectUsage objuse in obj.GetUsages())
+                {
+                    acts.Add(new BotObjectAction(this, objuse, obj));
+                }
+            }
+            return acts;
+        }
+
+        public List<SimObject> GetKnownObjects()
+        {
+            return KnowsAboutList;
         }
 
         public void UseAspect(BotMentalAspect someAspect)
@@ -538,11 +604,11 @@ namespace cogbot.TheOpenSims
                 //UseObject((SimObject)someAspect);
             }
         }
-        //public void SocialTo(String verb,SimAvatar simAvatar)
+        //public void SocialTo(String usename,SimAvatar simAvatar)
         //{
-        //    Approach(verb,simAvatar);           
+        //    Approach(usename,simAvatar);           
         //    InDialogWith = simAvatar;
-        //    Debug("TalkTo... "+verb+ " " + simAvatar);
+        //    Debug("TalkTo... "+usename+ " " + simAvatar);
         //    Thread.Sleep(4000);
         //    TalkTimeRemaining = (new Random()).Next(2)+2;
         //    CurrentAction = null;
@@ -556,10 +622,10 @@ namespace cogbot.TheOpenSims
         //    Thread.Sleep(8000);
         //    ApplyUpdate(use, simObject);
         //}
-        //public void ApplyUpdate(string verb, BotMentalAspect aspect)
+        //public void ApplyUpdate(string usename, BotMentalAspect aspect)
         //{
         //    BotNeeds needsBefore = CurrentNeeds.Copy();
-        //    BotNeeds simNeeds = ((SimObject)aspect).GetActualUpdate(verb);
+        //    BotNeeds simNeeds = ((SimObject)aspect).GetActualUpdate(usename);
         //    //TODO rate interaction
         //    CurrentNeeds.AddFrom(simNeeds);
         //    CurrentNeeds.SetRange(0.0F, 100.0F);
@@ -775,23 +841,19 @@ namespace cogbot.TheOpenSims
 
         public SimObjectType(string name):base(name)
         {
-            AspectName = name;
-            // Object "use"
-           // AddUse(SitName, new SimObjectUsage());
-            // Object area effect "near"
         }
 
-        public SimObjectUsage FindObjectUsage(string verb)
+        public SimObjectUsage FindObjectUsage(string usename)
         {
 
             List<SimObjectUsage> usages = new List<SimObjectUsage>();
 
-            if (usageAffect.ContainsKey(verb))
-               usages.Add(usageAffect[verb]);
+            if (usageAffect.ContainsKey(usename))
+               usages.Add(usageAffect[usename]);
 
             foreach (SimObjectType type in SuperTypes)
             {
-                SimObjectUsage find = type.FindObjectUsage(verb);
+                SimObjectUsage find = type.FindObjectUsage(usename);
                 if (find != null)
                 {
                     usages.Add(find);
@@ -800,7 +862,7 @@ namespace cogbot.TheOpenSims
 
             if (usages.Count == 0) return null;
 
-            SimObjectUsage newUse = new SimObjectUsage(verb);
+            SimObjectUsage newUse = new SimObjectUsage(usename);
 
             foreach (SimObjectUsage use in usages)
             {
@@ -820,18 +882,18 @@ namespace cogbot.TheOpenSims
                 newUse.ChangePromise.AddFrom(use.ChangePromise);
             }
             // maybe store for later
-            //usageAffect[verb] = newUse;
+            //usageAffect[usename] = newUse;
 
             return newUse;
         }
 
-        public SimObjectUsage CreateObjectUsage(string verb)
+        public SimObjectUsage CreateObjectUsage(string usename)
         {
-            if (usageAffect.ContainsKey(verb))
-                return usageAffect[verb];
-            SimObjectUsage sou = new SimObjectUsage(verb);
-          //  sou.TextName = verb;
-            usageAffect[verb] = sou;
+            if (usageAffect.ContainsKey(usename))
+                return usageAffect[usename];
+            SimObjectUsage sou = new SimObjectUsage(usename);
+          //  sou.TextName = usename;
+            usageAffect[usename] = sou;
             return sou;
         }
 
@@ -866,25 +928,25 @@ namespace cogbot.TheOpenSims
             return usages;            
         }
 
-        public BotNeeds GetUsagePromise(string verb)
+        public BotNeeds GetUsagePromise(string usename)
         {
-            SimObjectUsage use =FindObjectUsage(verb);
+            SimObjectUsage use =FindObjectUsage(usename);
             if (use==null) return BotNeeds.ZERO;
             return use.ChangePromise;
 
         }
 
-        public float RateIt(BotNeeds from, SimObjectUsage verb)
+        public float RateIt(BotNeeds from, SimObjectUsage use)
         {
-            BotNeeds sat = GetUsagePromise(verb.UsageName).Copy();
+            BotNeeds sat = GetUsagePromise(use.UsageName).Copy();
             sat.AddFrom(from);
             sat.SetRange(0.0F, 100.0F);
             return sat.RateIt();
         }
 
-        public BotNeeds GetUsageActual(string verb)
+        public BotNeeds GetUsageActual(string usename)
         {
-            SimObjectUsage use = FindObjectUsage(verb);
+            SimObjectUsage use = FindObjectUsage(usename);
             if (use == null) return BotNeeds.ZERO;
             return use.ChangeActual;
         }
@@ -1057,7 +1119,11 @@ namespace cogbot.TheOpenSims
         void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties props)
         {
             Primitive prim = Client.WorldSystem.GetPrimitive(props.ObjectID);
-            if (prim != null) GetSimObject(prim);
+            if (prim != null)
+            {
+                SimObject updateMe = GetSimObject(prim);
+                updateMe.UpdateProperties(props);
+            }
         }
 
         void Avatars_OnAvatarAnimation(UUID avatarID, InternalDictionary<UUID, int> anims)
