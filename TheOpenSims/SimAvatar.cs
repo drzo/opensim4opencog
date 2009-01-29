@@ -263,15 +263,19 @@ namespace cogbot.TheOpenSims
 
             // Create the Side-Effect closure
             ThreadStart closure = new ThreadStart(DoSideEffects);
-
+            bool animUeed = false;
             // IF UseAnim was specified
             if (!String.IsNullOrEmpty(Usage.UseAnim))
             {
                 UUID animID = TheBot.FindAnimUUID(Usage.UseAnim);
                 if (animID != UUID.Zero)
+                {
                     closure = TheBot.WithAnim(animID, closure);
+                    animUeed = true;
+                }
             }
            // else
+            if (!animUeed)
             {
                 //ELSE look for Verb coverage for an anim
                 UUID animID = TheBot.FindAnimUUID(use);
@@ -453,12 +457,11 @@ namespace cogbot.TheOpenSims
         Vector3 lastgood = new Vector3(128, 128, 25);
         public override Vector3 GetPosition()
         {
-            if (theAvatar.Position.X < 59 || theAvatar.Position.Y < 59 || theAvatar.Position.Z < 10)
+            if (theAvatar.SimPosition.X < 59 || theAvatar.SimPosition.Y < 59 || theAvatar.SimPosition.Z < 10)
             {
                 return lastgood;
-                //throw new UnauthorizedAccessException("" + this + " is not at " + theAvatar.Position);
             }
-            lastgood = theAvatar.Position;
+            lastgood = theAvatar.SimPosition;
             return lastgood;
         }
 
@@ -533,7 +536,7 @@ namespace cogbot.TheOpenSims
             return act;
         }
 
-        private BotAction BestAct(List<BotAction> acts)
+        public BotAction BestAct(List<BotAction> acts)
         {
             if (acts.Count == 0) return null;
             BotAction bestAct = acts[0];
@@ -551,26 +554,37 @@ namespace cogbot.TheOpenSims
         }
 
         List<BotAction> AllPossibleActions = new List<BotAction>();
+        List<BotAction> LearnedPossibleActions = new List<BotAction>();
+        List<SimObjectUsage> LearnedPossibleUsages = new List<SimObjectUsage>();
 
         public List<BotAction> GetPossibleActions()
         {
             if (AllPossibleActions.Count < 2)
             {
-                AllPossibleActions = GetPossibleActions0();                
+                AllPossibleActions = NewPossibleActions();                
             }
             return AllPossibleActions;
         }
 
-        private List<BotAction> GetPossibleActions0()
+        private List<BotAction> NewPossibleActions()
         {
             List<SimObject> knowns = GetKnownObjects();
 
             List<BotAction> acts = new List<BotAction>();
+            foreach (BotAction obj in LearnedPossibleActions)
+            {
+                acts.Add(obj);
+            }
+
             foreach (SimObject obj in knowns)
             {
                 foreach (SimObjectUsage objuse in obj.GetUsages())
                 {
                     acts.Add(new BotObjectAction(this, objuse, obj));
+                    foreach (SimObjectUsage puse in LearnedPossibleUsages) {
+                        //acts.Add( new BotObjectAction(this, puse, obj));
+                    }
+
                 }
             }
             return acts;
