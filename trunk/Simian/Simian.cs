@@ -23,8 +23,8 @@ namespace Simian
         public const uint REGION_X = 256000;
         public const uint REGION_Y = 256000;
 
-        public int UDPPort = 9000;
-        public int HttpPort = 8002;
+        public int UDPPort = 19000;
+        public int HttpPort = 18002;
         public string DataDir = "SimianData/";
 
         public WebServer HttpServer;
