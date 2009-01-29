@@ -5,7 +5,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System.Reflection;
 using OpenMetaverse.Packets;
-using cogbot.TheSims;
+using cogbot.TheOpenSims;
 using Simian; //using libsecondlife;
 
 namespace cogbot.Listeners
