@@ -10,7 +10,7 @@
   <simURL>http://opensim:9000/</simURL>
   <startupLisp>
        (create-botclient "My" "Bot" )
-       '(create-botclient "Second" "Bot" "nonDefaultPassword" "http://71.197.210.170:9000/")
+       (create-botclient "Second" "Bot" "nonDefaultPassword" "http://71.197.210.170:9000/")
     </startupLisp>
   <startupClientLisp>
        (thisClient.ExecuteCommand "login")
