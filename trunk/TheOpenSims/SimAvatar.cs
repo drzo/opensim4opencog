@@ -102,10 +102,16 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public virtual Vector3 GetPosition()
+        public virtual Vector3 GetSimPosition()
         {
-            if (lastPos == Vector3.Zero) lastPos = thePrim.Position;
-            return thePrim.Position;
+            Primitive theLPrim = thePrim;
+            Vector3 theLPos = theLPrim.Position;
+            while (theLPrim.ParentID != 0)
+            {
+                theLPrim = BotRegionModel.BotWorld.Client.WorldSystem.GetPrimitive(theLPrim.ParentID);
+                theLPos = theLPos + theLPrim.Position;
+            }
+            return theLPos;
         }
 
         public BotNeeds GetActualUpdate(string p)
@@ -121,7 +127,7 @@ namespace cogbot.TheOpenSims
 
         public Vector3 GetUsePosition()
         {
-            return GetPosition();
+            return GetSimPosition();
         }
 
         internal BotNeeds GetProposedUpdate(string p)
@@ -455,14 +461,10 @@ namespace cogbot.TheOpenSims
         }
 
         Vector3 lastgood = new Vector3(128, 128, 25);
-        public override Vector3 GetPosition()
+        public override Vector3 GetSimPosition()
         {
-            if (theAvatar.SimPosition.X < 59 || theAvatar.SimPosition.Y < 59 || theAvatar.SimPosition.Z < 10)
-            {
-                return lastgood;
-            }
-            lastgood = theAvatar.SimPosition;
-            return lastgood;
+            if (theAvatar.LocalID == Client.Self.LocalID) return Client.Self.SimPosition;
+            return base.GetSimPosition();
         }
 
         public void Think()
@@ -698,7 +700,7 @@ namespace cogbot.TheOpenSims
             ListAsSet<SimObject> objects = BotRegionModel.BotWorld.objects;
             lock (objects) foreach (SimObject obj in objects)
                 {
-                    if (Vector3.Distance(obj.GetPosition(), GetPosition()) < 30)
+                    if (Vector3.Distance(obj.GetSimPosition(), GetSimPosition()) < 30)
                     {
                         lock (KnowsAboutList) if (!KnowsAboutList.Contains(obj))
                             {
@@ -729,7 +731,7 @@ namespace cogbot.TheOpenSims
             Vector3 vector3 = obj.GetUsePosition();
             Debug("Approaching " + vector3 + " dist=" + dist + " " + obj);
             MovementToVector.MoveTo(Client, vector3, dist);
-            Client.Self.Movement.TurnToward(obj.GetPosition());
+            Client.Self.Movement.TurnToward(obj.GetSimPosition());
             Thread.Sleep(2000);
             return dist;
         }
@@ -741,7 +743,7 @@ namespace cogbot.TheOpenSims
             try
             {
                 InDialogWith = avatar;
-                Client.Self.Movement.TurnToward(InDialogWith.GetPosition());
+                Client.Self.Movement.TurnToward(InDialogWith.GetSimPosition());
                 Client.Talk(InDialogWith + ": " + talkAbout);
                 Thread.Sleep(3000);
             }
