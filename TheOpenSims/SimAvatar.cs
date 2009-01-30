@@ -29,10 +29,11 @@ namespace cogbot.TheOpenSims
     //TheSims-like object
     public class SimObject : BotMentalAspect
     {
-        public SimObject(string name, Primitive prim)
+        public SimObject(string name, Primitive prim, WorldObjects objectSystem)
             : base(name)
         {
             thePrim = prim;
+            WorldSystem = objectSystem;
             ObjectType = BotRegionModel.BotWorld.GetObjectType(prim.ID.ToString());
             UpdateProperties(thePrim.Properties);
         }
@@ -43,6 +44,7 @@ namespace cogbot.TheOpenSims
         }
 
         public Primitive thePrim; // the prim in Secondlife
+        WorldObjects WorldSystem;
         Vector3 lastPos = Vector3.Zero;
         public float scaleOnNeeds = 1.11F; // the bonus or handicap the object has compared to the defination (more expensive chair might have more effect)
 
@@ -93,7 +95,52 @@ namespace cogbot.TheOpenSims
             }
             ObjectType.SuperTypes = BotRegionModel.BotWorld.GuessSimObjectTypes(thePrim);
         }
+
+        public bool RestoreEnterable()
+        {
+            bool changed = false;
+            PrimFlags original = thePrim.Flags;
+            PrimFlags tempFlags = original;
+            if (MadePhantom && (tempFlags & PrimFlags.Phantom) != PrimFlags.Phantom)
+            {
+                tempFlags -= PrimFlags.Phantom;
+                changed = true;
+                MadePhantom = false;
+            }
+            if (MadeNonPhysical && (tempFlags & PrimFlags.Physics) == 0)
+            {
+                tempFlags |= PrimFlags.Physics;
+                changed = true;
+                MadeNonPhysical = false;
+            }
+            if (changed) WorldSystem.SetPrimFlags(thePrim, tempFlags);
+            return changed;          
+        }
+
+        public bool MakeEnterable()
+        {
+            bool changed = false;
+            PrimFlags original = thePrim.Flags;
+            PrimFlags tempFlags = original;
+            if ((tempFlags & PrimFlags.Phantom) == 0)
+            {
+                tempFlags |= PrimFlags.Phantom;
+                changed = true;
+                MadePhantom = true;
+            }
+            if ((tempFlags & PrimFlags.Physics) != 0)
+            {
+                tempFlags -= PrimFlags.Physics;
+                changed = true;
+                MadeNonPhysical = true;
+            }
+            if (changed) WorldSystem.SetPrimFlags(thePrim, tempFlags);
+            return changed;
+        }
+
         readonly public SimObjectType ObjectType;
+        bool MadeNonPhysical = false;
+        bool MadePhantom = false;
 
         public override string ToString()
         {
@@ -258,7 +305,7 @@ namespace cogbot.TheOpenSims
         {
 
             String use = Usage.UsageName;
-            
+            Target.MakeEnterable();
             // Approach Target
             float howClose = TheBot.Approach(Target);            
 
@@ -298,6 +345,7 @@ namespace cogbot.TheOpenSims
                 closure = TheBot.WithSitOn(Target, closure);
 
             closure.Invoke();
+            Target.RestoreEnterable();
         }
 
 
@@ -412,8 +460,8 @@ namespace cogbot.TheOpenSims
 
 
 
-        public SimAvatar(Avatar slAvatar)
-            : base(slAvatar.Name, slAvatar)
+        public SimAvatar(Avatar slAvatar, WorldObjects objectSystem)
+            : base(slAvatar.Name, slAvatar,objectSystem)
         {
             //ObjectType = BotRegionModel.BotWorld.GetObjectType("Avatar");
             theAvatar = slAvatar;
@@ -720,19 +768,39 @@ namespace cogbot.TheOpenSims
 
         public float Approach(SimObject obj)
         {
+            PrimFlags fs = 0;
+            SimObject UnPhantom = null;
             // stand up first
-            if (Client.Self.SittingOn != 0 || Client.Self.Movement.SitOnGround)
+            if (Client.Self.Movement.SitOnGround)
             {
                 Client.Self.Stand();
+            }
+            else
+            {
+                uint sit = Client.Self.SittingOn;
+                if (sit != 0)
+                {
+                    UnPhantom = BotRegionModel.BotWorld.GetSimObject(Client.WorldSystem.GetPrimitive(sit));
+                    UnPhantom.MakeEnterable();                  
+                    Client.Self.Stand();
+                }
             }
 
             float dist = obj.GetSizeDistance();
 
             Vector3 vector3 = obj.GetUsePosition();
+
             Debug("Approaching " + vector3 + " dist=" + dist + " " + obj);
+            obj.MakeEnterable();
             MovementToVector.MoveTo(Client, vector3, dist);
             Client.Self.Movement.TurnToward(obj.GetSimPosition());
+
             Thread.Sleep(2000);
+
+            if (UnPhantom!=null)
+            {
+                UnPhantom.RestoreEnterable();
+            }
             return dist;
         }
 
@@ -1160,7 +1228,7 @@ namespace cogbot.TheOpenSims
                     return obj;                
             }
             // not found
-            SimObject obj0 = new SimObject(prim.ToString(), prim);
+            SimObject obj0 = new SimObject(prim.ToString(), prim,Client.WorldSystem);
             lock (objects) objects.AddTo(obj0);
             RefreshInspector();
             return obj0;
@@ -1179,7 +1247,7 @@ namespace cogbot.TheOpenSims
                     if (obj.theAvatar == prim)
                         return obj;
                 }
-            SimAvatar obj0 = new SimAvatar(prim);
+            SimAvatar obj0 = new SimAvatar(prim,Client.WorldSystem);
             lock (avatars) avatars.AddTo(obj0);
             lock (objects) objects.AddTo(obj0);
             return obj0;

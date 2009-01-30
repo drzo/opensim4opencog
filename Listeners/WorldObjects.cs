@@ -1518,5 +1518,13 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             return UUID.Zero;
 
         }
+
+        internal void SetPrimFlags(Primitive UnPhantom, PrimFlags fs)
+        {
+            client.Objects.SetFlags(UnPhantom.LocalID, ((fs & PrimFlags.Physics) != 0),//
+                ((fs & PrimFlags.Temporary) != 0),
+                ((fs & PrimFlags.Phantom) != 0),
+                ((fs & PrimFlags.CastShadows) != 0));
+        }
     }
 }
