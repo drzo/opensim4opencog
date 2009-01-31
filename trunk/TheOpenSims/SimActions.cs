@@ -6,6 +6,29 @@ using System.Threading;
 
 namespace cogbot.TheOpenSims
 {
+    abstract public class BotAction : BotMentalAspect
+    {
+        public BotAction(string s)
+            : base(s)
+        {
+        }
+
+        // the actor
+        public SimAvatar TheBot;
+        // Returns how much the needs should be changed;
+        public abstract BotNeeds ProposedChange();
+        // the needs are really changed;
+        public abstract void InvokeReal();
+        // use assumptions
+        public float RateIt()
+        {
+            BotNeeds bn = TheBot.CurrentNeeds.Copy();
+            BotNeeds pc = ProposedChange();
+            bn.AddFrom(pc);
+            bn.SetRange(0f, 100f);
+            return bn.RateIt();
+        }
+    }
 
     public class SimObjectUsage
     {
@@ -58,7 +81,7 @@ namespace cogbot.TheOpenSims
                 Thread.Sleep(TypeUsage.totalTimeMS);
             });
 
-            bool animUeed = false;
+            bool animFound = TypeUsage.UseSit;
             // IF UseAnim was specified
             if (!String.IsNullOrEmpty(TypeUsage.UseAnim))
             {
@@ -66,11 +89,11 @@ namespace cogbot.TheOpenSims
                 if (animID != UUID.Zero)
                 {
                     closure = TheBot.WithAnim(animID, closure);
-                    animUeed = true;
+                    animFound = true;
                 }
             }
             // else
-            if (!animUeed)
+            if (!animFound)
             {
                 //ELSE look for Verb coverage for an anim
                 UUID animID = TheBot.FindAnimUUID(use);
@@ -121,28 +144,6 @@ namespace cogbot.TheOpenSims
         public String LispScript = null; // the lisp code that does the animation effects
     }
 
-    abstract public class BotAction : BotMentalAspect
-    {
-        public BotAction(string s)
-            : base(s)
-        {
-        }
-        public SimAvatar TheBot;
-        //   public SimTypeUsage TypeUsage;
-        // Returns how much the needs should be changed;
-        public abstract BotNeeds ProposedChange();
-        // the needs are really changed;
-        public abstract void InvokeReal();
-
-        public float RateIt()
-        {
-            BotNeeds bn = TheBot.CurrentNeeds.Copy();
-            BotNeeds pc = ProposedChange();
-            bn.AddFrom(pc);
-            bn.SetRange(0f, 100f);
-            return bn.RateIt();
-        }
-    }
 
     public class AnimThread
     {

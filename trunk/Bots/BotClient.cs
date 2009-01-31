@@ -1019,7 +1019,7 @@ namespace cogbot
 
         public bool ExecuteCommand(string text)
         {
-            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
+//            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
             //text = text.Replace("\"", "");
             string verb = text.Split(null)[0];
             if (Commands.ContainsKey(verb))

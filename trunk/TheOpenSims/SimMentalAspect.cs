@@ -30,9 +30,9 @@ namespace cogbot.TheOpenSims
             String str = ToString() + "[";
             SuperTypes.ForEach(delegate(SimObjectType item)
             {
-                str += " " + item.ToString();
+                str +=  item.ToString() + " ";
             });
-            return str + "]";
+            return str.Trim() + "]";
         }
 
         public string SitName = null;
@@ -293,6 +293,8 @@ namespace cogbot.TheOpenSims
          * 
          * 
          **/
+        static ListAsSet<SimObjectType> objectTypes = new ListAsSet<SimObjectType>();
+
 
         static public ListAsSet<SimObjectType> GuessSimObjectTypes(Primitive prim)
         {
@@ -383,9 +385,6 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        static ListAsSet<SimObjectType> objectTypes = new ListAsSet<SimObjectType>();
-
-
         static public void LoadDefaultTypes()
         {
             /*
@@ -418,7 +417,6 @@ namespace cogbot.TheOpenSims
                     "UseAnim", Animations.SIT,
                     "Comfort", 1, 0, // 100 minutes till comfort bliss? 
                     null);
-
 
             CreateObjectUse("Sleepable",
                     "TextName", "Lay on",// Beds/Couches
@@ -479,10 +477,34 @@ namespace cogbot.TheOpenSims
                     "Hunger", 40, 20, // fullfills some huger
                     null);
 
+            CreateObjectUse("Fightable",
+                    "TextName", "Beat up",// People
+                    "maximumDistance", 1, // close enough?
+                    "UseSit", false,
+                    "UseAnim", Animations.ONETWO_PUNCH,
+                    "Energy", -11, -20,
+                    null);
+
+            CreateObjectUse("Talkable",
+                    "TextName", "Talk to",// People
+                    "maximumDistance", 3, // close enough?
+                    "UseSit", false,
+                    "UseAnim", Animations.TALK,
+                    "Social", 11, 20,
+                    null);
+
+            CreateObjectUse("Pushable",
+                    "TextName", "Beat up",// People
+                    "maximumDistance", 1, // close enough?
+                    "UseSit", false,
+                    "UseAnim", Animations.SWORD_STRIKE,
+                    "Energy", -11, -20,
+                    null);
+
             CreateObjectUse("Unknown",
                     "TextName", "Think about",
-                    "maximumDistance", 6, // close enough?
-                    "UseAnim", Animations.AFRAID,
+                    "maximumDistance", 3, // close enough?
+                    "UseAnim", Animations.SHRUG,
                     null);
 
 
@@ -576,6 +598,7 @@ namespace cogbot.TheOpenSims
             CreateObjectType("Toilet",//  sitting on toilet
                     "SuperType", "Sittable",
                     "SitName", "Go potty",
+                    "UseSit",true,
                     "maximumDistance", 1, // close enough?
                     "Bladder", 100, 100, // you are fully satified
                     "Hygiene", 0, -10, // make you dirty:  10 potties = need one baths
@@ -584,6 +607,7 @@ namespace cogbot.TheOpenSims
                     "SuperType", "Cleanable",
                     "TextName", "Flush it",
                     "UseAnim", "POINT_YOU",
+                    "UseSit", false,
                     "maximumDistance", 1, // must be 1 away
                     "Hygiene", 1, 4, // makes you cleaner than you thought
                     "Fun", 5, 4, // watching water spin is mildly exciting
@@ -591,10 +615,30 @@ namespace cogbot.TheOpenSims
 
             CreateObjectType("Fridg",//  sit on
                     "SuperType", "FoodStore",
+                    "TextName", "Raid the fridge",
+                    "UseAnim",Animations.DRINK,
+                    "UseGrab",true,
                     null);
 
-            CreateObjectType("Avatar",//  talk to
+            CreateObjectType("Treadmill",//  sit on
+                    "SuperType", "Excersizable",
+                    "UseSit",true,
+                    null);
 
+            CreateObjectType("Pooltable",//  sit on
+                    "SuperType", "Playable",
+                    "TextName", "Play pool",
+                    "UseAnim", Animations.AIM_BAZOOKA_R,
+                    null);
+
+            CreateObjectType("Dance",//  sit on
+                    "SuperType", "Playable",
+                    "TextName", "Dance! Dance!",
+                    "UseAnim", Animations.DANCE2,
+                    null);
+
+
+            CreateObjectType("Avatar",//  talk to
                    "Verb", "talk",
                    "maximumDistance", 4, // must be at most 4 meters
                    "Social", 1.0, 1.5, // 10 minutes till Social bliss? (better than we think)
