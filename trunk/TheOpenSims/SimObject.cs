@@ -9,16 +9,19 @@ namespace cogbot.TheOpenSims
     //TheSims-like object
     public class SimObject : BotMentalAspect
     {
-        public Primitive thePrim; // the prim in Secondlife
-        public readonly WorldObjects WorldSystem;
+        readonly public Primitive thePrim; // the prim in Secondlife
+        readonly public SimObjectType ObjectType;
+        readonly public WorldObjects WorldSystem;
+        bool MadeNonPhysical = false;
+        bool MadePhantom = false;
+        bool needUpdate = true;
         Vector3 lastPos = Vector3.Zero;
-        public float scaleOnNeeds = 1.11F; // the bonus or handicap the object has compared to the defination (more expensive chair might have more effect)
 
-        List<SimObject> GetNearObjects(float dist)
-        {
-            List<SimObject> list = new List<SimObject>();
-            return list;
-        }
+        /// <summary>
+        /// the bonus or handicap the object has compared to the defination 
+        /// (more expensive chair might have more effect)
+        /// </summary>
+        public float scaleOnNeeds = 1.11F; 
 
         public SimObject(string name, Primitive prim, WorldObjects objectSystem)
             : base(name)
@@ -27,11 +30,36 @@ namespace cogbot.TheOpenSims
             WorldSystem = objectSystem;
             ObjectType = SimObjectType.GetObjectType(prim.ID.ToString());
             UpdateProperties(thePrim.Properties);
+        }      
+
+        public virtual SimObject GetParent()
+        {
+            uint parent = thePrim.ParentID;
+            if (parent == 0) return null;
+            return GetWorld().GetSimObject(WorldSystem.GetPrimitive(parent));
         }
 
-        public string DebugInfo()
+        public virtual bool IsRoot()
         {
-            return ToString();
+            uint parent = thePrim.ParentID;
+            return (parent == 0);
+        }
+
+        private BotRegionModel GetWorld()
+        {
+            return BotRegionModel.BotWorld;
+        }
+
+        public virtual string DebugInfo()
+        {
+            if (thePrim.ParentID != 0)
+            {
+                return thePrim.ParentID + " " + thePrim.Properties.Name + " " + thePrim.Properties.Description + " " + ToString();
+            }
+            else
+            {
+                return thePrim.Properties.Name + " " + thePrim.Properties.Description + " " + ToString();
+            }
         }
 
         public float RateIt(BotNeeds againsNeeds, SimAvatar avatar)
@@ -48,6 +76,10 @@ namespace cogbot.TheOpenSims
         public List<SimObjectUsage> GetUsages()
         {
             List<SimObjectUsage> uses = new List<SimObjectUsage>();
+            if (needUpdate)
+            {
+                UpdateProperties(thePrim.Properties);
+            }
             foreach (SimTypeUsage typeUse in ObjectType.GetTypeUsages())
             {
                 uses.Add(new SimObjectUsage(typeUse, this));
@@ -89,11 +121,12 @@ namespace cogbot.TheOpenSims
             {
                 ObjectType.SitName = objectProperties.SitName;
                 ObjectType.TouchName = objectProperties.TouchName;
+                needUpdate = false;
             }
             ObjectType.SuperTypes = SimObjectType.GuessSimObjectTypes(thePrim);
         }
 
-        public bool RestoreEnterable()
+        public virtual bool RestoreEnterable()
         {
             bool changed = false;
             PrimFlags original = thePrim.Flags;
@@ -135,13 +168,13 @@ namespace cogbot.TheOpenSims
             return changed;
         }
 
-        readonly public SimObjectType ObjectType;
-        bool MadeNonPhysical = false;
-        bool MadePhantom = false;
-
         public override string ToString()
         {
             String str = base.ToString() + "[";
+            if (String.IsNullOrEmpty(thePrim.Properties.Name))
+                str += thePrim.Properties.Name + " ";
+            if (String.IsNullOrEmpty(thePrim.Properties.Description))
+                str += thePrim.Properties.Description + " ";
             ObjectType.SuperTypes.ForEach(delegate(SimObjectType item)
             {
                 str += item.ToString() + " ";
@@ -164,12 +197,20 @@ namespace cogbot.TheOpenSims
 
         public BotNeeds GetActualUpdate(string p)
         {
+            if (needUpdate)
+            {
+                UpdateProperties(thePrim.Properties);
+            }
             return ObjectType.GetUsageActual(p).Magnify(scaleOnNeeds);
         }
 
 
         public SimTypeUsage GetDefaultUsage()
         {
+            if (needUpdate)
+            {
+                UpdateProperties(thePrim.Properties);
+            }
             return ObjectType.GetDefaultUsage();
         }
 

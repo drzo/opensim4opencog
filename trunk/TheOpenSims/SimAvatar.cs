@@ -67,7 +67,44 @@ namespace cogbot.TheOpenSims
             MakeEnterable();
         }
 
-        internal void StartThinking()
+        public override bool RestoreEnterable()
+        {
+            return false;// base.RestoreEnterable();
+        }
+
+        public override bool IsRoot()
+        {
+            return true;
+        }
+        public override SimObject GetParent()
+        {
+            return null;
+        }
+
+        public bool IsSitting()
+        {
+            BotClient Client = base.WorldSystem.client;
+            if (theAvatar.ID != Client.Self.AgentID)
+            {
+                if (Client.Self.Movement.SitOnGround) return true;
+                return Client.Self.SittingOn != 0;
+            }
+            return theAvatar.ParentID != 0;
+        }
+
+     
+        public override string DebugInfo()
+        {
+            String s = ToString();
+            foreach (SimObject item in GetKnownObjects())
+            {
+                if (item is SimAvatar) continue;
+                s += "\n   " + item.DebugInfo();
+            }
+            return "\n" + s;
+        }
+
+        public void StartThinking()
         {
             if (avatarThinkerThread == null)
             {
@@ -291,12 +328,13 @@ namespace cogbot.TheOpenSims
             ListAsSet<SimObject> objects = GetNearByObjects(20);
             lock (objects) foreach (SimObject obj in objects)
                 {
-                    lock (KnowsAboutList) if (!KnowsAboutList.Contains(obj))
-                        {
-                            if (KnowsAboutList.Count < 2) KnowsAboutList.AddTo(obj);
-                            else
-                                KnowsAboutList.Insert(1, obj);
-                        }
+                    if (obj.IsRoot() && obj!=this)
+                        lock (KnowsAboutList) if (!KnowsAboutList.Contains(obj))
+                            {
+                                if (KnowsAboutList.Count < 2) KnowsAboutList.AddTo(obj);
+                                else
+                                    KnowsAboutList.Insert(1, obj);
+                            }
                 }
 
         }
@@ -392,6 +430,10 @@ namespace cogbot.TheOpenSims
                 + ": " + p);
         }
 
+        public void Eat(SimObject target)
+        {
+            Debug("!!! EAT " + target);
+        }
 
         public ThreadStart WithSitOn(SimObject obj, ThreadStart closure)
         {
@@ -449,23 +491,17 @@ namespace cogbot.TheOpenSims
             return WorldObjects.GetAnimationUUID(use);
         }
 
-        public void ExecuteLisp(SimObjectUsage botObjectAction, object lisp)
+        public void ExecuteLisp(SimObjectUsage botObjectAction, String lisp)
         {
             if (lisp == null) return;
             BotClient Client = GetGridClient();
-            if (lisp is String)
+            if (!String.IsNullOrEmpty(lisp))
             {
-                if (!String.IsNullOrEmpty((String)lisp))
-                {
-                    Client.lispTaskInterperter.Intern("simAvatar", this);
-                    Client.lispTaskInterperter.Intern("botObjectAction", botObjectAction);
-                    Client.evalLispString((String)lisp);
-                }
-                return;
+                Client.lispTaskInterperter.Intern("TheBot", this);
+                Client.lispTaskInterperter.Intern("Target", botObjectAction.Target);
+                Client.lispTaskInterperter.Intern("botObjectAction", botObjectAction);
+                Client.evalLispString((String)lisp);
             }
-            Client.lispTaskInterperter.Intern("simAvatar", this);
-            Client.lispTaskInterperter.Intern("botObjectAction", botObjectAction);
-            Client.lispTaskInterperter.Eval(lisp);
         }
 
 

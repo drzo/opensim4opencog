@@ -140,7 +140,6 @@ namespace cogbot
             // Start the server
             ///UtilitiesTcpServer.startSocketListener();
 
-
             //Client.Network.RegisterCallback(PacketType.AgentDataUpdate, new NetworkManager.PacketCallback(AgentDataUpdateHandler));
             //  CurrentClient.Network.OnLogin += new NetworkManager.LoginCallback(LoginHandler);
             //Client.Self.OnInstantMessage += new AgentManager.InstantMessageCallback(Self_OnInstantMessage);

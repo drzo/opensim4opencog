@@ -76,8 +76,7 @@ namespace cogbot.TheOpenSims
                 CurrentNeeds.SetRange(0.0F, 100.0F);
                 BotNeeds difNeeds = CurrentNeeds.Minus(needsBefore);
                 TheBot.Debug(TheBotAct.ToString() + "\n\t=> " + difNeeds.ShowNonZeroNeeds());
-                object lisp = TypeUsage.LispScript;
-                if (lisp != null) TheBot.ExecuteLisp(this, lisp);
+                TheBot.ExecuteLisp(this, TypeUsage.LispScript);
                 Thread.Sleep(TypeUsage.totalTimeMS);
             });
 
@@ -136,8 +135,10 @@ namespace cogbot.TheOpenSims
         public string TextName = ""; // the scripting usename name
         // if true the avatar will attempt to sit on the object for the duration
         public bool UseSit = false;
+        public bool UseSitSpecified = false;
         // if true the client will attempt to invoke the "touch/grab" for the duration
         public bool UseGrab = false;
+        public bool UseGrabSpecified = false;
         // if "KICK" or another Anim the avatar will play this anim
         public String UseAnim = null;
         // if set the client will attempt to run
@@ -165,6 +166,7 @@ namespace cogbot.TheOpenSims
         {
             try
             {
+                Client.Self.AnimationStart(anim, true);
                 while (repeat)
                 {
                     // some anims will only last a short time so we have to 
@@ -173,7 +175,7 @@ namespace cogbot.TheOpenSims
                     //12000 is a estimate avage
                     Client.Self.AnimationStop(anim, true);
                     Client.Self.AnimationStart(anim, true);
-                    Thread.Sleep(1200);
+                    Thread.Sleep(3200);
                 }
             }
             catch (Exception) { } // for the Abort 

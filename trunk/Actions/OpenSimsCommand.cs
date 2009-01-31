@@ -37,9 +37,8 @@ namespace cogbot.Actions
                 return "Started Thinking " + avatar;
             }
 
-            else if (args[0] == "think")
+            if (args[0] == "think")
             {
-                if (BRM == null) return "the bot was off";
                 SimAvatar avatar = GetSimAvatar();
                 if (avatar.IsThinking())
                 {
@@ -48,6 +47,13 @@ namespace cogbot.Actions
                 avatar.ThinkOnce();
                 return "Think once " + avatar;
             }
+
+            if (args[0] == "list")
+            {
+                SimAvatar avatar = GetSimAvatar();
+                return "List " + avatar.DebugInfo();
+            }
+
             
             if (BRM == null) return "the bot is off";
 
