@@ -141,8 +141,12 @@ namespace cogbot.TheOpenSims
 
         public override string ToString()
         {
-            String s = base.ToString();
-            return s + "(" + ObjectType.ToDebugString() + ")";
+            String str = base.ToString() + "[";
+            ObjectType.SuperTypes.ForEach(delegate(SimObjectType item)
+            {
+                str += item.ToString() + " ";
+            });
+            return str.Trim() + "]";
         }
 
 
@@ -188,7 +192,22 @@ namespace cogbot.TheOpenSims
         {
             float fx = thePrim.Scale.X;
             float fy = thePrim.Scale.Y;
-            return (((fx > fy) ? fx : fy) * 2) + 1;
+            return ((fx > fy) ? fx : fy) + 1.5f;
+        }
+
+        public ListAsSet<SimObject> GetNearByObjects(float p)
+        {
+            ListAsSet<SimObject> KnowsAboutList = new ListAsSet<SimObject>();
+            List<SimObject> objects = BotRegionModel.BotWorld.objects;
+            Vector3 here = GetSimPosition();
+            lock (objects) foreach (SimObject obj in objects)
+                {
+                    if (Vector3.Distance(obj.GetSimPosition(), here) <= p)
+                    {
+                        KnowsAboutList.AddTo(obj);
+                    }
+                }
+            return KnowsAboutList;
         }
     }
 }

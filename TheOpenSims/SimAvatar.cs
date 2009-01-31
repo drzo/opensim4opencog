@@ -27,7 +27,6 @@ namespace cogbot.TheOpenSims
 
         public BotNeeds CurrentNeeds;
 
-
         // things the bot cycles through mentally
         public ListAsSet<SimObject> KnowsAboutList = new ListAsSet<SimObject>();
 
@@ -40,14 +39,19 @@ namespace cogbot.TheOpenSims
         //notice this also stores object types that pleases the bot as well as people
         // (so how much one bot likes another avatar is sotred here as well)
 
+        // Actions tbe bot might do next cycle.
         ListAsSet<BotAction> AllPossibleActions = new ListAsSet<BotAction>();
+
+        // Actions observed
         ListAsSet<BotAction> LearnedPossibleActions = new ListAsSet<BotAction>();
+
+        // Action template stubs 
         ListAsSet<SimTypeUsage> LearnedPossibleUsages = new ListAsSet<SimTypeUsage>();
 
-        // assuptions
+        // assuptions about stubs
         public Dictionary<SimObjectType, BotNeeds> Assumptions = new Dictionary<SimObjectType, BotNeeds>();
 
-
+        // Current action 
         public BotAction CurrentAction = null;
 
 
@@ -60,6 +64,7 @@ namespace cogbot.TheOpenSims
             AspectName = slAvatar.Name;
             avatarHeartbeatThread = new Thread(new ThreadStart(Aging));
             avatarHeartbeatThread.Start();
+            MakeEnterable();
         }
 
         internal void StartThinking()
@@ -225,15 +230,14 @@ namespace cogbot.TheOpenSims
                 TalkTo(InDialogWith, someAspect);
                 return;
             }
-            else
+
+            if (someAspect is SimAvatar)
             {
-                if (someAspect is SimAvatar)
-                {
-                    // SocialTo("talk",(SimAvatar)someAspect);
-                    return;
-                }
-                //UseObject((SimObject)someAspect);
+                // SocialTo("talk",(SimAvatar)someAspect);
+                return;
             }
+            //UseObject((SimObject)someAspect);
+
         }
 
         public SimObject GetNextInterestingObject()
@@ -284,19 +288,17 @@ namespace cogbot.TheOpenSims
 
         public void ScanNewObjects()
         {
-            ListAsSet<SimObject> objects = GetBotWorld().objects;
+            ListAsSet<SimObject> objects = GetNearByObjects(20);
             lock (objects) foreach (SimObject obj in objects)
                 {
-                    if (Vector3.Distance(obj.GetSimPosition(), GetSimPosition()) < 30)
-                    {
-                        lock (KnowsAboutList) if (!KnowsAboutList.Contains(obj))
-                            {
-                                if (KnowsAboutList.Count < 2) KnowsAboutList.AddTo(obj);
-                                else
-                                    KnowsAboutList.Insert(1, obj);
-                            }
-                    }
+                    lock (KnowsAboutList) if (!KnowsAboutList.Contains(obj))
+                        {
+                            if (KnowsAboutList.Count < 2) KnowsAboutList.AddTo(obj);
+                            else
+                                KnowsAboutList.Insert(1, obj);
+                        }
                 }
+
         }
 
         // Avatars approach distance
@@ -332,7 +334,7 @@ namespace cogbot.TheOpenSims
             Debug("Approaching " + vector3 + " dist=" + dist + " " + obj);
             obj.MakeEnterable();
 
-            MovementToVector.MoveTo(Client, vector3, dist);
+            MovementToVector.MoveTo(this, vector3, dist);
             Client.Self.Movement.TurnToward(obj.GetSimPosition());
 
             Thread.Sleep(2000);
@@ -349,9 +351,13 @@ namespace cogbot.TheOpenSims
             return BotRegionModel.BotWorld;
         }
 
-        private BotClient GetGridClient()
+        public BotClient GetGridClient()
         {
             BotClient Client = base.WorldSystem.client;
+            if (theAvatar.ID != Client.Self.AgentID)
+            {
+                throw new Exception("This avatar " + theAvatar + " has no GridClient");
+            }
             return Client;
         }
 
@@ -373,10 +379,10 @@ namespace cogbot.TheOpenSims
                 avatar.InDialogWith = avatarWasInDialogWith;
             }
         }
+
         public void TalkTo(SimAvatar avatar, BotMentalAspect talkAbout)
         {
-            // closure add a thought bubble maybe
-            // closure find a better text represantation
+            // TODO find a better text represantation (a thought bubble maybe?)
             TalkTo(avatar, "" + talkAbout);
         }
 
@@ -477,15 +483,14 @@ namespace cogbot.TheOpenSims
 
     public class MovementToVector
     {
-        public static bool MoveTo(BotClient bc, Vector3 targ, float dist)
+        public static bool MoveTo(SimAvatar bc, Vector3 targ, float dist)
         {
-            MovementToVector mtv = new MovementToVector(bc, targ);
-            mtv.followDist = dist;
+            MovementToVector mtv = new MovementToVector(bc, targ,dist);
             mtv.Goto();
             if (mtv.GetDistance() > dist) return false;
             return true;
         }
-
+        SimAvatar theAvatar;
         Vector3 Destination;
         Vector3 LastPosition;
         BotClient Client;
@@ -495,10 +500,12 @@ namespace cogbot.TheOpenSims
         int autoPilotsRemaining = 6;
 
         float followDist = 2.0F;
-        public MovementToVector(BotClient bc, Vector3 targ)
+        public MovementToVector(SimAvatar bc, Vector3 targ,float fd)
         {
-            Client = bc;
+            theAvatar = bc;
+            Client = bc.GetGridClient();
             Destination = targ;
+            followDist = fd;
         }
 
         public void Goto()
@@ -550,6 +557,7 @@ namespace cogbot.TheOpenSims
             float curDist = GetDistance();
             bool UseAutoPilot = false;
             float traveled = 10f;
+            List<SimObject> madePhantom = new List<SimObject>();
             while (curDist > followDist && autoPilotsRemaining > 0)
             {
                 LastPosition = Client.Self.SimPosition;
@@ -560,6 +568,14 @@ namespace cogbot.TheOpenSims
                     {
                         Console.WriteLine("AutoPilot due to traveled=" + traveled);
                         Client.Self.AutoPilot(Destination.X, Destination.Y, Destination.Z);
+                        madePhantom = theAvatar.GetNearByObjects(2);
+                        if (madePhantom.Count > 0)
+                        {
+                            foreach (SimObject obj in madePhantom)
+                            {
+                                obj.MakeEnterable();
+                            }
+                        }
                         Thread.Sleep(2000);
                     }
                     else
@@ -585,6 +601,14 @@ namespace cogbot.TheOpenSims
                 }
 
                 curDist = GetDistance();
+                if (madePhantom.Count > 0)
+                {
+                    foreach (SimObject obj in madePhantom)
+                    {
+                        obj.RestoreEnterable();
+                    }
+                    madePhantom.Clear();
+                }
             }
             Client.Self.AutoPilotCancel();
         }
