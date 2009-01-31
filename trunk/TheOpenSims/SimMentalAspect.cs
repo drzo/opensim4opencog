@@ -665,7 +665,7 @@ namespace cogbot.TheOpenSims
                     "SuperType", "Eatable",
                     "TextName", "Eat the bread",
                     "UseAnim", Animations.DRINK,
-                    "LispCode","(progn TheBot.Eat(Target))",
+                    "LispScript","(progn (TheBot.Eat Target))",
                     null);
 
             CreateObjectType("Avatar",//  talk to
