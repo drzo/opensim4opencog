@@ -71,10 +71,10 @@ namespace cogbot.TheOpenSims
             {
                 if (String.IsNullOrEmpty(newUse.TextName))
                     newUse.TextName = use.TextName;
-                if (use.UseGrab)
-                    newUse.UseGrab = true;
-                if (use.UseSit)
-                    newUse.UseSit = true;
+                if (use.UseGrabSpecified)
+                    newUse.UseGrab = use.UseGrab;
+                if (use.UseSitSpecified)
+                    newUse.UseSit = use.UseSit;
                 if (String.IsNullOrEmpty(newUse.LispScript))
                     newUse.LispScript = use.LispScript;
                 if (String.IsNullOrEmpty(newUse.UseAnim))
@@ -199,7 +199,7 @@ namespace cogbot.TheOpenSims
                     s = parseStr[i++].ToString();
                     type.SitName = s;
                     usage.TextName = s;
-                    usage.UseSit = true;
+  //                  usage.UseSit = true;
                     continue;
                 }
                 if (s == "TouchName")
@@ -207,8 +207,16 @@ namespace cogbot.TheOpenSims
                     s = parseStr[i++].ToString();
                     type.TouchName = s;
                     usage.TextName = s;
-                    usage.UseGrab = true;
+   //                 usage.UseGrab = true;
                     continue;
+                }
+                if (s == "UseSit")
+                {
+                    usage.UseSitSpecified = true;
+                }
+                if (s == "UseGrab")
+                {
+                    usage.UseGrabSpecified = true;
                 }
 
                 // usage / distanceToExcite / etc
@@ -408,7 +416,6 @@ namespace cogbot.TheOpenSims
                     "Comfort", -1, -1, // needs to be kept comfy every 100 minutes
                     null);
 
-
             // CLASSES
             CreateObjectUse("Sittable",
                     "TextName", "Sit on",// Chairs/Couches
@@ -472,7 +479,7 @@ namespace cogbot.TheOpenSims
             CreateObjectUse("FoodStore",
                     "TextName", "Eat from",// Refrigerators and cupboards
                     "maximumDistance", 1, // close enough?
-                    "UseAnim", Animations.BLOW_KISS,
+                    "UseAnim", Animations.DRINK,
                     "Hygiene", 0, -5, // should wash hands after
                     "Hunger", 40, 20, // fullfills some huger
                     null);
@@ -501,9 +508,24 @@ namespace cogbot.TheOpenSims
                     "Energy", -11, -20,
                     null);
 
+            CreateObjectUse("Eatable",//  sit on
+                    "TextName", "Eat it",
+                    "maximumDistance", 1, // close enough?
+                    "UseGrab", true,
+                    null);
+
+            CreateObjectUse("Kissable",
+                    "TextName", "Kiss",// People
+                    "maximumDistance", 1, // close enough?
+                    "UseSit", false,
+                    "UseAnim", Animations.BLOW_KISS,
+                    "Social", 11, 20,
+                    "Fun", 21, 20,
+                    null);
+
             CreateObjectUse("Unknown",
                     "TextName", "Think about",
-                    "maximumDistance", 3, // close enough?
+                    "maximumDistance", 1, // close enough?
                     "UseAnim", Animations.SHRUG,
                     null);
 
@@ -511,6 +533,7 @@ namespace cogbot.TheOpenSims
             // Body cleaning types
             CreateObjectType("Shower",//  What it is
                     "SuperType", "BodyCleaner", // Use as body cleaner
+                    "UseAnim", Animations.KISS_MY_BUTT,
                     "TextName", "Take a Shower", // The name
                     "maximumDistance", 1, // must be near enouch
                     "Comfort", 10, 10, // showers little less than batch
@@ -622,6 +645,7 @@ namespace cogbot.TheOpenSims
 
             CreateObjectType("Treadmill",//  sit on
                     "SuperType", "Excersizable",
+                    "TextName", "Tread the mill",
                     "UseSit",true,
                     null);
 
@@ -637,21 +661,34 @@ namespace cogbot.TheOpenSims
                     "UseAnim", Animations.DANCE2,
                     null);
 
+            CreateObjectType("Bread",//  sit on
+                    "SuperType", "Eatable",
+                    "TextName", "Eat the bread",
+                    "UseAnim", Animations.DRINK,
+                    "LispCode","(progn TheBot.Eat(Target))",
+                    null);
 
             CreateObjectType("Avatar",//  talk to
-                   "Verb", "talk",
-                   "maximumDistance", 4, // must be at most 4 meters
-                   "Social", 1.0, 1.5, // 10 minutes till Social bliss? (better than we think)
+                   "SuperType", "Talkable",
+                   "maximumDistance", 3, // must be at most 3 meters
+                   "Social", 10.0, 1.5, // 10 minutes till Social bliss? (better than we think)
                    "Fun", 1.0, 1.0,
 
-                   "Verb", "push",
+                   "SuperType", "Fightable",
                    "maximumDistance", 1, // must be at most 1 meters
-                   "Social", 1.0, 1.5, // 10 minutes till Social bliss? (better than we think)
-                   "Energy", -10, -10,
-                   "GenerallySadToHappy", -10, -10,
-                   "Fun", 10, 10,
+                   "Social", 10, 1.5, // 10 minutes till Social bliss? (better than we think)
+                   "Energy", 0, -10,
+                   "GenerallySadToHappy", 0, -10,
+                   "Fun", 20, 10,
 
-                   "Verb", "kiss",
+                   "SuperType", "Pushable",
+                   "maximumDistance", 1, // must be at most 1 meters
+                   "Social", 10, 1.5, // 10 minutes till Social bliss? (better than we think)
+                   "Energy", 0, -10,
+                   "GenerallySadToHappy", 0, -10,
+                   "Fun", 20, 10,
+
+                   "SuperType", "Kissable",
                    "maximumDistance", 1, // must be at most 1 meters
                    "Social", 10, 15, // 5 minutes till Social bliss? (better than we think)
                    "GenerallySadToHappy", 10, 10,
