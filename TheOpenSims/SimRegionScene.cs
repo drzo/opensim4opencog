@@ -27,10 +27,10 @@ namespace cogbot.TheOpenSims
 
     public class BotRegionModel
     {
-        ListAsSet<SimAvatar> avatars = new ListAsSet<SimAvatar>();
+        static public ListAsSet<SimAvatar> avatars = new ListAsSet<SimAvatar>();
         public ListAsSet<SimObject> objects = new ListAsSet<SimObject>();
         //public BotClient Client;
-        readonly WorldObjects WorldSystem;
+        public readonly WorldObjects WorldSystem;
         public static BotRegionModel BotWorld = null;
         //        TheBotsInspector inspector = new TheBotsInspector();
         public BotRegionModel(BotClient Client)
@@ -93,12 +93,12 @@ namespace cogbot.TheOpenSims
         {
             lock (avatars) foreach (SimAvatar obj in avatars)
                 {
-                    if (obj.theAvatar == prim)
+                    if (obj.theAvatar.Name == prim.Name)
                         return obj;
                 }
             SimAvatar obj0 = new SimAvatar(prim, WorldSystem);
             lock (avatars) avatars.AddTo(obj0);
-            lock (objects) objects.AddTo(obj0);
+            //lock (objects) objects.AddTo(obj0);
             return obj0;
         }
     }

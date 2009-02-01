@@ -83,7 +83,7 @@ namespace cogbot.TheOpenSims
 
         public bool IsSitting()
         {
-            BotClient Client = base.WorldSystem.client;
+            //BotClient Client = base.WorldSystem.client;
             if (theAvatar.ID != Client.Self.AgentID)
             {
                 if (Client.Self.Movement.SitOnGround) return true;
@@ -109,7 +109,7 @@ namespace cogbot.TheOpenSims
             if (avatarThinkerThread == null)
             {
                 avatarThinkerThread = new Thread(new ThreadStart(Think));
-                if (theAvatar.LocalID == WorldSystem.client.Self.LocalID)
+                if (theAvatar.LocalID == Client.Self.LocalID)
                 {
                     // only think for ourselves
                     avatarThinkerThread.Start();
@@ -140,7 +140,7 @@ namespace cogbot.TheOpenSims
 
         public override Vector3 GetSimPosition()
         {
-            if (theAvatar.LocalID == WorldSystem.client.Self.LocalID) return WorldSystem.client.Self.SimPosition;
+            if (Client != null) if (theAvatar.LocalID == Client.Self.LocalID) return Client.Self.SimPosition;
             return base.GetSimPosition();
         }
 
@@ -325,7 +325,7 @@ namespace cogbot.TheOpenSims
 
         public void ScanNewObjects()
         {
-            ListAsSet<SimObject> objects = GetNearByObjects(20);
+            ListAsSet<SimObject> objects = GetNearByObjects(20,true);
             lock (objects) foreach (SimObject obj in objects)
                 {
                     if (obj.IsRoot() && obj!=this)
@@ -391,11 +391,12 @@ namespace cogbot.TheOpenSims
 
         public BotClient GetGridClient()
         {
-            BotClient Client = base.WorldSystem.client;
-            if (theAvatar.ID != Client.Self.AgentID)
-            {
-                throw new Exception("This avatar " + theAvatar + " has no GridClient");
-            }
+            //if (Client != null) return Client;
+            //BotClient Client = WorldSystem.client;
+            //if (theAvatar.ID != Client.Self.AgentID)
+            //{
+            //    throw new Exception("This avatar " + theAvatar + " has no GridClient");
+            //}
             return Client;
         }
 
@@ -408,8 +409,11 @@ namespace cogbot.TheOpenSims
                 InDialogWith = avatar;
                 BotClient Client = GetGridClient();
                 Client.Self.Movement.TurnToward(InDialogWith.GetSimPosition());
+                Client.Self.AnimationStop(Animations.TALK, true);
+                Client.Self.AnimationStart(Animations.TALK, true);
                 Client.Talk(InDialogWith + ": " + talkAbout);
                 Thread.Sleep(3000);
+                Client.Self.AnimationStop(Animations.TALK, true);
             }
             finally
             {
@@ -514,6 +518,12 @@ namespace cogbot.TheOpenSims
         {
             return GetName();
         }
+        BotClient Client;
+        internal void SetClient(BotClient Client)
+        {
+            this.Client = Client;
+            WorldSystem = Client.WorldSystem;
+        }
     }
 
 
@@ -604,7 +614,7 @@ namespace cogbot.TheOpenSims
                     {
                         Console.WriteLine("AutoPilot due to traveled=" + traveled);
                         Client.Self.AutoPilot(Destination.X, Destination.Y, Destination.Z);
-                        madePhantom = theAvatar.GetNearByObjects(2);
+                        madePhantom = theAvatar.GetNearByObjects(2,false);
                         if (madePhantom.Count > 0)
                         {
                             foreach (SimObject obj in madePhantom)
@@ -653,6 +663,7 @@ namespace cogbot.TheOpenSims
         {
             Random somthing = new Random(Environment.TickCount);// We do stuff randomly here
             float curDist = GetDistance();
+
             if (lastDistance <= curDist)
             {
                 //    StopMoving();
@@ -663,6 +674,8 @@ namespace cogbot.TheOpenSims
             if (curDist > followDist)
             {
 
+                //Client.Self.AnimationStop(Animations.WALK, true);
+                //Client.Self.AnimationStart(Animations.WALK, true);
                 //Client.Self.Movement.SendUpdate();
                 if (curDist < (followDist * 1.25))
                 {
@@ -672,6 +685,9 @@ namespace cogbot.TheOpenSims
                     Thread.Sleep(125);
                     Client.Self.Movement.Stop = true;
                     Client.Self.Movement.AtPos = false;
+                    Client.Self.Movement.NudgeAtPos = true;
+                    Client.Self.Movement.SendUpdate(true);
+                    Thread.Sleep(100);
                     Client.Self.Movement.NudgeAtPos = false;
                     Client.Self.Movement.SendUpdate(true);
                     Thread.Sleep(100);
