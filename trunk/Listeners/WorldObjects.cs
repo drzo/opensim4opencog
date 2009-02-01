@@ -948,32 +948,41 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             }
             uuidType[prim0.ID] = prim0;
         }
+    
+        object GetPrimitiveLock = new Object();
+
         public Primitive GetPrimitive(UUID id)
         {
-            Primitive prim;
-            if (prims.TryGetValue(id, out prim))
+            lock (GetPrimitiveLock)
             {
-                uuidType[id] = prim;
-                return prim;
-            }
-            Primitive found = GetCurrentSim().ObjectsPrimitives.Find(delegate(Primitive prim0)
-            {
-                return (prim0.ID == id);
-            });
-            if (found == null) found = GetCurrentSim().ObjectsAvatars.Find(delegate(Avatar prim0)
-            {
-                if (prim0.ID == id)
+                Primitive prim;
+                if (prims.TryGetValue(id, out prim))
                 {
-                    AvatarCacheAdd(prim0.Name, prim0);
-                    return true;
+                    uuidType[id] = prim;
+                    return prim;
                 }
-                return false;
-            });
-            if (found != null)
-            {
-                lock (prims) prims.Add(found.LocalID, found.ID, found);
+                //lock (GetCurrentSim().ObjectsAvatars)
+                {
+                    Primitive found = GetCurrentSim().ObjectsPrimitives.Find(delegate(Primitive prim0)
+                    {
+                        return (prim0.ID == id);
+                    });
+                    if (found == null) found = GetCurrentSim().ObjectsAvatars.Find(delegate(Avatar prim0)
+                    {
+                        if (prim0.ID == id)
+                        {
+                            AvatarCacheAdd(prim0.Name, prim0);
+                            return true;
+                        }
+                        return false;
+                    });
+                    if (found != null)
+                    {
+                        lock (prims) prims.Add(found.LocalID, found.ID, found);
+                    }
+                    return found;
+                }
             }
-            return found;
         }
 
         private Simulator GetCurrentSim()

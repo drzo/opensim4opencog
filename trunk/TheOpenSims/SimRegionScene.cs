@@ -28,14 +28,19 @@ namespace cogbot.TheOpenSims
     public class BotRegionModel
     {
         static public ListAsSet<SimAvatar> avatars = new ListAsSet<SimAvatar>();
+        static public SimMovementStore store = new SimMovementStore();
+
+
+
         public ListAsSet<SimObject> objects = new ListAsSet<SimObject>();
-        //public BotClient Client;
+        public BotClient Client;
         public readonly WorldObjects WorldSystem;
         public static BotRegionModel BotWorld = null;
         //        TheBotsInspector inspector = new TheBotsInspector();
         public BotRegionModel(BotClient Client)
         {
             BotWorld = this;
+            this.Client = Client;
             WorldSystem = Client.WorldSystem;
             SimObjectType.LoadDefaultTypes();
             CatchUp(Client.Network.CurrentSim);
@@ -97,9 +102,79 @@ namespace cogbot.TheOpenSims
                         return obj;
                 }
             SimAvatar obj0 = new SimAvatar(prim, WorldSystem);
+            obj0.SetClient(Client);
             lock (avatars) avatars.AddTo(obj0);
             //lock (objects) objects.AddTo(obj0);
             return obj0;
         }
+
+        internal static void AddTracking(SimAvatar simAvatar, BotClient Client)
+        {
+          //  Client.Objects.OnObjectUpdated += Objects_OnObjectUpdated;
+            //throw new Exception("The method or operation is not implemented.");
+        }
     }
+    public class SimMovementStore
+    {
+        List<SimMovement> Movements = new List<SimMovement>();
+        public SimMovementStore()
+        {
+        }
+
+
+        internal void Add(SimMovement LastMovement, SimMovement thisMove)
+        {
+            Movements.Add(thisMove);
+        }
+    }
+
+    public class TrackedPrim
+    {
+        SimAvatar Target;
+        Quaternion RotationLast;
+        Vector3 PostionLast;
+        float moveDist = 4;
+        Vector3 RotationPostionLast;
+        uint LocalID = 0;
+        //SimMovementStore MovementStore;
+        SimMovement LastMovement;
+        public TrackedPrim(SimAvatar tracked)
+        {
+            Target = tracked;
+            RotationPostionLast = tracked.GetSimPosition();
+            LocalID = tracked.thePrim.LocalID;
+            PostionLast = tracked.GetSimPosition();
+            RotationLast = tracked.GetSimRotation();
+        }
+
+        public virtual void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
+        {
+            if (update.LocalID == LocalID)
+            {
+                if (update.Position != PostionLast)
+                {
+                    NewPosition(update.Position, moveDist);
+                }
+                if (RotationLast != update.Rotation)
+                {
+                    NewPosition(update.Position, 0.5f);
+                    RotationLast = update.Rotation;
+                    RotationPostionLast = update.Position;
+                }
+            }
+
+        }
+
+        private void NewPosition(Vector3 vector3, float moveDist)
+        {
+            if (Vector3.Distance(vector3, PostionLast) > moveDist)
+            {
+                SimMovement thisMove = new SimMovement(PostionLast, vector3);
+               // MovementStore.Add(LastMovement, thisMove);
+                LastMovement = thisMove;
+                PostionLast = vector3;
+            }
+        }
+    }
+
 }
