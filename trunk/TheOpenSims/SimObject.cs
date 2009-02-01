@@ -69,7 +69,7 @@ namespace cogbot.TheOpenSims
 
         public virtual bool IsRoot()
         {
-            return GetParent()==this;
+            return (thePrim.ParentID == 0);
         }
 
         private BotRegionModel GetWorld()
@@ -145,7 +145,16 @@ namespace cogbot.TheOpenSims
                 ObjectType.TouchName = objectProperties.TouchName;
                 needUpdate = false;
             }
-            GetParent();
+            try
+            {
+              //  GetParent();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(""+e);
+            }
+
+
             ObjectType.SuperTypes = SimObjectType.GuessSimObjectTypes(thePrim);
         }
 
@@ -201,10 +210,13 @@ namespace cogbot.TheOpenSims
         public override string ToString()
         {
             String str = base.ToString() + "[";
-            if (!String.IsNullOrEmpty(thePrim.Properties.Name))
-                str += thePrim.Properties.Name + " ";
-            if (!String.IsNullOrEmpty(thePrim.Properties.Description))
-                str += thePrim.Properties.Description + " ";
+            if (thePrim.Properties != null)
+            {
+                if (!String.IsNullOrEmpty(thePrim.Properties.Name))
+                    str += thePrim.Properties.Name + " ";
+                if (!String.IsNullOrEmpty(thePrim.Properties.Description))
+                    str += thePrim.Properties.Description + " ";
+            }
             ObjectType.SuperTypes.ForEach(delegate(SimObjectType item)
             {
                 str += item.ToString() + " ";
@@ -277,7 +289,7 @@ namespace cogbot.TheOpenSims
         public ListAsSet<SimObject> GetNearByObjects(float p, bool rootOnly)
         {
             ListAsSet<SimObject> KnowsAboutList = new ListAsSet<SimObject>();
-            List<SimObject> objects = BotRegionModel.BotWorld.objects;
+            List<SimObject> objects = BotRegionModel.objects;
             Vector3 here = GetSimPosition();
             lock (objects) foreach (SimObject obj in objects)
                 {

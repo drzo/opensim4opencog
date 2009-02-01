@@ -30,9 +30,7 @@ namespace cogbot.TheOpenSims
         static public ListAsSet<SimAvatar> avatars = new ListAsSet<SimAvatar>();
         static public SimMovementStore store = new SimMovementStore();
 
-
-
-        public ListAsSet<SimObject> objects = new ListAsSet<SimObject>();
+        static public ListAsSet<SimObject> objects = new ListAsSet<SimObject>();
         public BotClient Client;
         public readonly WorldObjects WorldSystem;
         public static BotRegionModel BotWorld = null;
