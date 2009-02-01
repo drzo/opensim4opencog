@@ -214,7 +214,15 @@ namespace cogbot
             foreach (BotClient CurrentClient in BotByName.Values)
                 if (CurrentClient != null)
                 {
-                    if (CurrentClient.ExecuteCommand(text)) handled = true;
+                    try
+                    {
+                        if (CurrentClient.ExecuteCommand(text)) handled = true;
+                    }
+                    catch (Exception e)
+                    {
+                        output("" + CurrentClient.Self.Name + ": " + e);
+                    }
+
                 }
 
             if (!handled)

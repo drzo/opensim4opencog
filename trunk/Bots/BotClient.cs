@@ -1009,11 +1009,13 @@ namespace cogbot
 
         internal string argsListString(IEnumerable list)
         {
+            if (scriptEventListener == null) return "" + list;
             return scriptEventListener.argsListString(list);
         }
 
         internal string argString(object p)
         {
+            if (scriptEventListener == null) return "" + p;
             return scriptEventListener.argString(p);
         }
 

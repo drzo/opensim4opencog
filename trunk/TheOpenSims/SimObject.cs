@@ -11,7 +11,7 @@ namespace cogbot.TheOpenSims
     {
         readonly public Primitive thePrim; // the prim in Secondlife
         readonly public SimObjectType ObjectType;
-        readonly public WorldObjects WorldSystem;
+        public WorldObjects WorldSystem;
         bool MadeNonPhysical = false;
         bool MadePhantom = false;
         bool needUpdate = true;
@@ -41,8 +41,7 @@ namespace cogbot.TheOpenSims
 
         public virtual bool IsRoot()
         {
-            uint parent = thePrim.ParentID;
-            return (parent == 0);
+            return (thePrim.ParentID == 0);
         }
 
         private BotRegionModel GetWorld()
@@ -52,19 +51,14 @@ namespace cogbot.TheOpenSims
 
         public virtual string DebugInfo()
         {
+            string str = thePrim.Properties.Name + " " + thePrim.Properties.Description + " " + ToString();
             if (thePrim.ParentID != 0)
-            {
-                return thePrim.ParentID + " " + thePrim.Properties.Name + " " + thePrim.Properties.Description + " " + ToString();
-            }
-            else
-            {
-                return thePrim.Properties.Name + " " + thePrim.Properties.Description + " " + ToString();
-            }
+                return thePrim.ParentID + " " + str;
+            return str;
         }
 
         public float RateIt(BotNeeds againsNeeds, SimAvatar avatar)
         {
-            // GetMenu(avatar);
             return ObjectType.RateIt(againsNeeds, GetDefaultUsage()) * scaleOnNeeds;
         }
 
@@ -129,8 +123,7 @@ namespace cogbot.TheOpenSims
         public virtual bool RestoreEnterable()
         {
             bool changed = false;
-            PrimFlags original = thePrim.Flags;
-            PrimFlags tempFlags = original;
+            PrimFlags tempFlags = thePrim.Flags;
             if (MadePhantom && (tempFlags & PrimFlags.Phantom) != PrimFlags.Phantom)
             {
                 tempFlags -= PrimFlags.Phantom;
@@ -144,14 +137,17 @@ namespace cogbot.TheOpenSims
                 MadeNonPhysical = false;
             }
             if (changed) WorldSystem.SetPrimFlags(thePrim, tempFlags);
+            if (!IsRoot())
+            {
+                if (GetParent().RestoreEnterable()) return true;
+            }
             return changed;
         }
 
-        public bool MakeEnterable()
+        public virtual bool MakeEnterable()
         {
             bool changed = false;
-            PrimFlags original = thePrim.Flags;
-            PrimFlags tempFlags = original;
+            PrimFlags tempFlags = thePrim.Flags;
             if ((tempFlags & PrimFlags.Phantom) == 0)
             {
                 tempFlags |= PrimFlags.Phantom;
@@ -165,7 +161,12 @@ namespace cogbot.TheOpenSims
                 MadeNonPhysical = true;
             }
             if (changed) WorldSystem.SetPrimFlags(thePrim, tempFlags);
+            if (!IsRoot())
+            {
+                if (GetParent().MakeEnterable()) return true;
+            }
             return changed;
+
         }
 
         public override string ToString()
@@ -224,11 +225,6 @@ namespace cogbot.TheOpenSims
             return ObjectType.GetUsagePromise(p).Magnify(scaleOnNeeds);
         }
 
-        //public SimTypeUsage FindObjectUsage(SimAvatar simAvatar)
-        //{
-        //    return ObjectType.FindObjectUsage(GetDefaultUsage());
-        //}
-
         public virtual float GetSizeDistance()
         {
             float fx = thePrim.Scale.X;
@@ -236,17 +232,17 @@ namespace cogbot.TheOpenSims
             return ((fx > fy) ? fx : fy) + 1.5f;
         }
 
-        public ListAsSet<SimObject> GetNearByObjects(float p)
+        public ListAsSet<SimObject> GetNearByObjects(float p, bool rootOnly)
         {
             ListAsSet<SimObject> KnowsAboutList = new ListAsSet<SimObject>();
             List<SimObject> objects = BotRegionModel.BotWorld.objects;
             Vector3 here = GetSimPosition();
             lock (objects) foreach (SimObject obj in objects)
                 {
-                    if (Vector3.Distance(obj.GetSimPosition(), here) <= p)
-                    {
+                    if (rootOnly && !obj.IsRoot()) continue; 
+                    if (obj !=this && Vector3.Distance(obj.GetSimPosition(), here) <= p)
                         KnowsAboutList.AddTo(obj);
-                    }
+                    
                 }
             return KnowsAboutList;
         }

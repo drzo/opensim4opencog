@@ -96,9 +96,11 @@ namespace cogbot.ScriptEngines
         }
 
 
-        public string argsListString(IEnumerable args)
+        public string argsListString(IEnumerable args)        
         {
+            if (args == null) return "NiL";
             IEnumerator enumer = args.GetEnumerator();
+            if (enumer == null) return "niL";
             if (!enumer.MoveNext()) return "";
             String msg = argString(enumer.Current);
             while (enumer.MoveNext())
