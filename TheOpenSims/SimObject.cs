@@ -246,5 +246,10 @@ namespace cogbot.TheOpenSims
                 }
             return KnowsAboutList;
         }
+
+        public Quaternion GetSimRotation()
+        {
+            return thePrim.Rotation;
+        }
     }
 }
