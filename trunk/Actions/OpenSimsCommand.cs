@@ -15,7 +15,7 @@ namespace cogbot.Actions
         {
             Name = "simbot";
             helpString = "Start theOpenSims type AI.";
-            usageString = "simbot [on|start|stop|off|think]";
+            usageString = "simbot [on|start|stop|off|think|ini|list]";
            
         }
 
@@ -23,6 +23,22 @@ namespace cogbot.Actions
         {
 
             if (args.Length == 0) return usageString;
+
+            if (args[0] == "ini")
+            {
+                SimObjectType.LoadDefaultTypes0();
+                return "ReLoaded  ini";
+            }
+            if (args[0] == "types")
+            {
+                SimObjectType.ListTypes();
+                return "Listed types";
+            }
+            if (args[0] == "load")
+            {
+                SimObjectType.LoadConfig(args[1]);
+                return "ReLoaded  ini";
+            }
 
             if (args[0] == "on")
             {

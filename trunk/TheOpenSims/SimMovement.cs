@@ -445,11 +445,12 @@ namespace cogbot.TheOpenSims
                     {
                         Console.WriteLine("AutoPilot due to traveled=" + traveled);
                         Client.Self.AutoPilot(Destination.X, Destination.Y, Destination.Z);
-                        madePhantom = theAvatar.GetNearByObjects(2, false);
+                        madePhantom = theAvatar.GetNearByObjects(2.0f, false);
                         if (madePhantom.Count > 0)
                         {
                             foreach (SimObject obj in madePhantom)
                             {
+                                Client.Self.Touch(obj.thePrim.LocalID);
                                 obj.MakeEnterable();
                             }
                         }

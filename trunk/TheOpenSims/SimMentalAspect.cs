@@ -4,6 +4,8 @@ using System.Text;
 using System.Reflection;
 using cogbot.Listeners;
 using OpenMetaverse;
+using System.IO;
+using DotLisp;
 
 namespace cogbot.TheOpenSims
 {
@@ -27,6 +29,7 @@ namespace cogbot.TheOpenSims
     {
         public String ToDebugString()
         {
+            if (cons != null) return cons.ToString();
             String str = ToString() + "[";
             SuperTypes.ForEach(delegate(SimObjectType item)
             {
@@ -37,6 +40,7 @@ namespace cogbot.TheOpenSims
 
         public string SitName = null;
         public string TouchName = null;
+        Cons cons;
         Dictionary<string, SimTypeUsage> usageAffect = new Dictionary<string, SimTypeUsage>();
         // Object area effect
         public ListAsSet<SimObjectType> SuperTypes = new ListAsSet<SimObjectType>();
@@ -407,6 +411,12 @@ namespace cogbot.TheOpenSims
         }
         static public void LoadDefaultTypes0()
         {
+            FileInfo fi = new FileInfo("SimBots.ini");
+            if (fi.Exists)
+            {
+                LoadConfig(fi.Name);
+                return;
+            }
             /*
             
              Format of loader
@@ -539,6 +549,7 @@ namespace cogbot.TheOpenSims
                     "TextName", "Think about",
                     "maximumDistance", 1, // close enough?
                     "UseAnim", Animations.SHRUG,
+                    "Fun",-10,0,
                     null);
 
 
@@ -713,17 +724,93 @@ namespace cogbot.TheOpenSims
 
         }
 
-        static void CreateObjectUse(string classname, params object[] defs)
+        public static void LoadConfig(string filename)
+        {
+            System.IO.FileStream f = System.IO.File.OpenRead(filename);
+            StreamReader r = new StreamReader(f);
+            r.BaseStream.Seek(0, SeekOrigin.Begin);
+            TextReader tr = r;
+            Interpreter interp = new DotLisp.Interpreter();
+            while (tr.Peek() != -1)
+            {
+                Object read = interp.Read(filename, tr);
+                if (interp.Eof(read)) return;
+                Cons cons = (Cons)read;
+                SimObjectType type = LoadConfigCons(cons);
+                type.cons = cons;
+            }
+
+        }
+
+        public static SimObjectType LoadConfigCons(Cons cons)
+        {
+            Object first = Cons.First(cons);
+            cons =(Cons) Cons.Rest(cons);
+            first = ((Symbol)first).ToString();
+            if (first.ToString().ToLower() == "createobjectuse")
+            {
+                Object second = Cons.First(cons);
+                return CreateObjectUse(second.ToString(), ConsParams(Cons.Rest(cons)));
+            }
+            else
+                if (first.ToString().ToLower() == "createobjecttype")
+                {
+                    Object second = Cons.First(cons);
+                    return CreateObjectType(second.ToString(), ConsParams(Cons.Rest(cons)));
+                }
+                else
+                {
+                    return CreateObjectType(first.ToString(), ConsParams(cons));
+                }
+        }
+
+        private static object[] ConsParams(object ocons)
+        {
+            Cons cons = (Cons)ocons;
+            object[] consV = Cons.ToVector(cons);
+            object[] o = new object[consV.Length];
+            for (int i = 0; i < consV.Length; i++)
+            {
+                object v = consV[i];
+                if (v is Cons)
+                {
+                    v = Cons.First((Cons)v).ToString().Substring(1);
+                }
+
+                String s = v.ToString();
+                if (v is Symbol)
+                {
+                    v = s;
+                }
+                else if (v is IConvertible)
+                {
+                    //v = s;
+                }
+                else
+                {
+                 //   v = v;
+                }
+                if (s == "true") v = true;
+                else
+                    if (s == "false") v = false;
+                o[i] = v;
+            }
+            return o;
+        }
+
+        static public SimObjectType CreateObjectUse(string classname, params object[] defs)
         {
             SimObjectType type = GetObjectType(classname);
             SimTypeUsage usage = type.CreateObjectUsage(classname);
             type.ParseAffect(usage, defs);
+            return type;
         }
 
-        static public void CreateObjectType(string aspectName, params object[] parseStr)
+        static public SimObjectType CreateObjectType(string aspectName, params object[] parseStr)
         {
             SimObjectType type = GetObjectType(aspectName);
             type.ParseAffect(null, parseStr);
+            return type;
         }
 
         static public SimObjectType FindObjectType(string aspectName)
@@ -744,6 +831,19 @@ namespace cogbot.TheOpenSims
                 lock (objectTypes) objectTypes.AddTo(type);
             }
             return type;
+        }
+
+        internal static void ListTypes()
+        {
+            foreach (SimObjectType type in objectTypes)
+            {
+                Console.WriteLine();
+                Console.WriteLine("\t" + type.ToDebugString());
+                foreach (String key in type.usageAffect.Keys)
+                {
+                    Console.WriteLine("\t\t;;" + type.FindObjectUsage(key).ToDebugString());
+                }
+            }
         }
     }
 

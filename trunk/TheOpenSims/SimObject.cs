@@ -17,6 +17,16 @@ namespace cogbot.TheOpenSims
         bool needUpdate = true;
         Vector3 lastPos = Vector3.Zero;
 
+        public ListAsSet<SimObject> AttachedChildren = new ListAsSet<SimObject>();
+
+        public ListAsSet<SimObject> GetChildren()
+        {
+            if (AttachedChildren.Count == 0)
+            {
+            }
+            return AttachedChildren;
+        }
+
         /// <summary>
         /// the bonus or handicap the object has compared to the defination 
         /// (more expensive chair might have more effect)
@@ -30,18 +40,36 @@ namespace cogbot.TheOpenSims
             WorldSystem = objectSystem;
             ObjectType = SimObjectType.GetObjectType(prim.ID.ToString());
             UpdateProperties(thePrim.Properties);
-        }      
+        }
+
+        SimObject Parent;
 
         public virtual SimObject GetParent()
         {
-            uint parent = thePrim.ParentID;
-            if (parent == 0) return null;
-            return GetWorld().GetSimObject(WorldSystem.GetPrimitive(parent));
+            if (Parent == null)
+            {
+                uint parent = thePrim.ParentID;
+                if (parent != 0)
+                {
+                    Parent = GetWorld().GetSimObject(WorldSystem.GetPrimitive(parent));
+                    Parent.AddChild(this);
+                }
+                else
+                {
+                    Parent = this;
+                }
+            }
+            return Parent;
+        }
+
+        public bool AddChild(SimObject simObject)
+        {
+           return AttachedChildren.AddTo(simObject);
         }
 
         public virtual bool IsRoot()
         {
-            return (thePrim.ParentID == 0);
+            return GetParent()==this;
         }
 
         private BotRegionModel GetWorld()
@@ -117,6 +145,7 @@ namespace cogbot.TheOpenSims
                 ObjectType.TouchName = objectProperties.TouchName;
                 needUpdate = false;
             }
+            GetParent();
             ObjectType.SuperTypes = SimObjectType.GuessSimObjectTypes(thePrim);
         }
 
@@ -172,9 +201,9 @@ namespace cogbot.TheOpenSims
         public override string ToString()
         {
             String str = base.ToString() + "[";
-            if (String.IsNullOrEmpty(thePrim.Properties.Name))
+            if (!String.IsNullOrEmpty(thePrim.Properties.Name))
                 str += thePrim.Properties.Name + " ";
-            if (String.IsNullOrEmpty(thePrim.Properties.Description))
+            if (!String.IsNullOrEmpty(thePrim.Properties.Description))
                 str += thePrim.Properties.Description + " ";
             ObjectType.SuperTypes.ForEach(delegate(SimObjectType item)
             {
@@ -227,9 +256,22 @@ namespace cogbot.TheOpenSims
 
         public virtual float GetSizeDistance()
         {
+            float size = 1;
+
             float fx = thePrim.Scale.X;
+            if (fx > size) size = fx;
             float fy = thePrim.Scale.Y;
-            return ((fx > fy) ? fx : fy) + 1.5f;
+            if (fy > size) size = fy;
+
+            foreach (SimObject obj in AttachedChildren)
+            {
+                Primitive cp = obj.thePrim;
+                fx = cp.Scale.X;
+                if (fx > size) size = fx;
+                fy = cp.Scale.Y;
+                if (fy > size) size = fy;
+            }
+            return size + 1f;
         }
 
         public ListAsSet<SimObject> GetNearByObjects(float p, bool rootOnly)
