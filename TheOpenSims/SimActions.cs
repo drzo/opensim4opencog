@@ -128,11 +128,11 @@ namespace cogbot.TheOpenSims
         }
         // the maximum distance the user can be away scaled on object size
         public String UsageName;
+        public string TextName = ""; // the scripting usename name
         public int maximumDistance = 1;
         public int totalTimeMS = 14000;  // the time this usage takes
         public BotNeeds ChangePromise = new BotNeeds(0.0F); // what most users think will happen by default
         public BotNeeds ChangeActual = new BotNeeds(0.0F); //what really happens ofter 1 minute use
-        public string TextName = ""; // the scripting usename name
         // if true the avatar will attempt to sit on the object for the duration
         public bool UseSit = false;
         public bool UseSitSpecified = false;
@@ -143,6 +143,21 @@ namespace cogbot.TheOpenSims
         public String UseAnim = null;
         // if set the client will attempt to run
         public String LispScript = null; // the lisp code that does the animation effects
+
+        public string ToDebugString()
+        {
+            String str = UsageName;
+            str += " TextName: '" + TextName;
+            str += "' totalTimeMS: " + totalTimeMS;
+            str += " maximumDistance: " + maximumDistance;
+            str += " ChangePromise:" + ChangePromise.ShowNonZeroNeeds();
+            str += " ChangeActual:" + ChangeActual.ShowNonZeroNeeds();
+            if (UseSitSpecified) str += " UseSit: " + UseSit;
+            if (UseGrabSpecified) str += " UseGrab: " + UseGrab;
+            if (!String.IsNullOrEmpty(UseAnim)) str += " UseAnim: " + UseAnim;
+            if (!String.IsNullOrEmpty(LispScript)) str += " LispScript: " + LispScript;
+            return str;
+        }
     }
 
 

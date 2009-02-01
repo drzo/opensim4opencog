@@ -325,7 +325,7 @@ namespace cogbot.TheOpenSims
 
         public void ScanNewObjects()
         {
-            ListAsSet<SimObject> objects = GetNearByObjects(20,true);
+            ListAsSet<SimObject> objects = GetNearByObjects(100,true);
             lock (objects) foreach (SimObject obj in objects)
                 {
                     if (obj.IsRoot() && obj!=this)
