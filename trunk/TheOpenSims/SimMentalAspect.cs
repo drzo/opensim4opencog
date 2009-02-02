@@ -46,9 +46,9 @@ namespace cogbot.TheOpenSims
         public string SitName = null;
         public string TouchName = null;
         Cons cons;
-        Dictionary<string, SimTypeUsage> usageAffect = new Dictionary<string, SimTypeUsage>();
+        readonly Dictionary<string, SimTypeUsage> usageAffect = new Dictionary<string, SimTypeUsage>();
         // Object area effect
-        public ListAsSet<SimObjectType> SuperTypes = new ListAsSet<SimObjectType>();
+        readonly public ListAsSet<SimObjectType> SuperTypes = new ListAsSet<SimObjectType>();
 
         public SimObjectType(string name)
             : base(name)
@@ -362,7 +362,7 @@ namespace cogbot.TheOpenSims
             }
             if (possibles.Count == 0)
             {
-                possibles.AddTo(UNKNOWN);
+               // possibles.AddTo(UNKNOWN);
             }
             if (possibles.Count > 1)
             {

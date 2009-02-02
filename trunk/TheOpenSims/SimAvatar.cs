@@ -25,16 +25,16 @@ namespace cogbot.TheOpenSims
 
         public SimAvatar InDialogWith = null;
 
-        public BotNeeds CurrentNeeds;
+        readonly public BotNeeds CurrentNeeds = new BotNeeds(90.0f);
 
         // things the bot cycles through mentally
-        public ListAsSet<SimObject> KnowsAboutList = new ListAsSet<SimObject>();
+        readonly public ListAsSet<SimObject> KnowsAboutList = new ListAsSet<SimObject>();
 
         // which will result in 
-        public ListAsSet<BotAction> KnowsActList = new ListAsSet<BotAction>();
+        readonly public ListAsSet<BotAction> KnowsActList = new ListAsSet<BotAction>();
 
         // which will be skewed with how much one bot like a Mental Aspect
-        public Dictionary<BotMentalAspect, int> AspectEnjoyment = new Dictionary<BotMentalAspect, int>();
+        readonly public Dictionary<BotMentalAspect, int> AspectEnjoyment = new Dictionary<BotMentalAspect, int>();
 
         //notice this also stores object types that pleases the bot as well as people
         // (so how much one bot likes another avatar is sotred here as well)
@@ -43,13 +43,13 @@ namespace cogbot.TheOpenSims
         ListAsSet<BotAction> AllPossibleActions = new ListAsSet<BotAction>();
 
         // Actions observed
-        ListAsSet<BotAction> LearnedPossibleActions = new ListAsSet<BotAction>();
+        readonly ListAsSet<BotAction> LearnedPossibleActions = new ListAsSet<BotAction>();
 
         // Action template stubs 
-        ListAsSet<SimTypeUsage> LearnedPossibleUsages = new ListAsSet<SimTypeUsage>();
+        readonly ListAsSet<SimTypeUsage> LearnedPossibleUsages = new ListAsSet<SimTypeUsage>();
 
         // assuptions about stubs
-        public Dictionary<SimObjectType, BotNeeds> Assumptions = new Dictionary<SimObjectType, BotNeeds>();
+        readonly public Dictionary<SimObjectType, BotNeeds> Assumptions = new Dictionary<SimObjectType, BotNeeds>();
 
         // Current action 
         public BotAction CurrentAction = null;
@@ -60,7 +60,6 @@ namespace cogbot.TheOpenSims
             : base(slAvatar.Name, slAvatar, objectSystem)
         {
             ObjectType.SuperTypes.Add(SimObjectType.GetObjectType("Avatar"));
-            CurrentNeeds = new BotNeeds(90.0F);
             AspectName = slAvatar.Name;
             avatarHeartbeatThread = new Thread(new ThreadStart(Aging));
             avatarHeartbeatThread.Start();
@@ -84,11 +83,12 @@ namespace cogbot.TheOpenSims
         public bool IsSitting()
         {
             //BotClient Client = base.WorldSystem.client;
-            if (theAvatar.ID != Client.Self.AgentID)
+            if (HasClient())
             {
                 if (Client.Self.Movement.SitOnGround) return true;
                 return Client.Self.SittingOn != 0;
             }
+
             return theAvatar.ParentID != 0;
         }
 
@@ -109,7 +109,7 @@ namespace cogbot.TheOpenSims
             if (avatarThinkerThread == null)
             {
                 avatarThinkerThread = new Thread(new ThreadStart(Think));
-                if (theAvatar.LocalID == Client.Self.LocalID)
+                if (HasClient())
                 {
                     // only think for ourselves
                     avatarThinkerThread.Start();
@@ -118,10 +118,16 @@ namespace cogbot.TheOpenSims
             if (!avatarThinkerThread.IsAlive) avatarThinkerThread.Resume();
         }
 
+        public bool HasClient()
+        {
+            return theAvatar.ID == Client.Self.AgentID || theAvatar.LocalID==Client.Self.LocalID;
+        }
+
         public bool IsThinking()
         {
             return (avatarThinkerThread != null);
         }
+
         internal void PauseThinking()
         {
             if (avatarThinkerThread != null)
@@ -140,7 +146,7 @@ namespace cogbot.TheOpenSims
 
         public override Vector3 GetSimPosition()
         {
-            if (Client != null) if (theAvatar.LocalID == Client.Self.LocalID) return Client.Self.SimPosition;
+            if (Client != null) if (HasClient()) return Client.Self.SimPosition;
             return base.GetSimPosition();
         }
 
@@ -166,7 +172,7 @@ namespace cogbot.TheOpenSims
                 CurrentNeeds.AddFrom(SimObjectType.GetObjectType("OnMinuteTimer").GetUsageActual("OnMinuteTimer"));
                 CurrentNeeds.SetRange(0.0F, 100.0F);
                 Thread.Sleep(60000); // one minute
-                Debug(CurrentNeeds.ToString());
+                //Debug(CurrentNeeds.ToString());
             }
         }
 
@@ -365,7 +371,7 @@ namespace cogbot.TheOpenSims
                 }
             }
 
-            float dist = obj.GetSizeDistance();
+            float dist = obj.GetSizeDistance();          
 
             Vector3 vector3 = obj.GetUsePosition();
 

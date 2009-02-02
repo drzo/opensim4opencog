@@ -81,41 +81,31 @@
 ;-----------------------------
 ;  (on-chat agent message) -> "(heard (agent) message)";
 (def (on-chat agent message)
-  (block
-    ;; (thisClient.output (@"fromLispExample: (heard {0} '{1}')" (notme agent)(str message)) )
-    ;(thisClient.ExecuteCommand (@"say I heard {0} '{1}')" (str agent)(str message)) )
-    ;(thisClient.ExecuteCommand (@"say I heard {0} '{1}')" (str agent)(str message)) )
-    ; (thisClient.ExecuteCommand (@"{0}" (str message)) )
-
-    )
-  (when
+    ;; (thisClient.output (@"fromLispExample: (heard {0} '{1}')" (notme agent)(str message)))
+    ;(thisClient.ExecuteCommand (@"say I heard {0} '{1}')" (str agent)(str message))
+    ;(thisClient.ExecuteCommand (@"say I heard {0} '{1}')" (str agent)(str message))
+    ; (thisClient.ExecuteCommand (@"{0}" (str message)))
+  (if
    (notme agent)
     ;; end this block
-    (setj mymsg (str message))
-    ; (setj mymsgList (into nil (mymsg.Split(" ") )))
+    (setj message (str message))
+    ; (setj messageList (into nil (message.Split(" "))))     
+    ; (when (member messageList wamo ) (thisClient.ExecuteCommand "say I just saw wamo"))
+     (if (>= (message.IndexOf "hello" ) 0)
+        (thisClient.ExecuteCommand (@"say Hello there {0} !!!" (str agent)))
      
-    ; (when (member mymsgList wamo )
-    ;  (thisClient.ExecuteCommand "say I just saw wamo")
-    ;  )
-      
-     (when (>= (mymsg.IndexOf "hello" ) 0) 
-        (thisClient.ExecuteCommand (@"say Hello there {0} !!!" (str agent) ) )
-     )
-     (when (>= (mymsg.IndexOf "use" ) 0) 
-        (thisClient.ExecuteCommand (@"{0}" (str message)) )
-     )
-     (when (>= (mymsg.IndexOf "follow" ) 0) 
-        (thisClient.ExecuteCommand (@"{0}" (str message)) )
-     )
-     (when (>= (mymsg.IndexOf "cogbot" ) 0)
+     (if (>= (message.IndexOf "use" ) 0) 
+        (thisClient.ExecuteCommand (@"{0}" (str message)))
+     
+     (if (>= (message.IndexOf "follow" ) 0) 
+        (thisClient.ExecuteCommand (@"{0}" (str message)))
+
+     (if (>= (message.IndexOf "cogbot" ) 0)
        (progn
         (setj mycommand (str message))
         (setj mycommand1 (mycommand.Replace "cogbot " ""))
-        (thisClient.ExecuteCommand  mycommand1 )
-        )
-     )
-    )
- )
+        (thisClient.ExecuteCommand  mycommand1 ))))))))
+        
  
  ;  (on-instantmessage agent message) -> "(heard (agent) message)";
 (def (on-instantmessage agent message)
