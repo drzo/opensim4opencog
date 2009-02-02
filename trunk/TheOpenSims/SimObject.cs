@@ -51,7 +51,7 @@ namespace cogbot.TheOpenSims
                 uint parent = thePrim.ParentID;
                 if (parent != 0)
                 {
-                    Parent = GetWorld().GetSimObject(WorldSystem.GetPrimitive(parent));
+                    Parent = WorldSystem.GetSimObject(WorldSystem.GetPrimitive(parent));
                     Parent.AddChild(this);
                 }
                 else
@@ -72,11 +72,6 @@ namespace cogbot.TheOpenSims
         public virtual bool IsRoot()
         {
             return (thePrim.ParentID == 0);
-        }
-
-        private BotRegionModel GetWorld()
-        {
-            return BotRegionModel.BotWorld;
         }
 
         public virtual string DebugInfo()
@@ -156,8 +151,35 @@ namespace cogbot.TheOpenSims
                 Console.WriteLine(""+e);
             }
 
+            AddSuperTypes(SimObjectType.GuessSimObjectTypes(objectProperties));
+        }
 
-            ObjectType.SuperTypes = SimObjectType.GuessSimObjectTypes(thePrim);
+        public void UpdateObject(ObjectUpdate objectUpdate)
+        {
+        }
+
+        private void AddSuperTypes(ListAsSet<SimObjectType> listAsSet)
+        {
+            SimObjectType UNKNOWN = SimObjectType.UNKNOWN;
+            ListAsSet<SimObjectType> orig = ObjectType.SuperTypes;
+            lock (orig)
+            {
+                if (orig.Count == 1)
+                {
+                    if (orig[0] == UNKNOWN)
+                    {
+                        orig.Clear();
+                    }
+                }
+                foreach (SimObjectType type in listAsSet)
+                {
+                    if (type == UNKNOWN)
+                    {
+                        if (orig.Count != 0) continue;
+                    }
+                    orig.Add(type);
+                }
+            }
         }
 
         public virtual bool RestoreEnterable()
@@ -295,7 +317,7 @@ namespace cogbot.TheOpenSims
         public ListAsSet<SimObject> GetNearByObjects(float p, bool rootOnly)
         {
             ListAsSet<SimObject> KnowsAboutList = new ListAsSet<SimObject>();
-            List<SimObject> objects = BotRegionModel.objects;
+            List<SimObject> objects = WorldSystem.GetAllSimObjects();
             Vector3 here = GetSimPosition();
             lock (objects) foreach (SimObject obj in objects)
                 {

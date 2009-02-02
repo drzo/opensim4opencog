@@ -59,7 +59,7 @@ namespace cogbot.TheOpenSims
         public SimAvatar(Avatar slAvatar, WorldObjects objectSystem)
             : base(slAvatar.Name, slAvatar, objectSystem)
         {
-            //ObjectType = BotRegionModel.BotWorld.GetObjectType("Avatar");
+            ObjectType.SuperTypes.Add(SimObjectType.GetObjectType("Avatar"));
             CurrentNeeds = new BotNeeds(90.0F);
             AspectName = slAvatar.Name;
             avatarHeartbeatThread = new Thread(new ThreadStart(Aging));
@@ -359,7 +359,7 @@ namespace cogbot.TheOpenSims
                 uint sit = Client.Self.SittingOn;
                 if (sit != 0)
                 {
-                    UnPhantom = GetBotWorld().GetSimObject(WorldSystem.GetPrimitive(sit));
+                    UnPhantom = WorldSystem.GetSimObject(WorldSystem.GetPrimitive(sit));
                     UnPhantom.MakeEnterable();
                     Client.Self.Stand();
                 }
@@ -384,10 +384,6 @@ namespace cogbot.TheOpenSims
             return dist;
         }
 
-        private BotRegionModel GetBotWorld()
-        {
-            return BotRegionModel.BotWorld;
-        }
 
         public BotClient GetGridClient()
         {
@@ -523,7 +519,7 @@ namespace cogbot.TheOpenSims
         {
             this.Client = Client;
             WorldSystem = Client.WorldSystem;
-            BotRegionModel.AddTracking(this,Client);
+            //WorldSystem.AddTracking(this,Client);
         }
     }
 
