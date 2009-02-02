@@ -64,7 +64,9 @@ namespace cogbot.TheOpenSims
 
         public bool AddChild(SimObject simObject)
         {
+           needUpdate = true;
            return AttachedChildren.AddTo(simObject);
+
         }
 
         public virtual bool IsRoot()
@@ -232,6 +234,10 @@ namespace cogbot.TheOpenSims
             while (theLPrim.ParentID != 0)
             {
                 theLPrim = WorldSystem.GetPrimitive(theLPrim.ParentID);
+                if (theLPrim == null)
+                {
+                    break;
+                }
                 theLPos = theLPos + theLPrim.Position;
             }
             return theLPos;
