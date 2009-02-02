@@ -101,7 +101,9 @@ namespace cogbot.TheOpenSims
         public override string DebugInfo()
         {
             String s = ToString();
-            foreach (SimObject item in GetKnownObjects())
+            List<SimObject> KnowsAboutList = GetKnownObjects();
+            KnowsAboutList.Sort(CompareObjects);
+            foreach (SimObject item in KnowsAboutList)
             {
                 if (item is SimAvatar) continue;
                 s += "\n   " + item.DebugInfo();
@@ -220,6 +222,20 @@ namespace cogbot.TheOpenSims
             return bestAct;
         }
 
+        public void SortActs(List<BotAction> acts)
+        {
+            acts.Sort(CompareActs);
+        }
+
+        int CompareActs(BotAction act1, BotAction act2)
+        {
+            return (int)(act2.RateIt() - act1.RateIt());
+        }
+        int CompareObjects(SimObject act1, SimObject act2)
+        {
+            return (int)(act2.RateIt(this) - act1.RateIt(this));
+        }
+
         public ListAsSet<BotAction> GetPossibleActions()
         {
             if (AllPossibleActions.Count < 2)
@@ -314,18 +330,11 @@ namespace cogbot.TheOpenSims
         {
             if ((mostInteresting is SimObject) && (cAspect is SimObject))
             {
-                return CompareObjects((SimObject)mostInteresting, (SimObject)cAspect);
+                int rate = CompareObjects((SimObject)mostInteresting, (SimObject)cAspect);
+                if (rate > 0) return cAspect;
+                if (rate < 0) return mostInteresting;
             }
             return (MyRandom.Next(1, 2) == 1) ? mostInteresting : cAspect;
-        }
-
-        private BotMentalAspect CompareObjects(SimObject simObject, SimObject simObject_2)
-        {
-            if (simObject == simObject_2) return simObject;
-            float a1 = simObject.RateIt(CurrentNeeds, this);
-            float a2 = simObject_2.RateIt(CurrentNeeds, this);
-            if (a2 > a1) return simObject_2;
-            return simObject;
         }
 
         public void ScanNewObjects()
