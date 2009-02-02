@@ -396,7 +396,14 @@ namespace cogbot.TheOpenSims
             tracker();
             StopMoving();
             Client.Self.Movement.TurnToward(Destination);
-
+            if (madePhantom.Count > 0)
+            {
+                foreach (SimObject obj in madePhantom)
+                {
+                    obj.RestoreEnterable();
+                }
+                madePhantom.Clear();
+            }
         }
 
         private float GetDistance()
@@ -428,13 +435,13 @@ namespace cogbot.TheOpenSims
             //}
         }
 
+        readonly ListAsSet<SimObject> madePhantom = new ListAsSet<SimObject>();
 
         void tracker()
         {
             float curDist = GetDistance();
             bool UseAutoPilot = false;
             float traveled = 10f;
-            List<SimObject> madePhantom = new List<SimObject>();
             while (curDist > followDist && autoPilotsRemaining > 0)
             {
                 LastPosition = Client.Self.SimPosition;
@@ -444,16 +451,8 @@ namespace cogbot.TheOpenSims
                     if (autoPilotsRemaining > 0)
                     {
                         Console.WriteLine("AutoPilot due to traveled=" + traveled);
+                        PhantomizeArea();
                         Client.Self.AutoPilot(Destination.X, Destination.Y, Destination.Z);
-                        madePhantom = theAvatar.GetNearByObjects(2.0f, false);
-                        if (madePhantom.Count > 0)
-                        {
-                            foreach (SimObject obj in madePhantom)
-                            {
-                                Client.Self.Touch(obj.thePrim.LocalID);
-                                obj.MakeEnterable();
-                            }
-                        }
                         Thread.Sleep(2000);
                     }
                     else
@@ -479,16 +478,18 @@ namespace cogbot.TheOpenSims
                 }
 
                 curDist = GetDistance();
-                if (madePhantom.Count > 0)
-                {
-                    foreach (SimObject obj in madePhantom)
-                    {
-                        obj.RestoreEnterable();
-                    }
-                    madePhantom.Clear();
-                }
+
             }
             Client.Self.AutoPilotCancel();
+        }
+
+        private void PhantomizeArea()
+        {
+                foreach (SimObject obj in theAvatar.GetNearByObjects(2.0f, true)) //should be false
+                {
+                    madePhantom.AddTo(obj);
+                    obj.MakeEnterable();
+                }
         }
 
         private void UpdateHeading()

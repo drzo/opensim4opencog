@@ -26,7 +26,7 @@ namespace cogbot.TheOpenSims
             BotNeeds pc = ProposedChange();
             bn.AddFrom(pc);
             bn.SetRange(0f, 100f);
-            return bn.Total() - (Vector3.Distance(TheBot.GetSimPosition(),GetLocation())/2);
+            return bn.Total() - (Vector3.Distance(TheBot.GetSimPosition(),GetLocation()));
         }
 
         public abstract Vector3 GetLocation();

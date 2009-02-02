@@ -16,7 +16,7 @@ namespace cogbot.TheOpenSims
         bool MadeNonPhysical = false;
         bool MadePhantom = false;
         bool needUpdate = true;
-        Vector3 LastPositionSent = Vector3.Zero;
+        Vector3 lastPos = Vector3.Zero;
 
         public ListAsSet<SimObject> AttachedChildren = new ListAsSet<SimObject>();
 
@@ -53,7 +53,7 @@ namespace cogbot.TheOpenSims
                 if (parent != 0)
                 {
                     Primitive prim = WorldSystem.GetPrimitive(parent);
-                    while(prim == null)
+                    while (prim == null)
                     {
                         prim = WorldSystem.RequestMissingObject(parent);
                     }
@@ -70,11 +70,11 @@ namespace cogbot.TheOpenSims
 
         public bool AddChild(SimObject simObject)
         {
-           needUpdate = true;
-           simObject.Parent = this;
-           bool b = AttachedChildren.AddTo(simObject);
-           if (b) UpdateProperties(simObject.thePrim.Properties);
-           return b;
+            needUpdate = true;
+            simObject.Parent = this;
+            bool b = AttachedChildren.AddTo(simObject);
+            if (b) UpdateProperties(simObject.thePrim.Properties);
+            return b;
 
         }
 
@@ -93,10 +93,6 @@ namespace cogbot.TheOpenSims
 
         public float RateIt(BotNeeds againsNeeds, SimAvatar avatar)
         {
-            if (needUpdate)
-            {
-                UpdateProperties(thePrim.Properties);
-            }
             return ObjectType.RateIt(againsNeeds, GetDefaultUsage()) * scaleOnNeeds;
         }
 
@@ -151,7 +147,6 @@ namespace cogbot.TheOpenSims
         {
             if (objectProperties != null)
             {
-                AddSuperTypes(SimObjectType.GuessSimObjectTypes(objectProperties));
                 ObjectType.SitName = objectProperties.SitName;
                 ObjectType.TouchName = objectProperties.TouchName;
                 needUpdate = false;
@@ -164,6 +159,8 @@ namespace cogbot.TheOpenSims
             {
                 Console.WriteLine(""+e);
             }
+
+            AddSuperTypes(SimObjectType.GuessSimObjectTypes(objectProperties));
         }
 
         public void UpdateObject(ObjectUpdate objectUpdate)
@@ -172,16 +169,13 @@ namespace cogbot.TheOpenSims
 
         private void AddSuperTypes(ListAsSet<SimObjectType> listAsSet)
         {
-            needUpdate = true;
             SimObjectType UNKNOWN = SimObjectType.UNKNOWN;
             ListAsSet<SimObjectType> orig = ObjectType.SuperTypes;
             lock (orig)
-            {
                 foreach (SimObjectType type in listAsSet)
                 {
                     orig.AddTo(type);
-                }
-            }
+                }            
         }
 
         public virtual bool RestoreEnterable()
@@ -214,6 +208,7 @@ namespace cogbot.TheOpenSims
             PrimFlags tempFlags = thePrim.Flags;
             if ((tempFlags & PrimFlags.Phantom) == 0)
             {
+                WorldSystem.client.Self.Touch(thePrim.LocalID);
                 tempFlags |= PrimFlags.Phantom;
                 changed = true;
                 MadePhantom = true;
@@ -250,7 +245,6 @@ namespace cogbot.TheOpenSims
             });
             return str.Trim() + "]";
         }
-
 
         public bool CanGetSimPosition()
         {
@@ -314,10 +308,6 @@ namespace cogbot.TheOpenSims
 
         internal BotNeeds GetProposedUpdate(string p)
         {
-            if (needUpdate)
-            {
-                UpdateProperties(thePrim.Properties);
-            }
             return ObjectType.GetUsagePromise(p).Magnify(scaleOnNeeds);
         }
 
@@ -348,8 +338,8 @@ namespace cogbot.TheOpenSims
             Vector3 here = GetSimPosition();
             lock (objects) foreach (SimObject obj in objects)
                 {
-                    if (rootOnly && !obj.IsRoot()) continue;
-                    if (obj != this && obj.CanGetSimPosition() && Vector3.Distance(obj.GetSimPosition(), here) <= p)
+                    if (rootOnly && !obj.IsRoot()) continue; 
+                    if (obj !=this && obj.CanGetSimPosition() && Vector3.Distance(obj.GetSimPosition(), here) <= p)
                         KnowsAboutList.AddTo(obj);
                     
                 }
@@ -360,5 +350,8 @@ namespace cogbot.TheOpenSims
         {
             return thePrim.Rotation;
         }
+
+
+
     }
 }
