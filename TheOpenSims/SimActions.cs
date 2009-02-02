@@ -26,7 +26,7 @@ namespace cogbot.TheOpenSims
             BotNeeds pc = ProposedChange();
             bn.AddFrom(pc);
             bn.SetRange(0f, 100f);
-            return bn.RateIt();
+            return bn.Total();
         }
     }
 

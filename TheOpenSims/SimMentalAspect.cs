@@ -27,6 +27,11 @@ namespace cogbot.TheOpenSims
 
     public class SimObjectType : BotMentalAspect
     {
+        public static SimObjectType UNKNOWN
+        {
+            get { return GetObjectType("Unknown"); } 
+        }
+
         public String ToDebugString()
         {
             if (cons != null) return cons.ToString();
@@ -148,7 +153,7 @@ namespace cogbot.TheOpenSims
             BotNeeds sat = GetUsagePromise(use.UsageName).Copy();
             sat.AddFrom(from);
             sat.SetRange(0.0F, 100.0F);
-            return sat.RateIt();
+            return sat.Total();
         }
 
         public BotNeeds GetUsageActual(string usename)
@@ -308,56 +313,56 @@ namespace cogbot.TheOpenSims
         static ListAsSet<SimObjectType> objectTypes = new ListAsSet<SimObjectType>();
 
 
-        static public ListAsSet<SimObjectType> GuessSimObjectTypes(Primitive prim)
+        static public ListAsSet<SimObjectType> GuessSimObjectTypes(Primitive.ObjectProperties props)
         {
             ListAsSet<SimObjectType> possibles = new ListAsSet<SimObjectType>();
             SimObjectType type = null;
 
-            if (prim.Properties != null)
+            if (props != null)
             {
-                string objName = prim.Properties.Name.ToLower();
-                string objName2 = prim.Properties.Description.ToLower();
+                string objName = " " + props.Name.ToLower()+" ";
+                string objName2 = " " + props.Description.ToLower() + " ";
                 lock (objectTypes) if (objName.Length > 3) foreach (SimObjectType otype in objectTypes)
                         {
-                            String otypeAspectName = otype.AspectName.ToLower();
+                            String otypeAspectName = " " + otype.AspectName.ToLower()+" ";
                             if (objName.Contains(otypeAspectName))
                             {
                                 possibles.AddTo(otype);
-                                SetNames(prim, otype);
+                                SetNames(props, otype);
                             }
                             else if (objName2.Contains(otypeAspectName))
                             {
                                 possibles.AddTo(otype);
-                                SetNames(prim, otype);
+                                SetNames(props, otype);
                             }
 
                         }
             }
-            type = FindObjectType(GetPrimTypeName(prim));
-            if (type != null)
-            {
-                possibles.AddTo(type);
-                SetNames(prim, type);
+            //type = FindObjectType(GetPrimTypeName(prim));
+            //if (type != null)
+            //{
+            //    possibles.AddTo(type);
+            //    SetNames(prim, type);
 
-            }
-            if (prim.Properties != null)
+            //}
+            if (props != null)
             {
-                type = FindObjectType(prim.Properties.Name);
+                type = FindObjectType(props.Name);
                 if (type != null)
                 {
                     possibles.AddTo(type);
-                    SetNames(prim, type);
+                    SetNames(props, type);
                 }
-                type = FindObjectType(prim.Properties.Description);
+                type = FindObjectType(props.Description);
                 if (type != null)
                 {
                     possibles.AddTo(type);
-                    SetNames(prim, type);
+                    SetNames(props, type);
                 }
             }
             if (possibles.Count == 0)
             {
-                possibles.AddTo(FindObjectType("Unknown"));
+                possibles.AddTo(UNKNOWN);
             }
             if (possibles.Count > 1)
             {
@@ -366,32 +371,34 @@ namespace cogbot.TheOpenSims
             return possibles;
         }
 
-        static public string GetPrimTypeName(Primitive target)
-        {
-            if (target.PrimData.PCode == PCode.Prim)
-                return target.PrimData.Type.ToString();
-            return target.PrimData.PCode.ToString();
+        //static public string GetPrimTypeName(Primitive target)
+        //{
+        //    if (target.PrimData.PCode == PCode.Prim)
+        //        return target.PrimData.Type.ToString();
+        //    return target.PrimData.PCode.ToString();
 
-        }
+        //}
 
-        static private void SetNames(Primitive prim, SimObjectType otype)
+        static private void SetNames(Primitive.ObjectProperties props, SimObjectType otype)
         {
-            if (prim.Properties != null)
+             //= prim.Properties;
+            if (props != null)
             {
-                if (String.IsNullOrEmpty(prim.Properties.SitName))
+                Primitive prim = null;
+                if (String.IsNullOrEmpty(props.SitName))
                 {
-                    prim.Properties.SitName = otype.GetSitName();
-                    if (!String.IsNullOrEmpty(prim.Properties.SitName))
+                    props.SitName = otype.GetSitName();
+                    if (!String.IsNullOrEmpty(props.SitName))
                     {
-                        Console.WriteLine("[TODO] SetSitName(" + prim + "," + otype.GetSitName());
+                      // Console.WriteLine("[TODO] SetSitName(" + prim + "," + otype.GetSitName());
                     }
                 }
-                if (String.IsNullOrEmpty(prim.Properties.TouchName))
+                if (String.IsNullOrEmpty(props.TouchName))
                 {
-                    prim.Properties.TouchName = otype.GetTouchName();
-                    if (!String.IsNullOrEmpty(prim.Properties.TouchName))
+                    props.TouchName = otype.GetTouchName();
+                    if (!String.IsNullOrEmpty(props.TouchName))
                     {
-                        Console.WriteLine("[TODO] SetTextName(" + prim + "," + otype.GetTouchName());
+                      //  Console.WriteLine("[TODO] SetTextName(" + prim + "," + otype.GetTouchName());
                     }
                 }
             }
@@ -988,7 +995,7 @@ namespace cogbot.TheOpenSims
         //public float Mechanical, Charisma, Body, Creativity, Logic, Cleaning, Cooking;
 
 
-        public float RateIt()
+        public float Total()
         {
             float f = 0.0F;
             foreach (Object fi in GetNeeds())

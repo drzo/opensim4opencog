@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using cogbot.TheOpenSims;
-using System.Threading; //using libsecondlife;
+using System.Threading;
+using cogbot.Listeners; //using libsecondlife;
 
 namespace cogbot.Actions
 {
 
     class TheSims : Command
     {
-        BotRegionModel BRM;
+        //BotRegionModel BRM;
         public TheSims(BotClient Client)           
         {
             Name = "simbot";
@@ -71,7 +72,7 @@ namespace cogbot.Actions
             }
 
             
-            if (BRM == null) return "the bot is off";
+          //  if (BRM == null) return "the bot is off";
 
             if (args[0] == "stop")
             {
@@ -81,10 +82,10 @@ namespace cogbot.Actions
             }
             else if (args[0] == "off")
             {
-                if (BRM == null) return "the bot was off";
+            //    if (BRM == null) return "the bot was off";
                 SimAvatar avatar = GetSimAvatar();
                 avatar.PauseThinking();
-                BRM = null;
+             //   BRM = null;
                 return "Stopped " + avatar;
             }
             else
@@ -101,7 +102,7 @@ namespace cogbot.Actions
             {
                 Client.Network.CurrentSim = Client.Network.Simulators[0];
             }
-            if (BRM == null) BRM = new BotRegionModel(Client);
+            WorldObjects BRM = Client.WorldSystem;
             Avatar self = Client.WorldSystem.GetAvatar(Client.Self.AgentID);
             SimAvatar avatar = BRM.GetSimAvatar(self);
             avatar.SetClient(Client);

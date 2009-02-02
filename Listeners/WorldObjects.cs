@@ -17,7 +17,6 @@ namespace cogbot.Listeners
 		public Vector3 compPos;
 		public int searchStep;
 		public List<string> numberedAvatars;
-        BotRegionModel BRM;
 		public int burstSize = 100;
 		public float burstTime = 1;
 		public DateTime burstStartTime;
@@ -45,6 +44,68 @@ namespace cogbot.Listeners
 		List<Primitive> primsAwaitingSelect = new List<Primitive>();
 		List<Primitive> primsKnown = new List<Primitive>();
 
+
+        static public ListAsSet<SimAvatar> SimAvatars = new ListAsSet<SimAvatar>();
+        static public SimMovementStore SimPaths = new SimMovementStore();
+        internal static void AddTracking(SimAvatar simAvatar, BotClient Client)
+        {
+            //  Client.Objects.OnObjectUpdated += Objects_OnObjectUpdated;
+            //throw new Exception("The method or operation is not implemented.");
+        }
+
+        ListAsSet<SimObject> SimObjects = new ListAsSet<SimObject>();
+ 
+        //public static BotRegionModel BotWorld = null;
+        //        TheBotsInspector inspector = new TheBotsInspector();
+ 
+            ///  inspector.Show();
+
+        private void CatchUp(Simulator simulator)
+        {
+            simulator.ObjectsAvatars.ForEach(delegate(Avatar item)
+            {
+                GetSimAvatar(item);
+            });
+            simulator.ObjectsPrimitives.ForEach(delegate(Primitive item)
+            {
+                GetSimObject(item);
+            });
+        }
+
+
+
+        public SimObject GetSimObject(Primitive prim)
+        {
+            if (prim is Avatar)
+            {
+                return GetSimAvatar((Avatar)prim);
+            }
+            lock (SimObjects) foreach (SimObject obj in SimObjects)
+                {
+                    if (obj.thePrim == prim)
+                        return obj;
+                }
+            // not found
+            SimObject obj0 = new SimObject(prim.ToString(), prim, this);
+            lock (SimObjects) SimObjects.AddTo(obj0);
+            return obj0;
+        }
+
+        public SimAvatar GetSimAvatar(Avatar prim)
+        {
+            lock (SimAvatars) foreach (SimAvatar obj in SimAvatars)
+                {
+                    if (obj.theAvatar.Name == prim.Name)
+                        return obj;
+                }
+            SimAvatar obj0 = new SimAvatar(prim, this);
+            obj0.SetClient(client);
+            lock (SimAvatars) SimAvatars.AddTo(obj0);
+            //lock (objects) objects.AddTo(obj0);
+            return obj0;
+        }
+
+
 		public WorldObjects(BotClient client)
 		: base(client)
 		{
@@ -54,7 +115,7 @@ namespace cogbot.Listeners
 			// prims = new Dictionary<string, Primitive>();
 			//  primsByLocalID = new Dictionary<uint, Primitive>();
 			// pendingPrims = new Dictionary<UUID, Primitive>();
-
+            
 			primGroups = new Dictionary<UUID, List<Primitive>>();
 			shortNames = new Dictionary<string, string>();
 			reverseShortNames = new Dictionary<string, string>();
@@ -95,27 +156,47 @@ namespace cogbot.Listeners
 			//parent.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
 			//parent.Objects.OnAvatarSitChanged += new ObjectManager.AvatarSitChanged(Objects_OnAvatarSitChanged);
 			// parent.Avatars.OnAvatarAppearance += new AvatarManager.AvatarAppearanceCallback(Avatars_OnAvatarAppearance);
-			//AgentManager..AvatarSitChanged(Objects_OnAvatarSitChanged);
+			//AgentManager.AvatarSitChanged(Objects_OnAvatarSitChanged);
 			// new DebugAllEvents(client);
-            texturePipeline = new TexturePipeline(client, 10);
-            texturePipeline.OnDownloadFinished += new TexturePipeline.DownloadFinishedCallback(texturePipeline_OnDownloadFinished);
-		}
 
-       // Dictionary<UUID, Parcel> uuidParcels = new Dictionary<UUID, Parcel>();
-        Dictionary<UUID, ImageDownload> uuidTextures = new Dictionary<UUID, ImageDownload>();
-        TexturePipeline texturePipeline;
-            //CurrentClient = new GridClient();
+            /*
+                texturePipeline = new TexturePipeline(client, 10);
+                texturePipeline.OnDownloadFinished += new TexturePipeline.DownloadFinishedCallback(texturePipeline_OnDownloadFinished);
+             */
+            {
+                //BotWorld = this;
+                SimObjectType.LoadDefaultTypes();
+
+                if (client.Network.CurrentSim != null)
+                {
+                    CatchUp(client.Network.CurrentSim);
+                }
+                else
+                {
+                    client.Network.OnLogin += delegate(LoginStatus login, string message)
+                    {
+                        if (login==LoginStatus.Success)
+                        CatchUp(client.Network.CurrentSim);
+                    };
+                }
+            }
+        }
+
         /*
-         On-Image-Received
- image: "{OpenMetaverse.ImageDownload,PacketCount=33,Codec=J2C,NotFound=False,Simulator=OpenSim Test (71.197.210.170:9000),PacketsSeen=System.Collections.Generic.SortedList`2[System.UInt16,System.UInt16],ImageType=Normal,DiscardLevel=-1,Priority=1013000,ID=728dd7fa-a688-432d-a4f7-4263b1f97395,Size=33345,AssetData=System.Byte[],Transferred=33345,Success=True,AssetType=Texture}"
- asset: "{OpenMetaverse.AssetTexture,Image=,LayerInfo=,Components=0,AssetData=System.Byte[],Temporary=False}"
-41031 [9] DEBUG - Worker 3 Downloaded texture 728dd7fa-a688-432d-a4f7-4263b1f97395
+        On-Image-Received
+             image: "{OpenMetaverse.ImageDownload,PacketCount=33,Codec=J2C,NotFound=False,Simulator=OpenSim Test (71.197.210.170:9000),PacketsSeen=System.Collections.Generic.SortedList`2[System.UInt16,System.UInt16],ImageType=Normal,DiscardLevel=-1,Priority=1013000,ID=728dd7fa-a688-432d-a4f7-4263b1f97395,Size=33345,AssetData=System.Byte[],Transferred=33345,Success=True,AssetType=Texture}"
+             asset: "{OpenMetaverse.AssetTexture,Image=,LayerInfo=,Components=0,AssetData=System.Byte[],Temporary=False}"
+            41031 [9] DEBUG - Worker 3 Downloaded texture 728dd7fa-a688-432d-a4f7-4263b1f97395
          */
         public override void Assets_OnImageReceived(ImageDownload image, AssetTexture asset)
         {
             lock (uuidTextures) uuidTextures[image.ID] = image;
             //base.Assets_OnImageReceived(image, asset);
-        }
+        }       // Dictionary<UUID, Parcel> uuidParcels = new Dictionary<UUID, Parcel>();
+
+        Dictionary<UUID, ImageDownload> uuidTextures = new Dictionary<UUID, ImageDownload>();
+        TexturePipeline texturePipeline;
+
         void texturePipeline_OnDownloadFinished(UUID id, bool success)
         {
             if (success)
@@ -159,7 +240,7 @@ namespace cogbot.Listeners
         public override void Self_OnMeanCollision(MeanCollisionType type, UUID perp, UUID victim, float magnitude, DateTime time)
 		{
 			Avatar perpAv, victimAv;
-			if (client.WorldSystem.tryGetAvatarById(perp, out perpAv) && client.WorldSystem.tryGetAvatarById(victim, out victimAv)) {
+			if (tryGetAvatarById(perp, out perpAv) && tryGetAvatarById(victim, out victimAv)) {
 				if (victimAv.Name == client.Self.Name)
 					output(perpAv.Name + " bumped into $bot.");
 				else if (perpAv.Name == client.Self.Name)
@@ -193,8 +274,8 @@ namespace cogbot.Listeners
 		{
 			if (prim.Properties != null) return prim;
 			if (!primsAwaitingSelect.Contains(prim)) {
+                primsAwaitingSelect.Add(prim);
 				client.Objects.SelectObject(sim, prim.LocalID);
-				primsAwaitingSelect.Add(prim);
 			}
 			while (prim.Properties == null) { // TODO maybe add a timer
 				System.Windows.Forms.Application.DoEvents();
@@ -206,6 +287,8 @@ namespace cogbot.Listeners
         {
             Avatar avatar = GetAvatar(avatarID);
             if (avatar == null) return;
+            GetSimAvatar(avatar);
+
             List<UUID> currents = new List<UUID>();
             List<String> names = new List<String>();
             UUID mostCurrentAnim = UUID.Zero;
@@ -361,6 +444,11 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             if (primsAwaitingSelect.Contains(prim))
             {
                 primsAwaitingSelect.Remove(prim);
+            }
+            if (prim != null)
+            {
+                SimObject updateMe = GetSimObject(prim);
+                updateMe.UpdateProperties(props);
             }
             //if (Program.Verbosity > 2)
             ///botoutput("Received properties for " + props.ObjectID.ToString());               
@@ -1534,6 +1622,11 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                 ((fs & PrimFlags.Temporary) != 0),
                 ((fs & PrimFlags.Phantom) != 0),
                 ((fs & PrimFlags.CastShadows) != 0));
+        }
+
+        internal List<SimObject> GetAllSimObjects()
+        {
+            return SimObjects;
         }
     }
 }
