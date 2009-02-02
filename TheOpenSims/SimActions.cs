@@ -20,14 +20,17 @@ namespace cogbot.TheOpenSims
         // the needs are really changed;
         public abstract void InvokeReal();
         // use assumptions
-        public float RateIt()
+        public virtual float RateIt()
         {
             BotNeeds bn = TheBot.CurrentNeeds.Copy();
             BotNeeds pc = ProposedChange();
             bn.AddFrom(pc);
             bn.SetRange(0f, 100f);
-            return bn.Total();
+            return bn.Total() - (Vector3.Distance(TheBot.GetSimPosition(),GetLocation())/2);
         }
+
+        public abstract Vector3 GetLocation();
+
     }
 
     public class SimObjectUsage
@@ -117,6 +120,11 @@ namespace cogbot.TheOpenSims
         {
             return Target.GetProposedUpdate(TypeUsage.UsageName);
         }
+
+        internal Vector3 GetLocation()
+        {
+            return Target.GetSimPosition();
+        }
     }
 
     // most object have use that advertises ChangePromise but actually calls ChangeActual
@@ -163,13 +171,17 @@ namespace cogbot.TheOpenSims
 
     public class AnimThread
     {
-        GridClient Client;
+        BotClient Client;
         UUID anim;
         bool repeat = true;
         Thread animLoop;
-        public AnimThread(GridClient c, UUID amin0)
+        public AnimThread(BotClient c, UUID amin0)
         {
             Client = c;
+            if (cogbot.Listeners.WorldObjects.GetAnimationName(amin0).StartsWith("S"))
+            {
+                repeat = false;
+            }
             anim = amin0;
         }
         public void Start()
@@ -188,9 +200,9 @@ namespace cogbot.TheOpenSims
                     // remind the server we still want to be ussing it 
                     // like Laugh .. lasts for about .9 seconds
                     //12000 is a estimate avage
+                    Thread.Sleep(3200);
                     Client.Self.AnimationStop(anim, true);
                     Client.Self.AnimationStart(anim, true);
-                    Thread.Sleep(3200);
                 }
             }
             catch (Exception) { } // for the Abort 
@@ -213,6 +225,11 @@ namespace cogbot.TheOpenSims
 
     public class BotObjectAction : BotAction
     {
+        public override Vector3 GetLocation()
+        {
+            return TargetUse.GetLocation();
+        }
+
         public SimObjectUsage TargetUse;
         public BotObjectAction(SimAvatar who, SimObjectUsage whattarget)
             : base(whattarget.ToString())
@@ -239,6 +256,11 @@ namespace cogbot.TheOpenSims
 
     public class BotSocialAction : BotAction
     {
+        public override Vector3 GetLocation()
+        {
+            return Victem.GetSimPosition();
+        }
+
         static Random rand = new Random();
         public SimAvatar Victem;
         public SimTypeUsage TypeUsage;

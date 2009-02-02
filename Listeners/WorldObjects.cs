@@ -6,7 +6,8 @@ using OpenMetaverse.StructuredData;
 using System.Reflection;
 using OpenMetaverse.Packets;
 using cogbot.TheOpenSims;
-using Simian; //using libsecondlife;
+using Simian;
+using System.Threading; //using libsecondlife;
 
 namespace cogbot.Listeners
 {
@@ -30,28 +31,23 @@ namespace cogbot.Listeners
 		public Dictionary<string, string> shortNames;
 		public Dictionary<string, string> reverseShortNames;
 		public List<string> numberedObjects;
+
 		public Dictionary<uint, OSDMap> lastOSD = new Dictionary<uint, OSDMap>();
-        Simulator sim;
 
 		DoubleDictionary<uint, UUID, Primitive> prims = new DoubleDictionary<uint, UUID, Primitive>();
-		//DoubleDictionary<uint, UUID, Avatar> prims = new DoubleDictionary<uint, UUID, Avatar>();
 		Dictionary<uint, ObjectUpdate> lastObjectUpdate = new Dictionary<uint, ObjectUpdate>();
 		Dictionary<uint, ObjectUpdate> lastObjectUpdateDiff = new Dictionary<uint, ObjectUpdate>();
         Dictionary<Avatar, List<UUID>> avatarAminsSent = new Dictionary<Avatar, List<UUID>>();
         Dictionary<Avatar, UUID> avatarAminCurrent = new Dictionary<Avatar, UUID>();
-        //Dictionary<uint, uint> selectedPrims = new Dictionary<uint, uint>();
 		//Dictionary<UUID, UUID> texturesFinished = new Dictionary<UUID, UUID>();
-		List<Primitive> primsAwaitingSelect = new List<Primitive>();
-		List<Primitive> primsKnown = new List<Primitive>();
+        List<uint> primsAwaitingSelect = new List<uint>();
+        List<uint> primsSelectedOnce = new List<uint>();
 
 
         static public ListAsSet<SimAvatar> SimAvatars = new ListAsSet<SimAvatar>();
         static public SimMovementStore SimPaths = new SimMovementStore();
-        internal static void AddTracking(SimAvatar simAvatar, BotClient Client)
-        {
-            //  Client.Objects.OnObjectUpdated += Objects_OnObjectUpdated;
-            //throw new Exception("The method or operation is not implemented.");
-        }
+        //internal static void AddTracking(SimAvatar simAvatar, BotClient Client){}
+
 
         ListAsSet<SimObject> SimObjects = new ListAsSet<SimObject>();
  
@@ -72,6 +68,12 @@ namespace cogbot.Listeners
             });
         }
 
+        public Simulator GetSimulator()
+        {
+            if (client.Network.CurrentSim != null) return client.Network.CurrentSim;
+            if (client.Network.Simulators.Count == 0) return null;
+            return client.Network.Simulators[0];
+        }
 
 
         public SimObject GetSimObject(Primitive prim)
@@ -80,29 +82,51 @@ namespace cogbot.Listeners
             {
                 return GetSimAvatar((Avatar)prim);
             }
-            lock (SimObjects) foreach (SimObject obj in SimObjects)
-                {
+            SimObject obj0 = null;
+            lock (SimObjects)
+            {
+                foreach (SimObject obj in SimObjects)
                     if (obj.thePrim == prim)
                         return obj;
+
+                // not found
+                obj0 = new SimObject(prim.ToString(), prim, this);
+                SimObjects.AddTo(obj0);
+            }
+            Primitive.ObjectProperties props = prim.Properties;
+            if (props != null)
+            {
+                SendNewEvent("on-new-prim", props.Name, props.ObjectID.ToString(), props.Description, prim.Position);
+            }
+            else
+            {
+                EnsureSelected(prim.LocalID);
+                output("---------Warning delayed new prim " + prim);
+                if (false)
+                {
+                    BlockUntilProperties(prim);
+                    props = prim.Properties;
+                    SendNewEvent("on-new-prim", props.Name, props.ObjectID.ToString(), props.Description, prim.Position);
                 }
-            // not found
-            SimObject obj0 = new SimObject(prim.ToString(), prim, this);
-            lock (SimObjects) SimObjects.AddTo(obj0);
+            }
             return obj0;
+
         }
 
         public SimAvatar GetSimAvatar(Avatar prim)
         {
-            lock (SimAvatars) foreach (SimAvatar obj in SimAvatars)
-                {
+            lock (SimAvatars)
+            {
+                foreach (SimAvatar obj in SimAvatars)
                     if (obj.theAvatar.Name == prim.Name)
                         return obj;
-                }
-            SimAvatar obj0 = new SimAvatar(prim, this);
-            obj0.SetClient(client);
-            lock (SimAvatars) SimAvatars.AddTo(obj0);
-            //lock (objects) objects.AddTo(obj0);
-            return obj0;
+
+                SimAvatar obj0 = new SimAvatar(prim, this);
+                obj0.SetClient(client);
+                SimAvatars.AddTo(obj0);
+                //lock (objects) objects.AddTo(obj0);
+                return obj0;
+            }
         }
 
 
@@ -167,16 +191,16 @@ namespace cogbot.Listeners
                 //BotWorld = this;
                 SimObjectType.LoadDefaultTypes();
 
-                if (client.Network.CurrentSim != null)
+                if (GetSimulator() != null)
                 {
-                    CatchUp(client.Network.CurrentSim);
+                    CatchUp(GetSimulator());
                 }
                 else
                 {
                     client.Network.OnLogin += delegate(LoginStatus login, string message)
                     {
                         if (login==LoginStatus.Success)
-                        CatchUp(client.Network.CurrentSim);
+                        CatchUp(GetSimulator());
                     };
                 }
             }
@@ -264,24 +288,33 @@ namespace cogbot.Listeners
 			//botoutput("preload sound " + soundID);
 		}
 
-
-		public void SetCurrentSimulator(Simulator simulator)
-		{
-			sim = simulator;
-		}
-
 		public Primitive BlockUntilProperties(Primitive prim)
 		{
 			if (prim.Properties != null) return prim;
-			if (!primsAwaitingSelect.Contains(prim)) {
-                primsAwaitingSelect.Add(prim);
-				client.Objects.SelectObject(sim, prim.LocalID);
-			}
-			while (prim.Properties == null) { // TODO maybe add a timer
+            EnsureSelected(prim.LocalID);
+            while (prim.Properties == null)
+            { // TODO maybe add a timer
 				System.Windows.Forms.Application.DoEvents();
 			}
 			return prim;
 		}
+
+        public void EnsureSelected(uint LocalID)
+        {
+            if (LocalID != 0)
+                lock (primsAwaitingSelect)
+                {
+                    if (!primsSelectedOnce.Contains(LocalID))
+                    {
+                        primsSelectedOnce.Add(LocalID);
+                        if (!primsAwaitingSelect.Contains(LocalID))
+                        {
+                            primsAwaitingSelect.Add(LocalID);
+                            client.Objects.SelectObject(GetSimulator(), LocalID);
+                        }
+                    }
+                }
+        }
 
         public override void Avatars_OnAvatarAnimation(UUID avatarID, InternalDictionary<UUID, int> anims)
         {
@@ -329,6 +362,7 @@ namespace cogbot.Listeners
             //SendNewEvent("On-Avatar-Animation", avatar, names);
         }
 
+        // this was ourself and is now handled in Avatar Animations Changed
         public override void Self_OnAnimationsChanged(InternalDictionary<UUID, int> agentAnimations)
         {
             Avatars_OnAvatarAnimation(client.Self.AgentID, agentAnimations);
@@ -371,27 +405,26 @@ namespace cogbot.Listeners
                 base.Objects_OnObjectKilled(simulator, objectID);
             }
         }
-/*
-On-Effect
-type: "Sphere"
-sourceID: "00000000-0000-0000-0000-000000000000"
-targetID: "00000000-0000-0000-0000-000000000000"
-targetPos: '(Vector3d 256126.750573638 256129.791631699 25.2663780227304)
-duration: 0.25
-id: "a31efee6-a426-65a6-5ef2-d1345be49233"
- */
+
+        /*
+            On-Effect
+            type: "Sphere"
+            sourceID: "00000000-0000-0000-0000-000000000000"
+            targetID: "00000000-0000-0000-0000-000000000000"
+            targetPos: '(Vector3d 256126.750573638 256129.791631699 25.2663780227304)
+            duration: 0.25
+            id: "a31efee6-a426-65a6-5ef2-d1345be49233"
+         */
         public override void Avatars_OnEffect(EffectType type, UUID sourceID, UUID targetID, Vector3d targetPos, float duration, UUID id)
         {
 //            SendNewEvent("on-effect",targetPos,id)
             lock (uuidType) uuidType[id] = type;
             base.Avatars_OnEffect(type, sourceID, targetID, targetPos, duration, id);
         }
-/*
-         
- On-Folder-Updated
-folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
- */
-
+        /*         
+         On-Folder-Updated
+        folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
+         */
         static Dictionary<UUID, object> uuidType = new Dictionary<UUID, object>();
         public override void Inventory_OnFolderUpdated(UUID folderID)
         {
@@ -414,14 +447,11 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 		static readonly string[] paramNamesOnObjectUpdated = new string[] { "simulator", "update", "regionHandle", "timeDilation"};
 		static readonly Type[] paramTypesOnObjectUpdated = new Type[] { typeof(Simulator), typeof(ObjectUpdate), typeof(ulong), typeof(ushort)};
 
+        //
         public override void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
 		{
-            lock (primsAwaitingSelect)
-            {
                //lock (prim)                   prims.Add(prim.LocalID, prim.ID, prim);
-                primsAwaitingSelect.Add(prim);
-                client.Objects.SelectObject(simulator, prim.LocalID);
-            }
+                EnsureSelected(prim.LocalID);
 			//CalcStats(prim);
 			//UpdateTextureQueue(prim.Textures);
 		}
@@ -441,27 +471,20 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
         {
             Primitive prim = GetPrimitive(props.ObjectID);
 
-            if (primsAwaitingSelect.Contains(prim))
-            {
-                primsAwaitingSelect.Remove(prim);
-            }
             if (prim != null)
             {
+                if (primsAwaitingSelect.Contains(prim.LocalID))
+                {
+                    primsAwaitingSelect.Remove(prim.LocalID);
+                    EnsureSelected(prim.ParentID);
+                }
                 SimObject updateMe = GetSimObject(prim);
                 updateMe.UpdateProperties(props);
+                //if (Program.Verbosity > 2)
+                ///botoutput("Received properties for " + props.ObjectID.ToString());               
+                //lock (prim)  prim.Properties = props;
+                describePrimToAI(prim);
             }
-            //if (Program.Verbosity > 2)
-            ///botoutput("Received properties for " + props.ObjectID.ToString());               
-            //lock (prim)  prim.Properties = props;
-            lock (primsKnown)
-                if (!primsKnown.Contains(prim))
-                {
-                    primsKnown.Add(prim);
-                    SendNewEvent("on-new-prim", props.Name, props.ObjectID.ToString(), props.Description, prim.Position);
-                    CalcStats(prim);
-                }
-            describePrimToAI(prim);
-
         }
 
    
@@ -604,15 +627,17 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 						///output("Updating state for Prim " + prim);
 						updateToPrim(prim, update);
 					}
-					if (prim.Properties != null) {
-						CalcStats(prim);
-						describePrimToAI(prim);
-					} else {
-						if (!primsAwaitingSelect.Contains(prim)) {
-							client.Objects.SelectObject(sim, prim.LocalID);
-							primsAwaitingSelect.Add(prim);
-						}
-					}
+                    if (prim.Properties != null)
+                    {
+                        CalcStats(prim);
+                        describePrimToAI(prim);
+                    }
+                    else
+                    {
+                        EnsureSelected(prim.LocalID);
+                        EnsureSelected(prim.ParentID);
+
+                    }
 				} else {
 					output("missing Objects_OnObjectUpdated");
 				}
@@ -999,34 +1024,6 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             return asset;
         }
 
-
-        public Primitive GetPrimitive(uint id)
-        {
-            Primitive prim;
-            if (prims.TryGetValue(id, out prim))
-            {
-                return prim;
-            }
-            Primitive found = GetCurrentSim().ObjectsPrimitives.Find(delegate(Primitive prim0)
-            {
-                return (prim0.LocalID == id);
-            });
-            if (found == null) found = GetCurrentSim().ObjectsAvatars.Find(delegate(Avatar prim0)
-            {
-                if (prim0.LocalID == id)
-                {
-                    AvatarCacheAdd(prim0.Name, prim0);
-                    return true;
-                }
-                return false;
-            });
-            if (found != null)
-            {
-                lock (prims) prims.Add(found.LocalID, found.ID, found);
-            }
-            return found;
-        }
-
         private void AvatarCacheAdd(string p, Avatar prim0)
         {
             lock (avatarCache)
@@ -1067,15 +1064,48 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                     if (found != null)
                     {
                         lock (prims) prims.Add(found.LocalID, found.ID, found);
+                        uuidType[found.ID] = found;
                     }
                     return found;
                 }
             }
         }
 
+        public Primitive GetPrimitive(uint id)
+        {
+            lock (GetPrimitiveLock)
+            {
+
+                Primitive prim;
+                if (prims.TryGetValue(id, out prim))
+                {
+                    return prim;
+                }
+                Primitive found = GetCurrentSim().ObjectsPrimitives.Find(delegate(Primitive prim0)
+                {
+                    return (prim0.LocalID == id);
+                });
+                if (found == null) found = GetCurrentSim().ObjectsAvatars.Find(delegate(Avatar prim0)
+                {
+                    if (prim0.LocalID == id)
+                    {
+                        AvatarCacheAdd(prim0.Name, prim0);
+                        return true;
+                    }
+                    return false;
+                });
+                if (found != null)
+                {
+                    lock (prims) prims.Add(found.LocalID, found.ID, found);
+                    uuidType[found.ID] = found;
+                }
+                return found;
+            }
+        }
+
         private Simulator GetCurrentSim()
         {
-            Simulator cs = client.Network.CurrentSim;
+            Simulator cs = GetSimulator();
             if (cs != null) return cs;
             cs = client.Network.Simulators[0];
             return cs;
@@ -1115,13 +1145,6 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 			client.SendNewEvent(eventName, args);
 		}
 
-
-		void Avatars_OnAnimationsChanged(InternalDictionary<UUID, int> agentAnimations)
-		{
-
-            // this was ourself and is now handled in Avatar Animations Changed
-
-		}
 
 		public void CalcStats(Primitive prim)
 		{
@@ -1186,8 +1209,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 				describeAvatarToAI(avatar);
 				return;
 			}
-            if (true) return;
-			if (!primsKnown.Contains(prim))	return;
+            if (true) return;		
 			BlockUntilProperties(prim);
 			if (prim.Properties.Name != null) {
 				//botenqueueLispTask("(on-prim-description '(" + prim.Properties.Name + ") '" + prim.Properties.Description + "' )");
@@ -1274,7 +1296,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 		float boringNamesHeuristic(Primitive prim)
 		{
 			string name = prim.Properties.Name;
-			if (name == "Object" || name == "Component" || name == null)
+            if (name == "Object" || name == "Primitive" || name == "Component" || name == null)
 				return(float)0.1;
 			else
 				return 1;
@@ -1627,6 +1649,21 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
         internal List<SimObject> GetAllSimObjects()
         {
             return SimObjects;
+        }
+
+        internal void DeletePrim(Primitive thePrim)
+        {
+            client.Inventory.RequestDeRezToInventory(thePrim.LocalID);
+        }
+
+        internal Primitive RequestMissingObject(uint localID)
+        {
+            client.Objects.SelectObject(GetSimulator(), localID);
+            Primitive prim = GetPrimitive(localID);
+            client.Objects.RequestObject(GetSimulator(), localID);
+            Thread.Sleep(1000);
+            prim = GetPrimitive(localID);
+            return prim;
         }
     }
 }
