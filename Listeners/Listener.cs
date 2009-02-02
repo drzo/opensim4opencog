@@ -8,7 +8,7 @@ namespace cogbot.Listeners
     public class Listener
     {
      //   protected TextForm botclient;
-        protected BotClient client;
+        public BotClient client;
 
         public Listener(BotClient _parent)
         {

@@ -119,13 +119,13 @@ namespace cogbot
 //            manager.AddTextFormCommands(this);
 			//          RegisterAllCommands(Assembly.GetExecutingAssembly());
 
-            //Settings.LOG_LEVEL = Helpers.LogLevel.Info;
-            //Settings.LOG_RESENDS = false;
-            //Settings.STORE_LAND_PATCHES = true;
-            //Settings.ALWAYS_DECODE_OBJECTS = true;
-            //Settings.ALWAYS_REQUEST_OBJECTS = true;
-            //Settings.SEND_AGENT_UPDATES = true;
-            //Settings.USE_TEXTURE_CACHE = false;	//was true
+            Settings.LOG_LEVEL = Helpers.LogLevel.Info;
+            Settings.LOG_RESENDS = false;
+            Settings.STORE_LAND_PATCHES = true;
+            Settings.ALWAYS_DECODE_OBJECTS = true;
+            Settings.ALWAYS_REQUEST_OBJECTS = true;
+            Settings.SEND_AGENT_UPDATES = true;
+            Settings.USE_TEXTURE_CACHE = false;	//was true
 			// Optimize the throttle
             //Throttle.Wind = 0;
             //Throttle.Cloud = 0;
@@ -150,9 +150,9 @@ namespace cogbot
 
             //            Appearances = new Dictionary<UUID, AvatarAppearancePacket>();
 
-            //Settings.ALWAYS_DECODE_OBJECTS = true;
-            //Settings.ALWAYS_REQUEST_OBJECTS = true;
-            //Settings.OBJECT_TRACKING = true;
+            Settings.ALWAYS_DECODE_OBJECTS = true;
+            Settings.ALWAYS_REQUEST_OBJECTS = true;
+            Settings.OBJECT_TRACKING = true;
 
             //  Manager = Inventory;
             //  Inventory = Manager.Store;
@@ -172,8 +172,8 @@ namespace cogbot
             //Settings.ENABLE_CAPS = true;
             //Self.Movement.Camera.Far = 32;
             //Settings.LOG_ALL_CAPS_ERRORS = true;
-            //Settings.FETCH_MISSING_INVENTORY = true;
-            //Settings.SEND_AGENT_THROTTLE = true;
+            Settings.FETCH_MISSING_INVENTORY = true;
+            Settings.SEND_AGENT_THROTTLE = true;
 
             muteList = new List<string>();
 
@@ -1010,27 +1010,13 @@ namespace cogbot
         internal string argsListString(IEnumerable list)
         {
             if (scriptEventListener == null) return "" + list;
-            try
-            {
-                return scriptEventListener.argsListString(list);
-            }
-            catch (Exception)
-            {
-                return "" + list;
-            }
+            return scriptEventListener.argsListString(list);
         }
 
         internal string argString(object p)
         {
             if (scriptEventListener == null) return "" + p;
-            try
-            {
-                return scriptEventListener.argString(p);
-            }
-            catch (Exception)
-            {
-                return "" + p;
-            }
+            return scriptEventListener.argString(p);
         }
 
         public bool ExecuteCommand(string text)
