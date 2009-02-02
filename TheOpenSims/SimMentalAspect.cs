@@ -150,6 +150,7 @@ namespace cogbot.TheOpenSims
 
         public float RateIt(BotNeeds from, SimTypeUsage use)
         {
+            if (use == null) return -100f;
             BotNeeds sat = GetUsagePromise(use.UsageName).Copy();
             sat.AddFrom(from);
             sat.SetRange(0.0F, 100.0F);

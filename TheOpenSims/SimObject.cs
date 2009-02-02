@@ -91,9 +91,9 @@ namespace cogbot.TheOpenSims
             return str;
         }
 
-        public float RateIt(BotNeeds againsNeeds, SimAvatar avatar)
+        public float RateIt(SimAvatar avatar)
         {
-            return ObjectType.RateIt(againsNeeds, GetDefaultUsage()) * scaleOnNeeds;
+            return ObjectType.RateIt(avatar.CurrentNeeds, GetBestUse(avatar)) * scaleOnNeeds;
         }
 
         //public List<SimTypeUsage> GetTypeUsages()
@@ -249,8 +249,8 @@ namespace cogbot.TheOpenSims
         public bool CanGetSimPosition()
         {
             if (IsRoot()) return true;
-            Primitive p = WorldSystem.GetPrimitive(thePrim.ParentID);
-            if (p == null)
+            Primitive pUse = WorldSystem.GetPrimitive(thePrim.ParentID);
+            if (pUse == null)
             {
                 WorldSystem.EnsureSelected(thePrim.ParentID);
                 return false;
@@ -282,23 +282,37 @@ namespace cogbot.TheOpenSims
             return theLPos;
         }
 
-        public BotNeeds GetActualUpdate(string p)
+        public BotNeeds GetActualUpdate(string pUse)
         {
             if (needUpdate)
             {
                 UpdateProperties(thePrim.Properties);
             }
-            return ObjectType.GetUsageActual(p).Magnify(scaleOnNeeds);
+            return ObjectType.GetUsageActual(pUse).Magnify(scaleOnNeeds);
         }
 
 
-        public SimTypeUsage GetDefaultUsage()
+        public SimTypeUsage GetBestUse(SimAvatar avatar)
         {
             if (needUpdate)
             {
                 UpdateProperties(thePrim.Properties);
             }
-            return ObjectType.GetDefaultUsage();
+
+            ListAsSet<SimTypeUsage> all = ObjectType.GetTypeUsages();
+            if (all.Count == 0) return null;
+            SimTypeUsage typeUsage = all[0];
+            float typeUsageRating = 0.0f;
+            foreach (SimTypeUsage use in all)
+            {
+                float f = ObjectType.RateIt(avatar.CurrentNeeds, use);
+                if (f > typeUsageRating)
+                {
+                    typeUsageRating = f;
+                    typeUsage = use;
+                }
+            }            
+            return typeUsage;
         }
 
         public Vector3 GetUsePosition()
@@ -306,9 +320,9 @@ namespace cogbot.TheOpenSims
             return GetSimPosition();
         }
 
-        internal BotNeeds GetProposedUpdate(string p)
+        internal BotNeeds GetProposedUpdate(string pUse)
         {
-            return ObjectType.GetUsagePromise(p).Magnify(scaleOnNeeds);
+            return ObjectType.GetUsagePromise(pUse).Magnify(scaleOnNeeds);
         }
 
         public virtual float GetSizeDistance()
@@ -331,7 +345,7 @@ namespace cogbot.TheOpenSims
             return size;
         }
 
-        public ListAsSet<SimObject> GetNearByObjects(float p, bool rootOnly)
+        public ListAsSet<SimObject> GetNearByObjects(float pUse, bool rootOnly)
         {
             ListAsSet<SimObject> KnowsAboutList = new ListAsSet<SimObject>();
             List<SimObject> objects = WorldSystem.GetAllSimObjects();
@@ -339,7 +353,7 @@ namespace cogbot.TheOpenSims
             lock (objects) foreach (SimObject obj in objects)
                 {
                     if (rootOnly && !obj.IsRoot()) continue; 
-                    if (obj !=this && obj.CanGetSimPosition() && Vector3.Distance(obj.GetSimPosition(), here) <= p)
+                    if (obj !=this && obj.CanGetSimPosition() && Vector3.Distance(obj.GetSimPosition(), here) <= pUse)
                         KnowsAboutList.AddTo(obj);
                     
                 }
@@ -350,8 +364,6 @@ namespace cogbot.TheOpenSims
         {
             return thePrim.Rotation;
         }
-
-
 
     }
 }
