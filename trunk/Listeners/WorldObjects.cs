@@ -17,7 +17,7 @@ namespace cogbot.Listeners
 		public Vector3 compPos;
 		public int searchStep;
 		public List<string> numberedAvatars;
-
+        BotRegionModel BRM;
 		public int burstSize = 100;
 		public float burstTime = 1;
 		public DateTime burstStartTime;
