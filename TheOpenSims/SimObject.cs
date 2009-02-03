@@ -53,9 +53,9 @@ namespace cogbot.TheOpenSims
                 if (parent != 0)
                 {
                     Primitive prim = WorldSystem.GetPrimitive(parent);
-                    while (prim == null)
+                    if (prim == null)
                     {
-                        prim = WorldSystem.RequestMissingObject(parent);
+                        return null;
                     }
                     Parent = WorldSystem.GetSimObject(prim);
                     Parent.AddChild(this);
@@ -72,6 +72,7 @@ namespace cogbot.TheOpenSims
         {
             needUpdate = true;
             simObject.Parent = this;
+            simObject.needUpdate = true;
             bool b = AttachedChildren.AddTo(simObject);
             if (b) UpdateProperties(simObject.thePrim.Properties);
             return b;
@@ -80,7 +81,9 @@ namespace cogbot.TheOpenSims
 
         public virtual bool IsRoot()
         {
-            return (thePrim.ParentID == 0);
+            if (thePrim.ParentID == 0) return true;
+            GetParent();
+            return false;
         }
 
         public virtual string DebugInfo()
@@ -161,6 +164,7 @@ namespace cogbot.TheOpenSims
             }
 
             AddSuperTypes(SimObjectType.GuessSimObjectTypes(objectProperties));
+
         }
 
         public void UpdateObject(ObjectUpdate objectUpdate)
@@ -184,6 +188,7 @@ namespace cogbot.TheOpenSims
             PrimFlags tempFlags = thePrim.Flags;
             if (MadePhantom && (tempFlags & PrimFlags.Phantom) != PrimFlags.Phantom)
             {
+                WorldSystem.client.Self.Touch(thePrim.LocalID);
                 tempFlags -= PrimFlags.Phantom;
                 changed = true;
                 MadePhantom = false;
@@ -347,15 +352,17 @@ namespace cogbot.TheOpenSims
 
         public ListAsSet<SimObject> GetNearByObjects(float pUse, bool rootOnly)
         {
+            return GetNearByObjects( GetSimPosition(),WorldSystem,this,pUse,rootOnly);
+
+
+        }
+
+        static ListAsSet<SimObject> CopyObjects(List<SimObject> objects)
+        {
             ListAsSet<SimObject> KnowsAboutList = new ListAsSet<SimObject>();
-            List<SimObject> objects = WorldSystem.GetAllSimObjects();
-            Vector3 here = GetSimPosition();
             lock (objects) foreach (SimObject obj in objects)
                 {
-                    if (rootOnly && !obj.IsRoot()) continue; 
-                    if (obj !=this && obj.CanGetSimPosition() && Vector3.Distance(obj.GetSimPosition(), here) <= pUse)
-                        KnowsAboutList.AddTo(obj);
-                    
+                    KnowsAboutList.Add(obj);
                 }
             return KnowsAboutList;
         }
@@ -365,5 +372,20 @@ namespace cogbot.TheOpenSims
             return thePrim.Rotation;
         }
 
+
+        internal static ListAsSet<SimObject> GetNearByObjects(Vector3 here,WorldObjects WorldSystem, object thiz, float pUse, bool rootOnly)
+        {
+            ListAsSet<SimObject> KnowsAboutList = new ListAsSet<SimObject>();
+            List<SimObject> objectsOld = WorldSystem.GetAllSimObjects();
+            List<SimObject> objects = CopyObjects(objectsOld);
+            lock (objects) foreach (SimObject obj in objects)
+                {
+                    if (rootOnly && !obj.IsRoot()) continue;
+                    if (obj != thiz && obj.CanGetSimPosition() && Vector3.Distance(obj.GetSimPosition(), here) <= pUse)
+                        KnowsAboutList.AddTo(obj);
+
+                }
+            return KnowsAboutList;
+        }
     }
 }

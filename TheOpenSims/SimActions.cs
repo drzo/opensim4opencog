@@ -57,14 +57,6 @@ namespace cogbot.TheOpenSims
         {
             SimAvatar TheBot = TheBotAct.TheBot;
             String use = TypeUsage.UsageName;
-            Target.MakeEnterable();
-            // Approach Target
-            float howClose = TheBot.Approach(Target, TypeUsage.maximumDistance);
-
-            if (howClose > TypeUsage.maximumDistance)
-            {
-                // maybe get closer or fail
-            }
 
             // Create the Side-Effect closure
             ThreadStart closure = new ThreadStart(delegate()
@@ -78,7 +70,7 @@ namespace cogbot.TheOpenSims
                 CurrentNeeds.AddFrom(update);
                 CurrentNeeds.SetRange(0.0F, 100.0F);
                 BotNeeds difNeeds = CurrentNeeds.Minus(needsBefore);
-                TheBot.Debug(TheBotAct.ToString() + "\n\t=> " + difNeeds.ShowNonZeroNeeds());
+                TheBot.Debug(TheBotAct.ToString() + "\n\t " + Target.GetSimPosition() + " dist=" + Vector3.Distance(Target.GetSimPosition(), TheBot.GetSimPosition()) + "=> " + difNeeds.ShowNonZeroNeeds());
                 TheBot.ExecuteLisp(this, TypeUsage.LispScript);
                 Thread.Sleep(TypeUsage.totalTimeMS);
             });
@@ -110,6 +102,17 @@ namespace cogbot.TheOpenSims
             // Surround with Sit if needed
             if (use == "sit" || TypeUsage.UseSit)
                 closure = TheBot.WithSitOn(Target, closure);
+
+
+            Target.MakeEnterable();
+            // Approach Target
+            float howClose = TheBot.Approach(Target, TypeUsage.maximumDistance);
+
+            if (howClose > TypeUsage.maximumDistance)
+            {
+                TheBot.Debug("Too far away from " + this);
+                return;
+            }
 
             closure.Invoke();
             Target.RestoreEnterable();
@@ -261,7 +264,7 @@ namespace cogbot.TheOpenSims
             return Victem.GetSimPosition();
         }
 
-        static Random rand = new Random();
+        static Random rand = new Random(DateTime.Now.Millisecond);
         public SimAvatar Victem;
         public SimTypeUsage TypeUsage;
         public BotMentalAspect CurrentTopic;
