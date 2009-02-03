@@ -119,7 +119,7 @@ namespace OpenMetaverse.Utilities
         /// <param name="cps">Characters per second rate for chatting</param>
         public static void Chat(GridClient client, string message, ChatType type, int cps)
         {
-            Random rand = new Random();
+            Random rand = new Random(DateTime.Now.Millisecond);
             int characters = 0;
             bool typing = true;
 

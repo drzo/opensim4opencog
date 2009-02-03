@@ -78,7 +78,7 @@ namespace cogbot.TheOpenSims
         }
         public override SimObject GetParent()
         {
-            return null;
+            return this;
         }
 
         public bool IsSitting()
@@ -324,7 +324,7 @@ namespace cogbot.TheOpenSims
             KnowsAboutList.AddTo(mostInteresting);
             return mostInteresting;
         }
-        readonly Random MyRandom = new Random();
+        readonly Random MyRandom = new Random(DateTime.Now.Millisecond);
         // TODO Real Eval routine
         public BotMentalAspect CompareTwo(BotMentalAspect mostInteresting, BotMentalAspect cAspect)
         {
@@ -380,22 +380,47 @@ namespace cogbot.TheOpenSims
             }
 
             float dist = obj.GetSizeDistance();
+            if (dist > maxDistance)
+            {
+                dist = maxDistance;
+            }
 
             Vector3 vector3 = obj.GetUsePosition();
 
             Debug("Approaching " + vector3 + " dist=" + dist + " " + obj);
             obj.MakeEnterable();
 
-            MovementToVector.MoveTo(this, vector3, dist);
+
+            Thread mover = new Thread(new ThreadStart(delegate()
+            {
+                try
+                {
+                    MovementToVector.MoveTo(Client, vector3, dist);
+                } catch (Exception) {}
+            }));
+            mover.Start();
+            for (int i = 0; i < 10; i++)
+            {
+                if (mover.IsAlive)
+                {
+                    Thread.Sleep(1000);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            if (mover.IsAlive)
+            {                
+                mover.Abort();
+            }
+
             Client.Self.Movement.TurnToward(obj.GetSimPosition());
 
-            Thread.Sleep(2000);
-
-            if (UnPhantom != null)
-            {
+            if (UnPhantom != null)            
                 UnPhantom.RestoreEnterable();
-            }
-            return dist;
+
+            return Vector3.Distance(GetSimPosition(), obj.GetSimPosition());
         }
 
 

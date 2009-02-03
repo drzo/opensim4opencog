@@ -273,13 +273,13 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public SimTypeUsage GetDefaultUsage()
-        {
-            List<SimTypeUsage> usages = GetTypeUsages();
-            if (usages.Count == 0) return null;
-            int item = (new Random()).Next(0, usages.Count - 1);
-            return usages[item];
-        }
+        //public SimTypeUsage GetDefaultUsage()
+        //{
+        //    List<SimTypeUsage> usages = GetTypeUsages();
+        //    if (usages.Count == 0) return null;
+        //    int item = (new Random(DateTime.Now.Millisecond)).Next(0, usages.Count - 1);
+        //    return usages[item];
+        //}
 
         public string GetTouchName()
         {
