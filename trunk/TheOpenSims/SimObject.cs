@@ -18,6 +18,12 @@ namespace cogbot.TheOpenSims
         bool needUpdate = true;
         Vector3 lastPos = Vector3.Zero;
 
+
+        public SimObjectType IsTypeOf(SimObjectType superType)
+        {
+            return ObjectType.IsSubType(superType);
+        }
+
         public ListAsSet<SimObject> AttachedChildren = new ListAsSet<SimObject>();
 
         public ListAsSet<SimObject> GetChildren()
@@ -173,7 +179,7 @@ namespace cogbot.TheOpenSims
 
         private void AddSuperTypes(ListAsSet<SimObjectType> listAsSet)
         {
-            SimObjectType UNKNOWN = SimObjectType.UNKNOWN;
+            //SimObjectType UNKNOWN = SimObjectType.UNKNOWN;
             ListAsSet<SimObjectType> orig = ObjectType.SuperTypes;
             lock (orig)
                 foreach (SimObjectType type in listAsSet)

@@ -404,6 +404,7 @@ namespace cogbot.TheOpenSims
                 if (mover.IsAlive)
                 {
                     Thread.Sleep(1000);
+                    continue;
                 }
                 else
                 {
