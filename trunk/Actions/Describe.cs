@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using OpenMetaverse; //using libsecondlife;
+using OpenMetaverse;
+using cogbot.TheOpenSims; //using libsecondlife;
 
 namespace cogbot.Actions
 {
@@ -37,13 +38,38 @@ namespace cogbot.Actions
 
         public override void acceptInput(string verb, Parser args)
         {
-         //   base.acceptInput(verb, args);
+            //   base.acceptInput(verb, args);
 
             string subject = args.objectPhrase;
             if (subject.Length == 0)
             {
                 Client.describeAll();
                 Client.describeSituation();
+                return;
+            }
+            Client.describeNext = false;
+
+            if (subject == "inventory")
+            {
+                //Client.ListObjectsFolder();
+                Client.PrintInventoryAll();
+                return;
+            }
+            float range;
+            if (float.TryParse(subject,out range)) {
+                SimAvatar simAva = Client.WorldSystem.TheSimAvatar;
+                if (simAva != null)
+                {
+                    List<SimObject> objs = simAva.GetNearByObjects(range, false);
+                    if (objs.Count > 0)
+                    {
+                        foreach (SimObject o in objs)
+                        {
+                            Client.WorldSystem.describePrim(o.thePrim);
+                        }
+                        return;
+                    }
+                }
             }
             else
             {
@@ -57,23 +83,17 @@ namespace cogbot.Actions
                     else
                     {
                         Primitive prim;
-                        if (Client.WorldSystem.tryGetPrim(subject, out prim))
+                        if (Client.WorldSystem.tryGetPrim(args.str, out prim))
                             Client.WorldSystem.describePrim(prim);
                         else
                         {
-                            if (subject == "inventory")
-                            {
-                                //Client.ListObjectsFolder();
-                                Client.PrintInventoryAll();
-                            }
-                            else
+
                             WriteLine("I don't know about " + subject + ".");
                         }
                     }
                 }
             }
 
-            Client.describeNext = false;
         }
     }
 }

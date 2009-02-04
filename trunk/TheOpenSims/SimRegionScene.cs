@@ -9,6 +9,32 @@ namespace cogbot.TheOpenSims
 {
     public class ListAsSet<T> : List<T>
     {
+        // synchronization
+        public bool Remove(T item)
+        {
+            lock (this)
+                return base.Remove(item);
+        }
+
+        // synchronization
+        public void ForEach(Action<T> act)
+        {
+            foreach (T item in CopyOf())
+            {
+                act(item);
+            }
+        }
+
+        // synchronization
+        public T Find(Predicate<T> act)
+        {
+            foreach (T item in CopyOf())
+            {
+                if (act(item)) return item;
+            }
+            return default(T);
+        }
+
         public bool AddTo(T item)
         {
             lock (this)
@@ -31,7 +57,15 @@ namespace cogbot.TheOpenSims
                 return true;
             }
         }
+
+        // return a copy
         public Enumerator GetEnumerator()
+        {
+            return CopyOf().GetEnumerator();
+        }
+
+        // synchronization
+        public List<T> CopyOf()
         {
             List<T> list = new List<T>();
             lock (this)
@@ -42,20 +76,30 @@ namespace cogbot.TheOpenSims
                     list.Add((T)enumer.Current);
                 }
             }
-            return list.GetEnumerator();
+            return list;
         }
+
         public new void Add(T item)
         {
             AddTo(item);
         }
         public override string ToString()
         {
-            String s = "[";
-            foreach (T t in this)
+            List<T> copy = CopyOf();
+            switch (copy.Count)
             {
-                s += "," + t;
+                case 0: return "[]";
+                case 1: return "[" + copy[0] + "]";
+                default:
+                    {
+                        String s = "";
+                        foreach (T t in copy)
+                        {
+                            s += "," + t;
+                        }
+                        return "["+s.Substring(1) + "]";
+                    }
             }
-            return s + "]";
         }
     }
 

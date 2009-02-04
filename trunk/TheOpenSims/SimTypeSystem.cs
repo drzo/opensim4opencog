@@ -11,18 +11,14 @@ namespace cogbot.TheOpenSims
 {
     public class SimObjectType : BotMentalAspect
     {
-        public static SimObjectType UNKNOWN
-        {
-            get { return SimTypeSystem.GetObjectType("Unknown"); }
-        }
 
         // Attachments
-        public List<string> StoreObjectType = new List<string>(); // types that can attach to it
-        public List<string> AttachesTo = null; // what bodypart to attach?  Book=LeftHand
+        public ListAsSet<string> AcceptsChild = new ListAsSet<string>(); // types that can attach to it
+        public ListAsSet<string> AcceptsParent = new ListAsSet<string>(); // what bodypart to attach?  Book=LeftHand
 
         // Clasification
-        public List<string> Match = new List<string>();  // regexpr match
-        public List<string> NoMatch = new List<string>(); // wont be if one of these matches
+        public ListAsSet<string> Match = new ListAsSet<string>();  // regexpr match
+        public ListAsSet<string> NoMatch = new ListAsSet<string>(); // wont be if one of these matches
 
         // Defines Side-effects to change Prim in SL
         public string SitName = null;
@@ -35,10 +31,15 @@ namespace cogbot.TheOpenSims
         internal Object cons;
 
         // Uses for this type
-        internal readonly Dictionary<string, SimTypeUsage> usageAffect = new Dictionary<string, SimTypeUsage>();
+        internal readonly Dictionary<string, SimTypeUsage> UsageAffect = new Dictionary<string, SimTypeUsage>();
 
         // Superclasses
         readonly public ListAsSet<SimObjectType> SuperType = new ListAsSet<SimObjectType>();
+
+        public SimObjectType(string name)
+            : base(name)
+        {
+        }
 
         public SimObjectType IsSubType(SimObjectType superType)
         {
@@ -53,6 +54,7 @@ namespace cogbot.TheOpenSims
             return null;
         }
 
+
         public String ToDebugString()
         {
             if (cons != null) return cons.ToString();
@@ -65,15 +67,10 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public SimObjectType(string name)
-            : base(name)
-        {
-        }
-
         public SimTypeUsage FindObjectUsage(string usename)
         {
 
-            List<SimTypeUsage> usages = new List<SimTypeUsage>();
+            ListAsSet<SimTypeUsage> usages = new ListAsSet<SimTypeUsage>();
 
 
             foreach (SimObjectType type in SuperType)
@@ -84,8 +81,8 @@ namespace cogbot.TheOpenSims
                     usages.Add(find);
                 }
             }
-            if (usageAffect.ContainsKey(usename))
-                usages.Add(usageAffect[usename]);
+            if (UsageAffect.ContainsKey(usename))
+                usages.Add(UsageAffect[usename]);
 
 
             if (usages.Count == 0) return null;
@@ -96,26 +93,27 @@ namespace cogbot.TheOpenSims
             {
                 newUse.OverrideProperties(use);
             }
-            // maybe store for later
-            //usageAffect[usename] = newUse;
+
+            // TODO maybe store for later?
+            // usageAffect[usename] = newUse;
 
             return newUse;
         }
 
         public SimTypeUsage CreateObjectUsage(string usename)
         {
-            if (usageAffect.ContainsKey(usename))
-                return usageAffect[usename];
+            if (UsageAffect.ContainsKey(usename))
+                return UsageAffect[usename];
             SimTypeUsage sou = new SimTypeUsage(usename);
             //  sou.TextName = usename;
-            usageAffect[usename] = sou;
+            UsageAffect[usename] = sou;
             return sou;
         }
 
         public ListAsSet<SimTypeUsage> GetTypeUsages()
         {
             ListAsSet<string> verbs = new ListAsSet<string>();
-            foreach (string key in usageAffect.Keys)
+            foreach (string key in UsageAffect.Keys)
             {
                 verbs.AddTo(key);
             }
@@ -197,9 +195,8 @@ namespace cogbot.TheOpenSims
                 {
                     String arg = parseStr[i++].ToString();
                     // TODO make suree creation order inernalizes correctly
-                    SimObjectType superType = SimTypeSystem.GetObjectType(arg);
+                    SimObjectType superType = SimTypeSystem.CreateObjectUse(arg,new object[0]);
                     SuperType.AddTo(superType);
-                    superType.CreateObjectUsage(arg);
                     usage = type.CreateObjectUsage(arg);
                     continue;
                 }
@@ -255,6 +252,11 @@ namespace cogbot.TheOpenSims
             });
             return pt == null ? SitName : pt.GetSitName();
         }
+
+        internal bool IsComplete()
+        {
+            return SuperType.Count > 0;
+        }
     }
 
 
@@ -269,6 +271,16 @@ namespace cogbot.TheOpenSims
     public class SimTypeSystem
     {
 
+        public static SimObjectType UNKNOWN
+        {
+            get { return SimTypeSystem.GetObjectType("Unknown"); }
+        }
+        public static SimObjectType USEABLE
+        {
+            get { return SimTypeSystem.GetObjectType("Useable"); }
+        }
+
+
         /**
          * 
          * STATIC METHODS
@@ -278,55 +290,58 @@ namespace cogbot.TheOpenSims
 
         static ListAsSet<SimObjectType> objectTypes = new ListAsSet<SimObjectType>();
 
-
+        //the scripting language might supply a number as a parameter in a foriegn method call, so when i iterate thru the method signatures.. i have to recognise which ones are claiming to accept a numeric argument
         static public ListAsSet<SimObjectType> GuessSimObjectTypes(Primitive.ObjectProperties props)
         {
             ListAsSet<SimObjectType> possibles = new ListAsSet<SimObjectType>();
             if (props != null)
             {
                 string objName = " " + props.Name.ToLower() + " | " + props.Description.ToLower() + " ";
-                lock (objectTypes) if (objName.Length > 3)
-                    {
 
-                    NextOType:
-                        foreach (SimObjectType otype in objectTypes)
+                foreach (SimObjectType otype in objectTypes)
+                {
+                    foreach (string smatch in otype.NoMatch)
+                    { // NoMatch
+                        if (MatchString(objName,smatch))
                         {
-                            bool skipIt = false;
-                            foreach (string smatch in otype.NoMatch)
-                            { // NoMatch
-                                String otypeAspectName = smatch.ToLower().Replace("*", "");
-                                if (objName.Contains(otypeAspectName))
-                                {
-                                    skipIt = true;
-                                    break;
-                                    // continue NextOType;
-                                }
-                            }
-                            if (!skipIt)
-                                foreach (string smatch in otype.Match)
-                                { // NoMatchOn
-                                    String otypeAspectName = smatch.ToLower().Replace("*", "");
-                                    if (objName.Contains(otypeAspectName))
-                                    {
-                                        possibles.AddTo(otype);
-                                        SetNames(props, otype);
-                                        break;
-                                    }
-                                }
-
+                            goto nextOType;
                         }
                     }
-
+                    foreach (string smatch in otype.Match)
+                    { // Match
+                        if (MatchString(objName,smatch))
+                        {
+                            possibles.AddTo(otype);
+                            SetNames(props, otype);
+                            break;
+                        }
+                    }
+                nextOType: { }
+                }
             }
             return possibles;
         }
+
+        public static bool MatchString(string objName, string smatch)
+        {
+            objName = objName.ToLower();
+            smatch = smatch.ToLower();
+            String otypeAspectName = smatch;
+            if (objName.Contains(otypeAspectName)) return true;            
+            otypeAspectName = smatch.Replace("*", " ");
+            if (objName.Contains(otypeAspectName)) return true;
+            otypeAspectName = smatch.Replace("*", "");
+            if (objName.Contains(otypeAspectName)) return true;
+            return false;
+        }
+
+
 
         //static public string GetPrimTypeName(Primitive target)
         //{
         //    if (target.PrimData.PCode == PCode.Prim)
         //        return target.PrimData.Type.ToString();
         //    return target.PrimData.PCode.ToString();
-
         //}
 
         static private void SetNames(Primitive.ObjectProperties props, SimObjectType otype)
@@ -469,6 +484,7 @@ namespace cogbot.TheOpenSims
         static public SimObjectType CreateObjectUse(string classname, params object[] defs)
         {
             SimObjectType type = GetObjectType(classname);
+            type.SuperType.AddTo(USEABLE);
             SimTypeUsage usage = type.CreateObjectUsage(classname);
             type.ParseAffect(usage, defs);
             return type;
@@ -506,10 +522,10 @@ namespace cogbot.TheOpenSims
         {
             lock (objectTypes) foreach (SimObjectType type in objectTypes)
                 {
-                    if (type.SuperType.Count == 0 && type.usageAffect.Count == 0) continue;
+                    if (!type.IsComplete()) continue;
                     Console.WriteLine();
                     Console.WriteLine("\t" + type.ToDebugString());
-                    foreach (String key in type.usageAffect.Keys)
+                    foreach (String key in type.UsageAffect.Keys)
                     {
                         Console.WriteLine("\t\t;;" + type.FindObjectUsage(key).ToDebugString());
                     }

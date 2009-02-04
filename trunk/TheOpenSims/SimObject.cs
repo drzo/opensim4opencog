@@ -47,9 +47,10 @@ namespace cogbot.TheOpenSims
             WorldSystem = objectSystem;
             ObjectType = SimTypeSystem.GetObjectType(prim.ID.ToString());
             UpdateProperties(thePrim.Properties);
+            GetParent(); // at least request it
         }
 
-        SimObject Parent;
+        SimObject Parent = null; // null means unknown if we IsRoot then Parent == this;
 
         public virtual SimObject GetParent()
         {
@@ -61,6 +62,8 @@ namespace cogbot.TheOpenSims
                     Primitive prim = WorldSystem.GetPrimitive(parent);
                     if (prim == null)
                     {
+                        // try to request for next time
+                        WorldSystem.EnsureSelected(parent);
                         return null;
                     }
                     Parent = WorldSystem.GetSimObject(prim);
@@ -80,9 +83,20 @@ namespace cogbot.TheOpenSims
             simObject.Parent = this;
             simObject.needUpdate = true;
             bool b = AttachedChildren.AddTo(simObject);
-            if (b) UpdateProperties(simObject.thePrim.Properties);
+            if (b)
+            {
+                if (!IsTyped())
+                {// borrow from child?
+                    UpdateProperties(simObject.thePrim.Properties);
+                }
+            }
             return b;
 
+        }
+
+        public bool IsTyped()
+        {
+            return ObjectType.IsComplete() ;
         }
 
         public virtual bool IsRoot()
@@ -392,6 +406,11 @@ namespace cogbot.TheOpenSims
 
                 }
             return KnowsAboutList;
+        }
+
+        public virtual bool Matches(string name)
+        {
+            return SimTypeSystem.MatchString(ToString(),name);
         }
     }
 }
