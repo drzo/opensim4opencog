@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using cogbot.Listeners;
+using System.Collections;
 
 namespace cogbot.TheOpenSims
 {
@@ -10,9 +11,42 @@ namespace cogbot.TheOpenSims
     {
         public bool AddTo(T item)
         {
-            if (base.Contains(item)) return false;
-            base.Add(item);
-            return true;
+            lock (this)
+            {
+                if (true)
+                {
+                    {
+                        IEnumerator enumer = base.GetEnumerator();
+                        while (enumer.MoveNext())
+                        {
+                            if (item.Equals( (T)enumer.Current)) return false;
+                        }
+                    }
+                }
+                else
+                {
+                    if (base.Contains(item)) return false;
+                }
+                base.Add(item);
+                return true;
+            }
+        }
+        public Enumerator GetEnumerator()
+        {
+            List<T> list = new List<T>();
+            lock (this)
+            {
+                IEnumerator enumer = base.GetEnumerator();
+                while (enumer.MoveNext())
+                {
+                    list.Add((T)enumer.Current);
+                }
+            }
+            return list.GetEnumerator();
+        }
+        public new void Add(T item)
+        {
+            AddTo(item);
         }
         public override string ToString()
         {

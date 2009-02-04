@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using System.Threading;
+using System.Collections;
 
 namespace cogbot.TheOpenSims
 {
@@ -113,7 +114,7 @@ namespace cogbot.TheOpenSims
                 TheBot.Debug("Too far away " + howClose + " from " + this);
                 return;
             }
-
+         
             closure.Invoke();
             Target.RestoreEnterable();
         }
@@ -137,19 +138,33 @@ namespace cogbot.TheOpenSims
         {
             UsageName = name;
         }
-        // the maximum distance the user can be away scaled on object size
+
         public String UsageName;
-        public string TextName = ""; // the scripting usename name
+        
+        // the scripting usename name
+        public string TextName = "";
+
+        // the maximum distance the user can be away *excluding* the object size
         public int maximumDistance = 1;
+
+        // How much time the effect should take total
         public int totalTimeMS = 14000;  // the time this usage takes
-        public BotNeeds ChangePromise = new BotNeeds(0.0F); // what most users think will happen by default
-        public BotNeeds ChangeActual = new BotNeeds(0.0F); //what really happens ofter 1 minute use
+
+        // Side effects On "use"
+        public string IsTransformedOnUse = null; // new type it converts to
+        public bool IsDestroyedOnUse;
+
+        //what really happens ofter 1 minute use
+        public BotNeeds ChangeActual = new BotNeeds(0.0F);
+
+        // what most users think will happen by default
+        public BotNeeds ChangePromise = new BotNeeds(0.0F);
+
+        public ListAsSet<string> SpecifiedProperties = new ListAsSet<string>();
         // if true the avatar will attempt to sit on the object for the duration
         public bool UseSit = false;
-        public bool UseSitSpecified = false;
-        // if true the client will attempt to invoke the "touch/grab" for the duration
+        // if true the client will attempt to invoke the "touch/grab" in SL for the duration
         public bool UseGrab = false;
-        public bool UseGrabSpecified = false;
         // if "KICK" or another Anim the avatar will play this anim
         public String UseAnim = null;
         // if set the client will attempt to run
@@ -163,26 +178,33 @@ namespace cogbot.TheOpenSims
             str += " maximumDistance: " + maximumDistance;
             str += " ChangePromise:" + ChangePromise.ShowNonZeroNeeds();
             str += " ChangeActual:" + ChangeActual.ShowNonZeroNeeds();
-            if (UseSitSpecified) str += " UseSit: " + UseSit;
-            if (UseGrabSpecified) str += " UseGrab: " + UseGrab;
-            if (!String.IsNullOrEmpty(UseAnim)) str += " UseAnim: " + UseAnim;
-            if (!String.IsNullOrEmpty(LispScript)) str += " LispScript: " + LispScript;
+            if (SpecifiedProperties.Contains("UseSit")) str += " UseSit: " + UseSit;
+            if (SpecifiedProperties.Contains("UseGrab")) str += " UseGrab: " + UseGrab;
+            if (SpecifiedProperties.Contains("UseAnim")) str += " UseAnim: " + UseAnim;
+            if (SpecifiedProperties.Contains("LispScript")) str += " LispScript: " + LispScript;
             return str;
         }
 
-        public SimTypeUsage AppendUse(SimTypeUsage use)
+        public SimTypeUsage OverrideProperties(SimTypeUsage use)
         {
             SimTypeUsage newUse = this;
-            if (String.IsNullOrEmpty(newUse.TextName))
-                newUse.TextName = use.TextName;
-            if (use.UseGrabSpecified)
-                newUse.UseGrab = use.UseGrab;
-            if (use.UseSitSpecified)
-                newUse.UseSit = use.UseSit;
-            if (String.IsNullOrEmpty(newUse.LispScript))
-                newUse.LispScript = use.LispScript;
-            if (String.IsNullOrEmpty(newUse.UseAnim))
-                newUse.UseAnim = use.UseAnim;
+            foreach (string prop in use.SpecifiedProperties)
+            {
+                System.Reflection.FieldInfo fi = newUse.GetType().GetField(prop);
+                if (fi.FieldType==typeof(BotNeeds)) continue;
+                SimTypeSystem.SetValue(fi, newUse, fi.GetValue(use));
+            }
+            //if (use.SpecifiedProperties.Contains("TextName"))
+            //    newUse.TextName = use.TextName;
+            //if (use.SpecifiedProperties.Contains("UseGrab"))
+            //    newUse.UseGrab = use.UseGrab;
+            //if (use.SpecifiedProperties.Contains("UseSit"))
+            //    newUse.UseSit = use.UseSit;
+            //if (use.SpecifiedProperties.Contains("LispScript"))
+            //    newUse.LispScript = use.LispScript;
+            //if (use.SpecifiedProperties.Contains("UseAnim"))
+            //    newUse.UseAnim = use.UseAnim;
+
             newUse.ChangeActual = newUse.ChangeActual.Copy();
             newUse.ChangeActual.AddFrom(use.ChangeActual);
             newUse.ChangePromise = newUse.ChangePromise.Copy();

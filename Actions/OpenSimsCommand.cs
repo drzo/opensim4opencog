@@ -27,17 +27,17 @@ namespace cogbot.Actions
 
             if (args[0] == "ini")
             {
-                SimObjectType.LoadDefaultTypes0();
+                SimTypeSystem.LoadDefaultTypes0();
                 return "ReLoaded  ini";
             }
             if (args[0] == "types")
             {
-                SimObjectType.ListTypes();
+                SimTypeSystem.ListTypes();
                 return "Listed types";
             }
             if (args[0] == "load")
             {
-                SimObjectType.LoadConfig(args[1]);
+                SimTypeSystem.LoadConfig(args[1]);
                 return "ReLoaded  ini";
             }
 
