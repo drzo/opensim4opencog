@@ -25,7 +25,9 @@ namespace cogbot.TheOpenSims
 
         public SimAvatar InDialogWith = null;
 
-        public BotNeeds CurrentNeeds;
+        readonly public BotNeeds CurrentNeeds;
+        public float SightRange = 30.0f;
+
 
         // things the bot cycles through mentally
         public ListAsSet<SimObject> KnowsAboutList = new ListAsSet<SimObject>();
@@ -101,7 +103,7 @@ namespace cogbot.TheOpenSims
         public override string DebugInfo()
         {
             String s = ToString();
-            List<SimObject> KnowsAboutList = GetKnownObjects();
+            ListAsSet<SimObject> KnowsAboutList = GetKnownObjects();
             KnowsAboutList.Sort(CompareObjects);
             foreach (SimObject item in KnowsAboutList)
             {
@@ -194,7 +196,7 @@ namespace cogbot.TheOpenSims
         {
             BotAction act = CurrentAction;
 
-            List<BotAction> acts = GetPossibleActions();
+            ListAsSet<BotAction> acts = GetPossibleActions();
 
             if (acts.Count > 0)
             {
@@ -204,7 +206,7 @@ namespace cogbot.TheOpenSims
             return act;
         }
 
-        public BotAction BestAct(List<BotAction> acts)
+        public BotAction BestAct(ListAsSet<BotAction> acts)
         {
             if (acts.Count == 0) return null;
             BotAction bestAct = acts[0];
@@ -222,7 +224,7 @@ namespace cogbot.TheOpenSims
             return bestAct;
         }
 
-        public void SortActs(List<BotAction> acts)
+        public void SortActs(ListAsSet<BotAction> acts)
         {
             acts.Sort(CompareActs);
         }
@@ -247,7 +249,7 @@ namespace cogbot.TheOpenSims
 
         private ListAsSet<BotAction> NewPossibleActions()
         {
-            List<SimObject> knowns = GetKnownObjects();
+            ListAsSet<SimObject> knowns = GetKnownObjects();
 
             ListAsSet<BotAction> acts = new ListAsSet<BotAction>();
             foreach (BotAction obj in LearnedPossibleActions)
@@ -270,7 +272,7 @@ namespace cogbot.TheOpenSims
             return acts;
         }
 
-        public List<SimObject> GetKnownObjects()
+        public ListAsSet<SimObject> GetKnownObjects()
         {
             return KnowsAboutList;
         }
@@ -339,7 +341,7 @@ namespace cogbot.TheOpenSims
 
         public void ScanNewObjects()
         {
-            ListAsSet<SimObject> objects = GetNearByObjects(100,true);
+            ListAsSet<SimObject> objects = GetNearByObjects(SightRange, true);
             lock (objects) foreach (SimObject obj in objects)
                 {
                     if (obj.IsRoot() && obj!=this)
@@ -559,7 +561,12 @@ namespace cogbot.TheOpenSims
         {
             this.Client = Client;
             WorldSystem = Client.WorldSystem;
+            WorldSystem.SetSimAvatar(this);
             //WorldSystem.AddTracking(this,Client);
+        }
+        public override bool Matches(string name)
+        {
+            return SimTypeSystem.MatchString(base.ToString(), name);
         }
     }
 
