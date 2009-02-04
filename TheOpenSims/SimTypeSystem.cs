@@ -518,18 +518,20 @@ namespace cogbot.TheOpenSims
             return type;
         }
 
-        internal static void ListTypes()
+        internal static string ListTypes()
         {
+            string str = "";
             lock (objectTypes) foreach (SimObjectType type in objectTypes)
                 {
                     if (!type.IsComplete()) continue;
-                    Console.WriteLine();
-                    Console.WriteLine("\t" + type.ToDebugString());
+                    str += "\n";
+                    str += "\t" + type.ToDebugString() + "\n";
                     foreach (String key in type.UsageAffect.Keys)
                     {
-                        Console.WriteLine("\t\t;;" + type.FindObjectUsage(key).ToDebugString());
+                        str += "\t\t;;" + type.FindObjectUsage(key).ToDebugString()+"\n";
                     }
                 }
+            return str;
         }
         static public void SetValue(FieldInfo fi, object o, object p)
         {

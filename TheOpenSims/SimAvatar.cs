@@ -272,6 +272,11 @@ namespace cogbot.TheOpenSims
             return acts;
         }
 
+        internal void DoBestUse(SimObject objToUse)
+        {
+            UseAspect(objToUse);
+        }
+
         public ListAsSet<SimObject> GetKnownObjects()
         {
             return KnowsAboutList;
@@ -291,12 +296,12 @@ namespace cogbot.TheOpenSims
                 return;
             }
 
-            if (someAspect is SimAvatar)
+            if (someAspect is SimObject)
             {
-                // SocialTo("talk",(SimAvatar)someAspect);
+                SimObject someObject = (SimObject)someAspect;
+                UseAspect(new BotObjectAction(this, new SimObjectUsage(someObject.GetBestUse(this),someObject)));
                 return;
             }
-            //UseObject((SimObject)someAspect);
 
         }
 
@@ -342,15 +347,16 @@ namespace cogbot.TheOpenSims
         public void ScanNewObjects()
         {
             ListAsSet<SimObject> objects = GetNearByObjects(SightRange, true);
-            lock (objects) foreach (SimObject obj in objects)
+            lock (objects) foreach (SimObject obj in objects.GetBaseEnumerable())
                 {
-                    if (obj.IsRoot() && obj!=this)
-                        lock (KnowsAboutList) if (!KnowsAboutList.Contains(obj))
-                            {
-                                if (KnowsAboutList.Count < 2) KnowsAboutList.AddTo(obj);
-                                else
-                                    KnowsAboutList.Insert(1, obj);
-                            }
+                    if (obj != this)
+                        if (obj.IsRoot() || obj.IsTyped())
+                            lock (KnowsAboutList) if (!KnowsAboutList.Contains(obj))
+                                {
+                                    if (KnowsAboutList.Count < 2) KnowsAboutList.AddTo(obj);
+                                    else
+                                        KnowsAboutList.Insert(1, obj);
+                                }
                 }
 
         }
@@ -358,7 +364,7 @@ namespace cogbot.TheOpenSims
         // Avatars approach distance
         public override float GetSizeDistance()
         {
-            return 3f;
+            return 2f;
         }
 
         public float Approach(SimObject obj, float maxDistance)
@@ -466,10 +472,9 @@ namespace cogbot.TheOpenSims
             TalkTo(avatar, "" + talkAbout);
         }
 
-        public void Debug(string p)
+        public override void Debug(string p)
         {
-            Console.WriteLine("++" + theAvatar.Name
-                + ": " + p);
+            WorldSystem.output(p);
         }
 
         public void Eat(SimObject target)
@@ -568,6 +573,8 @@ namespace cogbot.TheOpenSims
         {
             return SimTypeSystem.MatchString(base.ToString(), name);
         }
+
+
     }
 
 }
