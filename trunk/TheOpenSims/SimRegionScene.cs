@@ -64,6 +64,38 @@ namespace cogbot.TheOpenSims
             return CopyOf().GetEnumerator();
         }
 
+        public class BaseEnumerable : IEnumerable<T> 
+        {
+            readonly IEnumerator<T> be;
+            public BaseEnumerable(IEnumerator<T> r)
+            {
+                be = r;
+            }
+
+
+            #region IEnumerable<T> Members
+
+            IEnumerator<T> IEnumerable<T>.GetEnumerator()
+            {
+                return be;
+            }
+
+            #endregion
+
+            #region IEnumerable Members
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return be;
+            }
+
+            #endregion
+        }
+        // return the fast underlying
+        public IEnumerable<T> GetBaseEnumerable()
+        {
+            return new BaseEnumerable(base.GetEnumerator());
+        }
         // synchronization
         public List<T> CopyOf()
         {

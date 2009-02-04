@@ -238,7 +238,7 @@ namespace cogbot.Listeners
         //}
 
 
-		private void output(string p)
+		public void output(string p)
 		{
 			client.output(p);
 		}
@@ -1008,6 +1008,8 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                 {
                     Primitive found = GetSimulator().ObjectsPrimitives.Find(delegate(Primitive prim0)
                     {
+                        EnsureSelected(prim0.LocalID);
+                        EnsureSelected(prim0.ParentID);
                         return (prim0.ID == id);
                     });
                     if (found == null) found = GetSimulator().ObjectsAvatars.Find(delegate(Avatar prim0)
@@ -1041,6 +1043,8 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                 }
                 Primitive found = GetSimulator().ObjectsPrimitives.Find(delegate(Primitive prim0)
                 {
+                    EnsureSelected(prim0.LocalID);
+                    EnsureSelected(prim0.ParentID);
                     return (prim0.LocalID == id);
                 });
                 if (found == null) found = GetSimulator().ObjectsAvatars.Find(delegate(Avatar prim0)
@@ -1056,6 +1060,8 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                 {
                     lock (prims) prims.Add(found.LocalID, found.ID, found);
                     uuidType[found.ID] = found;
+                    EnsureSelected(found.LocalID);
+                    EnsureSelected(found.ParentID);
                     return found;
                 }
                 return null;
@@ -1706,5 +1712,20 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                 }
         }
 
+
+        internal void RescanTypes()
+        {
+            int count = SimObjects.Count;
+            output("Rescaning " + count + " simobjects");
+            foreach (SimObject obj in SimObjects)
+            {
+                obj.GetParent();
+                obj.UpdateProperties(obj.thePrim.Properties);
+            }
+            if (count != SimObjects.Count)
+            {
+                RescanTypes();
+            }
+        }
     }
 }

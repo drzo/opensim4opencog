@@ -16,7 +16,7 @@ namespace cogbot.Actions
         {
             Name = "simbot";
             helpString = "Start theOpenSims type AI.";
-            usageString = "simbot [on|start|stop|off|think|ini|list]";
+            usageString = "simbot [on|start|stop|off|think|ini|list|needs]";
            
         }
 
@@ -28,17 +28,18 @@ namespace cogbot.Actions
             if (args[0] == "ini")
             {
                 SimTypeSystem.LoadDefaultTypes0();
+                WorldSystem.RescanTypes();
                 return "ReLoaded  ini";
             }
             if (args[0] == "types")
             {
-                SimTypeSystem.ListTypes();
-                return "Listed types";
+                return SimTypeSystem.ListTypes();
             }
             if (args[0] == "load")
             {
                 SimTypeSystem.LoadConfig(args[1]);
-                return "ReLoaded  ini";
+                WorldSystem.RescanTypes();
+                return "(Re)Loaded " + args[1];
             }
 
             if (args[0] == "on")
@@ -52,6 +53,12 @@ namespace cogbot.Actions
                 SimAvatar avatar = GetSimAvatar();
                 avatar.StartThinking();
                 return "Started Thinking " + avatar;
+            }
+
+            if (args[0] == "needs")
+            {
+                SimAvatar avatar = GetSimAvatar();
+                return avatar.CurrentNeeds.ToString();
             }
 
             if (args[0] == "think")

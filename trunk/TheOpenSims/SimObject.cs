@@ -180,7 +180,7 @@ namespace cogbot.TheOpenSims
             }
             catch (Exception e)
             {
-                Console.WriteLine(""+e);
+                Debug(""+e);
             }
 
             AddSuperTypes(SimTypeSystem.GuessSimObjectTypes(objectProperties));
@@ -263,7 +263,30 @@ namespace cogbot.TheOpenSims
                 if (!String.IsNullOrEmpty(thePrim.Properties.Description))
                     str += thePrim.Properties.Description + " ";
             }
-            str += "(" + AttachedChildren.Count + ")[";
+            uint ParentId = thePrim.ParentID;
+            if (ParentId != 0)
+            {
+                str += " ChildOf--";
+                Primitive pp = WorldSystem.GetPrimitive(ParentId);
+                if (pp != null)
+                {
+                    str += WorldSystem.GetPrimTypeName(pp) + " " + pp.ID;
+                }
+                else
+                {
+                    str += ParentId;
+                }
+                str += "--";
+            }
+            if (AttachedChildren.Count > 0)
+            {
+                str += "(childs=" + AttachedChildren.Count + ")";
+            }
+            else
+            {
+                str += "(0)";
+            }
+            str += "[";
             ObjectType.SuperType.ForEach(delegate(SimObjectType item)
             {
                 str += item.ToString() + " ";
@@ -301,7 +324,7 @@ namespace cogbot.TheOpenSims
             //            LastPositionSent = theLPos;
             if (theLPos.Z < -20.0f)
             {
-                Console.WriteLine("-------------------------" + this + " shouldnt be at " + theLPos);
+                Debug("-------------------------" + this + " shouldnt be at " + theLPos);
                 WorldSystem.DeletePrim(thePrim);
             }
             return theLPos;
@@ -377,15 +400,15 @@ namespace cogbot.TheOpenSims
 
         }
 
-        static ListAsSet<SimObject> CopyObjects(List<SimObject> objects)
-        {
-            ListAsSet<SimObject> KnowsAboutList = new ListAsSet<SimObject>();
-            lock (objects) foreach (SimObject obj in objects)
-                {
-                    KnowsAboutList.Add(obj);
-                }
-            return KnowsAboutList;
-        }
+        //static ListAsSet<SimObject> CopyObjects(List<SimObject> objects)
+        //{
+        //    ListAsSet<SimObject> KnowsAboutList = new ListAsSet<SimObject>();
+        //    lock (objects) foreach (SimObject obj in objects)
+        //        {
+        //            KnowsAboutList.Add(obj);
+        //        }
+        //    return KnowsAboutList;
+        //}
 
         public Quaternion GetSimRotation()
         {
@@ -393,24 +416,26 @@ namespace cogbot.TheOpenSims
         }
 
 
-        internal static ListAsSet<SimObject> GetNearByObjects(Vector3 here,WorldObjects WorldSystem, object thiz, float pUse, bool rootOnly)
+        internal static ListAsSet<SimObject> GetNearByObjects(Vector3 here, WorldObjects WorldSystem, object thiz, float pUse, bool rootOnly)
         {
-            ListAsSet<SimObject> KnowsAboutList = new ListAsSet<SimObject>();
-            List<SimObject> objectsOld = WorldSystem.GetAllSimObjects();
-            List<SimObject> objects = CopyObjects(objectsOld);
-            lock (objects) foreach (SimObject obj in objects)
-                {
-                    if (rootOnly && !obj.IsRoot()) continue;
-                    if (obj != thiz && obj.CanGetSimPosition() && Vector3.Distance(obj.GetSimPosition(), here) <= pUse)
-                        KnowsAboutList.AddTo(obj);
+            ListAsSet<SimObject> nearby = new ListAsSet<SimObject>();
+            foreach (SimObject obj in WorldSystem.GetAllSimObjects())
+            {
+                if (rootOnly && !obj.IsRoot() && !obj.IsTyped()) continue;
+                if (obj != thiz && obj.CanGetSimPosition() && Vector3.Distance(obj.GetSimPosition(), here) <= pUse)
+                    nearby.AddTo(obj);
 
-                }
-            return KnowsAboutList;
+            }
+            return nearby;
         }
 
         public virtual bool Matches(string name)
         {
             return SimTypeSystem.MatchString(ToString(),name);
+        }
+        public virtual void Debug(string p)
+        {
+            WorldSystem.output(thePrim+":"+ p);
         }
     }
 }

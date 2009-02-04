@@ -125,7 +125,7 @@ namespace cogbot
             Settings.ALWAYS_DECODE_OBJECTS = true;
             Settings.ALWAYS_REQUEST_OBJECTS = true;
             Settings.SEND_AGENT_UPDATES = true;
-            Settings.USE_TEXTURE_CACHE = false;	//was true
+            Settings.USE_TEXTURE_CACHE = true;
 			// Optimize the throttle
             //Throttle.Wind = 0;
             //Throttle.Cloud = 0;
@@ -467,11 +467,18 @@ namespace cogbot
 		void client_OnLogMessage(object message, Helpers.LogLevel level)
 		{
 			string msg = "" + level + " " + message;
-			if (msg.Contains("esend")) return;
+
+            if (msg.Contains("esend")) return;
 			if (msg.Contains("resent packet")) return;
 			if (msg.Contains("Rate limit"))	return;
 			if (debugLevel < 3 && msg.Contains("Array index is out of range")) return;
 			if (debugLevel < 3 && (msg.Contains("nloadi") || msg.Contains("ransfer"))) return;
+            if (level == Helpers.LogLevel.Warning || level == Helpers.LogLevel.Debug)
+            {
+                if (Settings.LOG_LEVEL == Helpers.LogLevel.Info)
+                    Console.WriteLine(msg);
+                return;
+            }
 			SendNewEvent("On-Log-Message", message, level);
 		}
 

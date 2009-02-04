@@ -35,6 +35,14 @@ namespace cogbot.Actions
             }
         }
 
+        public cogbot.Listeners.WorldObjects WorldSystem
+        {
+            get
+            {
+                return Client.WorldSystem;
+            }
+        }
+
         public string Name;
         protected string helpString;
         protected string usageString;
