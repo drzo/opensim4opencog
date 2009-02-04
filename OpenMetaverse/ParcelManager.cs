@@ -1498,8 +1498,15 @@ namespace OpenMetaverse
                 OSDMap map = (OSDMap)llsd;
                 OSDMap parcelDataBlock = (OSDMap)(((OSDArray)map["ParcelData"])[0]);
                 OSDMap ageVerifyBlock = (OSDMap)(((OSDArray)map["AgeVerificationBlock"])[0]);
-                OSDMap mediaDataBlock = (OSDMap)(((OSDArray)map["MediaData"])[0]);
-
+                OSDMap mediaDataBlock = new OSDMap();
+                try
+                {
+                    mediaDataBlock = (OSDMap)(((OSDArray)map["MediaData"])[0]);
+                }
+                catch (Exception e)
+                {
+                    Logger.Log("" + e, Helpers.LogLevel.Warning);
+                }
                 Parcel parcel = new Parcel(parcelDataBlock["LocalID"].AsInteger());
 
                 parcel.AABBMax = ((OSDArray)parcelDataBlock["AABBMax"]).AsVector3();

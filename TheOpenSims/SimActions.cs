@@ -108,9 +108,9 @@ namespace cogbot.TheOpenSims
             // Approach Target
             float howClose = TheBot.Approach(Target, TypeUsage.maximumDistance);
 
-            if (howClose > TypeUsage.maximumDistance)
+            if (howClose-1 > TypeUsage.maximumDistance)
             {
-                TheBot.Debug("Too far away from " + this);
+                TheBot.Debug("Too far away " + howClose + " from " + this);
                 return;
             }
 
@@ -168,6 +168,26 @@ namespace cogbot.TheOpenSims
             if (!String.IsNullOrEmpty(UseAnim)) str += " UseAnim: " + UseAnim;
             if (!String.IsNullOrEmpty(LispScript)) str += " LispScript: " + LispScript;
             return str;
+        }
+
+        public SimTypeUsage AppendUse(SimTypeUsage use)
+        {
+            SimTypeUsage newUse = this;
+            if (String.IsNullOrEmpty(newUse.TextName))
+                newUse.TextName = use.TextName;
+            if (use.UseGrabSpecified)
+                newUse.UseGrab = use.UseGrab;
+            if (use.UseSitSpecified)
+                newUse.UseSit = use.UseSit;
+            if (String.IsNullOrEmpty(newUse.LispScript))
+                newUse.LispScript = use.LispScript;
+            if (String.IsNullOrEmpty(newUse.UseAnim))
+                newUse.UseAnim = use.UseAnim;
+            newUse.ChangeActual = newUse.ChangeActual.Copy();
+            newUse.ChangeActual.AddFrom(use.ChangeActual);
+            newUse.ChangePromise = newUse.ChangePromise.Copy();
+            newUse.ChangePromise.AddFrom(use.ChangePromise);
+            return newUse;
         }
     }
 

@@ -6,6 +6,7 @@ using cogbot.Listeners;
 using OpenMetaverse;
 using System.IO;
 using DotLisp;
+using System.Collections;
 
 namespace cogbot.TheOpenSims
 {
@@ -32,6 +33,19 @@ namespace cogbot.TheOpenSims
             get { return GetObjectType("Unknown"); } 
         }
 
+        public SimObjectType IsSubType(SimObjectType superType)
+        {
+            if (superType == this) return this;
+            foreach (SimObjectType st in SuperTypes)
+            {
+                if (st == superType) return st;
+                if (st.SuperTypes.Contains(superType)) return st;
+                SimObjectType found = st.IsSubType(superType);
+                if (found!=null) return found;
+            }
+            return null;
+        }
+
         public String ToDebugString()
         {
             if (cons != null) return cons.ToString();
@@ -43,6 +57,12 @@ namespace cogbot.TheOpenSims
             return str.Trim() + "]";
         }
 
+        public string IsWearableOrPortable=null; // what bodypart to attach?  Book=LeftHand
+        public string IsTransformedOnUse = null; // new type it converts to
+        public List<string> StoreObjectType = new List<string>(); // new type it converts to
+        public bool IsDestroyedOnUse;
+        public List<string> Match = new List<string>();  // regexpr match
+        public List<string> NoMatch = new List<string>(); // wont be if one of these matches
         public string SitName = null;
         public string TouchName = null;
         Cons cons;
@@ -78,20 +98,7 @@ namespace cogbot.TheOpenSims
 
             foreach (SimTypeUsage use in usages)
             {
-                if (String.IsNullOrEmpty(newUse.TextName))
-                    newUse.TextName = use.TextName;
-                if (use.UseGrabSpecified)
-                    newUse.UseGrab = use.UseGrab;
-                if (use.UseSitSpecified)
-                    newUse.UseSit = use.UseSit;
-                if (String.IsNullOrEmpty(newUse.LispScript))
-                    newUse.LispScript = use.LispScript;
-                if (String.IsNullOrEmpty(newUse.UseAnim))
-                    newUse.UseAnim = use.UseAnim;
-                newUse.ChangeActual = newUse.ChangeActual.Copy();
-                newUse.ChangeActual.AddFrom(use.ChangeActual);
-                newUse.ChangePromise = newUse.ChangePromise.Copy();
-                newUse.ChangePromise.AddFrom(use.ChangePromise);
+                newUse.AppendUse(use);
             }
             // maybe store for later
             //usageAffect[usename] = newUse;
@@ -114,19 +121,13 @@ namespace cogbot.TheOpenSims
             ListAsSet<string> verbs = new ListAsSet<string>();
             foreach (string key in usageAffect.Keys)
             {
-                if (!verbs.Contains(key))
-                {
-                    verbs.AddTo(key);
-                }
+                verbs.AddTo(key);
             }
             foreach (SimObjectType st in SuperTypes)
             {
                 foreach (SimTypeUsage v in st.GetTypeUsages())
                 {
-                    if (!verbs.Contains(v.UsageName))
-                    {
-                        verbs.AddTo(v.UsageName);
-                    }
+                    verbs.AddTo(v.UsageName);
                 }
             }
             ListAsSet<SimTypeUsage> usages = new ListAsSet<SimTypeUsage>();
@@ -183,6 +184,8 @@ namespace cogbot.TheOpenSims
                     continue;
                 }
                 string s = (string)parseStr[i++];//.ToString();
+                if (s == "SuperTypes") 
+                    s = "SuperType";
                 if (s == "SuperType")
                 {
                     String arg = parseStr[i++].ToString();
@@ -233,28 +236,14 @@ namespace cogbot.TheOpenSims
                 FieldInfo fi = type.GetType().GetField(s);
                 if (fi != null)
                 {
-                    if (fi.FieldType == typeof(String))
-                    {
-                        fi.SetValue(type, parseStr[i++].ToString());
-                    }
-                    else
-                    {
-                        fi.SetValue(type, parseStr[i++]);
-                    }
+                    SetValue(fi, type, parseStr[i++]);
                     continue;
                 }
 
                 fi = usage.GetType().GetField(s);
                 if (fi != null)
                 {
-                    if (fi.FieldType == typeof(String))
-                    {
-                        fi.SetValue(usage, parseStr[i++].ToString());
-                    }
-                    else
-                    {
-                        fi.SetValue(usage, parseStr[i++]);
-                    }
+                    SetValue(fi,usage, parseStr[i++]);
                     continue;
                 }
 
@@ -270,6 +259,40 @@ namespace cogbot.TheOpenSims
                 }
                 System.Console.WriteLine("ERROR: MISSING " + s + " ... " + parseStr[i]);
             }
+        }
+
+        private void SetValue(FieldInfo fi, object o, object p)
+        {
+            Type ftype = fi.FieldType;
+            if (ftype.IsInstanceOfType(p))
+            {
+                fi.SetValue(o, p);
+                return;
+            }
+            if (ftype.IsAssignableFrom(typeof(string))) {
+                if (p == null) fi.SetValue(o, null);
+                else fi.SetValue(o, p.ToString());
+                return;
+            }
+            if (typeof(IList).IsAssignableFrom(ftype))
+            {
+                object fv = fi.GetValue(o);
+                if (fv == null)
+                {
+                    fv = ftype.GetConstructor(new Type[0]).Invoke(new object[0]);
+                }
+                ftype = fv.GetType().GetGenericArguments()[0];
+                p = CastTo(ftype,p);
+                ((IList)fv).Add(p);
+                fi.SetValue(o, fv);
+                return;
+            }
+            fi.SetValue(o, p);
+        }
+
+        private object CastTo(Type ftype, object p)
+        {
+            return p;
         }
 
 
@@ -317,57 +340,41 @@ namespace cogbot.TheOpenSims
         static public ListAsSet<SimObjectType> GuessSimObjectTypes(Primitive.ObjectProperties props)
         {
             ListAsSet<SimObjectType> possibles = new ListAsSet<SimObjectType>();
-            SimObjectType type = null;
-
             if (props != null)
             {
-                string objName = " " + props.Name.ToLower()+" ";
-                string objName2 = " " + props.Description.ToLower() + " ";
-                lock (objectTypes) if (objName.Length > 3) foreach (SimObjectType otype in objectTypes)
+                string objName = " "+ props.Name.ToLower() + " | " + props.Description.ToLower() + " ";
+                lock (objectTypes) if (objName.Length > 3)
+                    {
+
+                    NextOType:
+                        foreach (SimObjectType otype in objectTypes)
                         {
-                            String otypeAspectName = " " + otype.AspectName.ToLower()+" ";
-                            if (objName.Contains(otypeAspectName))
-                            {
-                                possibles.AddTo(otype);
-                                SetNames(props, otype);
+                            bool skipIt = false;
+                            foreach (string smatch in otype.NoMatch)
+                            { // NoMatch
+                                String otypeAspectName = smatch.ToLower().Replace("*", "");
+                                if (objName.Contains(otypeAspectName))
+                                {
+                                    skipIt = true;
+                                    break;
+                                    // continue NextOType;
+                                }
                             }
-                            else if (objName2.Contains(otypeAspectName))
-                            {
-                                possibles.AddTo(otype);
-                                SetNames(props, otype);
-                            }
+                            if (!skipIt)
+                                foreach (string smatch in otype.Match)
+                                { // NoMatchOn
+                                    String otypeAspectName = smatch.ToLower().Replace("*", "");
+                                    if (objName.Contains(otypeAspectName))
+                                    {
+                                        possibles.AddTo(otype);
+                                        SetNames(props, otype);
+                                        break;
+                                    }
+                                }
 
                         }
-            }
-            //type = FindObjectType(GetPrimTypeName(prim));
-            //if (type != null)
-            //{
-            //    possibles.AddTo(type);
-            //    SetNames(prim, type);
+                    }
 
-            //}
-            if (props != null)
-            {
-                type = FindObjectType(props.Name);
-                if (type != null)
-                {
-                    possibles.AddTo(type);
-                    SetNames(props, type);
-                }
-                type = FindObjectType(props.Description);
-                if (type != null)
-                {
-                    possibles.AddTo(type);
-                    SetNames(props, type);
-                }
-            }
-            if (possibles.Count == 0)
-            {
-               // possibles.AddTo(UNKNOWN);
-            }
-            if (possibles.Count > 1)
-            {
-                //  Console.WriteLine(prim + "  is " + possibles);
             }
             return possibles;
         }
@@ -425,13 +432,8 @@ namespace cogbot.TheOpenSims
                 LoadConfig(fi.Name);
                 return;
             }
-            /*
-            
-             Format of loader
-            
-             * 
-            
-            
+            /*            
+             Format of loader           
              */
             CreateObjectUse("OnMinuteTimer", //  Just being alive
                     "maximumDistance", 1000, // mostly anywhere
@@ -445,291 +447,7 @@ namespace cogbot.TheOpenSims
                     "GenerallySadToHappy", -1, -1, // needs to be kept happy every 100 minutes
                     "Comfort", -1, -1, // needs to be kept comfy every 100 minutes
                     null);
-
-            // CLASSES
-            CreateObjectUse("Sittable",
-                    "TextName", "Sit on",// Chairs/Couches
-                    "maximumDistance", 1, // close enough?
-                    "UseSit", true,
-                    "UseAnim", Animations.SIT,
-                    "Comfort", 1, 0, // 100 minutes till comfort bliss? 
-                    null);
-
-            CreateObjectUse("Sleepable",
-                    "TextName", "Lay on",// Beds/Couches
-                    "maximumDistance", 1, // close enough?
-                    "UseSit", true,
-                    "UseAnim", Animations.SLEEP,
-                    "Comfort", 5, 5, // 100 minutes till comfort bliss? 
-                    "Energy", 20, 20, // 100 minutes till comfort bliss? 
-                    null);
-
-            CreateObjectUse("Cleanable",
-                    "TextName", "Clean",// Anything with Touch
-                    "maximumDistance", 1, // must be 1 near
-                    "UseAnim", Animations.FINGER_WAG,
-                    "Fun", -2, 2, // fun to do but not to think about doing
-                    "Energy", 0, -1, // uses energy 
-                    null);
-
-            CreateObjectUse("Observable",
-                    "TextName", "Observe",//  TVs/Radios/Art/Pictures
-                    "maximumDistance", 5, // must be 1 near
-                    "UseAnim", Animations.CLAP,
-                    "Fun", 2, 1, // fun to look at
-                    "Energy", 0, -1, // uses energy 
-                    null);
-
-            // We overuse "sit" allot becasue thats how most animations work
-            CreateObjectUse("BodyCleaner",
-                    "TextName", "Wash",// Sinks/Tubs/Showers
-                    "maximumDistance", 1, // close enough?
-                    "UseAnim", Animations.RPS_PAPER,
-                    "Comfort", 0, 10,
-                    "Hygiene", 20, 10,
-                    null);
-
-            CreateObjectUse("Excersizable",
-                    "TextName", "Excersize",// Excersize bikes/ Dance floors/ treadmills
-                    "maximumDistance", 1, // close enough?
-                    "UseAnim", Animations.ONETWO_PUNCH,
-                    "Fun", 10, 10,
-                    "Hygiene", -10, -10,
-                    null);
-
-            CreateObjectUse("Playable",
-                    "TextName", "Play with",// Dance floors/ Pools / Pooltables
-                    "maximumDistance", 1, // close enough?
-                    "UseAnim", Animations.SHOOT_BOW_L,
-                    "Energy", -10, -10,
-                    "Fun", 20, 10,
-                    null);
-
-
-            CreateObjectUse("FoodStore",
-                    "TextName", "Eat from",// Refrigerators and cupboards
-                    "maximumDistance", 1, // close enough?
-                    "UseAnim", Animations.DRINK,
-                    "Hygiene", 0, -5, // should wash hands after
-                    "Hunger", 40, 20, // fullfills some huger
-                    null);
-
-            CreateObjectUse("Fightable",
-                    "TextName", "Beat up",// People
-                    "maximumDistance", 1, // close enough?
-                    "UseSit", false,
-                    "UseAnim", Animations.ONETWO_PUNCH,
-                    "Energy", -11, -20,
-                    null);
-
-            CreateObjectUse("Talkable",
-                    "TextName", "Talk to",// People
-                    "maximumDistance", 3, // close enough?
-                    "UseSit", false,
-                    "UseAnim", Animations.TALK,
-                    "Social", 11, 20,
-                    null);
-
-            CreateObjectUse("Pushable",
-                    "TextName", "Beat up",// People
-                    "maximumDistance", 1, // close enough?
-                    "UseSit", false,
-                    "UseAnim", Animations.SWORD_STRIKE,
-                    "Energy", -11, -20,
-                    null);
-
-            CreateObjectUse("Eatable",//  sit on
-                    "TextName", "Eat it",
-                    "maximumDistance", 1, // close enough?
-                    "UseGrab", true,
-                    null);
-
-            CreateObjectUse("Kissable",
-                    "TextName", "Kiss",// People
-                    "maximumDistance", 1, // close enough?
-                    "UseSit", false,
-                    "UseAnim", Animations.BLOW_KISS,
-                    "Social", 11, 20,
-                    "Fun", 21, 20,
-                    null);
-
-            CreateObjectUse("Unknown",
-                    "TextName", "Think about",
-                    "maximumDistance", 1, // close enough?
-                    "UseAnim", Animations.SHRUG,
-                    "Fun",-10,0,
-                    null);
-
-
-            // Body cleaning types
-            CreateObjectType("Shower",//  What it is
-                    "SuperType", "BodyCleaner", // Use as body cleaner
-                    "UseAnim", Animations.KISS_MY_BUTT,
-                    "TextName", "Take a Shower", // The name
-                    "maximumDistance", 1, // must be near enouch
-                    "Comfort", 10, 10, // showers little less than batch
-                    "Hygiene", 30, 30,// showers little less than batch
-                    "SuperType", "Cleanable", // allow object to be cleaned
-                    null);
-
-            CreateObjectType("Bath",//  What it is
-                    "SuperType", "BodyCleaner", // Use as body cleaner
-                    "TextName", "Take a Bath", // The name
-                    "UseSit", true,
-                    "maximumDistance", 1, // must be near enouch
-                    "Comfort", 20, 20, // showers little less than batch
-                    "Hygiene", 100, 100,// showers little less than batch
-                    "SuperType", "Cleanable", // allow object to be cleaned
-                    null);
-
-            CreateObjectType("Sink",//  What it is
-                    "SuperType", "BodyCleaner", // Use as body cleaner
-                    "TextName", "Wash Hands", // The name
-                    "maximumDistance", 1, // must be near enouch
-                    "Comfort", 0, 0, // no comfort
-                    "Hygiene", 10, 10,// provides some hygiene
-                    "SuperType", "Cleanable", // allow object to be cleaned
-                    null);
-
-            // Lounging on types
-            CreateObjectType("Bed",// Lay on
-                    "SuperType", "Sleepable",
-                    "SitName", "Sleep a few",
-                    "UseSit", true, // for sleep scripts
-                    "UseAnim", Animations.SLEEP, // look like sleeping
-                    "maximumDistance", 1, // close enough?
-                    "Comfort", 10, 30,
-                    "Energy", 100, 80,
-                    null);
-
-            CreateObjectType("Chair",//  sit on
-                    "SuperType", "Sittable",
-                    "SitName", "Sit down",
-                    "UseSit", true, // for sit scripts
-                    "UseAnim", Animations.SMOKE_IDLE, // look like 
-                    "maximumDistance", 1, // close enough?
-                    "Comfort", 15, 10, // 10 minutes till comfort bliss? (secretly not much better than couch)
-                    "Energy", 10, 20,
-                    null);
-
-            CreateObjectType("Couch",//  sit on
-                    "SuperType", "Sittable",
-                    "SitName", "Sit down",
-                    "UseSit", true, // for sit scripts
-                    "UseAnim", Animations.SMOKE_IDLE, // look like 
-                    "maximumDistance", 1, // close enough?
-                    "Comfort", 20, 20,
-                    "Energy", 10, 20,
-                    null);
-
-            // Observable on types
-            CreateObjectType("Television", //  watching tv
-                    "SuperType", "Observable",
-
-                    "TextName", "Watch TV",
-                    "maximumDistance", 4, // must be 4 meters near to use
-                    "Hunger", 1, -1, // pretends will feed but just makes you hngrier due to comercials
-                    "Bladder", 0, 0, // doesnt change toilet needs
-                    "Hygiene", 0, 0, // doesnt change cleanliness 
-                    "Room", 1, 0, // shows you pictures of spacious life but does nothing relaly
-                    "Social", 2, -1, // claims to meet social needs.. but actually causes lonliness
-                    "Fun", 2, 1, // advertses more excitement then it fullfills
-                    "GenerallySadToHappy", 2, 1, // It claim much happiness but only gives a little        
-                    "Energy", 1, -1, // pretends to solve entrgy issues but does the opposite                 
-                    null);
-
-            CreateObjectType("Radio",//  watching tv
-                    "SuperType", "Observable",
-                    "TextName", "Listen to Radio",
-                    "maximumDistance", 4, // must be 4 meters near to use
-                    "Room", 1, 0, // shows you pictures of spacious life but does nothing relaly
-                    "Fun", 10, 10, // advertses more excitement then it fullfills
-                    "GenerallySadToHappy", 10, 10, // It claim much happiness but only gives a little        
-                    "Energy", 1, -1, // pretends to solve entrgy issues but does the opposite                 
-                    null);
-
-
-            CreateObjectType("Toilet",//  sitting on toilet
-                    "SuperType", "Sittable",
-                    "SitName", "Go potty",
-                    "UseSit",true,
-                    "maximumDistance", 1, // close enough?
-                    "Bladder", 100, 100, // you are fully satified
-                    "Hygiene", 0, -10, // make you dirty:  10 potties = need one baths
-
-                // Flushing the toilet
-                    "SuperType", "Cleanable",
-                    "TextName", "Flush it",
-                    "UseAnim", "POINT_YOU",
-                    "UseSit", false,
-                    "maximumDistance", 1, // must be 1 away
-                    "Hygiene", 1, 4, // makes you cleaner than you thought
-                    "Fun", 5, 4, // watching water spin is mildly exciting
-                    null);
-
-            CreateObjectType("Fridg",//  sit on
-                    "SuperType", "FoodStore",
-                    "TextName", "Raid the fridge",
-                    "UseAnim",Animations.DRINK,
-                    "UseGrab",true,
-                    null);
-
-            CreateObjectType("Treadmill",//  sit on
-                    "SuperType", "Excersizable",
-                    "TextName", "Tread the mill",
-                    "UseSit",true,
-                    null);
-
-            CreateObjectType("Pooltable",//  sit on
-                    "SuperType", "Playable",
-                    "TextName", "Play pool",
-                    "UseAnim", Animations.AIM_BAZOOKA_R,
-                    null);
-
-            CreateObjectType("Dance",//  sit on
-                    "SuperType", "Playable",
-                    "TextName", "Dance! Dance!",
-                    "UseAnim", Animations.DANCE2,
-                    null);
-
-            CreateObjectType("Bread",//  sit on
-                    "SuperType", "Eatable",
-                    "TextName", "Eat the bread",
-                    "UseAnim", Animations.DRINK,
-                    "LispScript","(progn (TheBot.Eat Target))",
-                    null);
-
-            CreateObjectType("Avatar",//  talk to
-                   "SuperType", "Talkable",
-                   "maximumDistance", 3, // must be at most 3 meters
-                   "Social", 10.0, 1.5, // 10 minutes till Social bliss? (better than we think)
-                   "Fun", 1.0, 1.0,
-
-                   "SuperType", "Fightable",
-                   "maximumDistance", 1, // must be at most 1 meters
-                   "Social", 10, 1.5, // 10 minutes till Social bliss? (better than we think)
-                   "Energy", 0, -10,
-                   "GenerallySadToHappy", 0, -10,
-                   "Fun", 20, 10,
-
-                   "SuperType", "Pushable",
-                   "maximumDistance", 1, // must be at most 1 meters
-                   "Social", 10, 1.5, // 10 minutes till Social bliss? (better than we think)
-                   "Energy", 0, -10,
-                   "GenerallySadToHappy", 0, -10,
-                   "Fun", 20, 10,
-
-                   "SuperType", "Kissable",
-                   "maximumDistance", 1, // must be at most 1 meters
-                   "Social", 10, 15, // 5 minutes till Social bliss? (better than we think)
-                   "GenerallySadToHappy", 10, 10,
-                   "Fun", 10, 10,
-                   null);
-
-            //CreateObjectType("Friend", "talk", "SuperType", "Avatar");
-            //CreateObjectType("Enemy", "push", "SuperType", "Avatar");
-            //CreateObjectType("Red couch", "sit", "SuperType", "Couch");
-
+            
         }
 
         public static void LoadConfig(string filename)
@@ -818,6 +536,7 @@ namespace cogbot.TheOpenSims
         {
             SimObjectType type = GetObjectType(aspectName);
             type.ParseAffect(null, parseStr);
+            type.ParseAffect(null, new object[] { "Match", "* " + aspectName + " *" });
             return type;
         }
 
@@ -854,6 +573,7 @@ namespace cogbot.TheOpenSims
             }
         }
     }
+
 
     // These needs are 0 - 100.0F     100.0 = satiafied (on the positive end i.g. less thirsty)
     public class BotNeeds
