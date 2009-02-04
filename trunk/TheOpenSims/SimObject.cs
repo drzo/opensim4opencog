@@ -45,7 +45,7 @@ namespace cogbot.TheOpenSims
         {
             thePrim = prim;
             WorldSystem = objectSystem;
-            ObjectType = SimObjectType.GetObjectType(prim.ID.ToString());
+            ObjectType = SimTypeSystem.GetObjectType(prim.ID.ToString());
             UpdateProperties(thePrim.Properties);
         }
 
@@ -169,7 +169,7 @@ namespace cogbot.TheOpenSims
                 Console.WriteLine(""+e);
             }
 
-            AddSuperTypes(SimObjectType.GuessSimObjectTypes(objectProperties));
+            AddSuperTypes(SimTypeSystem.GuessSimObjectTypes(objectProperties));
 
         }
 
@@ -180,7 +180,7 @@ namespace cogbot.TheOpenSims
         private void AddSuperTypes(ListAsSet<SimObjectType> listAsSet)
         {
             //SimObjectType UNKNOWN = SimObjectType.UNKNOWN;
-            ListAsSet<SimObjectType> orig = ObjectType.SuperTypes;
+            ListAsSet<SimObjectType> orig = ObjectType.SuperType;
             lock (orig)
                 foreach (SimObjectType type in listAsSet)
                 {
@@ -250,7 +250,7 @@ namespace cogbot.TheOpenSims
                     str += thePrim.Properties.Description + " ";
             }
             str += "(" + AttachedChildren.Count + ")[";
-            ObjectType.SuperTypes.ForEach(delegate(SimObjectType item)
+            ObjectType.SuperType.ForEach(delegate(SimObjectType item)
             {
                 str += item.ToString() + " ";
             });

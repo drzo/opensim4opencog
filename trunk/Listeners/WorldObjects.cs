@@ -165,7 +165,7 @@ namespace cogbot.Listeners
              */
             {
                 //BotWorld = this;
-                SimObjectType.LoadDefaultTypes();
+                SimTypeSystem.LoadDefaultTypes();
 
                 if (client.Network.CurrentSim != null)
                 {

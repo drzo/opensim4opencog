@@ -59,7 +59,7 @@ namespace cogbot.TheOpenSims
         public SimAvatar(Avatar slAvatar, WorldObjects objectSystem)
             : base(slAvatar.Name, slAvatar, objectSystem)
         {
-            ObjectType.SuperTypes.Add(SimObjectType.GetObjectType("Avatar"));
+            ObjectType.SuperType.Add(SimTypeSystem.GetObjectType("Avatar"));
             CurrentNeeds = new BotNeeds(90.0F);
             AspectName = slAvatar.Name;
             avatarHeartbeatThread = new Thread(new ThreadStart(Aging));
@@ -170,7 +170,7 @@ namespace cogbot.TheOpenSims
         {
             while (true)
             {
-                CurrentNeeds.AddFrom(SimObjectType.GetObjectType("OnMinuteTimer").GetUsageActual("OnMinuteTimer"));
+                CurrentNeeds.AddFrom(SimTypeSystem.GetObjectType("OnMinuteTimer").GetUsageActual("OnMinuteTimer"));
                 CurrentNeeds.SetRange(0.0F, 100.0F);
                 Thread.Sleep(60000); // one minute
                // Debug(CurrentNeeds.ToString());
