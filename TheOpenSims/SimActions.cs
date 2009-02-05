@@ -190,6 +190,7 @@ namespace cogbot.TheOpenSims
             SimTypeUsage newUse = this;
             foreach (string prop in use.SpecifiedProperties)
             {
+                newUse.SpecifiedProperties.AddTo(prop);
                 System.Reflection.FieldInfo fi = newUse.GetType().GetField(prop);
                 if (fi.FieldType==typeof(BotNeeds)) continue;
                 SimTypeSystem.SetValue(fi, newUse, fi.GetValue(use));

@@ -19,6 +19,25 @@ namespace cogbot.Actions
         public virtual void Think()
         {
         }
+        public UUID UUIDParse(string p)
+        {
+            UUID uuid;
+            if (UUIDTryParse(p, out uuid)) return uuid;
+            return UUID.Parse(p);
+        }
+
+        public bool UUIDTryParse(string p, out UUID target)
+        {
+            if (p.Contains("-") && UUID.TryParse(p,out target)) return true;
+            Primitive prim;
+            if (WorldSystem.tryGetPrim(p,out prim)) {
+                target = prim.ID;
+                if (target != UUID.Zero) return true;
+            }
+            target = cogbot.Listeners.WorldObjects.GetAnimationUUID(p);
+            if (target != UUID.Zero) return true;
+            return false;
+        }
 
 
         public BotClient m_Client = null;

@@ -39,7 +39,7 @@ namespace cogbot.Actions
             if (args.Length < 1 || args.Length > 4)
                 return "Usage prim-uuid [copy] [mod] [xfer]";
 
-            if (!UUID.TryParse(args[0], out rootID))
+            if (!UUIDTryParse(args[0], out rootID))
                 return "Usage prim-uuid [copy] [mod] [xfer]";
 
             for (int i = 1; i < args.Length; i++)

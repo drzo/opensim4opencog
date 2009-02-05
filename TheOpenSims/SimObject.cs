@@ -10,6 +10,11 @@ namespace cogbot.TheOpenSims
     //TheSims-like object
     public class SimObject : BotMentalAspect
     {
+        public double distance(SimObject prim)
+        {
+            return Vector3.Distance(GetSimPosition(), prim.GetSimPosition());
+        }
+
         readonly public Primitive thePrim; // the prim in Secondlife
         readonly public SimObjectType ObjectType;
         public WorldObjects WorldSystem;
@@ -255,28 +260,30 @@ namespace cogbot.TheOpenSims
 
         public override string ToString()
         {
-            String str = base.ToString();
+            String str = thePrim.ToString() + " ";
             if (thePrim.Properties != null)
             {
                 if (!String.IsNullOrEmpty(thePrim.Properties.Name))
                     str += thePrim.Properties.Name + " ";
                 if (!String.IsNullOrEmpty(thePrim.Properties.Description))
-                    str += thePrim.Properties.Description + " ";
+                    str += " | " + thePrim.Properties.Description + " ";
             }
+            if (!String.IsNullOrEmpty(thePrim.Text))
+                str += " | " + thePrim.Text + " ";
             uint ParentId = thePrim.ParentID;
             if (ParentId != 0)
             {
-                str += " ChildOf--";
+                str += " parent=";
                 Primitive pp = WorldSystem.GetPrimitive(ParentId);
                 if (pp != null)
                 {
-                    str += WorldSystem.GetPrimTypeName(pp) + " " + pp.ID;
+                    str += WorldSystem.GetPrimTypeName(pp) + " " + pp.ID.ToString().Substring(0,8);
                 }
                 else
                 {
                     str += ParentId;
                 }
-                str += "--";
+                str += "- ";
             }
             if (AttachedChildren.Count > 0)
             {
@@ -286,12 +293,15 @@ namespace cogbot.TheOpenSims
             {
                 str += "(0)";
             }
-            str += "[";
+            str += " [";
             ObjectType.SuperType.ForEach(delegate(SimObjectType item)
             {
                 str += item.ToString() + " ";
             });
-            return str.Trim() + "]";
+            str = str.Trim() + "]";
+            if (thePrim.Sound != UUID.Zero)
+                str += " Audible";
+            return str;
         }
 
         public bool CanGetSimPosition()

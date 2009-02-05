@@ -24,7 +24,7 @@ namespace cogbot.Actions
 
             UUID targetID;
 
-            if (!UUID.TryParse(args[0], out targetID))
+            if (!UUIDTryParse(args[0], out targetID))
                 return Description;
 
             StringBuilder sb = new StringBuilder();

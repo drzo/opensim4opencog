@@ -37,7 +37,7 @@ namespace cogbot.Actions
                 if (args.Length < 2)
                     return Description;
 
-                if (!UUID.TryParse((resolvedGroupName = groupName = args[1]), out resolvedGroupID))
+                if (!UUIDTryParse((resolvedGroupName = groupName = args[1]), out resolvedGroupID))
                     return resolvedGroupName + " doesn't seem a valid UUID";
             }
             else

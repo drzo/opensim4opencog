@@ -33,7 +33,7 @@ namespace cogbot.Actions
             Image = null;
             Asset = null;
 
-            if (UUID.TryParse(args[0], out TextureID))
+            if (UUIDTryParse(args[0], out TextureID))
             {
                 int discardLevel = 0;
 

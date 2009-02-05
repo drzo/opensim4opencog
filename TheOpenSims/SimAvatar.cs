@@ -299,7 +299,19 @@ namespace cogbot.TheOpenSims
             if (someAspect is SimObject)
             {
                 SimObject someObject = (SimObject)someAspect;
-                UseAspect(new BotObjectAction(this, new SimObjectUsage(someObject.GetBestUse(this),someObject)));
+                SimTypeUsage use = someObject.GetBestUse(this);
+                if (use == null)
+                {
+                    float closeness = Approach(someObject, 2);
+                    Client.Self.Touch(someObject.thePrim.LocalID);
+                    if (closeness < 3)
+                    {
+                        Client.Self.RequestSit(someObject.thePrim.ID, Vector3.Zero);
+                        Client.Self.Sit();
+                    }
+                    return;
+                }
+                UseAspect(new BotObjectAction(this, new SimObjectUsage(use, someObject)));
                 return;
             }
 
@@ -574,6 +586,17 @@ namespace cogbot.TheOpenSims
             return SimTypeSystem.MatchString(base.ToString(), name);
         }
 
+
+
+        internal void SortByDistance(List<SimObject> sortme)
+        {
+            sortme.Sort(compDistance);
+        }
+
+        public int compDistance(SimObject p1, SimObject p2)
+        {
+            return (int)(distance(p1) - distance(p2));
+        }
 
     }
 

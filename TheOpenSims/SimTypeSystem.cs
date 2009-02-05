@@ -6,6 +6,7 @@ using OpenMetaverse;
 using DotLisp;
 using System.Collections;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace cogbot.TheOpenSims
 {
@@ -327,11 +328,35 @@ namespace cogbot.TheOpenSims
             objName = objName.ToLower();
             smatch = smatch.ToLower();
             String otypeAspectName = smatch;
-            if (objName.Contains(otypeAspectName)) return true;            
-            otypeAspectName = smatch.Replace("*", " ");
             if (objName.Contains(otypeAspectName)) return true;
-            otypeAspectName = smatch.Replace("*", "");
-            if (objName.Contains(otypeAspectName)) return true;
+            if (smatch.Contains("*"))
+            {
+                otypeAspectName = smatch.Replace("*", " ");
+                if (objName.Contains(otypeAspectName)) return true;
+                otypeAspectName = smatch.Replace("*", "");
+                if (objName.Contains(otypeAspectName)) return true;
+                if (!smatch.Contains(".*"))
+                {
+                    smatch = smatch.Replace("*", ".*");
+                }
+                // Build Regex
+                Regex regexPrimName = new Regex(smatch);
+                if (regexPrimName.IsMatch(objName))
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                // Build Regex
+                Regex regexPrimName = new Regex(".*" + smatch + ".*");
+                if (regexPrimName.IsMatch(objName))
+                {
+                    return true;
+                }
+            }
+
+          
             return false;
         }
 
