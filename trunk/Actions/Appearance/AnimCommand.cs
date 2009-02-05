@@ -58,7 +58,7 @@ namespace cogbot.Actions
                     try
                     {
                         if (a.Substring(2).Contains("-"))
-                            anim = UUID.Parse(a);
+                            anim = UUIDParse(a);
                     }
                     catch (Exception) { }
                 }

@@ -20,7 +20,7 @@ namespace cogbot.Actions
 
             uint objectLocalID;
             UUID objectID;
-            if (!UUID.TryParse(args[0], out objectID))
+            if (!UUIDTryParse(args[0], out objectID))
                 return "Usage: objectinventory [objectID]";
 
             Primitive found = Client.Network.CurrentSim.ObjectsPrimitives.Find(delegate(Primitive prim) { return prim.ID == objectID; });

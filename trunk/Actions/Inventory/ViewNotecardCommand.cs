@@ -32,7 +32,7 @@ namespace cogbot.Actions
                 return "Usage: viewnote [notecard asset uuid]";
             }
             UUID note;
-            if (!UUID.TryParse(args[0], out note))
+            if (!UUIDTryParse(args[0], out note))
             {
                 return "First argument expected agent UUID.";
             }

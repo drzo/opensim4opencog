@@ -12,7 +12,7 @@ using cogbot.Actions; //using libsecondlife;
 
 namespace cogbot.Listeners
 {
-	public delegate float ObjectHeuristic(Primitive prim);
+	public delegate float ObjectHeuristic(SimObject prim);
 
     public class WorldObjects : DebugAllEvents {
 		protected Dictionary<string, Avatar> avatarCache = new Dictionary<string,Avatar>();
@@ -27,11 +27,6 @@ namespace cogbot.Listeners
 		public ListAsSet<ObjectHeuristic> objectHeuristics;
 		public Dictionary<UUID, ListAsSet<Primitive>> primGroups;
 		public Object newLock = new Object();
-		public int maxShortNameLength = 0;
-		public int maxNameLength;
-		public Dictionary<string, string> shortNames;
-		public Dictionary<string, string> reverseShortNames;
-		public ListAsSet<string> numberedObjects;
 		public Dictionary<uint, OSDMap> lastOSD = new Dictionary<uint, OSDMap>();
 
 		DoubleDictionary<uint, UUID, Primitive> prims = new DoubleDictionary<uint, UUID, Primitive>();
@@ -45,10 +40,19 @@ namespace cogbot.Listeners
         ListAsSet<uint> primsAwaitingSelect = new ListAsSet<uint>();
         ListAsSet<uint> primsSelectedOnce = new ListAsSet<uint>();
 
-        public SimAvatar TheSimAvatar;
+        public SimAvatar TheSimAvatar
+        {
+            get {
+                if (m_TheSimAvatar == null)
+                {
+                    m_TheSimAvatar = GetSimAvatar(GetAvatar(client.Self.AgentID));
+                }
+                return m_TheSimAvatar; }
+        }
+        public SimAvatar m_TheSimAvatar;
         internal void SetSimAvatar(SimAvatar simAvatar)
         {
-            TheSimAvatar = simAvatar;
+            m_TheSimAvatar = simAvatar;
         }
 
         static public ListAsSet<SimAvatar> SimAvatars = new ListAsSet<SimAvatar>();
@@ -123,16 +127,12 @@ namespace cogbot.Listeners
 			// pendingPrims = new Dictionary<UUID, Primitive>();
             
 			primGroups = new Dictionary<UUID, ListAsSet<Primitive>>();
-			shortNames = new Dictionary<string, string>();
-			reverseShortNames = new Dictionary<string, string>();
-			numberedObjects = new ListAsSet<string>();
 
 			objectHeuristics = new ListAsSet<ObjectHeuristic>();
 			objectHeuristics.Add(new ObjectHeuristic(distanceHeuristic));
-			objectHeuristics.Add(new ObjectHeuristic(nameLengthHeuristic));
+			//objectHeuristics.Add(new ObjectHeuristic(nameLengthHeuristic));
 			objectHeuristics.Add(new ObjectHeuristic(boringNamesHeuristic));
 
-			maxNameLength = -1;
 /*
 			client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
             client.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
@@ -310,6 +310,11 @@ namespace cogbot.Listeners
                     UUID oldAnim = avatarAminCurrent[avatar];
                     if (oldAnim != mostCurrentAnim)
                     {
+                        String oldName = GetAnimationName(oldAnim);
+                        String newName = GetAnimationName(mostCurrentAnim);
+                        if (oldName.Length > 4 && newName.Length > 4 && oldName.Substring(0,5)==newName.Substring(0,5))
+                        {
+                        } else 
                         SendNewEvent("On-Object-Animation", avatar, mostCurrentAnim);
                     }
                 }
@@ -583,7 +588,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 
 						// output("Updating state for Avatar " + prim.Name);
 						//  updateToPrim(prim, update);
-						CalcStats(prim);
+						//CalcStats(prim);
 						//   describePrimToAI(prim);
 					}
 
@@ -601,7 +606,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 						updateToPrim(prim, update);
 					}
 					if (prim.Properties != null) {
-						CalcStats(prim);
+						//CalcStats(prim);
 						describePrimToAI(prim);
 					} else {
                         EnsureSelected(prim.LocalID);
@@ -1060,10 +1065,9 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                 {
                     lock (prims) prims.Add(found.LocalID, found.ID, found);
                     uuidType[found.ID] = found;
-                    EnsureSelected(found.LocalID);
-                    EnsureSelected(found.ParentID);
                     return found;
                 }
+                EnsureSelected(id);
                 return null;
             }
         }
@@ -1124,26 +1128,43 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 
 		}
 
-		public void CalcStats(Primitive prim)
+		public void CalcStats(SimObject prim)
 		{
-			if (prim is Avatar)	return;
-			BlockUntilProperties(prim);
 			if (boringNamesHeuristic(prim) == 0)
 				client.BoringNamesCount++;
 			else
 				client.GoodNamesCount++;
 		}
 
-		public bool tryGetPrim(string name, out Primitive prim)
-		{
-			prim = null;
+        public bool tryGetPrim(string name, out Primitive prim)
+        {
+            prim = null;
             uint pickNum = 0;
+            UUID uuid;
+            if (name.Contains("-") && UUID.TryParse(name,out uuid)) {
+                prim = GetPrimitive(uuid);
+                if (prim != null) return true;
+            }
+            if (name.ToLower().StartsWith("primid"))
+            {
+                if (name.Length > 6)
+                {
+                    String s = name.Substring(6);
+                    if (uint.TryParse(s,out pickNum))
+                    {
+                        prim = GetPrimitive(pickNum);
+                        if (prim != null) return true;
+                    }
+                    pickNum = 0;
+                }
+            }
+
             if (name.Contains(" "))
             {
                 string[] splitted = Parsing.ParseArguments(name);
                 if (splitted.Length > 1)
                 {
-                    if (UInt32.TryParse(splitted[splitted.Length - 1],out pickNum))
+                    if (UInt32.TryParse(splitted[splitted.Length - 1], out pickNum))
                     {
                         name = String.Join("*", splitted, 0, splitted.Length - 1);
                     }
@@ -1164,7 +1185,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                     {
                         matches.Add(obj);
                     }
-                }                
+                }
             }
             if (matches.Count == 0)
             {
@@ -1184,11 +1205,17 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             }
             bool retVal = false;
             int num = 0;
+            TheSimAvatar.SortByDistance(matches);
+            if (pickNum != 0 && pickNum <= matches.Count)
+            {
+                prim = matches[(int)pickNum].thePrim;
+                return true;
+            }
             output("Found " + matches.Count + " matches: ");
             foreach (SimObject obj in matches)
             {
                 num++;
-                output(" "+ num + ": " + obj);
+                output(" " + num + ": " + obj);
                 if (num == pickNum)
                 {
                     prim = obj.thePrim;
@@ -1200,28 +1227,26 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                 output("Use '" + name + " ###'");
             }
             return retVal;
-		}
+        }
 
-        public void describePrim(Primitive prim)
+        public string describePrim(Primitive prim)
         {
-            if (prim is Avatar) return;
-            BlockUntilProperties(prim);
             SimObject simObject = GetSimObject(prim);
             string str = simObject.ToString();
             //output(simObject.ToString());
             if (simObject.CanGetSimPosition())
             {
-                str += " is at " + simObject.GetSimPosition();
+                str += " " + Vector3.Distance(simObject.GetSimPosition(), TheSimAvatar.GetSimPosition()) + "m ";
+                str += " " + simObject.GetSimPosition();
             }
             else
             {
                 str += " relatively at " + prim.Position;
             }
-            if (prim.Sound != UUID.Zero)
-                str += " makes sound";
-            if (prim.Properties.SalePrice != 0)
-                str += " for sale L" + prim.Properties.SalePrice;
-            output(str);
+
+            if (prim.Properties != null && prim.Properties.SalePrice != 0)
+                str += " Sale: L" + prim.Properties.SalePrice;
+            return str;// output(str);
         }
 
 		public void describePrimToAI(Primitive prim)
@@ -1247,22 +1272,18 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 			}
 		}
 
-		public int comp(Primitive p1, Primitive p2)
-		{
-			return(int)(getFitness(p1) - getFitness(p2));
-		}
+        public int comp(SimObject p1, SimObject p2)
+        {
+            return (int)(getFitness(p2) - getFitness(p1));
+        }
 
 		public List<Primitive> getPrimitives(int num)
 		{
-
-			ListAsSet<Primitive> ret = new ListAsSet<Primitive>();
-
-			prims.ForEach(delegate(Primitive prim){
+            List<SimObject> ret = new List<SimObject>();
+            TheSimAvatar.ScanNewObjects();
+            TheSimAvatar.GetKnownObjects().ForEach(delegate(SimObject prim)
+            {
 						  ret.Add(prim);
-
-
-
-
 						 });
 
 			//foreach (Primitive prim in prims.ForEach.Values)
@@ -1270,27 +1291,27 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 			//    ret.Add(prim);
 			//}
 
+            ret.Sort(new Comparison<SimObject>(comp));
+            if (ret.Count > num)
+                ret = ret.GetRange(0, num);
 
-			if (ret.Count <= num) {
-				updateNumberedObjects(ret, num);
-				return ret;
-			} else {
-				ret.Sort(new Comparison<Primitive>(comp));
-				updateNumberedObjects(ret, num);
-				return ret.GetRange(0, num);
-			}
+            ret.Sort(TheSimAvatar.compDistance);
+
+            List<Primitive> ps = new List<Primitive>();
+            foreach (SimObject os in ret)
+            {
+                ps.Add(os.thePrim);
+            }
+            return ps;
 		}
 
-		void updateNumberedObjects(ListAsSet<Primitive> ret, int num)
-		{
-			numberedObjects.Clear();
-			for (int i = 0; i < num && i < ret.Count; ++i) {
-				if (ret[i].Properties != null) numberedObjects.Add(ret[i].Properties.Name);
-			}
-		}
 
-		float getFitness(Primitive prim)
+        float getFitness(SimObject prim)
 		{
+            if (true)
+            {
+                return ((float)prim.ToString().Length/5 - (float)TheSimAvatar.distance(prim));
+            }
 			float fitness = 1;
 			foreach (ObjectHeuristic heuristic in objectHeuristics)
 			{
@@ -1299,30 +1320,27 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 			return fitness;
 		}
 
-		float distanceHeuristic(Primitive prim)
+        float distanceHeuristic(SimObject prim)
 		{
 			if (prim != null)
-				return(float)(1.0 / Math.Exp((double)Vector3.Distance(client.Self.RelativePosition, prim.Position)));
+				return(float)(1.0 / Math.Exp((double)TheSimAvatar.distance(prim))
+                    );
 			else
 				return(float)0.01;
 		}
 
-		float nameLengthHeuristic(Primitive prim)
-		{
-            BlockUntilProperties(prim);
-			if ((prim != null) && (prim.Properties.Name != null)) {
-				return(float)prim.Properties.Name.Length / (float)maxNameLength;
-			} else
-				return(float)0.1;
-		}
+        //float nameLengthHeuristic(Primitive prim)
+        //{
+        //    if ((prim != null) && (prim.Properties!=null) && (prim.Properties.Name != null))
+        //    {
+        //        return(float)prim.Properties.Name.Length / (float)maxNameLength;
+        //    } else
+        //        return(float)0.1;
+        //}
 
-		float boringNamesHeuristic(Primitive prim)
+        float boringNamesHeuristic(SimObject prim)
 		{
-			string name = prim.Properties.Name;
-			if (name == "Object" || name == "Component" || name == null)
-				return(float)0.1;
-			else
-				return 1;
+            return prim.ToString().Length;
 		}
 
 		bool tryGetBuildingPos(ListAsSet<Primitive> group, out Vector3 centroid)
@@ -1395,39 +1413,11 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 
 		public string getObjectName(Primitive prim)
 		{
-			BlockUntilProperties(prim);
-			string name = getObjectShortName(prim);
-			for (int i = 0; i < numberedObjects.Count; ++i)
-				if (numberedObjects[i] == prim.Properties.Name)
-					name = (i + 1) + ": " + name;
-			return name;
+            SimObject so = GetSimObject(prim);
+            if (so != null) return "" + so;
+            return "" + prim;
 		}
 
-		public string getObjectShortName(Primitive prim)
-		{
-			if (prim.Properties.Name.Length < maxShortNameLength) {
-				return prim.Properties.Name;
-			} else {
-				if (reverseShortNames.ContainsKey(prim.Properties.Name))
-					return reverseShortNames[prim.Properties.Name];
-				else {
-					string shortName = "";
-					int i = 0;
-					foreach (string token in prim.Properties.Name.Split(null))
-					{
-						if (i != 0)	shortName += " ";
-						i++;
-						shortName += token;
-						if (!shortNames.ContainsKey(shortName)) {
-							shortNames[shortName] = prim.Properties.Name;
-							reverseShortNames[prim.Properties.Name] = shortName;
-							return shortName;
-						}
-					}
-					return prim.Properties.Name;
-				}
-			}
-		}
 
 		public string GetPrimTypeName(Primitive target)
 		{

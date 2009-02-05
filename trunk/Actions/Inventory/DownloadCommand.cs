@@ -31,7 +31,7 @@ namespace cogbot.Actions
             assetType = AssetType.Unknown;
             DownloadHandle.Reset();
 
-            if (UUID.TryParse(args[0], out AssetID))
+            if (UUIDTryParse(args[0], out AssetID))
             {
                 int typeInt;
                 if (Int32.TryParse(args[1], out typeInt) && typeInt >= 0 && typeInt <= 22)

@@ -65,7 +65,7 @@ namespace cogbot.Actions
                     {
                         foreach (SimObject o in objs)
                         {
-                            Client.WorldSystem.describePrim(o.thePrim);
+                            WriteLine(Client.WorldSystem.describePrim(o.thePrim));
                         }
                         return;
                     }
@@ -84,7 +84,7 @@ namespace cogbot.Actions
                     {
                         Primitive prim;
                         if (Client.WorldSystem.tryGetPrim(args.str, out prim))
-                            Client.WorldSystem.describePrim(prim);
+                            WriteLine(Client.WorldSystem.describePrim(prim));
                         else
                         {
 

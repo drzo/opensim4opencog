@@ -660,9 +660,9 @@ namespace cogbot
 			List<Primitive> prims = WorldSystem.getPrimitives(16);
 			if (prims.Count > 1) {
 				string str = "You see the objects ";
-				for (int i = 0; i < prims.Count - 1; ++i)
-					str += WorldSystem.getObjectName(prims[i]) + ", ";
-				str += "and " + WorldSystem.getObjectName(prims[prims.Count - 1]) + ".";
+				for (int i = 0; i < prims.Count; ++i)
+                    str += WorldSystem.describePrim(prims[i]) + "\n";
+				//str += "and " + WorldSystem.GetSimObject(prims[prims.Count - 1]) + ".";
 				output(str);
 			} else if (prims.Count == 1) {
 				output("You see one object: " + WorldSystem.getObjectName(prims[0]));

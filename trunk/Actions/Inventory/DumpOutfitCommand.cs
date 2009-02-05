@@ -28,7 +28,7 @@ namespace cogbot.Actions
 
             UUID target;
 
-            if (!UUID.TryParse(args[0], out target))
+            if (!UUIDTryParse(args[0], out target))
                 return "Usage: dumpoutfit [avatar-uuid]";
 
             lock (Client.Network.Simulators)

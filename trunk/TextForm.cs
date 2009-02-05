@@ -198,7 +198,8 @@ namespace cogbot
         }
         public bool ExecuteCommand(string text)
         {
-            text = text.Replace("\"", "");
+            //text = text.Replace("\"", "");
+            text = text.Trim();
             output("textform> " + text);
             string verb = text.Split(null)[0];
             if (groupActions.ContainsKey(verb))

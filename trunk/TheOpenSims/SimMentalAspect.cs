@@ -31,14 +31,15 @@ namespace cogbot.TheOpenSims
     public class BotNeeds
     {
 
+
         static public BotNeeds ZERO
         {
             get { return new BotNeeds(0.0f); }
         }
-
+        static FieldInfo[] needFields = typeof(BotNeeds).GetFields();
         public IEnumerable<Object> GetNeeds()
         {
-            return GetType().GetFields();
+            return needFields;
         }
         public float GetNeed(object fi)
         {

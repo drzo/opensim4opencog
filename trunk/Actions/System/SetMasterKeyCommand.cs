@@ -19,7 +19,7 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            Client.MasterKey = UUID.Parse(args[0]);
+            Client.MasterKey = UUIDParse(args[0]);
 
             lock (Client.Network.Simulators)
             {
@@ -43,5 +43,6 @@ namespace cogbot.Actions
 
             return "Master set to " + Client.MasterKey.ToString();
         }
+
     }
 }
