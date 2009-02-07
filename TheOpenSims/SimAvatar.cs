@@ -30,7 +30,13 @@ namespace cogbot.TheOpenSims
 
 
         // things the bot cycles through mentally
-        public ListAsSet<SimObject> KnowsAboutList = new ListAsSet<SimObject>();
+        public ListAsSet<SimObject> KnowsAboutObjects = new ListAsSet<SimObject>();
+
+        public ListAsSet<SimObject> GetKnownObjects()
+        {
+            ScanNewObjects(3, SightRange);
+            return KnowsAboutObjects;
+        }
 
         // which will result in 
         public ListAsSet<BotAction> KnowsActList = new ListAsSet<BotAction>();
@@ -65,6 +71,7 @@ namespace cogbot.TheOpenSims
             CurrentNeeds = new BotNeeds(90.0F);
             AspectName = slAvatar.Name;
             avatarHeartbeatThread = new Thread(new ThreadStart(Aging));
+            avatarHeartbeatThread.Name = "AvatarHeartbeatThread for " + Client;
             avatarHeartbeatThread.Start();
             MakeEnterable();
         }
@@ -118,6 +125,7 @@ namespace cogbot.TheOpenSims
             if (avatarThinkerThread == null)
             {
                 avatarThinkerThread = new Thread(new ThreadStart(Think));
+                avatarThinkerThread.Name = "AvatarThinkerThread for " + Client;
                 if (IsLocal())
                 {
                     // only think for ourselves
@@ -182,7 +190,7 @@ namespace cogbot.TheOpenSims
 
         public void ThinkOnce()
         {
-            ScanNewObjects();
+            ScanNewObjects(2, SightRange);
 
             Thread.Sleep(2000);
             CurrentAction = GetNextAction();
@@ -200,14 +208,14 @@ namespace cogbot.TheOpenSims
 
             if (acts.Count > 0)
             {
-                act = BestAct(acts);
+                act = FindBestAct(acts);
                 acts.Remove(act);
             }
             return act;
         }
 
-        public BotAction BestAct(ListAsSet<BotAction> acts)
-        {
+        public BotAction FindBestAct(IList<BotAction> acts)
+        {            
             if (acts.Count == 0) return null;
             BotAction bestAct = acts[0];
             if (acts.Count == 1) return bestAct;
@@ -250,7 +258,7 @@ namespace cogbot.TheOpenSims
         private ListAsSet<BotAction> NewPossibleActions()
         {
             ListAsSet<SimObject> knowns = GetKnownObjects();
-
+            SortByDistance(knowns);
             ListAsSet<BotAction> acts = new ListAsSet<BotAction>();
             foreach (BotAction obj in LearnedPossibleActions)
             {
@@ -268,19 +276,28 @@ namespace cogbot.TheOpenSims
                     }
 
                 }
-            }
+            }           
             return acts;
         }
 
-        internal void DoBestUse(SimObject objToUse)
+        internal void DoBestUse(SimObject someObject)
         {
-            UseAspect(objToUse);
+            SimTypeUsage use = someObject.GetBestUse(this);
+            if (use == null)
+            {
+                float closeness = Approach(someObject, 2);
+                Client.Self.Touch(someObject.thePrim.LocalID);
+                if (closeness < 3)
+                {
+                    Client.Self.RequestSit(someObject.thePrim.ID, Vector3.Zero);
+                    Client.Self.Sit();
+                }
+                return;
+            }
+            UseAspect(new BotObjectAction(this, new SimObjectUsage(use, someObject)));
+            return;
         }
 
-        public ListAsSet<SimObject> GetKnownObjects()
-        {
-            return KnowsAboutList;
-        }
 
         public void UseAspect(BotMentalAspect someAspect)
         {
@@ -299,30 +316,23 @@ namespace cogbot.TheOpenSims
             if (someAspect is SimObject)
             {
                 SimObject someObject = (SimObject)someAspect;
-                SimTypeUsage use = someObject.GetBestUse(this);
-                if (use == null)
-                {
-                    float closeness = Approach(someObject, 2);
-                    Client.Self.Touch(someObject.thePrim.LocalID);
-                    if (closeness < 3)
-                    {
-                        Client.Self.RequestSit(someObject.thePrim.ID, Vector3.Zero);
-                        Client.Self.Sit();
-                    }
-                    return;
-                }
-                UseAspect(new BotObjectAction(this, new SimObjectUsage(use, someObject)));
-                return;
+                DoBestUse(someObject);
             }
 
         }
 
+        ListAsSet<SimObject> InterestingObjects = new ListAsSet<SimObject>();
+
         public SimObject GetNextInterestingObject()
         {
-            SimObject mostInteresting = null;
-            KnowsAboutList.Remove(this);
-            int count = KnowsAboutList.Count - 2;
-            foreach (BotMentalAspect cAspect in KnowsAboutList)
+            SimObject mostInteresting = null;     
+            if (InterestingObjects.Count < 2)
+            {
+               InterestingObjects = GetKnownObjects();
+               InterestingObjects.Remove(this);
+            }
+            int count = InterestingObjects.Count - 2;
+            foreach (BotMentalAspect cAspect in InterestingObjects)
             {
                 if (cAspect is SimObject)
                 {
@@ -339,10 +349,11 @@ namespace cogbot.TheOpenSims
                     if (count < 0) break;
                 }
             }
-            KnowsAboutList.Remove(mostInteresting);
-            KnowsAboutList.AddTo(mostInteresting);
+            InterestingObjects.Remove(mostInteresting);
+            InterestingObjects.AddTo(mostInteresting);
             return mostInteresting;
         }
+
         readonly Random MyRandom = new Random(DateTime.Now.Millisecond);
         // TODO Real Eval routine
         public BotMentalAspect CompareTwo(BotMentalAspect mostInteresting, BotMentalAspect cAspect)
@@ -356,21 +367,23 @@ namespace cogbot.TheOpenSims
             return (MyRandom.Next(1, 2) == 1) ? mostInteresting : cAspect;
         }
 
-        public void ScanNewObjects()
+        public void ScanNewObjects(int minimum,float sightRange)
         {
-            ListAsSet<SimObject> objects = GetNearByObjects(SightRange, true);
-            lock (objects) foreach (SimObject obj in objects.GetBaseEnumerable())
+            ListAsSet<SimObject> objects = GetNearByObjects(sightRange, true);
+            lock (objects)
+            {
+                foreach (SimObject obj in objects.GetBaseEnumerable())
                 {
                     if (obj != this)
                         if (obj.IsRoot() || obj.IsTyped())
-                            lock (KnowsAboutList) if (!KnowsAboutList.Contains(obj))
-                                {
-                                    if (KnowsAboutList.Count < 2) KnowsAboutList.AddTo(obj);
-                                    else
-                                        KnowsAboutList.Insert(1, obj);
-                                }
+                            KnowsAboutObjects.Add(obj);
                 }
-
+            }
+            if (KnowsAboutObjects.Count < minimum)
+            {
+                if (sightRange<255)
+                ScanNewObjects(minimum, sightRange + 10);
+            }
         }
 
         // Avatars approach distance
@@ -399,15 +412,11 @@ namespace cogbot.TheOpenSims
                 }
             }
 
-            float dist = obj.GetSizeDistance();
-            if (dist > maxDistance)
-            {
-                dist = maxDistance;
-            }
+            float dist = obj.GetSizeDistance()+maxDistance;
 
             Vector3 vector3 = obj.GetUsePosition();
-
-            Debug("Approaching " + vector3 + " dist=" + dist + " " + obj);
+            string str = "Approaching " + obj + " " + DistanceVectorString(obj) + " to get " + dist;
+            Debug(str);
             obj.MakeEnterable();
 
 
@@ -418,6 +427,7 @@ namespace cogbot.TheOpenSims
                     MovementToVector.MoveTo(Client, vector3, dist);
                 } catch (Exception) {}
             }));
+            mover.Name = str;
             mover.Start();
             for (int i = 0; i < 10; i++)
             {
@@ -437,7 +447,7 @@ namespace cogbot.TheOpenSims
             }
 
             Client.Self.Movement.TurnToward(obj.GetSimPosition());
-
+            StopMoving();
             if (UnPhantom != null)            
                 UnPhantom.RestoreEnterable();
 
@@ -552,10 +562,9 @@ namespace cogbot.TheOpenSims
 
         public void ExecuteLisp(SimObjectUsage botObjectAction, String lisp)
         {
-            if (lisp == null) return;
-            BotClient Client = GetGridClient();
             if (!String.IsNullOrEmpty(lisp))
             {
+                BotClient Client = GetGridClient();
                 Client.lispTaskInterperter.Intern("TheBot", this);
                 Client.lispTaskInterperter.Intern("Target", botObjectAction.Target);
                 Client.lispTaskInterperter.Intern("botObjectAction", botObjectAction);
@@ -583,21 +592,56 @@ namespace cogbot.TheOpenSims
         }
         public override bool Matches(string name)
         {
-            return SimTypeSystem.MatchString(base.ToString(), name);
+            return SimTypeSystem.MatchString(base.ToString(), name) || SimTypeSystem.MatchString(ToString(), name);
         }
 
 
-
-        internal void SortByDistance(List<SimObject> sortme)
+        internal void StopMoving()
         {
-            sortme.Sort(compDistance);
-        }
+            Client.Self.AutoPilotCancel();
 
-        public int compDistance(SimObject p1, SimObject p2)
-        {
-            return (int)(distance(p1) - distance(p2));
-        }
+            //  Client.Self.Movement. AlwaysRun = false;
+            Client.Self.Movement.AtNeg = false;
+            Client.Self.Movement.AtPos = false;
+            Client.Self.Movement.AutoResetControls = false;
+            //   Client.Self.Movement. Away = false;
+            Client.Self.Movement.FastAt = false;
+            Client.Self.Movement.FastLeft = false;
+            Client.Self.Movement.FastUp = false;
+            Client.Self.Movement.FinishAnim = true;
+            //   Client.Self.Movement. Fly = false;
+            Client.Self.Movement.LButtonDown = false;
+            Client.Self.Movement.LButtonUp = false;
+            Client.Self.Movement.LeftNeg = false;
+            Client.Self.Movement.LeftPos = false;
+            Client.Self.Movement.MLButtonDown = false;
+            Client.Self.Movement.MLButtonUp = false;
+            // Client.Self.Movement. Mouselook = false;
+            Client.Self.Movement.NudgeAtNeg = false;
+            Client.Self.Movement.NudgeAtPos = false;
+            Client.Self.Movement.NudgeLeftNeg = false;
+            Client.Self.Movement.NudgeLeftPos = false;
+            Client.Self.Movement.NudgeUpNeg = false;
+            Client.Self.Movement.NudgeUpPos = false;
+            Client.Self.Movement.PitchNeg = false;
+            Client.Self.Movement.PitchPos = false;
+            //Client.Self.Movement. SitOnGround = false;
+            //Client.Self.Movement. StandUp = false;
+            Client.Self.Movement.Stop = true;
+            Client.Self.Movement.TurnLeft = false;
+            Client.Self.Movement.TurnRight = false;
+            Client.Self.Movement.UpdateInterval = 1;
+            Client.Self.Movement.UpNeg = false;
+            Client.Self.Movement.UpPos = false;
+            Client.Self.Movement.YawNeg = false;
+            Client.Self.Movement.YawPos = false;
 
+            //Client.Self.Movement.UpdateInterval = 0;
+            //Client.Self.Movement.SendUpdate();
+            Client.Self.Movement.FinishAnim = true;
+            Client.Self.Movement.Stop = true;
+            Client.Self.Movement.SendUpdate(true);    
+        }
     }
 
 }

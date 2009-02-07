@@ -139,9 +139,9 @@ namespace cogbot.Listeners
         public virtual void Self_OnInstantMessage(InstantMessage im, Simulator simulator) { OnEvent("On-Instant-Message", paramNamesOnInstantMessage, paramTypesOnInstantMessage, im, simulator); }
 
         static readonly string[] paramNamesOnTeleport = new string[] { "message", "status", "flags" };
-        static readonly Type[] paramTypesOnTeleport = new Type[] { typeof(string), typeof(AgentManager.TeleportStatus), typeof(AgentManager.TeleportFlags) };
+        static readonly Type[] paramTypesOnTeleport = new Type[] { typeof(string), typeof(TeleportStatus), typeof(TeleportFlags) };
 
-        public virtual void Self_OnTeleport(string message, AgentManager.TeleportStatus status, AgentManager.TeleportFlags flags) { OnEvent("On-Teleport", paramNamesOnTeleport, paramTypesOnTeleport, message, status, flags); }
+        public virtual void Self_OnTeleport(string message, TeleportStatus status, TeleportFlags flags) { OnEvent("On-Teleport", paramNamesOnTeleport, paramTypesOnTeleport, message, status, flags); }
 
         static readonly string[] paramNamesOnBalanceUpdated = new string[] { "balance" };
         static readonly Type[] paramTypesOnBalanceUpdated = new Type[] { typeof(int) };
@@ -202,9 +202,9 @@ namespace cogbot.Listeners
         public virtual void Self_OnCameraConstraint(Vector4 collidePlane) { OnEvent("On-Camera-Constraint", paramNamesOnCameraConstraint, paramTypesOnCameraConstraint, collidePlane); }
 
         static readonly string[] paramNamesOnScriptSensorReply = new string[] { "requestorID", "groupID", "name", "objectID", "ownerID", "position", "range", "rotation", "type", "velocity" };
-        static readonly Type[] paramTypesOnScriptSensorReply = new Type[] { typeof(UUID), typeof(UUID), typeof(string), typeof(UUID), typeof(UUID), typeof(Vector3), typeof(float), typeof(Quaternion), typeof(AgentManager.ScriptSensorTypeFlags), typeof(Vector3) };
+        static readonly Type[] paramTypesOnScriptSensorReply = new Type[] { typeof(UUID), typeof(UUID), typeof(string), typeof(UUID), typeof(UUID), typeof(Vector3), typeof(float), typeof(Quaternion), typeof(ScriptSensorTypeFlags), typeof(Vector3) };
 
-        public virtual void Self_OnScriptSensorReply(UUID requestorID, UUID groupID, string name, UUID objectID, UUID ownerID, Vector3 position, float range, Quaternion rotation, AgentManager.ScriptSensorTypeFlags type, Vector3 velocity) { OnEvent("On-Script-Sensor-Reply", paramNamesOnScriptSensorReply, paramTypesOnScriptSensorReply, requestorID, groupID, name, objectID, ownerID, position, range, rotation, type, velocity); }
+        public virtual void Self_OnScriptSensorReply(UUID requestorID, UUID groupID, string name, UUID objectID, UUID ownerID, Vector3 position, float range, Quaternion rotation, ScriptSensorTypeFlags type, Vector3 velocity) { OnEvent("On-Script-Sensor-Reply", paramNamesOnScriptSensorReply, paramTypesOnScriptSensorReply, requestorID, groupID, name, objectID, ownerID, position, range, rotation, type, velocity); }
 
         static readonly string[] paramNamesOnAvatarSitResponse = new string[] { "objectID", "autoPilot", "cameraAtOffset", "cameraEyeOffset", "forceMouselook", "sitPosition", "sitRotation" };
         static readonly Type[] paramTypesOnAvatarSitResponse = new Type[] { typeof(UUID), typeof(bool), typeof(Vector3), typeof(Vector3), typeof(bool), typeof(Vector3), typeof(Quaternion) };

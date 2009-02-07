@@ -29,6 +29,7 @@ namespace cogbot.Actions.SimExport
                 {
                     //throw new NotImplementedException();
                     Thread thread = new Thread(new ThreadStart(MonitorPrimsAwaitingSelect));
+                    thread.Name = "SimExportCommand Thread";
                     thread.Start();
                    // SetUpSimExportCommand(Client);
                 }
@@ -345,7 +346,7 @@ namespace cogbot.Actions.SimExport
 
                     client.Self.Movement.SendManualUpdate(
                         flags, pos, Vector3.UnitZ, Vector3.UnitX, Vector3.UnitY, Quaternion.Identity, Quaternion.Identity, far,
-                        AgentManager.AgentFlags.None, AgentManager.AgentState.None, false);
+                        AgentFlags.None, AgentState.None, false);
                 }
 
                 Thread.Sleep(500);

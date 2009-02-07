@@ -6,7 +6,7 @@ namespace Simian
 {
     class MainEntry
     {
-        static void SimianMain(string[] args)
+        static void MainSimian(string[] args)
         {
             Simian simulator = new Simian();
             if (simulator.Start())

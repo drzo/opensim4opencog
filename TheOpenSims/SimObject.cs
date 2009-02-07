@@ -10,7 +10,55 @@ namespace cogbot.TheOpenSims
     //TheSims-like object
     public class SimObject : BotMentalAspect
     {
-        public double distance(SimObject prim)
+
+        public bool IsPhantom
+        {
+            get
+            {
+                if (MadePhantom) return true;
+                return (thePrim.Flags & PrimFlags.Phantom) == PrimFlags.Phantom;
+            }
+            set
+            {
+                if (IsPhantom == value) return;
+                if (value)
+                {
+                    WorldSystem.SetPrimFlags(thePrim, (PrimFlags)(thePrim.Flags | PrimFlags.Phantom));
+                    MadePhantom = true;
+                }
+                else
+                {
+                    WorldSystem.SetPrimFlags(thePrim, (PrimFlags)(thePrim.Flags - PrimFlags.Phantom));
+                    MadePhantom = false;
+                }
+
+            }
+        }
+
+        public bool IsPhysical
+        {
+            get
+            {
+                return (thePrim.Flags & PrimFlags.Physics) == PrimFlags.Physics;
+            }
+            set
+            {
+                if (IsPhysical == value) return;
+                if (value)
+                {
+                    WorldSystem.SetPrimFlags(thePrim, (PrimFlags)(thePrim.Flags | PrimFlags.Physics));
+                    MadeNonPhysical = false;
+                }
+                else
+                {
+                    WorldSystem.SetPrimFlags(thePrim, (PrimFlags)(thePrim.Flags - PrimFlags.Physics));
+                    MadeNonPhysical = true;
+                }
+
+            }
+        }
+    
+        public float Distance(SimObject prim)
         {
             return Vector3.Distance(GetSimPosition(), prim.GetSimPosition());
         }
@@ -273,7 +321,7 @@ namespace cogbot.TheOpenSims
             uint ParentId = thePrim.ParentID;
             if (ParentId != 0)
             {
-                str += " parent=";
+                str += " (parent ";
                 Primitive pp = WorldSystem.GetPrimitive(ParentId);
                 if (pp != null)
                 {
@@ -283,25 +331,31 @@ namespace cogbot.TheOpenSims
                 {
                     str += ParentId;
                 }
-                str += "- ";
+                str += ") ";
             }
             if (AttachedChildren.Count > 0)
             {
-                str += "(childs=" + AttachedChildren.Count + ")";
+                str += " (childs " + AttachedChildren.Count + ") ";
             }
             else
             {
-                str += "(0)";
+                str += " (ch0) ";
             }
-            str += " [";
+            str += " (size " + GetSizeDistance() + ") ";
+            str += SuperTypeString();
+            if (thePrim.Sound != UUID.Zero)
+                str += "(Audible)";
+            return str.Replace("  ", " ").Replace(") (", ")(");
+        }
+
+        private string SuperTypeString()
+        {
+            String str = "[";
             ObjectType.SuperType.ForEach(delegate(SimObjectType item)
             {
-                str += item.ToString() + " ";
+                str += item.GetTypeName() + " ";
             });
-            str = str.Trim() + "]";
-            if (thePrim.Sound != UUID.Zero)
-                str += " Audible";
-            return str;
+            return str.TrimEnd() + "]";
         }
 
         public bool CanGetSimPosition()
@@ -382,10 +436,14 @@ namespace cogbot.TheOpenSims
         {
             return ObjectType.GetUsagePromise(pUse).Magnify(scaleOnNeeds);
         }
-
+        
+        /// <summary>
+        ///  Gets the distance a SimAvatar may be from SimObject to use
+        /// </summary>
+        /// <returns>1-255</returns>
         public virtual float GetSizeDistance()
         {
-            float size = 1;
+            float size = 1;           
 
             float fx = thePrim.Scale.X;
             if (fx > size) size = fx;
@@ -403,11 +461,11 @@ namespace cogbot.TheOpenSims
             return size;
         }
 
-        public ListAsSet<SimObject> GetNearByObjects(float pUse, bool rootOnly)
+        public ListAsSet<SimObject> GetNearByObjects(float maxDistance, bool rootOnly)
         {
-            return GetNearByObjects( GetSimPosition(),WorldSystem,this,pUse,rootOnly);
-
-
+            ListAsSet<SimObject> objs = GetNearByObjects(GetSimPosition(), WorldSystem, this, maxDistance, rootOnly);
+            SortByDistance(objs);
+            return objs;
         }
 
         //static ListAsSet<SimObject> CopyObjects(List<SimObject> objects)
@@ -447,5 +505,33 @@ namespace cogbot.TheOpenSims
         {
             WorldSystem.output(thePrim+":"+ p);
         }
+        internal void SortByDistance(List<SimObject> sortme)
+        {
+            sortme.Sort(compDistance);
+        }
+
+        public int compDistance(SimObject p1, SimObject p2)
+        {
+            return (int)(Distance(p1) - Distance(p2));
+        }
+
+        public string DistanceVectorString(SimObject obj)
+        {
+            String str;
+            Vector3 loc;
+            if (!obj.CanGetSimPosition())
+            {
+                str = "unknown relative ";
+                loc = obj.thePrim.Position;
+            }
+            else
+            {
+                loc = obj.GetSimPosition();
+                float dist = Vector3.Distance(GetSimPosition(), loc);
+                str = String.Format("{0:0.00}m ", dist);
+            }
+            return str + String.Format("<{0:0.00}, {1:0.00}, {2:0.00}>", loc.X, loc.Y, loc.Z);
+        }
+
     }
 }

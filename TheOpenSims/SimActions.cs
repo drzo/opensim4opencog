@@ -71,7 +71,9 @@ namespace cogbot.TheOpenSims
                 CurrentNeeds.AddFrom(update);
                 CurrentNeeds.SetRange(0.0F, 100.0F);
                 BotNeeds difNeeds = CurrentNeeds.Minus(needsBefore);
-                TheBot.Debug(TheBotAct.ToString() + "\n\t " + Target.GetSimPosition() + " dist=" + Vector3.Distance(Target.GetSimPosition(), TheBot.GetSimPosition()) + "=> " + difNeeds.ShowNonZeroNeeds());
+                TheBot.Debug(TheBotAct.ToString() + "\n\t " +
+                    TheBot.DistanceVectorString(Target)             
+                    + "=> " + difNeeds.ShowNonZeroNeeds());
                 TheBot.ExecuteLisp(this, TypeUsage.LispScript);
                 Thread.Sleep(TypeUsage.totalTimeMS);
             });
@@ -230,9 +232,16 @@ namespace cogbot.TheOpenSims
             }
             anim = amin0;
         }
+
+        public override string ToString()
+        {
+            return "AnimLoop " + anim + " of " + Client;
+        }
+
         public void Start()
         {
             animLoop = new Thread(new ThreadStart(LoopAnim));
+            animLoop.Name = "Thread for " + this.ToString() ;
             animLoop.Start();
         }
         void LoopAnim()
@@ -326,6 +335,7 @@ namespace cogbot.TheOpenSims
         {
             return TypeUsage.ChangePromise;
         }
+
 
         public override void InvokeReal()
         {

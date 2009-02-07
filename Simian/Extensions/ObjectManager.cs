@@ -149,6 +149,7 @@ namespace Simian.Extensions
             prim.PrimData.ProfileHollow = Primitive.UnpackProfileHollow(add.ObjectData.ProfileHollow);
             prim.PrimData.PCode = pcode;
 
+            prim.Properties = new Primitive.ObjectProperties();
             prim.Properties.CreationDate = DateTime.Now;
             prim.Properties.CreatorID = agent.Avatar.ID;
             prim.Properties.Description = String.Empty;
@@ -160,7 +161,7 @@ namespace Simian.Extensions
             prim.Properties.Permissions = Permissions.FullPermissions;
             prim.Properties.SalePrice = 10;
 
-            prim.RegionHandle = server.RegionHandle;
+            prim.RegionHandle = server.Scene.RegionHandle;
             prim.Rotation = add.ObjectData.Rotation;
             prim.Scale = scale;
             prim.Textures = new Primitive.TextureEntry(Primitive.TextureEntry.WHITE_TEXTURE);
@@ -335,12 +336,12 @@ namespace Simian.Extensions
 
                 ObjectUpdatePacket update = new ObjectUpdatePacket();
 
-                update.RegionData.RegionHandle = server.RegionHandle;
+                update.RegionData.RegionHandle = server.Scene.RegionHandle;
                 update.RegionData.TimeDilation = UInt16.MaxValue;               
 
                 update.ObjectData = new ObjectUpdatePacket.ObjectDataBlock[1];
 
-                update.ObjectData[0] = SimulationObject.BuildUpdateBlock(linkSet[i].Prim, server.RegionHandle, linkSet[i].Prim.Flags);
+                update.ObjectData[0] = SimulationObject.BuildUpdateBlock(linkSet[i].Prim, server.Scene.RegionHandle, linkSet[i].Prim.Flags);
 
                 if (linkSet[i].Prim.ParentID > 0)
                 {
@@ -404,7 +405,7 @@ namespace Simian.Extensions
 
             ObjectUpdatePacket update = new ObjectUpdatePacket();
 
-            update.RegionData.RegionHandle = server.RegionHandle;
+            update.RegionData.RegionHandle = server.Scene.RegionHandle;
             update.RegionData.TimeDilation = UInt16.MaxValue;
 
             update.ObjectData = new ObjectUpdatePacket.ObjectDataBlock[linkSet.Count];
@@ -412,7 +413,7 @@ namespace Simian.Extensions
             for (int i = 0; i < linkSet.Count; i++)
             {
                 update.ObjectData[i] = SimulationObject.BuildUpdateBlock(linkSet[i].Prim,
-                    server.RegionHandle, linkSet[i].Prim.Flags);
+                    server.Scene.RegionHandle, linkSet[i].Prim.Flags);
 
                 update.ObjectData[i].ParentID = 0;
                 linkSet[i].LinkNumber = 0;

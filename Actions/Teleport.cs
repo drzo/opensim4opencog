@@ -16,10 +16,11 @@ namespace cogbot.Actions
             Client.Self.OnTeleport += new AgentManager.TeleportCallback(On_Teleport);
         }
 
-        public void On_Teleport(string message, AgentManager.TeleportStatus status, AgentManager.TeleportFlags flags)
+                                    //string message, TeleportStatus status, TeleportFlags flags
+        public void On_Teleport(string message, TeleportStatus status, TeleportFlags flags)
         {            
             Client.describeNext = false;
-            if (status == AgentManager.TeleportStatus.Finished)
+            if (status == TeleportStatus.Finished)
             {
                 WriteLine(message);
                 Client.describePeople(false);

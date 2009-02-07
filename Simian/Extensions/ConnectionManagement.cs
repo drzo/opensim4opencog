@@ -32,12 +32,10 @@ namespace Simian.Extensions
             handshake.RegionInfo.BillableFactor = 0f;
             handshake.RegionInfo.CacheID = UUID.Random();
             handshake.RegionInfo.IsEstateManager = false;
-            handshake.RegionInfo.RegionFlags = (uint)(RegionFlags.AllowDirectTeleport | RegionFlags.AllowLandmark |
-                RegionFlags.AllowParcelChanges | RegionFlags.AllowSetHome | RegionFlags.AllowVoice | RegionFlags.PublicAllowed |
-                RegionFlags.Sandbox | RegionFlags.TaxFree);
+            handshake.RegionInfo.RegionFlags = (uint)server.Scene.RegionFlags;
             handshake.RegionInfo.SimOwner = UUID.Random();
             handshake.RegionInfo.SimAccess = (byte)SimAccess.Min;
-            handshake.RegionInfo.SimName = Utils.StringToBytes("Simian");
+            handshake.RegionInfo.SimName = Utils.StringToBytes(server.Scene.RegionName);
             handshake.RegionInfo.WaterHeight = server.Scene.WaterHeight;
             handshake.RegionInfo.TerrainBase0 = UUID.Zero;
             handshake.RegionInfo.TerrainBase1 = UUID.Zero;
@@ -55,7 +53,7 @@ namespace Simian.Extensions
             handshake.RegionInfo.TerrainStartHeight01 = 40f;
             handshake.RegionInfo.TerrainStartHeight10 = 0f;
             handshake.RegionInfo.TerrainStartHeight11 = 40f;
-            handshake.RegionInfo2.RegionID = UUID.Random();
+            handshake.RegionInfo2.RegionID = server.Scene.RegionID;
 
             server.UDP.SendPacket(agent.Avatar.ID, handshake, PacketCategory.Transaction);
         }
@@ -84,7 +82,7 @@ namespace Simian.Extensions
 
             server.UDP.SendPacket(agent.Avatar.ID, reply, PacketCategory.Transaction);
 
-            server.Avatars.Disconnect(agent);
+            server.Scene.ObjectRemove(this, agent.Avatar.ID);
         }
     }
 }

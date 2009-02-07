@@ -4,18 +4,28 @@
         <name>OpenMetaverseTypes</name>
     </assembly>
     <members>
-        <member name="T:OpenMetaverse.Vector2">
+        <member name="T:OpenMetaverse.Vector3d">
             <summary>
-            A two-dimensional vector with floating-point values
+            A three-dimensional vector with doubleing-point values
             </summary>
         </member>
-        <member name="F:OpenMetaverse.Vector2.X">
+        <member name="F:OpenMetaverse.Vector3d.X">
             <summary>X value</summary>
         </member>
-        <member name="F:OpenMetaverse.Vector2.Y">
+        <member name="F:OpenMetaverse.Vector3d.Y">
             <summary>Y value</summary>
         </member>
-        <member name="M:OpenMetaverse.Vector2.ApproxEquals(OpenMetaverse.Vector2,System.Single)">
+        <member name="F:OpenMetaverse.Vector3d.Z">
+            <summary>Z value</summary>
+        </member>
+        <member name="M:OpenMetaverse.Vector3d.#ctor(System.Byte[],System.Int32)">
+            <summary>
+            Constructor, builds a vector from a byte array
+            </summary>
+            <param name="byteArray">Byte array containing three eight-byte doubles</param>
+            <param name="pos">Beginning position in the byte array</param>
+        </member>
+        <member name="M:OpenMetaverse.Vector3d.ApproxEquals(OpenMetaverse.Vector3d,System.Double)">
             <summary>
             Test if this vector is equal to another vector, within a given
             tolerance range
@@ -26,155 +36,161 @@
             <returns>True if the magnitude of difference between the two vectors
             is less than the given tolerance, otherwise false</returns>
         </member>
-        <member name="M:OpenMetaverse.Vector2.IsFinite">
-            <summary>
-            Test if this vector is composed of all finite numbers
-            </summary>
-        </member>
-        <member name="M:OpenMetaverse.Vector2.CompareTo(OpenMetaverse.Vector2)">
+        <member name="M:OpenMetaverse.Vector3d.CompareTo(OpenMetaverse.Vector3d)">
             <summary>
             IComparable.CompareTo implementation
             </summary>
         </member>
-        <member name="M:OpenMetaverse.Vector2.FromBytes(System.Byte[],System.Int32)">
+        <member name="M:OpenMetaverse.Vector3d.IsFinite">
+            <summary>
+            Test if this vector is composed of all finite numbers
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.Vector3d.FromBytes(System.Byte[],System.Int32)">
             <summary>
             Builds a vector from a byte array
             </summary>
-            <param name="byteArray">Byte array containing two four-byte floats</param>
+            <param name="byteArray">Byte array containing a 24 byte vector</param>
             <param name="pos">Beginning position in the byte array</param>
         </member>
-        <member name="M:OpenMetaverse.Vector2.GetBytes">
+        <member name="M:OpenMetaverse.Vector3d.GetBytes">
             <summary>
             Returns the raw bytes for this vector
             </summary>
-            <returns>An eight-byte array containing X and Y</returns>
+            <returns>A 24 byte array containing X, Y, and Z</returns>
         </member>
-        <member name="M:OpenMetaverse.Vector2.Parse(System.String)">
+        <member name="M:OpenMetaverse.Vector3d.Parse(System.String)">
             <summary>
             Parse a vector from a string
             </summary>
-            <param name="val">A string representation of a 2D vector, enclosed 
+            <param name="val">A string representation of a 3D vector, enclosed 
             in arrow brackets and separated by commas</param>
         </member>
-        <member name="M:OpenMetaverse.Vector2.SmoothStep(OpenMetaverse.Vector2,OpenMetaverse.Vector2,System.Single)">
+        <member name="M:OpenMetaverse.Vector3d.SmoothStep(OpenMetaverse.Vector3d,OpenMetaverse.Vector3d,System.Double)">
             <summary>
             Interpolates between two vectors using a cubic equation
             </summary>
         </member>
-        <member name="M:OpenMetaverse.Vector2.ToString">
+        <member name="M:OpenMetaverse.Vector3d.ToString">
             <summary>
             Get a formatted string representation of the vector
             </summary>
             <returns>A string representation of the vector</returns>
         </member>
-        <member name="M:OpenMetaverse.Vector2.ToRawString">
+        <member name="M:OpenMetaverse.Vector3d.ToRawString">
             <summary>
             Get a string representation of the vector elements with up to three
             decimal digits and separated by spaces only
             </summary>
             <returns>Raw string representation of the vector</returns>
         </member>
-        <member name="F:OpenMetaverse.Vector2.Zero">
-            <summary>A vector with a value of 0,0</summary>
-        </member>
-        <member name="F:OpenMetaverse.Vector2.One">
-            <summary>A vector with a value of 1,1</summary>
-        </member>
-        <member name="F:OpenMetaverse.Vector2.UnitX">
-            <summary>A vector with a value of 1,0</summary>
-        </member>
-        <member name="F:OpenMetaverse.Vector2.UnitY">
-            <summary>A vector with a value of 0,1</summary>
-        </member>
-        <member name="T:OpenMetaverse.Color4">
+        <member name="M:OpenMetaverse.Vector3d.op_Modulus(OpenMetaverse.Vector3d,OpenMetaverse.Vector3d)">
             <summary>
-            An 8-bit color structure including an alpha channel
+            Cross product between two vectors
             </summary>
         </member>
-        <member name="F:OpenMetaverse.Color4.R">
-            <summary>Red</summary>
+        <member name="F:OpenMetaverse.Vector3d.Zero">
+            <summary>A vector with a value of 0,0,0</summary>
         </member>
-        <member name="F:OpenMetaverse.Color4.G">
-            <summary>Green</summary>
+        <member name="F:OpenMetaverse.Vector3d.One">
+            <summary>A vector with a value of 1,1,1</summary>
         </member>
-        <member name="F:OpenMetaverse.Color4.B">
-            <summary>Blue</summary>
+        <member name="F:OpenMetaverse.Vector3d.UnitX">
+            <summary>A unit vector facing forward (X axis), value of 1,0,0</summary>
         </member>
-        <member name="F:OpenMetaverse.Color4.A">
-            <summary>Alpha</summary>
+        <member name="F:OpenMetaverse.Vector3d.UnitY">
+            <summary>A unit vector facing left (Y axis), value of 0,1,0</summary>
         </member>
-        <member name="M:OpenMetaverse.Color4.#ctor(System.Byte,System.Byte,System.Byte,System.Byte)">
+        <member name="F:OpenMetaverse.Vector3d.UnitZ">
+            <summary>A unit vector facing up (Z axis), value of 0,0,1</summary>
+        </member>
+        <member name="T:OpenMetaverse.BlockingQueue`1">
             <summary>
-            
+            Same as Queue except Dequeue function blocks until there is an object to return.
+            Note: This class does not need to be synchronized
             </summary>
-            <param name="r"></param>
-            <param name="g"></param>
-            <param name="b"></param>
-            <param name="a"></param>
         </member>
-        <member name="M:OpenMetaverse.Color4.#ctor(System.Byte[],System.Int32,System.Boolean)">
+        <member name="M:OpenMetaverse.BlockingQueue`1.#ctor(System.Collections.Generic.IEnumerable{`0})">
             <summary>
-            Builds a color from a byte array
+            Create new BlockingQueue.
             </summary>
-            <param name="byteArray">Byte array containing a 16 byte color</param>
-            <param name="pos">Beginning position in the byte array</param>
-            <param name="inverted">True if the byte array stores inverted values,
-            otherwise false. For example the color black (fully opaque) inverted
-            would be 0xFF 0xFF 0xFF 0x00</param>
+            <param name="col">The System.Collections.ICollection to copy elements from</param>
         </member>
-        <member name="M:OpenMetaverse.Color4.#ctor(System.Byte[],System.Int32,System.Boolean,System.Boolean)">
+        <member name="M:OpenMetaverse.BlockingQueue`1.#ctor(System.Int32)">
             <summary>
-            Returns the raw bytes for this vector
+            Create new BlockingQueue.
             </summary>
-            <param name="byteArray">Byte array containing a 16 byte color</param>
-            <param name="pos">Beginning position in the byte array</param>
-            <param name="inverted">True if the byte array stores inverted values,
-            otherwise false. For example the color black (fully opaque) inverted
-            would be 0xFF 0xFF 0xFF 0x00</param>
-            <param name="alphaInverted">True if the alpha value is inverted in
-            addition to whatever the inverted parameter is. Setting inverted true
-            and alphaInverted true will flip the alpha value back to non-inverted,
-            but keep the other color bytes inverted</param>
-            <returns>A 16 byte array containing R, G, B, and A</returns>
+            <param name="capacity">The initial number of elements that the queue can contain</param>
         </member>
-        <member name="M:OpenMetaverse.Color4.#ctor(OpenMetaverse.Color4)">
+        <member name="M:OpenMetaverse.BlockingQueue`1.#ctor">
             <summary>
-            Copy constructor
+            Create new BlockingQueue.
             </summary>
-            <param name="color">Color to copy</param>
         </member>
-        <member name="M:OpenMetaverse.Color4.CompareTo(OpenMetaverse.Color4)">
+        <member name="M:OpenMetaverse.BlockingQueue`1.Finalize">
             <summary>
-            IComparable.CompareTo implementation
+            BlockingQueue Destructor (Close queue, resume any waiting thread).
             </summary>
-            <remarks>Sorting ends up like this: |--Grayscale--||--Color--|.
-            Alpha is only used when the colors are otherwise equivalent</remarks>
         </member>
-        <member name="M:OpenMetaverse.Color4.FromBytes(System.Byte[],System.Int32,System.Boolean,System.Boolean)">
+        <member name="M:OpenMetaverse.BlockingQueue`1.Clear">
             <summary>
-            Builds a color from a byte array
+            Remove all objects from the Queue.
             </summary>
-            <param name="byteArray">Byte array containing a 16 byte color</param>
-            <param name="pos">Beginning position in the byte array</param>
-            <param name="inverted">True if the byte array stores inverted values,
-            otherwise false. For example the color black (fully opaque) inverted
-            would be 0xFF 0xFF 0xFF 0x00</param>
-            <param name="alphaInverted">True if the alpha value is inverted in
-            addition to whatever the inverted parameter is. Setting inverted true
-            and alphaInverted true will flip the alpha value back to non-inverted,
-            but keep the other color bytes inverted</param>
         </member>
-        <member name="M:OpenMetaverse.Color4.GetBytes(System.Boolean)">
+        <member name="M:OpenMetaverse.BlockingQueue`1.Close">
             <summary>
-            
+            Remove all objects from the Queue, resume all dequeue threads.
             </summary>
-            <returns></returns>
         </member>
-        <member name="F:OpenMetaverse.Color4.Black">
-            <summary>A Color4 with zero RGB values and full alpha (1.0)</summary>
+        <member name="M:OpenMetaverse.BlockingQueue`1.Dequeue">
+            <summary>
+            Removes and returns the object at the beginning of the Queue.
+            </summary>
+            <returns>Object in queue.</returns>
         </member>
-        <member name="F:OpenMetaverse.Color4.White">
-            <summary>A Color4 with full RGB values (1.0) and full alpha (1.0)</summary>
+        <member name="M:OpenMetaverse.BlockingQueue`1.Dequeue(System.TimeSpan)">
+            <summary>
+            Removes and returns the object at the beginning of the Queue.
+            </summary>
+            <param name="timeout">time to wait before returning</param>
+            <returns>Object in queue.</returns>
+        </member>
+        <member name="M:OpenMetaverse.BlockingQueue`1.Dequeue(System.Int32)">
+            <summary>
+            Removes and returns the object at the beginning of the Queue.
+            </summary>
+            <param name="timeout">time to wait before returning (in milliseconds)</param>
+            <returns>Object in queue.</returns>
+        </member>
+        <member name="M:OpenMetaverse.BlockingQueue`1.Enqueue(`0)">
+            <summary>
+            Adds an object to the end of the Queue
+            </summary>
+            <param name="obj">Object to put in queue</param>
+        </member>
+        <member name="M:OpenMetaverse.BlockingQueue`1.Open">
+            <summary>
+            Open Queue.
+            </summary>
+        </member>
+        <member name="P:OpenMetaverse.BlockingQueue`1.Closed">
+            <summary>
+            Gets flag indicating if queue has been closed.
+            </summary>
+        </member>
+        <member name="F:OpenMetaverse.ExpiringCache`2.readWriteLock">
+            <summary>For thread safety</summary>
+        </member>
+        <member name="M:OpenMetaverse.ExpiringCache`2.ForEach(System.Action{`1})">
+            <summary>
+            Enumerates over all of the stored values without updating access times
+            </summary>
+            <param name="action">Action to perform on all of the elements</param>
+        </member>
+        <member name="M:OpenMetaverse.ExpiringCache`2.PurgeCache(System.Object,System.Timers.ElapsedEventArgs)">
+            <summary>
+            Purges expired objects from the cache. Called automatically by the purge timer.
+            </summary>
         </member>
         <member name="F:OpenMetaverse.Utils.DEG_TO_RAD">
             <summary>Used for converting degrees to radians</summary>
@@ -182,12 +198,31 @@
         <member name="F:OpenMetaverse.Utils.RAD_TO_DEG">
             <summary>Used for converting radians to degrees</summary>
         </member>
+        <member name="M:OpenMetaverse.Utils.BytesToInt16(System.Byte[])">
+            <summary>
+            Convert the first two bytes starting in the byte array in
+            little endian ordering to a signed short integer
+            </summary>
+            <param name="bytes">An array two bytes or longer</param>
+            <returns>A signed short integer, will be zero if a short can't be
+            read at the given position</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.BytesToInt16(System.Byte[],System.Int32)">
+            <summary>
+            Convert the first two bytes starting at the given position in
+            little endian ordering to a signed short integer
+            </summary>
+            <param name="bytes">An array two bytes or longer</param>
+            <param name="pos">Position in the array to start reading</param>
+            <returns>A signed short integer, will be zero if a short can't be
+            read at the given position</returns>
+        </member>
         <member name="M:OpenMetaverse.Utils.BytesToInt(System.Byte[],System.Int32)">
             <summary>
             Convert the first four bytes starting at the given position in
             little endian ordering to a signed integer
             </summary>
-            <param name="bytes">Byte array containing the int</param>
+            <param name="bytes">An array four bytes or longer</param>
             <param name="pos">Position to start reading the int from</param>
             <returns>A signed integer, will be zero if an int can't be read
             at the given position</returns>
@@ -200,6 +235,25 @@
             <param name="bytes">An array four bytes or longer</param>
             <returns>A signed integer, will be zero if the array contains
             less than four bytes</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.BytesToInt64(System.Byte[])">
+            <summary>
+            Convert the first eight bytes of the given array in little endian
+            ordering to a signed long integer
+            </summary>
+            <param name="bytes">An array eight bytes or longer</param>
+            <returns>A signed long integer, will be zero if the array contains
+            less than eight bytes</returns>
+        </member>
+        <member name="M:OpenMetaverse.Utils.BytesToInt64(System.Byte[],System.Int32)">
+            <summary>
+            Convert the first eight bytes starting at the given position in
+            little endian ordering to a signed long integer
+            </summary>
+            <param name="bytes">An array eight bytes or longer</param>
+            <param name="pos">Position to start reading the long from</param>
+            <returns>A signed long integer, will be zero if a long can't be read
+            at the given position</returns>
         </member>
         <member name="M:OpenMetaverse.Utils.BytesToUInt16(System.Byte[],System.Int32)">
             <summary>
@@ -825,106 +879,6 @@
         <member name="F:OpenMetaverse.Matrix4.Identity">
             <summary>A 4x4 identity matrix</summary>
         </member>
-        <member name="T:OpenMetaverse.Vector3d">
-            <summary>
-            A three-dimensional vector with doubleing-point values
-            </summary>
-        </member>
-        <member name="F:OpenMetaverse.Vector3d.X">
-            <summary>X value</summary>
-        </member>
-        <member name="F:OpenMetaverse.Vector3d.Y">
-            <summary>Y value</summary>
-        </member>
-        <member name="F:OpenMetaverse.Vector3d.Z">
-            <summary>Z value</summary>
-        </member>
-        <member name="M:OpenMetaverse.Vector3d.#ctor(System.Byte[],System.Int32)">
-            <summary>
-            Constructor, builds a vector from a byte array
-            </summary>
-            <param name="byteArray">Byte array containing three eight-byte doubles</param>
-            <param name="pos">Beginning position in the byte array</param>
-        </member>
-        <member name="M:OpenMetaverse.Vector3d.ApproxEquals(OpenMetaverse.Vector3d,System.Double)">
-            <summary>
-            Test if this vector is equal to another vector, within a given
-            tolerance range
-            </summary>
-            <param name="vec">Vector to test against</param>
-            <param name="tolerance">The acceptable magnitude of difference
-            between the two vectors</param>
-            <returns>True if the magnitude of difference between the two vectors
-            is less than the given tolerance, otherwise false</returns>
-        </member>
-        <member name="M:OpenMetaverse.Vector3d.CompareTo(OpenMetaverse.Vector3d)">
-            <summary>
-            IComparable.CompareTo implementation
-            </summary>
-        </member>
-        <member name="M:OpenMetaverse.Vector3d.IsFinite">
-            <summary>
-            Test if this vector is composed of all finite numbers
-            </summary>
-        </member>
-        <member name="M:OpenMetaverse.Vector3d.FromBytes(System.Byte[],System.Int32)">
-            <summary>
-            Builds a vector from a byte array
-            </summary>
-            <param name="byteArray">Byte array containing a 24 byte vector</param>
-            <param name="pos">Beginning position in the byte array</param>
-        </member>
-        <member name="M:OpenMetaverse.Vector3d.GetBytes">
-            <summary>
-            Returns the raw bytes for this vector
-            </summary>
-            <returns>A 24 byte array containing X, Y, and Z</returns>
-        </member>
-        <member name="M:OpenMetaverse.Vector3d.Parse(System.String)">
-            <summary>
-            Parse a vector from a string
-            </summary>
-            <param name="val">A string representation of a 3D vector, enclosed 
-            in arrow brackets and separated by commas</param>
-        </member>
-        <member name="M:OpenMetaverse.Vector3d.SmoothStep(OpenMetaverse.Vector3d,OpenMetaverse.Vector3d,System.Double)">
-            <summary>
-            Interpolates between two vectors using a cubic equation
-            </summary>
-        </member>
-        <member name="M:OpenMetaverse.Vector3d.ToString">
-            <summary>
-            Get a formatted string representation of the vector
-            </summary>
-            <returns>A string representation of the vector</returns>
-        </member>
-        <member name="M:OpenMetaverse.Vector3d.ToRawString">
-            <summary>
-            Get a string representation of the vector elements with up to three
-            decimal digits and separated by spaces only
-            </summary>
-            <returns>Raw string representation of the vector</returns>
-        </member>
-        <member name="M:OpenMetaverse.Vector3d.op_Modulus(OpenMetaverse.Vector3d,OpenMetaverse.Vector3d)">
-            <summary>
-            Cross product between two vectors
-            </summary>
-        </member>
-        <member name="F:OpenMetaverse.Vector3d.Zero">
-            <summary>A vector with a value of 0,0,0</summary>
-        </member>
-        <member name="F:OpenMetaverse.Vector3d.One">
-            <summary>A vector with a value of 1,1,1</summary>
-        </member>
-        <member name="F:OpenMetaverse.Vector3d.UnitX">
-            <summary>A unit vector facing forward (X axis), value of 1,0,0</summary>
-        </member>
-        <member name="F:OpenMetaverse.Vector3d.UnitY">
-            <summary>A unit vector facing left (Y axis), value of 0,1,0</summary>
-        </member>
-        <member name="F:OpenMetaverse.Vector3d.UnitZ">
-            <summary>A unit vector facing up (Z axis), value of 0,0,1</summary>
-        </member>
         <member name="F:OpenMetaverse.Vector4.X">
             <summary>X value</summary>
         </member>
@@ -1002,131 +956,6 @@
         </member>
         <member name="F:OpenMetaverse.Vector4.UnitW">
             <summary>A vector with a value of 0,0,0,1</summary>
-        </member>
-        <member name="F:OpenMetaverse.Quaternion.X">
-            <summary>X value</summary>
-        </member>
-        <member name="F:OpenMetaverse.Quaternion.Y">
-            <summary>Y value</summary>
-        </member>
-        <member name="F:OpenMetaverse.Quaternion.Z">
-            <summary>Z value</summary>
-        </member>
-        <member name="F:OpenMetaverse.Quaternion.W">
-            <summary>W value</summary>
-        </member>
-        <member name="M:OpenMetaverse.Quaternion.#ctor(System.Single,System.Single,System.Single)">
-            <summary>
-            Build a quaternion from normalized float values
-            </summary>
-            <param name="x">X value from -1.0 to 1.0</param>
-            <param name="y">Y value from -1.0 to 1.0</param>
-            <param name="z">Z value from -1.0 to 1.0</param>
-        </member>
-        <member name="M:OpenMetaverse.Quaternion.#ctor(System.Byte[],System.Int32,System.Boolean)">
-            <summary>
-            Constructor, builds a quaternion object from a byte array
-            </summary>
-            <param name="byteArray">Byte array containing four four-byte floats</param>
-            <param name="pos">Offset in the byte array to start reading at</param>
-            <param name="normalized">Whether the source data is normalized or
-            not. If this is true 12 bytes will be read, otherwise 16 bytes will
-            be read.</param>
-        </member>
-        <member name="M:OpenMetaverse.Quaternion.Normalize">
-            <summary>
-            Normalizes the quaternion
-            </summary>
-        </member>
-        <member name="M:OpenMetaverse.Quaternion.FromBytes(System.Byte[],System.Int32,System.Boolean)">
-            <summary>
-            Builds a quaternion object from a byte array
-            </summary>
-            <param name="byteArray">The source byte array</param>
-            <param name="pos">Offset in the byte array to start reading at</param>
-            <param name="normalized">Whether the source data is normalized or
-            not. If this is true 12 bytes will be read, otherwise 16 bytes will
-            be read.</param>
-        </member>
-        <member name="M:OpenMetaverse.Quaternion.GetBytes">
-            <summary>
-            Normalize this quaternion and serialize it to a byte array
-            </summary>
-            <returns>A 12 byte array containing normalized X, Y, and Z floating
-            point values in order using little endian byte ordering</returns>
-        </member>
-        <member name="M:OpenMetaverse.Quaternion.GetEulerAngles(System.Single@,System.Single@,System.Single@)">
-            <summary>
-            Convert this quaternion to euler angles
-            </summary>
-            <param name="roll">X euler angle</param>
-            <param name="pitch">Y euler angle</param>
-            <param name="yaw">Z euler angle</param>
-        </member>
-        <member name="M:OpenMetaverse.Quaternion.GetAxisAngle(OpenMetaverse.Vector3@,System.Single@)">
-            <summary>
-            Conver this quaternion to an angle around an axis
-            </summary>
-            <param name="axis">Unit vector describing the axis</param>
-            <param name="angle">Angle around the axis, in radians</param>
-        </member>
-        <member name="M:OpenMetaverse.Quaternion.Conjugate(OpenMetaverse.Quaternion)">
-            <summary>
-            Returns the conjugate (spatial inverse) of a quaternion
-            </summary>
-        </member>
-        <member name="M:OpenMetaverse.Quaternion.CreateFromAxisAngle(System.Single,System.Single,System.Single,System.Single)">
-            <summary>
-            Build a quaternion from an axis and an angle of rotation around
-            that axis
-            </summary>
-        </member>
-        <member name="M:OpenMetaverse.Quaternion.CreateFromAxisAngle(OpenMetaverse.Vector3,System.Single)">
-            <summary>
-            Build a quaternion from an axis and an angle of rotation around
-            that axis
-            </summary>
-            <param name="axis">Axis of rotation</param>
-            <param name="angle">Angle of rotation</param>
-        </member>
-        <member name="M:OpenMetaverse.Quaternion.CreateFromEulers(OpenMetaverse.Vector3)">
-            <summary>
-            Creates a quaternion from a vector containing roll, pitch, and yaw
-            in radians
-            </summary>
-            <param name="eulers">Vector representation of the euler angles in
-            radians</param>
-            <returns>Quaternion representation of the euler angles</returns>
-        </member>
-        <member name="M:OpenMetaverse.Quaternion.CreateFromEulers(System.Single,System.Single,System.Single)">
-            <summary>
-            Creates a quaternion from roll, pitch, and yaw euler angles in
-            radians
-            </summary>
-            <param name="roll">X angle in radians</param>
-            <param name="pitch">Y angle in radians</param>
-            <param name="yaw">Z angle in radians</param>
-            <returns>Quaternion representation of the euler angles</returns>
-        </member>
-        <member name="M:OpenMetaverse.Quaternion.Inverse(OpenMetaverse.Quaternion)">
-            <summary>
-            Conjugates and renormalizes a vector
-            </summary>
-        </member>
-        <member name="M:OpenMetaverse.Quaternion.Slerp(OpenMetaverse.Quaternion,OpenMetaverse.Quaternion,System.Single)">
-            <summary>
-            Spherical linear interpolation between two quaternions
-            </summary>
-        </member>
-        <member name="M:OpenMetaverse.Quaternion.ToRawString">
-            <summary>
-            Get a string representation of the quaternion elements with up to three
-            decimal digits and separated by spaces only
-            </summary>
-            <returns>Raw string representation of the quaternion</returns>
-        </member>
-        <member name="F:OpenMetaverse.Quaternion.Identity">
-            <summary>A quaternion with a value of 0,0,0,1</summary>
         </member>
         <member name="T:OpenMetaverse.Vector3">
             <summary>
@@ -1234,6 +1063,312 @@
         </member>
         <member name="F:OpenMetaverse.Vector3.UnitZ">
             <summary>A unit vector facing up (Z axis), value 0,0,1</summary>
+        </member>
+        <member name="F:OpenMetaverse.Quaternion.X">
+            <summary>X value</summary>
+        </member>
+        <member name="F:OpenMetaverse.Quaternion.Y">
+            <summary>Y value</summary>
+        </member>
+        <member name="F:OpenMetaverse.Quaternion.Z">
+            <summary>Z value</summary>
+        </member>
+        <member name="F:OpenMetaverse.Quaternion.W">
+            <summary>W value</summary>
+        </member>
+        <member name="M:OpenMetaverse.Quaternion.#ctor(System.Single,System.Single,System.Single)">
+            <summary>
+            Build a quaternion from normalized float values
+            </summary>
+            <param name="x">X value from -1.0 to 1.0</param>
+            <param name="y">Y value from -1.0 to 1.0</param>
+            <param name="z">Z value from -1.0 to 1.0</param>
+        </member>
+        <member name="M:OpenMetaverse.Quaternion.#ctor(System.Byte[],System.Int32,System.Boolean)">
+            <summary>
+            Constructor, builds a quaternion object from a byte array
+            </summary>
+            <param name="byteArray">Byte array containing four four-byte floats</param>
+            <param name="pos">Offset in the byte array to start reading at</param>
+            <param name="normalized">Whether the source data is normalized or
+            not. If this is true 12 bytes will be read, otherwise 16 bytes will
+            be read.</param>
+        </member>
+        <member name="M:OpenMetaverse.Quaternion.Normalize">
+            <summary>
+            Normalizes the quaternion
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.Quaternion.FromBytes(System.Byte[],System.Int32,System.Boolean)">
+            <summary>
+            Builds a quaternion object from a byte array
+            </summary>
+            <param name="byteArray">The source byte array</param>
+            <param name="pos">Offset in the byte array to start reading at</param>
+            <param name="normalized">Whether the source data is normalized or
+            not. If this is true 12 bytes will be read, otherwise 16 bytes will
+            be read.</param>
+        </member>
+        <member name="M:OpenMetaverse.Quaternion.GetBytes">
+            <summary>
+            Normalize this quaternion and serialize it to a byte array
+            </summary>
+            <returns>A 12 byte array containing normalized X, Y, and Z floating
+            point values in order using little endian byte ordering</returns>
+        </member>
+        <member name="M:OpenMetaverse.Quaternion.GetEulerAngles(System.Single@,System.Single@,System.Single@)">
+            <summary>
+            Convert this quaternion to euler angles
+            </summary>
+            <param name="roll">X euler angle</param>
+            <param name="pitch">Y euler angle</param>
+            <param name="yaw">Z euler angle</param>
+        </member>
+        <member name="M:OpenMetaverse.Quaternion.GetAxisAngle(OpenMetaverse.Vector3@,System.Single@)">
+            <summary>
+            Convert this quaternion to an angle around an axis
+            </summary>
+            <param name="axis">Unit vector describing the axis</param>
+            <param name="angle">Angle around the axis, in radians</param>
+        </member>
+        <member name="M:OpenMetaverse.Quaternion.Conjugate(OpenMetaverse.Quaternion)">
+            <summary>
+            Returns the conjugate (spatial inverse) of a quaternion
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.Quaternion.CreateFromAxisAngle(System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Build a quaternion from an axis and an angle of rotation around
+            that axis
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.Quaternion.CreateFromAxisAngle(OpenMetaverse.Vector3,System.Single)">
+            <summary>
+            Build a quaternion from an axis and an angle of rotation around
+            that axis
+            </summary>
+            <param name="axis">Axis of rotation</param>
+            <param name="angle">Angle of rotation</param>
+        </member>
+        <member name="M:OpenMetaverse.Quaternion.CreateFromEulers(OpenMetaverse.Vector3)">
+            <summary>
+            Creates a quaternion from a vector containing roll, pitch, and yaw
+            in radians
+            </summary>
+            <param name="eulers">Vector representation of the euler angles in
+            radians</param>
+            <returns>Quaternion representation of the euler angles</returns>
+        </member>
+        <member name="M:OpenMetaverse.Quaternion.CreateFromEulers(System.Single,System.Single,System.Single)">
+            <summary>
+            Creates a quaternion from roll, pitch, and yaw euler angles in
+            radians
+            </summary>
+            <param name="roll">X angle in radians</param>
+            <param name="pitch">Y angle in radians</param>
+            <param name="yaw">Z angle in radians</param>
+            <returns>Quaternion representation of the euler angles</returns>
+        </member>
+        <member name="M:OpenMetaverse.Quaternion.Inverse(OpenMetaverse.Quaternion)">
+            <summary>
+            Conjugates and renormalizes a vector
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.Quaternion.Slerp(OpenMetaverse.Quaternion,OpenMetaverse.Quaternion,System.Single)">
+            <summary>
+            Spherical linear interpolation between two quaternions
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.Quaternion.ToRawString">
+            <summary>
+            Get a string representation of the quaternion elements with up to three
+            decimal digits and separated by spaces only
+            </summary>
+            <returns>Raw string representation of the quaternion</returns>
+        </member>
+        <member name="F:OpenMetaverse.Quaternion.Identity">
+            <summary>A quaternion with a value of 0,0,0,1</summary>
+        </member>
+        <member name="T:OpenMetaverse.Vector2">
+            <summary>
+            A two-dimensional vector with floating-point values
+            </summary>
+        </member>
+        <member name="F:OpenMetaverse.Vector2.X">
+            <summary>X value</summary>
+        </member>
+        <member name="F:OpenMetaverse.Vector2.Y">
+            <summary>Y value</summary>
+        </member>
+        <member name="M:OpenMetaverse.Vector2.ApproxEquals(OpenMetaverse.Vector2,System.Single)">
+            <summary>
+            Test if this vector is equal to another vector, within a given
+            tolerance range
+            </summary>
+            <param name="vec">Vector to test against</param>
+            <param name="tolerance">The acceptable magnitude of difference
+            between the two vectors</param>
+            <returns>True if the magnitude of difference between the two vectors
+            is less than the given tolerance, otherwise false</returns>
+        </member>
+        <member name="M:OpenMetaverse.Vector2.IsFinite">
+            <summary>
+            Test if this vector is composed of all finite numbers
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.Vector2.CompareTo(OpenMetaverse.Vector2)">
+            <summary>
+            IComparable.CompareTo implementation
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.Vector2.FromBytes(System.Byte[],System.Int32)">
+            <summary>
+            Builds a vector from a byte array
+            </summary>
+            <param name="byteArray">Byte array containing two four-byte floats</param>
+            <param name="pos">Beginning position in the byte array</param>
+        </member>
+        <member name="M:OpenMetaverse.Vector2.GetBytes">
+            <summary>
+            Returns the raw bytes for this vector
+            </summary>
+            <returns>An eight-byte array containing X and Y</returns>
+        </member>
+        <member name="M:OpenMetaverse.Vector2.Parse(System.String)">
+            <summary>
+            Parse a vector from a string
+            </summary>
+            <param name="val">A string representation of a 2D vector, enclosed 
+            in arrow brackets and separated by commas</param>
+        </member>
+        <member name="M:OpenMetaverse.Vector2.SmoothStep(OpenMetaverse.Vector2,OpenMetaverse.Vector2,System.Single)">
+            <summary>
+            Interpolates between two vectors using a cubic equation
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.Vector2.ToString">
+            <summary>
+            Get a formatted string representation of the vector
+            </summary>
+            <returns>A string representation of the vector</returns>
+        </member>
+        <member name="M:OpenMetaverse.Vector2.ToRawString">
+            <summary>
+            Get a string representation of the vector elements with up to three
+            decimal digits and separated by spaces only
+            </summary>
+            <returns>Raw string representation of the vector</returns>
+        </member>
+        <member name="F:OpenMetaverse.Vector2.Zero">
+            <summary>A vector with a value of 0,0</summary>
+        </member>
+        <member name="F:OpenMetaverse.Vector2.One">
+            <summary>A vector with a value of 1,1</summary>
+        </member>
+        <member name="F:OpenMetaverse.Vector2.UnitX">
+            <summary>A vector with a value of 1,0</summary>
+        </member>
+        <member name="F:OpenMetaverse.Vector2.UnitY">
+            <summary>A vector with a value of 0,1</summary>
+        </member>
+        <member name="T:OpenMetaverse.Color4">
+            <summary>
+            An 8-bit color structure including an alpha channel
+            </summary>
+        </member>
+        <member name="F:OpenMetaverse.Color4.R">
+            <summary>Red</summary>
+        </member>
+        <member name="F:OpenMetaverse.Color4.G">
+            <summary>Green</summary>
+        </member>
+        <member name="F:OpenMetaverse.Color4.B">
+            <summary>Blue</summary>
+        </member>
+        <member name="F:OpenMetaverse.Color4.A">
+            <summary>Alpha</summary>
+        </member>
+        <member name="M:OpenMetaverse.Color4.#ctor(System.Byte,System.Byte,System.Byte,System.Byte)">
+            <summary>
+            
+            </summary>
+            <param name="r"></param>
+            <param name="g"></param>
+            <param name="b"></param>
+            <param name="a"></param>
+        </member>
+        <member name="M:OpenMetaverse.Color4.#ctor(System.Byte[],System.Int32,System.Boolean)">
+            <summary>
+            Builds a color from a byte array
+            </summary>
+            <param name="byteArray">Byte array containing a 16 byte color</param>
+            <param name="pos">Beginning position in the byte array</param>
+            <param name="inverted">True if the byte array stores inverted values,
+            otherwise false. For example the color black (fully opaque) inverted
+            would be 0xFF 0xFF 0xFF 0x00</param>
+        </member>
+        <member name="M:OpenMetaverse.Color4.#ctor(System.Byte[],System.Int32,System.Boolean,System.Boolean)">
+            <summary>
+            Returns the raw bytes for this vector
+            </summary>
+            <param name="byteArray">Byte array containing a 16 byte color</param>
+            <param name="pos">Beginning position in the byte array</param>
+            <param name="inverted">True if the byte array stores inverted values,
+            otherwise false. For example the color black (fully opaque) inverted
+            would be 0xFF 0xFF 0xFF 0x00</param>
+            <param name="alphaInverted">True if the alpha value is inverted in
+            addition to whatever the inverted parameter is. Setting inverted true
+            and alphaInverted true will flip the alpha value back to non-inverted,
+            but keep the other color bytes inverted</param>
+            <returns>A 16 byte array containing R, G, B, and A</returns>
+        </member>
+        <member name="M:OpenMetaverse.Color4.#ctor(OpenMetaverse.Color4)">
+            <summary>
+            Copy constructor
+            </summary>
+            <param name="color">Color to copy</param>
+        </member>
+        <member name="M:OpenMetaverse.Color4.CompareTo(OpenMetaverse.Color4)">
+            <summary>
+            IComparable.CompareTo implementation
+            </summary>
+            <remarks>Sorting ends up like this: |--Grayscale--||--Color--|.
+            Alpha is only used when the colors are otherwise equivalent</remarks>
+        </member>
+        <member name="M:OpenMetaverse.Color4.FromBytes(System.Byte[],System.Int32,System.Boolean,System.Boolean)">
+            <summary>
+            Builds a color from a byte array
+            </summary>
+            <param name="byteArray">Byte array containing a 16 byte color</param>
+            <param name="pos">Beginning position in the byte array</param>
+            <param name="inverted">True if the byte array stores inverted values,
+            otherwise false. For example the color black (fully opaque) inverted
+            would be 0xFF 0xFF 0xFF 0x00</param>
+            <param name="alphaInverted">True if the alpha value is inverted in
+            addition to whatever the inverted parameter is. Setting inverted true
+            and alphaInverted true will flip the alpha value back to non-inverted,
+            but keep the other color bytes inverted</param>
+        </member>
+        <member name="M:OpenMetaverse.Color4.GetBytes(System.Boolean)">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:OpenMetaverse.Color4.FromHSV(System.Double,System.Double,System.Double)">
+            <summary>
+            Create an RGB color from a hue, saturation, value combination
+            </summary>
+            <param name="hue">Hue</param>
+            <param name="saturation">Saturation</param>
+            <param name="value">Value</param>
+            <returns>An fully opaque RGB color (alpha is 1.0)</returns>
+        </member>
+        <member name="F:OpenMetaverse.Color4.Black">
+            <summary>A Color4 with zero RGB values and fully opaque (alpha 1.0)</summary>
+        </member>
+        <member name="F:OpenMetaverse.Color4.White">
+            <summary>A Color4 with full RGB values (1.0) and fully opaque (alpha 1.0)</summary>
         </member>
     </members>
 </doc>

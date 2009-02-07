@@ -14,7 +14,6 @@ namespace Simian.Extensions
         Simian server;
         Dictionary<UUID, Asset> AssetStore = new Dictionary<UUID, Asset>();
         string UploadDir;
-
         public AssetManager()
         {
         }

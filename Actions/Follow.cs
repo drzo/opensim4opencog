@@ -48,6 +48,7 @@ namespace cogbot.Actions
                                 Client.Self.Movement.Stop = true;
                                 Client.Self.Movement.AtPos = false;
                                 Client.Self.Movement.NudgeAtPos = false;
+                                Client.Self.Movement.SendUpdate(false);
                             
                             Thread.Sleep(100);
                         }
@@ -56,6 +57,7 @@ namespace cogbot.Actions
                             Client.Self.Movement.TurnToward(followAvatar.Position);
                             Client.Self.Movement.AtPos = true;
                             Client.Self.Movement.UpdateInterval = 0; //100
+                            Client.Self.Movement.SendUpdate(false);
                             //(int)(25 * (1 + (curDist / followDist)))
                             Thread.Sleep(somthing.Next(25, 100));
                         }
@@ -72,7 +74,7 @@ namespace cogbot.Actions
                             //Client.Self.Movement.SendUpdate();
                             Client.Self.Movement.FinishAnim = true;
                             Client.Self.Movement.Stop = true;
-                            
+                            Client.Self.Movement.SendUpdate(false);
                             Thread.Sleep(25);
                             justStopped = false;
                         }
@@ -91,6 +93,7 @@ namespace cogbot.Actions
                     return; // if followAvatar is null then we're not interested anymore 
                 }
             }
+            Client.botCommandThreads.Remove(Thread.CurrentThread);
         }
 
         void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
@@ -129,9 +132,12 @@ namespace cogbot.Actions
                 if (Client.WorldSystem.tryGetAvatar(name, out avatar))
                 {
                     followAvatar = avatar;
-                    WriteLine("You start to follow " + followAvatar.Name + ".");
+                    String str = ""+Client + " start to follow " + followAvatar.Name + ".";
+                    WriteLine(str);
                     // The thread that accepts the Client and awaits messages
                     thrTracker= new Thread(tracker);
+                    thrTracker.Name = str;
+                    Client.botCommandThreads.Add(thrTracker);
                     // The thread calls the tracker() method
                     thrTracker.Start();
 

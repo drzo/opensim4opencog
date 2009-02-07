@@ -113,7 +113,7 @@ namespace cogbot.Listeners
 
         #region SimEventSubscriber Members
 
-        void SimEventSubscriber.ShuttingDown()
+        public void ShuttingDown()
         {
             foreach (SimEventSubscriber subscriber in subscribers)
             {
@@ -125,13 +125,13 @@ namespace cogbot.Listeners
 
         #region SimEventPublisher Members
 
-        SimEvent SimEventPublisher.CreateEvent(string eventName, params object[] args)
+        public SimEvent CreateEvent(string eventName, params object[] args)
         {
             return new SimEvent(eventName, args);
         }
 
         // this pipelike will fire OnEvent to the subscriber list 
-        void SimEventPublisher.SendEvent(SimEvent simEvent)
+        public void SendEvent(SimEvent simEvent)
         {
             foreach (SimEventSubscriber subscriber in subscribers)
             {
@@ -143,7 +143,7 @@ namespace cogbot.Listeners
 
         #region SimEventSubscriber Members
 
-        void SimEventSubscriber.OnEvent(SimEvent simEvent)
+        public void OnEvent(SimEvent simEvent)
         {
             foreach (SimEventSubscriber subscriber in subscribers)
             {
@@ -156,7 +156,7 @@ namespace cogbot.Listeners
         #region SimEventPublisher Members
 
 
-        void SimEventPublisher.AddSubscriber(SimEventSubscriber sub)
+        public void AddSubscriber(SimEventSubscriber sub)
         {
             if (!subscribers.Contains(sub))
                 subscribers.Add(sub);

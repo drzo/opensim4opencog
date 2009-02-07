@@ -34,13 +34,13 @@ namespace Simian.Extensions
                 agent.Avatar.ID = UUID.Random();
                 agent.Balance = 1000;
                 agent.CreationTime = Utils.DateTimeToUnixTime(DateTime.Now);
-                agent.CurrentLookAt = Vector3.Zero;
-                agent.CurrentPosition = new Vector3(128f, 128f, 25f);
-                agent.CurrentRegionHandle = Utils.UIntsToLong(Simian.REGION_X, Simian.REGION_Y);
+                agent.CurrentLookAt = Vector3.UnitZ;
+                agent.Avatar.Position = new Vector3(128f, 128f, 25f);
+                agent.CurrentRegionHandle = Utils.UIntsToLong(256 * server.Scene.RegionX, 256 * server.Scene.RegionY);
                 agent.FirstName = firstName;
                 agent.GodLevel = 0;
                 agent.HomeLookAt = agent.CurrentLookAt;
-                agent.HomePosition = agent.CurrentPosition;
+                agent.HomePosition = agent.Avatar.Position;
                 agent.HomeRegionHandle = agent.CurrentRegionHandle;
                 agent.LastName = lastName;
                 agent.PasswordHash = password;

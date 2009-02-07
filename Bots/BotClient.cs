@@ -46,6 +46,7 @@ namespace cogbot
 		int thisTcpPort;
 		public OpenMetaverse.LoginParams BotLoginParams;// = null;
         SimEventPublisher botPipeline = new SimEventMulticastPipeline();
+        public List<Thread> botCommandThreads = new List<Thread>();
 		public UUID GroupID = UUID.Zero;
 		public Dictionary<UUID, GroupMember> GroupMembers = null; // intialized from a callback
 		public Dictionary<UUID, AvatarAppearancePacket> Appearances = new Dictionary<UUID, AvatarAppearancePacket>();
@@ -120,12 +121,15 @@ namespace cogbot
 			//          RegisterAllCommands(Assembly.GetExecutingAssembly());
 
             Settings.LOG_LEVEL = Helpers.LogLevel.Info;
-            Settings.LOG_RESENDS = false;
-            Settings.STORE_LAND_PATCHES = true;
+            //Settings.LOG_RESENDS = false;
+            //Settings.STORE_LAND_PATCHES = true;
             Settings.ALWAYS_DECODE_OBJECTS = true;
             Settings.ALWAYS_REQUEST_OBJECTS = true;
             Settings.SEND_AGENT_UPDATES = true;
             Settings.USE_TEXTURE_CACHE = true;
+            Settings.OBJECT_TRACKING = true;
+            Settings.PARCEL_TRACKING = true;
+            Settings.FETCH_MISSING_INVENTORY = true;
 			// Optimize the throttle
             //Throttle.Wind = 0;
             //Throttle.Cloud = 0;
@@ -155,25 +159,25 @@ namespace cogbot
             Settings.OBJECT_TRACKING = true;
 
             //  Manager = Inventory;
-            //  Inventory = Manager.Store;
+            //Inventory = Manager.Store;
 
             // config = new Configuration();
             // config.loadConfig();
             /// Settings.LOGIN_SERVER = config.simURL;
             // Opensim recommends 250k total
-            //Throttle.Total = 250000;
+            Throttle.Total = 250000;
             //Settings.CAPS_TIMEOUT = 5 * 1000;
             //Settings.RESEND_TIMEOUT = 4 * 1000;
             //Settings.LOGIN_TIMEOUT = 16 * 1000;
             //Settings.LOGOUT_TIMEOUT = 16 * 1000;
             //Settings.SIMULATOR_TIMEOUT = 90 * 1000;
-            //Settings.SEND_PINGS = true;
+            Settings.SEND_PINGS = true;
             //Settings.MULTIPLE_SIMS = false;
-            //Settings.ENABLE_CAPS = true;
-            //Self.Movement.Camera.Far = 32;
-            //Settings.LOG_ALL_CAPS_ERRORS = true;
+            Settings.ENABLE_CAPS = true;
+            Self.Movement.Camera.Far = 32;
+            Settings.LOG_ALL_CAPS_ERRORS = true;
             Settings.FETCH_MISSING_INVENTORY = true;
-            Settings.SEND_AGENT_THROTTLE = true;
+            Settings.SEND_AGENT_THROTTLE = false;
 
             muteList = new List<string>();
 
@@ -201,7 +205,9 @@ namespace cogbot
             Commands["logout"] = new Actions.Logout(this);
             Commands["stop"] = new Actions.Stop(this);
             Commands["teleport"] = new Actions.Teleport(this);
-            Commands["describe"] = new Actions.Describe(this);
+            Action desc  = new Actions.Describe(this);
+            Commands["describe"] = desc;
+            Commands["look"] = desc;
             Commands["say"] = new Actions.Say(this);
             Commands["whisper"] = new Actions.Whisper(this);
             Commands["help"] = new Actions.Help(this);
@@ -336,14 +342,14 @@ namespace cogbot
 		}
 
 
-        void Self_OnTeleport(string message, AgentManager.TeleportStatus status, AgentManager.TeleportFlags flags)
+        void Self_OnTeleport(string message, TeleportStatus status, TeleportFlags flags)
         {
-            if (status == AgentManager.TeleportStatus.Failed)
+            if (status == TeleportStatus.Failed)
             {
                 output("Teleport failed.");
                 describeSituation();
             }
-            else if (status == AgentManager.TeleportStatus.Finished)
+            else if (status == TeleportStatus.Finished)
             {
                 output("Teleport succeeded.");
                 describeSituation();
@@ -522,9 +528,18 @@ namespace cogbot
 		public void UseInventoryItem(string usage,string itemName)
 		{
 
-			InventoryFolder rootFolder = Inventory.Store.RootFolder;
-			//InventoryEval searcher = new InventoryEval(this);
-			searcher.evalOnFolders(rootFolder, usage, itemName);
+            if (Inventory !=null && Inventory.Store != null)
+            {
+
+                InventoryFolder rootFolder = Inventory.Store.RootFolder;
+                //InventoryEval searcher = new InventoryEval(this);
+                searcher.evalOnFolders(rootFolder, usage, itemName);
+            }
+            else
+            {
+                output("UseInventoryItem " + usage + " " + itemName + " is not yet ready");
+ 
+            }
 		}
 
 		public void ListObjectsFolder()

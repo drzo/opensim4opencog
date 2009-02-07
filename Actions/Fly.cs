@@ -12,8 +12,8 @@ namespace cogbot.Actions
             : base(Client)
         {
             Name = "fly";
-            helpString = "You start flying.";
-            usageString = "To start flying type: \"fly\"";
+            helpString = "To start flying type: \"fly\"";
+            usageString = "fly [up|down] 'no_argument= start flying";
         }
 
         public override void acceptInput(string verb, Parser args)

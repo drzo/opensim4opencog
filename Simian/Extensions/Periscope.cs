@@ -9,7 +9,7 @@ namespace Simian.Extensions
 {
     public class Periscope : IExtension<Simian>
     {
-       public Agent MasterAgent = null;
+        public Agent MasterAgent = null;
 
         Simian server;
         GridClient client;
@@ -26,11 +26,10 @@ namespace Simian.Extensions
         {
             this.server = server;
 
-            //client = new GridClient();
-            client = server.periscopeClient;
-            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
+            client = new GridClient();
+            Settings.LOG_LEVEL = Helpers.LogLevel.Info;
             client.Settings.MULTIPLE_SIMS = false;
-            //client.Settings.SEND_AGENT_UPDATES = false;
+            client.Settings.SEND_AGENT_UPDATES = false;
 
             client.Network.OnCurrentSimChanged += Network_OnCurrentSimChanged;
             client.Objects.OnNewPrim += Objects_OnNewPrim;
@@ -84,19 +83,17 @@ namespace Simian.Extensions
 
         void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
         {
+            ulong localRegionHandle = Utils.UIntsToLong(256 * server.Scene.RegionX, 256 * server.Scene.RegionY);
+
             // Add the avatar to both the agents list and the scene objects
             Agent agent = new Agent();
             agent.Avatar.ID = avatar.ID;
             agent.Avatar = avatar;
-            agent.CurrentRegionHandle = server.RegionHandle;
+            agent.CurrentRegionHandle = localRegionHandle;
             agent.FirstName = avatar.FirstName;
             agent.LastName = avatar.LastName;
-            
-            lock (server.Agents)
-                server.Agents[agent.Avatar.ID] = agent;
 
-            SimulationObject simObj = new SimulationObject(avatar, server);
-            server.Scene.ObjectAdd(this, simObj, avatar.Flags);
+            server.Scene.AgentAdd(this, agent, avatar.Flags);
         }
 
         void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
@@ -104,9 +101,8 @@ namespace Simian.Extensions
             server.Scene.ObjectTransform(this, update.LocalID, update.Position, update.Rotation, update.Velocity,
                 update.Acceleration, update.AngularVelocity);
 
-            if (update.LocalID == client.Self.LocalID && MasterAgent!=null)
+            if (update.LocalID == client.Self.LocalID)
             {
-                
                 MasterAgent.Avatar.Acceleration = update.Acceleration;
                 MasterAgent.Avatar.AngularVelocity = update.AngularVelocity;
                 MasterAgent.Avatar.CollisionPlane = update.CollisionPlane;
@@ -128,7 +124,7 @@ namespace Simian.Extensions
             Primitive.TextureEntryFace[] faceTextures, List<byte> visualParams)
         {
             Agent agent;
-            if (server.Agents.TryGetValue(avatarID, out agent))
+            if (server.Scene.TryGetAgent(avatarID, out agent))
             {
                 Primitive.TextureEntry te = new Primitive.TextureEntry(defaultTexture);
                 te.FaceTextures = faceTextures;
@@ -137,10 +133,10 @@ namespace Simian.Extensions
 
                 Logger.Log("[Periscope] Updating foreign avatar appearance for " + agent.FirstName + " " + agent.LastName, Helpers.LogLevel.Info);
 
-                server.Scene.AvatarAppearance(this, agent, te, vp);
+                server.Scene.AgentAppearance(this, agent, te, vp);
 
                 if (agent.Avatar.ID == client.Self.AgentID)
-                    server.Scene.AvatarAppearance(this, MasterAgent, te, vp);
+                    server.Scene.AgentAppearance(this, MasterAgent, te, vp);
             }
             else
             {
@@ -150,12 +146,16 @@ namespace Simian.Extensions
 
         void Terrain_OnLandPatch(Simulator simulator, int x, int y, int width, float[] data)
         {
-            // TODO: When Simian gets a terrain editing interface, switch this over to
-            // edit the scene heightmap instead of sending packets direct to clients
-            int[] patches = new int[1];
-            patches[0] = (y * 16) + x;
-            LayerDataPacket layer = TerrainCompressor.CreateLandPacket(data, x, y);
-            server.UDP.BroadcastPacket(layer, PacketCategory.Terrain);
+            float[,] patchData = new float[16, 16];
+            for (int py = 0; py < 16; py++)
+            {
+                for (int px = 0; px < 16; px++)
+                {
+                    patchData[py, px] = data[py * 16 + px];
+                }
+            }
+
+            server.Scene.SetTerrainPatch(this, (uint)x, (uint)y, patchData);
         }
 
         void Self_OnChat(string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourceType,
@@ -175,18 +175,30 @@ namespace Simian.Extensions
             server.UDP.BroadcastPacket(chat, PacketCategory.Transaction);
         }
 
-        void Self_OnTeleport(string message, AgentManager.TeleportStatus status, AgentManager.TeleportFlags flags)
+        void Self_OnTeleport(string message, TeleportStatus status, TeleportFlags flags)
         {
-            if (status == AgentManager.TeleportStatus.Finished)
+            if (status == TeleportStatus.Finished)
             {
-                // Kill off any prims from the previous sim
-                IDictionary<uint, SimulationObject> scene = server.Scene.GetSceneCopy();
+                server.Scene.ForEachObject(
+                    delegate(SimulationObject obj)
+                    {
+                        if (obj.Prim.RegionHandle != client.Network.CurrentSim.Handle)
+                            server.Scene.ObjectRemove(this, obj.Prim.ID);
+                    }
+                );
 
-                foreach (SimulationObject obj in scene.Values)
-                {
-                    if (obj.Prim.RegionHandle != client.Network.CurrentSim.Handle)
-                        server.Scene.ObjectRemove(this, obj.Prim.ID);
-                }
+                ulong localRegionHandle = Utils.UIntsToLong(256 * server.Scene.RegionX, 256 * server.Scene.RegionY);
+
+                server.Scene.ForEachAgent(
+                    delegate(Agent agent)
+                    {
+                        if (agent.Avatar.RegionHandle != localRegionHandle &&
+                            agent.Avatar.RegionHandle != client.Network.CurrentSim.Handle)
+                        {
+                            server.Scene.ObjectRemove(this, agent.Avatar.ID);
+                        }
+                    }
+                );
             }
         }
 
@@ -201,7 +213,7 @@ namespace Simian.Extensions
             AvatarAnimationPacket animations = (AvatarAnimationPacket)packet;
 
             Agent agent;
-            if (server.Agents.TryGetValue(animations.Sender.ID, out agent))
+            if (server.Scene.TryGetAgent(animations.Sender.ID, out agent))
             {
                 agent.Animations.Clear();
 
@@ -211,23 +223,20 @@ namespace Simian.Extensions
                     agent.Animations.Add(block.AnimID, block.AnimSequenceID);
                 }
 
-
                 server.Avatars.SendAnimations(agent);
             }
 
-            if (animations.Sender.ID == client.Self.AgentID)            
+            if (animations.Sender.ID == client.Self.AgentID)
             {
-                if (MasterAgent == null) MasterAgent = agent;
-
-                if (MasterAgent!=null) MasterAgent.Animations.Clear();
+                MasterAgent.Animations.Clear();
 
                 for (int i = 0; i < animations.AnimationList.Length; i++)
                 {
                     AvatarAnimationPacket.AnimationListBlock block = animations.AnimationList[i];
-                    if (MasterAgent != null) MasterAgent.Animations.Add(block.AnimID, block.AnimSequenceID);
+                    MasterAgent.Animations.Add(block.AnimID, block.AnimSequenceID);
                 }
 
-                if (MasterAgent != null) server.Avatars.SendAnimations(MasterAgent);
+                server.Avatars.SendAnimations(MasterAgent);
             }
         }
 
@@ -236,6 +245,8 @@ namespace Simian.Extensions
             RegionHandshakePacket handshake = (RegionHandshakePacket)packet;
 
             handshake.RegionInfo.SimOwner = (MasterAgent != null ? MasterAgent.Avatar.ID : UUID.Zero);
+            handshake.RegionInfo.RegionFlags &= ~(uint)RegionFlags.NoFly;
+            handshake.RegionInfo2.RegionID = server.Scene.RegionID;
 
             // TODO: Need more methods to manipulate the scene so we can apply these properties.
             // Right now this only gets sent out to people who are logged in when the master avatar
@@ -280,12 +291,9 @@ namespace Simian.Extensions
                             imageDelivery.Pipeline.CurrentCount, imageDelivery.Pipeline.QueuedCount));
                         return;
                     case "/nudemod":
-                        int count = 0;
-                        Dictionary<UUID, Agent> agents;
-                        lock (server.Agents)
-                            agents = new Dictionary<UUID, Agent>(server.Agents);
-
-                        foreach (Agent curAgent in agents.Values)
+                        //int count = 0;
+                        // FIXME: AvatarAppearance locks the agents dictionary. Need to be able to copy the agents dictionary?
+                        /*foreach (Agent curAgent in agents.Values)
                         {
                             if (curAgent != agent && curAgent.VisualParams != null)
                             {
@@ -307,7 +315,7 @@ namespace Simian.Extensions
                             }
                         }
 
-                        server.Avatars.SendAlert(agent, String.Format("Modified appearances for {0} avatar(s)", count));
+                        server.Avatars.SendAlert(agent, String.Format("Modified appearances for {0} avatar(s)", count));*/
                         return;
                 }
             }
@@ -336,13 +344,13 @@ namespace Simian.Extensions
                 lock (loginLock)
                 {
                     // Double-checked locking to avoid hitting the loginLock each time
-                    if (MasterAgent == null &&
-                        server.Agents.TryGetValue(update.AgentData.AgentID, out MasterAgent))
+                    if (MasterAgent == null && server.Scene.TryGetAgent(update.AgentData.AgentID, out MasterAgent))
                     {
                         Logger.Log(String.Format("[Periscope] {0} {1} is the controlling agent",
                             MasterAgent.FirstName, MasterAgent.LastName), Helpers.LogLevel.Info);
 
-                        LoginParams login = client.Network.DefaultLoginParams(agent.FirstName, agent.LastName, agent.PasswordHash, "Simian Periscope", "1.0.0");
+                        LoginParams login = client.Network.DefaultLoginParams(agent.FirstName, agent.LastName, agent.PasswordHash,
+                            "Simian Periscope", "1.0.0");
                         login.Start = "last";
                         client.Network.Login(login);
 

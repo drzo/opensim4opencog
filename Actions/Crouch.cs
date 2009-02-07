@@ -7,13 +7,13 @@ namespace cogbot.Actions
 {
     class Crouch : Action
     {
-        bool isCrouching = false;
+       // bool isCrouching = false;
 
         public Crouch(BotClient Client)
             : base(Client)
         {
-            helpString = "Crouch.";
-            usageString = "To Crouch type \"crouch\"";
+            helpString = "crouch [on|off] 'no argumennt=for 500ms' ";
+            usageString = "crouch [on|off]";
         }
 
         public override void acceptInput(string verb, Parser args)
@@ -26,20 +26,20 @@ namespace cogbot.Actions
                 Client.Self.Crouch(true);
                 System.Threading.Thread.Sleep(500);
                 WriteLine(Client.Self.Name + " crouched.");
-                isCrouching = false;
+               // isCrouching = false;
                 Client.Self.Crouch(false);
             }
             else
                 if (tokens[0].Equals("on"))
                 {
                     Client.Self.Crouch(true);
-                    isCrouching = true;
+                 //   isCrouching = true;
                     WriteLine(Client.Self.Name + " started crouching.");
                 }
                 else
                 {
                     Client.Self.Crouch(true);
-                    isCrouching = false;
+                 //   isCrouching = false;
                     WriteLine(Client.Self.Name + " done crouching.");
                     Client.Self.Crouch(false);
                 }
