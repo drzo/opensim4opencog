@@ -28,7 +28,7 @@ using System;
 using log4net;
 using log4net.Config;
 
-//dmiles [assembly: log4net.Config.XmlConfigurator(Watch = true)]
+[assembly: log4net.Config.XmlConfigurator(Watch = true)]
 
 namespace OpenMetaverse
 {

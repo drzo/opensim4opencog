@@ -381,35 +381,32 @@ namespace OpenMetaverse.Imaging
                             layerInfo[i].End = endPacket.end_pos;
                         }
 
-                        if (layerInfo.Length > 0)
+                        // More sanity checking
+                        if (layerInfo[layerInfo.Length - 1].End <= encoded.Length - 1)
                         {
-                            // More sanity checking
-                            if (layerInfo[layerInfo.Length - 1].End <= encoded.Length - 1)
+                            success = true;
+
+                            for (int i = 0; i < layerInfo.Length; i++)
                             {
-                                success = true;
-
-                                for (int i = 0; i < layerInfo.Length; i++)
+                                if (layerInfo[i].Start >= layerInfo[i].End ||
+                                    (i > 0 && layerInfo[i].Start <= layerInfo[i - 1].End))
                                 {
-                                    if (layerInfo[i].Start >= layerInfo[i].End ||
-                                        (i > 0 && layerInfo[i].Start <= layerInfo[i - 1].End))
-                                    {
-                                        System.Text.StringBuilder output = new System.Text.StringBuilder(
-                                            "Inconsistent packet data in JPEG2000 stream:\n");
-                                        for (int j = 0; j < layerInfo.Length; j++)
-                                            output.AppendFormat("Layer {0}: Start: {1} End: {2}\n", j, layerInfo[j].Start, layerInfo[j].End);
-                                        Logger.Log(output.ToString(), Helpers.LogLevel.Error);
+                                    System.Text.StringBuilder output = new System.Text.StringBuilder(
+                                        "Inconsistent packet data in JPEG2000 stream:\n");
+                                    for (int j = 0; j < layerInfo.Length; j++)
+                                        output.AppendFormat("Layer {0}: Start: {1} End: {2}\n", j, layerInfo[j].Start, layerInfo[j].End);
+                                    Logger.Log(output.ToString(), Helpers.LogLevel.Error);
 
-                                        success = false;
-                                        break;
-                                    }
+                                    success = false;
+                                    break;
                                 }
                             }
-                            else
-                            {
-                                Logger.Log(String.Format(
-                                    "Last packet end in JPEG2000 stream extends beyond the end of the file. filesize={0} layerend={1}",
-                                    encoded.Length, layerInfo[layerInfo.Length - 1].End), Helpers.LogLevel.Warning);
-                            }
+                        }
+                        else
+                        {
+                            Logger.Log(String.Format(
+                                "Last packet end in JPEG2000 stream extends beyond the end of the file. filesize={0} layerend={1}",
+                                encoded.Length, layerInfo[layerInfo.Length - 1].End), Helpers.LogLevel.Warning);
                         }
                     }
                     else

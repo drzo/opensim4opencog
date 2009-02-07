@@ -225,10 +225,6 @@ namespace OpenMetaverse
 
         private int transferStart;
 
-        public int Stuck = 0;
-        public float LastComplete = 1.0f;
-
-
         /// <summary>Number of milliseconds passed since the last transfer
         /// packet was received</summary>
         public int TimeSinceLastPacket
@@ -713,24 +709,6 @@ namespace OpenMetaverse
                     if (Single.IsNaN(percentComplete))
                         percentComplete = 0f;
 
-                    if (transfer.LastComplete == percentComplete)
-                    {
-                        if (transfer.LastComplete > 2.0f)
-                        {
-                            transfer.Stuck++;
-                            if (transfer.Stuck > 4)
-                            {
-                                transfer.Size = transfer.Transferred;
-                            }
-                        }
-
-                    }
-                    else
-                    {
-                        transfer.Stuck = 0;
-                    }
-                    transfer.LastComplete = percentComplete;
-
                     Logger.DebugLog(String.Format("Updating priority on image transfer {0}, {1}% complete",
                         imageID, Math.Round(percentComplete, 2)));
                 }
@@ -870,6 +848,8 @@ namespace OpenMetaverse
                     String.Format("Beginning asset upload [Single Packet], ID: {0}, AssetID: {1}, Size: {2}",
                     upload.ID.ToString(), upload.AssetID.ToString(), upload.Size), Helpers.LogLevel.Info, Client);
 
+                    Transfers[upload.ID]=upload;         
+                
                 // The whole asset will fit in this packet, makes things easy
                 request.AssetBlock.AssetData = data;
                 upload.Transferred = data.Length;

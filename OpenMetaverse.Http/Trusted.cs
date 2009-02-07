@@ -24,20 +24,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if __MonoCS__
-#define MONO
-#endif
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
-#if MONO
 using Mono.Security;
 using Mono.Security.X509;
 using Mono.Security.X509.Extensions;
 using Mono.Security.Authenticode;
-#endif
 
 namespace OpenMetaverse.Http
 {
@@ -45,9 +41,6 @@ namespace OpenMetaverse.Http
     {
         public static void CreateServerRootCA(string issuer, out byte[] rootKey, out byte[] rootCert)
         {
-            rootKey = null;
-            rootCert = null;
-
             if (!issuer.StartsWith("CN="))
                 issuer = "CN=" + issuer;
 
@@ -58,7 +51,6 @@ namespace OpenMetaverse.Http
             RSA issuerKey = (RSA)RSA.Create();
 
             // Generate a private key
-#if MONO
             PrivateKey key = new PrivateKey();
             key.RSA = issuerKey;
 
@@ -66,15 +58,13 @@ namespace OpenMetaverse.Http
             key.Save(tempFile);
             rootKey = File.ReadAllBytes(tempFile);
             File.Delete(tempFile);
-#endif
+
             // Serial number MUST be positive
             byte[] sn = Guid.NewGuid().ToByteArray();
             if ((sn[0] & 0x80) == 0x80)
                 sn[0] -= 0x80;
 
             // Generate a self-signed certificate
-#if MONO
-
             X509CertificateBuilder cb = new X509CertificateBuilder(3);
             cb.SerialNumber = sn;
             cb.IssuerName = issuer;
@@ -85,21 +75,17 @@ namespace OpenMetaverse.Http
             cb.Hash = "SHA1";
 
             rootCert = cb.Sign(issuerKey);
-#endif
         }
 
         public static byte[] CreateServerCert(string subjectName, byte[] rootKey, byte[] rootCert)
         {
-            rootKey = null;
-            rootCert = null;
-
             if (!subjectName.StartsWith("CN="))
                 subjectName = "CN=" + subjectName;
 
             // Copy the root key since the PrivateKey constructor will blow away the data
             byte[] rootKeyCopy = new byte[rootKey.Length];
             Buffer.BlockCopy(rootKey, 0, rootKeyCopy, 0, rootKey.Length);
-#if MONO
+
             // Load the server's private key and certificate
             PrivateKey pvk = new PrivateKey(rootKeyCopy, null);
             RSA issuerKey = pvk.RSA;
@@ -141,15 +127,10 @@ namespace OpenMetaverse.Http
             p12.AddPkcs8ShroudedKeyBag(issuerKey, attributes);
 
             return p12.GetBytes();
-#endif
-            return null;
         }
 
         public static byte[] CreateClientCert(string subjectName, byte[] rootKey, byte[] rootCert)
         {
-            rootKey = null;
-            rootCert = null;
-#if MONO
             if (!subjectName.StartsWith("CN="))
                 subjectName = "CN=" + subjectName;
 
@@ -198,8 +179,6 @@ namespace OpenMetaverse.Http
             p12.AddPkcs8ShroudedKeyBag(issuerKey, attributes);
 
             return p12.GetBytes();
-#endif
-            return null;
         }
     }
 }

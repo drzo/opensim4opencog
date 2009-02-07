@@ -114,7 +114,10 @@ namespace HttpServer
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                {
+                    _logWriter.Write(this, LogPrio.Info, "Attempted to set RequestHandler to null");
+                    return;
+                }
 
                 _requestHandler = value;
             }

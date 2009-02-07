@@ -53,12 +53,12 @@ namespace OpenMetaverse
             {
                 if (Dictionary1.ContainsKey(key1))
                 {
-                    if (!Dictionary2.ContainsKey(key2))
+                    if (false) if (!Dictionary2.ContainsKey(key2))
                         throw new ArgumentException("key1 exists in the dictionary but not key2");
                 }
                 else if (Dictionary2.ContainsKey(key2))
                 {
-                    if (!Dictionary1.ContainsKey(key1))
+                    if (false) if (!Dictionary1.ContainsKey(key1))
                         throw new ArgumentException("key2 exists in the dictionary but not key1");
                 }
 
