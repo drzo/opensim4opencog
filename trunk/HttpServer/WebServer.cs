@@ -111,13 +111,19 @@ namespace HttpServer
         {
             HttpRequestHandler[] newHandlers = new HttpRequestHandler[requestHandlers.Length - 1];
 
-            int j = 0;
-            for (int i = 0; i < requestHandlers.Length; i++)
-                if (!requestHandlers[i].Signature.ExactlyEquals(handler.Signature))
-                    newHandlers[j++] = handler;
+            try
+            {
+                int j = 0;
+                for (int i = 0; i < requestHandlers.Length; i++)
+                    if (!requestHandlers[i].Signature.ExactlyEquals(handler.Signature))
+                        newHandlers[j++] = handler;
 
-            // CLR guarantees this is an atomic operation
-            requestHandlers = newHandlers;
+                // CLR guarantees this is an atomic operation
+                requestHandlers = newHandlers;
+            }
+            catch (IndexOutOfRangeException)
+            {
+            }
         }
 
         /// <summary>

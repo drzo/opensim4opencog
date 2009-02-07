@@ -1498,15 +1498,24 @@ namespace OpenMetaverse
                 OSDMap map = (OSDMap)llsd;
                 OSDMap parcelDataBlock = (OSDMap)(((OSDArray)map["ParcelData"])[0]);
                 OSDMap ageVerifyBlock = (OSDMap)(((OSDArray)map["AgeVerificationBlock"])[0]);
-                OSDMap mediaDataBlock = new OSDMap();
+                OSDMap mediaDataBlock = default(OSDMap);
                 try
                 {
-                    mediaDataBlock = (OSDMap)(((OSDArray)map["MediaData"])[0]);
+                    OSD osd =  map["MediaData"];
+                    if (osd is OSDArray)
+                        mediaDataBlock = (OSDMap)(((OSDArray)osd)[0]);
+                    if (osd is OSDMap)
+                        mediaDataBlock = (OSDMap)osd;
+                    else
+                    {
+                       // mediaDataBlock = new OSDMap();
+                    }
                 }
                 catch (Exception e)
                 {
-                    Logger.Log("" + e, Helpers.LogLevel.Warning);
+                    Console.WriteLine("" + e);
                 }
+
                 Parcel parcel = new Parcel(parcelDataBlock["LocalID"].AsInteger());
 
                 parcel.AABBMax = ((OSDArray)parcelDataBlock["AABBMax"]).AsVector3();
@@ -1562,14 +1571,16 @@ namespace OpenMetaverse
                 parcel.TotalPrims = parcelDataBlock["TotalPrims"].AsInteger();
                 parcel.UserLocation = ((OSDArray)parcelDataBlock["UserLocation"]).AsVector3();
                 parcel.UserLookAt = ((OSDArray)parcelDataBlock["UserLookAt"]).AsVector3();
-                parcel.Media.MediaDesc = mediaDataBlock["MediaDesc"].AsString();
-                parcel.Media.MediaHeight = mediaDataBlock["MediaHeight"].AsInteger();
-                parcel.Media.MediaWidth = mediaDataBlock["MediaWidth"].AsInteger();
-                parcel.Media.MediaLoop = mediaDataBlock["MediaLoop"].AsBoolean();
-                parcel.Media.MediaType = mediaDataBlock["MediaType"].AsString();
-                parcel.ObscureMedia = mediaDataBlock["ObscureMedia"].AsBoolean();
-                parcel.ObscureMusic = mediaDataBlock["ObscureMusic"].AsBoolean();
-
+                if (mediaDataBlock != null && mediaDataBlock.Count>0)
+                {
+                    parcel.Media.MediaDesc = mediaDataBlock["MediaDesc"].AsString();
+                    parcel.Media.MediaHeight = mediaDataBlock["MediaHeight"].AsInteger();
+                    parcel.Media.MediaWidth = mediaDataBlock["MediaWidth"].AsInteger();
+                    parcel.Media.MediaLoop = mediaDataBlock["MediaLoop"].AsBoolean();
+                    parcel.Media.MediaType = mediaDataBlock["MediaType"].AsString();
+                    parcel.ObscureMedia = mediaDataBlock["ObscureMedia"].AsBoolean();
+                    parcel.ObscureMusic = mediaDataBlock["ObscureMusic"].AsBoolean();
+                }
                 if (Client.Settings.PARCEL_TRACKING)
                 {
                     lock (simulator.Parcels.Dictionary)

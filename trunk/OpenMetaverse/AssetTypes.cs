@@ -383,40 +383,36 @@ namespace OpenMetaverse
                 else
                 {
                     string line = lines[stri].Trim();
-                    string[] fieldsMaster = line.Split('\t');
+                    string[] fields = line.Split('\t');
 
-                    if (fieldsMaster.Length == 1)
+                    if (fields.Length == 1)
                     {
-                        string[] fields = line.Split(' ');
+                        fields = line.Split(' ');
                         if (fields[0] == "parameters")
                         {
                             int count = Int32.Parse(fields[1]) + stri;
                             for (; stri < count; )
                             {
                                 stri++;
-                                if (stri >= lines.Length) break;
                                 line = lines[stri].Trim();
                                 fields = line.Split(' ');
 
+                                int id = 0;
                                 try
                                 {
-                                    if (fields[0].StartsWith("textures")) break;
-                                    if (fields.Length < 2) break;
-                                    int id = Int32.Parse(fields[0]);
+                                    id = Int32.Parse(fields[0]);
                                     if (fields[1] == ",")
                                         fields[1] = "0";
                                     else
                                         fields[1] = fields[1].Replace(',', '.');
-                                    if (fields[1].ToCharArray()[0] == '\0') break;
+
                                     float weight = float.Parse(fields[1], System.Globalization.NumberStyles.Float,
                                         Utils.EnUsCulture.NumberFormat);
 
                                     Params[id] = weight;
                                 }
-                                catch (FormatException fe)
-                                {
-                                    break;
-                                }
+                                catch (FormatException) { }
+
                             }
                         }
                         else if (fields[0] == "textures")
@@ -440,10 +436,9 @@ namespace OpenMetaverse
                         }
 
                     }
-                    else if (fieldsMaster.Length == 2)
+                    else if (fields.Length == 2)
                     {
-                        string[] fields = fieldsMaster;
-                        switch (fieldsMaster[0])
+                        switch (fields[0])
                         {
                             case "creator_mask":
                                 // Deprecated, apply this as the base mask
