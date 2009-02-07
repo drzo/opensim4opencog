@@ -32,11 +32,14 @@ namespace cogbot.Actions
                 if (time < 1) time = 1300;
                 try
                 {
-                    float ia = float.Parse(a);
-                    if (ia > 0.0)
+                    float ia;
+                    if (float.TryParse(a, out ia))
                     {
-                        time = (int)(ia * 1000);
-                        continue;
+                        if (ia > 0.0)
+                        {
+                            time = (int)(ia * 1000);
+                            continue;
+                        }
                     }
                 }
                 catch (Exception) { }

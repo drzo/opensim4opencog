@@ -21,15 +21,32 @@ namespace cogbot.Actions
             {
                 return "Usage: thread anim 30 crouch";
             }
-
+            if (args.Length == 1 && args[0]=="list")
+            {
+                int n = 0;
+                String s="";
+                foreach (Thread t in Client.botCommandThreads)
+                {
+                    n++;
+                    s+=""+ n + ": " + t.Name + " alive=" + t.IsAlive + " backgrounded=" + t.IsBackground + " priority=" + t.Priority+"\n";
+                }
+                return s;
+            }
+            String cmd = String.Join(" ", args);
             Thread thread = new Thread(new ThreadStart(delegate()
             {
-                String cmd = String.Join(" ", args);
-                Client.ExecuteCommand(cmd);
+                try
+                {
+                    Client.ExecuteCommand(cmd);
+                }
+                catch (ThreadAbortException) { }
                 WriteLine("done with " + cmd);
+                Client.botCommandThreads.Remove(Thread.CurrentThread);
             }));
+            thread.Name = "ThreadCommnand for " + cmd;
             thread.Start();
-            return String.Empty;
+            Client.botCommandThreads.Add(thread);
+            return thread.Name;
         }
     }
 }

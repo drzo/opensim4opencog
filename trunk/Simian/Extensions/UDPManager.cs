@@ -172,7 +172,6 @@ namespace Simian
             if (clients.TryGetValue(agent.Avatar.ID, out client))
             {
                 client.Shutdown();
-                lock (server.Agents) server.Agents.Remove(agent.Avatar.ID);
                 return clients.Remove(agent.Avatar.ID, client.Address);
             }
             else
@@ -187,7 +186,7 @@ namespace Simian
             lock (unassociatedAgents)
                 unassociatedAgents[circuitCode] = agent;
 
-            Logger.Log("Created a circuit for " + agent.FirstName, Helpers.LogLevel.Info);
+            Logger.Log("Created circuit " + circuitCode + " for " + agent.FirstName, Helpers.LogLevel.Info);
 
             return circuitCode;
         }
@@ -412,7 +411,7 @@ namespace Simian
                                 Logger.Log(String.Format("Ack timeout for {0}, disconnecting", client.Agent.Avatar.Name),
                                     Helpers.LogLevel.Warning);
 
-                                server.Avatars.Disconnect(client.Agent);
+                                server.Scene.ObjectRemove(this, client.Agent.Avatar.ID);
                                 return;
                             }
                         }
@@ -601,7 +600,7 @@ namespace Simian
                 if (unassociatedAgents.TryGetValue(circuitCode, out agent))
                 {
                     unassociatedAgents.Remove(circuitCode);
-                    lock (server.Agents) server.Agents[agent.Avatar.ID] = agent;
+                    server.Scene.AgentAdd(this, agent, PrimFlags.None);
                     return true;
                 }
                 else

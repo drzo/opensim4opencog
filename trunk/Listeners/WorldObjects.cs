@@ -295,7 +295,8 @@ namespace cogbot.Listeners
 
             anims.ForEach(delegate(UUID key)
                 {
-                    int animNumber = (int)anims[key];
+                    int animNumber;
+                    anims.TryGetValue(key,out animNumber) ;
                     if (animNumber >= mostCurrentSequence)
                     {
                         mostCurrentSequence = animNumber;
@@ -398,7 +399,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
         static Dictionary<UUID, object> uuidType = new Dictionary<UUID, object>();
         public override void Inventory_OnFolderUpdated(UUID folderID)
         {
-            lock (uuidType) uuidType[folderID] = typeof(OpenMetaverse.InventoryFolder);
+            lock (uuidType) uuidType[folderID] = client.Inventory.Store[folderID]; //;;typeof(OpenMetaverse.InventoryFolder);
             //base.Inventory_OnFolderUpdated(folderID);
         }
 		static readonly string[] paramNamesOnObjectPropertiesFamily = new string[] { "simulator", "props", "type"};
@@ -951,16 +952,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 
         public Type GetType(UUID uuid)
         {
-            Object found;
-            lock (uuidType)
-                if (uuidType.ContainsKey(uuid))
-                {
-                    found = uuidType[uuid];
-                    if (found is Type) return (Type)found;
-                    return found.GetType();
-                }
-
-            found = GetObject(uuid);
+            Object found = GetObject(uuid);
             if (found == null) return null;
             //lock (uuidType) uuidType[uuid] = found;
             if (found is Type) return (Type)found;
@@ -969,6 +961,14 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 
         public object GetObject(UUID id)
         {
+            lock (uuidType)
+                if (uuidType.ContainsKey(id))
+                {
+                    object found = uuidType[id];
+                    if (found != null)
+                        return found;
+                } 
+            
             object ret = GetPrimitive(id);
             if (ret != null) return ret;
             //ret = GetAvatar(id);
@@ -1001,6 +1001,13 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 
         public Primitive GetPrimitive(UUID id)
         {
+            lock (uuidType)
+                if (uuidType.ContainsKey(id))
+                {
+                    object found = uuidType[id];
+                    if (found != null && found is Primitive)
+                        return (Primitive)found;
+                }
             lock (GetPrimitiveLock)
             {
                 Primitive prim;
@@ -1021,7 +1028,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                     {
                         if (prim0.ID == id)
                         {
-                            AvatarCacheAdd(prim0.Name, prim0);
+                          //  AvatarCacheAdd(prim0.Name, prim0);
                             return true;
                         }
                         return false;
@@ -1056,7 +1063,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                 {
                     if (prim0.LocalID == id)
                     {
-                        AvatarCacheAdd(prim0.Name, prim0);
+                       /// AvatarCacheAdd(prim0.Name, prim0);
                         return true;
                     }
                     return false;
@@ -1176,7 +1183,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                 ListAsSet<SimObject> set = TheSimAvatar.GetKnownObjects();
                 if (set.Count == 0)
                 {
-                    TheSimAvatar.ScanNewObjects();
+                    TheSimAvatar.ScanNewObjects(5,100);
                     set = TheSimAvatar.GetKnownObjects();
                 }
                 foreach (SimObject obj in set)
@@ -1215,7 +1222,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             foreach (SimObject obj in matches)
             {
                 num++;
-                output(" " + num + ": " + obj);
+                output(" " + num + ": " + obj + " " +  TheSimAvatar.DistanceVectorString(obj));
                 if (num == pickNum)
                 {
                     prim = obj.thePrim;
@@ -1233,17 +1240,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
         {
             SimObject simObject = GetSimObject(prim);
             string str = simObject.ToString();
-            //output(simObject.ToString());
-            if (simObject.CanGetSimPosition())
-            {
-                str += " " + Vector3.Distance(simObject.GetSimPosition(), TheSimAvatar.GetSimPosition()) + "m ";
-                str += " " + simObject.GetSimPosition();
-            }
-            else
-            {
-                str += " relatively at " + prim.Position;
-            }
-
+            str += " " + TheSimAvatar.DistanceVectorString(simObject);
             if (prim.Properties != null && prim.Properties.SalePrice != 0)
                 str += " Sale: L" + prim.Properties.SalePrice;
             return str;// output(str);
@@ -1280,7 +1277,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 		public List<Primitive> getPrimitives(int num)
 		{
             List<SimObject> ret = new List<SimObject>();
-            TheSimAvatar.ScanNewObjects();
+            TheSimAvatar.ScanNewObjects(10,100);
             TheSimAvatar.GetKnownObjects().ForEach(delegate(SimObject prim)
             {
 						  ret.Add(prim);
@@ -1310,7 +1307,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 		{
             if (true)
             {
-                return ((float)prim.ToString().Length/5 - (float)TheSimAvatar.distance(prim));
+                return ((float)prim.ToString().Length/5 - (float)TheSimAvatar.Distance(prim));
             }
 			float fitness = 1;
 			foreach (ObjectHeuristic heuristic in objectHeuristics)
@@ -1323,7 +1320,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
         float distanceHeuristic(SimObject prim)
 		{
 			if (prim != null)
-				return(float)(1.0 / Math.Exp((double)TheSimAvatar.distance(prim))
+				return(float)(1.0 / Math.Exp((double)TheSimAvatar.Distance(prim))
                     );
 			else
 				return(float)0.01;
@@ -1671,11 +1668,11 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 
         internal Primitive RequestMissingObject(uint localID)
         {
-            client.Objects.SelectObject(GetSimulator(), localID);
-            Primitive prim = GetPrimitive(localID);
+            if (localID == 0) return null;
+            EnsureSelected(localID);
             client.Objects.RequestObject(GetSimulator(), localID);
             Thread.Sleep(1000);
-            prim = GetPrimitive(localID);
+            Primitive prim = GetPrimitive(localID);
             return prim;
         }
         public Simulator GetSimulator()

@@ -31,6 +31,7 @@ namespace Simian.Extensions
         Periscope periscope;
         Timer updateTimer;
         long lastTick;
+        TerrainPatch[,] heightmap = new TerrainPatch[16, 16];
 
         public int LastTick
         {
@@ -42,6 +43,8 @@ namespace Simian.Extensions
         {
             this.server = server;
             this.periscope = periscope;
+
+            server.Scene.OnTerrainUpdate += Scene_OnTerrainUpdate;
 
             server.UDP.RegisterPacketCallback(PacketType.AgentUpdate, AgentUpdateHandler);
             server.UDP.RegisterPacketCallback(PacketType.SetAlwaysRun, SetAlwaysRunHandler);
@@ -60,15 +63,21 @@ namespace Simian.Extensions
             }
         }
 
+        void Scene_OnTerrainUpdate(object sender, uint x, uint y, float[,] patchData)
+        {
+            TerrainPatch patch = new TerrainPatch(16, 16);
+            patch.Height = patchData;
+            heightmap[y, x] = patch;
+        }
+
         void UpdateTimer_Elapsed(object sender)
         {
             int tick = Environment.TickCount;
             float seconds = (float)((tick - LastTick) / 1000f);
             LastTick = tick;
 
-            lock (server.Agents)
-            {
-                foreach (Agent agent in server.Agents.Values)
+            server.Scene.ForEachAgent(
+                delegate(Agent agent)
                 {
                     // Don't handle movement for the master agent or foreign agents
                     if (agent != periscope.MasterAgent && agent.SessionID != UUID.Zero)
@@ -310,7 +319,7 @@ namespace Simian.Extensions
                         if (agent.Avatar.Position.Z < lowerLimit) agent.Avatar.Position.Z = lowerLimit;
                     }
                 }
-            }
+            );
         }
 
         void AgentUpdateHandler(Packet packet, Agent agent)
@@ -327,7 +336,7 @@ namespace Simian.Extensions
             }
 
             ObjectUpdatePacket fullUpdate = SimulationObject.BuildFullUpdate(agent.Avatar,
-                server.RegionHandle, agent.Flags);
+                server.Scene.RegionHandle, agent.Flags);
 
             server.UDP.BroadcastPacket(fullUpdate, PacketCategory.State);
         }
@@ -349,23 +358,54 @@ namespace Simian.Extensions
             if (y > 255) y = 255;
             else if (y < 0) y = 0;
 
-            float center = server.Scene.Heightmap[y * 256 + x];
-            float distX = position.X - (int)position.X;
-            float distY = position.Y - (int)position.Y;
+            int patchX = x / 16;
+            int patchY = y / 16;
 
-            float nearestX;
-            float nearestY;
+            if (heightmap[patchY, patchX] != null)
+            {
+                float center = heightmap[patchY, patchX].Height[y - (patchY * 16), x - (patchX * 16)];
 
-            if (distX > 0) nearestX = server.Scene.Heightmap[y * 256 + x + (x < 255 ? 1 : 0)];
-            else nearestX = server.Scene.Heightmap[y * 256 + x - (x > 0 ? 1 : 0)];
+                float distX = position.X - (int)position.X;
+                float distY = position.Y - (int)position.Y;
 
-            if (distY > 0) nearestY = server.Scene.Heightmap[(y + (y < 255 ? 1 : 0)) * 256 + x];
-            else nearestY = server.Scene.Heightmap[(y - (y > 0 ? 1 : 0)) * 256 + x];
+                float nearestX;
+                float nearestY;
 
-            float lerpX = Utils.Lerp(center, nearestX, Math.Abs(distX));
-            float lerpY = Utils.Lerp(center, nearestY, Math.Abs(distY));
+                if (distX > 0f)
+                {
+                    int i = x < 255 ? 1 : 0;
+                    int newPatchX = (x + i) / 16;
+                    nearestX = heightmap[patchY, newPatchX].Height[y - (patchY * 16), (x + i) - (newPatchX * 16)];
+                }
+                else
+                {
+                    int i = x > 0 ? 1 : 0;
+                    int newPatchX = (x - i) / 16;
+                    nearestX = heightmap[patchY, newPatchX].Height[y - (patchY * 16), (x - i) - (newPatchX * 16)];
+                }
 
-            return ((lerpX + lerpY) / 2);
+                if (distY > 0f)
+                {
+                    int i = y < 255 ? 1 : 0;
+                    int newPatchY = (y + i) / 16;
+                    nearestY = heightmap[newPatchY, patchX].Height[(y + i) - (newPatchY * 16), x - (patchX * 16)];
+                }
+                else
+                {
+                    int i = y > 0 ? 1 : 0;
+                    int newPatchY = (y - i) / 16;
+                    nearestY = heightmap[newPatchY, patchX].Height[(y - i) - (newPatchY * 16), x - (patchX * 16)];
+                }
+
+                float lerpX = Utils.Lerp(center, nearestX, Math.Abs(distX));
+                float lerpY = Utils.Lerp(center, nearestY, Math.Abs(distY));
+
+                return ((lerpX + lerpY) / 2);
+            }
+            else
+            {
+                return 0f;
+            }
         }
     }
 }

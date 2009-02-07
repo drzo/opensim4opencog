@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace cogbot.Actions
 {
@@ -21,10 +22,14 @@ namespace cogbot.Actions
             {
                 foreach (string action in Client.Commands.Keys)
                 {
-                    WriteLine(action + ": " + Client.Commands[action].makeHelpString());
+                    //WriteLine(action + ": " + Client.Commands[action].makeHelpString());
+                }
+                lock (Client.botCommandThreads) foreach (Thread t in Client.botCommandThreads)
+                {
+                    t.Abort();
                 }
             }
-
+            WorldSystem.TheSimAvatar.StopMoving();
             Client.describeNext = false;
         }
     }

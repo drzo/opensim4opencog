@@ -24,8 +24,10 @@ namespace cogbot.ScriptEngines
             if (client!=null) WorldSystem = client.WorldSystem;
 
             thrJobQueue = new Thread(jobManager);
+            thrJobQueue.Name = "ScriptEventListener Thread for " + client;
             thrJobQueue.Start();
         }
+
         public void jobManager()
         {
             try

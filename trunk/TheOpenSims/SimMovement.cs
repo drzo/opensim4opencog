@@ -373,80 +373,53 @@ namespace cogbot.TheOpenSims
             Vector3 target = new Vector3();
             float distance = 2.0f;
 
-            if (args.Length > 3 || args.Length < 2)
-                return "Usage: gto x y [dist]";
+            if (args.Length > 3 || args.Length == 0)
+                return "Usage: gto [prim | [x y [dist]]";
 
-            if (!float.TryParse(args[0], out target.X) ||
-                !float.TryParse(args[1], out target.Y))
+            if (float.TryParse(args[0], out target.X) &&
+                float.TryParse(args[1], out target.Y))
             {
-                return "Usage: gto x y [dist]";
+                target.Z = Client.Self.SimPosition.Z;
+                if (args.Length == 3) Single.TryParse(args[2], out distance);
             }
-
-            target.Z = Client.Self.SimPosition.Z;
-
-            if (args.Length == 3) Single.TryParse(args[2], out distance);
-
-            Goto(target,distance);
-            return string.Format("gto {0} {1}", target.ToString(), distance);
-        }
-
-        private void Goto(Vector3 target, float p)
-        {            
-            AutoGoto1(Client,target, p);
-            Vector2 v2 = new Vector2(target.X, target.Y);
-            float d = DistanceTo(Client,v2);
-            if (d < p) return;
-        }
-
-        static public void AutoGoto1(BotClient Client, Vector3 target3, float dist)
-        {
-            Vector2 target = new Vector2(target3.X, target3.Y);
-            float d = DistanceTo(Client,target);
-            if (d < dist) return;
-            float ld = d;
-            float traveled = 0.0f;
-            uint x, y;
-           // Vector2 P = Position();
-            Utils.LongToUInts(Client.Network.CurrentSim.Handle, out x, out y);
-            Client.Self.AutoPilot((ulong)(x + target.X), (ulong)(y + target.Y), Client.Self.SimPosition.Z);
-            bool AutoPilot = true;
-            while (AutoPilot)
+            else
             {
-               // float moved = Vector2.Distance(P, Position());
-               // WriteLine("Moved=" + moved);
-                if (d < dist)
+                string s = String.Join(" ", args);
+                Primitive prim;
+
+
+                if (WorldSystem.tryGetPrim(s, out prim))
                 {
-                    AutoPilot = false;
+
+                    SimObject simObject = WorldSystem.GetSimObject(prim);
+                    if (simObject.CanGetSimPosition())
+                    {
+                        target = simObject.GetSimPosition();
+                        distance = 0.5f + simObject.GetSizeDistance();
+                    }
+                    else
+                    {
+                        return "Cannot get Sim Position of " + simObject;
+                    }
+
                 }
                 else
                 {
-                    Application.DoEvents();
-                    d = DistanceTo(Client,target);
-                    traveled = ld - d;
-                    if (traveled < 0)
-                    {
-                        AutoPilot = false;
-                    }          
-                    Client.Self.Movement.TurnToward(target3);             
-                    ld = d;
+                    return "Cannot select " + s;
                 }
-            //    P = Position();
             }
-            Client.Self.AutoPilotCancel();
-            Client.Self.Movement.TurnToward(target3);
+
+            Goto(target, distance);
+            return string.Format("gto {0} {1}", target.ToString(), distance);
         }
 
-        static float DistanceTo(BotClient Client, Vector2 v2)
+        public void Goto(Vector3 target, float distance)
         {
-            Vector2 cp = Position(Client);
-            return Vector2.Distance(v2, cp);
+            Approacher.AutoGoto1(Client, target, distance,20000);
+            Vector2 v2 = new Vector2(target.X, target.Y);
+            float d = Approacher.DistanceTo(Client, v2);
+            if (d < distance) return;
         }
-
-        static Vector2 Position(BotClient Client)
-        {
-            return new Vector2(Client.Self.SimPosition.X, Client.Self.SimPosition.Y);
-        }
-
         private void Goto1(Vector3 target, float p)
         {
 
@@ -497,6 +470,118 @@ namespace cogbot.TheOpenSims
             GotoVector gvect = new GotoVector(Client, target, 10000, p);
             gvect.Goto();
         }
+    }
+    class fto : cogbot.Actions.Command
+    {
+        public fto(BotClient client)
+        {
+            Name = "fto";
+            Description = "gto the avatar toward the specified position for a maximum of seconds. Usage: FlyTo x y z [seconds]";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            if (args.Length > 3 || args.Length == 0)
+                return "Usage: fto prim";
+
+            string s = String.Join(" ", args);
+            Primitive prim;
+
+
+            if (WorldSystem.tryGetPrim(s, out prim))
+            {
+
+                SimObject simObject = WorldSystem.GetSimObject(prim);
+                if (simObject.CanGetSimPosition())
+                {
+                    Goto(simObject);
+                    return "Gone to " + simObject;
+                }
+                else
+                {
+                    return "Cannot get Sim Position of " + simObject;
+                }
+            }
+            return "Cannot select " + s;
+        }
+
+        private void Goto(SimObject simObject)
+        {
+            long msTotal = 30000;
+            long msProbe = 2000;
+            float distance = 0.5f + simObject.GetSizeDistance();
+            long endAt = Environment.TickCount + msTotal;
+
+            while (endAt < Environment.TickCount && distance < Vector3.Distance(simObject.GetSimPosition(), Client.Self.SimPosition))
+            {
+                Approacher.AutoGoto1(Client, simObject.GetSimPosition(), distance, msProbe);
+                Client.Self.AutoPilotCancel();
+                Client.Self.Movement.TurnToward(simObject.GetSimPosition());
+            }
+
+        }
+
+    }
+    class Approacher
+    {
+                
+        static public bool AutoGoto1(BotClient Client, Vector3 target3, float dist, long maxMs)
+        {
+            long endAt = Environment.TickCount + maxMs;
+            Vector2 target = new Vector2(target3.X, target3.Y);
+            float d = DistanceTo(Client,target);
+            if (d < dist) return true;
+            float ld = d;
+            float traveled = 0.0f;
+            uint x, y;
+           // Vector2 P = Position();
+            Utils.LongToUInts(Client.Network.CurrentSim.Handle, out x, out y);
+            Client.Self.AutoPilot((ulong)(x + target.X), (ulong)(y + target.Y), target3.Z);
+            bool AutoPilot = true;
+            while (AutoPilot)
+            {
+               // float moved = Vector2.Distance(P, Position());
+               // WriteLine("Moved=" + moved);
+                if (d < dist)
+                {
+                    AutoPilot = false;
+                }
+                else
+                    if (Environment.TickCount > endAt)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        Application.DoEvents();
+                        d = DistanceTo(Client, target);
+                        traveled = ld - d;
+                        if (traveled < 0)
+                        {
+                            AutoPilot = false;
+                        }
+                        Client.Self.Movement.TurnToward(target3);
+                        ld = d;
+                    }
+            //    P = Position();
+            }
+            Client.Self.AutoPilotCancel();
+            Client.Self.Movement.TurnToward(target3);
+            return true;
+        }
+
+        public static float DistanceTo(BotClient Client, Vector2 v2)
+        {
+            Vector2 cp = Position(Client);
+            return Vector2.Distance(v2, cp);
+        }
+
+        public static Vector2 Position(BotClient Client)
+        {
+            return new Vector2(Client.Self.SimPosition.X, Client.Self.SimPosition.Y);
+        }
+
     }
 
     class GotoVector
@@ -698,7 +783,7 @@ namespace cogbot.TheOpenSims
         {
             if (true)
             {
-                gto.AutoGoto1(bc, targ, dist);
+                Approacher.AutoGoto1(bc, targ, dist,10000);
                 return true;
             }
 

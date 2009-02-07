@@ -38,7 +38,7 @@ namespace cogbot.Utilities
             // The thread that accepts the Client and awaits messages
 
             thrSvr = new Thread(tcpSrv);
-
+            thrSvr.Name = "BotTcpServer for " + client.GetBotName();
             // The thread calls the tcpSvr() method
 
             thrSvr.Start();
@@ -72,7 +72,9 @@ namespace cogbot.Utilities
                         lock (ClientHandlerLock)
                         {
                             ClientHandle = tcp_socket.AcceptTcpClient();
-                            new Thread(new ThreadStart(OneClient)).Start();
+                            Thread t = new Thread(new ThreadStart(OneClient));
+                            t.Name = "ClientHandle thread for " + ClientHandle;
+                            t.Start();
                         }
                     }
                     catch (Exception e)

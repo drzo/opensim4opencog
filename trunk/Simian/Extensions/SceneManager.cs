@@ -3,21 +3,41 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Threading;
 using ExtensionLoader;
+using HttpServer;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using OpenMetaverse.Packets;
+using OpenMetaverse.StructuredData;
+using OpenMetaverse.Http;
 
 namespace Simian.Extensions
 {
+    class EventQueueServerCap
+    {
+        public EventQueueServer Server;
+        public Uri Capability;
+
+        public EventQueueServerCap(EventQueueServer server, Uri capability)
+        {
+            Server = server;
+            Capability = capability;
+        }
+    }
+
     public class SceneManager : IExtension<Simian>, ISceneProvider
     {
         Simian server;
         DoubleDictionary<uint, UUID, SimulationObject> sceneObjects = new DoubleDictionary<uint, UUID, SimulationObject>();
+        DoubleDictionary<uint, UUID, Agent> sceneAgents = new DoubleDictionary<uint, UUID, Agent>();
+        Dictionary<UUID, EventQueueServerCap> eventQueues = new Dictionary<UUID, EventQueueServerCap>();
         int currentLocalID = 1;
-        float[] heightmap = new float[256 * 256];
+        ulong regionHandle;
+        UUID regionID = UUID.Random();
+        TerrainPatch[,] heightmap = new TerrainPatch[16, 16];
 
         public event ObjectAddCallback OnObjectAdd;
         public event ObjectRemoveCallback OnObjectRemove;
@@ -25,24 +45,26 @@ namespace Simian.Extensions
         public event ObjectFlagsCallback OnObjectFlags;
         public event ObjectImageCallback OnObjectImage;
         public event ObjectModifyCallback OnObjectModify;
-        public event AvatarAppearanceCallback OnAvatarAppearance;
-        public event TerrainUpdatedCallback OnTerrainUpdated;
+        public event AgentAddCallback OnAgentAdd;
+        public event AgentRemoveCallback OnAgentRemove;
+        public event AgentAppearanceCallback OnAgentAppearance;
+        public event TerrainUpdateCallback OnTerrainUpdate;
 
-        public float[] Heightmap
-        {
-            get { return heightmap; }
-            set
-            {
-                if (value.Length != (256 * 256))
-                    throw new ArgumentException("Heightmap must be 256x256");
-                heightmap = value;
-            }
-        }
+        public uint RegionX { get { return 7777; } }
+        public uint RegionY { get { return 7777; } }
+        public ulong RegionHandle { get { return regionHandle; } }
+        public UUID RegionID { get { return regionID; } }
+        public string RegionName { get { return "Simian"; } }
+        public RegionFlags RegionFlags { get { return RegionFlags.None; } }
 
-        public float WaterHeight { get { return 35f; } }
+        public float WaterHeight { get { return 20f; } }
+
+        public uint TerrainPatchWidth { get { return 16; } }
+        public uint TerrainPatchHeight { get { return 16; } }
 
         public SceneManager()
         {
+            regionHandle = Utils.UIntsToLong(RegionX * 256, RegionY * 256);
         }
 
         public void Start(Simian server)
@@ -50,11 +72,39 @@ namespace Simian.Extensions
             this.server = server;
 
             server.UDP.RegisterPacketCallback(PacketType.CompleteAgentMovement, new PacketCallback(CompleteAgentMovementHandler));
-            LoadTerrain(server.DataDir + "heightmap.tga");
+            LoadTerrain(Simian.DATA_DIR + "heightmap.tga");
         }
 
         public void Stop()
         {
+            lock (eventQueues)
+            {
+                foreach (EventQueueServerCap eventQueue in eventQueues.Values)
+                {
+                    server.Capabilities.RemoveCapability(eventQueue.Capability);
+                    eventQueue.Server.Stop();
+                }
+            }
+        }
+
+        public float[,] GetTerrainPatch(uint x, uint y)
+        {
+            float[,] copy = new float[16, 16];
+            Buffer.BlockCopy(heightmap[y, x].Height, 0, copy, 0, 16 * 16 * sizeof(float));
+            return copy;
+        }
+
+        public void SetTerrainPatch(object sender, uint x, uint y, float[,] patchData)
+        {
+            if (OnTerrainUpdate != null)
+                OnTerrainUpdate(sender, x, y, patchData);
+
+            float[,] copy = new float[16, 16];
+            Buffer.BlockCopy(patchData, 0, copy, 0, 16 * 16 * sizeof(float));
+            heightmap[y, x].Height = copy;
+
+            LayerDataPacket layer = TerrainCompressor.CreateLandPacket(heightmap[y, x].Height, (int)x, (int)y);
+            server.UDP.BroadcastPacket(layer, PacketCategory.Terrain);
         }
 
         public bool ObjectAdd(object sender, SimulationObject obj, PrimFlags creatorFlags)
@@ -75,25 +125,24 @@ namespace Simian.Extensions
             // Add the object to the scene dictionary
             sceneObjects.Add(obj.Prim.LocalID, obj.Prim.ID, obj);
 
-            if (server.Agents.ContainsKey(obj.Prim.OwnerID))
+            if (sceneAgents.ContainsKey(obj.Prim.OwnerID))
             {
                 // Send an update out to the creator
-                ObjectUpdatePacket updateToOwner = SimulationObject.BuildFullUpdate(obj.Prim, server.RegionHandle,
+                ObjectUpdatePacket updateToOwner = SimulationObject.BuildFullUpdate(obj.Prim, regionHandle,
                     obj.Prim.Flags | creatorFlags);
                 server.UDP.SendPacket(obj.Prim.OwnerID, updateToOwner, PacketCategory.State);
             }
 
             // Send an update out to everyone else
-            ObjectUpdatePacket updateToOthers = SimulationObject.BuildFullUpdate(obj.Prim, server.RegionHandle,
+            ObjectUpdatePacket updateToOthers = SimulationObject.BuildFullUpdate(obj.Prim, regionHandle,
                 obj.Prim.Flags);
-            lock (server.Agents)
-            {
-                foreach (Agent recipient in server.Agents.Values)
+            server.Scene.ForEachAgent(
+                delegate(Agent recipient)
                 {
                     if (recipient.Avatar.ID != obj.Prim.OwnerID)
                         server.UDP.SendPacket(recipient.Avatar.ID, updateToOthers, PacketCategory.State);
                 }
-            }
+            );
 
             return true;
         }
@@ -118,7 +167,19 @@ namespace Simian.Extensions
             }
             else
             {
-                return false;
+                Agent agent;
+                if (sceneAgents.TryGetValue(localID, out agent))
+                {
+                    if (OnAgentRemove != null)
+                        OnAgentRemove(sender, agent);
+
+                    AgentRemove(agent);
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
         }
 
@@ -142,14 +203,55 @@ namespace Simian.Extensions
             }
             else
             {
-                return false;
+                Agent agent;
+                if (sceneAgents.TryGetValue(id, out agent))
+                {
+                    if (OnAgentRemove != null)
+                        OnAgentRemove(sender, agent);
+
+                    AgentRemove(agent);
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
+        }
+
+        void AgentRemove(Agent agent)
+        {
+            Logger.Log("Removing agent " + agent.FullName + " from the scene", Helpers.LogLevel.Info);
+
+            sceneAgents.Remove(agent.Avatar.LocalID, agent.Avatar.ID);
+
+            KillObjectPacket kill = new KillObjectPacket();
+            kill.ObjectData = new KillObjectPacket.ObjectDataBlock[1];
+            kill.ObjectData[0] = new KillObjectPacket.ObjectDataBlock();
+            kill.ObjectData[0].ID = agent.Avatar.LocalID;
+
+            server.UDP.BroadcastPacket(kill, PacketCategory.State);
+
+            // Kill the EventQueue
+            RemoveEventQueue(agent.Avatar.ID);
+
+            // Remove the UDP client
+            server.UDP.RemoveClient(agent);
+
+            // Notify everyone in the scene that this agent has gone offline
+            OfflineNotificationPacket offline = new OfflineNotificationPacket();
+            offline.AgentBlock = new OfflineNotificationPacket.AgentBlockBlock[1];
+            offline.AgentBlock[0] = new OfflineNotificationPacket.AgentBlockBlock();
+            offline.AgentBlock[0].AgentID = agent.Avatar.ID;
+            server.UDP.BroadcastPacket(offline, PacketCategory.State);
         }
 
         public void ObjectTransform(object sender, uint localID, Vector3 position, Quaternion rotation,
             Vector3 velocity, Vector3 acceleration, Vector3 angularVelocity)
         {
             SimulationObject obj;
+            Agent agent;
+
             if (sceneObjects.TryGetValue(localID, out obj))
             {
                 if (OnObjectTransform != null)
@@ -166,7 +268,25 @@ namespace Simian.Extensions
                 obj.Prim.AngularVelocity = angularVelocity;
 
                 // Inform clients
-                BroadcastObjectUpdate(obj);
+                BroadcastObjectUpdate(obj.Prim);
+            }
+            else if (sceneAgents.TryGetValue(localID, out agent))
+            {
+                if (OnObjectTransform != null)
+                {
+                    OnObjectTransform(sender, obj, position, rotation, velocity,
+                        acceleration, angularVelocity);
+                }
+
+                // Update the avatar
+                agent.Avatar.Position = position;
+                agent.Avatar.Rotation = rotation;
+                agent.Avatar.Velocity = velocity;
+                agent.Avatar.Acceleration = acceleration;
+                agent.Avatar.AngularVelocity = angularVelocity;
+
+                // Inform clients
+                BroadcastObjectUpdate(agent.Avatar);
             }
         }
 
@@ -181,7 +301,7 @@ namespace Simian.Extensions
             obj.Prim.Flags = flags;
 
             // Inform clients
-            BroadcastObjectUpdate(obj);
+            BroadcastObjectUpdate(obj.Prim);
         }
 
         public void ObjectImage(object sender, SimulationObject obj, string mediaURL, Primitive.TextureEntry textureEntry)
@@ -196,7 +316,7 @@ namespace Simian.Extensions
             obj.Prim.MediaURL = mediaURL;
 
             // Inform clients
-            BroadcastObjectUpdate(obj);
+            BroadcastObjectUpdate(obj.Prim);
         }
 
         public void ObjectModify(object sender, uint localID, Primitive.ConstructionData data)
@@ -213,41 +333,23 @@ namespace Simian.Extensions
                 obj.Prim.PrimData = data;
 
                 // Inform clients
-                BroadcastObjectUpdate(obj);
+                BroadcastObjectUpdate(obj.Prim);
             }
         }
 
-        public void AvatarAppearance(object sender, Agent agent, Primitive.TextureEntry textures, byte[] visualParams)
+        public bool ContainsObject(uint localID)
         {
-            if (OnAvatarAppearance != null)
-            {
-                OnAvatarAppearance(sender, agent, textures, visualParams);
-            }
+            return sceneObjects.ContainsKey(localID) || sceneAgents.ContainsKey(localID);
+        }
 
-            // Broadcast an object update for this avatar
-            // TODO: Is this necessary here?
-            ObjectUpdatePacket update = SimulationObject.BuildFullUpdate(agent.Avatar,
-                server.RegionHandle, agent.Flags);
-            server.UDP.BroadcastPacket(update, PacketCategory.State);
+        public bool ContainsObject(UUID id)
+        {
+            return sceneObjects.ContainsKey(id) || sceneAgents.ContainsKey(id);
+        }
 
-            // Update the avatar
-            agent.Avatar.Textures = textures;
-            if (visualParams != null && visualParams.Length > 1)
-                agent.VisualParams = visualParams;
-
-            if (agent.VisualParams != null)
-            {
-                // Send the appearance packet to all other clients
-                AvatarAppearancePacket appearance = BuildAppearancePacket(agent);
-                lock (server.Agents)
-                {
-                    foreach (Agent recipient in server.Agents.Values)
-                    {
-                        if (recipient != agent)
-                            server.UDP.SendPacket(recipient.Avatar.ID, appearance, PacketCategory.State);
-                    }
-                }
-            }
+        public int ObjectCount()
+        {
+            return sceneObjects.Count;
         }
 
         public bool TryGetObject(uint localID, out SimulationObject obj)
@@ -260,22 +362,190 @@ namespace Simian.Extensions
             return sceneObjects.TryGetValue(id, out obj);
         }
 
-        public IDictionary<uint, SimulationObject> GetSceneCopy()
+        public bool AgentAdd(object sender, Agent agent, PrimFlags creatorFlags)
         {
-            IDictionary<uint, SimulationObject> scene = new Dictionary<uint, SimulationObject>(sceneObjects.Count);
+            // Check if the agent already exists in the scene
+            if (sceneAgents.ContainsKey(agent.Avatar.ID))
+                sceneAgents.Remove(agent.Avatar.LocalID, agent.Avatar.ID);
 
-            sceneObjects.ForEach(
-                delegate(SimulationObject obj)
-                { scene.Add(obj.Prim.LocalID, obj); }
+            if (agent.Avatar.LocalID == 0)
+            {
+                // Assign a unique LocalID to this agent
+                agent.Avatar.LocalID = (uint)Interlocked.Increment(ref currentLocalID);
+            }
+
+            if (OnAgentAdd != null)
+                OnAgentAdd(sender, agent, creatorFlags);
+
+            // Add the agent to the scene dictionary
+            sceneAgents.Add(agent.Avatar.LocalID, agent.Avatar.ID, agent);
+
+            // Send an update out to the agent
+            ObjectUpdatePacket updateToOwner = SimulationObject.BuildFullUpdate(agent.Avatar, regionHandle,
+                agent.Avatar.Flags | creatorFlags);
+            server.UDP.SendPacket(agent.Avatar.ID, updateToOwner, PacketCategory.State);
+
+            // Send an update out to everyone else
+            ObjectUpdatePacket updateToOthers = SimulationObject.BuildFullUpdate(agent.Avatar, regionHandle,
+                agent.Avatar.Flags);
+            server.Scene.ForEachAgent(
+                delegate(Agent recipient)
+                {
+                    if (recipient.Avatar.ID != agent.Avatar.ID)
+                        server.UDP.SendPacket(recipient.Avatar.ID, updateToOthers, PacketCategory.State);
+                }
             );
 
-            return scene;
+            return true;
         }
 
-        void BroadcastObjectUpdate(SimulationObject obj)
+        public void AgentAppearance(object sender, Agent agent, Primitive.TextureEntry textures, byte[] visualParams)
+        {
+            if (OnAgentAppearance != null)
+            {
+                OnAgentAppearance(sender, agent, textures, visualParams);
+            }
+
+            // Broadcast an object update for this avatar
+            // TODO: Is this necessary here?
+            ObjectUpdatePacket update = SimulationObject.BuildFullUpdate(agent.Avatar,
+                regionHandle, agent.Flags);
+            server.UDP.BroadcastPacket(update, PacketCategory.State);
+
+            // Update the avatar
+            agent.Avatar.Textures = textures;
+            if (visualParams != null && visualParams.Length > 1)
+                agent.VisualParams = visualParams;
+
+            if (agent.VisualParams != null)
+            {
+                // Send the appearance packet to all other clients
+                AvatarAppearancePacket appearance = BuildAppearancePacket(agent);
+                sceneAgents.ForEach(
+                    delegate(Agent recipient)
+                    {
+                        if (recipient != agent)
+                            server.UDP.SendPacket(recipient.Avatar.ID, appearance, PacketCategory.State);
+                    }
+                );
+            }
+        }
+
+        public void ForEachObject(Action<SimulationObject> action)
+        {
+            sceneObjects.ForEach(action);
+        }
+
+        public bool TryGetAgent(uint localID, out Agent agent)
+        {
+            return sceneAgents.TryGetValue(localID, out agent);
+        }
+
+        public bool TryGetAgent(UUID id, out Agent agent)
+        {
+            return sceneAgents.TryGetValue(id, out agent);
+        }
+
+        public int AgentCount()
+        {
+            return sceneAgents.Count;
+        }
+
+        public void ForEachAgent(Action<Agent> action)
+        {
+            sceneAgents.ForEach(action);
+        }
+
+        public bool SeedCapabilityHandler(IHttpClientContext context, IHttpRequest request, IHttpResponse response, object state)
+        {
+            UUID agentID = (UUID)state;
+
+            OSDArray array = OSDParser.DeserializeLLSDXml(request.Body) as OSDArray;
+            if (array != null)
+            {
+                OSDMap osdResponse = new OSDMap();
+
+                for (int i = 0; i < array.Count; i++)
+                {
+                    string capName = array[i].AsString();
+
+                    switch (capName)
+                    {
+                        case "EventQueueGet":
+                            Uri eqCap = null;
+
+                            // Check if this agent already has an event queue
+                            EventQueueServerCap eqServer;
+                            if (eventQueues.TryGetValue(agentID, out eqServer))
+                                eqCap = eqServer.Capability;
+
+                            // If not, create one
+                            if (eqCap == null)
+                                eqCap = CreateEventQueue(agentID);
+
+                            osdResponse.Add("EventQueueGet", OSD.FromUri(eqCap));
+                            break;
+                    }
+                }
+
+                byte[] responseData = OSDParser.SerializeLLSDXmlBytes(osdResponse);
+                response.ContentLength = responseData.Length;
+                response.Body.Write(responseData, 0, responseData.Length);
+                response.Body.Flush();
+            }
+            else
+            {
+                response.Status = HttpStatusCode.BadRequest;
+            }
+
+            return true;
+        }
+
+        public Uri CreateEventQueue(UUID agentID)
+        {
+            EventQueueServer eqServer = new EventQueueServer(server.HttpServer);
+            EventQueueServerCap eqServerCap = new EventQueueServerCap(eqServer,
+                server.Capabilities.CreateCapability(EventQueueHandler, false, eqServer));
+
+            eventQueues.Add(agentID, eqServerCap);
+            
+            return eqServerCap.Capability;
+        }
+
+        public bool RemoveEventQueue(UUID agentID)
+        {
+            return eventQueues.Remove(agentID);
+        }
+
+        public bool HasRunningEventQueue(Agent agent)
+        {
+            return eventQueues.ContainsKey(agent.Avatar.ID);
+        }
+
+        public void SendEvent(Agent agent, string name, OSDMap body)
+        {
+            EventQueueServerCap eventQueue;
+            if (eventQueues.TryGetValue(agent.Avatar.ID, out eventQueue))
+            {
+                eventQueue.Server.SendEvent(name, body);
+            }
+            else
+            {
+                Logger.Log(String.Format("Cannot send the event {0} to agent {1}, no event queue for that avatar",
+                    name, agent.FullName), Helpers.LogLevel.Warning);
+            }
+        }
+
+        bool EventQueueHandler(IHttpClientContext context, IHttpRequest request, IHttpResponse response, object state)
+        {
+            EventQueueServer eqServer = (EventQueueServer)state;
+            return eqServer.EventQueueHandler(context, request, response);
+        }
+
+        void BroadcastObjectUpdate(Primitive prim)
         {
             ObjectUpdatePacket update =
-                SimulationObject.BuildFullUpdate(obj.Prim, server.RegionHandle, obj.Prim.Flags);
+                SimulationObject.BuildFullUpdate(prim, regionHandle, prim.Flags);
 
             server.UDP.BroadcastPacket(update, PacketCategory.State);
         }
@@ -321,7 +591,7 @@ namespace Simian.Extensions
                 complete.AgentData.SessionID = agent.SessionID;
                 complete.Data.LookAt = Vector3.UnitX;
                 complete.Data.Position = avatar.Position;
-                complete.Data.RegionHandle = server.RegionHandle;
+                complete.Data.RegionHandle = regionHandle;
                 complete.Data.Timestamp = Utils.DateTimeToUnixTime(DateTime.Now);
                 complete.SimData.ChannelVersion = Utils.StringToBytes("Simian");
 
@@ -359,9 +629,8 @@ namespace Simian.Extensions
             });
 
             // Send appearances for all avatars
-            lock (server.Agents)
-            {
-                foreach (Agent otherAgent in server.Agents.Values)
+            sceneAgents.ForEach(
+                delegate(Agent otherAgent)
                 {
                     if (otherAgent != agent)
                     {
@@ -370,7 +639,7 @@ namespace Simian.Extensions
                         server.UDP.SendPacket(agent.Avatar.ID, appearance, PacketCategory.State);
                     }
                 }
-            }
+            );
 
             // Send terrain data
             SendLayerData(agent);
@@ -378,50 +647,80 @@ namespace Simian.Extensions
 
         void LoadTerrain(string mapFile)
         {
+            byte[] rgbValues = new byte[256 * 256 * 3];
+
             if (File.Exists(mapFile))
             {
                 lock (heightmap)
                 {
                     Bitmap bmp = LoadTGAClass.LoadTGA(mapFile);
 
-                    Rectangle rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
-                    BitmapData bmpData = bmp.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
-                    IntPtr ptr = bmpData.Scan0;
-                    int bytes = bmpData.Stride * bmp.Height;
-                    byte[] rgbValues = new byte[bytes];
-                    Marshal.Copy(ptr, rgbValues, 0, bytes);
-                    bmp.UnlockBits(bmpData);
-
-                    for (int i = 1, pos = 0; i < heightmap.Length; i++, pos += 3)
-                        heightmap[i] = (float)rgbValues[pos];
-
-                    if (OnTerrainUpdated != null)
-                        OnTerrainUpdated(this);
+                    if (bmp.Width == 256 && bmp.Height == 256)
+                    {
+                        Rectangle rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
+                        BitmapData bmpData = bmp.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+                        Marshal.Copy(bmpData.Scan0, rgbValues, 0, rgbValues.Length);
+                        bmp.UnlockBits(bmpData);
+                    }
+                    else
+                    {
+                        Logger.Log("Map file " + mapFile + " has the wrong dimensions or wrong pixel format (must be 256x256 RGB). Defaulting to 25m",
+                            Helpers.LogLevel.Warning);
+                        for (int i = 0; i < rgbValues.Length; i++)
+                            rgbValues[i] = 25;
+                    }
                 }
             }
             else
             {
                 Logger.Log("Map file " + mapFile + " not found, defaulting to 25m", Helpers.LogLevel.Info);
+                for (int i = 0; i < rgbValues.Length; i++)
+                    rgbValues[i] = 25;
+            }
 
-                server.Scene.Heightmap = new float[65536];
-                for (int i = 0; i < server.Scene.Heightmap.Length; i++)
-                    server.Scene.Heightmap[i] = 25f;
+            uint patchX = 0, patchY = 0, x = 0, y = 0;
+            for (int i = 0; i < rgbValues.Length; i += 3)
+            {
+                if (heightmap[patchY, patchX] == null)
+                    heightmap[patchY, patchX] = new TerrainPatch(16, 16);
+
+                heightmap[patchY, patchX].Height[y, x] = (float)rgbValues[i];
+
+                ++x;
+                if (x > 15)
+                {
+                    if (y == 15)
+                    {
+                        if (OnTerrainUpdate != null)
+                            OnTerrainUpdate(this, patchX, patchY, heightmap[patchY, patchX].Height);
+                    }
+
+                    x = 0;
+                    ++patchX;
+                }
+
+                if (patchX > 15)
+                {
+                    patchX = 0;
+                    ++y;
+                }
+
+                if (y > 15)
+                {
+                    y = 0;
+                    ++patchY;
+                }
             }
         }
 
         void SendLayerData(Agent agent)
         {
-            lock (heightmap)
+            for (int y = 0; y < 16; y++)
             {
-                for (int y = 0; y < 16; y++)
+                for (int x = 0; x < 16; x++)
                 {
-                    for (int x = 0; x < 16; x++)
-                    {
-                        int[] patches = new int[1];
-                        patches[0] = (y * 16) + x;
-                        LayerDataPacket layer = TerrainCompressor.CreateLandPacket(heightmap, patches);
-                        server.UDP.SendPacket(agent.Avatar.ID, layer, PacketCategory.Terrain);
-                    }
+                    LayerDataPacket layer = TerrainCompressor.CreateLandPacket(heightmap[y, x].Height, x, y);
+                    server.UDP.SendPacket(agent.Avatar.ID, layer, PacketCategory.Terrain);
                 }
             }
         }
@@ -432,10 +731,6 @@ namespace Simian.Extensions
             appearance.ObjectData.TextureEntry = agent.Avatar.Textures.ToBytes();
             appearance.Sender.ID = agent.Avatar.ID;
             appearance.Sender.IsTrial = false;
-            if (agent.VisualParams == null)
-            {
-                agent.VisualParams = new byte[0];
-            }
 
             appearance.VisualParam = new AvatarAppearancePacket.VisualParamBlock[agent.VisualParams.Length];
             for (int i = 0; i < agent.VisualParams.Length; i++)
