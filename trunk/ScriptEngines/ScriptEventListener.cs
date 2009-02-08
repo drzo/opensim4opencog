@@ -160,6 +160,22 @@ namespace cogbot.ScriptEngines
 
 
             }
+
+            if (arg is Parcel)
+            {
+                String dictname = "'(parcel";
+                Parcel list = (Parcel)arg;
+                dictname += " " + argString(list.SnapshotID.ToString());
+                dictname += " " + argString(list.Name);
+                return dictname + ")";
+            }
+            if (arg is Group)
+            {
+                String dictname = "'(Group";
+                Group list = (Group)arg;
+                dictname += " " + argString(list.Name);
+                return dictname + ")";
+            }
             if (arg is IDictionary)
             {
                 String dictname = "'(dict " + type.Name;
@@ -192,7 +208,7 @@ namespace cogbot.ScriptEngines
 
             if (arg is UUID)
             {
-              //  if (true) return argString(arg.ToString());
+            //   if (true) return argString(arg.ToString());
                 object found = WorldSystem.GetObject((UUID)arg);
                 if (found == null || found == arg)
                 {

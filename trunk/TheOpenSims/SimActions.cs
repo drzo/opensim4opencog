@@ -217,67 +217,6 @@ namespace cogbot.TheOpenSims
     }
 
 
-    public class AnimThread
-    {
-        BotClient Client;
-        UUID anim;
-        bool repeat = true;
-        Thread animLoop;
-        public AnimThread(BotClient c, UUID amin0)
-        {
-            Client = c;
-            if (cogbot.Listeners.WorldObjects.GetAnimationName(amin0).StartsWith("S"))
-            {
-                repeat = false;
-            }
-            anim = amin0;
-        }
-
-        public override string ToString()
-        {
-            return "AnimLoop " + anim + " of " + Client;
-        }
-
-        public void Start()
-        {
-            animLoop = new Thread(new ThreadStart(LoopAnim));
-            animLoop.Name = "Thread for " + this.ToString() ;
-            animLoop.Start();
-        }
-        void LoopAnim()
-        {
-            try
-            {
-                Client.Self.AnimationStart(anim, true);
-                while (repeat)
-                {
-                    // some anims will only last a short time so we have to 
-                    // remind the server we still want to be ussing it 
-                    // like Laugh .. lasts for about .9 seconds
-                    //12000 is a estimate avage
-                    Thread.Sleep(3200);
-                    Client.Self.AnimationStop(anim, true);
-                    Client.Self.AnimationStart(anim, true);
-                }
-            }
-            catch (Exception) { } // for the Abort 
-        }
-        public void Stop()
-        {
-            repeat = false;
-            if (animLoop != null)
-            {
-                try
-                {
-                    if (animLoop.IsAlive) animLoop.Abort();
-                }
-                catch (Exception) { }
-                animLoop = null;
-            }
-            Client.Self.AnimationStop(anim, true);
-        }
-    }
-
     public class BotObjectAction : BotAction
     {
         public override Vector3 GetLocation()

@@ -15,7 +15,7 @@ namespace cogbot.Listeners
 	public delegate float ObjectHeuristic(SimObject prim);
 
     public class WorldObjects : DebugAllEvents {
-		protected Dictionary<string, Avatar> avatarCache = new Dictionary<string,Avatar>();
+		//protected Dictionary<string, Avatar> avatarCache = new Dictionary<string,Avatar>();
 		public Vector3 compPos;
 		public int searchStep;
 		public List<string> numberedAvatars;
@@ -90,7 +90,7 @@ namespace cogbot.Listeners
             {
                 return GetSimAvatar((Avatar)prim);
             }
-            lock (SimObjects) foreach (SimObject obj in SimObjects)
+            foreach (SimObject obj in SimObjects)
                 {
                     if (obj.thePrim == prim)
                         return obj;
@@ -156,7 +156,7 @@ namespace cogbot.Listeners
 			burstStartTime = DateTime.Now;
 			burstInterval = new TimeSpan(0, 0, 0, 0, (int)(burstTime * 1000));
 			searchStep = 1;
-			avatarCache = new Dictionary<string, Avatar>();
+			//avatarCache = new Dictionary<string, Avatar>();
 			numberedAvatars = new List<string>();
 
 			//parent.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
@@ -196,11 +196,13 @@ namespace cogbot.Listeners
          */
         public override void Assets_OnImageReceived(ImageDownload image, AssetTexture asset)
         {
-            lock (uuidTextures) uuidTextures[image.ID] = image;
+            RegisterUUID(image.ID, image);
+            RegisterUUID(asset.AssetID, asset);
+            //lock (uuidTextures) uuidTextures[image.ID] = image;
             //base.Assets_OnImageReceived(image, asset);
         }       // Dictionary<UUID, Parcel> uuidParcels = new Dictionary<UUID, Parcel>();
 
-        Dictionary<UUID, ImageDownload> uuidTextures = new Dictionary<UUID, ImageDownload>();
+        //Dictionary<UUID, ImageDownload> uuidTextures = new Dictionary<UUID, ImageDownload>();
         TexturePipeline texturePipeline;
 
         void texturePipeline_OnDownloadFinished(UUID id, bool success)
@@ -211,7 +213,8 @@ namespace cogbot.Listeners
                 ImageDownload image = texturePipeline.GetTextureToRender(id);
                 try
                 {
-                    lock (uuidTextures) uuidTextures[id] = image;
+                    RegisterUUID(id, image);
+                    //lock (uuidTextures) uuidTextures[id] = image;
                 }
                 catch (Exception)
                 {
@@ -286,7 +289,7 @@ namespace cogbot.Listeners
             Avatar avatar = GetAvatar(avatarID);
             if (avatar == null) return;
 
-            List<UUID> currents = new List<UUID>();
+            //List<UUID> currents = new List<UUID>();
             List<String> names = new List<String>();
             UUID mostCurrentAnim = UUID.Zero;
             int mostCurrentSequence = -1;
@@ -301,27 +304,30 @@ namespace cogbot.Listeners
                         mostCurrentSequence = animNumber;
                         mostCurrentAnim = key;
                     }
-                    currents.Add(key);
+                   // currents.Add(key);
                     names.Add(GetAnimationName(key));
                 });
             lock (avatarAminCurrent)
+            {
+                String newName = GetAnimationName(mostCurrentAnim);
                 if (avatarAminCurrent.ContainsKey(avatar))
                 {
                     UUID oldAnim = avatarAminCurrent[avatar];
                     if (oldAnim != mostCurrentAnim)
                     {
                         String oldName = GetAnimationName(oldAnim);
-                        String newName = GetAnimationName(mostCurrentAnim);
-                        if (oldName.Length > 4 && newName.Length > 4 && oldName.Substring(0,5)==newName.Substring(0,5))
+                        if (oldName.Length > 4 && newName.Length > 4 && oldName.Substring(0, 5) == newName.Substring(0, 5))
                         {
-                        } else 
-                        SendNewEvent("On-Object-Animation", avatar, mostCurrentAnim);
+                        }
+                        else
+                            SendNewEvent("On-Object-Animation", avatar, newName);
                     }
                 }
                 else
                 {
-                    SendNewEvent("On-Object-Animation", avatar, mostCurrentAnim);
+                    SendNewEvent("On-Object-Animation", avatar, newName);
                 }
+            }
             avatarAminCurrent[avatar] = mostCurrentAnim;
 
 
@@ -386,8 +392,13 @@ id: "a31efee6-a426-65a6-5ef2-d1345be49233"
         public override void Avatars_OnEffect(EffectType type, UUID sourceID, UUID targetID, Vector3d targetPos, float duration, UUID id)
         {
 //            SendNewEvent("on-effect",targetPos,id)
-            lock (uuidType) uuidType[id] = type;
+            RegisterUUID(id, type);
             base.Avatars_OnEffect(type, sourceID, targetID, targetPos, duration, id);
+        }
+
+        public static void RegisterUUID(UUID id, object type)
+        {
+            lock (uuidTypeObject) uuidTypeObject[id] = type;
         }
 /*
          
@@ -395,10 +406,10 @@ id: "a31efee6-a426-65a6-5ef2-d1345be49233"
 folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
  */
 
-        static Dictionary<UUID, object> uuidType = new Dictionary<UUID, object>();
+        static Dictionary<UUID, object> uuidTypeObject = new Dictionary<UUID, object>();
         public override void Inventory_OnFolderUpdated(UUID folderID)
         {
-            lock (uuidType) uuidType[folderID] = client.Inventory.Store[folderID]; //;;typeof(OpenMetaverse.InventoryFolder);
+            RegisterUUID(folderID,client.Inventory.Store[folderID]); //;;typeof(OpenMetaverse.InventoryFolder);
             //base.Inventory_OnFolderUpdated(folderID);
         }
 		static readonly string[] paramNamesOnObjectPropertiesFamily = new string[] { "simulator", "props", "type"};
@@ -436,7 +447,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
         object Objects_OnObjectPropertiesLock = new object();
         public override void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties props)
         {
-            lock (Objects_OnObjectPropertiesLock)
+           // lock (Objects_OnObjectPropertiesLock)
                 Objects_OnObjectProperties1(simulator, props);
         }
         private void Objects_OnObjectProperties1(Simulator simulator, Primitive.ObjectProperties props)
@@ -482,16 +493,16 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             Objects_OnNewPrim(simulator, avatar, regionHandle, timeDilation);
             try
             {
-                lock (avatarCache)
-                {
-                    if (avatar != null)
-                    {
-                        if (!avatarCache.ContainsKey(avatar.Name))
-                        {
-                            avatarCache[avatar.Name] = avatar;
-                        }
-                    }
-                }
+                //lock (avatarCache)
+                //{
+                //    if (avatar != null)
+                //    {
+                //        if (!avatarCache.ContainsKey(avatar.Name))
+                //        {
+                //            avatarCache[avatar.Name] = avatar;
+                //        }
+                //    }
+                //}
                 describeAvatarToAI(avatar);
             }
             catch (Exception e)
@@ -704,7 +715,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 				wasChanged = true;
                 wasPositionUpdateSent = true;
             }
-			if (before.Rotation != after.Rotation) {
+			if (ChangedBetween(before.Rotation,after.Rotation)>0.1f) {
                 after.Rotation =(Quaternion) didUpdate(objectUpdated, "Rotation", before.Rotation, after.Rotation, diff.Rotation);
 				wasChanged = true;
 			}
@@ -733,6 +744,12 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 			if (!wasChanged) return null;
 			return diff;
 		}
+
+        private float ChangedBetween(Quaternion quaternion, Quaternion quaternion_2)
+        {
+            Quaternion diff = quaternion - quaternion_2;
+            return diff.Length();
+        }
 
         //removes from taintable
         public String OSDDiff(OSDMap before, OSDMap after)
@@ -925,9 +942,9 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             if (targetID == client.Self.AgentID)
             {
                 output("  (TARGET IS SELF)");
-                SendNewEvent("on-self-point-target", GetObject(sourceID), lookType);
+                SendNewEvent("on-self-point-target", /*GetObject*/(sourceID), lookType);
             }
-            SendNewEvent("on-avatar-point", GetObject(sourceID), GetObject(targetID), targetPos, lookType.ToString(), duration, GetObject(id));
+            SendNewEvent("on-avatar-point", /*GetObject*/(sourceID), /*GetObject*/(targetID), targetPos, lookType.ToString(), duration, /*GetObject*/(id));
         }
 
         public override void Avatars_OnLookAt(UUID sourceID, UUID targetID, Vector3d targetPos, LookAtType lookType, float duration, UUID id)
@@ -937,9 +954,10 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             if (targetID == client.Self.AgentID)
             {
                 output("  (TARGET IS SELF)");
-                SendNewEvent("on-self-look-target", GetObject(sourceID), lookType);
+                SendNewEvent("on-self-look-target", /*GetObject*/(sourceID), lookType);
             }
-            SendNewEvent("on-avatar-look", GetObject(sourceID), GetObject(targetID), targetPos, lookType.ToString(), duration, GetObject(id));
+            RegisterUUID(id, lookType);
+            SendNewEvent("on-avatar-look", /*GetObject*/(sourceID), /*GetObject*/(targetID), targetPos, lookType.ToString(), duration, /*GetObject*/(id));
         }
 
         public Avatar GetAvatar(UUID avatarID)
@@ -954,7 +972,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
         {
             Object found = GetObject(uuid);
             if (found == null) return null;
-            //lock (uuidType) uuidType[uuid] = found;
+            //RegisterUUID(uuid] = found;
             if (found is Type) return (Type)found;
             return found.GetType();
         }
@@ -963,10 +981,10 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
         {
             if (id == UUID.Zero) return null;
 
-            lock (uuidType)
-                if (uuidType.ContainsKey(id))
+            lock (uuidTypeObject)
+                if (uuidTypeObject.ContainsKey(id))
                 {
-                    object found = uuidType[id];
+                    object found = uuidTypeObject[id];
                     if (found != null)
                         return found;
                 } 
@@ -982,6 +1000,11 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             return id;
         }
 
+        public string GetAnimationName(UUID id)
+        {
+            return cogbot.TheOpenSims.SimAnimation.GetAnimationName(id);
+        }
+
         private Asset GetAsset(UUID id)
         {
             Asset asset;
@@ -994,7 +1017,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             assetProvider.TryGetAsset(id, out asset);
             if (asset != null)
             {
-                uuidType[id] = asset;
+                RegisterUUID(id, asset);
             }
             return asset;
         }
@@ -1003,10 +1026,10 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 
         public Primitive GetPrimitive(UUID id)
         {
-            lock (uuidType)
-                if (uuidType.ContainsKey(id))
+            lock (uuidTypeObject)
+                if (uuidTypeObject.ContainsKey(id))
                 {
-                    object found = uuidType[id];
+                    object found = uuidTypeObject[id];
                     if (found != null && found is Primitive)
                         return (Primitive)found;
                 }
@@ -1015,7 +1038,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                 Primitive prim;
                 if (prims.TryGetValue(id, out prim))
                 {
-                    uuidType[id] = prim;
+                    RegisterUUID(id, prim);
                     return prim;
                 }
                 //lock (GetSimulator().ObjectsAvatars)
@@ -1023,13 +1046,15 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                     Primitive found = GetSimulator().ObjectsPrimitives.Find(delegate(Primitive prim0)
                     {
                         EnsureSelected(prim0.LocalID);
-                        EnsureSelected(prim0.ParentID);
+                        EnsureSelected(prim0.ParentID);      
                         return (prim0.ID == id);
                     });
                     if (found == null) found = GetSimulator().ObjectsAvatars.Find(delegate(Avatar prim0)
                     {
+                        RegisterUUID(prim0.ID, prim0);
                         if (prim0.ID == id)
                         {
+                  
                           //  AvatarCacheAdd(prim0.Name, prim0);
                             return true;
                         }
@@ -1038,7 +1063,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                     if (found != null)
                     {
                         lock (prims) prims.Add(found.LocalID, found.ID, found);
-                        uuidType[found.ID] = found;
+                        RegisterUUID(found.ID, found);
                     }
                     return found;
                 }
@@ -1056,7 +1081,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                 }
                 if (GetSimulator().ObjectsPrimitives.TryGetValue(id, out prim))
                 {
-                    uuidType[prim.ID] = prim;
+                    RegisterUUID(prim.ID, prim);
                     EnsureSelected(prim.LocalID);
                     EnsureSelected(prim.ParentID);
                     lock (prims) prims.Add(prim.LocalID, prim.ID, prim);
@@ -1065,7 +1090,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                 Avatar avatar;
                 if (GetSimulator().ObjectsAvatars.TryGetValue(id, out avatar))
                 {
-                    uuidType[avatar.ID] = avatar;
+                    RegisterUUID(avatar.ID, avatar);
                     lock (prims) prims.Add(avatar.LocalID, avatar.ID, avatar);
                     return avatar;
                 };
@@ -1074,15 +1099,15 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             }
         }
 
-        private void AvatarCacheAdd(string p, Avatar prim0)
-        {
-            lock (avatarCache)
-            {
-                if (!avatarCache.ContainsKey(p))
-                avatarCache[p] = prim0;
-            }
-            uuidType[prim0.ID] = prim0;
-        }
+        //private void AvatarCacheAdd(string p, Avatar prim0)
+        //{
+        //    lock (avatarCache)
+        //    {
+        //        if (!avatarCache.ContainsKey(p))
+        //        avatarCache[p] = prim0;
+        //    }
+        //    RegisterUUID(prim0.ID, prim0);
+        //}
     
         object GetPrimitiveLock = new Object();
 
@@ -1422,7 +1447,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 
 		public int numAvatars()
 		{
-			return avatarCache.Count;
+			return SimAvatars.Count;
 		}
 
 		public int comp(Avatar a1, Avatar a2)
@@ -1434,9 +1459,12 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 		{
 			compPos = pos;
 			List<Avatar> avatarList = new List<Avatar>();
-			foreach (Avatar avatar in avatarCache.Values)
-			if (avatar.Name != client.Self.Name)
-				avatarList.Add(avatar);
+            foreach (SimAvatar simavatar in SimAvatars)
+            {
+                Avatar avatar = simavatar.theAvatar;
+                if (avatar.Name != client.Self.Name)
+                    avatarList.Add(avatar);
+            }
 
 			if (avatarList.Count > num) {
 				avatarList.Sort(new Comparison<Avatar>(comp));
@@ -1464,47 +1492,21 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 
 		public bool tryGetAvatarById(UUID id, out Avatar avatar)
 		{
-			avatar = null;
-			foreach (Avatar av in avatarCache.Values)
-			{
-				if (av.ID == id) {
-					avatar = av;
-					return true;
-				}
-			}
-			return false;
+            avatar = GetAvatar(id);
+			return (avatar is Avatar);
 		}
 
 		public bool tryGetAvatar(string name, out Avatar avatar)
 		{
 			avatar = null;
-
-			string[] toks = name.Split(null);
-			if (toks.Length == 2 && toks[0] == "person") {
-				try {
-					int i = Convert.ToInt32(toks[1]);
-					if (i > 0 && i <= numberedAvatars.Count) {
-						avatar = avatarCache[numberedAvatars[i - 1]];
-						return true;
-					}
-				} catch (FormatException) {
-				}
-			}
-
-			if (avatarCache.ContainsKey(name)) {
-				avatar = avatarCache[name];
-				return true;
-			}
-
-			foreach (string avatarName in avatarCache.Keys)
-			{
-				if (avatarName.Length >= name.Length && avatarName.Substring(0, name.Length) == name) {
-					avatar = avatarCache[avatarName];
-					return true;
-				}
-			}
-
-			return false;
+            Primitive prim;
+            if (!tryGetPrim(name, out prim)) return false;
+            if (prim is Avatar)
+            {
+                avatar = (Avatar)prim;
+                return true;
+            }
+            return false;
 		}
 
 		public string getAvatarName(Avatar avatar)
@@ -1570,64 +1572,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 
 		}
 
-        static Dictionary<UUID, string> animationName = new Dictionary<UUID, string>();
-        static Dictionary<string, UUID> nameAnimation = new Dictionary<string, UUID>();
-
-        static void FillAnimationNames()
-        {
-            lock (animationName)
-            {
-                if (animationName.Count > 0) return;
-
-
-                foreach (FieldInfo fi in typeof(Animations).GetFields())
-                {
-                    UUID uid = (UUID)fi.GetValue(null);
-                    string uids = uid.ToString();
-                    animationName[uid] = fi.Name;
-                    uuidType[uid] = fi.Name;
-                    nameAnimation[fi.Name] = uid;
-                }
-            }
-        }
-        public static ICollection<string> GetAnimationList()
-        {
-            FillAnimationNames();
-            return nameAnimation.Keys;
-        }
-        public static String GetAnimationName(UUID uuid)
-        {
-            FillAnimationNames();
-            String name;
-            if (animationName.TryGetValue(uuid, out name))
-            {
-                return name;
-            }
-            return uuid.ToString();
-        }
-
-
-        public static UUID GetAnimationUUID(string a)
-        {
-            a = a.ToLower();
-            FillAnimationNames();
-            UUID partial = default(UUID);
-            foreach (String name in nameAnimation.Keys)
-            {
-                String sname = name.ToLower();
-                if (sname.Equals(a))
-                {
-                    return nameAnimation[name];
-                }
-                if (sname.Contains(a))
-                {
-                    partial = nameAnimation[name];
-                } 
-            }
-            return partial;
-
-        }
-
+     
         internal void SetPrimFlags(Primitive UnPhantom, PrimFlags fs)
         {
             client.Objects.SetFlags(UnPhantom.LocalID, ((fs & PrimFlags.Physics) != 0),//
@@ -1693,6 +1638,36 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             {
                 RescanTypes();
             }
+        }
+        public override void Groups_OnCurrentGroups(Dictionary<UUID, Group> groups) 
+        {
+            foreach (UUID key in groups.Keys)
+            {
+                Group g = groups[key];
+                RegisterUUID(key,  g);
+            }
+            base.Groups_OnCurrentGroups(groups);
+            //OnEvent("On-Current-Groups", paramNamesOnCurrentGroups, paramTypesOnCurrentGroups, groups);
+        
+        }
+        
+        Dictionary<int, Parcel> parcelLocalIds = new Dictionary<int, Parcel>();
+        public override void Parcels_OnParcelProperties(Simulator simulator, Parcel parcel, ParcelResult result, int selectedPrims, int sequenceID, bool snapSelection)
+        {
+            parcelLocalIds[parcel.LocalID] = parcel;
+            base.Parcels_OnParcelProperties(simulator, parcel, result, selectedPrims, sequenceID, snapSelection);
+        }
+        public override void Parcels_OnParcelDwell(UUID parcelID, int localID, float dwell)
+        {
+            Parcel p = parcelLocalIds[localID];
+            p.SnapshotID = parcelID;
+            RegisterUUID(parcelID, p);
+            base.Parcels_OnParcelDwell(parcelID, localID, dwell);
+        }
+
+        internal UUID GetAnimationUUID(string a)
+        {
+            return cogbot.TheOpenSims.SimAnimation.GetAnimationUUID(a);
         }
     }
 }

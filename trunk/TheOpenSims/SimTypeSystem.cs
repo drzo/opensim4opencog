@@ -14,12 +14,12 @@ namespace cogbot.TheOpenSims
     {
 
         // Attachments
-        public ListAsSet<string> AcceptsChild = new ListAsSet<string>(); // types that can attach to it
-        public ListAsSet<string> AcceptsParent = new ListAsSet<string>(); // what bodypart to attach?  Book=LeftHand
+        public List<string> AcceptsChild = new List<string>(); // types that can attach to it
+        public List<string> AcceptsParent = new List<string>(); // what bodypart to attach?  Book=LeftHand
 
         // Clasification
-        public ListAsSet<string> Match = new ListAsSet<string>();  // regexpr match
-        public ListAsSet<string> NoMatch = new ListAsSet<string>(); // wont be if one of these matches
+        public List<string> Match = new List<string>();  // regexpr match
+        public List<string> NoMatch = new List<string>(); // wont be if one of these matches
 
         // Defines Side-effects to change Prim in SL
         public string SitName = null;
@@ -71,7 +71,7 @@ namespace cogbot.TheOpenSims
         public SimTypeUsage FindObjectUsage(string usename)
         {
 
-            ListAsSet<SimTypeUsage> usages = new ListAsSet<SimTypeUsage>();
+            List<SimTypeUsage> usages = new List<SimTypeUsage>();
 
 
             foreach (SimObjectType type in SuperType)
@@ -289,17 +289,17 @@ namespace cogbot.TheOpenSims
          * 
          **/
 
-        static ListAsSet<SimObjectType> objectTypes = new ListAsSet<SimObjectType>();
+        static List<SimObjectType> objectTypes = new List<SimObjectType>();
 
         //the scripting language might supply a number as a parameter in a foriegn method call, so when i iterate thru the method signatures.. i have to recognise which ones are claiming to accept a numeric argument
-        static public ListAsSet<SimObjectType> GuessSimObjectTypes(Primitive.ObjectProperties props)
+        static public List<SimObjectType> GuessSimObjectTypes(Primitive.ObjectProperties props)
         {
             ListAsSet<SimObjectType> possibles = new ListAsSet<SimObjectType>();
             if (props != null)
             {
                 string objName = " " + props.Name.ToLower() + " | " + props.Description.ToLower() + " ";
 
-                foreach (SimObjectType otype in objectTypes)
+                lock (objectTypes) foreach (SimObjectType otype in objectTypes)
                 {
                     foreach (string smatch in otype.NoMatch)
                     { // NoMatch
@@ -538,7 +538,7 @@ namespace cogbot.TheOpenSims
             if (type == null)
             {
                 type = new SimObjectType(name);
-                lock (objectTypes) objectTypes.AddTo(type);
+                lock (objectTypes) objectTypes.Add(type);
             }
             return type;
         }
