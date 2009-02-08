@@ -19,7 +19,7 @@ namespace cogbot.Actions
         {
             if (args.Length < 1)
             {
-                ICollection<string> list = Listeners.WorldObjects.GetAnimationList();
+                ICollection<string> list = cogbot.TheOpenSims.SimAnimation.GetAnimationList();
                WriteLine(Client.argsListString(list));
                return "Usage:  anim [seconds] HOVER [seconds] 23423423423-4234234234-234234234-23423423  +CLAP -JUMP STAND";
            }
@@ -54,7 +54,7 @@ namespace cogbot.Actions
                     time = 0;
                     a = a.Substring(1);
                 }
-                UUID anim = Listeners.WorldObjects.GetAnimationUUID(a);
+                UUID anim = WorldSystem.GetAnimationUUID(a);
 
                 if (anim == UUID.Zero)
                 {
@@ -77,16 +77,16 @@ namespace cogbot.Actions
                 switch (val)
                 {
                     case -1:
-                        WriteLine("Stop anim " + Listeners.WorldObjects.GetAnimationName(anim.Key));
+                        WriteLine("Stop anim " + WorldSystem.GetAnimationName(anim.Key));
                         Client.Self.AnimationStop(anim.Key, true);
                         continue;
                     case 0:
-                        WriteLine("Start anim " + Listeners.WorldObjects.GetAnimationName(anim.Key));
+                        WriteLine("Start anim " + WorldSystem.GetAnimationName(anim.Key));
                         Client.Self.AnimationStart(anim.Key, true);
                         continue;
                     default:
                         Client.Self.AnimationStart(anim.Key, true);
-                        WriteLine("Run anim " + Listeners.WorldObjects.GetAnimationName(anim.Key) + " for " + val / 1000 + " seconds.");
+                        WriteLine("Run anim " + WorldSystem.GetAnimationName(anim.Key) + " for " + val / 1000 + " seconds.");
                         Thread.Sleep(val);
                         Client.Self.AnimationStop(anim.Key, true);
                         continue;

@@ -557,7 +557,7 @@ namespace cogbot.TheOpenSims
 
         public UUID FindAnimUUID(string use)
         {
-            return WorldObjects.GetAnimationUUID(use);
+            return cogbot.TheOpenSims.SimAnimation.GetAnimationUUID(use);
         }
 
         public void ExecuteLisp(SimObjectUsage botObjectAction, String lisp)

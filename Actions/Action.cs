@@ -34,7 +34,7 @@ namespace cogbot.Actions
                 target = prim.ID;
                 if (target != UUID.Zero) return true;
             }
-            target = cogbot.Listeners.WorldObjects.GetAnimationUUID(p);
+            target = cogbot.TheOpenSims.SimAnimation.GetAnimationUUID(p);
             if (target != UUID.Zero) return true;
             return false;
         }

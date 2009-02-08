@@ -4,12 +4,13 @@ using System.Text;
 using OpenMetaverse; //using libsecondlife;
 using System.Threading;
 using System.Windows.Forms;
+using cogbot.TheOpenSims;
 
 namespace cogbot.Actions
 {
     class Follow : Action
     {
-        public Avatar followAvatar;
+        public SimObject followAvatar;
         public float followDist;
         //public Vector3 LastTarget;
         public Thread thrTracker=null;
@@ -30,7 +31,7 @@ namespace cogbot.Actions
             //Client.Settings.THROTTLE_OUTGOING_PACKETS = false;
             //Client.Settings.SEND_AGENT_THROTTLE = true;
 
-            Client.Objects.OnObjectUpdated += new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
+           // Client.Objects.OnObjectUpdated += new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
 
         }
 
@@ -44,14 +45,15 @@ namespace cogbot.Actions
                 {
                     if (followAvatar != null)
                     {
-                        float curDist = Vector3.Distance(Client.Self.SimPosition, followAvatar.Position);
+                        Vector3 targetPosition = followAvatar.GetSimPosition();
+                        float curDist = Vector3.Distance(Client.Self.SimPosition, targetPosition);
                         if (curDist > followDist)
                         {
 
                             //Client.Self.Movement.SendUpdate();
                             if (curDist < (followDist * 1.25))
                             {
-                                Client.Self.Movement.TurnToward(followAvatar.Position);
+                                Client.Self.Movement.TurnToward(targetPosition);
                                 Client.Self.Movement.AtPos = true;
                                 Thread.Sleep(25);
                                 Client.Self.Movement.Stop = true;
@@ -63,7 +65,7 @@ namespace cogbot.Actions
                             }
                             else
                             {                          
-                                Client.Self.Movement.TurnToward(followAvatar.Position);
+                                Client.Self.Movement.TurnToward(targetPosition);
                                 Client.Self.Movement.AtPos = true;
                                 Client.Self.Movement.UpdateInterval = 0; //100
                                 Client.Self.Movement.SendUpdate(false);
@@ -77,7 +79,7 @@ namespace cogbot.Actions
                         {
                             if (justStopped)
                             {
-                                Client.Self.Movement.TurnToward(followAvatar.Position);
+                                Client.Self.Movement.TurnToward(targetPosition);
                                 Client.Self.Movement.AtPos = false;
                                 //Client.Self.Movement.UpdateInterval = 0;
                                 Client.Self.Movement.StandUp = true;
@@ -119,21 +121,21 @@ namespace cogbot.Actions
         {
             if (followAvatar != null)
             {
-                if (Vector3.Distance(Client.Self.SimPosition, followAvatar.Position) > followDist)
+              //  if (Vector3.Distance(Client.Self.SimPosition, targetPosition) > followDist)
                 {
-                    //if (Vector3.Dist(LastTarget, followAvatar.Position) > 1)
+                    //if (Vector3.Dist(LastTarget, targetPosition) > 1)
                     //{
-                    //   LastTarget = followAvatar.Position;
-                    //    Client.Self.Movement.TurnToward(followAvatar.Position);
+                    //   LastTarget = targetPosition;
+                    //    Client.Self.Movement.TurnToward(targetPosition);
                     //    Client.Self.Movement.AtPos = true;
                     //    //Client.Self.AutoPilotCancel();
                     //      Client.Self.Movement.UpdateInterval = 0;
                     //    Client.Self.Movement.SendUpdate();
                     //}
-                    //      Client.Self.AutoPilotLocal((int)followAvatar.Position.X,
-                    //          (int)followAvatar.Position.Y, followAvatar.Position.Z);
+                    //      Client.Self.AutoPilotLocal((int)targetPosition.X,
+                    //          (int)targetPosition.Y, targetPosition.Z);
                 }
-                else
+                //else
                 {
                     //Client.Self.AutoPilotCancel();
                 }
@@ -147,11 +149,12 @@ namespace cogbot.Actions
             if (verb == "follow")
             {
                 string name = args.objectPhrase;
-                Avatar avatar;
-                if (Client.WorldSystem.tryGetAvatar(name, out avatar))
+                Primitive avatar;
+                if (Client.WorldSystem.tryGetPrim(name, out avatar))
                 {
-                    followAvatar = avatar;
-                    String str = ""+Client + " start to follow " + followAvatar.Name + ".";
+                    followAvatar = WorldSystem.GetSimObject( avatar);
+                    followDist = followAvatar.GetSizeDistance();
+                    String str = ""+Client + " start to follow " + followAvatar + ".";
                     WriteLine(str);
                     // The thread that accepts the Client and awaits messages
                     thrTracker= new Thread(tracker);
@@ -169,7 +172,7 @@ namespace cogbot.Actions
             else if (verb == "stop-following") {
                 if (followAvatar != null)
                 {
-                    WriteLine("You stop following " + followAvatar.Name + ".");
+                    WriteLine("You stop following " + followAvatar + ".");
                     followAvatar = null;
                 }
                 else

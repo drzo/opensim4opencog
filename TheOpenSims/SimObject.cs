@@ -100,7 +100,7 @@ namespace cogbot.TheOpenSims
             WorldSystem = objectSystem;
             ObjectType = SimTypeSystem.GetObjectType(prim.ID.ToString());
             UpdateProperties(thePrim.Properties);
-            GetParent(); // at least request it
+           // GetParent(); // at least request it
         }
 
         SimObject Parent = null; // null means unknown if we IsRoot then Parent == this;
@@ -230,13 +230,14 @@ namespace cogbot.TheOpenSims
             try
             {
               //  GetParent();
+                AddSuperTypes(SimTypeSystem.GuessSimObjectTypes(objectProperties));
             }
             catch (Exception e)
             {
                 Debug(""+e);
             }
 
-            AddSuperTypes(SimTypeSystem.GuessSimObjectTypes(objectProperties));
+   
 
         }
 
@@ -244,7 +245,7 @@ namespace cogbot.TheOpenSims
         {
         }
 
-        private void AddSuperTypes(ListAsSet<SimObjectType> listAsSet)
+        private void AddSuperTypes(IList<SimObjectType> listAsSet)
         {
             //SimObjectType UNKNOWN = SimObjectType.UNKNOWN;
             ListAsSet<SimObjectType> orig = ObjectType.SuperType;
