@@ -25,9 +25,19 @@ namespace cogbot.Actions
                     //WriteLine(action + ": " + Client.Commands[action].makeHelpString());
                 }
                 lock (Client.botCommandThreads) foreach (Thread t in Client.botCommandThreads)
-                {
-                    t.Abort();
-                }
+                    {
+
+                        try
+                        {
+                            if (t.IsAlive)
+                                t.Abort();
+                            t.Join();
+
+                        }
+                        catch (Exception) { }
+
+                    }
+                lock (Client.botCommandThreads) Client.botCommandThreads.Clear();
             }
             WorldSystem.TheSimAvatar.StopMoving();
             Client.describeNext = false;

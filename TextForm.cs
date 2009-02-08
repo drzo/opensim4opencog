@@ -493,8 +493,7 @@ namespace cogbot
                 }
             });
             BotByName[""+bc.BotLoginParams.FirstName+" "+bc.BotLoginParams.LastName] = bc;
-            //LoginParams loginParams = bc.Network.DefaultLoginParams(account.FirstName, account.LastName, account.Password, "BotClient", version);
-            bc.TextFormClient(TextForm.SingleInstance);
+            //LoginParams loginParams = bc.Network.DefaultLoginParams(account.FirstName, account.LastName, account.Password, "BotClient", version);            
             return bc;
         }
 

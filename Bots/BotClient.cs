@@ -12,6 +12,7 @@ using cogbot.ScriptEngines;
 using System.IO;
 using cogbot.Listeners;
 using Action=cogbot.Actions.Action;
+using cogbot.TheOpenSims;
 
 namespace cogbot
 {
@@ -46,7 +47,7 @@ namespace cogbot
 		int thisTcpPort;
 		public OpenMetaverse.LoginParams BotLoginParams;// = null;
         SimEventPublisher botPipeline = new SimEventMulticastPipeline();
-        public List<Thread> botCommandThreads = new List<Thread>();
+        public List<Thread> botCommandThreads = new ListAsSet<Thread>();
 		public UUID GroupID = UUID.Zero;
 		public Dictionary<UUID, GroupMember> GroupMembers = null; // intialized from a callback
 		public Dictionary<UUID, AvatarAppearancePacket> Appearances = new Dictionary<UUID, AvatarAppearancePacket>();
@@ -121,8 +122,8 @@ namespace cogbot
 			//          RegisterAllCommands(Assembly.GetExecutingAssembly());
 
             Settings.LOG_LEVEL = Helpers.LogLevel.Info;
-            //Settings.LOG_RESENDS = false;
-            //Settings.STORE_LAND_PATCHES = true;
+            Settings.LOG_RESENDS = false;
+            Settings.STORE_LAND_PATCHES = true;
             Settings.ALWAYS_DECODE_OBJECTS = true;
             Settings.ALWAYS_REQUEST_OBJECTS = true;
             Settings.SEND_AGENT_UPDATES = true;
@@ -131,32 +132,24 @@ namespace cogbot
             Settings.PARCEL_TRACKING = true;
             Settings.FETCH_MISSING_INVENTORY = true;
 			// Optimize the throttle
-            //Throttle.Wind = 0;
-            //Throttle.Cloud = 0;
-            //Throttle.Land = 1000000;
-            //Throttle.Task = 1000000;
+            Throttle.Wind = 0;
+            Throttle.Cloud = 0;
+            Throttle.Land = 1000000;
+            Throttle.Task = 1000000;
 
 			VoiceManager = new VoiceManager(this);
 			//manager.AddBotClientToTextForm(this);
 			SetDefaultLoginDetails(TextForm.SingleInstance.config);
-		}
 
-
-
-        public void TextFormClient(TextForm parent)
-        {
-            botPipeline.AddSubscriber(new SimEventTextSubscriber(parent,this));
+            botPipeline.AddSubscriber(new SimEventTextSubscriber(manager,this));
             // SingleInstance = this;
             ///this = this;// new GridClient();
-            ClientManager = parent;
 
-        
-
-            //            Appearances = new Dictionary<UUID, AvatarAppearancePacket>();
 
             Settings.ALWAYS_DECODE_OBJECTS = true;
             Settings.ALWAYS_REQUEST_OBJECTS = true;
             Settings.OBJECT_TRACKING = true;
+            Settings.AVATAR_TRACKING = true;
 
             //  Manager = Inventory;
             //Inventory = Manager.Store;
@@ -166,18 +159,18 @@ namespace cogbot
             /// Settings.LOGIN_SERVER = config.simURL;
             // Opensim recommends 250k total
             Throttle.Total = 250000;
-            //Settings.CAPS_TIMEOUT = 5 * 1000;
-            //Settings.RESEND_TIMEOUT = 4 * 1000;
-            //Settings.LOGIN_TIMEOUT = 16 * 1000;
-            //Settings.LOGOUT_TIMEOUT = 16 * 1000;
-            //Settings.SIMULATOR_TIMEOUT = 90 * 1000;
+            Settings.CAPS_TIMEOUT = 5 * 1000;
+            Settings.RESEND_TIMEOUT = 4 * 1000;
+            Settings.LOGIN_TIMEOUT = 16 * 1000;
+            Settings.LOGOUT_TIMEOUT = 16 * 1000;
+            Settings.SIMULATOR_TIMEOUT = 90 * 1000;
             Settings.SEND_PINGS = true;
-            //Settings.MULTIPLE_SIMS = false;
-            Settings.ENABLE_CAPS = true;
-            Self.Movement.Camera.Far = 32;
-            Settings.LOG_ALL_CAPS_ERRORS = true;
-            Settings.FETCH_MISSING_INVENTORY = true;
-            Settings.SEND_AGENT_THROTTLE = false;
+            Settings.MULTIPLE_SIMS = false;
+            //Settings.ENABLE_CAPS = true;
+            //Self.Movement.Camera.Far = 32;
+            //Settings.LOG_ALL_CAPS_ERRORS = true;
+            //Settings.FETCH_MISSING_INVENTORY = true;
+            //Settings.SEND_AGENT_THROTTLE = false;
 
             muteList = new List<string>();
 
@@ -235,7 +228,7 @@ namespace cogbot
 
 
             tutorials = new Dictionary<string, cogbot.Tutorials.Tutorial>();
-            tutorials["tutorial1"] = new Tutorials.Tutorial1(parent, this);
+            tutorials["tutorial1"] = new Tutorials.Tutorial1(manager, this);
 
 
             describeNext = true;

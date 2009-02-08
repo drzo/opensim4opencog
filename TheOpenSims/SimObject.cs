@@ -487,13 +487,14 @@ namespace cogbot.TheOpenSims
         internal static ListAsSet<SimObject> GetNearByObjects(Vector3 here, WorldObjects WorldSystem, object thiz, float pUse, bool rootOnly)
         {
             ListAsSet<SimObject> nearby = new ListAsSet<SimObject>();
-            foreach (SimObject obj in WorldSystem.GetAllSimObjects())
+            WorldSystem.GetAllSimObjects().ForEach(delegate(SimObject obj) 
             {
-                if (rootOnly && !obj.IsRoot() && !obj.IsTyped()) continue;
+                if (!(rootOnly && !obj.IsRoot() && !obj.IsTyped()))
                 if (obj != thiz && obj.CanGetSimPosition() && Vector3.Distance(obj.GetSimPosition(), here) <= pUse)
                     nearby.AddTo(obj);
 
-            }
+            
+            });
             return nearby;
         }
 

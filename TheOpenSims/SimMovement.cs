@@ -550,7 +550,7 @@ namespace cogbot.TheOpenSims
                 else
                     if (Environment.TickCount > endAt)
                     {
-                        return false;
+                        AutoPilot = false;
                     }
                     else
                     {
@@ -567,6 +567,7 @@ namespace cogbot.TheOpenSims
             //    P = Position();
             }
             Client.Self.AutoPilotCancel();
+            Client.WorldSystem.TheSimAvatar.StopMoving();
             Client.Self.Movement.TurnToward(target3);
             return true;
         }
