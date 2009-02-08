@@ -28,8 +28,8 @@ namespace Simian.Extensions
 
             client = new GridClient();
             Settings.LOG_LEVEL = Helpers.LogLevel.Info;
-            client.Settings.MULTIPLE_SIMS = false;
-            client.Settings.SEND_AGENT_UPDATES = false;
+           // client.Settings.MULTIPLE_SIMS = false;
+           // client.Settings.SEND_AGENT_UPDATES = false;
 
             client.Network.OnCurrentSimChanged += Network_OnCurrentSimChanged;
             client.Objects.OnNewPrim += Objects_OnNewPrim;

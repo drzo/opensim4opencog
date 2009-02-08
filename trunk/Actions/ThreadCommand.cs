@@ -25,10 +25,12 @@ namespace cogbot.Actions
             {
                 int n = 0;
                 String s="";
-                foreach (Thread t in Client.botCommandThreads)
+                lock (Client.botCommandThreads)  foreach (Thread t in Client.botCommandThreads)
                 {
                     n++;
-                    s+=""+ n + ": " + t.Name + " alive=" + t.IsAlive + " backgrounded=" + t.IsBackground + " priority=" + t.Priority+"\n";
+                    //System.Threading.ThreadStateException: Thread is dead; state cannot be accessed.
+                    //  at System.Threading.Thread.IsBackgroundNative()
+                    s+=""+ n + ": " + t.Name + " alive=" + t.IsAlive;
                 }
                 return s;
             }
@@ -41,11 +43,12 @@ namespace cogbot.Actions
                 }
                 catch (ThreadAbortException) { }
                 WriteLine("done with " + cmd);
-                Client.botCommandThreads.Remove(Thread.CurrentThread);
+                lock (Client.botCommandThreads) 
+                    Client.botCommandThreads.Remove(Thread.CurrentThread);
             }));
             thread.Name = "ThreadCommnand for " + cmd;
             thread.Start();
-            Client.botCommandThreads.Add(thread);
+            lock (Client.botCommandThreads) Client.botCommandThreads.Add(thread);
             return thread.Name;
         }
     }

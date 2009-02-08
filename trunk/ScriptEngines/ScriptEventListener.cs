@@ -192,6 +192,7 @@ namespace cogbot.ScriptEngines
 
             if (arg is UUID)
             {
+              //  if (true) return argString(arg.ToString());
                 object found = WorldSystem.GetObject((UUID)arg);
                 if (found == null || found == arg)
                 {

@@ -39,7 +39,7 @@ namespace cogbot.TheOpenSims
         }
 
         // which will result in 
-        public ListAsSet<BotAction> KnowsActList = new ListAsSet<BotAction>();
+        public List<BotAction> KnowsActList = new List<BotAction>();
 
         // which will be skewed with how much one bot like a Mental Aspect
         public Dictionary<BotMentalAspect, int> AspectEnjoyment = new Dictionary<BotMentalAspect, int>();
@@ -48,13 +48,13 @@ namespace cogbot.TheOpenSims
         // (so how much one bot likes another avatar is sotred here as well)
 
         // Actions tbe bot might do next cycle.
-        ListAsSet<BotAction> AllPossibleActions = new ListAsSet<BotAction>();
+        List<BotAction> AllPossibleActions = new List<BotAction>();
 
         // Actions observed
-        ListAsSet<BotAction> LearnedPossibleActions = new ListAsSet<BotAction>();
+        List<BotAction> LearnedPossibleActions = new List<BotAction>();
 
         // Action template stubs 
-        ListAsSet<SimTypeUsage> LearnedPossibleUsages = new ListAsSet<SimTypeUsage>();
+        List<SimTypeUsage> LearnedPossibleUsages = new List<SimTypeUsage>();
 
         // assuptions about stubs
         public Dictionary<SimObjectType, BotNeeds> Assumptions = new Dictionary<SimObjectType, BotNeeds>();
@@ -110,7 +110,7 @@ namespace cogbot.TheOpenSims
         public override string DebugInfo()
         {
             String s = ToString();
-            ListAsSet<SimObject> KnowsAboutList = GetKnownObjects();
+            List<SimObject> KnowsAboutList = GetKnownObjects();
             KnowsAboutList.Sort(CompareObjects);
             foreach (SimObject item in KnowsAboutList)
             {
@@ -204,7 +204,7 @@ namespace cogbot.TheOpenSims
         {
             BotAction act = CurrentAction;
 
-            ListAsSet<BotAction> acts = GetPossibleActions();
+            List<BotAction> acts = GetPossibleActions();
 
             if (acts.Count > 0)
             {
@@ -232,7 +232,7 @@ namespace cogbot.TheOpenSims
             return bestAct;
         }
 
-        public void SortActs(ListAsSet<BotAction> acts)
+        public void SortActs(List<BotAction> acts)
         {
             acts.Sort(CompareActs);
         }
@@ -246,7 +246,7 @@ namespace cogbot.TheOpenSims
             return (int)(act2.RateIt(this) - act1.RateIt(this));
         }
 
-        public ListAsSet<BotAction> GetPossibleActions()
+        public List<BotAction> GetPossibleActions()
         {
             if (AllPossibleActions.Count < 2)
             {
@@ -255,11 +255,11 @@ namespace cogbot.TheOpenSims
             return AllPossibleActions;
         }
 
-        private ListAsSet<BotAction> NewPossibleActions()
+        private List<BotAction> NewPossibleActions()
         {
-            ListAsSet<SimObject> knowns = GetKnownObjects();
+            List<SimObject> knowns = GetKnownObjects();
             SortByDistance(knowns);
-            ListAsSet<BotAction> acts = new ListAsSet<BotAction>();
+            List<BotAction> acts = new List<BotAction>();
             foreach (BotAction obj in LearnedPossibleActions)
             {
                 acts.Add(obj);
@@ -603,13 +603,13 @@ namespace cogbot.TheOpenSims
             //  Client.Self.Movement. AlwaysRun = false;
             Client.Self.Movement.AtNeg = false;
             Client.Self.Movement.AtPos = false;
-            Client.Self.Movement.AutoResetControls = false;
+            //Client.Self.Movement.AutoResetControls = true;
             //   Client.Self.Movement. Away = false;
             Client.Self.Movement.FastAt = false;
             Client.Self.Movement.FastLeft = false;
             Client.Self.Movement.FastUp = false;
-            Client.Self.Movement.FinishAnim = true;
-            //   Client.Self.Movement. Fly = false;
+            // Client.Self.Movement.FinishAnim = true;
+            //  Client.Self.Movement. Fly = false;
             Client.Self.Movement.LButtonDown = false;
             Client.Self.Movement.LButtonUp = false;
             Client.Self.Movement.LeftNeg = false;
@@ -630,17 +630,13 @@ namespace cogbot.TheOpenSims
             Client.Self.Movement.Stop = true;
             Client.Self.Movement.TurnLeft = false;
             Client.Self.Movement.TurnRight = false;
-            Client.Self.Movement.UpdateInterval = 1;
+            Client.Self.Movement.UpdateInterval = 0;
             Client.Self.Movement.UpNeg = false;
             Client.Self.Movement.UpPos = false;
             Client.Self.Movement.YawNeg = false;
             Client.Self.Movement.YawPos = false;
 
-            //Client.Self.Movement.UpdateInterval = 0;
-            //Client.Self.Movement.SendUpdate();
-            Client.Self.Movement.FinishAnim = true;
-            Client.Self.Movement.Stop = true;
-            Client.Self.Movement.SendUpdate(true);    
+            Client.Self.Movement.SendUpdate();    
         }
     }
 

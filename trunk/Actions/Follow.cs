@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse; //using libsecondlife;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace cogbot.Actions
 {
@@ -22,6 +23,12 @@ namespace cogbot.Actions
 
             followAvatar = null;
             followDist = 3;
+            //Client.Settings.AVATAR_TRACKING = true;
+            //Client.Settings.ALWAYS_REQUEST_OBJECTS = true;
+            Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = false;
+            Client.Settings.SEND_AGENT_UPDATES = true;
+            //Client.Settings.THROTTLE_OUTGOING_PACKETS = false;
+            //Client.Settings.SEND_AGENT_THROTTLE = true;
 
             Client.Objects.OnObjectUpdated += new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
 
@@ -29,19 +36,21 @@ namespace cogbot.Actions
 
         void tracker()
         {
-          Random somthing = new Random(Environment.TickCount);// We do stuff randomly here
-          Boolean justStopped = false;
-            while (true)
+            try
             {
-                if (followAvatar != null)
+                Random somthing = new Random(Environment.TickCount);// We do stuff randomly here
+                Boolean justStopped = false;
+                while (true)
                 {
-                    float curDist = Vector3.Distance(Client.Self.SimPosition, followAvatar.Position);
-                    if (curDist > followDist)
+                    if (followAvatar != null)
                     {
-
-                        //Client.Self.Movement.SendUpdate();
-                        if (curDist < (followDist * 1.25))
+                        float curDist = Vector3.Distance(Client.Self.SimPosition, followAvatar.Position);
+                        if (curDist > followDist)
                         {
+
+                            //Client.Self.Movement.SendUpdate();
+                            if (curDist < (followDist * 1.25))
+                            {
                                 Client.Self.Movement.TurnToward(followAvatar.Position);
                                 Client.Self.Movement.AtPos = true;
                                 Thread.Sleep(25);
@@ -49,51 +58,61 @@ namespace cogbot.Actions
                                 Client.Self.Movement.AtPos = false;
                                 Client.Self.Movement.NudgeAtPos = false;
                                 Client.Self.Movement.SendUpdate(false);
-                            
-                            Thread.Sleep(100);
+
+                                Thread.Sleep(100);
+                            }
+                            else
+                            {                          
+                                Client.Self.Movement.TurnToward(followAvatar.Position);
+                                Client.Self.Movement.AtPos = true;
+                                Client.Self.Movement.UpdateInterval = 0; //100
+                                Client.Self.Movement.SendUpdate(false);
+                                Application.DoEvents();
+                                //(int)(25 * (1 + (curDist / followDist)))
+                                Thread.Sleep(somthing.Next(25, 100));
+                            }
+                            justStopped = true;
                         }
                         else
                         {
-                            Client.Self.Movement.TurnToward(followAvatar.Position);
-                            Client.Self.Movement.AtPos = true;
-                            Client.Self.Movement.UpdateInterval = 0; //100
-                            Client.Self.Movement.SendUpdate(false);
-                            //(int)(25 * (1 + (curDist / followDist)))
-                            Thread.Sleep(somthing.Next(25, 100));
+                            if (justStopped)
+                            {
+                                Client.Self.Movement.TurnToward(followAvatar.Position);
+                                Client.Self.Movement.AtPos = false;
+                                //Client.Self.Movement.UpdateInterval = 0;
+                                Client.Self.Movement.StandUp = true;
+                                //Client.Self.Movement.SendUpdate();
+                                Client.Self.Movement.FinishAnim = true;
+                                Client.Self.Movement.Stop = true;
+                                Client.Self.Movement.SendUpdate(false);
+                                Thread.Sleep(25);
+                                WorldSystem.TheSimAvatar.StopMoving();
+                                justStopped = false;
+                            }
+                            else
+                            {
+                                Thread.Sleep(100);
+                            }
+
+
                         }
-                        justStopped = true;
+
                     }
                     else
                     {
-                        if (justStopped)
-                        {
-                            Client.Self.Movement.TurnToward(followAvatar.Position);
-                            Client.Self.Movement.AtPos = false;
-                            //Client.Self.Movement.UpdateInterval = 0;
-                            Client.Self.Movement.StandUp = true;
-                            //Client.Self.Movement.SendUpdate();
-                            Client.Self.Movement.FinishAnim = true;
-                            Client.Self.Movement.Stop = true;
-                            Client.Self.Movement.SendUpdate(false);
-                            Thread.Sleep(25);
-                            justStopped = false;
-                        }
-                        else
-                        {
-                            Thread.Sleep(100);
-                        }
-
-
+                        Thread.Sleep(100);
+                        return; // if followAvatar is null then we're not interested anymore 
                     }
-
-                }
-                else
-                {
-                    Thread.Sleep(100);
-                    return; // if followAvatar is null then we're not interested anymore 
                 }
             }
-            Client.botCommandThreads.Remove(Thread.CurrentThread);
+            finally
+            {
+                try
+                {
+                    WorldSystem.TheSimAvatar.StopMoving();
+                }
+                catch (Exception e) { }
+            }
         }
 
         void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
@@ -137,7 +156,7 @@ namespace cogbot.Actions
                     // The thread that accepts the Client and awaits messages
                     thrTracker= new Thread(tracker);
                     thrTracker.Name = str;
-                    Client.botCommandThreads.Add(thrTracker);
+                    lock (Client.botCommandThreads) Client.botCommandThreads.Add(thrTracker);
                     // The thread calls the tracker() method
                     thrTracker.Start();
 
