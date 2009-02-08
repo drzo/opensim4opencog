@@ -35,6 +35,8 @@ namespace cogbot.Actions
 
         }
 
+
+        bool StartedFlying = false;
         void tracker()
         {
             try
@@ -45,7 +47,34 @@ namespace cogbot.Actions
                 {
                     if (followAvatar != null)
                     {
-                        Vector3 targetPosition = followAvatar.GetSimPosition();
+                        Vector3 targetPosition = new Vector3( followAvatar.GetSimPosition());
+                        float ZDist = Math.Abs(targetPosition.Z - Client.Self.SimPosition.Z);
+
+                        // allow flight
+                        if (ZDist > followDist)
+                        {
+                            if (!Client.Self.Movement.Fly)
+                            {
+                                if (!StartedFlying)
+                                {
+                                    Client.Self.Fly(true);
+                                    StartedFlying = true;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (StartedFlying)
+                            {
+                                Client.Self.Fly(false);
+                                StartedFlying = false;
+                            }
+                        }
+
+                        
+
+
+
                         float curDist = Vector3.Distance(Client.Self.SimPosition, targetPosition);
                         if (curDist > followDist)
                         {
@@ -149,6 +178,7 @@ namespace cogbot.Actions
             if (verb == "follow")
             {
                 string name = args.objectPhrase;
+                if (String.IsNullOrEmpty(name.Trim())) name = "avatar";
                 Primitive avatar;
                 if (Client.WorldSystem.tryGetPrim(name, out avatar))
                 {
@@ -157,12 +187,11 @@ namespace cogbot.Actions
                     String str = ""+Client + " start to follow " + followAvatar + ".";
                     WriteLine(str);
                     // The thread that accepts the Client and awaits messages
-                    thrTracker= new Thread(tracker);
+                    thrTracker = new Thread(tracker);
                     thrTracker.Name = str;
                     lock (Client.botCommandThreads) Client.botCommandThreads.Add(thrTracker);
                     // The thread calls the tracker() method
                     thrTracker.Start();
-
                 }
                 else
                 {

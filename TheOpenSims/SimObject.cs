@@ -10,7 +10,6 @@ namespace cogbot.TheOpenSims
     //TheSims-like object
     public class SimObject : BotMentalAspect
     {
-
         public bool IsPhantom
         {
             get
@@ -140,7 +139,7 @@ namespace cogbot.TheOpenSims
             {
                 if (!IsTyped())
                 {// borrow from child?
-                    UpdateProperties(simObject.thePrim.Properties);
+                   // UpdateProperties(simObject.thePrim.Properties);
                 }
             }
             return b;
@@ -237,8 +236,17 @@ namespace cogbot.TheOpenSims
                 Debug(""+e);
             }
 
-   
+        }
 
+        public virtual bool IsFloating {
+            get
+            {
+                return !IsPhysical;
+            }
+            set
+            {
+                IsPhysical = !value;
+            }
         }
 
         public void UpdateObject(ObjectUpdate objectUpdate)
@@ -488,14 +496,12 @@ namespace cogbot.TheOpenSims
         internal static ListAsSet<SimObject> GetNearByObjects(Vector3 here, WorldObjects WorldSystem, object thiz, float pUse, bool rootOnly)
         {
             ListAsSet<SimObject> nearby = new ListAsSet<SimObject>();
-            WorldSystem.GetAllSimObjects().ForEach(delegate(SimObject obj) 
+             foreach (SimObject obj in WorldSystem.GetAllSimObjects().CopyOf()) 
             {
                 if (!(rootOnly && !obj.IsRoot() && !obj.IsTyped()))
                 if (obj != thiz && obj.CanGetSimPosition() && Vector3.Distance(obj.GetSimPosition(), here) <= pUse)
                     nearby.AddTo(obj);
-
-            
-            });
+            };
             return nearby;
         }
 
