@@ -84,21 +84,30 @@ namespace cogbot.Listeners
 
 
 
+        Dictionary<uint, SimObject> LocalIdToSimObject = new Dictionary<uint, SimObject>(); 
+
         public SimObject GetSimObject(Primitive prim)
         {
             if (prim is Avatar)
             {
                 return GetSimAvatar((Avatar)prim);
             }
-            foreach (SimObject obj in SimObjects)
+            SimObject obj0;
+            lock (LocalIdToSimObject)
+            {
+                if (LocalIdToSimObject.TryGetValue(prim.LocalID, out obj0))
                 {
-                    if (obj.thePrim == prim)
-                        return obj;
+                    return obj0;
                 }
-            // not found
-            SimObject obj0 = new SimObject(prim.ToString(), prim, this);
-            lock (SimObjects) SimObjects.AddTo(obj0);
-            return obj0;
+
+                // not found
+
+                obj0 = new SimObject(prim.ToString(), prim, this);
+                LocalIdToSimObject[prim.LocalID] = obj0;
+                lock (SimObjects) SimObjects.AddTo(obj0);
+                
+                return obj0;
+            }
         }
 
         public SimAvatar GetSimAvatar(Avatar prim)
@@ -1581,7 +1590,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                 ((fs & PrimFlags.CastShadows) != 0));
         }
 
-        internal List<SimObject> GetAllSimObjects()
+        internal ListAsSet<SimObject> GetAllSimObjects()
         {
             return SimObjects;
         }

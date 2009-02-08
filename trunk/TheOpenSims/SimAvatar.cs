@@ -6,6 +6,7 @@ using DotLisp;
 using System.Reflection;
 using cogbot.Listeners;
 using System.Threading;
+using System.Windows.Forms;
 //Complex outcomes may be a result of simple causes, or they may just be complex by nature. 
 //Those complexities that turn out to have simple causes can be simulated and studied, 
 //thus increasing our knowledge without needing direct observation.
@@ -232,6 +233,38 @@ namespace cogbot.TheOpenSims
             return bestAct;
         }
 
+        //public void AddGrass(Simulator simulator, Vector3 scale, Quaternion rotation, Vector3 position, Grass grassType, UUID groupOwner)
+        //{
+        //}
+        //public void AddPrim(Simulator simulator, Primitive.ConstructionData prim, UUID groupID, Vector3 position, Vector3 scale, Quaternion rotation)
+        //{
+        //}
+        //public void AddTree(Simulator simulator, Vector3 scale, Quaternion rotation, Vector3 position, Tree treeType, UUID groupOwner, bool newTree)
+        //{
+        //}
+        //public void AttachObject(Simulator simulator, uint localID, AttachmentPoint attachPoint, Quaternion rotation)
+        //{
+        //}
+
+        //public static Primitive.ConstructionData BuildBasicShape(PrimType type)
+        //{
+        //}
+
+        //public SimObject RezObjectType(SimObject copyOf)
+        //{
+        //    string treeName = args[0].Trim(new char[] { ' ' });
+        //    Tree tree = (Tree)Enum.Parse(typeof(Tree), treeName);
+
+        //    Vector3 treePosition = Client.Self.SimPosition;
+        //    treePosition.Z += 3.0f;
+
+        //    Client.Objects.AddTree(Client.Network.CurrentSim, new Vector3(0.5f, 0.5f, 0.5f),
+        //        Quaternion.Identity, treePosition, tree, Client.GroupID, false);
+
+        //    //Client.Self.
+        //    return copyOf;
+        //}
+
         public void SortActs(List<BotAction> acts)
         {
             acts.Sort(CompareActs);
@@ -241,6 +274,7 @@ namespace cogbot.TheOpenSims
         {
             return (int)(act2.RateIt() - act1.RateIt());
         }
+
         int CompareObjects(SimObject act1, SimObject act2)
         {
             return (int)(act2.RateIt(this) - act1.RateIt(this));
@@ -392,6 +426,10 @@ namespace cogbot.TheOpenSims
             return 2f;
         }
 
+        float ApproachDistance;
+        SimObject ApproachTarget;
+        Thread ApproachThread = null;
+
         public float Approach(SimObject obj, float maxDistance)
         {
             SimObject UnPhantom = null;
@@ -412,27 +450,26 @@ namespace cogbot.TheOpenSims
                 }
             }
 
-            float dist = obj.GetSizeDistance()+maxDistance;
+            ApproachTarget = obj;
+            ApproachDistance = obj.GetSizeDistance() + maxDistance;
 
             Vector3 vector3 = obj.GetUsePosition();
-            string str = "Approaching " + obj + " " + DistanceVectorString(obj) + " to get " + dist;
+            string str = "Approaching " + obj + " " + DistanceVectorString(obj) + " to get " + ApproachDistance;
             Debug(str);
             obj.MakeEnterable();
 
 
-            Thread mover = new Thread(new ThreadStart(delegate()
+            if (ApproachThread == null || !ApproachThread.IsAlive)
             {
-                try
-                {
-                    MovementToVector.MoveTo(Client, vector3, dist);
-                } catch (Exception) {}
-            }));
-            mover.Name = str;
-            mover.Start();
+                ApproachThread = new Thread(TrackerLoop);
+                ApproachThread.Name = str;
+                ApproachThread.Start();
+            }
+
             for (int i = 0; i < 10; i++)
             {
-                if (mover.IsAlive)
-                {
+     
+                if (Distance(ApproachTarget)>ApproachDistance) {
                     Thread.Sleep(1000);
                     continue;
                 }
@@ -441,17 +478,12 @@ namespace cogbot.TheOpenSims
                     break;
                 }
             }
-            if (mover.IsAlive)
-            {                
-                mover.Abort();
-            }
 
-            Client.Self.Movement.TurnToward(obj.GetSimPosition());
-            StopMoving();
+           // StopMoving();
             if (UnPhantom != null)            
                 UnPhantom.RestoreEnterable();
 
-            return Vector3.Distance(GetSimPosition(), obj.GetSimPosition());
+            return Distance(obj);            
         }
 
 
@@ -573,6 +605,21 @@ namespace cogbot.TheOpenSims
         }
 
 
+        public override bool IsFloating
+        {
+            get
+            {
+                return Client.Self.Movement.Fly;
+            }
+            set
+            {
+                if (IsFloating != value)
+                {
+                    Client.Self.Fly(value);
+                }
+            }
+        }
+
         public string GetName()
         {
             return theAvatar.Name;
@@ -595,6 +642,115 @@ namespace cogbot.TheOpenSims
             return SimTypeSystem.MatchString(base.ToString(), name) || SimTypeSystem.MatchString(ToString(), name);
         }
 
+        void TrackerLoop()
+        {
+            bool StartedFlying = false;// !IsFloating;
+            try
+            {
+                Random somthing = new Random(Environment.TickCount);// We do stuff randomly here
+                Boolean justStopped = false;
+                while (true)
+                {
+                    if (ApproachTarget != null)
+                    {
+                        Vector3 targetPosition = new Vector3(ApproachTarget.GetSimPosition());
+                        float ZDist = Math.Abs(targetPosition.Z - Client.Self.SimPosition.Z);
+                        targetPosition.Z = GetSimPosition().Z;
+                        // allow flight
+                        if (ZDist > ApproachDistance)
+                        {
+                            if (!Client.Self.Movement.Fly)
+                            {
+                                if (!StartedFlying)
+                                {
+                                    Client.Self.Fly(true);
+                                    StartedFlying = true;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (StartedFlying)
+                            {
+                               // Client.Self.Fly(false);
+                                StartedFlying = false;
+                            }
+                        }
+
+
+
+
+
+                        float curDist = Vector3.Distance(Client.Self.SimPosition, targetPosition);
+                        if (curDist > ApproachDistance)
+                        {
+
+                            //Client.Self.Movement.SendUpdate();
+                            if (curDist < (ApproachDistance * 1.25))
+                            {
+                                Client.Self.Movement.TurnToward(targetPosition);
+                                Client.Self.Movement.AtPos = true;
+                                Thread.Sleep(25);
+                                Client.Self.Movement.Stop = true;
+                                Client.Self.Movement.AtPos = false;
+                                Client.Self.Movement.NudgeAtPos = false;
+                                Client.Self.Movement.SendUpdate(false);
+
+                                Thread.Sleep(100);
+                            }
+                            else
+                            {
+                                Client.Self.Movement.TurnToward(targetPosition);
+                                Client.Self.Movement.AtPos = true;
+                                Client.Self.Movement.UpdateInterval = 0; //100
+                                Client.Self.Movement.SendUpdate(false);
+                                Application.DoEvents();
+                                //(int)(25 * (1 + (curDist / ApproachDistance)))
+                                Thread.Sleep(somthing.Next(25, 100));
+                            }
+                            justStopped = true;
+                        }
+                        else
+                        {
+                            if (justStopped)
+                            {
+                                Client.Self.Movement.TurnToward(targetPosition);
+                                Client.Self.Movement.AtPos = false;
+                                //Client.Self.Movement.UpdateInterval = 0;
+                                Client.Self.Movement.StandUp = true;
+                                //Client.Self.Movement.SendUpdate();
+                                Client.Self.Movement.FinishAnim = true;
+                                Client.Self.Movement.Stop = true;
+                                Client.Self.Movement.SendUpdate(false);
+                                Thread.Sleep(25);
+                               // WorldSystem.TheSimAvatar.StopMoving();
+                                justStopped = false;
+                            }
+                            else
+                            {
+                                Thread.Sleep(100);
+                            }
+
+
+                        }
+
+                    }
+                    else
+                    {
+                        Thread.Sleep(1000);
+                        return; // if ApproachTarget is null then we're not interested anymore 
+                    }
+                }
+            }
+            finally
+            {
+                try
+                {
+                   // WorldSystem.TheSimAvatar.StopMoving();
+                }
+                catch (Exception e) { }
+            }
+        }
 
         internal void StopMoving()
         {

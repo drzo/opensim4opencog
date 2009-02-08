@@ -646,21 +646,21 @@ namespace cogbot
 
 		public void describePeople(bool detailed)
 		{
-			if (detailed) {
-				List<Avatar> avatarList = WorldSystem.getAvatarsNear(Self.RelativePosition, 8);
-				if (avatarList.Count > 1) {
-					string str = "You see the people ";
-					for (int i = 0; i < avatarList.Count - 1; ++i)
-						str += WorldSystem.getAvatarName(avatarList[i]) + ", ";
-					str += "and " + WorldSystem.getAvatarName(avatarList[avatarList.Count - 1]) + ".";
-					output(str);
-				} else if (avatarList.Count == 1) {
-					output("You see one person: " + WorldSystem.getAvatarName(avatarList[0]) + ".");
-				} else
-					output("You don't see anyone around.");
-			} else {
-				output("You see " + WorldSystem.numAvatars() + " people.");
-			}
+            //if (detailed) {
+            //    List<Avatar> avatarList = WorldSystem.getAvatarsNear(Self.RelativePosition, 8);
+            //    if (avatarList.Count > 1) {
+            //        string str = "You see the people ";
+            //        for (int i = 0; i < avatarList.Count - 1; ++i)
+            //            str += WorldSystem.getAvatarName(avatarList[i]) + ", ";
+            //        str += "and " + WorldSystem.getAvatarName(avatarList[avatarList.Count - 1]) + ".";
+            //        output(str);
+            //    } else if (avatarList.Count == 1) {
+            //        output("You see one person: " + WorldSystem.getAvatarName(avatarList[0]) + ".");
+            //    } else
+            //        output("You don't see anyone around.");
+            //} else {
+            //    output("You see " + WorldSystem.numAvatars() + " people.");
+            //}
 		}
 
 		public void describeObjects(bool detailed)
