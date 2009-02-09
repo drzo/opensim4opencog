@@ -435,21 +435,10 @@ namespace cogbot.TheOpenSims
             SimObject UnPhantom = null;
             BotClient Client = GetGridClient();
             // stand up first
-            if (Client.Self.Movement.SitOnGround)
-            {
-                Client.Self.Stand();
-            }
-            else
-            {
-                uint sit = Client.Self.SittingOn;
-                if (sit != 0)
-                {
-                    UnPhantom = WorldSystem.GetSimObject(WorldSystem.GetPrimitive(sit));
-                    UnPhantom.MakeEnterable();
-                    Client.Self.Stand();
-                }
-            }
-
+            UnPhantom = StandUp();
+            // make sure it not going somewhere
+            StopMoving();
+            // set the new target
             ApproachTarget = obj;
             ApproachDistance = obj.GetSizeDistance() + maxDistance;
 
@@ -466,10 +455,10 @@ namespace cogbot.TheOpenSims
                 ApproachThread.Start();
             }
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 15; i++)
             {
      
-                if (Distance(ApproachTarget)>ApproachDistance) {
+                if (Distance(obj)>ApproachDistance) {
                     Thread.Sleep(1000);
                     continue;
                 }
@@ -484,6 +473,26 @@ namespace cogbot.TheOpenSims
                 UnPhantom.RestoreEnterable();
 
             return Distance(obj);            
+        }
+
+        public SimObject StandUp()
+        {
+            SimObject UnPhantom = null;
+            if (Client.Self.Movement.SitOnGround)
+            {
+                Client.Self.Stand();
+            }
+            else
+            {
+                uint sit = Client.Self.SittingOn;
+                if (sit != 0)
+                {
+                    UnPhantom = WorldSystem.GetSimObject(WorldSystem.GetPrimitive(sit));
+                    UnPhantom.MakeEnterable();
+                    Client.Self.Stand();
+                }
+            }
+            return UnPhantom;
         }
 
 
@@ -754,6 +763,7 @@ namespace cogbot.TheOpenSims
 
         internal void StopMoving()
         {
+            ApproachTarget = null;
             Client.Self.AutoPilotCancel();
 
             //  Client.Self.Movement. AlwaysRun = false;

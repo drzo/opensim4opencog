@@ -536,6 +536,10 @@ namespace cogbot.TheOpenSims
             {
                 loc = obj.GetSimPosition();
                 float dist = Vector3.Distance(GetSimPosition(), loc);
+                if (dist == float.NaN)
+                {
+                    throw new InvalidCastException("NaN is not a number");
+                }
                 str = String.Format("{0:0.00}m ", dist);
             }
             return str + String.Format("<{0:0.00}, {1:0.00}, {2:0.00}>", loc.X, loc.Y, loc.Z);
