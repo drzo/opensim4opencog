@@ -104,7 +104,6 @@ namespace OpenMetaverse
 
             // Fire up the texture download thread
             downloadMaster = new Thread(new ThreadStart(DownloadThread));
-            downloadMaster.Name = "TexturePipeline for " + client;
             downloadMaster.Start();
         }
 

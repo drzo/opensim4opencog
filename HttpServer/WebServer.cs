@@ -160,6 +160,12 @@ namespace HttpServer
         {
             HttpResponse response = new HttpResponse(client, request);
 
+            RequestCookies cookies = request.Headers["cookie"] != null
+                ? new RequestCookies(request.Headers["cookie"])
+                : new RequestCookies(string.Empty);
+
+            request.SetCookies(cookies);
+
             // Create a request signature
             HttpRequestSignature signature = new HttpRequestSignature(request);
 

@@ -143,11 +143,6 @@ namespace OpenMetaverse
         /// <returns>Client avatars full name</returns>
         public override string ToString()
         {
-            return GetBotName();
-        }
-
-        public string GetBotName()
-        {
             return Self.Name;
         }
     }

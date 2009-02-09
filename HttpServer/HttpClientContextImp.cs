@@ -302,7 +302,7 @@ namespace HttpServer
             if (offset + size > buffer.Length)
                 throw new ArgumentOutOfRangeException("offset", offset, "offset + size is beyond end of buffer.");
 
-            if (_stream != null)
+            if (_stream != null && _stream.CanWrite)
                 _stream.Write(buffer, offset, size);
         }
     }
