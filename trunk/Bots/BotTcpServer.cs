@@ -38,7 +38,7 @@ namespace cogbot.Utilities
             // The thread that accepts the Client and awaits messages
 
             thrSvr = new Thread(tcpSrv);
-            thrSvr.Name = "BotTcpServer for " + client.GetBotName();
+            thrSvr.Name = "BotTcpServer for " + client;
             // The thread calls the tcpSvr() method
 
             thrSvr.Start();
