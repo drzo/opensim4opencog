@@ -454,7 +454,7 @@ namespace cogbot.TheOpenSims
                 ApproachThread.Name = str;
                 ApproachThread.Start();
             }
-
+            // 16 seconds of travel permitted
             for (int i = 0; i < 15; i++)
             {
      
@@ -471,7 +471,7 @@ namespace cogbot.TheOpenSims
            // StopMoving();
             if (UnPhantom != null)            
                 UnPhantom.RestoreEnterable();
-
+            Client.Self.Movement.TurnToward(obj.GetUsePosition());
             return Distance(obj);            
         }
 
