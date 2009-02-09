@@ -17,12 +17,9 @@ namespace Simian
 {
     public partial class Simian
     {
-        public GridClient periscopeClient;
-        public Dictionary<UUID, Agent> Agents = new Dictionary<UUID, Agent>();
         public const string CONFIG_FILE = "Simian.ini";
         public const string DATA_DIR = "SimianData/";
 
-        public String DataDir = DATA_DIR;
         public int UDPPort { get { return 19000; } }
         public int HttpPort { get { return 18002; } }
         public bool SSL { get { return false; } }
@@ -45,6 +42,7 @@ namespace Simian
 
         // Persistent extensions
         public List<IPersistable> PersistentExtensions = new List<IPersistable>();
+        public GridClient periscopeClient;
 
         public Simian()
         {

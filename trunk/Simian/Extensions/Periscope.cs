@@ -26,7 +26,7 @@ namespace Simian.Extensions
         {
             this.server = server;
 
-            client = new GridClient();
+            client = server.periscopeClient;// new GridClient();
             Settings.LOG_LEVEL = Helpers.LogLevel.Info;
            // client.Settings.MULTIPLE_SIMS = false;
            // client.Settings.SEND_AGENT_UPDATES = false;
