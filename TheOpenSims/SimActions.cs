@@ -1,17 +1,66 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using OpenMetaverse;
 using System.Threading;
 using System.Collections;
+using Vector3 = OpenMetaverse.Vector3;
+using UUID = OpenMetaverse.UUID;
 
 namespace cogbot.TheOpenSims
 {
-    abstract public class BotAction : BotMentalAspect
+
+    abstract public class SimUsage : BotMentalAspect
+    {
+        public String UsageName;
+
+        public SimUsage(string name)
+            : base(name)
+        {
+            UsageName = name;
+        }
+
+        public static bool operator ==(SimUsage use1, SimUsage use2)
+        {
+            if (Object.ReferenceEquals(use1, null) && Object.ReferenceEquals(use2, null)) return true;
+            if (Object.ReferenceEquals(use1, null) || Object.ReferenceEquals(use2, null)) return false;
+            return use1.UsageName == use2.UsageName;
+        }
+
+        public static bool operator !=(SimUsage use1, SimUsage use2)
+        {
+            if (use1 == null && use2 == null) return false;
+            if (use1 == null || use2 == null) return true;
+            return use1.UsageName != use2.UsageName;
+        }
+        public override bool Equals(object obj)
+        {
+            if (!(obj is SimUsage)) return false;
+            return this == (SimUsage)obj;
+        }
+
+        public override int GetHashCode()
+        {
+            return UsageName.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return GetType().Name + "::" + UsageName;
+        }
+
+        public abstract float RateIt(BotNeeds current);
+    }
+
+    abstract public class BotAction : SimUsage
     {
         public BotAction(string s)
             : base(s)
         {
+        }
+
+        public override float RateIt(BotNeeds current)
+        {
+            return ProposedChange().TotalSideEffect(current);
         }
 
         // the actor
@@ -21,20 +70,20 @@ namespace cogbot.TheOpenSims
         // the needs are really changed;
         public abstract void InvokeReal();
         // use assumptions
-        public virtual float RateIt()
-        {
-            BotNeeds bn = TheBot.CurrentNeeds.Copy();
-            BotNeeds pc = ProposedChange();
-            bn.AddFrom(pc);
-            bn.SetRange(0f, 100f);
-            return bn.Total() - (Vector3.Distance(TheBot.GetSimPosition(),GetLocation()));
-        }
+        //public virtual float RateIt()
+        //{
+        //    BotNeeds bn = TheBot.CurrentNeeds.Copy();
+        //    BotNeeds pc = ProposedChange();
+        //    bn.AddFrom(pc);
+        //    bn.SetRange(0f, 100f);
+        //    return bn.Total() - (Vector3.Distance(TheBot.GetSimPosition(),GetLocation()));
+        //}
 
         public abstract Vector3 GetLocation();
 
     }
 
-    public class SimObjectUsage
+    public class SimObjectUsage : SimUsage
     {
         public SimTypeUsage TypeUsage;
         public SimObject Target;
@@ -48,34 +97,21 @@ namespace cogbot.TheOpenSims
             return verb + " " + Target;
         }
 
-        public SimObjectUsage(SimTypeUsage use, SimObject target)
+        public SimObjectUsage(SimTypeUsage use, SimObject target) : base (""+ use.ToString() + " " + target.ToString())
         {
             TypeUsage = use;
             Target = target;
         }
 
-        public void InvokeReal(BotObjectAction TheBotAct)
+        public void InvokeReal(SimAvatar TheBot)
         {
-            SimAvatar TheBot = TheBotAct.TheBot;
+   
             String use = TypeUsage.UsageName;
 
             // Create the Side-Effect closure
             ThreadStart closure = new ThreadStart(delegate()
             {
-                TheBot.Debug(ToString());
-                //User.ApplyUpdate(use, simObject);
-                BotNeeds CurrentNeeds = TheBot.CurrentNeeds;
-                BotNeeds needsBefore = CurrentNeeds.Copy();
-                BotNeeds update = Target.GetActualUpdate(TypeUsage.UsageName);
-                //TODO rate interaction and update TheBot.Assumptions
-                CurrentNeeds.AddFrom(update);
-                CurrentNeeds.SetRange(0.0F, 100.0F);
-                BotNeeds difNeeds = CurrentNeeds.Minus(needsBefore);
-                TheBot.Debug(TheBotAct.ToString() + "\n\t " +
-                    TheBot.DistanceVectorString(Target)             
-                    + "=> " + difNeeds.ShowNonZeroNeeds());
-                TheBot.ExecuteLisp(this, TypeUsage.LispScript);
-                Thread.Sleep(TypeUsage.totalTimeMS);
+                InvokeBotSideEffect(TheBot);
             });
 
             bool animFound = TypeUsage.UseSit;
@@ -111,7 +147,7 @@ namespace cogbot.TheOpenSims
             // Approach Target
             float howClose = TheBot.Approach(Target, TypeUsage.maximumDistance);
 
-            if (howClose-1 > TypeUsage.maximumDistance)
+            if (howClose-1 > TypeUsage.maximumDistance+0.5f)
             {
                 TheBot.Debug("Too far away " + howClose + " from " + this);
                 return;
@@ -119,6 +155,24 @@ namespace cogbot.TheOpenSims
          
             closure.Invoke();
             Target.RestoreEnterable();
+        }
+
+        public virtual void InvokeBotSideEffect(SimAvatar TheBot)
+        {
+            TheBot.Debug(ToString());
+            //User.ApplyUpdate(use, simObject);
+            BotNeeds CurrentNeeds = TheBot.CurrentNeeds;
+            BotNeeds needsBefore = CurrentNeeds.Copy();
+            BotNeeds update = Target.GetActualUpdate(TypeUsage.UsageName);
+            //TODO rate interaction and update TheBot.Assumptions
+            CurrentNeeds.AddFrom(update);
+            CurrentNeeds.SetRange(0.0F, 100.0F);
+            BotNeeds difNeeds = CurrentNeeds.Minus(needsBefore);
+            TheBot.Debug(TheBot + " " + ToString() + "\n\t " +
+                TheBot.DistanceVectorString(Target)
+                + "=> " + difNeeds.ShowNonZeroNeeds());
+            TheBot.ExecuteLisp(this, TypeUsage.LispScript);
+            Thread.Sleep(TypeUsage.totalTimeMS);
         }
 
 
@@ -131,18 +185,21 @@ namespace cogbot.TheOpenSims
         {
             return Target.GetSimPosition();
         }
+
+        public override float RateIt(BotNeeds simAvatar)
+        {
+            return GetProposedChange().TotalSideEffect(simAvatar);
+        }
     }
 
     // most object have use that advertises ChangePromise but actually calls ChangeActual
-    public class SimTypeUsage
+    public class SimTypeUsage : SimUsage
     {
-        public SimTypeUsage(String name)
+        public SimTypeUsage(String name):base(name)
         {
-            UsageName = name;
+            
         }
 
-        public String UsageName;
-        
         // the scripting usename name
         public string TextName = "";
 
@@ -214,6 +271,11 @@ namespace cogbot.TheOpenSims
             newUse.ChangePromise.AddFrom(use.ChangePromise);
             return newUse;
         }
+
+        public override float RateIt(BotNeeds needs)
+        {
+            return ChangePromise.TotalSideEffect(needs);
+        }
     }
 
 
@@ -244,8 +306,10 @@ namespace cogbot.TheOpenSims
 
         public override void InvokeReal()
         {
-            TargetUse.InvokeReal(this);
+            TargetUse.InvokeReal(TheBot);
         }
+
+
     }
 
     public class BotSocialAction : BotAction
@@ -275,6 +339,10 @@ namespace cogbot.TheOpenSims
             return TypeUsage.ChangePromise;
         }
 
+        public override float RateIt(BotNeeds current)
+        {
+            return ProposedChange().TotalSideEffect(current);
+        }
 
         public override void InvokeReal()
         {

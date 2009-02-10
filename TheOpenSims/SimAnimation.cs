@@ -12,13 +12,13 @@ namespace cogbot.TheOpenSims
 
     public class AnimThread
     {
-        BotClient Client;
+        AgentManager ClientSelf;
         UUID anim;
         bool repeat = true;
         Thread animLoop;
-        public AnimThread(BotClient c, UUID amin0)
+        public AnimThread(AgentManager c, UUID amin0)
         {
-            Client = c;
+            ClientSelf = c;//.Self;
             if (cogbot.TheOpenSims.SimAnimation.GetAnimationName(amin0).StartsWith("S"))
             {
                 repeat = false;
@@ -28,7 +28,7 @@ namespace cogbot.TheOpenSims
 
         public override string ToString()
         {
-            return "AnimLoop " + anim + " of " + Client;
+            return "AnimLoop " + anim + " of " + ClientSelf;
         }
 
         public void Start()
@@ -41,7 +41,7 @@ namespace cogbot.TheOpenSims
         {
             try
             {
-                Client.Self.AnimationStart(anim, true);
+                ClientSelf.AnimationStart(anim, true);
                 while (repeat)
                 {
                     // some anims will only last a short time so we have to 
@@ -49,8 +49,8 @@ namespace cogbot.TheOpenSims
                     // like Laugh .. lasts for about .9 seconds
                     //12000 is a estimate avage
                     Thread.Sleep(3200);
-                    Client.Self.AnimationStop(anim, true);
-                    Client.Self.AnimationStart(anim, true);
+                    ClientSelf.AnimationStop(anim, true);
+                    ClientSelf.AnimationStart(anim, true);
                 }
             }
             catch (Exception) { } // for the Abort 
@@ -67,7 +67,7 @@ namespace cogbot.TheOpenSims
                 catch (Exception) { }
                 animLoop = null;
             }
-            Client.Self.AnimationStop(anim, true);
+            ClientSelf.AnimationStop(anim, true);
         }
     }
 

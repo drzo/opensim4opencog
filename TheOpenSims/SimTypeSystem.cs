@@ -18,8 +18,8 @@ namespace cogbot.TheOpenSims
         public List<string> AcceptsParent = new List<string>(); // what bodypart to attach?  Book=LeftHand
 
         // Clasification
-        public List<string> Match = new List<string>();  // regexpr match
-        public List<string> NoMatch = new List<string>(); // wont be if one of these matches
+        public List<Regex> Match = new List<Regex>();  // regexpr match
+        public List<Regex> NoMatch = new List<Regex>(); // wont be if one of these matches
 
         // Defines Side-effects to change Prim in SL
         public string SitName = null;
@@ -35,7 +35,7 @@ namespace cogbot.TheOpenSims
         internal readonly Dictionary<string, SimTypeUsage> UsageAffect = new Dictionary<string, SimTypeUsage>();
 
         // Superclasses
-        readonly public ListAsSet<SimObjectType> SuperType = new ListAsSet<SimObjectType>();
+        readonly public List<SimObjectType> SuperType = new List<SimObjectType>();
 
         public SimObjectType(string name)
             : base(name)
@@ -111,7 +111,7 @@ namespace cogbot.TheOpenSims
             return sou;
         }
 
-        public ListAsSet<SimTypeUsage> GetTypeUsages()
+        public IList<SimTypeUsage> GetTypeUsages()
         {
             ListAsSet<string> verbs = new ListAsSet<string>();
             foreach (string key in UsageAffect.Keys)
@@ -125,12 +125,12 @@ namespace cogbot.TheOpenSims
                     verbs.AddTo(v.UsageName);
                 }
             }
-            ListAsSet<SimTypeUsage> usages = new ListAsSet<SimTypeUsage>();
+            List<SimTypeUsage> usages = new List<SimTypeUsage>();
             foreach (string st in verbs)
             {
                 SimTypeUsage use = FindObjectUsage(st);
                 use.ToString();
-                usages.AddTo(use);
+                usages.Add(use);
             }
 
             return usages;
@@ -188,16 +188,30 @@ namespace cogbot.TheOpenSims
                     {
                         throw new Exception("unkown supertype " + arg + " for " + type);
                     }
-                    SuperType.AddTo(test);
+                    AddSuperType(test);
                     usage = type.CreateObjectUsage(arg);
                     continue;
                 }
+                //if (s == "Match")
+                //{
+                //    String arg = parseStr[i++].ToString();
+                //    arg = SimTypeSystem.MakeRegExpression(arg);
+                //    type.Match.Add(new Regex(arg));
+                //    continue;
+                //}
+                //if (s == "NoMatch")
+                //{
+                //    String arg = parseStr[i++].ToString();
+                //    arg = SimTypeSystem.MakeRegExpression(arg);
+                //    type.NoMatch.Add(new Regex(arg));
+                //    continue;
+                //}
                 if (s == "Verb")
                 {
                     String arg = parseStr[i++].ToString();
                     // TODO make suree creation order inernalizes correctly
                     SimObjectType superType = SimTypeSystem.CreateObjectUse(arg,new object[0]);
-                    SuperType.AddTo(superType);
+                    AddSuperType(superType);
                     usage = type.CreateObjectUsage(arg);
                     continue;
                 }
@@ -231,6 +245,16 @@ namespace cogbot.TheOpenSims
                 System.Console.WriteLine("ERROR: SimBots.ini-like dirrective unknown: '" + s + "'");
             }
         }
+
+        public void AddSuperType(SimObjectType test)
+        {
+            lock (SuperType)
+            {
+                if (SuperType.Contains(test)) return;
+                SuperType.Add(test);
+            }
+        }
+
 
         public string GetTouchName()
         {
@@ -294,26 +318,29 @@ namespace cogbot.TheOpenSims
         //the scripting language might supply a number as a parameter in a foriegn method call, so when i iterate thru the method signatures.. i have to recognise which ones are claiming to accept a numeric argument
         static public List<SimObjectType> GuessSimObjectTypes(Primitive.ObjectProperties props)
         {
-            ListAsSet<SimObjectType> possibles = new ListAsSet<SimObjectType>();
+            List<SimObjectType> possibles = new List<SimObjectType>();
             if (props != null)
             {
                 string objName = " " + props.Name.ToLower() + " | " + props.Description.ToLower() + " ";
 
                 lock (objectTypes) foreach (SimObjectType otype in objectTypes)
                 {
-                    foreach (string smatch in otype.NoMatch)
+                    foreach (Regex smatch in otype.NoMatch)
                     { // NoMatch
-                        if (MatchString(objName,smatch))
+                        if (smatch.IsMatch(objName))
                         {
                             goto nextOType;
                         }
                     }
-                    foreach (string smatch in otype.Match)
+                    foreach (Regex smatch in otype.Match)
                     { // Match
-                        if (MatchString(objName,smatch))
+                        if (smatch.IsMatch(objName))
                         {
-                            possibles.AddTo(otype);
-                            SetNames(props, otype);
+                            if (!possibles.Contains(otype))
+                            {
+                                possibles.Add(otype);
+                                SetNames(props, otype);
+                            }
                             break;
                         }
                     }
@@ -509,7 +536,7 @@ namespace cogbot.TheOpenSims
         static public SimObjectType CreateObjectUse(string classname, params object[] defs)
         {
             SimObjectType type = GetObjectType(classname);
-            type.SuperType.AddTo(USEABLE);
+            type.AddSuperType(USEABLE);
             SimTypeUsage usage = type.CreateObjectUsage(classname);
             type.ParseAffect(usage, defs);
             return type;
@@ -596,6 +623,10 @@ namespace cogbot.TheOpenSims
                 {
                     return null;
                 }
+                if (ftype == typeof(Regex))
+                {
+                    return new Regex(MakeRegExpression(p.ToString()));
+                }
                 if (ftype == typeof(SimObjectType))
                 {
                     return CreateObjectType(p.ToString());
@@ -604,12 +635,22 @@ namespace cogbot.TheOpenSims
                 {
                     return p.ToString().ToLower().StartsWith("t");
                 }
-                if (ftype == typeof(bool))
-                {
-                    return p.ToString().ToLower().StartsWith("t");
-                }
             }
             return p;
+        }
+
+        internal static string MakeRegExpression(string arg)
+        {
+            if (arg.Contains("*"))
+            {
+                if (!arg.Contains(".*"))
+                    arg = arg.Replace("*", ".*");
+            }
+            else
+            {
+                arg = ".*" + arg + ".*";
+            }
+            return arg.ToLower();
         }
     }
 }
