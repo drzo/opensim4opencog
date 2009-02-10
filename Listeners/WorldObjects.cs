@@ -8,7 +8,8 @@ using OpenMetaverse.Packets;
 using cogbot.TheOpenSims;
 using Simian;
 using System.Threading;
-using cogbot.Actions; //using libsecondlife;
+using cogbot.Actions;
+using cogbot.TheOpenSims.Navigation; //using libsecondlife;
 
 namespace cogbot.Listeners
 {
@@ -56,7 +57,7 @@ namespace cogbot.Listeners
         }
 
         static public ListAsSet<SimAvatar> SimAvatars = new ListAsSet<SimAvatar>();
-        static public SimMovementStore SimPaths = new SimMovementStore("millspec.paths");
+        static public SimPathStore SimPaths = new SimPathStore("millspec.paths");
         internal static void AddTracking(SimAvatar simAvatar, BotClient Client)
         {
             //  Client.Objects.OnObjectUpdated += Objects_OnObjectUpdated;
