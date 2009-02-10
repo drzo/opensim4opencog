@@ -125,7 +125,7 @@ namespace cogbot.TheOpenSims
                 show--;
                 if (show < 0) break;
                 //if (item is SimAvatar) continue;
-                s += "\n   " + item;
+                s += "\n   " + item + " " + DistanceVectorString(item);
             }
             show = 10;
             KnownTypeUsages.Sort(CompareUsage);
@@ -135,7 +135,7 @@ namespace cogbot.TheOpenSims
                 show--;
                 if (show < 0) break;
                 //if (item is SimAvatar) continue;
-                s += "\n   " + item;
+                s += "\n   " + item + " " + item.RateIt(CurrentNeeds);
             }
             return "\n" + s;
         }
@@ -234,19 +234,22 @@ namespace cogbot.TheOpenSims
             return act;
         }
 
-        public SimUsage FindBestUsage(IList<SimUsage> acts)
-        {            
-            if (acts.Count == 0) return null;
-            SimUsage bestAct = acts[0];
-            if (acts.Count == 1) return bestAct;
-            float bestRate = bestAct.RateIt(CurrentNeeds);
-            foreach (SimUsage b in acts)
+        public SimUsage FindBestUsage(IEnumerable<SimUsage> acts)
+        {
+            SimUsage bestAct = null;
+            if (acts != null)
             {
-                float brate = b.RateIt(CurrentNeeds);
-                if (brate > bestRate)
+                IEnumerator<SimUsage> enumer = acts.GetEnumerator();
+                float bestRate = float.MinValue;
+                while (enumer.MoveNext())
                 {
-                    bestAct = b;
-                    bestRate = brate;
+                    SimUsage b = enumer.Current;
+                    float brate = b.RateIt(CurrentNeeds);
+                    if (brate > bestRate)
+                    {
+                        bestAct = b;
+                        bestRate = brate;
+                    }
                 }
             }
             return bestAct;
@@ -299,7 +302,7 @@ namespace cogbot.TheOpenSims
             return (int)(act2.RateIt(CurrentNeeds) - act1.RateIt(CurrentNeeds));
         }
 
-        public List<BotAction> GetPossibleActions()
+        public IList<BotAction> GetPossibleActions()
         {
             if (TodoBotActions.Count < 2)
             {

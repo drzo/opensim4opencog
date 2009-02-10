@@ -394,13 +394,32 @@ namespace cogbot.TheOpenSims
                 }
                 theLPos = theLPos + theLPrim.Position;
             }
-            //            LastPositionSent = theLPos;
             if (theLPos.Z < -20.0f)
             {
                 Debug("-------------------------" + this + " shouldnt be at " + theLPos);
                 WorldSystem.DeletePrim(thePrim);
             }
             return theLPos;
+        }
+
+
+        public Quaternion GetSimRotation()
+        {
+            Primitive theLPrim = thePrim;
+            Quaternion theLPos = theLPrim.Rotation;
+            while (theLPrim.ParentID != 0)
+            {
+                uint theLPrimParentID = theLPrim.ParentID;
+                theLPrim = WorldSystem.GetPrimitive(theLPrimParentID);
+                while (theLPrim == null)
+                {
+                    Thread.Sleep(100);
+                    theLPrim = WorldSystem.RequestMissingObject(theLPrimParentID);
+                }
+                theLPos = theLPos + theLPrim.Rotation;
+                theLPos.Normalize();
+            }
+            return theLPos;        
         }
 
         public BotNeeds GetActualUpdate(string pUse)
@@ -497,10 +516,6 @@ namespace cogbot.TheOpenSims
         //    return KnowsAboutList;
         //}
 
-        public Quaternion GetSimRotation()
-        {
-            return thePrim.Rotation;
-        }
 
 
         internal static List<SimObject> GetNearByObjects(Vector3 here, WorldObjects WorldSystem, object thiz, float pUse, bool rootOnly)
