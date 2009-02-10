@@ -1321,7 +1321,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
             if (ret.Count > num)
                 ret = ret.GetRange(0, num);
 
-            ret.Sort(TheSimAvatar.compDistance);
+            ret.Sort(TheSimAvatar.CompareDistance);
 
             List<Primitive> ps = new List<Primitive>();
             foreach (SimObject os in ret)
