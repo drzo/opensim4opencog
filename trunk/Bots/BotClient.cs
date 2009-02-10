@@ -32,7 +32,7 @@ namespace cogbot
 
         // Reflect events into lisp
         //        
-
+        int LoginRetries = 1; // for the times we are "already logged in"
         public void Login()
         {
             if (TextForm.simulator.periscopeClient == null)
@@ -667,7 +667,7 @@ namespace cogbot
 		{
 			List<Primitive> prims = WorldSystem.getPrimitives(16);
 			if (prims.Count > 1) {
-				string str = "You see the objects ";
+				string str = "You see the objects:\n";
 				for (int i = 0; i < prims.Count; ++i)
                     str += WorldSystem.describePrim(prims[i]) + "\n";
 				//str += "and " + WorldSystem.GetSimObject(prims[prims.Count - 1]) + ".";
@@ -919,6 +919,7 @@ namespace cogbot
 				output("Not able to login");
 				// SendNewEvent("on-login-fail",login,message);
 				SendNewEvent("On-Login-Fail", login, message);
+                if (LoginRetries-->=0) Login();
 			} else if (login == LoginStatus.Success) {
 				output("Logged in successfully");
 				SendNewEvent("On-Login-Success", login, message);

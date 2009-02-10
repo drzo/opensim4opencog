@@ -48,7 +48,8 @@ namespace cogbot.TheOpenSims
         bool MustCrouch = false;
         bool MustAutoPilot = false;
         bool IsBlocked = false;
-        bool IsOneDirrection = false;
+        public bool IsOneDirrection = false;
+
         public static SimMovementComplex CopyProperties(SimMovement simMovement, SimMovementComplex movement)
         {
             return (SimMovementComplex)CopyProperties(simMovement, (SimMovement)movement);
@@ -77,12 +78,17 @@ namespace cogbot.TheOpenSims
             if (simMovement.IsOneDirrection) movement.IsOneDirrection = simMovement.IsOneDirrection;
             return movement;
         }
+        public SimMovement(String s)
+        {
+            FromFileString(s);
+        }
+
         public SimMovement(Vector3 from, Vector3 to)
         {
             Begin = from;
             End = to;
         }
-        public SimMovement GetReverse()
+        public virtual SimMovement Reverse()
         {
             SimMovement movement = new SimMovement(End, Begin);
             SimMovement.CopyProperties(this, movement);
@@ -177,8 +183,7 @@ namespace cogbot.TheOpenSims
                 moves.Add(move);
                 beg = end;
             }
-            return CopyProperties(this,new SimMovementComplex(moves));
-            
+            return CopyProperties(this,new SimMovementComplex(moves));            
         }
 
         public virtual Vector3 GetPointAt(float p)
@@ -246,10 +251,63 @@ namespace cogbot.TheOpenSims
             }
             return Append(new SimMovement(End, vector3));
         }
+
+        public virtual string ToFileString()
+        {
+            string s = Begin.ToRawString() + " " + End.ToRawString() + " ";
+            if (MustAutoPilot) s += " MustAutoPilot";
+            if (MustFly) s += " MustFly";
+            if (MustCrouch) s += " MustCrouch";
+            if (IsBlocked) s += " IsBlocked";
+            if (IsOneDirrection) s += " IsOneDirrection";
+            return s;
+        }
+
+        public void FromFileString(String s)
+        {
+            string[] args = s.Split(null);
+            Begin = new Vector3(float.Parse(args[0]), float.Parse(args[1]), float.Parse(args[2]));
+            End = new Vector3(float.Parse(args[3]), float.Parse(args[4]), float.Parse(args[5]));
+            if (s.Contains("MustAutoPilot")) MustAutoPilot = true;
+            if (s.Contains("MustFly")) MustFly = true;
+            if (s.Contains("MustCrouch")) MustCrouch = true;
+            if (s.Contains("IsBlocked")) IsBlocked = true;
+            if (s.Contains("IsOneDirrection")) IsOneDirrection = true;
+        }
+
+        public virtual bool NearPoint(Vector3 e, float maxDist)
+        {
+            if (Vector3.Distance(Begin, e) < maxDist) return true;
+            if (Vector3.Distance(End, e) < maxDist) return true;
+            return false;
+        }
     }
 
     public class SimMovementComplex : SimMovement
     {
+        public override bool NearPoint(Vector3 e, float maxDist)
+        {
+            if (Vector3.Distance(Begin, e) < maxDist) return true;
+            if (Vector3.Distance(End, e) < maxDist) return true;
+            foreach (SimMovement move in MoveList)
+            {
+                if (move.NearPoint(e, maxDist)) return true;
+            }
+            return false;
+        }
+
+        public override SimMovement Reverse()
+        {
+            List<SimMovement> ReverseMoveList = new List<SimMovement>();
+            foreach (SimMovement move in MoveList)
+            {
+                ReverseMoveList.Insert(0, move.Reverse());
+            }
+            SimMovementComplex movement = new SimMovementComplex(ReverseMoveList);
+            CopyProperties(this, movement);
+            return movement;
+        }
+
         List<SimMovement> MoveList;
         public SimMovementComplex(List<SimMovement> ms)
             : base(ms[0].Begin, ms[ms.Count - 1].End)
@@ -471,58 +529,7 @@ namespace cogbot.TheOpenSims
             gvect.Goto();
         }
     }
-    class fto : cogbot.Actions.Command
-    {
-        public fto(BotClient client)
-        {
-            Name = "fto";
-            Description = "gto the avatar toward the specified position for a maximum of seconds. Usage: FlyTo x y z [seconds]";
-            Category = cogbot.Actions.CommandCategory.Movement;
-        }
-
-        public override string Execute(string[] args, UUID fromAgentID)
-        {
-            if (args.Length > 3 || args.Length == 0)
-                return "Usage: fto prim";
-
-            string s = String.Join(" ", args);
-            Primitive prim;
-
-
-            if (WorldSystem.tryGetPrim(s, out prim))
-            {
-
-                SimObject simObject = WorldSystem.GetSimObject(prim);
-                if (simObject.CanGetSimPosition())
-                {
-                    Goto(simObject);
-                    return "Gone to " + simObject;
-                }
-                else
-                {
-                    return "Cannot get Sim Position of " + simObject;
-                }
-            }
-            return "Cannot select " + s;
-        }
-
-        private void Goto(SimObject simObject)
-        {
-            long msTotal = 30000;
-            long msProbe = 2000;
-            float distance = 0.5f + simObject.GetSizeDistance();
-            long endAt = Environment.TickCount + msTotal;
-
-            while (endAt < Environment.TickCount && distance < Vector3.Distance(simObject.GetSimPosition(), Client.Self.SimPosition))
-            {
-                Approacher.AutoGoto1(Client, simObject.GetSimPosition(), distance, msProbe);
-                Client.Self.AutoPilotCancel();
-                Client.Self.Movement.TurnToward(simObject.GetSimPosition());
-            }
-
-        }
-
-    }
+   
     class Approacher
     {
                 

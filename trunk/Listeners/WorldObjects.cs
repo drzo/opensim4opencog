@@ -56,7 +56,7 @@ namespace cogbot.Listeners
         }
 
         static public ListAsSet<SimAvatar> SimAvatars = new ListAsSet<SimAvatar>();
-        static public SimMovementStore SimPaths = new SimMovementStore();
+        static public SimMovementStore SimPaths = new SimMovementStore("millspec.paths");
         internal static void AddTracking(SimAvatar simAvatar, BotClient Client)
         {
             //  Client.Objects.OnObjectUpdated += Objects_OnObjectUpdated;
@@ -606,6 +606,8 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 					objectUpdated = prim;
 					lock (prim)
 					{
+                        SimAvatar simAvatar = GetSimAvatar((Avatar)prim);
+                        SimPaths.Update(update.LocalID, simAvatar.GetSimPosition(), update.Rotation);
 
 						// output("Updating state for Avatar " + prim.Name);
 						//  updateToPrim(prim, update);
@@ -1336,7 +1338,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 		{
             if (true)
             {
-                return ((float)prim.ToString().Length/5 - (float)TheSimAvatar.Distance(prim));
+                return /* ((float)prim.ToString().Length/5 -*/ (float)TheSimAvatar.Distance(prim);
             }
 			float fitness = 1;
 			foreach (ObjectHeuristic heuristic in objectHeuristics)
