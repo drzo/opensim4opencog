@@ -174,7 +174,6 @@ namespace cogbot.Actions
         public override void acceptInput(string verb, Parser args)
         {
            // base.acceptInput(verb, args);
-
             if (verb == "follow")
             {
                 string name = args.objectPhrase;
@@ -190,6 +189,8 @@ namespace cogbot.Actions
                     thrTracker = new Thread(tracker);
                     thrTracker.Name = str;
                     lock (Client.botCommandThreads) Client.botCommandThreads.Add(thrTracker);
+                    // needs to interupt prevoius goals
+                    WorldSystem.TheSimAvatar.StopMoving();
                     // The thread calls the tracker() method
                     thrTracker.Start();
                 }

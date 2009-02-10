@@ -31,16 +31,17 @@ namespace cogbot.TheOpenSims
 
 
         // things the bot cycles through mentally
-        public ListAsSet<SimObject> KnowsAboutObjects = new ListAsSet<SimObject>();
+        public List<SimObject> KnownSimObjects = new List<SimObject>();
 
-        public ListAsSet<SimObject> GetKnownObjects()
+        public List<SimObject> GetKnownObjects()
         {
             ScanNewObjects(3, SightRange);
-            return KnowsAboutObjects;
+            SortByDistance(KnownSimObjects);
+            return KnownSimObjects;
         }
 
         // which will result in 
-        public List<BotAction> KnowsActList = new List<BotAction>();
+        public List<BotAction> KnownBotActions = new List<BotAction>();
 
         // which will be skewed with how much one bot like a Mental Aspect
         public Dictionary<BotMentalAspect, int> AspectEnjoyment = new Dictionary<BotMentalAspect, int>();
@@ -49,13 +50,14 @@ namespace cogbot.TheOpenSims
         // (so how much one bot likes another avatar is sotred here as well)
 
         // Actions tbe bot might do next cycle.
-        List<BotAction> AllPossibleActions = new List<BotAction>();
+        List<BotAction> TodoBotActions = new List<BotAction>();
 
         // Actions observed
-        List<BotAction> LearnedPossibleActions = new List<BotAction>();
+        List<BotAction> ObservedBotActions = new List<BotAction>();
 
         // Action template stubs 
-        List<SimTypeUsage> LearnedPossibleUsages = new List<SimTypeUsage>();
+        List<SimTypeUsage> KnownTypeUsages = new List<SimTypeUsage>();
+
 
         // assuptions about stubs
         public Dictionary<SimObjectType, BotNeeds> Assumptions = new Dictionary<SimObjectType, BotNeeds>();
@@ -96,15 +98,18 @@ namespace cogbot.TheOpenSims
             //BotClient Client = base.WorldSystem.client;
             if (IsLocal())
             {
-                if (Client.Self.Movement.SitOnGround) return true;
-                return Client.Self.SittingOn != 0;
+                AgentManager ClientSelf = Client.Self;
+                AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
+                if (ClientMovement.SitOnGround) return true;
+                return ClientSelf.SittingOn != 0;
             }
             return theAvatar.ParentID != 0;
         }
 
         public bool IsLocal()
         {
-            return Client.Self.AgentID == theAvatar.ID || Client.Self.LocalID == theAvatar.LocalID;
+            AgentManager ClientSelf = Client.Self;
+            return ClientSelf.AgentID == theAvatar.ID || ClientSelf.LocalID == theAvatar.LocalID;
         }
 
      
@@ -113,10 +118,24 @@ namespace cogbot.TheOpenSims
             String s = ToString();
             List<SimObject> KnowsAboutList = GetKnownObjects();
             KnowsAboutList.Sort(CompareObjects);
+            int show = 10;
+            s += "\nKnowsAboutList: " + KnowsAboutList.Count;
             foreach (SimObject item in KnowsAboutList)
             {
-                if (item is SimAvatar) continue;
-                s += "\n   " + item.DebugInfo();
+                show--;
+                if (show < 0) break;
+                //if (item is SimAvatar) continue;
+                s += "\n   " + item;
+            }
+            show = 10;
+            KnownTypeUsages.Sort(CompareUsage);
+            s += "\nKnownTypeUsages: " + KnownTypeUsages.Count;
+            foreach (SimTypeUsage item in KnownTypeUsages)
+            {
+                show--;
+                if (show < 0) break;
+                //if (item is SimAvatar) continue;
+                s += "\n   " + item;
             }
             return "\n" + s;
         }
@@ -205,25 +224,25 @@ namespace cogbot.TheOpenSims
         {
             BotAction act = CurrentAction;
 
-            List<BotAction> acts = GetPossibleActions();
+            IList<SimUsage> acts = (IList<SimUsage>)GetPossibleActions();
 
             if (acts.Count > 0)
             {
-                act = FindBestAct(acts);
+                act = (BotAction)FindBestUsage(acts);
                 acts.Remove(act);
             }
             return act;
         }
 
-        public BotAction FindBestAct(IList<BotAction> acts)
+        public SimUsage FindBestUsage(IList<SimUsage> acts)
         {            
             if (acts.Count == 0) return null;
-            BotAction bestAct = acts[0];
+            SimUsage bestAct = acts[0];
             if (acts.Count == 1) return bestAct;
-            float bestRate = bestAct.RateIt();
-            foreach (BotAction b in acts)
+            float bestRate = bestAct.RateIt(CurrentNeeds);
+            foreach (SimUsage b in acts)
             {
-                float brate = b.RateIt();
+                float brate = b.RateIt(CurrentNeeds);
                 if (brate > bestRate)
                 {
                     bestAct = b;
@@ -255,46 +274,45 @@ namespace cogbot.TheOpenSims
         //    string treeName = args[0].Trim(new char[] { ' ' });
         //    Tree tree = (Tree)Enum.Parse(typeof(Tree), treeName);
 
-        //    Vector3 treePosition = Client.Self.SimPosition;
+        //    Vector3 treePosition = ClientSelf.SimPosition;
         //    treePosition.Z += 3.0f;
 
         //    Client.Objects.AddTree(Client.Network.CurrentSim, new Vector3(0.5f, 0.5f, 0.5f),
         //        Quaternion.Identity, treePosition, tree, Client.GroupID, false);
 
-        //    //Client.Self.
+        //    //ClientSelf.
         //    return copyOf;
         //}
 
-        public void SortActs(List<BotAction> acts)
+        //public void SortActs(List<SimUsage> acts)
+        //{
+        //    acts.Sort(CompareUsage);
+        //}
+
+        public int CompareUsage(SimUsage act1, SimUsage act2)
         {
-            acts.Sort(CompareActs);
+            return (int)(act2.RateIt(CurrentNeeds) - act1.RateIt(CurrentNeeds));
         }
 
-        int CompareActs(BotAction act1, BotAction act2)
+        public int CompareObjects(SimObject act1, SimObject act2)
         {
-            return (int)(act2.RateIt() - act1.RateIt());
-        }
-
-        int CompareObjects(SimObject act1, SimObject act2)
-        {
-            return (int)(act2.RateIt(this) - act1.RateIt(this));
+            return (int)(act2.RateIt(CurrentNeeds) - act1.RateIt(CurrentNeeds));
         }
 
         public List<BotAction> GetPossibleActions()
         {
-            if (AllPossibleActions.Count < 2)
+            if (TodoBotActions.Count < 2)
             {
-                AllPossibleActions = NewPossibleActions();
+                TodoBotActions = NewPossibleActions();
             }
-            return AllPossibleActions;
+            return TodoBotActions;
         }
 
         private List<BotAction> NewPossibleActions()
         {
             List<SimObject> knowns = GetKnownObjects();
-            SortByDistance(knowns);
             List<BotAction> acts = new List<BotAction>();
-            foreach (BotAction obj in LearnedPossibleActions)
+            foreach (BotAction obj in ObservedBotActions)
             {
                 acts.Add(obj);
             }
@@ -304,7 +322,7 @@ namespace cogbot.TheOpenSims
                 foreach (SimObjectUsage objuse in obj.GetUsages())
                 {
                     acts.Add(new BotObjectAction(this, objuse));
-                    foreach (SimTypeUsage puse in LearnedPossibleUsages)
+                    foreach (SimTypeUsage puse in KnownTypeUsages)
                     {
                         //acts.Add( new BotObjectAction(this, puse, obj));
                     }
@@ -316,15 +334,16 @@ namespace cogbot.TheOpenSims
 
         internal void DoBestUse(SimObject someObject)
         {
-            SimTypeUsage use = someObject.GetBestUse(this);
+            SimTypeUsage use = someObject.GetBestUse(CurrentNeeds);
             if (use == null)
             {
                 float closeness = Approach(someObject, 2);
-                Client.Self.Touch(someObject.thePrim.LocalID);
+                AgentManager ClientSelf = Client.Self;
+                ClientSelf.Touch(someObject.thePrim.LocalID);
                 if (closeness < 3)
                 {
-                    Client.Self.RequestSit(someObject.thePrim.ID, Vector3.Zero);
-                    Client.Self.Sit();
+                    ClientSelf.RequestSit(someObject.thePrim.ID, Vector3.Zero);
+                    ClientSelf.Sit();
                 }
                 return;
             }
@@ -355,7 +374,7 @@ namespace cogbot.TheOpenSims
 
         }
 
-        ListAsSet<SimObject> InterestingObjects = new ListAsSet<SimObject>();
+        List<SimObject> InterestingObjects = new List<SimObject>();
 
         public SimObject GetNextInterestingObject()
         {
@@ -384,7 +403,7 @@ namespace cogbot.TheOpenSims
                 }
             }
             InterestingObjects.Remove(mostInteresting);
-            InterestingObjects.AddTo(mostInteresting);
+            InterestingObjects.Add(mostInteresting);
             return mostInteresting;
         }
 
@@ -401,22 +420,35 @@ namespace cogbot.TheOpenSims
             return (MyRandom.Next(1, 2) == 1) ? mostInteresting : cAspect;
         }
 
-        public void ScanNewObjects(int minimum,float sightRange)
+        public void ScanNewObjects(int minimum, float sightRange)
         {
-            ListAsSet<SimObject> objects = GetNearByObjects(sightRange, true);
+            List<SimObject> objects = GetNearByObjects(sightRange, true);
             lock (objects)
             {
-                foreach (SimObject obj in objects.GetBaseEnumerable())
+                foreach (SimObject obj in objects)
                 {
                     if (obj != this)
                         if (obj.IsRoot() || obj.IsTyped())
-                            KnowsAboutObjects.Add(obj);
+                        {
+                            if (!KnownSimObjects.Contains(obj))
+                            {
+                                KnownSimObjects.Add(obj);
+                                IList<SimTypeUsage> uses = obj.GetTypeUsages();
+                                foreach (SimTypeUsage use in uses)
+                                {
+                                    if (!KnownTypeUsages.Contains(use))
+                                    {
+                                        KnownTypeUsages.Add(use);
+                                    }
+                                }
+                            }
+                        }
                 }
             }
-            if (KnowsAboutObjects.Count < minimum)
+            if (KnownSimObjects.Count < minimum)
             {
-                if (sightRange<255)
-                ScanNewObjects(minimum, sightRange + 10);
+                if (sightRange < 255)
+                    ScanNewObjects(minimum, sightRange + 10);
             }
         }
 
@@ -432,10 +464,9 @@ namespace cogbot.TheOpenSims
 
         public float Approach(SimObject obj, float maxDistance)
         {
-            SimObject UnPhantom = null;
             BotClient Client = GetGridClient();
             // stand up first
-            UnPhantom = StandUp();
+            SimObject UnPhantom = StandUp();
             // make sure it not going somewhere
             StopMoving();
             // set the new target
@@ -471,25 +502,28 @@ namespace cogbot.TheOpenSims
            // StopMoving();
             if (UnPhantom != null)            
                 UnPhantom.RestoreEnterable();
-            Client.Self.Movement.TurnToward(obj.GetUsePosition());
+            AgentManager.AgentMovement ClientMovement = Client.Self.Movement;
+            ClientMovement.TurnToward(obj.GetUsePosition());
             return Distance(obj);            
         }
 
         public SimObject StandUp()
         {
             SimObject UnPhantom = null;
-            if (Client.Self.Movement.SitOnGround)
+            AgentManager ClientSelf = Client.Self;
+            AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
+            if (ClientMovement.SitOnGround)
             {
-                Client.Self.Stand();
+                ClientSelf.Stand();
             }
             else
             {
-                uint sit = Client.Self.SittingOn;
+                uint sit = ClientSelf.SittingOn;
                 if (sit != 0)
                 {
                     UnPhantom = WorldSystem.GetSimObject(WorldSystem.GetPrimitive(sit));
                     UnPhantom.MakeEnterable();
-                    Client.Self.Stand();
+                    ClientSelf.Stand();
                 }
             }
             return UnPhantom;
@@ -500,7 +534,7 @@ namespace cogbot.TheOpenSims
         {
             //if (Client != null) return Client;
             //BotClient Client = WorldSystem.client;
-            //if (theAvatar.ID != Client.Self.AgentID)
+            //if (theAvatar.ID != ClientSelf.AgentID)
             //{
             //    throw new Exception("This avatar " + theAvatar + " has no GridClient");
             //}
@@ -515,12 +549,14 @@ namespace cogbot.TheOpenSims
             {
                 InDialogWith = avatar;
                 BotClient Client = GetGridClient();
-                Client.Self.Movement.TurnToward(InDialogWith.GetSimPosition());
-                Client.Self.AnimationStop(Animations.TALK, true);
-                Client.Self.AnimationStart(Animations.TALK, true);
+                AgentManager ClientSelf = Client.Self;
+                AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
+                ClientMovement.TurnToward(InDialogWith.GetSimPosition());
+                ClientSelf.AnimationStop(Animations.TALK, true);
+                ClientSelf.AnimationStart(Animations.TALK, true);
                 Client.Talk(InDialogWith + ": " + talkAbout);
                 Thread.Sleep(3000);
-                Client.Self.AnimationStop(Animations.TALK, true);
+                ClientSelf.AnimationStop(Animations.TALK, true);
             }
             finally
             {
@@ -547,33 +583,40 @@ namespace cogbot.TheOpenSims
 
         public ThreadStart WithSitOn(SimObject obj, ThreadStart closure)
         {
+            BotClient Client = GetGridClient();
+            AgentManager ClientSelf = Client.Self;
             return new ThreadStart(delegate()
             {
                 Primitive targetPrim = obj.thePrim;
-                BotClient Client = GetGridClient();
-                Client.Self.RequestSit(targetPrim.ID, Vector3.Zero);
-                Client.Self.Sit();
-                closure.Invoke();
-                Client.Self.Stand();
+                ClientSelf.RequestSit(targetPrim.ID, Vector3.Zero);
+                ClientSelf.Sit();
+                try
+                {
+                    closure.Invoke();
+                }
+                finally
+                {
+                    ClientSelf.Stand();
+                }
             });
         }
 
         public ThreadStart WithGrabAt(SimObject obj, ThreadStart closure)
         {
+            BotClient Client = GetGridClient();
             return new ThreadStart(delegate()
             {
                 Primitive targetPrim = obj.thePrim;
                 uint objectLocalID = targetPrim.LocalID;
-                BotClient Client = GetGridClient();
-
+                AgentManager ClientSelf = Client.Self;
                 try
                 {
-                    Client.Self.Grab(objectLocalID);
+                    ClientSelf.Grab(objectLocalID);
                     closure.Invoke();
                 }
                 finally
                 {
-                    Client.Self.DeGrab(objectLocalID);
+                    ClientSelf.DeGrab(objectLocalID);
                 }
             });
         }
@@ -581,9 +624,9 @@ namespace cogbot.TheOpenSims
         public ThreadStart WithAnim(UUID anim, ThreadStart closure)
         {
             BotClient Client = GetGridClient();
+            AnimThread animThread = new AnimThread(Client.Self, anim);
             return new ThreadStart(delegate()
             {
-                AnimThread animThread = new AnimThread(Client, anim);
                 try
                 {
                     animThread.Start();
@@ -603,9 +646,9 @@ namespace cogbot.TheOpenSims
 
         public void ExecuteLisp(SimObjectUsage botObjectAction, String lisp)
         {
+            BotClient Client = GetGridClient();
             if (!String.IsNullOrEmpty(lisp))
             {
-                BotClient Client = GetGridClient();
                 Client.lispTaskInterperter.Intern("TheBot", this);
                 Client.lispTaskInterperter.Intern("Target", botObjectAction.Target);
                 Client.lispTaskInterperter.Intern("botObjectAction", botObjectAction);
@@ -618,13 +661,16 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                return Client.Self.Movement.Fly;
+                AgentManager ClientSelf = Client.Self;
+                AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
+                return ClientMovement.Fly;
             }
             set
             {
                 if (IsFloating != value)
                 {
-                    Client.Self.Fly(value);
+                    AgentManager ClientSelf = Client.Self;
+                    ClientSelf.Fly(value);
                 }
             }
         }
@@ -638,21 +684,36 @@ namespace cogbot.TheOpenSims
         {
             return GetName();
         }
+
         BotClient Client;
-        internal void SetClient(BotClient Client)
+        public void SetClient(BotClient Client)
         {
             this.Client = Client;
             WorldSystem = Client.WorldSystem;
             WorldSystem.SetSimAvatar(this);
             //WorldSystem.AddTracking(this,Client);
         }
+
+        public SimObject FindSimObject(SimObjectType pUse)
+        {
+           IList<SimObject> objects = GetKnownObjects();
+           foreach (SimObject obj in objects)
+           {
+               if (obj.IsTypeOf(pUse)!=null) return obj;
+           }
+           return null;
+        }
+
         public override bool Matches(string name)
         {
-            return SimTypeSystem.MatchString(base.ToString(), name) || SimTypeSystem.MatchString(ToString(), name);
+            return SimTypeSystem.MatchString(base.ToString(), name) 
+                || SimTypeSystem.MatchString(ToString(), name);
         }
 
         void TrackerLoop()
         {
+            AgentManager ClientSelf = Client.Self;
+            AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
             bool StartedFlying = false;// !IsFloating;
             try
             {
@@ -663,16 +724,16 @@ namespace cogbot.TheOpenSims
                     if (ApproachTarget != null)
                     {
                         Vector3 targetPosition = new Vector3(ApproachTarget.GetSimPosition());
-                        float ZDist = Math.Abs(targetPosition.Z - Client.Self.SimPosition.Z);
+                        float ZDist = Math.Abs(targetPosition.Z - ClientSelf.SimPosition.Z);
                         targetPosition.Z = GetSimPosition().Z;
                         // allow flight
                         if (ZDist > ApproachDistance)
                         {
-                            if (!Client.Self.Movement.Fly)
+                            if (!ClientMovement.Fly)
                             {
                                 if (!StartedFlying)
                                 {
-                                    Client.Self.Fly(true);
+                                   // ClientSelf.Fly(true);                                 
                                     StartedFlying = true;
                                 }
                             }
@@ -681,38 +742,38 @@ namespace cogbot.TheOpenSims
                         {
                             if (StartedFlying)
                             {
-                               // Client.Self.Fly(false);
+                                // ClientSelf.Fly(false);
                                 StartedFlying = false;
                             }
                         }
 
-
-
-
-
-                        float curDist = Vector3.Distance(Client.Self.SimPosition, targetPosition);
+                        if (StartedFlying)
+                        {
+                            targetPosition.Z = ApproachTarget.GetSimPosition().Z;
+                        }
+                        float curDist = Vector3.Distance(ClientSelf.SimPosition, targetPosition);
                         if (curDist > ApproachDistance)
                         {
 
-                            //Client.Self.Movement.SendUpdate();
+                            //ClientMovement.SendUpdate();
                             if (curDist < (ApproachDistance * 1.25))
                             {
-                                Client.Self.Movement.TurnToward(targetPosition);
-                                Client.Self.Movement.AtPos = true;
+                                ClientMovement.TurnToward(targetPosition);
+                                ClientMovement.AtPos = true;
                                 Thread.Sleep(25);
-                                Client.Self.Movement.Stop = true;
-                                Client.Self.Movement.AtPos = false;
-                                Client.Self.Movement.NudgeAtPos = false;
-                                Client.Self.Movement.SendUpdate(false);
+                                ClientMovement.Stop = true;
+                                ClientMovement.AtPos = false;
+                                ClientMovement.NudgeAtPos = false;
+                                ClientMovement.SendUpdate(false);
 
                                 Thread.Sleep(100);
                             }
                             else
                             {
-                                Client.Self.Movement.TurnToward(targetPosition);
-                                Client.Self.Movement.AtPos = true;
-                                Client.Self.Movement.UpdateInterval = 0; //100
-                                Client.Self.Movement.SendUpdate(false);
+                                ClientMovement.TurnToward(targetPosition);
+                                ClientMovement.AtPos = true;
+                                ClientMovement.UpdateInterval = 0; //100
+                                ClientMovement.SendUpdate(false);
                                 Application.DoEvents();
                                 //(int)(25 * (1 + (curDist / ApproachDistance)))
                                 Thread.Sleep(somthing.Next(25, 100));
@@ -723,14 +784,14 @@ namespace cogbot.TheOpenSims
                         {
                             if (justStopped)
                             {
-                                Client.Self.Movement.TurnToward(targetPosition);
-                                Client.Self.Movement.AtPos = false;
-                                //Client.Self.Movement.UpdateInterval = 0;
-                                Client.Self.Movement.StandUp = true;
-                                //Client.Self.Movement.SendUpdate();
-                                Client.Self.Movement.FinishAnim = true;
-                                Client.Self.Movement.Stop = true;
-                                Client.Self.Movement.SendUpdate(false);
+                                ClientMovement.TurnToward(targetPosition);
+                                ClientMovement.AtPos = false;
+                                //ClientMovement.UpdateInterval = 0;
+                                ClientMovement.StandUp = true;
+                                //ClientMovement.SendUpdate();
+                                ClientMovement.FinishAnim = true;
+                                ClientMovement.Stop = true;
+                                ClientMovement.SendUpdate(false);
                                 Thread.Sleep(25);
                                // WorldSystem.TheSimAvatar.StopMoving();
                                 justStopped = false;
@@ -764,45 +825,46 @@ namespace cogbot.TheOpenSims
         internal void StopMoving()
         {
             ApproachTarget = null;
-            Client.Self.AutoPilotCancel();
+            AgentManager ClientSelf = Client.Self;
+            ClientSelf.AutoPilotCancel();
+            AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
+            //  ClientMovement. AlwaysRun = false;
+            ClientMovement.AtNeg = false;
+            ClientMovement.AtPos = false;
+            //ClientMovement.AutoResetControls = true;
+            //   ClientMovement. Away = false;
+            ClientMovement.FastAt = false;
+            ClientMovement.FastLeft = false;
+            ClientMovement.FastUp = false;
+            // ClientMovement.FinishAnim = true;
+            //  ClientMovement. Fly = false;
+            ClientMovement.LButtonDown = false;
+            ClientMovement.LButtonUp = false;
+            ClientMovement.LeftNeg = false;
+            ClientMovement.LeftPos = false;
+            ClientMovement.MLButtonDown = false;
+            ClientMovement.MLButtonUp = false;
+            // ClientMovement. Mouselook = false;
+            ClientMovement.NudgeAtNeg = false;
+            ClientMovement.NudgeAtPos = false;
+            ClientMovement.NudgeLeftNeg = false;
+            ClientMovement.NudgeLeftPos = false;
+            ClientMovement.NudgeUpNeg = false;
+            ClientMovement.NudgeUpPos = false;
+            ClientMovement.PitchNeg = false;
+            ClientMovement.PitchPos = false;
+            //ClientMovement. SitOnGround = false;
+            //ClientMovement. StandUp = false;
+            ClientMovement.Stop = true;
+            ClientMovement.TurnLeft = false;
+            ClientMovement.TurnRight = false;
+            ClientMovement.UpdateInterval = 0;
+            ClientMovement.UpNeg = false;
+            ClientMovement.UpPos = false;
+            ClientMovement.YawNeg = false;
+            ClientMovement.YawPos = false;
 
-            //  Client.Self.Movement. AlwaysRun = false;
-            Client.Self.Movement.AtNeg = false;
-            Client.Self.Movement.AtPos = false;
-            //Client.Self.Movement.AutoResetControls = true;
-            //   Client.Self.Movement. Away = false;
-            Client.Self.Movement.FastAt = false;
-            Client.Self.Movement.FastLeft = false;
-            Client.Self.Movement.FastUp = false;
-            // Client.Self.Movement.FinishAnim = true;
-            //  Client.Self.Movement. Fly = false;
-            Client.Self.Movement.LButtonDown = false;
-            Client.Self.Movement.LButtonUp = false;
-            Client.Self.Movement.LeftNeg = false;
-            Client.Self.Movement.LeftPos = false;
-            Client.Self.Movement.MLButtonDown = false;
-            Client.Self.Movement.MLButtonUp = false;
-            // Client.Self.Movement. Mouselook = false;
-            Client.Self.Movement.NudgeAtNeg = false;
-            Client.Self.Movement.NudgeAtPos = false;
-            Client.Self.Movement.NudgeLeftNeg = false;
-            Client.Self.Movement.NudgeLeftPos = false;
-            Client.Self.Movement.NudgeUpNeg = false;
-            Client.Self.Movement.NudgeUpPos = false;
-            Client.Self.Movement.PitchNeg = false;
-            Client.Self.Movement.PitchPos = false;
-            //Client.Self.Movement. SitOnGround = false;
-            //Client.Self.Movement. StandUp = false;
-            Client.Self.Movement.Stop = true;
-            Client.Self.Movement.TurnLeft = false;
-            Client.Self.Movement.TurnRight = false;
-            Client.Self.Movement.UpdateInterval = 0;
-            Client.Self.Movement.UpNeg = false;
-            Client.Self.Movement.UpPos = false;
-            Client.Self.Movement.YawNeg = false;
-            Client.Self.Movement.YawPos = false;
-
-            Client.Self.Movement.SendUpdate();    
+            ClientMovement.SendUpdate();    
         }
     }
 

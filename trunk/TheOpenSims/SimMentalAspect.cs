@@ -260,6 +260,13 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        public float TotalSideEffect(BotNeeds bn) {
+            bn = bn.Copy();           
+            bn.AddFrom(this);
+            bn.SetRange(0f, 100f);
+            return bn.Total();
+        }
+
         public BotNeeds Minus(BotNeeds needsBefore)
         {
             BotNeeds copy = Copy();

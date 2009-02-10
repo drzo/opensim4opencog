@@ -59,6 +59,8 @@ namespace cogbot.TheOpenSims
     
         public float Distance(SimObject prim)
         {
+            if (!prim.CanGetSimPosition()) return 1300;
+            if (!CanGetSimPosition()) return 1300;
             return Vector3.Distance(GetSimPosition(), prim.GetSimPosition());
         }
 
@@ -166,15 +168,15 @@ namespace cogbot.TheOpenSims
             return str;
         }
 
-        public float RateIt(SimAvatar avatar)
+        public float RateIt(BotNeeds needs)
         {
-            return ObjectType.RateIt(avatar.CurrentNeeds, GetBestUse(avatar)) * scaleOnNeeds;
+            return ObjectType.RateIt(needs, GetBestUse(needs)) * scaleOnNeeds;
         }
 
-        //public List<SimTypeUsage> GetTypeUsages()
-        //{
-        //  return ObjectType.GetTypeUsages();
-        //}
+        public IList<SimTypeUsage> GetTypeUsages()
+        {
+          return ObjectType.GetTypeUsages();
+        }
 
         public List<SimObjectUsage> GetUsages()
         {
@@ -256,12 +258,10 @@ namespace cogbot.TheOpenSims
         private void AddSuperTypes(IList<SimObjectType> listAsSet)
         {
             //SimObjectType UNKNOWN = SimObjectType.UNKNOWN;
-            ListAsSet<SimObjectType> orig = ObjectType.SuperType;
-            lock (orig)
-                foreach (SimObjectType type in listAsSet)
-                {
-                    orig.AddTo(type);
-                }            
+            foreach (SimObjectType type in listAsSet)
+            {
+                ObjectType.AddSuperType(type);
+            }
         }
 
         public virtual bool RestoreEnterable()
@@ -413,20 +413,20 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public SimTypeUsage GetBestUse(SimAvatar avatar)
+        public SimTypeUsage GetBestUse(BotNeeds needs)
         {
             if (needUpdate)
             {
                 UpdateProperties(thePrim.Properties);
             }
 
-            ListAsSet<SimTypeUsage> all = ObjectType.GetTypeUsages();
+            IList<SimTypeUsage> all = ObjectType.GetTypeUsages();
             if (all.Count == 0) return null;
             SimTypeUsage typeUsage = all[0];
             float typeUsageRating = 0.0f;
             foreach (SimTypeUsage use in all)
             {
-                float f = ObjectType.RateIt(avatar.CurrentNeeds, use);
+                float f = ObjectType.RateIt(needs, use);
                 if (f > typeUsageRating)
                 {
                     typeUsageRating = f;
@@ -470,11 +470,21 @@ namespace cogbot.TheOpenSims
             return size;
         }
 
-        public ListAsSet<SimObject> GetNearByObjects(float maxDistance, bool rootOnly)
+        public List<SimObject> GetNearByObjects(float maxDistance, bool rootOnly)
         {
-            ListAsSet<SimObject> objs = GetNearByObjects(GetSimPosition(), WorldSystem, this, maxDistance, rootOnly);
-            SortByDistance(objs);
-            return objs;
+            if (!CanGetSimPosition())
+            {
+                List<SimObject> objs = new List<SimObject>();
+                GetParent();
+                if (Parent != null && Parent != this)
+                {
+                    objs.Add(Parent);
+                }
+                return objs;
+            }
+            List<SimObject> objs2 = GetNearByObjects(GetSimPosition(), WorldSystem, this, maxDistance, rootOnly);            
+            SortByDistance(objs2);
+            return objs2;
         }
 
         //static ListAsSet<SimObject> CopyObjects(List<SimObject> objects)
@@ -493,14 +503,14 @@ namespace cogbot.TheOpenSims
         }
 
 
-        internal static ListAsSet<SimObject> GetNearByObjects(Vector3 here, WorldObjects WorldSystem, object thiz, float pUse, bool rootOnly)
+        internal static List<SimObject> GetNearByObjects(Vector3 here, WorldObjects WorldSystem, object thiz, float pUse, bool rootOnly)
         {
-            ListAsSet<SimObject> nearby = new ListAsSet<SimObject>();
+            List<SimObject> nearby = new List<SimObject>();
              foreach (SimObject obj in WorldSystem.GetAllSimObjects().CopyOf()) 
             {
                 if (!(rootOnly && !obj.IsRoot() && !obj.IsTyped()))
                 if (obj != thiz && obj.CanGetSimPosition() && Vector3.Distance(obj.GetSimPosition(), here) <= pUse)
-                    nearby.AddTo(obj);
+                    nearby.Add(obj);
             };
             return nearby;
         }
@@ -513,12 +523,13 @@ namespace cogbot.TheOpenSims
         {
             WorldSystem.output(thePrim+":"+ p);
         }
+
         internal void SortByDistance(List<SimObject> sortme)
         {
-            sortme.Sort(compDistance);
+            sortme.Sort(CompareDistance);
         }
 
-        public int compDistance(SimObject p1, SimObject p2)
+        public int CompareDistance(SimObject p1, SimObject p2)
         {
             return (int)(Distance(p1) - Distance(p2));
         }

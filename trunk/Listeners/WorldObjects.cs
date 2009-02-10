@@ -1139,21 +1139,21 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                 if (!primVect.ContainsKey(prim))
                 {
                     primVect[prim] = vect;
-                    client.SendNewEvent(eventName, args);
+                   // client.SendNewEvent(eventName, args);
                 }
                 else
                 {
                     Vector3 v3 = primVect[prim]-vect;
                     if (v3.Length() > 0.5)
                     {
-                        client.SendNewEvent(eventName, args);
+                       // client.SendNewEvent(eventName, args);
                         primVect[prim] = vect;
                     }
                 }
                 return;
 
             }
-			client.SendNewEvent(eventName, args);
+			//client.SendNewEvent(eventName, args);
 		}
 
 
@@ -1597,6 +1597,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
 
         internal void DeletePrim(Primitive thePrim)
         {
+            SimObjects.Remove(GetSimObject(thePrim));
             client.Inventory.RequestDeRezToInventory(thePrim.LocalID);
         }
 
