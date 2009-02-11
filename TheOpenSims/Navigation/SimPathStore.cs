@@ -22,36 +22,36 @@ namespace cogbot.TheOpenSims.Navigation
             else
             {
                 PrimTracker tracker = TrackedAgents[agentID];
-                SimMovement move = tracker.Update(point, rotation);
+                SimRoute move = tracker.Update(point, rotation);
                 if (move != null) Movements.Add(move);
             }
         }
 
 
 
-        List<SimMovement> Movements = new List<SimMovement>();
+        List<SimRoute> Movements = new List<SimRoute>();
         readonly string RegionFileName;
 
-        public SimMovement GetBeginToEndMovement(Vector3 begin, Vector3 end, float maxDist)
+        public SimRoute GetBeginToEndMovement(Vector3 begin, Vector3 end, float maxDist)
         {
-            SimMovement b = GetBeginMovement(begin, maxDist);
-            SimMovement e = GetEndMovement(end, maxDist);
+            SimRoute b = GetBeginMovement(begin, maxDist);
+            SimRoute e = GetEndMovement(end, maxDist);
             if (b == null || e == null) return null;
-            SimMovement m = new SimMovement(b.End, e.Begin);
-            List<SimMovement> list = new List<SimMovement>();
+            SimRoute m = new SimRoute(b.End, e.Begin);
+            List<SimRoute> list = new List<SimRoute>();
             list.Add(b);
             list.Add(m);
             list.Add(e);
-            return new SimRoute(list);
+            return new SimMovement(list);
         }
 
-        public SimMovement GetBeginMovement(Vector3 vect, float maxDist)
+        public SimRoute GetBeginMovement(Vector3 vect, float maxDist)
         {
-            SimMovement bestBegin = null;
+            SimRoute bestBegin = null;
             float distToBegin = maxDist;
-            foreach (SimMovement move in Movements)
+            foreach (SimRoute move in Movements)
             {
-                float close = Vector3.Distance(vect, move.Begin);
+                float close = Vector3.Distance(vect, move.Begin.GetSimPosition());
                 if (close < distToBegin)
                 {
                     bestBegin = move;
@@ -61,7 +61,7 @@ namespace cogbot.TheOpenSims.Navigation
                 {
                     if (!move.IsOneDirrection)
                     {
-                        close = Vector3.Distance(vect, move.End);
+                        close = Vector3.Distance(vect, move.End.GetSimPosition());
                         if (close < distToBegin)
                         {
                             bestBegin = move.Reverse();
@@ -73,13 +73,13 @@ namespace cogbot.TheOpenSims.Navigation
             return bestBegin;
         }
 
-        public SimMovement GetEndMovement(Vector3 vect, float maxDist)
+        public SimRoute GetEndMovement(Vector3 vect, float maxDist)
         {
-            SimMovement bestEnd = null;
+            SimRoute bestEnd = null;
             float distToEnd = maxDist;
-            foreach (SimMovement move in Movements)
+            foreach (SimRoute move in Movements)
             {
-                float close = Vector3.Distance(vect, move.End);
+                float close = Vector3.Distance(vect, move.End.GetSimPosition());
                 if (close < distToEnd)
                 {
                     bestEnd = move;
@@ -89,7 +89,7 @@ namespace cogbot.TheOpenSims.Navigation
                 {
                     if (!move.IsOneDirrection)
                     {
-                        close = Vector3.Distance(vect, move.Begin);
+                        close = Vector3.Distance(vect, move.Begin.GetSimPosition());
                         if (close < distToEnd)
                         {
                             bestEnd = move.Reverse();
@@ -116,7 +116,7 @@ namespace cogbot.TheOpenSims.Navigation
             }
             FileStream stream = save.Open(FileMode.OpenOrCreate, FileAccess.Write);
             StreamWriter sw = new StreamWriter(stream);
-            foreach(SimMovement sm in Movements) {
+            foreach(SimRoute sm in Movements) {
                 sw.WriteLine(sm.ToFileString());
             }
             sw.Close();
@@ -138,7 +138,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         private void LoadFromLine(string s)
         {
-            SimMovement sm = new SimMovement(s);
+            SimRoute sm = new SimRoute(s);
             Movements.Add(sm);
         }
 
@@ -151,15 +151,15 @@ namespace cogbot.TheOpenSims.Navigation
         protected float MovedAllot = 2.0f;
         SimWaypoint WayPoint;
         Quaternion Orientation;
-        public PrimTracker(SimWaypoint firstP, Quaternion firtsR)
+        public PrimTracker(SimPosition firstP, Quaternion firtsR)
         {
-            WayPoint = firstP;
+            WayPoint = SimWaypoint.Create(firstP.GetSimPosition());
             Orientation = firtsR;
         }
 
-        public SimMovement Update(Vector3 point3, Quaternion rotation)
+        public SimRoute Update(Vector3 point3, Quaternion rotation)
         {
-            float dist = Vector3.Distance(WayPoint, point3) ;
+            float dist = Vector3.Distance(WayPoint.GetSimPosition(), point3);
             if (dist > MovedAllot * 2)
             {
                 WayPoint = SimWaypoint.Create(point3);
@@ -174,7 +174,7 @@ namespace cogbot.TheOpenSims.Navigation
             if (RotationDiffernt(rotation, Orientation))
             {
                 SimWaypoint point = SimWaypoint.Create(point3);
-                SimMovement move = MakeMovement(point);
+                SimRoute move = MakeMovement(point);
                 if (move != null)
                 {
                     Orientation = rotation;
@@ -185,12 +185,12 @@ namespace cogbot.TheOpenSims.Navigation
             return null;
         }
 
-        private SimMovement MakeMovement(SimWaypoint point)
+        private SimRoute MakeMovement(SimWaypoint point)
         {
-            if (Vector3.Distance(WayPoint, point) > MovedAllot / 3)
+            if (Vector3.Distance(WayPoint.GetSimPosition(), point.GetSimPosition()) > MovedAllot / 3)
             {
                 Console.WriteLine("WAYPOINT " + WayPoint + " -> " + point);
-                SimMovement move = new SimMovement(point, WayPoint);
+                SimRoute move = new SimRoute(point, WayPoint);
                 WayPoint = point;
                 return move;
             }

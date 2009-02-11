@@ -4,11 +4,12 @@ using System.Text;
 using OpenMetaverse;
 using cogbot.Listeners;
 using System.Threading;
+using cogbot.TheOpenSims.Navigation;
 
 namespace cogbot.TheOpenSims
 {
     //TheSims-like object
-    public class SimObject : BotMentalAspect
+    public class SimObject : BotMentalAspect, SimPosition
     {
         public bool IsPhantom
         {
@@ -549,6 +550,12 @@ namespace cogbot.TheOpenSims
             return (int)(Distance(p1) - Distance(p2));
         }
 
+        public int CompareDistance(Vector3 v1, Vector3 v2)
+        {
+            Vector3 rp = GetSimPosition();
+            return (int)(Vector3.Mag(rp - v1) - Vector3.Mag(rp - v2));
+        }
+
         public string DistanceVectorString(SimObject obj)
         {
             String str;
@@ -571,5 +578,16 @@ namespace cogbot.TheOpenSims
             return str + String.Format("<{0:0.00}, {1:0.00}, {2:0.00}>", loc.X, loc.Y, loc.Z);
         }
 
+        public virtual string GetName()
+        {
+            if (thePrim.Properties != null)
+            {
+                String s = thePrim.Properties.Name;
+                if (s.Length > 8) return s;
+                s += " | " + thePrim.Properties.Description;
+                if (s.Length > 8) return s;
+            }
+            return ToString();
+        }
     }
 }

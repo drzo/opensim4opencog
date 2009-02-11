@@ -7,6 +7,7 @@ using System.Reflection;
 using cogbot.Listeners;
 using System.Threading;
 using System.Windows.Forms;
+using cogbot.TheOpenSims.Navigation;
 //Complex outcomes may be a result of simple causes, or they may just be complex by nature. 
 //Those complexities that turn out to have simple causes can be simulated and studied, 
 //thus increasing our knowledge without needing direct observation.
@@ -462,7 +463,7 @@ namespace cogbot.TheOpenSims
         }
 
         float ApproachDistance;
-        public SimObject ApproachTarget;
+        public SimPosition ApproachTarget;
         Thread ApproachThread = null;
 
         public float Approach(SimObject obj, float maxDistance)
@@ -670,7 +671,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public string GetName()
+        public override string GetName()
         {
             return theAvatar.Name;
         }
@@ -870,7 +871,7 @@ namespace cogbot.TheOpenSims
             ClientMovement.SendUpdate();
         }
 
-        internal void SetFollow(SimObject followAvatar)
+        public void SetFollow(SimPosition followAvatar)
         {
             lock (TrackerLoopLock)
             {
