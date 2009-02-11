@@ -5,17 +5,33 @@ using OpenMetaverse;
 
 namespace cogbot.TheOpenSims.Navigation
 {
-    public class SimWaypoint
+    public class SimWaypoint : SimPosition
     {
+
+        public static implicit operator Vector3(SimWaypoint m)
+        {
+            return m.GetSimPosition();
+        }
+        public static implicit operator Vector2(SimWaypoint m)
+        {
+            Vector3 v3 = m.GetSimPosition();
+            return new Vector2(v3.X, v3.Y);
+        }
+        public static implicit operator Vector3d(SimWaypoint m)
+        {
+            Vector3 v3 = m.GetSimPosition();
+            return new Vector3d(v3.X, v3.Y, v3.Z);
+        }
+
         public override string ToString()
         {
-            return ToVector().ToRawString();
+            return GetSimPosition().ToRawString();
         }
         public override bool Equals(object obj)
         {
-            if (obj is SimWaypoint)
+            if (obj is SimPosition)
             {
-                return ToVector() == ((SimWaypoint)obj).ToVector();
+                return GetSimPosition() == ((SimPosition)obj).GetSimPosition();
             }
             if (obj is Vector3)
             {
@@ -29,24 +45,11 @@ namespace cogbot.TheOpenSims.Navigation
             return SimPosition.GetHashCode();
         }
 
-        public List<SimMovement> BeginMovements = new List<SimMovement>();
-        public List<SimMovement> EndMovements = new List<SimMovement>();
+        public List<SimRoute> BeginMovements = new List<SimRoute>();
+        public List<SimRoute> EndMovements = new List<SimRoute>();
         private SimWaypoint(Vector3 firstP)
         {
             SimPosition = RoundPoint(firstP);
-        }
-
-        public static implicit operator Vector3(SimWaypoint m)
-        {
-            return m.ToVector();
-        }
-        public static implicit operator Vector2(SimWaypoint m)
-        {
-            return new Vector2(m.SimPosition.X, m.SimPosition.Y);
-        }
-        public static implicit operator Vector3d(SimWaypoint m)
-        {
-            return new Vector3d(m.SimPosition.X, m.SimPosition.Y,m.SimPosition.Z);
         }
 
         protected Vector3 SimPosition;
@@ -73,19 +76,33 @@ namespace cogbot.TheOpenSims.Navigation
             return wp;
         }
 
-        public Vector3 ToVector()
+        public Vector3 GetSimPosition()
         {
             return SimPosition;
         }
 
-        internal void HasBegin(SimMovement simMovement)
+        internal void HasBegin(SimRoute simMovement)
         {
             BeginMovements.Add(simMovement);
         }
-        internal void HasEnd(SimMovement simMovement)
+        internal void HasEnd(SimRoute simMovement)
         {
             EndMovements.Add(simMovement);
         }
+
+        #region SimPosition Members
+
+        public Vector3 GetUsePosition()
+        {
+            return GetSimPosition();
+        }
+
+        public float GetSizeDistance()
+        {
+            return 0.17f;
+        }
+
+        #endregion
     }
 
     //public class SimMovementPoints : SimMovement

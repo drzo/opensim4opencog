@@ -79,7 +79,7 @@ namespace cogbot.TheOpenSims
         //    return bn.Total() - (Vector3.Distance(TheBot.GetSimPosition(),GetLocation()));
         //}
 
-        public abstract Vector3 GetLocation();
+        public abstract Vector3 GetUsePostion();
 
     }
 
@@ -181,7 +181,7 @@ namespace cogbot.TheOpenSims
             return Target.GetProposedUpdate(TypeUsage.UsageName);
         }
 
-        internal Vector3 GetLocation()
+        public Vector3 GetUsePosition()
         {
             return Target.GetSimPosition();
         }
@@ -281,9 +281,9 @@ namespace cogbot.TheOpenSims
 
     public class BotObjectAction : BotAction
     {
-        public override Vector3 GetLocation()
+        public override Vector3 GetUsePostion()
         {
-            return TargetUse.GetLocation();
+            return TargetUse.GetUsePosition();
         }
 
         public SimObjectUsage TargetUse;
@@ -314,7 +314,7 @@ namespace cogbot.TheOpenSims
 
     public class BotSocialAction : BotAction
     {
-        public override Vector3 GetLocation()
+        public override Vector3 GetUsePostion()
         {
             return Victem.GetSimPosition();
         }
