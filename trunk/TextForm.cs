@@ -79,7 +79,7 @@ namespace cogbot
         public String taskInterperterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
         static List<LoginDetails> accounts = new List<LoginDetails>();
         ///public static ClientManager this = new ClientManager(accounts, false);
-        public static Simian.Simian simulator = new Simian.Simian();
+       // public static Simian.Simian simulator = new Simian.Simian();
 
         public TextForm()
         {
@@ -148,10 +148,13 @@ namespace cogbot
 
             //Client.Network.RegisterCallback(PacketType.AvatarAppearance, new NetworkManager.PacketCallback(AvatarAppearanceHandler));
             //Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(AlertMessageHandler));
-            if (config.startupLisp.Length > 1)
+            new Thread(new ThreadStart(delegate()
             {
-                evalLispString("(progn " + config.startupLisp + ")");
-            }
+                if (config.startupLisp.Length > 1)
+                {
+                    evalLispString("(progn " + config.startupLisp + ")");
+                }
+            })).Start();
         }
 
         private LoginDetails GetDetailsFromConfig(Configuration config)

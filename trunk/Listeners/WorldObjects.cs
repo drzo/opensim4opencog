@@ -120,6 +120,7 @@ namespace cogbot.Listeners
                 }
             SimAvatar obj0 = new SimAvatar(prim, this);
             obj0.SetClient(client);
+            LocalIdToSimObject[prim.LocalID] = obj0;
             lock (SimAvatars) SimAvatars.AddTo(obj0);
             lock (SimObjects) SimObjects.AddTo(obj0);
             return obj0;
@@ -198,6 +199,17 @@ namespace cogbot.Listeners
             }
         }
 
+
+        public override void Assets_OnXferReceived(XferDownload xfer)
+        {
+            RegisterUUID(xfer.ID, xfer);
+        }
+
+        public override void Assets_OnAssetReceived(AssetDownload transfer, Asset asset)
+        {
+            RegisterUUID(transfer.ID, transfer);
+            RegisterUUID(asset.AssetID, asset);
+        }
         /*
         On-Image-Received
              image: "{OpenMetaverse.ImageDownload,PacketCount=33,Codec=J2C,NotFound=False,Simulator=OpenSim Test (71.197.210.170:9000),PacketsSeen=System.Collections.Generic.SortedList`2[System.UInt16,System.UInt16],ImageType=Normal,DiscardLevel=-1,Priority=1013000,ID=728dd7fa-a688-432d-a4f7-4263b1f97395,Size=33345,AssetData=System.Byte[],Transferred=33345,Success=True,AssetType=Texture}"
@@ -1020,7 +1032,7 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
         private Asset GetAsset(UUID id)
         {
             Asset asset;
-           IAssetProvider assetProvider =  TextForm.simulator.Assets;
+            IAssetProvider assetProvider = null;// TextForm.simulator.Assets;
            if (assetProvider == null)
            {
                Console.WriteLine("Asset Provider still offline for " + id);
@@ -1243,14 +1255,15 @@ folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
                 return true;
             }
             bool retVal = false;
-            int num = 0;
+        
             TheSimAvatar.SortByDistance(matches);
             if (pickNum != 0 && pickNum <= matches.Count)
             {
-                prim = matches[(int)pickNum].thePrim;
+                prim = matches[(int)pickNum-1].thePrim;
                 return true;
             }
             output("Found " + matches.Count + " matches: ");
+            int num = 0;
             foreach (SimObject obj in matches)
             {
                 num++;
