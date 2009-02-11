@@ -91,12 +91,14 @@ namespace cogbot.TheOpenSims.Navigation
 
         private SimRoute FindArc(SimWaypoint s, SimWaypoint e)
         {
-            foreach (SimRoute sr in SimRoutes)
+            for (int i = SimRoutes.Count; i != 0; )
             {
-                if (sr.IsSame(s,e))
+                SimRoute sr = SimRoutes[--i];
+                if (sr.IsSame(s, e))
                 {
                     return sr;
                 }                
+
             }
             return null;
         }
