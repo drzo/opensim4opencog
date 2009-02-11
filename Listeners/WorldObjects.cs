@@ -57,7 +57,7 @@ namespace cogbot.Listeners
         }
 
         static public ListAsSet<SimAvatar> SimAvatars = new ListAsSet<SimAvatar>();
-        static public SimPathStore SimPaths = new SimPathStore("millspec.paths");
+        static public SimPathStore SimPaths = SimPathStore.Instance;
         internal static void AddTracking(SimAvatar simAvatar, BotClient Client)
         {
             //  Client.Objects.OnObjectUpdated += Objects_OnObjectUpdated;
