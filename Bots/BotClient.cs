@@ -35,12 +35,12 @@ namespace cogbot
         int LoginRetries = 1; // for the times we are "already logged in"
         public void Login()
         {
-            if (TextForm.simulator.periscopeClient == null)
-            {
-                TextForm.simulator.periscopeClient = this;
-                TextForm.simulator.Start();
-                Settings.LOG_LEVEL = Helpers.LogLevel.Info;
-            }
+            //if (TextForm.simulator.periscopeClient == null)
+            //{
+            //    TextForm.simulator.periscopeClient = this;
+            //    TextForm.simulator.Start();
+            //    Settings.LOG_LEVEL = Helpers.LogLevel.Info;
+            //}
             Network.Login(BotLoginParams.FirstName, BotLoginParams.LastName, BotLoginParams.Password, "OnRez", "UNR");
         }
 
@@ -123,14 +123,14 @@ namespace cogbot
 
             Settings.LOG_LEVEL = Helpers.LogLevel.Info;
             Settings.LOG_RESENDS = false;
-            Settings.STORE_LAND_PATCHES = true;
             Settings.ALWAYS_DECODE_OBJECTS = true;
             Settings.ALWAYS_REQUEST_OBJECTS = true;
             Settings.SEND_AGENT_UPDATES = true;
-            Settings.USE_TEXTURE_CACHE = true;
             Settings.OBJECT_TRACKING = true;
-            Settings.PARCEL_TRACKING = true;
-            Settings.FETCH_MISSING_INVENTORY = true;
+            //Settings.STORE_LAND_PATCHES = true;
+            //Settings.USE_TEXTURE_CACHE = true;
+            //Settings.PARCEL_TRACKING = true;
+            //Settings.FETCH_MISSING_INVENTORY = true;
 			// Optimize the throttle
             Throttle.Wind = 0;
             Throttle.Cloud = 0;

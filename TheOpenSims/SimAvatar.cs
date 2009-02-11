@@ -112,7 +112,7 @@ namespace cogbot.TheOpenSims
             return ClientSelf.AgentID == theAvatar.ID || ClientSelf.LocalID == theAvatar.LocalID;
         }
 
-     
+
         public override string DebugInfo()
         {
             String s = ToString();
@@ -203,7 +203,7 @@ namespace cogbot.TheOpenSims
                 CurrentNeeds.AddFrom(SimTypeSystem.GetObjectType("OnMinuteTimer").GetUsageActual("OnMinuteTimer"));
                 CurrentNeeds.SetRange(0.0F, 100.0F);
                 Thread.Sleep(60000); // one minute
-               // Debug(CurrentNeeds.ToString());
+                // Debug(CurrentNeeds.ToString());
             }
         }
 
@@ -331,7 +331,7 @@ namespace cogbot.TheOpenSims
                     }
 
                 }
-            }           
+            }
             return acts;
         }
 
@@ -381,11 +381,11 @@ namespace cogbot.TheOpenSims
 
         public SimObject GetNextInterestingObject()
         {
-            SimObject mostInteresting = null;     
+            SimObject mostInteresting = null;
             if (InterestingObjects.Count < 2)
             {
-               InterestingObjects = GetKnownObjects();
-               InterestingObjects.Remove(this);
+                InterestingObjects = GetKnownObjects();
+                InterestingObjects.Remove(this);
             }
             int count = InterestingObjects.Count - 2;
             foreach (BotMentalAspect cAspect in InterestingObjects)
@@ -462,7 +462,7 @@ namespace cogbot.TheOpenSims
         }
 
         float ApproachDistance;
-        SimObject ApproachTarget;
+        public SimObject ApproachTarget;
         Thread ApproachThread = null;
 
         public float Approach(SimObject obj, float maxDistance)
@@ -471,28 +471,20 @@ namespace cogbot.TheOpenSims
             // stand up first
             SimObject UnPhantom = StandUp();
             // make sure it not going somewhere
-            StopMoving();
             // set the new target
-            ApproachTarget = obj;
-            ApproachDistance = obj.GetSizeDistance() + maxDistance;
 
             Vector3 vector3 = obj.GetUsePosition();
             string str = "Approaching " + obj + " " + DistanceVectorString(obj) + " to get " + ApproachDistance;
             Debug(str);
             obj.MakeEnterable();
-
-
-            if (ApproachThread == null || !ApproachThread.IsAlive)
-            {
-                ApproachThread = new Thread(TrackerLoop);
-                ApproachThread.Name = str;
-                ApproachThread.Start();
-            }
+            SetFollow(obj);
+            //ApproachDistance = obj.GetSizeDistance() +maxDistance;
             // 16 seconds of travel permitted
             for (int i = 0; i < 15; i++)
             {
-     
-                if (Distance(obj)>ApproachDistance) {
+
+                if (Distance(obj) > ApproachDistance)
+                {
                     Thread.Sleep(1000);
                     continue;
                 }
@@ -502,12 +494,12 @@ namespace cogbot.TheOpenSims
                 }
             }
 
-           // StopMoving();
-            if (UnPhantom != null)            
+            // StopMoving();
+            if (UnPhantom != null)
                 UnPhantom.RestoreEnterable();
             AgentManager.AgentMovement ClientMovement = Client.Self.Movement;
             ClientMovement.TurnToward(obj.GetUsePosition());
-            return Distance(obj);            
+            return Distance(obj);
         }
 
         public SimObject StandUp()
@@ -699,19 +691,22 @@ namespace cogbot.TheOpenSims
 
         public SimObject FindSimObject(SimObjectType pUse)
         {
-           IList<SimObject> objects = GetKnownObjects();
-           foreach (SimObject obj in objects)
-           {
-               if (obj.IsTypeOf(pUse)!=null) return obj;
-           }
-           return null;
+            IList<SimObject> objects = GetKnownObjects();
+            foreach (SimObject obj in objects)
+            {
+                if (obj.IsTypeOf(pUse) != null) return obj;
+            }
+            return null;
         }
 
         public override bool Matches(string name)
         {
-            return SimTypeSystem.MatchString(base.ToString(), name) 
+            return SimTypeSystem.MatchString(base.ToString(), name)
                 || SimTypeSystem.MatchString(ToString(), name);
         }
+
+
+        object TrackerLoopLock = new object();
 
         void TrackerLoop()
         {
@@ -724,8 +719,10 @@ namespace cogbot.TheOpenSims
                 Boolean justStopped = false;
                 while (true)
                 {
+                    lock (TrackerLoopLock)
                     if (ApproachTarget != null)
                     {
+                        ApproachDistance = ApproachTarget.GetSizeDistance();
                         Vector3 targetPosition = new Vector3(ApproachTarget.GetSimPosition());
                         float ZDist = Math.Abs(targetPosition.Z - ClientSelf.SimPosition.Z);
                         targetPosition.Z = GetSimPosition().Z;
@@ -736,7 +733,7 @@ namespace cogbot.TheOpenSims
                             {
                                 if (!StartedFlying)
                                 {
-                                   // ClientSelf.Fly(true);                                 
+                                    // ClientSelf.Fly(true);                                 
                                     StartedFlying = true;
                                 }
                             }
@@ -752,7 +749,7 @@ namespace cogbot.TheOpenSims
 
                         if (StartedFlying)
                         {
-                            targetPosition.Z = ApproachTarget.GetSimPosition().Z;
+                            // targetPosition.Z = ApproachTarget.GetSimPosition().Z;
                         }
                         float curDist = Vector3.Distance(ClientSelf.SimPosition, targetPosition);
                         if (curDist > ApproachDistance)
@@ -796,7 +793,7 @@ namespace cogbot.TheOpenSims
                                 ClientMovement.Stop = true;
                                 ClientMovement.SendUpdate(false);
                                 Thread.Sleep(25);
-                               // WorldSystem.TheSimAvatar.StopMoving();
+                                // WorldSystem.TheSimAvatar.StopMoving();
                                 justStopped = false;
                             }
                             else
@@ -819,7 +816,7 @@ namespace cogbot.TheOpenSims
             {
                 try
                 {
-                   // WorldSystem.TheSimAvatar.StopMoving();
+                    // WorldSystem.TheSimAvatar.StopMoving();
                 }
                 catch (Exception e) { }
             }
@@ -827,7 +824,10 @@ namespace cogbot.TheOpenSims
 
         internal void StopMoving()
         {
-            ApproachTarget = null;
+            lock (TrackerLoopLock)
+            {
+                ApproachTarget = null;
+            }
             AgentManager ClientSelf = Client.Self;
             ClientSelf.AutoPilotCancel();
             AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
@@ -867,7 +867,25 @@ namespace cogbot.TheOpenSims
             ClientMovement.YawNeg = false;
             ClientMovement.YawPos = false;
 
-            ClientMovement.SendUpdate();    
+            ClientMovement.SendUpdate();
+        }
+
+        internal void SetFollow(SimObject followAvatar)
+        {
+            lock (TrackerLoopLock)
+            {
+                if (followAvatar != ApproachTarget)
+                {
+                    StopMoving();
+                }
+                if (ApproachThread == null)
+                {
+                    ApproachThread = new Thread(TrackerLoop);
+                    ApproachThread.Name = "SetFollow: " + ApproachTarget;
+                    ApproachThread.Start();
+                }
+                ApproachTarget = followAvatar;
+            }
         }
     }
 

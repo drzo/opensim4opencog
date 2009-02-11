@@ -21,7 +21,8 @@ namespace cogbot.TheOpenSims.Navigation
             }
             else
             {
-                SimMovement move = TrackedAgents[agentID].Update(point, rotation);
+                PrimTracker tracker = TrackedAgents[agentID];
+                SimMovement move = tracker.Update(point, rotation);
                 if (move != null) Movements.Add(move);
             }
         }
@@ -147,7 +148,7 @@ namespace cogbot.TheOpenSims.Navigation
 
     public class PrimTracker
     {
-        protected float MovedAllot = 4.0f;
+        protected float MovedAllot = 2.0f;
         SimWaypoint WayPoint;
         Quaternion Orientation;
         public PrimTracker(SimWaypoint firstP, Quaternion firtsR)
@@ -158,6 +159,18 @@ namespace cogbot.TheOpenSims.Navigation
 
         public SimMovement Update(Vector3 point3, Quaternion rotation)
         {
+            float dist = Vector3.Distance(WayPoint, point3) ;
+            if (dist > MovedAllot * 2)
+            {
+                WayPoint = SimWaypoint.Create(point3);
+                return null;
+            }
+            if (dist > MovedAllot)
+            {
+                SimWaypoint point = SimWaypoint.Create(point3);
+                return MakeMovement(point);
+            }
+
             if (RotationDiffernt(rotation, Orientation))
             {
                 SimWaypoint point = SimWaypoint.Create(point3);
@@ -168,11 +181,7 @@ namespace cogbot.TheOpenSims.Navigation
                 }
                 return move;
             }
-            if (Vector3.Distance(WayPoint, point3) > MovedAllot)
-            {
-                SimWaypoint point = SimWaypoint.Create(point3);
-                return MakeMovement(point);
-            }
+
             return null;
         }
 

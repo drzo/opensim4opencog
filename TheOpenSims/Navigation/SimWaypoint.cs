@@ -7,6 +7,10 @@ namespace cogbot.TheOpenSims.Navigation
 {
     public class SimWaypoint
     {
+        public override string ToString()
+        {
+            return ToVector().ToRawString();
+        }
         public override bool Equals(object obj)
         {
             if (obj is SimWaypoint)
