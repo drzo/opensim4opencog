@@ -57,8 +57,28 @@ namespace cogbot.TheOpenSims
 
             }
         }
-    
-        public float Distance(SimObject prim)
+
+        public SimWaypoint GetWaypoint()
+        {
+            Vector3 v3 = GetSimPosition();
+            SimWaypoint swp = WorldSystem.SimPaths.CreateClosestWaypoint(v3);
+            float dist = Vector3.Distance(v3, swp.GetSimPosition());
+            if (dist > GetSizeDistance())
+            {
+               WorldSystem.output("CreateClosestWaypoint: " +v3+ " <- " + dist + " -> " + swp + " " + this );
+            }
+            return swp;
+//            return WorldSystem.SimPaths.CreateClosestWaypointBox(v3, 4f);
+        }
+
+        public SimRoute[] GetRouteList(SimWaypoint from, out bool IsFake)
+        {
+            SimWaypoint to = GetWaypoint();
+            return WorldSystem.SimPaths.GetRoute(from, to, out IsFake);
+        }
+
+
+        public float Distance(SimPosition prim)
         {
             if (!prim.CanGetSimPosition()) return 1300;
             if (!CanGetSimPosition()) return 1300;

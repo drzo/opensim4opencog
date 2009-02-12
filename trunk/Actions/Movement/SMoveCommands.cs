@@ -5,11 +5,68 @@ using OpenMetaverse;
 using cogbot.TheOpenSims.Navigation;
 using cogbot.TheOpenSims;
 using System.Windows.Forms;
+using cogbot.TheOpenSims.Navigation.Debug;
 
 namespace cogbot.Actions.Movement
 {
     class SMoveCommands
     {
+    }
+    class srdebug : cogbot.Actions.Command
+    {
+        public srdebug(BotClient client)
+        {
+            Name = GetType().Name;
+            Description = "Starts the waypoint debuger";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            GraphFormer gf = new GraphFormer(SimPathStore.Instance);
+            gf.Reactivate();
+            return "ran srdebug";
+        }
+    }
+
+    class srpath : cogbot.Actions.Command
+    {
+        public srpath(BotClient client)
+        {
+            Name = GetType().Name;
+            Description = "Starts the waypoint debuger";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            int argsused;
+            Vector3 v3 = WorldSystem.GetVector(args,out argsused);
+            float dist;
+            SimWaypoint wp = SimPathStore.Instance.ClosestNode(v3.X, v3.Y, v3.Z,out dist, true);
+            return "v3="+ v3 + " wp="+wp.ToString();
+        }
+    }
+
+    class srg : cogbot.Actions.Command
+    {
+        public srg(BotClient client)
+        {
+            Name = GetType().Name;
+            Description = "Starts the waypoint debuger";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            Primitive prim;
+            if (WorldSystem.tryGetPrim(String.Join(" ",args), out prim))
+            {
+                SimObject simObject = WorldSystem.GetSimObject(prim);
+                WorldSystem.TheSimAvatar.GotoTarget(simObject);
+            }
+            return "srg Done.";
+        }
     }
     class gto : cogbot.Actions.Command
     {
@@ -83,7 +140,7 @@ namespace cogbot.Actions.Movement
                 Vector2 cp = new Vector2(Client.Self.SimPosition.X, Client.Self.SimPosition.Y);
                 float d = Vector2.Distance(v2, cp);
                 float dl = d;
-                bool autoOff = true;
+                bool autoOff = false;
                 while (d > p)
                 {
                     if (autoOff)

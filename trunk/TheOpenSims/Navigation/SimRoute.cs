@@ -1,3 +1,14 @@
+// Copyleft 2009 Douglas R. Miles (Daxtron Labs) - <dmiles@daxtron.com>
+// Copyright 2003 Eric Marchesin - <eric.marchesin@laposte.net>
+//
+// This source file(s) may be redistributed by any means PROVIDING they
+// are not sold for profit without the authors expressed written consent,
+// and providing that this notice and the authors name and all copyright
+// notices remain intact.
+// THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED. USE IT AT YOUR OWN RISK. THE AUTHOR ACCEPTS NO
+// LIABILITY FOR ANY DATA DAMAGE/LOSS THAT THIS PRODUCT MAY CAUSE.
+//-----------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -63,7 +74,10 @@ namespace cogbot.TheOpenSims.Navigation
             set
             {
                 if (value == null) throw new ArgumentNullException("EndNode");
-                if (StartNode != null && value.Equals(StartNode)) throw new ArgumentException("StartNode and EndNode must be different");
+                if (StartNode != null && value.Equals(StartNode))
+                {
+                    throw new ArgumentException("StartNode and EndNode must be different");
+                }
                 if (_EndNode != null) _EndNode.IncomingArcs.Remove(this);
                 _EndNode = value;
                 _EndNode.IncomingArcs.Add(this);
@@ -130,7 +144,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// </summary>
         virtual public float Cost
         {
-            get { return Weight * Length; }
+            get { return Weight /* * Length*/ ; }
         }
 
         /// <summary>
@@ -163,22 +177,22 @@ namespace cogbot.TheOpenSims.Navigation
         /// <returns>HashCode value.</returns>
         public override int GetHashCode() { return (int)Length; }
 
-        public static SimRoute PointsToMovement(List<Vector3> list, float fudge)
-        {
-            SimRoute moveNow = new SimRoute(list[0], list[1]);
-            if (list.Count > 2)
-            {
-                Vector3 Last = list[1];
-                int listIndex = 2;
-                while (listIndex < list.Count)
-                {
-                    if (Vector3.Distance(Last, list[listIndex]) > fudge)
-                        moveNow = moveNow.AppendPoint(list[listIndex], fudge);
-                    Last = list[listIndex++];
-                }
-            }
-            return moveNow;
-        }
+        //public static SimRoute PointsToMovement(List<Vector3> list, float fudge)
+        //{
+        //    SimRoute moveNow = new SimRoute(list[0], list[1]);
+        //    if (list.Count > 2)
+        //    {
+        //        Vector3 Last = list[1];
+        //        int listIndex = 2;
+        //        while (listIndex < list.Count)
+        //        {
+        //            if (Vector3.Distance(Last, list[listIndex]) > fudge)
+        //                moveNow = moveNow.AppendPoint(list[listIndex], fudge);
+        //            Last = list[listIndex++];
+        //        }
+        //    }
+        //    return moveNow;
+        //}
 
         bool MustFly = false;
         bool MustCrouch = false;
@@ -216,13 +230,16 @@ namespace cogbot.TheOpenSims.Navigation
             if (simMovement.MustFly) movement.MustFly = simMovement.MustFly;
             if (simMovement.IsBlocked) movement.IsBlocked = simMovement.IsBlocked;
             if (simMovement.IsOneDirrection) movement.IsOneDirrection = simMovement.IsOneDirrection;
+            movement.Weight = simMovement.Weight;
+            movement._Length = simMovement._Length;
+            movement.LengthUpdated = simMovement.LengthUpdated;
             return movement;
         }
 
-        public SimRoute(String s)
-        {
-            FromFileString(s);
-        }
+        //public SimRoute(String s)
+        //{
+        //    FromFileString(s);
+        //}
 
         public SimRoute(Vector3 from, Vector3 to)
             : this(SimWaypoint.Create(from), SimWaypoint.Create(to))
@@ -231,8 +248,9 @@ namespace cogbot.TheOpenSims.Navigation
 
         public virtual SimRoute Reverse()
         {
-            SimRoute movement = new SimRoute(EndNode, StartNode);
+            SimRoute movement = SimPathStore.Instance.InternArc(EndNode, StartNode,Weight);
             SimRoute.CopyProperties(this, movement);
+            //movement.Cost = Cost;
             return movement;
         }
 
@@ -418,6 +436,11 @@ namespace cogbot.TheOpenSims.Navigation
         internal bool IsSame(SimWaypoint s, SimWaypoint e)
         {
             return s == StartNode && e == EndNode;
+        }
+
+        internal void ReWeigth(float p)
+        {
+            Weight = Weight * p;
         }
     }
 
