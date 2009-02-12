@@ -92,6 +92,7 @@ namespace cogbot.TheOpenSims.Navigation
             if (wp == null)
             {
                 wp = SimWaypoint.Create(x, y, SimZ);
+                AddNode(wp);
                 saved[x, y] = wp;
             }
             return wp;
@@ -123,7 +124,7 @@ namespace cogbot.TheOpenSims.Navigation
         }
         private SimRoute FindArc(SimWaypoint s, SimWaypoint e)
         {
-            for (int i = SimRoutes.Count; i != 0; )
+            lock (SimRoutes) for (int i = SimRoutes.Count; i != 0; )
             {
                 SimRoute sr = SimRoutes[--i];
                 if (sr.IsSame(s, e))
@@ -136,7 +137,7 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
         public SimRoute[] GetRoute(SimWaypoint StartNode, SimWaypoint EndNode, out bool IsFake)
-        {
+        {          
             SimMovement AS = new SimMovement(this);
             AS.Initialize(StartNode, EndNode);
             while (AS.NextStep()) { }
@@ -149,6 +150,7 @@ namespace cogbot.TheOpenSims.Navigation
             // Partial Path
             IsFake = true;
             SimRoute fr = null;
+             //AS.Open.Length, AS.Closed.Length, AS.StepCounter
             SimRoute[] PathByArcs = AS.PathByArcs;
             if (PathByArcs==null || PathByArcs.Length == 0)
             {
@@ -473,7 +475,7 @@ namespace cogbot.TheOpenSims.Navigation
           //  return;
             if (!TrackedAgents.ContainsKey(agentID))
             {
-                TrackedAgents[agentID] = new PrimTracker(SimWaypoint.Create(point), rotation);
+                TrackedAgents[agentID] = new PrimTracker(SimWaypoint.Create(point), rotation,this);
             }
             else
             {
@@ -603,11 +605,11 @@ namespace cogbot.TheOpenSims.Navigation
         //}
 
 
-        internal static void EnsureKnown(SimWaypoint wp)
-        {
-            if (Instance.SimWaypoints.Contains(wp)) return;
-            Instance.SimWaypointsAdd(wp);
-        }
+        //internal static void EnsureKnown(SimWaypoint wp)
+        //{
+        //    if (Instance.SimWaypoints.Contains(wp)) return;
+        //    Instance.SimWaypointsAdd(wp);
+        //}
 
         internal bool SaveFile(string filename)
         {
@@ -646,15 +648,14 @@ namespace cogbot.TheOpenSims.Navigation
         public SimWaypoint CreateClosestWaypoint(Vector3 v3)
         {
             float Dist;
-            SimWaypoint  node = ClosestNode(v3.X, v3.Y, v3.Z, out Dist, false);
-            if (Dist < 2f)
+            SimWaypoint Closest = ClosestNode(v3.X, v3.Y, v3.Z, out Dist, true);
+            SimWaypoint V3Waypoint = SimWaypoint.Create(v3);
+            if (Closest != V3Waypoint)
             {
-                return node;
+                AddNode(V3Waypoint);
+                Intern2Arc(V3Waypoint, Closest, 1.2f);
             }
-            SimWaypoint thisWP = SimWaypoint.Create(v3);
-            Intern2Arc(thisWP, node, 1.2f);
-            //thisWP.Passable = false;
-            return thisWP;
+            return V3Waypoint;
         }
 
         readonly static  Vector3 N = new Vector3(new Vector3(0,-1,0));
@@ -707,9 +708,11 @@ namespace cogbot.TheOpenSims.Navigation
         protected float MovedAllot = 2.0f;
         SimWaypoint WayPoint;
         Quaternion Orientation;
-        public PrimTracker(SimPosition firstP, Quaternion firtsR)
+        SimPathStore Store;
+        public PrimTracker(SimPosition firstP, Quaternion firtsR, SimPathStore store)
         {
             WayPoint = SimWaypoint.Create(firstP.GetSimPosition());
+            Store = store;
             Orientation = firtsR;
         }
 
@@ -746,7 +749,9 @@ namespace cogbot.TheOpenSims.Navigation
             if (Vector3.Distance(WayPoint.GetSimPosition(), point.GetSimPosition()) > MovedAllot / 3)
             {
                 Console.WriteLine("WAYPOINT " + WayPoint + " -> " + point);
-                SimRoute move = SimPathStore.Instance.Intern2Arc(point, WayPoint,0.5f); //Cheap
+                Store.AddNode(point);
+                Store.AddNode(WayPoint);
+                SimRoute move = SimPathStore.Instance.Intern2Arc(point, WayPoint, 0.5f); //Cheap
                 WayPoint = point;
                 return move;
             }

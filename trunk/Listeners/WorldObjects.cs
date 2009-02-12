@@ -48,7 +48,8 @@ namespace cogbot.Listeners
             {
                 if (m_TheSimAvatar == null)
                 {
-                    m_TheSimAvatar = GetSimAvatar(GetAvatar(client.Self.AgentID));
+                    m_TheSimAvatar = (SimAvatar)GetSimObject(GetAvatar(client.Self.AgentID));
+                    m_TheSimAvatar.SetClient(client);
                 }
                 return m_TheSimAvatar;
             }
@@ -78,7 +79,7 @@ namespace cogbot.Listeners
         {
             simulator.ObjectsAvatars.ForEach(delegate(Avatar item)
             {
-                GetSimAvatar(item);
+                GetSimObject(item);
             });
             simulator.ObjectsPrimitives.ForEach(delegate(Primitive item)
             {
@@ -92,10 +93,6 @@ namespace cogbot.Listeners
 
         public SimObject GetSimObject(Primitive prim)
         {
-            if (prim is Avatar)
-            {
-                return GetSimAvatar((Avatar)prim);
-            }
             SimObject obj0;
             lock (LocalIdToSimObject)
             {
@@ -105,8 +102,14 @@ namespace cogbot.Listeners
                 }
 
                 // not found
-
-                obj0 = new SimObject(prim.ToString(), prim, this);
+                if (prim is Avatar)
+                {
+                    obj0 = new SimAvatar((Avatar)prim, this);
+                }
+                else
+                {
+                    obj0 = new SimObject(prim, this);
+                }
                 LocalIdToSimObject[prim.LocalID] = obj0;
                 lock (SimObjects) SimObjects.AddTo(obj0);
 
@@ -114,20 +117,20 @@ namespace cogbot.Listeners
             }
         }
 
-        public SimAvatar GetSimAvatar(Avatar prim)
-        {
-            lock (SimAvatars) foreach (SimAvatar obj in SimAvatars)
-                {
-                    if (obj.theAvatar.Name == prim.Name)
-                        return obj;
-                }
-            SimAvatar obj0 = new SimAvatar(prim, this);
-            obj0.SetClient(client);
-            LocalIdToSimObject[prim.LocalID] = obj0;
-            lock (SimAvatars) SimAvatars.AddTo(obj0);
-            lock (SimObjects) SimObjects.AddTo(obj0);
-            return obj0;
-        }
+        //public SimAvatar GetSimAvatar(Avatar prim)
+        //{
+        //    lock (SimAvatars) foreach (SimAvatar obj in SimAvatars)
+        //        {
+        //            if (obj.theAvatar.Name == prim.Name)
+        //                return obj;
+        //        }
+        //    SimAvatar obj0 = new SimAvatar(prim, this);
+        //    obj0.SetClient(client);
+        //    LocalIdToSimObject[prim.LocalID] = obj0;
+        //    lock (SimAvatars) SimAvatars.AddTo(obj0);
+        //    lock (SimObjects) SimObjects.AddTo(obj0);
+        //    return obj0;
+        //}
 
 
         public WorldObjects(BotClient client)
@@ -514,7 +517,7 @@ namespace cogbot.Listeners
         private void Objects_OnNewAvatar1(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
         {
             //lock (prims)
-            GetSimAvatar(avatar);
+            //GetSimAvatar(avatar);
             // prims.Add(avatar.LocalID, avatar.ID, avatar);
             //lock (prims)  prims.Add(avatar.LocalID, avatar.ID, avatar);
             Objects_OnNewPrim(simulator, avatar, regionHandle, timeDilation);
@@ -626,7 +629,7 @@ namespace cogbot.Listeners
                     objectUpdated = prim;
                     lock (prim)
                     {
-                        SimAvatar simAvatar = GetSimAvatar((Avatar)prim);
+                        SimObject simAvatar = GetSimObject(prim);
                         SimPaths.Update(update.LocalID, simAvatar.GetSimPosition(), update.Rotation);
 
                         // output("Updating state for Avatar " + prim.Name);
@@ -1749,10 +1752,10 @@ namespace cogbot.Listeners
         }
 
 
-        internal Vector3 GetVector(string[] args, out int argsUsed)
+        internal SimPosition GetVector(string[] args, out int argsUsed)
         {
             argsUsed = 0;
-            if (args.Length == 0) return client.Self.SimPosition;
+            if (args.Length == 0) return TheSimAvatar;
             if (args.Length >= 2)
             {
                 Vector3 target;
@@ -1766,31 +1769,28 @@ namespace cogbot.Listeners
                         Single.TryParse(args[2], out target.Z);
                         argsUsed = 3;
                     }
-                    return target;
+                    return SimWaypoint.Create(target);
                 }
             }
-            else
+            int consume = args.Length;
+            while (consume > 0)
             {
-                int consume = args.Length;
-                while (consume > 0)
+                string s = String.Join(" ", args, 0, consume);
+                Primitive prim;
+
+
+                if (tryGetPrim(s, out prim))
                 {
-                    string s = String.Join(" ", args, 0, consume);
-                    Primitive prim;
-
-
-                    if (tryGetPrim(s, out prim))
+                    SimObject simObject = GetSimObject(prim);
+                    if (simObject.CanGetSimPosition())
                     {
-                        SimObject simObject = GetSimObject(prim);
-                        if (simObject.CanGetSimPosition())
-                        {
-                            argsUsed = consume;
-                            return simObject.GetSimPosition();
-                        }
+                        argsUsed = consume;
+                        return simObject;
                     }
-                    consume--;
                 }
+                consume--;
             }
-            return default(Vector3);
+            return null;
         }
     }
 }

@@ -69,8 +69,9 @@ namespace cogbot.TheOpenSims
 
 
         public SimAvatar(Avatar slAvatar, WorldObjects objectSystem)
-            : base(slAvatar.Name, slAvatar, objectSystem)
+            : base(slAvatar, objectSystem)
         {
+            WorldObjects.SimAvatars.Add(this);
             ObjectType.SuperType.Add(SimTypeSystem.GetObjectType("Avatar"));
             CurrentNeeds = new BotNeeds(90.0F);
             AspectName = slAvatar.Name;

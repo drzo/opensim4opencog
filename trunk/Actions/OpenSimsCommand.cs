@@ -105,15 +105,7 @@ namespace cogbot.Actions
 
         private SimAvatar GetSimAvatar()
         {
-            if (Client.Network.CurrentSim == null)
-            {
-                Client.Network.CurrentSim = Client.Network.Simulators[0];
-            }
-            WorldObjects BRM = Client.WorldSystem;
-            Avatar self = Client.WorldSystem.GetAvatar(Client.Self.AgentID);
-            SimAvatar avatar = BRM.GetSimAvatar(self);
-            avatar.SetClient(Client);
-            return avatar;
+            return WorldSystem.TheSimAvatar;
 
         }
 
