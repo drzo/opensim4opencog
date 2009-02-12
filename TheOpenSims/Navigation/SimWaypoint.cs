@@ -13,6 +13,17 @@ namespace cogbot.TheOpenSims.Navigation
     [Serializable]
     public class SimWaypoint : SimPosition
     {
+        public SimWaypoint GetWaypoint()
+        {
+            return this;
+        }
+
+
+        public bool CanGetSimPosition()
+        {
+            return true;
+        }
+         
         Vector3 _Position;
         bool _Passable;
         ArrayList _IncomingArcs, _OutgoingArcs;
@@ -208,7 +219,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// Returns the textual description of the node.
         /// </summary>
         /// <returns>String describing this node.</returns>
-        public override string ToString() { return Position.ToRawString(); }
+        public override string ToString() { return "(" + Position.ToRawString() + ")"; }
 
         /// <summary>
         /// Object.Equals override.
@@ -375,8 +386,8 @@ namespace cogbot.TheOpenSims.Navigation
         public static Vector3 RoundPoint(Vector3 point)
         {
             Vector3 vect3 = new Vector3(point);
-            vect3.X = (float)Math.Round(vect3.X, 1);
-            vect3.Y = (float)Math.Round(vect3.Y, 1);
+            vect3.X = (float)Math.Round(vect3.X*5,0)/5;
+            vect3.Y = (float)Math.Round(vect3.Y*5,0)/5;
             vect3.Z = (float)Math.Round(vect3.Z, 0);
             return vect3;
         }
@@ -412,7 +423,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public float GetSizeDistance()
         {
-            return 0.17f;
+            return 1.2f;
         }
 
         #endregion

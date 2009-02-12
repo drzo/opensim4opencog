@@ -1040,7 +1040,7 @@ namespace cogbot
 //            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
             //text = text.Replace("\"", "");
             string verb = text.Split(null)[0];
-            if (Commands.ContainsKey(verb))
+            if (Commands!=null && Commands.ContainsKey(verb))
             {
                 if (text.Length > verb.Length)
                     Commands[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1));

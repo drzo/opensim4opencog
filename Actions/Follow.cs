@@ -35,7 +35,7 @@ namespace cogbot.Actions
                     String str = "" + Client + " start to follow " + followAvatar + ".";
                     WriteLine(str);
                     // The thread that accepts the Client and awaits messages
-                    WorldSystem.TheSimAvatar.SetFollow(followAvatar);
+                    WorldSystem.TheSimAvatar.SetMoveTarget(followAvatar);
                 }
                 else
                 {
@@ -46,7 +46,7 @@ namespace cogbot.Actions
             {
 
 
-                WriteLine("You stop following " + Client.WorldSystem.TheSimAvatar.ApproachTarget + ".");
+                WriteLine("You stop following " + Client.WorldSystem.TheSimAvatar.ApproachPosition + ".");
 
                 WorldSystem.TheSimAvatar.StopMoving();
             }

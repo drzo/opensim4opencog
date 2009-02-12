@@ -1,3 +1,4 @@
+// Copyleft 2009 Douglas R. Miles (Daxtron Labs) - <dmiles@daxtron.com>
 // Copyright 2003 Eric Marchesin - <eric.marchesin@laposte.net>
 //
 // This source file(s) may be redistributed by any means PROVIDING they
@@ -17,91 +18,6 @@ using System.Windows.Forms;
 
 namespace cogbot.TheOpenSims.Navigation
 {
-
-    /// <summary>
-    /// A track is a succession of nodes which have been visited.
-    /// Thus when it leads to the target node, it is easy to return the result path.
-    /// These objects are contained in Open and Closed lists.
-    /// </summary>
-    internal class Track : IComparable
-    {
-        private static SimWaypoint _Target = null;
-        private static float _Coeff = 0.5f;
-        private static cogbot.TheOpenSims.Navigation.SimMovement.Heuristic _ChoosenHeuristic = SimMovement.EuclidianHeuristic;
-
-        public static SimWaypoint Target { set { _Target = value; } get { return _Target; } }
-
-        public SimWaypoint EndNode;
-        public Track Queue;
-
-        public static float DijkstraHeuristicBalance
-        {
-            get { return _Coeff; }
-            set
-            {
-                if (value < 0 || value > 1) throw new ArgumentException(
-  @"The coefficient which balances the respective influences of Dijkstra and the Heuristic must belong to [0; 1].
--> 0 will minimize the number of nodes explored but will not take the real cost into account.
--> 0.5 will minimize the cost without developing more nodes than necessary.
--> 1 will only consider the real cost without estimating the remaining cost.");
-                _Coeff = value;
-            }
-        }
-
-        public static cogbot.TheOpenSims.Navigation.SimMovement.Heuristic ChoosenHeuristic
-        {
-            set { _ChoosenHeuristic = value; }
-            get { return _ChoosenHeuristic; }
-        }
-
-        private int _NbArcsVisited;
-        public int NbArcsVisited { get { return _NbArcsVisited; } }
-
-        private float _Cost;
-        public float Cost { get { return _Cost; } }
-
-        virtual public float Evaluation
-        {
-            get
-            {
-                return _Coeff * _Cost + (1 - _Coeff) * _ChoosenHeuristic(EndNode, _Target);
-            }
-        }
-
-        public bool Succeed { get { return EndNode == _Target; } }
-
-        public Track(SimWaypoint GraphNode)
-        {
-            if (_Target == null) throw new InvalidOperationException("You must specify a target Node for the Track class.");
-            _Cost = 0;
-            _NbArcsVisited = 0;
-            Queue = null;
-            EndNode = GraphNode;
-        }
-
-        public Track(Track PreviousTrack, SimRoute Transition)
-        {
-            if (_Target == null) throw new InvalidOperationException("You must specify a target Node for the Track class.");
-            Queue = PreviousTrack;
-            _Cost = Queue.Cost + Transition.Cost;
-            _NbArcsVisited = Queue._NbArcsVisited + 1;
-            EndNode = Transition.EndNode;
-        }
-
-        public int CompareTo(object Objet)
-        {
-            Track OtherTrack = (Track)Objet;
-            return Evaluation.CompareTo(OtherTrack.Evaluation);
-        }
-
-        public static bool SameEndNode(object O1, object O2)
-        {
-            Track P1 = O1 as Track;
-            Track P2 = O2 as Track;
-            if (P1 == null || P2 == null) throw new ArgumentException("Objects must be of 'Track' type.");
-            return P1.EndNode == P2.EndNode;
-        }
-    }
 
     /// <summary>
     /// Class to search the best path between two nodes on a graph.
@@ -403,6 +319,91 @@ namespace cogbot.TheOpenSims.Navigation
                     Path[i] = Cur.EndNode.Position;
                 return Path;
             }
+        }
+    }
+
+    /// <summary>
+    /// A track is a succession of nodes which have been visited.
+    /// Thus when it leads to the target node, it is easy to return the result path.
+    /// These objects are contained in Open and Closed lists.
+    /// </summary>
+    internal class Track : IComparable
+    {
+        private static SimWaypoint _Target = null;
+        private static float _Coeff = 0.5f;
+        private static cogbot.TheOpenSims.Navigation.SimMovement.Heuristic _ChoosenHeuristic = SimMovement.EuclidianHeuristic;
+
+        public static SimWaypoint Target { set { _Target = value; } get { return _Target; } }
+
+        public SimWaypoint EndNode;
+        public Track Queue;
+
+        public static float DijkstraHeuristicBalance
+        {
+            get { return _Coeff; }
+            set
+            {
+                if (value < 0 || value > 1) throw new ArgumentException(
+  @"The coefficient which balances the respective influences of Dijkstra and the Heuristic must belong to [0; 1].
+-> 0 will minimize the number of nodes explored but will not take the real cost into account.
+-> 0.5 will minimize the cost without developing more nodes than necessary.
+-> 1 will only consider the real cost without estimating the remaining cost.");
+                _Coeff = value;
+            }
+        }
+
+        public static cogbot.TheOpenSims.Navigation.SimMovement.Heuristic ChoosenHeuristic
+        {
+            set { _ChoosenHeuristic = value; }
+            get { return _ChoosenHeuristic; }
+        }
+
+        private int _NbArcsVisited;
+        public int NbArcsVisited { get { return _NbArcsVisited; } }
+
+        private float _Cost;
+        public float Cost { get { return _Cost; } }
+
+        virtual public float Evaluation
+        {
+            get
+            {
+                return _Coeff * _Cost + (1 - _Coeff) * _ChoosenHeuristic(EndNode, _Target);
+            }
+        }
+
+        public bool Succeed { get { return EndNode == _Target; } }
+
+        public Track(SimWaypoint GraphNode)
+        {
+            if (_Target == null) throw new InvalidOperationException("You must specify a target Node for the Track class.");
+            _Cost = 0;
+            _NbArcsVisited = 0;
+            Queue = null;
+            EndNode = GraphNode;
+        }
+
+        public Track(Track PreviousTrack, SimRoute Transition)
+        {
+            if (_Target == null) throw new InvalidOperationException("You must specify a target Node for the Track class.");
+            Queue = PreviousTrack;
+            _Cost = Queue.Cost + Transition.Cost;
+            _NbArcsVisited = Queue._NbArcsVisited + 1;
+            EndNode = Transition.EndNode;
+        }
+
+        public int CompareTo(object Objet)
+        {
+            Track OtherTrack = (Track)Objet;
+            return Evaluation.CompareTo(OtherTrack.Evaluation);
+        }
+
+        public static bool SameEndNode(object O1, object O2)
+        {
+            Track P1 = O1 as Track;
+            Track P2 = O2 as Track;
+            if (P1 == null || P2 == null) throw new ArgumentException("Objects must be of 'Track' type.");
+            return P1.EndNode == P2.EndNode;
         }
     }
 }
