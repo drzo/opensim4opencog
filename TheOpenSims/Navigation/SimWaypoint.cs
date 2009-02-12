@@ -361,20 +361,20 @@ namespace cogbot.TheOpenSims.Navigation
             }
         }
 
-        public static implicit operator Vector3(SimWaypoint m)
-        {
-            return m.GetSimPosition();
-        }
-        public static implicit operator Vector2(SimWaypoint m)
-        {
-            Vector3 v3 = m.GetSimPosition();
-            return new Vector2(v3.X, v3.Y);
-        }
-        public static implicit operator Vector3d(SimWaypoint m)
-        {
-            Vector3 v3 = m.GetSimPosition();
-            return new Vector3d(v3.X, v3.Y, v3.Z);
-        }
+        //public static implicit operator Vector3(SimWaypoint m)
+        //{
+        //    return m.GetSimPosition();
+        //}
+        //public static implicit operator Vector2(SimWaypoint m)
+        //{
+        //    Vector3 v3 = m.GetSimPosition();
+        //    return new Vector2(v3.X, v3.Y);
+        //}
+        //public static implicit operator Vector3d(SimWaypoint m)
+        //{
+        //    Vector3 v3 = m.GetSimPosition();
+        //    return new Vector3d(v3.X, v3.Y, v3.Z);
+        //}
 
         private SimWaypoint(Vector3 firstP)
         {
@@ -405,7 +405,7 @@ namespace cogbot.TheOpenSims.Navigation
             wp._IncomingArcs = new ArrayList();
             wp._OutgoingArcs = new ArrayList();
             InternedPoints[rounded] = wp;
-            SimPathStore.EnsureKnown(wp);
+          //  SimPathStore.EnsureKnown(wp);
             return wp;
         }
 
@@ -427,6 +427,11 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
         #endregion
+
+        internal static float Distance(SimWaypoint wp1, SimWaypoint wp2)
+        {
+            return Vector3.Distance(wp1.GetSimPosition(), wp2.GetSimPosition());
+        }
     }
 
     //public class SimMovementPoints : SimMovement

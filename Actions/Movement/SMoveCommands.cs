@@ -34,19 +34,54 @@ namespace cogbot.Actions.Movement
         public srpath(BotClient client)
         {
             Name = GetType().Name;
-            Description = "Starts the waypoint debuger";
+            Description = "Show the route to the object";
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
             int argsused;
-            Vector3 v3 = WorldSystem.GetVector(args,out argsused);
-            float dist;
-            SimWaypoint wp = SimPathStore.Instance.ClosestNode(v3.X, v3.Y, v3.Z,out dist, true);
-            return "v3="+ v3 + " wp="+wp.ToString();
+            SimPosition v3 = WorldSystem.GetVector(args, out argsused);
+            SimWaypoint wp = v3.GetWaypoint();
+            bool IsFake;
+            SimRoute[] route = WorldSystem.TheSimAvatar.GetRouteList(wp,out IsFake);
+            String s = "v3=" + WorldSystem.TheSimAvatar.DistanceVectorString(v3) + " wp=" + wp.ToString();
+            if (IsFake)
+            {
+                s += "\nIsFake: ";
+            }
+            else
+            {
+                s += "\nComputed ";
+            }
+
+            for (int i = 0; i < route.Length; i++)
+            {
+                s += " \n" + i + ": " + route[i].ToInfoString();
+            }
+            return s;
         }
     }
+
+    class srwp : cogbot.Actions.Command
+    {
+        public srwp(BotClient client)
+        {
+            Name = GetType().Name;
+            Description = "Show the waypoint for object";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            int argsused;
+            SimPosition v3 = WorldSystem.GetVector(args, out argsused);
+            SimWaypoint wp = v3.GetWaypoint();
+
+            return "v3=" + WorldSystem.TheSimAvatar.DistanceVectorString(v3) + " wp=" + wp.ToString();
+        }
+    }
+
 
     class srg : cogbot.Actions.Command
     {

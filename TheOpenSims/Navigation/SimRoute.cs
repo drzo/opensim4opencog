@@ -135,7 +135,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <returns></returns>
         virtual protected float CalculateLength()
         {
-            return Vector3.Distance(_StartNode.Position, _EndNode.Position);
+            return SimWaypoint.Distance(_StartNode, _EndNode);
         }
 
         /// <summary>
@@ -154,7 +154,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <returns>String describing this arc.</returns>
         public override string ToString()
         {
-            return _StartNode.ToString() + "-->" + _EndNode.ToString();
+            return ToFileString();
         }
 
         /// <summary>
@@ -177,16 +177,16 @@ namespace cogbot.TheOpenSims.Navigation
         /// <returns>HashCode value.</returns>
         public override int GetHashCode() { return (int)Length; }
 
-        //public static SimRoute PointsToMovement(List<Vector3> list, float fudge)
+        //public static SimRoute PointsToMovement(List<SimWaypoint> list, float fudge)
         //{
         //    SimRoute moveNow = new SimRoute(list[0], list[1]);
         //    if (list.Count > 2)
         //    {
-        //        Vector3 Last = list[1];
+        //        SimWaypoint Last = list[1];
         //        int listIndex = 2;
         //        while (listIndex < list.Count)
         //        {
-        //            if (Vector3.Distance(Last, list[listIndex]) > fudge)
+        //            if (SimWaypoint.Distance(Last, list[listIndex]) > fudge)
         //                moveNow = moveNow.AppendPoint(list[listIndex], fudge);
         //            Last = list[listIndex++];
         //        }
@@ -209,17 +209,17 @@ namespace cogbot.TheOpenSims.Navigation
             return (SimRouteMovement)CopyProperties(simMovement, (SimRoute)movement);
         }
 
-        public virtual List<Vector3> GetWayPoints(float apart)
+        public virtual List<SimWaypoint> GetWayPoints(float apart)
         {
-            List<Vector3> points = new List<Vector3>();
+            List<SimWaypoint> points = new List<SimWaypoint>();
             float len = Length;
             float way = 0.0f;
             while (way < len)
             {
-                points.Add(GetPointAt(way).GetSimPosition());
+                points.Add(GetPointAt(way));
                 way += apart;
             }
-            points.Add(EndNode.GetSimPosition());
+            points.Add(EndNode);
             return points;
         }
 
@@ -241,10 +241,10 @@ namespace cogbot.TheOpenSims.Navigation
         //    FromFileString(s);
         //}
 
-        public SimRoute(Vector3 from, Vector3 to)
-            : this(SimWaypoint.Create(from), SimWaypoint.Create(to))
-        {
-        }
+        //public SimRoute(Vector3 from, Vector3 to)
+        //    : this(SimWaypoint.Create(from), SimWaypoint.Create(to))
+        //{
+        //}
 
         public virtual SimRoute Reverse()
         {
@@ -268,8 +268,8 @@ namespace cogbot.TheOpenSims.Navigation
             {
                 distlen = len - start;
             }
-            Vector3 First = StartNode.GetSimPosition();
-            Vector3 Last = EndNode.GetSimPosition();
+            SimWaypoint First = StartNode;
+            SimWaypoint Last = EndNode;
             foreach (SimRoute move in GetSegments())
             {
 
@@ -314,7 +314,7 @@ namespace cogbot.TheOpenSims.Navigation
             return new SimRouteMovement(newmoves);
         }
 
-        public virtual Vector3 NextPoint(float start)
+        public virtual SimWaypoint NextPoint(float start)
         {
             return EndNode;
         }
@@ -324,11 +324,11 @@ namespace cogbot.TheOpenSims.Navigation
             List<SimRoute> moves = new List<SimRoute>();
             float len = Length;
             float seglen = len / by;
-            Vector3 beg = StartNode;
+            SimWaypoint beg = StartNode;
             int current = 1;
             while (current < by)
             {
-                Vector3 end = GetPointAt(seglen * current);
+                SimWaypoint end = GetPointAt(seglen * current);
                 SimRoute move = new SimRoute(beg, end);
                 moves.Add(move);
                 beg = end;
@@ -386,17 +386,17 @@ namespace cogbot.TheOpenSims.Navigation
             return new SimRouteMovement(MS);
         }
 
-        public virtual List<Vector3> GetPoints()
+        public virtual List<SimWaypoint> GetPoints()
         {
-            List<Vector3> points = new List<Vector3>();
+            List<SimWaypoint> points = new List<SimWaypoint>();
             points.Add(StartNode);
             points.Add(EndNode);
             return points;
         }
 
-        public virtual SimRoute AppendPoint(Vector3 vector3, float fudge)
+        public virtual SimRoute AppendPoint(SimWaypoint vector3, float fudge)
         {
-            if (Vector3.Distance(EndNode, vector3) < fudge)
+            if (SimWaypoint.Distance(EndNode, vector3) < fudge)
             {
                 return new SimRoute(StartNode, vector3);
             }
@@ -405,7 +405,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public virtual string ToFileString()
         {
-            string s = StartNode.GetSimPosition().ToRawString() + " " + EndNode.GetSimPosition().ToRawString() + " ";
+            string s = StartNode.GetSimPosition().ToRawString() + " -> " + EndNode.GetSimPosition().ToRawString() + " ";
             if (MustAutoPilot) s += " MustAutoPilot";
             if (MustFly) s += " MustFly";
             if (MustCrouch) s += " MustCrouch";
@@ -418,7 +418,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             string[] args = s.Split(null);
             StartNode = SimWaypoint.Create(new Vector3(float.Parse(args[0]), float.Parse(args[1]), float.Parse(args[2])));
-            EndNode = SimWaypoint.Create(new Vector3(float.Parse(args[3]), float.Parse(args[4]), float.Parse(args[5])));
+            EndNode = SimWaypoint.Create(new Vector3(float.Parse(args[4]), float.Parse(args[5]), float.Parse(args[6])));
             if (s.Contains("MustAutoPilot")) MustAutoPilot = true;
             if (s.Contains("MustFly")) MustFly = true;
             if (s.Contains("MustCrouch")) MustCrouch = true;
@@ -426,10 +426,10 @@ namespace cogbot.TheOpenSims.Navigation
             if (s.Contains("IsOneDirrection")) IsOneDirrection = true;
         }
 
-        public virtual bool NearPoint(Vector3 e, float maxDist)
+        public virtual bool NearPoint(SimWaypoint e, float maxDist)
         {
-            if (Vector3.Distance(StartNode, e) < maxDist) return true;
-            if (Vector3.Distance(EndNode, e) < maxDist) return true;
+            if (SimWaypoint.Distance(StartNode, e) < maxDist) return true;
+            if (SimWaypoint.Distance(EndNode, e) < maxDist) return true;
             return false;
         }
 
@@ -442,14 +442,19 @@ namespace cogbot.TheOpenSims.Navigation
         {
             Weight = Weight * p;
         }
+
+        internal string ToInfoString()
+        {
+            return ToFileString();
+        }
     }
 
     public class SimRouteMovement : SimRoute
     {
-        public override bool NearPoint(Vector3 e, float maxDist)
+        public override bool NearPoint(SimWaypoint e, float maxDist)
         {
-            if (Vector3.Distance(StartNode, e) < maxDist) return true;
-            if (Vector3.Distance(EndNode, e) < maxDist) return true;
+            if (SimWaypoint.Distance(StartNode, e) < maxDist) return true;
+            if (SimWaypoint.Distance(EndNode, e) < maxDist) return true;
             foreach (SimRoute move in MoveList)
             {
                 if (move.NearPoint(e, maxDist)) return true;
@@ -476,11 +481,11 @@ namespace cogbot.TheOpenSims.Navigation
             MoveList = ms;
         }
 
-        public override List<Vector3> GetPoints()
+        public override List<SimWaypoint> GetPoints()
         {
-            List<Vector3> points = new List<Vector3>();
+            List<SimWaypoint> points = new List<SimWaypoint>();
             points.Add(StartNode);
-            Vector3 Last = StartNode;
+            SimWaypoint Last = StartNode;
             foreach (SimRoute move in GetSegments())
             {
                 if (move.StartNode != Last)
@@ -532,7 +537,7 @@ namespace cogbot.TheOpenSims.Navigation
             bool filled = false;
             foreach (SimRoute move in GetSegments())
             {
-                if (Vector3.Distance(at, move.StartNode) > maxDist)
+                if (SimWaypoint.Distance(at, move.StartNode) > maxDist)
                 {
                     moves.Add(new SimRoute(at, move.StartNode));
                     filled = true;
