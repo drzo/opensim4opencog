@@ -61,7 +61,7 @@ namespace cogbot.TheOpenSims
         public SimWaypoint GetWaypoint()
         {
             Vector3 v3 = GetSimPosition();
-            SimWaypoint swp = WorldSystem.SimPaths.CreateClosestWaypointBox(v3,GetSizeDistance()+4);
+            SimWaypoint swp = WorldSystem.SimPaths.CreateClosestWaypointBox(v3, GetSizeDistance() + 4, 5, 1.0f);
             float dist = Vector3.Distance(v3, swp.GetSimPosition());
             if (dist > GetSizeDistance())
             {

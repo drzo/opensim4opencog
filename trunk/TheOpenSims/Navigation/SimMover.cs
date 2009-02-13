@@ -98,7 +98,7 @@ namespace cogbot.TheOpenSims.Navigation
                         Skipped++;
                         continue;
                     }
-                    if (route.BumpyCount > 1 && Skipped==0)
+                    if (route.BumpyCount > 0 && Skipped==0)
                     {
                         SetBlocked(route);
                     }
@@ -130,7 +130,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         private void CreateSurroundWaypoints()
         {
-            SimPathStore.Instance.CreateClosestWaypointBox(Mover.GetSimPosition(), 4);
+            SimPathStore.Instance.CreateClosestWaypointBox(Mover.GetSimPosition(), 4, 5, 1.0f);
         }
 
         private int ClosestToInRoute(SimRoute BestR)
@@ -185,7 +185,7 @@ namespace cogbot.TheOpenSims.Navigation
             }
             Vector3 endVect = route.EndNode.GetSimPosition();
 
-            bool MadeIt = Mover.MoveTo(endVect, 1f, 14);
+            bool MadeIt = Mover.MoveTo(endVect, 1f, 7);
             vectMover = Mover.GetSimPosition();
             if (!MadeIt)
             {               

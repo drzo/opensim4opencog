@@ -28,6 +28,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 	/// </summary>
 	public class GraphFormer : System.Windows.Forms.Form
 	{
+        readonly static float THREE = 3f;
 		#region Construction / Destruction
 
 		private ContextMenu MenuContextuel;
@@ -74,12 +75,12 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 		static GraphFormer()
 		{
 			CrayonNoeuds = new Pen(Color.Black, Epaisseur);
-			CrayonNoeudsInactifs = new Pen(Color.Gray, Epaisseur);
+			CrayonNoeudsInactifs = new Pen(Color.Red, Epaisseur);
 
 			CrayonArcs = new Pen(Color.Black, Epaisseur);
 			CrayonArcs.EndCap = LineCap.Custom;
 			CrayonArcs.CustomEndCap = new AdjustableArrowCap(3, 6, true);
-			CrayonArcsInactifs = new Pen(Color.Gray, Epaisseur);
+			CrayonArcsInactifs = new Pen(Color.Red, Epaisseur);
 			CrayonArcsInactifs.EndCap = LineCap.Custom;
 			CrayonArcsInactifs.CustomEndCap = new AdjustableArrowCap(3, 6, true);
 
@@ -507,7 +508,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 		{
 			float[] Min, Max;
 			SimWaypoint.BoundingBox(NoeudsAEnglober, out Min, out Max);
-			return Rectangle.FromLTRB((int)Min[0], (int)Min[1], (int)Max[0], (int)Max[1]);
+			return Rectangle.FromLTRB((int)(Min[0]* THREE), (int)(Min[1]* THREE), (int)(Max[0]* THREE), (int)(Max[1]* THREE));
 		}
 
 		static bool Collision(SimWaypoint N1, SimWaypoint N2)
@@ -534,15 +535,15 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 		SimWaypoint NoeudSousJacent(int X, int Y)
 		{
 			float Distance;
-			SimWaypoint ClosestNode = G.ClosestNode(X, Y, 0, out Distance, false);
-			return Distance<=2*Rayon ? ClosestNode : null;
+            SimWaypoint ClosestNode = G.ClosestNode((float)(X / THREE), (float)(Y / THREE), 0, out Distance, false);
+			return (Distance* THREE)<=2*Rayon ? ClosestNode : null;
 		}
 
 		SimRoute ArcSousJacent(int X, int Y)
 		{
-			float Distance;
-			SimRoute ArcPlusProche = G.ClosestArc(X, Y, 0, out Distance, false);
-			return Distance<=Rayon ? ArcPlusProche : null;
+            float Distance;
+			SimRoute ArcPlusProche = G.ClosestArc((float)(X/ THREE), (float)(Y/ THREE), 0, out Distance, false);
+            return (Distance * THREE) <= Rayon ? ArcPlusProche : null;
 		}
 		#endregion
 
@@ -574,7 +575,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 				case Action.Dessiner:
 				{
 					AjouterN1 = NoeudSelonPosition(e.X, e.Y, ref TempN1);
-                    TempN2 = SimWaypoint.Create(TempN1.X, TempN1.Y, 0);
+                    TempN2 = SimWaypoint.Create((float)(TempN1.X / THREE), (float)(TempN1.Y / THREE), (float)0);
 					GraphPanel.Invalidate( Boite(TempN1, TempN2) );
 					break;
 				}
@@ -617,7 +618,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 		string SB_NoeudPlusProche(int X, int Y)
 		{
 			float Distance;
-			SimWaypoint N = G.ClosestNode(X, Y, 0, out Distance, true);
+			SimWaypoint N = G.ClosestNode(X/THREE, Y/THREE, 0, out Distance, true);
 			return N!=null ? SB_Noeud((int)N.X, (int)N.Y) : SB_Point(X, Y);
 		}
 
@@ -839,7 +840,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 				case Action.AEtoile:
 				{
 					float Distance;
-					SimWaypoint NoeudPlusProche = G.ClosestNode(e.X, e.Y, 0, out Distance, true);
+					SimWaypoint NoeudPlusProche = G.ClosestNode(e.X/THREE, e.Y/THREE, 0, out Distance, true);
 					if ( NoeudPlusProche==null ) break;
 					Rectangle Invalide = Boite(NoeudPlusProche);
 
@@ -1236,10 +1237,10 @@ with the respective left and right mouse buttons.", "Impossible action", Message
 			if ( N==null ) return;
 			Point[] Pts = new Point[5];
 
-			float AnglePortion =(float) (2*Math.PI)/Pts.Length;
+			double AnglePortion =(double) (2*Math.PI)/Pts.Length;
 			for ( int i=0; i<Pts.Length; i++ )
 			{
-				float Angle = 2*i*AnglePortion;
+				double Angle = 2*i*AnglePortion;
 				if ( Numero==1 ) Angle += AnglePortion/2;
 				Pts[i] = new Point(1+(int)(N.X+(Rayon+1)*Math.Cos(Angle)), 1+(int)(N.Y+(Rayon+1)*Math.Sin(Angle)));
 			}

@@ -688,47 +688,20 @@ namespace cogbot.TheOpenSims.Navigation
             return V3Waypoint;
         }
 
-        readonly static  Vector3 N = new Vector3(new Vector3(0,-1,0));
-        readonly static  Vector3 NE = new Vector3(new Vector3(1, -1, 0));
-        readonly static  Vector3 E = new Vector3(new Vector3(1, 0, 0));
-        readonly static  Vector3 SE = new Vector3(new Vector3(1, 1, 0));
-        readonly static  Vector3 S = new Vector3(new Vector3(0, 1, 0));
-        readonly static  Vector3 SW = new Vector3(new Vector3(-1, 1, 0));
-        readonly static  Vector3 W = new Vector3(new Vector3(-1, 0, 0));
-        readonly static  Vector3 NW = new Vector3(new Vector3(-1, -1, 0));
-        readonly static float COS45 = (float)Math.Cos(Math.PI / 4);
-
-        public SimWaypoint CreateClosestWaypointBox(Vector3 v3, float radius)
+        public SimWaypoint CreateClosestWaypointBox(Vector3 v3, float radius,int numPoints,float Weight)
         {
-            float Weight = 1f;
             SimWaypoint node = CreateClosestWaypoint(v3);
-            float radiusA = radius * COS45;
-            SimWaypoint nodeN = CreateClosestWaypoint(v3 + N * radius);
-            SimWaypoint nodeNE = CreateClosestWaypoint(v3 + NE * radiusA);
-            SimWaypoint nodeE = CreateClosestWaypoint(v3 + E * radius);
-            SimWaypoint nodeSE = CreateClosestWaypoint(v3 + SE * radiusA);
-            SimWaypoint nodeS = CreateClosestWaypoint(v3 + S * radius);
-            SimWaypoint nodeSW = CreateClosestWaypoint(v3 + SW * radiusA);
-            SimWaypoint nodeW = CreateClosestWaypoint(v3 + W * radius);
-            SimWaypoint nodeNW = CreateClosestWaypoint(v3 + NW * radiusA);
-
-            Intern2Arc(nodeN, nodeNW, Weight);
-            Intern2Arc(nodeN, nodeNE, Weight);
-            Intern2Arc(nodeS, nodeSW,Weight);
-            Intern2Arc(nodeS, nodeSE,Weight);
-            Intern2Arc(nodeE, nodeSE,Weight);
-            Intern2Arc(nodeE, nodeNE,Weight);
-            Intern2Arc(nodeW, nodeSW,Weight);
-            Intern2Arc(nodeW, nodeNW,Weight);
-            
-            Intern2Arc(nodeN, node,Weight);
-            Intern2Arc(nodeNE, node,Weight);
-            Intern2Arc(nodeE, node,Weight);
-            Intern2Arc(nodeSE, node,Weight);
-            Intern2Arc(nodeS, node,Weight);
-            Intern2Arc(nodeSW, node,Weight);
-            Intern2Arc(nodeW, node,Weight);
-            Intern2Arc(nodeNW, node,Weight);
+            double radiansStep = Math.PI * 2 / numPoints;
+            SimWaypoint Last = node;
+            for (int Step = 0; Step < numPoints; Step++)
+            {
+                double ThisAngle = Step * radiansStep;
+                Vector3 vectAngle = new Vector3((float)Math.Cos(ThisAngle), (float)Math.Sin(ThisAngle), 0) * radius;
+                SimWaypoint nodeNew = CreateClosestWaypoint(v3 + vectAngle);
+                Intern2Arc(nodeNew, node, Weight); // outward from node
+                Intern2Arc(nodeNew, Last, Weight); // circle node
+                Last = nodeNew;
+            }
             return node;
         }
     }
