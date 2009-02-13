@@ -386,8 +386,8 @@ namespace cogbot.TheOpenSims.Navigation
         public static Vector3 RoundPoint(Vector3 point)
         {
             Vector3 vect3 = new Vector3(point);
-            vect3.X = (float)Math.Round(vect3.X*5,0)/5;
-            vect3.Y = (float)Math.Round(vect3.Y*5,0)/5;
+            vect3.X = (float)Math.Round(vect3.X*2,0)/2;
+            vect3.Y = (float)Math.Round(vect3.Y*2,0)/2;
             vect3.Z = (float)Math.Round(vect3.Z, 0);
             return vect3;
         }
@@ -423,7 +423,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public float GetSizeDistance()
         {
-            return 1.2f;
+            return 0.7f;
         }
 
         #endregion

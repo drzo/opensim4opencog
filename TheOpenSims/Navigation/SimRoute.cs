@@ -30,6 +30,8 @@ namespace cogbot.TheOpenSims.Navigation
         float _Length;
         bool _LengthUpdated;
 
+        public int BumpyCount = 0;
+
         /// <summary>
         /// Arc constructor.
         /// </summary>
@@ -144,7 +146,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// </summary>
         virtual public float Cost
         {
-            get { return Weight /* * Length*/ ; }
+            get { return Weight * Length ; }
         }
 
         /// <summary>

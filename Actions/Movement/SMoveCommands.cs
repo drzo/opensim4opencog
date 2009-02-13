@@ -82,27 +82,81 @@ namespace cogbot.Actions.Movement
         }
     }
 
+    class srm : cogbot.Actions.Command
+    {
+        public srm(BotClient client)
+        {
+            Name = GetType().Name;
+            Description = "Move to a the specified point using MoveTo";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            int argcount;
+            SimPosition pos = WorldSystem.GetVector(args, out argcount);
+            if (pos == null)
+            {
+                return "Cannot " + Name + " to " + String.Join(" ", args);
+            }
+            int maxSeconds = 6;
+            float maxDistance = 1f;
+            if (argcount < args.Length)
+            {
+            }
+            string str = "MoveTo(" + pos.GetSimPosition() + ", " + maxDistance + ", " + maxSeconds + ")";
+            WriteLine("Starting  " +str);
+            bool MadIt = WorldSystem.TheSimAvatar.MoveTo(pos.GetSimPosition(), maxDistance, maxSeconds);
+            if (MadIt)
+            {
+                return ("SUCCESS " + str);
+
+            }
+            else
+            {
+                return ("FAILED " + str);
+            }
+        }
+    }
 
     class srg : cogbot.Actions.Command
     {
         public srg(BotClient client)
         {
             Name = GetType().Name;
-            Description = "Starts the waypoint debuger";
+            Description = "Use A* Pathfinding to get to object";
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            Primitive prim;
-            if (WorldSystem.tryGetPrim(String.Join(" ",args), out prim))
+            int argcount;
+            SimPosition pos = WorldSystem.GetVector(args, out argcount);
+            if (pos == null)
             {
-                SimObject simObject = WorldSystem.GetSimObject(prim);
-                WorldSystem.TheSimAvatar.GotoTarget(simObject);
+                return "Cannot " + Name + " to " + String.Join(" ", args);
             }
-            return "srg Done.";
+            int maxSeconds = 6;
+            float maxDistance = 1f;
+            if (argcount < args.Length)
+            {
+            }
+            String str = "GotoTarget(" + pos + ")";
+            WriteLine(str);
+            bool MadIt = WorldSystem.TheSimAvatar.GotoTarget(pos);
+            if (MadIt)
+            {
+                return ("SUCCESS " + str);
+
+            }
+            else
+            {
+                return ("FAILED " + str);
+            }
         }
+
     }
+
     class gto : cogbot.Actions.Command
     {
         public gto(BotClient client)

@@ -224,7 +224,23 @@ namespace cogbot.TheOpenSims
                     continue;
                 }
 
+                fi = type.GetType().GetField(s+"s");
+                if (fi != null)
+                {
+                    type.SpecifiedProperties.AddTo(fi.Name);
+                    SimTypeSystem.SetValue(fi, type, parseStr[i++]);
+                    continue;
+                }
+
                 fi = usage.GetType().GetField(s);
+                if (fi != null)
+                {
+                    usage.SpecifiedProperties.AddTo(fi.Name);
+                    SimTypeSystem.SetValue(fi, usage, parseStr[i++]);
+                    continue;
+                }
+
+                fi = usage.GetType().GetField(s + "s");
                 if (fi != null)
                 {
                     usage.SpecifiedProperties.AddTo(fi.Name);
@@ -246,12 +262,13 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public void AddSuperType(SimObjectType test)
+        public bool AddSuperType(SimObjectType test)
         {
             lock (SuperType)
             {
-                if (SuperType.Contains(test)) return;
+                if (SuperType.Contains(test)) return false;
                 SuperType.Add(test);
+                return true;
             }
         }
 
