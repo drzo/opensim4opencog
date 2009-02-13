@@ -8,11 +8,12 @@ namespace cogbot.TheOpenSims.Navigation
 {
     public interface SimMover : SimPosition
     {
-        void TurnToward(SimPosition targetPosition);
-        void SetMoveTarget(SimPosition v3);
-        float Distance(SimPosition v3);
-
+        //void TurnToward(SimPosition targetPosition);
+         //void SetMoveTarget(SimPosition v3);
         void StopMoving();
+        bool MoveTo(Vector3 end, float maxDistance, int maxSeconds);
+        //float Distance(SimPosition v3);
+
     }
 
     public enum SimMoverState : byte
@@ -20,17 +21,19 @@ namespace cogbot.TheOpenSims.Navigation
         PAUSED = 0,
         MOVING = 1,
         BLOCKED = 2,
-        COMPLETE = 3
+        COMPLETE = 3,
+        TRYAGAIN = 4
     }
 
     public class SimRouteMover
     {
 
         SimMoverState _STATE = SimMoverState.PAUSED;
-        SimAvatar Mover;
+        SimMover Mover;
         SimRoute[] Routes;
-
-        int CurrentRouteIndex = -1;
+        readonly Vector3 FinalLocation;
+        readonly float FinalDistance;
+        int CurrentRouteIndex = 0;
         SimRoute StuckAt = null;
 
 
@@ -40,116 +43,175 @@ namespace cogbot.TheOpenSims.Navigation
             set { _STATE = value; }
         }
 
-        public SimRouteMover(SimMover mover, SimRoute[] routes)
+        public SimRouteMover(SimMover mover, SimRoute[] routes, Vector3 finalGoal, float finalDistance)
         {
             Mover = (SimAvatar)mover;
             Routes = routes;
+            FinalDistance = finalDistance;
+            FinalLocation = finalGoal;
         }
-
 
         public SimMoverState Goto()
         {
+            SimMoverState ST =  Goto1();
+            return ST;
+        }
+
+        public SimMoverState Goto1()
+        {
             _STATE = SimMoverState.MOVING;
-            CurrentRouteIndex = -1;
-            foreach (SimRoute route in Routes)
+            int CanSkip = 0;
+            int Skipped = 0;
+            for (int cI = CurrentRouteIndex; cI < Routes.Length;cI++)
             {
-                CurrentRouteIndex++;
-                STATE = FollowRoute(route);
-                if (STATE == SimMoverState.BLOCKED)
+                Mover.StopMoving();
+                CurrentRouteIndex = cI;
+
+                if (false)
                 {
-                    SetBlocked(route);
+                    // Auto Advance when we are closer to the end if its in the future
+                    // but cant trust doing this if we are circling arround something
+                    int indexClosest = ClosestToInRoute(Routes[cI]);
+                    if (indexClosest > cI)
+                    {
+                        cI = indexClosest;
+                    }
+                }
+
+                SimRoute route = Routes[cI];
+
+                STATE = FollowRoute(route);
+                float distance = Vector3.Distance(Mover.GetSimPosition(), FinalLocation);
+                if (STATE == SimMoverState.BLOCKED)
+                {            
+                    //  SetBlocked(route);
+                    if (distance < FinalDistance)
+                    {
+                        return SimMoverState.COMPLETE;
+                    }
+                    CreateSurroundWaypoints();
+                    route.ReWeigth(1.1f);
+                    route.BumpyCount++;
+                    if (CanSkip > 0)
+                    {
+                        CanSkip--;
+                        Skipped++;
+                        continue;
+                    }
+                    if (route.BumpyCount > 1 && Skipped==0)
+                    {
+                        SetBlocked(route);
+                    }
                     return STATE;
                 }
                 if (STATE == SimMoverState.PAUSED)
                 {
-                    return STATE;
+                    CreateSurroundWaypoints();
+                    if (distance < FinalDistance)
+                    {
+                        return SimMoverState.COMPLETE;
+                    }
+                    if (CanSkip > 0)
+                    {
+                        CanSkip--;
+                        Skipped++;
+                        continue;
+                    }
+                    return SimMoverState.PAUSED;
+                }
+                if (distance < FinalDistance)
+                {
+                    return SimMoverState.COMPLETE;
                 }
             }
             STATE = SimMoverState.COMPLETE;
             return STATE;
         }
 
+        private void CreateSurroundWaypoints()
+        {
+            SimPathStore.Instance.CreateClosestWaypointBox(Mover.GetSimPosition(), 4);
+        }
+
+        private int ClosestToInRoute(SimRoute BestR)
+        {
+            Vector3 current = Mover.GetSimPosition();
+            float BestDist = Vector3.Distance(current, BestR.StartNode.GetSimPosition());
+            int index = -1;
+            foreach (SimRoute R in Routes) {
+                index++;
+                float testDist = Vector3.Distance(current, R.StartNode.GetSimPosition());
+                if (testDist < BestDist)
+                {
+                    BestR = R;
+                    BestDist = testDist;
+                }
+            }
+            return index;
+        }
+
         private void SetBlocked(SimRoute route)
         {
             StuckAt = route;
+            Debug("INACESSABLE: " + StuckAt);
+
             StuckAt.Passable = false;
             StuckAt.ReWeigth(1.1f);
-            Debug("INACESSABLE: " + StuckAt);
-            StuckAt.Reverse().Passable = false;
-            SimPathStore.Instance.RemoveArc(StuckAt);
+            
+            SimRoute reversed = StuckAt.Reverse();//
+            
+            reversed.Passable = false;
+            reversed.ReWeigth(1.1f);
+           // SimPathStore.Instance.RemoveArc(StuckAt);
+            ///SimPathStore.Instance.RemoveArc(reversed);
+
             STATE = SimMoverState.BLOCKED;
         }
 
         private SimMoverState FollowRoute(SimRoute route)
         {
-            Vector3 startGoto = route.StartNode.GetSimPosition();
-            Vector3 start = Mover.GetSimPosition();
-            float maxDistFromStart = route.StartNode.GetSizeDistance();
-            float currentDistFromStart = Vector3.Distance(start, startGoto);            
-            if (currentDistFromStart > maxDistFromStart)
+            Vector3 vectStart = route.StartNode.GetSimPosition();
+            Vector3 vectMover = Mover.GetSimPosition();
+            float currentDistFromStart = Vector3.Distance(vectMover, vectStart);            
+            if (currentDistFromStart > 1f)
             {
-                Debug("FollowRoute: trying to " + start + " > " + startGoto);
-                if (!MoveTo(route.StartNode, maxDistFromStart))
+                Debug("FollowRoute: TRYING for Start " + vectMover + " -> " + vectStart);
+                if (!Mover.MoveTo(vectStart, 1, 6))
                 {
-                    Debug("FollowRoute: cant start " + currentDistFromStart + " > " + maxDistFromStart);
+                    //SimWaypoint stoppedAt = Mover.GetWaypoint();
+                    Debug("FollowRoute: FAILED Start " + vectMover + " -> " + vectStart);
                     return SimMoverState.PAUSED;
                 }
             }
+            Vector3 endVect = route.EndNode.GetSimPosition();
 
-            Vector3 finishGoto = route.EndNode.GetSimPosition();
-            float maxDistFromfinish = route.EndNode.GetSizeDistance();
-
-            bool MadeIt = MoveTo(route.EndNode, maxDistFromfinish);
-
-            Vector3 finish = Mover.GetSimPosition();
-            float currentDistFromfinish = Vector3.Distance(finish, finishGoto);
-            if (currentDistFromfinish > maxDistFromfinish)
-            {
-                Debug("FollowRoute: cant finish " + currentDistFromfinish + " > " + maxDistFromfinish);
-                return SimMoverState.PAUSED;
-                //return false;
-            }
+            bool MadeIt = Mover.MoveTo(endVect, 1f, 14);
+            vectMover = Mover.GetSimPosition();
             if (!MadeIt)
-            {
-                route.ReWeigth(1.1f);
-                Debug("FollowRoute: NOT MadeIt " + route);
+            {               
+                Debug("FollowRoute: BLOCKED ROUTE " + vectMover + "-> " + endVect);
                 return SimMoverState.BLOCKED;
             }
-            else
-            {
-                route.ReWeigth(0.8f); //Cheapen
-                Debug("FollowRoute: Success " + route);
-                return SimMoverState.COMPLETE;
-            }
-        }
 
-        private bool MoveTo(SimWaypoint finishGoto, float maxDistance)
-        {
-            Vector3 start = Mover.GetSimPosition();
-            Vector3 end = finishGoto.GetSimPosition();
-            Mover.TurnToward(finishGoto);
-            Mover.SetMoveTarget(finishGoto);
-            // Monitor for 6 seconds
-            for (int i = 0; i < 6; i++)
+            Vector3 endVectMover = Mover.GetSimPosition();
+            float currentDistFromfinish = Vector3.Distance(endVectMover, endVect);
+            if (currentDistFromfinish > 1f)
             {
-                Thread.Sleep(1000);
-                float currentDist = Vector3.Distance(end, Mover.GetSimPosition());
-                if (currentDist > maxDistance)
-                {         
-                    continue;
-                }
-                else
-                {
-                    return true;
-                }
+                Debug("FollowRoute: CANNOT FINISH " + endVectMover + " -> " + endVect);
+                return SimMoverState.PAUSED;
             }
-            return false;
+            Debug("FollowRoute: SUCCEED " + vectStart + " -> " + endVectMover);
+            return SimMoverState.COMPLETE;
         }
 
         public override string ToString()
         {
-            string s = GetType().Name + "::" + Mover + " to " + Routes[0].StartNode;
+
             SimWaypoint point = Routes[0].StartNode;
+            int c = Routes.Length;
+            SimWaypoint end = Routes[c-1].EndNode;
+            string s = GetType().Name + "::" + Mover;// +" " + point.ToString() + " to " + end;
+            return s;
             foreach (SimRoute A in Routes)
             {
                 SimWaypoint next = A.StartNode;

@@ -629,7 +629,8 @@ namespace cogbot.Listeners
                     objectUpdated = prim;
                     lock (prim)
                     {
-                        SimObject simAvatar = GetSimObject(prim);
+                        SimAvatar simAvatar = (SimAvatar)GetSimObject(prim);
+                        if (!simAvatar.IsLocal())
                         SimPaths.Update(update.LocalID, simAvatar.GetSimPosition(), update.Rotation);
 
                         // output("Updating state for Avatar " + prim.Name);

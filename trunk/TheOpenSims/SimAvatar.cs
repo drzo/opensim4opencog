@@ -112,6 +112,7 @@ namespace cogbot.TheOpenSims
 
         public bool IsLocal()
         {
+            if (Client == null) return false;
             AgentManager ClientSelf = Client.Self;
             return ClientSelf.AgentID == theAvatar.ID || ClientSelf.LocalID == theAvatar.LocalID;
         }
@@ -181,9 +182,17 @@ namespace cogbot.TheOpenSims
 
         public override Vector3 GetSimPosition()
         {
-            if (Client != null) if (IsLocal()) return Client.Self.SimPosition;
+            if (IsLocal()) return Client.Self.SimPosition;
             return base.GetSimPosition();
         }
+
+        public override Quaternion GetSimRotation()
+        {
+            if (IsLocal()) return Client.Self.SimRotation;
+            return base.GetSimRotation();
+        }
+        
+
 
         public void Think()
         {
@@ -465,66 +474,6 @@ namespace cogbot.TheOpenSims
             return 2f;
         }
 
-        float ApproachDistance;
-        volatile public SimPosition ApproachPosition;
-        readonly Thread ApproachThread ;//= new Thread(TrackerLoop);
-
-
-        public float Approach(SimObject obj, float maxDistance)
-        {
-            BotClient Client = GetGridClient();
-            // stand up first
-            SimObject UnPhantom = StandUp();
-            // make sure it not going somewhere
-            // set the new target
-            ApproachDistance = obj.GetSizeDistance()+0.5f;
-            string str = "Approaching " + obj + " " + DistanceVectorString(obj) + " to get " + ApproachDistance;
-            Debug(str);
-            obj.MakeEnterable();
-            SetMoveTarget(obj);
-            //ApproachDistance = obj.GetSizeDistance() +maxDistance;
-            // 16 seconds of travel permitted
-            for (int i = 0; i < 15; i++)
-            {
-
-                if (Distance(obj) > ApproachDistance)
-                {
-                    Thread.Sleep(1000);
-                    continue;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            if (UnPhantom != null)
-                UnPhantom.RestoreEnterable();
-    
-            return Distance(obj);
-        }
-
-        public SimObject StandUp()
-        {
-            SimObject UnPhantom = null;
-            AgentManager ClientSelf = Client.Self;
-            AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
-            if (ClientMovement.SitOnGround)
-            {
-                ClientSelf.Stand();
-            }
-            else
-            {
-                uint sit = ClientSelf.SittingOn;
-                if (sit != 0)
-                {
-                    UnPhantom = WorldSystem.GetSimObject(WorldSystem.GetPrimitive(sit));
-                    UnPhantom.MakeEnterable();
-                    ClientSelf.Stand();
-                }
-            }
-            return UnPhantom;
-        }
-
 
         public BotClient GetGridClient()
         {
@@ -710,6 +659,77 @@ namespace cogbot.TheOpenSims
                 || SimTypeSystem.MatchString(ToString(), name);
         }
 
+        public SimObject StandUp()
+        {
+            SimObject UnPhantom = null;
+            AgentManager ClientSelf = Client.Self;
+            AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
+            if (ClientMovement.SitOnGround)
+            {
+                ClientSelf.Stand();
+            }
+            else
+            {
+                uint sit = ClientSelf.SittingOn;
+                if (sit != 0)
+                {
+                    UnPhantom = WorldSystem.GetSimObject(WorldSystem.GetPrimitive(sit));
+                    UnPhantom.MakeEnterable();
+                    ClientSelf.Stand();
+                }
+            }
+            return UnPhantom;
+        }
+
+        public void StopMoving()
+        {
+            lock (TrackerLoopLock)
+            {
+                ApproachPosition = null;
+
+                AgentManager ClientSelf = Client.Self;
+                ClientSelf.AutoPilotCancel();
+                AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
+                //  ClientMovement. AlwaysRun = false;
+                ClientMovement.AtNeg = false;
+                ClientMovement.AtPos = false;
+                //ClientMovement.AutoResetControls = true;
+                //   ClientMovement. Away = false;
+                ClientMovement.FastAt = false;
+                ClientMovement.FastLeft = false;
+                ClientMovement.FastUp = false;
+                // ClientMovement.FinishAnim = true;
+                //  ClientMovement. Fly = false;
+                ClientMovement.LButtonDown = false;
+                ClientMovement.LButtonUp = false;
+                ClientMovement.LeftNeg = false;
+                ClientMovement.LeftPos = false;
+                ClientMovement.MLButtonDown = false;
+                ClientMovement.MLButtonUp = false;
+                // ClientMovement. Mouselook = false;
+                ClientMovement.NudgeAtNeg = false;
+                ClientMovement.NudgeAtPos = false;
+                ClientMovement.NudgeLeftNeg = false;
+                ClientMovement.NudgeLeftPos = false;
+                ClientMovement.NudgeUpNeg = false;
+                ClientMovement.NudgeUpPos = false;
+                ClientMovement.PitchNeg = false;
+                ClientMovement.PitchPos = false;
+                //ClientMovement. SitOnGround = false;
+                //ClientMovement. StandUp = false;
+                ClientMovement.Stop = true;
+                ClientMovement.TurnLeft = false;
+                ClientMovement.TurnRight = false;
+                ClientMovement.UpdateInterval = 0;
+                ClientMovement.UpNeg = false;
+                ClientMovement.UpPos = false;
+                ClientMovement.YawNeg = false;
+                ClientMovement.YawPos = false;
+
+                ClientMovement.SendUpdate();
+            }
+        }
+
 
         object TrackerLoopLock = new object();
 
@@ -719,22 +739,19 @@ namespace cogbot.TheOpenSims
             AgentManager ClientSelf = Client.Self;
             AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
             bool StartedFlying = false;// !IsFloating;
-            try
+            Boolean justStopped = false;
+            while (true)
             {
-                Boolean justStopped = false;
-                while (true)
+                // Debug("TrackerLoop: " + Thread.CurrentThread);
+                if (ApproachPosition == null)
                 {
-                    // Debug("TrackerLoop: " + Thread.CurrentThread);
-                    if (ApproachPosition == null)
-                    {
-                        Thread.Sleep(500);
-                        continue;
-                    }
-
-
-                    SimPosition ApproachPositionLocal = ApproachPosition;
-                    ApproachDistance = ApproachPositionLocal.GetSizeDistance();
-                    Vector3 targetPosition = new Vector3(ApproachPositionLocal.GetSimPosition());
+                    Thread.Sleep(500);
+                    continue;
+                }
+                //ApproachDistance = ApproachPosition.GetSizeDistance();
+                try
+                {
+                    Vector3 targetPosition = new Vector3(ApproachPosition.GetSimPosition());
                     float UpDown = targetPosition.Z - ClientSelf.SimPosition.Z;
                     float ZDist = Math.Abs(UpDown);
                     if (UpDown > 1)
@@ -752,7 +769,7 @@ namespace cogbot.TheOpenSims
                         {
                             if (!StartedFlying)
                             {
-                                if (UpDown > 0) ClientMovement.NudgeUpPos = true;
+                                //if (UpDown > 0) ClientMovement.NudgeUpPos = true;
                                 // ClientMovement.SendUpdate(false);
                                 // ClientSelf.Fly(true);                                 
                                 StartedFlying = true;
@@ -780,7 +797,7 @@ namespace cogbot.TheOpenSims
                         //ClientMovement.SendUpdate();
                         if (curDist < (ApproachDistance * 1.25))
                         {
-                            TurnToward(ApproachPositionLocal);
+                            TurnToward(ApproachPosition);
                             ClientMovement.AtPos = true;
                             Thread.Sleep(25);
                             ClientMovement.Stop = true;
@@ -792,7 +809,7 @@ namespace cogbot.TheOpenSims
                         }
                         else
                         {
-                            TurnToward(ApproachPositionLocal);
+                            TurnToward(ApproachPosition);
                             ClientMovement.AtPos = true;
                             ClientMovement.UpdateInterval = 0; //100
                             ClientMovement.SendUpdate(false);
@@ -806,7 +823,7 @@ namespace cogbot.TheOpenSims
                     {
                         if (justStopped)
                         {
-                            TurnToward(ApproachPositionLocal);
+                            TurnToward(ApproachPosition);
                             ClientMovement.AtPos = false;
                             ClientMovement.UpdateInterval = 0;
                             //ClientMovement.StandUp = true;
@@ -827,99 +844,17 @@ namespace cogbot.TheOpenSims
                     }
 
                 }
-            }
-            catch (Exception e)
-            {
-                Debug("" + e);
+                catch (Exception e)
+                {
+                    Debug("" + e);
+                }
+
             }
         }
 
         public void TurnToward(SimPosition targetPosition)
         {
             Client.Self.Movement.TurnToward(targetPosition.GetSimPosition());
-        }
-
-        public void StopMoving()
-        {
-            lock (TrackerLoopLock)
-            {
-                ApproachPosition = null;
-            }
-            AgentManager ClientSelf = Client.Self;
-            ClientSelf.AutoPilotCancel();
-            AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
-            //  ClientMovement. AlwaysRun = false;
-            ClientMovement.AtNeg = false;
-            ClientMovement.AtPos = false;
-            //ClientMovement.AutoResetControls = true;
-            //   ClientMovement. Away = false;
-            ClientMovement.FastAt = false;
-            ClientMovement.FastLeft = false;
-            ClientMovement.FastUp = false;
-            // ClientMovement.FinishAnim = true;
-            //  ClientMovement. Fly = false;
-            ClientMovement.LButtonDown = false;
-            ClientMovement.LButtonUp = false;
-            ClientMovement.LeftNeg = false;
-            ClientMovement.LeftPos = false;
-            ClientMovement.MLButtonDown = false;
-            ClientMovement.MLButtonUp = false;
-            // ClientMovement. Mouselook = false;
-            ClientMovement.NudgeAtNeg = false;
-            ClientMovement.NudgeAtPos = false;
-            ClientMovement.NudgeLeftNeg = false;
-            ClientMovement.NudgeLeftPos = false;
-            ClientMovement.NudgeUpNeg = false;
-            ClientMovement.NudgeUpPos = false;
-            ClientMovement.PitchNeg = false;
-            ClientMovement.PitchPos = false;
-            //ClientMovement. SitOnGround = false;
-            //ClientMovement. StandUp = false;
-            ClientMovement.Stop = true;
-            ClientMovement.TurnLeft = false;
-            ClientMovement.TurnRight = false;
-            ClientMovement.UpdateInterval = 0;
-            ClientMovement.UpNeg = false;
-            ClientMovement.UpPos = false;
-            ClientMovement.YawNeg = false;
-            ClientMovement.YawPos = false;
-
-            ClientMovement.SendUpdate();
-        }
-        public bool GotoTarget(SimPosition pos) {
-            Debug("Start GotoTarget: " + pos);
-            bool IsFake;
-            for (int i = 0; i < 18; i++)
-            {
-                StopMoving();
-                if (TryGotoTarget(pos,out IsFake))
-                {
-                    TurnToward(pos);
-                    StopMoving();
-                    Debug("SUCCESS GotoTarget: " + pos);
-                    return true;
-                }
-                TurnToward(pos);
-                float posDist = Vector3.Distance(GetSimPosition(), pos.GetSimPosition());
-                if (posDist <= pos.GetSizeDistance() + 0.5)
-                {
-                    StopMoving();
-                    Debug("OK GotoTarget: " + pos);
-                    return true;
-                }
-                if (IsFake) break;
-            }
-            StopMoving();
-            Debug("FAILED GotoTarget: " + pos);
-            return false;
-        }
-
-        public bool TryGotoTarget(SimPosition pos, out bool IsFake)
-        {
-            SimWaypoint target = pos.GetWaypoint();
-            SimRoute[] routes = GetRouteList(target, out IsFake);
-            SimRouteMover ApproachPlan = new SimRouteMover(this, routes);
-            return ApproachPlan.Goto() == SimMoverState.COMPLETE;
         }
 
         public void SetMoveTarget(SimPosition target)
@@ -933,6 +868,150 @@ namespace cogbot.TheOpenSims
                 ApproachPosition = target;
             }
         }
+
+        float ApproachDistance = 2f;
+        public SimPosition ApproachPosition;
+
+        readonly Thread ApproachThread;//= new Thread(TrackerLoop);
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="end"></param>
+      /// <param name="maxDistance"></param>
+      /// <param name="maxSeconds"></param>
+      /// <returns></returns>
+        public bool MoveTo(Vector3 end, float maxDistance, int maxSeconds)
+        {
+            SimWaypoint wp = SimWaypoint.Create(end);
+            ApproachDistance = maxDistance;
+            TurnToward(wp);
+            SetMoveTarget(wp);
+            for (int i = 0; i < maxSeconds; i++)
+            {
+                Thread.Sleep(1000);
+                Application.DoEvents();
+                float currentDist = Vector3.Distance(end,GetSimPosition());
+
+                if (currentDist > maxDistance)
+                {
+                    continue;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            StopMoving();
+            return false;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="maxDistance"></param>
+        /// <returns></returns>
+        public float Approach(SimObject obj, float maxDistance)
+        {
+            BotClient Client = GetGridClient();
+            // stand up first
+            SimObject UnPhantom = StandUp();
+            // make sure it not going somewhere
+            // set the new target
+            ApproachDistance = obj.GetSizeDistance() + 0.5f;
+            string str = "Approaching " + obj + " " + DistanceVectorString(obj) + " to get " + ApproachDistance;
+            Debug(str);
+            obj.MakeEnterable();
+            MoveTo(obj.GetSimPosition(), obj.GetSizeDistance() + 0.5f, 12);
+            if (UnPhantom != null)
+                UnPhantom.RestoreEnterable();
+
+            return Distance(obj);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <param name="IsFake"></param>
+        /// <returns></returns>
+        public bool TryGotoTarget(SimPosition pos, out bool IsFake)
+        {
+            SimWaypoint target = pos.GetWaypoint();
+            SimRoute[] routes = GetRouteList(target, out IsFake);
+            SimRouteMover ApproachPlan = new SimRouteMover(this, routes,pos.GetSimPosition(),pos.GetSizeDistance());
+            SimMoverState state = ApproachPlan.Goto();
+            if (state == SimMoverState.COMPLETE) return true;
+            return false;
+            
+            //== SimMoverState.COMPLETE;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <returns></returns>
+        public bool GotoTarget(SimPosition pos) {
+         
+            bool IsFake;
+            for (int i = 0; i < 9; i++)
+            {
+                Debug("Start GotoTarget: " + pos);
+               // StopMoving();
+                if (TryGotoTarget(pos,out IsFake))
+                {
+                    StopMoving();
+                    TurnToward(pos);
+                    Debug("SUCCESS GotoTarget: " + pos);
+                    return true;
+                }
+
+                //TurnToward(pos);
+                float posDist = Vector3.Distance(GetSimPosition(), pos.GetSimPosition());
+                if (posDist <= pos.GetSizeDistance() + 0.5)
+                {
+                    Debug("OK GotoTarget: " + pos);
+                    return true;
+                }
+                Vector3 newPost = GetLeftPos(90, 4f);
+                StopMoving();
+                Debug("MOVELEFT GotoTarget: " + pos);
+                MoveTo(newPost, 2f, 4);
+                //if (IsFake) break;
+            }
+            Debug("FAILED GotoTarget: " + pos);
+            return false;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="zAngleFromFace"></param>
+        /// <param name="distance"></param>
+        /// <returns></returns>
+        private Vector3 GetLeftPos(int zAngleFromFace, float distance)
+        {
+            Vector3 c = GetSimPosition();            
+            
+            Quaternion r = GetSimRotation();
+            Quaternion z_angle = Quaternion.CreateFromEulers(new Vector3(0, 0, zAngleFromFace /57.29577951f));
+            Quaternion next = r * z_angle;
+            float ax, ay, az;
+            next.GetEulerAngles(out ax, out ay, out az);
+            float xmul = (float)Math.Cos(az);
+            float ymul = (float)Math.Sin(az);
+            Vector3 v3 = new Vector3(xmul, ymul, 0);
+            v3 = v3 * distance;
+            Vector3 result = c + v3;
+            return result;
+            /*
+             * Client.Self.Movement.SendManualUpdate(AgentManager.ControlFlags.AGENT_CONTROL_AT_POS, Client.Self.Movement.Camera.Position,
+                    Client.Self.Movement.Camera.AtAxis, Client.Self.Movement.Camera.LeftAxis, Client.Self.Movement.Camera.UpAxis,
+                    Client.Self.Movement.BodyRotation, Client.Self.Movement.HeadRotation, Client.Self.Movement.Camera.Far, AgentFlags.None,
+                    AgentState.None, true);*/
+        }
+
+
     }
 
 }

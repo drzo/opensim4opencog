@@ -61,7 +61,7 @@ namespace cogbot.TheOpenSims
         public SimWaypoint GetWaypoint()
         {
             Vector3 v3 = GetSimPosition();
-            SimWaypoint swp = WorldSystem.SimPaths.CreateClosestWaypoint(v3);
+            SimWaypoint swp = WorldSystem.SimPaths.CreateClosestWaypointBox(v3,GetSizeDistance()+4);
             float dist = Vector3.Distance(v3, swp.GetSimPosition());
             if (dist > GetSizeDistance())
             {
@@ -91,7 +91,6 @@ namespace cogbot.TheOpenSims
         bool MadeNonPhysical = false;
         bool MadePhantom = false;
         bool needUpdate = true;
-        Vector3 lastPos = Vector3.Zero;
 
 
         public SimObjectType IsTypeOf(SimObjectType superType)
@@ -424,7 +423,7 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public Quaternion GetSimRotation()
+        public virtual Quaternion GetSimRotation()
         {
             Primitive theLPrim = thePrim;
             Quaternion theLPos = theLPrim.Rotation;
