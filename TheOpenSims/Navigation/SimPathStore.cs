@@ -49,7 +49,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public void CreateDefaultRoutes()
         {
-            int StepSize = 5;
+            int StepSize = 6;
             int MX = 255 - StepSize;
             int MY = 255 - StepSize;
             float W = 0.75f;
@@ -740,6 +740,7 @@ namespace cogbot.TheOpenSims.Navigation
                 AddNode(P);
                 foreach (SimWaypoint V in newWaypoints[P])
                 {
+                    if (V == null) continue;
                     AddNode(V);
                     if (P != V) Intern2Arc(P, V, Weight);
                 }

@@ -26,9 +26,9 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 	/// <summary>
 	/// Summary description for Form1.
 	/// </summary>
-	public class GraphFormer : System.Windows.Forms.Form
+    public partial class GraphFormer : System.Windows.Forms.Form
 	{
-        public readonly static float DSCALE = 6f;
+        public readonly static float DSCALE = 5f;
         volatile public static GraphFormer DEBUGGER = null;
 		#region Construction / Destruction
 
@@ -63,7 +63,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 		private System.Windows.Forms.ToolBarButton AEtoileFin;
 		private System.ComponentModel.IContainer components;
 
-		static int Rayon = 7;
+		static int Rayon = 6;
 		static int Epaisseur = 1;
 		static Pen CrayonNoeuds;
 		static Pen CrayonArcs;
@@ -136,290 +136,315 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.components = new System.ComponentModel.Container();
-			System.Resources.ResourceManager resources = new System.Resources.ResourceManager(typeof(GraphFormer));
-			this.GraphPanel = new FlickerFreePanel();
-			this.EditionToolBar = new System.Windows.Forms.ToolBar();
-			this.BoutonDessiner = new System.Windows.Forms.ToolBarButton();
-			this.BoutonEffacer = new System.Windows.Forms.ToolBarButton();
-			this.BoutonDeplacer = new System.Windows.Forms.ToolBarButton();
-			this.BoutonChangerEtat = new System.Windows.Forms.ToolBarButton();
-			this.BoutonAEtoile = new System.Windows.Forms.ToolBarButton();
-			this.ImagesActions = new System.Windows.Forms.ImageList(this.components);
-			this.GraphStatusBar = new System.Windows.Forms.StatusBar();
-			this.NbNodesPanel = new System.Windows.Forms.StatusBarPanel();
-			this.NbArcsPanel = new System.Windows.Forms.StatusBarPanel();
-			this.CoordsPanel = new System.Windows.Forms.StatusBarPanel();
-			this.FichierToolBar = new System.Windows.Forms.ToolBar();
-			this.BoutonNouveau = new System.Windows.Forms.ToolBarButton();
-			this.BoutonCharger = new System.Windows.Forms.ToolBarButton();
-			this.BoutonSauver = new System.Windows.Forms.ToolBarButton();
-			this.BoutonAProposDe = new System.Windows.Forms.ToolBarButton();
-			this.Sep1 = new System.Windows.Forms.ToolBarButton();
-			this.ImagesFichier = new System.Windows.Forms.ImageList(this.components);
-			this.AEtoileToolBar = new System.Windows.Forms.ToolBar();
-			this.Sep2 = new System.Windows.Forms.ToolBarButton();
-			this.AEtoileDebut = new System.Windows.Forms.ToolBarButton();
-			this.AEtoileEtape = new System.Windows.Forms.ToolBarButton();
-			this.AEtoileFin = new System.Windows.Forms.ToolBarButton();
-			this.ImagesPasAPas = new System.Windows.Forms.ImageList(this.components);
-			this.LabelAide = new System.Windows.Forms.Label();
-			((System.ComponentModel.ISupportInitialize)(this.NbNodesPanel)).BeginInit();
-			((System.ComponentModel.ISupportInitialize)(this.NbArcsPanel)).BeginInit();
-			((System.ComponentModel.ISupportInitialize)(this.CoordsPanel)).BeginInit();
-			this.SuspendLayout();
-			// 
-			// EditionToolBar
-			// 
-			this.EditionToolBar.Appearance = System.Windows.Forms.ToolBarAppearance.Flat;
-			this.EditionToolBar.Buttons.AddRange(new System.Windows.Forms.ToolBarButton[] {
-																							  this.BoutonDessiner,
-																							  this.BoutonEffacer,
-																							  this.BoutonDeplacer,
-																							  this.BoutonChangerEtat,
-																							  this.BoutonAEtoile});
-			this.EditionToolBar.ButtonSize = new System.Drawing.Size(16, 16);
-			this.EditionToolBar.Cursor = System.Windows.Forms.Cursors.Hand;
-			this.EditionToolBar.Divider = false;
-			this.EditionToolBar.Dock = System.Windows.Forms.DockStyle.None;
-			this.EditionToolBar.DropDownArrows = true;
-			this.EditionToolBar.ImageList = this.ImagesActions;
-			this.EditionToolBar.Location = new System.Drawing.Point(104, 0);
-			this.EditionToolBar.Name = "EditionToolBar";
-			this.EditionToolBar.ShowToolTips = true;
-			this.EditionToolBar.Size = new System.Drawing.Size(136, 23);
-			this.EditionToolBar.TabIndex = 0;
-			this.EditionToolBar.ButtonClick += new System.Windows.Forms.ToolBarButtonClickEventHandler(this.GraphToolBar_ButtonClick);
-			// 
-			// BoutonDessiner
-			// 
-			this.BoutonDessiner.ImageIndex = 0;
-			this.BoutonDessiner.Style = System.Windows.Forms.ToolBarButtonStyle.ToggleButton;
-			this.BoutonDessiner.Tag = 0;
-			this.BoutonDessiner.ToolTipText = "Draw nodes and arcs";
-			// 
-			// BoutonEffacer
-			// 
-			this.BoutonEffacer.ImageIndex = 1;
-			this.BoutonEffacer.Style = System.Windows.Forms.ToolBarButtonStyle.ToggleButton;
-			this.BoutonEffacer.Tag = 1;
-			this.BoutonEffacer.ToolTipText = "Erase nodes and arcs";
-			// 
-			// BoutonDeplacer
-			// 
-			this.BoutonDeplacer.ImageIndex = 2;
-			this.BoutonDeplacer.Style = System.Windows.Forms.ToolBarButtonStyle.ToggleButton;
-			this.BoutonDeplacer.Tag = 2;
-			this.BoutonDeplacer.ToolTipText = "Move nodes";
-			// 
-			// BoutonChangerEtat
-			// 
-			this.BoutonChangerEtat.ImageIndex = 3;
-			this.BoutonChangerEtat.Style = System.Windows.Forms.ToolBarButtonStyle.ToggleButton;
-			this.BoutonChangerEtat.Tag = 3;
-			this.BoutonChangerEtat.ToolTipText = "Change the state of nodes and arcs";
-			// 
-			// BoutonAEtoile
-			// 
-			this.BoutonAEtoile.ImageIndex = 4;
-			this.BoutonAEtoile.Style = System.Windows.Forms.ToolBarButtonStyle.DropDownButton;
-			this.BoutonAEtoile.Tag = 4;
-			this.BoutonAEtoile.ToolTipText = "Place starting and ending flags, then find the best path.";
-			// 
-			// ImagesActions
-			// 
-			this.ImagesActions.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
-			this.ImagesActions.ImageSize = new System.Drawing.Size(16, 16);
-			this.ImagesActions.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ImagesActions.ImageStream")));
-			this.ImagesActions.TransparentColor = System.Drawing.Color.Transparent;
-			// 
-			// GraphStatusBar
-			// 
-			this.GraphStatusBar.Location = new System.Drawing.Point(0, 494);
-			this.GraphStatusBar.Name = "GraphStatusBar";
-			this.GraphStatusBar.Panels.AddRange(new System.Windows.Forms.StatusBarPanel[] {
-																							  this.NbNodesPanel,
-																							  this.NbArcsPanel,
-																							  this.CoordsPanel});
-			this.GraphStatusBar.ShowPanels = true;
-			this.GraphStatusBar.Size = new System.Drawing.Size(744, 24);
-			this.GraphStatusBar.TabIndex = 1;
-			this.GraphStatusBar.Text = "GraphStatusBar";
-			// 
-			// NbNodesPanel
-			// 
-			this.NbNodesPanel.AutoSize = System.Windows.Forms.StatusBarPanelAutoSize.Contents;
-			this.NbNodesPanel.Icon = ((System.Drawing.Icon)(resources.GetObject("NbNodesPanel.Icon")));
-			this.NbNodesPanel.Text = "NbNodes";
-			this.NbNodesPanel.ToolTipText = "Number of nodes";
-			this.NbNodesPanel.Width = 82;
-			// 
-			// NbArcsPanel
-			// 
-			this.NbArcsPanel.AutoSize = System.Windows.Forms.StatusBarPanelAutoSize.Contents;
-			this.NbArcsPanel.Icon = ((System.Drawing.Icon)(resources.GetObject("NbArcsPanel.Icon")));
-			this.NbArcsPanel.Text = "NbArcs";
-			this.NbArcsPanel.ToolTipText = "Number of arcs";
-			this.NbArcsPanel.Width = 72;
-			// 
-			// CoordsPanel
-			// 
-			this.CoordsPanel.Alignment = System.Windows.Forms.HorizontalAlignment.Right;
-			this.CoordsPanel.AutoSize = System.Windows.Forms.StatusBarPanelAutoSize.Spring;
-			this.CoordsPanel.BorderStyle = System.Windows.Forms.StatusBarPanelBorderStyle.None;
-			this.CoordsPanel.Text = "Coordinates";
-			this.CoordsPanel.Width = 574;
-			// 
-			// GraphPanel
-			// 
-			this.GraphPanel.BackColor = System.Drawing.Color.FromArgb(((System.Byte)(255)), ((System.Byte)(255)), ((System.Byte)(192)));
-			this.GraphPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-			this.GraphPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.GraphPanel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((System.Byte)(0)));
-			this.GraphPanel.Location = new System.Drawing.Point(0, 24);
-			this.GraphPanel.Name = "GraphPanel";
-			this.GraphPanel.Size = new System.Drawing.Size(744, 470);
-			this.GraphPanel.TabIndex = 2;
-			this.GraphPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.GraphPanel_MouseUp);
-			this.GraphPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.GraphPanel_Paint);
-			this.GraphPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.GraphPanel_MouseMove);
-			this.GraphPanel.MouseLeave += new System.EventHandler(this.GraphPanel_MouseLeave);
-			this.GraphPanel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GraphPanel_MouseDown);
-			// 
-			// FichierToolBar
-			// 
-			this.FichierToolBar.Appearance = System.Windows.Forms.ToolBarAppearance.Flat;
-			this.FichierToolBar.Buttons.AddRange(new System.Windows.Forms.ToolBarButton[] {
-																							  this.BoutonNouveau,
-																							  this.BoutonCharger,
-																							  this.BoutonSauver,
-																							  this.BoutonAProposDe,
-																							  this.Sep1});
-			this.FichierToolBar.ButtonSize = new System.Drawing.Size(16, 16);
-			this.FichierToolBar.Divider = false;
-			this.FichierToolBar.Dock = System.Windows.Forms.DockStyle.None;
-			this.FichierToolBar.DropDownArrows = true;
-			this.FichierToolBar.ImageList = this.ImagesFichier;
-			this.FichierToolBar.Name = "FichierToolBar";
-			this.FichierToolBar.ShowToolTips = true;
-			this.FichierToolBar.Size = new System.Drawing.Size(104, 23);
-			this.FichierToolBar.TabIndex = 0;
-			this.FichierToolBar.ButtonClick += new System.Windows.Forms.ToolBarButtonClickEventHandler(this.FichierToolBar_ButtonClick);
-			// 
-			// BoutonNouveau
-			// 
-			this.BoutonNouveau.ImageIndex = 0;
-			this.BoutonNouveau.Tag = 0;
-			this.BoutonNouveau.ToolTipText = "Clear the current graph to create a new one";
-			// 
-			// BoutonCharger
-			// 
-			this.BoutonCharger.ImageIndex = 1;
-			this.BoutonCharger.Tag = 1;
-			this.BoutonCharger.ToolTipText = "Load a graph";
-			// 
-			// BoutonSauver
-			// 
-			this.BoutonSauver.ImageIndex = 2;
-			this.BoutonSauver.Tag = 2;
-			this.BoutonSauver.ToolTipText = "Save the current graph";
-			// 
-			// BoutonAProposDe
-			// 
-			this.BoutonAProposDe.ImageIndex = 3;
-			this.BoutonAProposDe.Tag = 3;
-			this.BoutonAProposDe.ToolTipText = "About GraphFormer...";
-			// 
-			// Sep1
-			// 
-			this.Sep1.Style = System.Windows.Forms.ToolBarButtonStyle.Separator;
-			// 
-			// ImagesFichier
-			// 
-			this.ImagesFichier.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
-			this.ImagesFichier.ImageSize = new System.Drawing.Size(16, 16);
-			this.ImagesFichier.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ImagesFichier.ImageStream")));
-			this.ImagesFichier.TransparentColor = System.Drawing.Color.Transparent;
-			// 
-			// AEtoileToolBar
-			// 
-			this.AEtoileToolBar.Appearance = System.Windows.Forms.ToolBarAppearance.Flat;
-			this.AEtoileToolBar.Buttons.AddRange(new System.Windows.Forms.ToolBarButton[] {
-																							  this.Sep2,
-																							  this.AEtoileDebut,
-																							  this.AEtoileEtape,
-																							  this.AEtoileFin});
-			this.AEtoileToolBar.ButtonSize = new System.Drawing.Size(16, 16);
-			this.AEtoileToolBar.Cursor = System.Windows.Forms.Cursors.Arrow;
-			this.AEtoileToolBar.Divider = false;
-			this.AEtoileToolBar.Dock = System.Windows.Forms.DockStyle.None;
-			this.AEtoileToolBar.DropDownArrows = true;
-			this.AEtoileToolBar.ImageList = this.ImagesPasAPas;
-			this.AEtoileToolBar.Location = new System.Drawing.Point(240, 0);
-			this.AEtoileToolBar.Name = "AEtoileToolBar";
-			this.AEtoileToolBar.ShowToolTips = true;
-			this.AEtoileToolBar.Size = new System.Drawing.Size(80, 23);
-			this.AEtoileToolBar.TabIndex = 3;
-			this.AEtoileToolBar.ButtonClick += new System.Windows.Forms.ToolBarButtonClickEventHandler(this.AEtoileToolBar_ButtonClick);
-			// 
-			// Sep2
-			// 
-			this.Sep2.Style = System.Windows.Forms.ToolBarButtonStyle.Separator;
-			// 
-			// AEtoileDebut
-			// 
-			this.AEtoileDebut.ImageIndex = 0;
-			this.AEtoileDebut.Tag = 0;
-			this.AEtoileDebut.ToolTipText = "Initialize A*";
-			// 
-			// AEtoileEtape
-			// 
-			this.AEtoileEtape.ImageIndex = 1;
-			this.AEtoileEtape.Tag = 1;
-			this.AEtoileEtape.ToolTipText = "Perform A*\'s next step";
-			// 
-			// AEtoileFin
-			// 
-			this.AEtoileFin.ImageIndex = 2;
-			this.AEtoileFin.Tag = 2;
-			this.AEtoileFin.ToolTipText = "Perform A* to the end";
-			// 
-			// ImagesPasAPas
-			// 
-			this.ImagesPasAPas.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
-			this.ImagesPasAPas.ImageSize = new System.Drawing.Size(16, 16);
-			this.ImagesPasAPas.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ImagesPasAPas.ImageStream")));
-			this.ImagesPasAPas.TransparentColor = System.Drawing.Color.Transparent;
-			// 
-			// LabelAide
-			// 
-			this.LabelAide.Dock = System.Windows.Forms.DockStyle.Top;
-			this.LabelAide.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((System.Byte)(0)));
-			this.LabelAide.ForeColor = System.Drawing.SystemColors.InactiveCaption;
-			this.LabelAide.Name = "LabelAide";
-			this.LabelAide.Size = new System.Drawing.Size(744, 24);
-			this.LabelAide.TabIndex = 4;
-			this.LabelAide.Text = "Aide";
-			this.LabelAide.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-			// 
-			// GraphFormer
-			// 
-			this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
-			this.ClientSize = new System.Drawing.Size(744, 518);
-			this.Controls.AddRange(new System.Windows.Forms.Control[] {
-																		  this.GraphPanel,
-																		  this.GraphStatusBar,
-																		  this.FichierToolBar,
-																		  this.EditionToolBar,
-																		  this.AEtoileToolBar,
-																		  this.LabelAide});
-			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-			this.Name = "GraphFormer";
-			this.Text = "GraphFormer";
-			((System.ComponentModel.ISupportInitialize)(this.NbNodesPanel)).EndInit();
-			((System.ComponentModel.ISupportInitialize)(this.NbArcsPanel)).EndInit();
-			((System.ComponentModel.ISupportInitialize)(this.CoordsPanel)).EndInit();
-			this.ResumeLayout(false);
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GraphFormer));
+            this.GraphPanel = new cogbot.TheOpenSims.Navigation.Debug.FlickerFreePanel();
+            this.EditionToolBar = new System.Windows.Forms.ToolBar();
+            this.BoutonDessiner = new System.Windows.Forms.ToolBarButton();
+            this.BoutonEffacer = new System.Windows.Forms.ToolBarButton();
+            this.BoutonDeplacer = new System.Windows.Forms.ToolBarButton();
+            this.BoutonChangerEtat = new System.Windows.Forms.ToolBarButton();
+            this.BoutonAEtoile = new System.Windows.Forms.ToolBarButton();
+            this.ImagesActions = new System.Windows.Forms.ImageList(this.components);
+            this.GraphStatusBar = new System.Windows.Forms.StatusBar();
+            this.NbNodesPanel = new System.Windows.Forms.StatusBarPanel();
+            this.NbArcsPanel = new System.Windows.Forms.StatusBarPanel();
+            this.CoordsPanel = new System.Windows.Forms.StatusBarPanel();
+            this.FichierToolBar = new System.Windows.Forms.ToolBar();
+            this.BoutonNouveau = new System.Windows.Forms.ToolBarButton();
+            this.BoutonCharger = new System.Windows.Forms.ToolBarButton();
+            this.BoutonSauver = new System.Windows.Forms.ToolBarButton();
+            this.BoutonAProposDe = new System.Windows.Forms.ToolBarButton();
+            this.Sep1 = new System.Windows.Forms.ToolBarButton();
+            this.ImagesFichier = new System.Windows.Forms.ImageList(this.components);
+            this.AEtoileToolBar = new System.Windows.Forms.ToolBar();
+            this.Sep2 = new System.Windows.Forms.ToolBarButton();
+            this.AEtoileDebut = new System.Windows.Forms.ToolBarButton();
+            this.AEtoileEtape = new System.Windows.Forms.ToolBarButton();
+            this.AEtoileFin = new System.Windows.Forms.ToolBarButton();
+            this.ImagesPasAPas = new System.Windows.Forms.ImageList(this.components);
+            this.LabelAide = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)(this.NbNodesPanel)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NbArcsPanel)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.CoordsPanel)).BeginInit();
+            this.SuspendLayout();
+            // 
+            // GraphPanel
+            // 
+            this.GraphPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.GraphPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.GraphPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.GraphPanel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.GraphPanel.Location = new System.Drawing.Point(0, 24);
+            this.GraphPanel.Name = "GraphPanel";
+            this.GraphPanel.Size = new System.Drawing.Size(744, 470);
+            this.GraphPanel.TabIndex = 2;
+            this.GraphPanel.MouseLeave += new System.EventHandler(this.GraphPanel_MouseLeave);
+            this.GraphPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.GraphPanel_Paint);
+            this.GraphPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.GraphPanel_MouseMove);
+            this.GraphPanel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GraphPanel_MouseDown);
+            this.GraphPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.GraphPanel_MouseUp);
+            // 
+            // EditionToolBar
+            // 
+            this.EditionToolBar.Appearance = System.Windows.Forms.ToolBarAppearance.Flat;
+            this.EditionToolBar.Buttons.AddRange(new System.Windows.Forms.ToolBarButton[] {
+            this.BoutonDessiner,
+            this.BoutonEffacer,
+            this.BoutonDeplacer,
+            this.BoutonChangerEtat,
+            this.BoutonAEtoile});
+            this.EditionToolBar.ButtonSize = new System.Drawing.Size(16, 16);
+            this.EditionToolBar.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.EditionToolBar.Divider = false;
+            this.EditionToolBar.Dock = System.Windows.Forms.DockStyle.None;
+            this.EditionToolBar.DropDownArrows = true;
+            this.EditionToolBar.ImageList = this.ImagesActions;
+            this.EditionToolBar.Location = new System.Drawing.Point(104, 0);
+            this.EditionToolBar.Name = "EditionToolBar";
+            this.EditionToolBar.ShowToolTips = true;
+            this.EditionToolBar.Size = new System.Drawing.Size(136, 26);
+            this.EditionToolBar.TabIndex = 0;
+            this.EditionToolBar.ButtonClick += new System.Windows.Forms.ToolBarButtonClickEventHandler(this.GraphToolBar_ButtonClick);
+            // 
+            // BoutonDessiner
+            // 
+            this.BoutonDessiner.ImageIndex = 0;
+            this.BoutonDessiner.Name = "BoutonDessiner";
+            this.BoutonDessiner.Style = System.Windows.Forms.ToolBarButtonStyle.ToggleButton;
+            this.BoutonDessiner.Tag = 0;
+            this.BoutonDessiner.ToolTipText = "Draw nodes and arcs";
+            // 
+            // BoutonEffacer
+            // 
+            this.BoutonEffacer.ImageIndex = 1;
+            this.BoutonEffacer.Name = "BoutonEffacer";
+            this.BoutonEffacer.Style = System.Windows.Forms.ToolBarButtonStyle.ToggleButton;
+            this.BoutonEffacer.Tag = 1;
+            this.BoutonEffacer.ToolTipText = "Erase nodes and arcs";
+            // 
+            // BoutonDeplacer
+            // 
+            this.BoutonDeplacer.ImageIndex = 2;
+            this.BoutonDeplacer.Name = "BoutonDeplacer";
+            this.BoutonDeplacer.Style = System.Windows.Forms.ToolBarButtonStyle.ToggleButton;
+            this.BoutonDeplacer.Tag = 2;
+            this.BoutonDeplacer.ToolTipText = "Move nodes";
+            // 
+            // BoutonChangerEtat
+            // 
+            this.BoutonChangerEtat.ImageIndex = 3;
+            this.BoutonChangerEtat.Name = "BoutonChangerEtat";
+            this.BoutonChangerEtat.Style = System.Windows.Forms.ToolBarButtonStyle.ToggleButton;
+            this.BoutonChangerEtat.Tag = 3;
+            this.BoutonChangerEtat.ToolTipText = "Change the state of nodes and arcs";
+            // 
+            // BoutonAEtoile
+            // 
+            this.BoutonAEtoile.ImageIndex = 4;
+            this.BoutonAEtoile.Name = "BoutonAEtoile";
+            this.BoutonAEtoile.Style = System.Windows.Forms.ToolBarButtonStyle.DropDownButton;
+            this.BoutonAEtoile.Tag = 4;
+            this.BoutonAEtoile.ToolTipText = "Place starting and ending flags, then find the best path.";
+            // 
+            // ImagesActions
+            // 
+            this.ImagesActions.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ImagesActions.ImageStream")));
+            this.ImagesActions.TransparentColor = System.Drawing.Color.Transparent;
+            this.ImagesActions.Images.SetKeyName(0, "");
+            this.ImagesActions.Images.SetKeyName(1, "");
+            this.ImagesActions.Images.SetKeyName(2, "");
+            this.ImagesActions.Images.SetKeyName(3, "");
+            this.ImagesActions.Images.SetKeyName(4, "");
+            // 
+            // GraphStatusBar
+            // 
+            this.GraphStatusBar.Location = new System.Drawing.Point(0, 494);
+            this.GraphStatusBar.Name = "GraphStatusBar";
+            this.GraphStatusBar.Panels.AddRange(new System.Windows.Forms.StatusBarPanel[] {
+            this.NbNodesPanel,
+            this.NbArcsPanel,
+            this.CoordsPanel});
+            this.GraphStatusBar.ShowPanels = true;
+            this.GraphStatusBar.Size = new System.Drawing.Size(744, 24);
+            this.GraphStatusBar.TabIndex = 1;
+            this.GraphStatusBar.Text = "GraphStatusBar";
+            // 
+            // NbNodesPanel
+            // 
+            this.NbNodesPanel.AutoSize = System.Windows.Forms.StatusBarPanelAutoSize.Contents;
+            this.NbNodesPanel.Icon = ((System.Drawing.Icon)(resources.GetObject("NbNodesPanel.Icon")));
+            this.NbNodesPanel.Name = "NbNodesPanel";
+            this.NbNodesPanel.Text = "NbNodes";
+            this.NbNodesPanel.ToolTipText = "Number of nodes";
+            this.NbNodesPanel.Width = 82;
+            // 
+            // NbArcsPanel
+            // 
+            this.NbArcsPanel.AutoSize = System.Windows.Forms.StatusBarPanelAutoSize.Contents;
+            this.NbArcsPanel.Icon = ((System.Drawing.Icon)(resources.GetObject("NbArcsPanel.Icon")));
+            this.NbArcsPanel.Name = "NbArcsPanel";
+            this.NbArcsPanel.Text = "NbArcs";
+            this.NbArcsPanel.ToolTipText = "Number of arcs";
+            this.NbArcsPanel.Width = 72;
+            // 
+            // CoordsPanel
+            // 
+            this.CoordsPanel.Alignment = System.Windows.Forms.HorizontalAlignment.Right;
+            this.CoordsPanel.AutoSize = System.Windows.Forms.StatusBarPanelAutoSize.Spring;
+            this.CoordsPanel.BorderStyle = System.Windows.Forms.StatusBarPanelBorderStyle.None;
+            this.CoordsPanel.Name = "CoordsPanel";
+            this.CoordsPanel.Text = "Coordinates";
+            this.CoordsPanel.Width = 574;
+            // 
+            // FichierToolBar
+            // 
+            this.FichierToolBar.Appearance = System.Windows.Forms.ToolBarAppearance.Flat;
+            this.FichierToolBar.Buttons.AddRange(new System.Windows.Forms.ToolBarButton[] {
+            this.BoutonNouveau,
+            this.BoutonCharger,
+            this.BoutonSauver,
+            this.BoutonAProposDe,
+            this.Sep1});
+            this.FichierToolBar.ButtonSize = new System.Drawing.Size(16, 16);
+            this.FichierToolBar.Divider = false;
+            this.FichierToolBar.Dock = System.Windows.Forms.DockStyle.None;
+            this.FichierToolBar.DropDownArrows = true;
+            this.FichierToolBar.ImageList = this.ImagesFichier;
+            this.FichierToolBar.Location = new System.Drawing.Point(0, 0);
+            this.FichierToolBar.Name = "FichierToolBar";
+            this.FichierToolBar.ShowToolTips = true;
+            this.FichierToolBar.Size = new System.Drawing.Size(104, 26);
+            this.FichierToolBar.TabIndex = 0;
+            this.FichierToolBar.ButtonClick += new System.Windows.Forms.ToolBarButtonClickEventHandler(this.FichierToolBar_ButtonClick);
+            // 
+            // BoutonNouveau
+            // 
+            this.BoutonNouveau.ImageIndex = 0;
+            this.BoutonNouveau.Name = "BoutonNouveau";
+            this.BoutonNouveau.Tag = 0;
+            this.BoutonNouveau.ToolTipText = "Clear the current graph to create a new one";
+            // 
+            // BoutonCharger
+            // 
+            this.BoutonCharger.ImageIndex = 1;
+            this.BoutonCharger.Name = "BoutonCharger";
+            this.BoutonCharger.Tag = 1;
+            this.BoutonCharger.ToolTipText = "Load a graph";
+            // 
+            // BoutonSauver
+            // 
+            this.BoutonSauver.ImageIndex = 2;
+            this.BoutonSauver.Name = "BoutonSauver";
+            this.BoutonSauver.Tag = 2;
+            this.BoutonSauver.ToolTipText = "Save the current graph";
+            // 
+            // BoutonAProposDe
+            // 
+            this.BoutonAProposDe.ImageIndex = 3;
+            this.BoutonAProposDe.Name = "BoutonAProposDe";
+            this.BoutonAProposDe.Tag = 3;
+            this.BoutonAProposDe.ToolTipText = "About GraphFormer...";
+            // 
+            // Sep1
+            // 
+            this.Sep1.Name = "Sep1";
+            this.Sep1.Style = System.Windows.Forms.ToolBarButtonStyle.Separator;
+            // 
+            // ImagesFichier
+            // 
+            this.ImagesFichier.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ImagesFichier.ImageStream")));
+            this.ImagesFichier.TransparentColor = System.Drawing.Color.Transparent;
+            this.ImagesFichier.Images.SetKeyName(0, "");
+            this.ImagesFichier.Images.SetKeyName(1, "");
+            this.ImagesFichier.Images.SetKeyName(2, "");
+            this.ImagesFichier.Images.SetKeyName(3, "");
+            // 
+            // AEtoileToolBar
+            // 
+            this.AEtoileToolBar.Appearance = System.Windows.Forms.ToolBarAppearance.Flat;
+            this.AEtoileToolBar.Buttons.AddRange(new System.Windows.Forms.ToolBarButton[] {
+            this.Sep2,
+            this.AEtoileDebut,
+            this.AEtoileEtape,
+            this.AEtoileFin});
+            this.AEtoileToolBar.ButtonSize = new System.Drawing.Size(16, 16);
+            this.AEtoileToolBar.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.AEtoileToolBar.Divider = false;
+            this.AEtoileToolBar.Dock = System.Windows.Forms.DockStyle.None;
+            this.AEtoileToolBar.DropDownArrows = true;
+            this.AEtoileToolBar.ImageList = this.ImagesPasAPas;
+            this.AEtoileToolBar.Location = new System.Drawing.Point(240, 0);
+            this.AEtoileToolBar.Name = "AEtoileToolBar";
+            this.AEtoileToolBar.ShowToolTips = true;
+            this.AEtoileToolBar.Size = new System.Drawing.Size(80, 26);
+            this.AEtoileToolBar.TabIndex = 3;
+            this.AEtoileToolBar.ButtonClick += new System.Windows.Forms.ToolBarButtonClickEventHandler(this.AEtoileToolBar_ButtonClick);
+            // 
+            // Sep2
+            // 
+            this.Sep2.Name = "Sep2";
+            this.Sep2.Style = System.Windows.Forms.ToolBarButtonStyle.Separator;
+            // 
+            // AEtoileDebut
+            // 
+            this.AEtoileDebut.ImageIndex = 0;
+            this.AEtoileDebut.Name = "AEtoileDebut";
+            this.AEtoileDebut.Tag = 0;
+            this.AEtoileDebut.ToolTipText = "Initialize A*";
+            // 
+            // AEtoileEtape
+            // 
+            this.AEtoileEtape.ImageIndex = 1;
+            this.AEtoileEtape.Name = "AEtoileEtape";
+            this.AEtoileEtape.Tag = 1;
+            this.AEtoileEtape.ToolTipText = "Perform A*\'s next step";
+            // 
+            // AEtoileFin
+            // 
+            this.AEtoileFin.ImageIndex = 2;
+            this.AEtoileFin.Name = "AEtoileFin";
+            this.AEtoileFin.Tag = 2;
+            this.AEtoileFin.ToolTipText = "Perform A* to the end";
+            // 
+            // ImagesPasAPas
+            // 
+            this.ImagesPasAPas.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ImagesPasAPas.ImageStream")));
+            this.ImagesPasAPas.TransparentColor = System.Drawing.Color.Transparent;
+            this.ImagesPasAPas.Images.SetKeyName(0, "");
+            this.ImagesPasAPas.Images.SetKeyName(1, "");
+            this.ImagesPasAPas.Images.SetKeyName(2, "");
+            // 
+            // LabelAide
+            // 
+            this.LabelAide.Dock = System.Windows.Forms.DockStyle.Top;
+            this.LabelAide.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.LabelAide.ForeColor = System.Drawing.SystemColors.InactiveCaption;
+            this.LabelAide.Location = new System.Drawing.Point(0, 0);
+            this.LabelAide.Name = "LabelAide";
+            this.LabelAide.Size = new System.Drawing.Size(744, 24);
+            this.LabelAide.TabIndex = 4;
+            this.LabelAide.Text = "Aide";
+            this.LabelAide.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // GraphFormer
+            // 
+            this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
+            this.ClientSize = new System.Drawing.Size(744, 518);
+            this.Controls.Add(this.GraphPanel);
+            this.Controls.Add(this.GraphStatusBar);
+            this.Controls.Add(this.FichierToolBar);
+            this.Controls.Add(this.EditionToolBar);
+            this.Controls.Add(this.AEtoileToolBar);
+            this.Controls.Add(this.LabelAide);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Name = "GraphFormer";
+            this.Text = "GraphFormer";
+            ((System.ComponentModel.ISupportInitialize)(this.NbNodesPanel)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NbArcsPanel)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.CoordsPanel)).EndInit();
+            this.ResumeLayout(false);
+            this.PerformLayout();
 
 		}
 		#endregion
@@ -939,7 +964,10 @@ with the respective left and right mouse buttons.", "Impossible action", Message
             NDepart = start;
             NArrivee = end;
          //   CalculPossible = true;
-            AEtoile_Fin();
+          //  AEtoile_Debut();
+          //  AEtoile_Fin();
+            Chemin = AE.SearchPath(NDepart, NArrivee) ? AE.PathByNodes : null;
+            GraphPanel.Invalidate();
         }
 
 		private void AEtoile_Debut()
@@ -1130,7 +1158,8 @@ with the respective left and right mouse buttons.", "Impossible action", Message
 
         public void RepaintNow()
         {
-            GraphPanel_Paint(null, null);
+         //   GraphPanel_Paint(null, null);
+            GraphPanel.Invalidate();
         }
         Graphics GrfxI;
         #region Dessin
@@ -1153,8 +1182,8 @@ with the respective left and right mouse buttons.", "Impossible action", Message
 
 			SuspendLayout();
 			// Dessin du graphe
-			foreach ( SimWaypoint N in G.Nodes ) DessinerNoeud(Grfx, N.Passable?CrayonNoeuds:CrayonNoeudsInactifs, N);
-			foreach ( SimRoute A in G.Arcs ) DessinerArc(Grfx, A.Passable?CrayonArcs:CrayonArcsInactifs, A);
+            lock (G.Nodes) foreach (SimWaypoint N in G.Nodes) DessinerNoeud(Grfx, N.Passable ? CrayonNoeuds : CrayonNoeudsInactifs, N);
+            lock (G.Arcs) foreach (SimRoute A in G.Arcs) DessinerArc(Grfx, A.Passable ? CrayonArcs : CrayonArcsInactifs, A);
 
 			// Dessin du tracé temporaire courant
 			if ( Mode==Action.Dessiner )
@@ -1301,6 +1330,12 @@ with the respective left and right mouse buttons.", "Impossible action", Message
 			}
 			catch (Exception e) { MessageBox.Show(e.ToString()); }
 		}
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            DEBUGGER = null;
+            base.OnFormClosing(e);
+        }
 
 
     }
