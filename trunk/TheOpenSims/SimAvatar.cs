@@ -8,6 +8,7 @@ using cogbot.Listeners;
 using System.Threading;
 using System.Windows.Forms;
 using cogbot.TheOpenSims.Navigation;
+using System.Collections;
 //Complex outcomes may be a result of simple causes, or they may just be complex by nature. 
 //Those complexities that turn out to have simple causes can be simulated and studied, 
 //thus increasing our knowledge without needing direct observation.
@@ -32,7 +33,7 @@ namespace cogbot.TheOpenSims
 
 
         // things the bot cycles through mentally
-        public List<SimObject> KnownSimObjects = new List<SimObject>();
+        public ListAsSet<SimObject> KnownSimObjects = new ListAsSet<SimObject>();
 
         public List<SimObject> GetKnownObjects()
         {
@@ -237,7 +238,7 @@ namespace cogbot.TheOpenSims
         {
             BotAction act = CurrentAction;
 
-            IList<SimUsage> acts = (IList<SimUsage>)GetPossibleActions();
+            IList<BotAction> acts = GetPossibleActions();
 
             if (acts.Count > 0)
             {
@@ -247,16 +248,16 @@ namespace cogbot.TheOpenSims
             return act;
         }
 
-        public SimUsage FindBestUsage(IEnumerable<SimUsage> acts)
+        public SimUsage FindBestUsage(IEnumerable acts)
         {
             SimUsage bestAct = null;
             if (acts != null)
             {
-                IEnumerator<SimUsage> enumer = acts.GetEnumerator();
+                IEnumerator enumer = acts.GetEnumerator();
                 float bestRate = float.MinValue;
                 while (enumer.MoveNext())
                 {
-                    SimUsage b = enumer.Current;
+                    SimUsage b = (SimUsage)enumer.Current;
                     float brate = b.RateIt(CurrentNeeds);
                     if (brate > bestRate)
                     {
@@ -446,13 +447,13 @@ namespace cogbot.TheOpenSims
                     if (obj != this)
                         if (obj.IsRoot() || obj.IsTyped())
                         {
-                            if (!KnownSimObjects.Contains(obj))
+                            lock (KnownSimObjects) if (!KnownSimObjects.Contains(obj))
                             {
                                 KnownSimObjects.Add(obj);
                                 IList<SimTypeUsage> uses = obj.GetTypeUsages();
                                 foreach (SimTypeUsage use in uses)
                                 {
-                                    if (!KnownTypeUsages.Contains(use))
+                                    lock (KnownTypeUsages) if (!KnownTypeUsages.Contains(use))
                                     {
                                         KnownTypeUsages.Add(use);
                                     }
@@ -852,6 +853,20 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        public override SimWaypoint GetWaypoint()
+        {
+            Vector3 v3 = GetSimPosition();
+            SimWaypoint swp = WorldSystem.SimPaths.CreateClosestWaypoint(v3);
+            float dist = Vector3.Distance(v3, swp.GetSimPosition());
+            if (!swp.Passable)
+            {
+                WorldSystem.output("CreateClosestWaypoint: " + v3 + " <- " + dist + " -> " + swp + " " + this);
+            }
+            return swp;
+            //            return WorldSystem.SimPaths.CreateClosestWaypointBox(v3, 4f);
+        }
+
+
         public void TurnToward(SimPosition targetPosition)
         {
             Client.Self.Movement.TurnToward(targetPosition.GetSimPosition());
@@ -921,13 +936,17 @@ namespace cogbot.TheOpenSims
             string str = "Approaching " + obj + " " + DistanceVectorString(obj) + " to get " + ApproachDistance;
             Debug(str);
             obj.MakeEnterable();
-            MoveTo(obj.GetSimPosition(), obj.GetSizeDistance() + 0.5f, 12);
+            if (!MoveTo(obj.GetSimPosition(), obj.GetSizeDistance() + 0.5f, 12))
+            {
+                GotoTarget(obj);
+            }
             if (UnPhantom != null)
                 UnPhantom.RestoreEnterable();
 
             return Distance(obj);
         }
 
+        int TurnAvoid = 90;
         /// <summary>
         /// 
         /// </summary>
@@ -972,7 +991,13 @@ namespace cogbot.TheOpenSims
                     Debug("OK GotoTarget: " + pos);
                     return true;
                 }
-                Vector3 newPost = GetLeftPos(90, 4f);
+                TurnAvoid += 115;
+                while (TurnAvoid > 360)
+                {
+                    TurnAvoid -= 360;
+                }
+                Vector3 newPost = GetLeftPos(TurnAvoid, 4f);
+
                 StopMoving();
                 Debug("MOVELEFT GotoTarget: " + pos);
                 MoveTo(newPost, 2f, 4);
@@ -995,7 +1020,7 @@ namespace cogbot.TheOpenSims
             
             Quaternion r = GetSimRotation();
             Quaternion z_angle = Quaternion.CreateFromEulers(new Vector3(0, 0, zAngleFromFace /57.29577951f));
-            Quaternion next = r * z_angle;
+            Quaternion next = z_angle;
             float ax, ay, az;
             next.GetEulerAngles(out ax, out ay, out az);
             float xmul = (float)Math.Cos(az);

@@ -59,12 +59,12 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public SimWaypoint GetWaypoint()
+        public virtual SimWaypoint GetWaypoint()
         {
             Vector3 v3 = GetSimPosition();
-            SimWaypoint swp = WorldSystem.SimPaths.CreateClosestWaypointBox(v3, GetSizeDistance() + 4, 5, 1.0f);
+            SimWaypoint swp = WorldSystem.SimPaths.CreateClosestWaypointBox(v3, GetSizeDistance()+1, 7, 1.0f);
             float dist = Vector3.Distance(v3, swp.GetSimPosition());
-            if (dist > GetSizeDistance())
+            if (!swp.Passable)
             {
                WorldSystem.output("CreateClosestWaypoint: " +v3+ " <- " + dist + " -> " + swp + " " + this );
             }
@@ -567,7 +567,7 @@ namespace cogbot.TheOpenSims
 
         internal void SortByDistance(List<SimObject> sortme)
         {
-            sortme.Sort(CompareDistance);
+            lock (sortme) sortme.Sort(CompareDistance);
         }
 
         public int CompareDistance(SimObject p1, SimObject p2)

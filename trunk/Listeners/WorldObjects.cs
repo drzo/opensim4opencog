@@ -1669,6 +1669,7 @@ namespace cogbot.Listeners
 
         internal void DeletePrim(Primitive thePrim)
         {
+            if (thePrim is Avatar) return;
             SimObjects.Remove(GetSimObject(thePrim));
             client.Inventory.RequestDeRezToInventory(thePrim.LocalID);
         }
