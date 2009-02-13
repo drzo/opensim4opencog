@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using System.Collections;
+using cogbot.TheOpenSims.Navigation.Debug;
 
 namespace cogbot.TheOpenSims.Navigation
 {
@@ -60,6 +61,11 @@ namespace cogbot.TheOpenSims.Navigation
                 foreach (SimRoute A in _IncomingArcs) A.Passable = value;
                 foreach (SimRoute A in _OutgoingArcs) A.Passable = value;
                 _Passable = value;
+                if (GraphFormer.DEBUGGER != null)
+                {
+                    GraphFormer.DEBUGGER.RepaintNow();
+                }
+
             }
             get { return _Passable; }
         }
@@ -67,17 +73,17 @@ namespace cogbot.TheOpenSims.Navigation
         /// <summary>
         /// Gets X coordinate.
         /// </summary>
-        public double X { get { return Position.X*3; } }
+        public double X { get { return Position.X * GraphFormer.DSCALE; } }
 
         /// <summary>
         /// Gets Y coordinate.
         /// </summary>
-        public double Y { get { return Position.Y*3; } }
+        public double Y { get { return Position.Y * GraphFormer.DSCALE; } }
 
         /// <summary>
         /// Gets Z coordinate.
         /// </summary>
-        public double Z { get { return Position.Z*3; } }
+        public double Z { get { return Position.Z * GraphFormer.DSCALE; } }
 
         /// <summary>
         /// Modifies X, Y and Z coordinates
@@ -85,9 +91,9 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="PositionX">X coordinate.</param>
         /// <param name="PositionY">Y coordinate.</param>
         /// <param name="PositionZ">Z coordinate.</param>
-        public void ChangeXYZ(double PositionX, double PositionY, double PositionZ)
+        public void ChangeXYZDebug(float PositionX, float PositionY, float PositionZ)
         {
-            Position = new Vector3((float)PositionX/3f, (float)PositionY/3f,(float) PositionZ/3f);
+            Position = new Vector3((float)PositionX, (float)PositionY,(float) PositionZ);
         }
 
         /// <summary>
@@ -386,8 +392,8 @@ namespace cogbot.TheOpenSims.Navigation
         public static Vector3 RoundPoint(Vector3 point)
         {
             Vector3 vect3 = new Vector3(point);
-            vect3.X = (float)Math.Round(vect3.X*2,0)/2;
-            vect3.Y = (float)Math.Round(vect3.Y*2,0)/2;
+            vect3.X = (float)Math.Round(vect3.X,0);
+            vect3.Y = (float)Math.Round(vect3.Y,0);
             vect3.Z = (float)Math.Round(vect3.Z, 0);
             return vect3;
         }
