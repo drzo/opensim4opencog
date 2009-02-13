@@ -28,7 +28,8 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 	/// </summary>
 	public class GraphFormer : System.Windows.Forms.Form
 	{
-        readonly static float THREE = 3f;
+        public readonly static float DSCALE = 6f;
+        volatile public static GraphFormer DEBUGGER = null;
 		#region Construction / Destruction
 
 		private ContextMenu MenuContextuel;
@@ -97,6 +98,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 
 		public GraphFormer(SimPathStore SPS)
 		{
+            DEBUGGER = this;
 			MenuContextuel = new ContextMenu();
 			MenuContextuel.MenuItems.Add(new MenuItem("Automatic", new EventHandler(ChoixAutomatique)));
 			MenuContextuel.MenuItems.Add(new MenuItem("Step by step", new EventHandler(ChoixPasAPas)));
@@ -508,7 +510,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 		{
 			float[] Min, Max;
 			SimWaypoint.BoundingBox(NoeudsAEnglober, out Min, out Max);
-			return Rectangle.FromLTRB((int)(Min[0]* THREE), (int)(Min[1]* THREE), (int)(Max[0]* THREE), (int)(Max[1]* THREE));
+			return Rectangle.FromLTRB((int)(Min[0]* DSCALE), (int)(Min[1]* DSCALE), (int)(Max[0]* DSCALE), (int)(Max[1]* DSCALE));
 		}
 
 		static bool Collision(SimWaypoint N1, SimWaypoint N2)
@@ -526,8 +528,8 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 			}
 			else
 			{
-                if (N == null) N = SimWaypoint.Create(X, Y, 0);
-				else N.ChangeXYZ(X, Y, 0);
+                if (N == null) N = SimWaypoint.Create(X / DSCALE, Y / DSCALE, 0);
+                else N.ChangeXYZDebug(X/DSCALE, Y/DSCALE, 0);
 				return true;
 			}
 		}
@@ -535,15 +537,15 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 		SimWaypoint NoeudSousJacent(int X, int Y)
 		{
 			float Distance;
-            SimWaypoint ClosestNode = G.ClosestNode((float)(X / THREE), (float)(Y / THREE), 0, out Distance, false);
-			return (Distance* THREE)<=2*Rayon ? ClosestNode : null;
+            SimWaypoint ClosestNode = G.ClosestNode((float)(X / DSCALE), (float)(Y / DSCALE), 0, out Distance, false);
+			return (Distance* DSCALE)<=2*Rayon ? ClosestNode : null;
 		}
 
 		SimRoute ArcSousJacent(int X, int Y)
 		{
             float Distance;
-			SimRoute ArcPlusProche = G.ClosestArc((float)(X/ THREE), (float)(Y/ THREE), 0, out Distance, false);
-            return (Distance * THREE) <= Rayon ? ArcPlusProche : null;
+			SimRoute ArcPlusProche = G.ClosestArc((float)(X/ DSCALE), (float)(Y/ DSCALE), 0, out Distance, false);
+            return (Distance * DSCALE) <= Rayon ? ArcPlusProche : null;
 		}
 		#endregion
 
@@ -575,7 +577,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 				case Action.Dessiner:
 				{
 					AjouterN1 = NoeudSelonPosition(e.X, e.Y, ref TempN1);
-                    TempN2 = SimWaypoint.Create((float)(TempN1.X / THREE), (float)(TempN1.Y / THREE), (float)0);
+                    TempN2 = SimWaypoint.Create((float)((TempN1.X) / DSCALE), (float)((TempN1.Y) / DSCALE), (float)0);
 					GraphPanel.Invalidate( Boite(TempN1, TempN2) );
 					break;
 				}
@@ -618,7 +620,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 		string SB_NoeudPlusProche(int X, int Y)
 		{
 			float Distance;
-			SimWaypoint N = G.ClosestNode(X/THREE, Y/THREE, 0, out Distance, true);
+			SimWaypoint N = G.ClosestNode(X/DSCALE, Y/DSCALE, 0, out Distance, true);
 			return N!=null ? SB_Noeud((int)N.X, (int)N.Y) : SB_Point(X, Y);
 		}
 
@@ -681,7 +683,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 					{
 						if ( TempN1==null || TempN2==null ) return;
 						Rectangle AncienRect = Boite(TempN1, TempN2);
-						TempN2.ChangeXYZ(e.X, e.Y, 0);
+                        TempN2.ChangeXYZDebug(e.X / DSCALE, e.Y / DSCALE, 0);
 						Rectangle NouveauRect = Boite(TempN1, TempN2);
 						GraphPanel.Invalidate( Rectangle.Union(AncienRect, NouveauRect) );
 					}
@@ -701,7 +703,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 							for ( int i=0; i<AncienChemin.Length; i++ ) AncienChemin[i] = (SimWaypoint)Chemin[i].Clone();
 						}
 
-						TempN1.ChangeXYZ(e.X, e.Y, 0);
+                        TempN1.ChangeXYZDebug(e.X / DSCALE, e.Y / DSCALE, 0);
 						Rectangle NouveauRect = Boite(TempN1.Molecule);
 						if ( AdapterAEtoile() && CheminsDifferents(AncienChemin, Chemin) ) GraphPanel.Invalidate();
 						else GraphPanel.Invalidate( Rectangle.Union(AncienRect, NouveauRect) );
@@ -712,7 +714,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 						int DY = (int)(e.Y-TempP.Y);
 						TempP.X = e.X;
 						TempP.Y = e.Y;
-						foreach ( SimWaypoint N in G.Nodes ) N.ChangeXYZ(N.X+DX, N.Y+DY, 0);
+                        foreach (SimWaypoint N in G.Nodes) N.ChangeXYZDebug((float)(N.X + DX) / DSCALE, (float)(N.Y + DY) / DSCALE, 0);
 						GraphPanel.Invalidate();
 					}
 					break;
@@ -840,7 +842,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 				case Action.AEtoile:
 				{
 					float Distance;
-					SimWaypoint NoeudPlusProche = G.ClosestNode(e.X/THREE, e.Y/THREE, 0, out Distance, true);
+					SimWaypoint NoeudPlusProche = G.ClosestNode(e.X/DSCALE, e.Y/DSCALE, 0, out Distance, true);
 					if ( NoeudPlusProche==null ) break;
 					Rectangle Invalide = Boite(NoeudPlusProche);
 
@@ -931,6 +933,14 @@ with the respective left and right mouse buttons.", "Impossible action", Message
 			}
 			GraphPanel.Invalidate();
 		}
+
+
+        public void SetTryPathNow(SimWaypoint start,SimWaypoint end) {
+            NDepart = start;
+            NArrivee = end;
+         //   CalculPossible = true;
+            AEtoile_Fin();
+        }
 
 		private void AEtoile_Debut()
 		{
@@ -1117,17 +1127,29 @@ with the respective left and right mouse buttons.", "Impossible action", Message
 		}
 		#endregion
 
-		#region Dessin
+
+        public void RepaintNow()
+        {
+            GraphPanel_Paint(null, null);
+        }
+        Graphics GrfxI;
+        #region Dessin
 		/// <summary>
 		/// 
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void GraphPanel_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+        /// 
+		private void GraphPanel_Paint(object senderee, System.Windows.Forms.PaintEventArgs eee)
 		{
-			Graphics Grfx = e.Graphics;
-			Grfx.SmoothingMode = SmoothingMode.AntiAlias;
-			Grfx.PixelOffsetMode = PixelOffsetMode.None;
+            if (eee != null)
+            {
+                // Needed at least once
+               GrfxI = eee.Graphics;
+            }
+            Graphics Grfx = GrfxI;
+            Grfx.SmoothingMode = SmoothingMode.AntiAlias;
+            Grfx.PixelOffsetMode = PixelOffsetMode.None;
 
 			SuspendLayout();
 			// Dessin du graphe
@@ -1279,5 +1301,7 @@ with the respective left and right mouse buttons.", "Impossible action", Message
 			}
 			catch (Exception e) { MessageBox.Show(e.ToString()); }
 		}
-	}
+
+
+    }
 }

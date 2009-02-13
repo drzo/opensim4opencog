@@ -5,6 +5,7 @@ using OpenMetaverse;
 using cogbot.Listeners;
 using System.Threading;
 using cogbot.TheOpenSims.Navigation;
+using cogbot.TheOpenSims.Navigation.Debug;
 
 namespace cogbot.TheOpenSims
 {
@@ -74,6 +75,11 @@ namespace cogbot.TheOpenSims
         public SimRoute[] GetRouteList(SimWaypoint to, out bool IsFake)
         {
             SimWaypoint from = this.GetWaypoint();
+            if (GraphFormer.DEBUGGER != null)
+            {
+                GraphFormer.DEBUGGER.SetTryPathNow(from, to);
+                GraphFormer.DEBUGGER.Invalidate();
+            }
             return WorldSystem.SimPaths.GetRoute(from, to, out IsFake);
         }
 
