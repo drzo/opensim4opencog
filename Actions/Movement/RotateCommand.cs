@@ -11,7 +11,7 @@ namespace cogbot.Actions.Movement
             Description = "Sends the RotateCommand command to the server for a single packet or a given number of seconds. Usage: rotate [180]";
             Category = CommandCategory.Movement;
         }
-
+        readonly static float DEG_TO_RAD = 1 / 57.29577951;
         /// <summary>
         /// Offsets a position by the Global position determined by the regionhandle
         /// </summary>
@@ -35,22 +35,28 @@ namespace cogbot.Actions.Movement
             if (args.Length > 1)
                 return "Usage: rotate [angle]";
 
+
             int angle;
             if (args.Length == 0)
             {
                 float x, y, z;
                 Client.Self.Movement.BodyRotation.GetEulerAngles(out x, out y, out z);
-                return "Rotation is at " + z * 57.29577951;
+                return "Rotation is at " + z * DEG_TO_RAD;
             }
             else
             {
                 // Parse the number             
                 if (!Int32.TryParse(args[0], out angle))
                     return "Usage: rotate [angle]";
-                float x, y, z;
-                Client.Self.Movement.BodyRotation.GetEulerAngles(out x, out y, out z);
-                double heading = (angle / 57.29577951);
-                Client.Self.Movement.UpdateFromHeading(heading, false);
+                //float x, y, z;
+                //Client.Self.Movement.BodyRotation.GetEulerAngles(out x, out y, out z);
+                //double heading = (angle / 57.29577951);
+                //Client.Self.Movement.UpdateFromHeading(heading, false);
+                Quaternion x_angle = Quaternion.CreateFromEulers(new Vector3(0, 0, angle * DEG_TO_RAD));
+                Quaternion current = Client.Self.Movement.BodyRotation;
+                Quaternion next = current * x_angle;
+                Client.Self.Movement.BodyRotation = next;
+                Client.Self.Movement.SendUpdate();
                 return "Turned " + angle;
 
             }
