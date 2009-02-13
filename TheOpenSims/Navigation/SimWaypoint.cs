@@ -67,17 +67,17 @@ namespace cogbot.TheOpenSims.Navigation
         /// <summary>
         /// Gets X coordinate.
         /// </summary>
-        public float X { get { return Position.X; } }
+        public double X { get { return Position.X*3; } }
 
         /// <summary>
         /// Gets Y coordinate.
         /// </summary>
-        public float Y { get { return Position.Y; } }
+        public double Y { get { return Position.Y*3; } }
 
         /// <summary>
         /// Gets Z coordinate.
         /// </summary>
-        public float Z { get { return Position.Z; } }
+        public double Z { get { return Position.Z*3; } }
 
         /// <summary>
         /// Modifies X, Y and Z coordinates
@@ -85,9 +85,9 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="PositionX">X coordinate.</param>
         /// <param name="PositionY">Y coordinate.</param>
         /// <param name="PositionZ">Z coordinate.</param>
-        public void ChangeXYZ(float PositionX, float PositionY, float PositionZ)
+        public void ChangeXYZ(double PositionX, double PositionY, double PositionZ)
         {
-            Position = new Vector3(PositionX, PositionY, PositionZ);
+            Position = new Vector3((float)PositionX/3f, (float)PositionY/3f,(float) PositionZ/3f);
         }
 
         /// <summary>
@@ -351,11 +351,11 @@ namespace cogbot.TheOpenSims.Navigation
             switch (i)
             {
                 case 0:
-                    return X;
+                    return Position.X;
                 case 1:
-                    return Y;
+                    return Position.Y;
                 case 2:
-                    return Z;
+                    return Position.Z;
                 default:
                     throw new ArgumentException("Waypoints dont have arg " + i);
             }
