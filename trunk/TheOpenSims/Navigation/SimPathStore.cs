@@ -19,6 +19,7 @@ using System.IO;
 using System.Threading;
 using cogbot.TheOpenSims.Navigation.Debug;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Drawing;
 
 namespace cogbot.TheOpenSims.Navigation
 {
@@ -29,10 +30,15 @@ namespace cogbot.TheOpenSims.Navigation
     [Serializable]
     public class SimPathStore
     {
+        public static readonly float POINTS_PER_METER = 2f;
+        public static readonly float StepSize = 1f / POINTS_PER_METER;
+        public static readonly float LargeScale = 1f;
         public static SimPathStore Instance = new SimPathStore("millspec.serz");
         IList<SimWaypoint> SimWaypoints;
         IList<SimRoute> SimRoutes;
-        public int SimZ = 22;
+        public float SimZLevel = 22;
+        readonly SimWaypoint[,] saved = new SimWaypoint[(int)256 * (int)POINTS_PER_METER, (int)256 * (int)POINTS_PER_METER];
+
 
         /// <summary>
         /// Constructor.
@@ -43,63 +49,180 @@ namespace cogbot.TheOpenSims.Navigation
             RegionFileName = simName;
             SimWaypoints = new List<SimWaypoint>();
             SimRoutes = new List<SimRoute>();
-            CreateDefaultRoutes();
+            CreateDefaultRoutes(LargeScale);
             LoadFromFile();
         }
 
-        public void CreateDefaultRoutes()
+        /// <summary>
+        /// Adds a grid of LargeScale
+        /// </summary>
+        /// <param name="LargeScale"></param>
+        public void CreateDefaultRoutes(float LargeScale)
         {
-            int StepSize = 6;
-            int MX = 255 - StepSize;
-            int MY = 255 - StepSize;
-            float W = 0.75f;
-            SimWaypoint[,] saved = new SimWaypoint[256, 256];
-            for (int x = 1; x < MX; x += StepSize)
+            Console.WriteLine("START CreateDefaultRoutes StepSize={0}", LargeScale);
+            float MX = 255f - LargeScale - StepSize;
+            float MY = 255f - LargeScale - StepSize;
+            float Wieght = 0.05f;
+            for (float x = StepSize; x < MX; x += LargeScale)
             {
-                for (int y = 1; y < MY; y += StepSize)
+                for (float y = StepSize; y < MY; y += LargeScale)
                 {
-                    SimWaypoint sw00 = CreateXYZ(x, y, saved);
-                    SimWaypoint sw01 = CreateXYZ(x, y + StepSize, saved);
-                    SimWaypoint sw10 = CreateXYZ(x + StepSize, y, saved);
-                    SimWaypoint sw11 = CreateXYZ(x + StepSize, y + StepSize, saved);
+                    SimWaypoint C = InternNode(x, y);
+                    SimWaypoint S = InternNode(x, y + LargeScale);
+                    SimWaypoint E = InternNode(x + LargeScale, y);
+
 
                     /*
 
                      Draws two-way Routes StepSize meters appart
 
                              * - *  
-                             | X   
-                             *   * 
-                      
+                             |
+                             * 
                      
                     */
-                    AddNewArcs(sw00, sw01, W); //dirrection  |
-                    AddNewArcs(sw00, sw10, W); //dirrection  -
-                    AddNewArcs(sw00, sw11, W); //dirrection  \
-                    AddNewArcs(sw10, sw01, W); //dirrection  /
+                    AddInitalArcs(C, S, Wieght); //dirrection  |
+                    AddInitalArcs(C, E, Wieght); //dirrection  -
                 }
             }
+            Console.WriteLine("END CreateDefaultRoutes StepSize={0}", LargeScale);
         }
 
-        private SimWaypoint CreateXYZ(int x, int y, SimWaypoint[,] saved)
+
+        public SimWaypoint CreateFirstNode(float x, float y)
         {
-            SimWaypoint wp = saved[x, y];
+            if (x > 255)
+            {
+                x = 255f;
+            }
+            else if (x < 0)
+            {
+                x = 0;
+            }
+
+            if (y > 255)
+            {
+                y = 255f;
+            }
+            else if (y < 0)
+            {
+                y = 0;
+            }
+            SimWaypoint wp = saved[INT(x), INT(y)];
             if (wp == null)
             {
-                wp = SimWaypoint.Create(x, y, SimZ);
-                AddNode(wp);
-                saved[x, y] = wp;
+                wp = SimWaypoint.Create(x, y, SimZLevel);
+                //lock (SimWaypoints)
+                SimWaypoints.Add(wp);
+                saved[INT(x), INT(y)] = wp;
+
             }
             return wp;
         }
 
-        private void AddNewArcs(SimWaypoint s, SimWaypoint e, float W)
+
+        /// <summary>
+        ///  This Fills a LargeScale area with StepSize
+        /// </summary>
+        /// <param name="xx"></param>
+        /// <param name="yy"></param>
+        /// <returns></returns>
+        public SimWaypoint InternNodeFill(float xx, float yy)
         {
-            InternArc(s, e, W);
-            InternArc(e, s, W);
+            float MX = xx + LargeScale;
+            float MY = yy + LargeScale;
+            float Wieght = 1f;
+            for (float x = xx; x < MX; x += StepSize)
+            {
+                for (float y = yy; y < MY; y += StepSize)
+                {
+                    SimWaypoint C = InternNode(x, y);
+                    SimWaypoint S = InternNode(x, y + StepSize);
+                    SimWaypoint E = InternNode(x + StepSize, y);
+                    /*
+
+                     Draws two-way Routes StepSize meters appart
+
+                             * - *  
+                             |
+                             * 
+                      
+                     
+                    */
+                    AddInitalArcs(C, S, Wieght); //dirrection  |
+                    AddInitalArcs(C, E, Wieght); //dirrection  -
+                }
+            }
+            return InternNode(xx, yy);
         }
 
-        public SimRoute InternArc(SimWaypoint s, SimWaypoint e, float W)
+        /// <summary>
+        ///  Create 4 StepSizes around the Node
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public SimWaypoint InternNode(float x, float y)
+        {
+            float Wieght = 1f;
+            SimWaypoint C = CreateFirstNode(x, y);
+            if (C.ArcCount() < 2)
+            {
+                SimWaypoint S = CreateFirstNode(x, y + StepSize);
+                SimWaypoint E = CreateFirstNode(x + StepSize, y);
+                SimWaypoint N = CreateFirstNode(x, y - StepSize);
+                SimWaypoint W = CreateFirstNode(x - StepSize, y);
+                //SimWaypoint sw11 = InternNode(x + StepSize, y + StepSize);
+                /*
+
+                 Draws two-way Routes StepSize meters appart
+
+                         * 
+                         | 
+                     * - * - *  
+                         |    
+                         *   
+                */
+                AddInitalArcs(C, N, Wieght); //dirrection  |
+                AddInitalArcs(C, W, Wieght); //dirrection  -
+                AddInitalArcs(C, S, Wieght); //dirrection  |
+                AddInitalArcs(C, E, Wieght); //dirrection  -
+            }
+            return C;
+        }
+
+        private int INT(double x)
+        {
+            if (x == 0.0) return 0;
+            double i = x * POINTS_PER_METER;
+            int ii = (int)i;
+            if ((double)i != ii)
+            {
+                throw new ArgumentException("");
+            }
+            return ii;
+        }
+
+
+        private void AddInitalArcs(SimWaypoint s, SimWaypoint e, float Wieght)
+        {
+            if (s == e) return;
+            if (!s.GoesTo(e))
+            {
+                SimRoute fr = new SimRoute(s, e);
+                fr.Weight = Wieght;
+                SimRoutes.Add(fr);
+            }
+            if (!e.GoesTo(s))
+            {
+                SimRoute fr = new SimRoute(e, s);
+                SimRoutes.Add(fr);
+                fr.Weight = Wieght;
+            }
+        }
+
+
+        public SimRoute InternArc(SimWaypoint s, SimWaypoint e, float Wieght)
         {
             if (s == e) throw new ArgumentException("s and e the same!" + s);
             SimRoute fr = FindArc(s, e);
@@ -108,15 +231,15 @@ namespace cogbot.TheOpenSims.Navigation
                 fr = new SimRoute(s, e);
                 SimRoutesAdd(fr);
             }
-            fr.Weight = W;
+            fr.Weight = Wieght;
             return fr;
         }
 
-        public SimRoute Intern2Arc(SimWaypoint s, SimWaypoint e, float W)
+        public SimRoute Intern2Arc(SimWaypoint s, SimWaypoint e, float Wieght)
         {
-            InternArc(e, s, W);
+            InternArc(e, s, Wieght);
             Console.WriteLine("Intern2Arc: " + s + " <-> " + e);
-            return InternArc(s, e, W);
+            return InternArc(s, e, Wieght);
         }
 
         private SimRoute FindArc(SimWaypoint s, SimWaypoint e)
@@ -354,9 +477,38 @@ namespace cogbot.TheOpenSims.Navigation
         /// <returns>The closest node that has been found.</returns>
         public SimWaypoint ClosestNode(float PtX, float PtY, float PtZ, out float Distance, bool IgnorePassableProperty)
         {
+
+            PtZ = SimZLevel;
+            if (PtX > 255)
+            {
+                PtX = 255f;
+            }
+            else if (PtX < 0)
+            {
+                PtX = 0;
+            }
+
+            if (PtY > 255)
+            {
+                PtY = 255f;
+            }
+            else if (PtY < 0)
+            {
+                PtY = 0;
+            }
+
             SimWaypoint NodeMin = null;
             float DistanceMin = -1;
-            Vector3 P = new Vector3(PtX, PtY, PtZ);
+            Vector3 P = SimWaypoint.RoundPoint(new Vector3((float)PtX, (float)PtY, (float)PtZ));
+            {
+                NodeMin = InternNodeFill(P.X, P.Y);
+                if (IgnorePassableProperty || NodeMin.Passable)
+                {
+                    Distance = 0f;
+                    return NodeMin;
+                }
+            }
+
             lock (SimWaypoints) foreach (SimWaypoint N in SimWaypoints)
                 {
                     if (IgnorePassableProperty && N.Passable == false) continue;
@@ -370,6 +522,8 @@ namespace cogbot.TheOpenSims.Navigation
             Distance = DistanceMin;
             return NodeMin;
         }
+
+
 
         /// <summary>
         /// This function will find the nodes from a geographical position in space.
@@ -693,8 +847,8 @@ namespace cogbot.TheOpenSims.Navigation
         public SimWaypoint CreateClosestWaypoint(Vector3 v3)
         {
             float Dist;
-            SimWaypoint Closest = ClosestNode(v3.X, v3.Y, v3.Z, out Dist, false);
-            SimWaypoint V3Waypoint = SimWaypoint.Create(v3);
+            SimWaypoint Closest = ClosestNode(v3.X, v3.Y, SimZLevel, out Dist, false);
+            SimWaypoint V3Waypoint = SimWaypoint.Create(new Vector3(v3.X,v3.Y,SimZLevel));
             if (Closest != V3Waypoint)
             {
                 IList<SimWaypoint> more = ClosestNodes(V3Waypoint, Dist, Dist * 2, false);
@@ -747,11 +901,140 @@ namespace cogbot.TheOpenSims.Navigation
             }
             return node;
         }
+
+        internal void UpdateFromImage(Image image)
+        {
+            if (image == null) return;
+            Bitmap edges = new Bitmap((Image)image.Clone());
+            new DisplayImage("Edges", edges).Activate();
+            Console.WriteLine("START Edge detection " + image);
+            Bitmap e = EdgeDetection(edges, 34f, delegate(int x, int y)
+            {
+                edges.SetPixel(x, y, Color.Yellow);
+                SetNodeBlocked((float)x, (float)y);
+            });
+            Console.WriteLine("END Edge detection");
+            new DisplayImage("Clone", e).Activate();
+        }
+
+
+        internal void UpdateFromObject(SimObject obj)
+        {
+            //int SimZLevelWalk = SimZLevel + 1;
+            if (!obj.CanGetSimPosition()) return;
+            if (obj.IsPassable) return;
+            ICollection<Vector3> points = obj.GetOccupied((float)SimZLevel, (float)SimZLevel + 1f);
+            if (obj.IsPassable)
+            {
+                foreach (Vector3 point in points)
+                {
+                    {
+                        //    SetNodeOpen(point.X, point.Y);
+                    }
+                }
+            }
+            else
+            {
+                foreach (Vector3 point in points)
+                {
+                    {
+                        SetNodeBlocked(point.X, point.Y);
+                    }
+                }
+            }
+        }
+
+        public void SetNodeOpen(float x, float y)
+        {
+            float Dist;
+            SimWaypoint waypoint = ClosestNode(x, y, SimZLevel, out Dist, false);
+            if (Dist < 1f)
+            {
+                waypoint.EnsureAtLeastOnePath();
+
+            }
+        }
+
+        public void SetNodeBlocked(float x, float y)
+        {
+            float Dist;
+            //SimRoute route = ClosestArc((double)x, (double)y, SimZLevel, out Dist, false);
+            //if (route.Passable) //no need to search
+            //    if (route.OnRoute(new Vector2((double)x, (double)y)))
+            //    {
+            //        Console.WriteLine("Edge at " + route + " for " + x + " " + y);
+            //        route.Passable = false;
+            //        route.Reverse().Passable = false;
+            //        route.ReWeigth(3f);
+            //    }
+            SimWaypoint waypoint = ClosestNode(x, y, SimZLevel, out Dist, true);
+            if (Dist < 1f)
+            {
+                waypoint.Passable = false;
+
+            }
+
+        }
+        //                                    NewBitmap.SetPixel(x, y, EdgeColor);
+        public delegate void EdgeAction(int x, int y);
+
+        public static Bitmap EdgeDetection(Bitmap Image, double Threshold, EdgeAction EdgeColor)
+        {
+            System.Drawing.Bitmap TempBitmap = Image;
+            System.Drawing.Bitmap NewBitmap = new System.Drawing.Bitmap(TempBitmap.Width, TempBitmap.Height);
+            System.Drawing.Graphics NewGraphics = System.Drawing.Graphics.FromImage(NewBitmap);
+            NewGraphics.DrawImage(TempBitmap, new System.Drawing.Rectangle(0, 0, TempBitmap.Width, TempBitmap.Height), new System.Drawing.Rectangle(0, 0, TempBitmap.Width, TempBitmap.Height), System.Drawing.GraphicsUnit.Pixel);
+            NewGraphics.Dispose();
+            for (int x = 0; x < NewBitmap.Width; ++x)
+            {
+                for (int y = 0; y < NewBitmap.Height; ++y)
+                {
+                    bool EdgeSet = false;
+                    Color CurrentColor = NewBitmap.GetPixel(x, y);
+                    if (y < NewBitmap.Height - 1 && x < NewBitmap.Width - 1)
+                    {
+                        Color TempColor = NewBitmap.GetPixel(x + 1, y + 1);
+                        if (Math.Sqrt(((CurrentColor.R - TempColor.R) * (CurrentColor.R - TempColor.R)) +
+                            ((CurrentColor.G - TempColor.G) * (CurrentColor.G - TempColor.G)) +
+                            ((CurrentColor.B - TempColor.B) * (CurrentColor.B - TempColor.B))) > Threshold)
+                        {
+                            EdgeColor(x, y);
+                        }
+                        EdgeSet = true;
+                    }
+                    if (y < NewBitmap.Height - 1 && !EdgeSet)
+                    {
+                        Color TempColor = NewBitmap.GetPixel(x, y + 1);
+                        if (Math.Sqrt(((CurrentColor.R - TempColor.R) * (CurrentColor.R - TempColor.R)) +
+                            ((CurrentColor.G - TempColor.G) * (CurrentColor.G - TempColor.G)) +
+                            ((CurrentColor.B - TempColor.B) * (CurrentColor.B - TempColor.B))) > Threshold)
+                        {
+                            EdgeColor(x, y);
+                            // NewBitmap.SetPixel(x, y, EdgeColor);
+                        }
+                        EdgeSet = true;
+                    }
+                    if (x < NewBitmap.Width - 1 && !EdgeSet)
+                    {
+                        Color TempColor = NewBitmap.GetPixel(x + 1, y);
+                        if (Math.Sqrt(((CurrentColor.R - TempColor.R) * (CurrentColor.R - TempColor.R)) +
+                            ((CurrentColor.G - TempColor.G) * (CurrentColor.G - TempColor.G)) +
+                            ((CurrentColor.B - TempColor.B) * (CurrentColor.B - TempColor.B))) > Threshold)
+                        {
+                            EdgeColor(x, y);
+                            //NewBitmap.SetPixel(x, y, EdgeColor);
+                        }
+                        EdgeSet = true;
+                    }
+                }
+            }
+            return NewBitmap;
+        }
     }
 
     public class PrimTracker
     {
-        protected float MovedAllot = 3.0f;
+        protected float MovedAllot = SimPathStore.StepSize;
         Vector3 WayPoint;
         Quaternion Orientation;
         SimPathStore Store;
@@ -777,13 +1060,14 @@ namespace cogbot.TheOpenSims.Navigation
                 }
         }
 
-        private void MakeMovement(Vector3 point)
+        public void MakeMovement(Vector3 point)
         {
             if (Vector3.Distance(WayPoint, point) > MovedAllot / 3)
             {
                 Console.WriteLine("WAYPOINT " + WayPoint + " -> " + point);
                 SimWaypoint tieIn1 = Store.CreateClosestWaypoint(point);
                 SimWaypoint tieIn2 = Store.CreateClosestWaypoint(WayPoint);
+                if (tieIn1 == tieIn2) return;
                 Store.Intern2Arc(tieIn1, tieIn2, 0.01f); //Cheap
                 WayPoint = point;
             }

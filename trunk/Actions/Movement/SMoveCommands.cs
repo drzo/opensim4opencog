@@ -6,11 +6,29 @@ using cogbot.TheOpenSims.Navigation;
 using cogbot.TheOpenSims;
 using System.Windows.Forms;
 using cogbot.TheOpenSims.Navigation.Debug;
+using System.Drawing;
+using System.Net;
+//using IdealistViewer;
 
 namespace cogbot.Actions.Movement
 {
     class SMoveCommands
     {
+    }
+    class ideal : cogbot.Actions.Command
+    {
+        public ideal(BotClient client)
+        {
+            Name = GetType().Name;
+            Description = "Starts the waypoint debuger";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+          ///  BaseIdealistViewer.guithread.Start();//.Main(args);
+            return "ran "+Name;
+        }
     }
     class srdebug : cogbot.Actions.Command
     {
@@ -28,7 +46,65 @@ namespace cogbot.Actions.Movement
             return "ran srdebug";
         }
     }
+    class srmap : cogbot.Actions.Command
+    {
+        public srmap(BotClient client)
+        {
+            Name = GetType().Name;
+            Description = "Reads the sim map for improving routes";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
 
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            Image I = null;// WorldSystem.miniMap.Image;
+            if (I == null)
+            {
+
+                String picUri = "http://71.197.210.170:9000/index.php?method=regionImaged63a88fe7db448c6b1a52b7628fe8d0d";
+                // Create the requests.
+                WebRequest requestPic = WebRequest.Create(picUri);
+
+                WebResponse responsePic = requestPic.GetResponse();
+
+                I = Image.FromStream(responsePic.GetResponseStream());
+
+            }
+
+            WorldSystem.SimPaths.UpdateFromImage(I);
+            return "ran " + Name;
+        }
+    }
+    class srprim : cogbot.Actions.Command
+    {
+        public srprim(BotClient client)
+        {
+            Name = GetType().Name;
+            Description = "Reads the sim prims for improving routes";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            IEnumerable<SimObject> objs = WorldSystem.GetAllSimObjects(String.Join(" ",args));
+            SimPathStore pathStore = WorldSystem.SimPaths;
+            foreach (SimObject o in objs)
+            {
+                if (o.IsPassable)
+                {
+                    pathStore.UpdateFromObject(o);
+                }
+            }
+            foreach (SimObject o in objs)
+            {
+                if (!o.IsPassable)
+                {
+                    pathStore.UpdateFromObject(o);
+                }
+            }
+            return "ran " + Name;
+        }
+    }
     class srpath : cogbot.Actions.Command
     {
         public srpath(BotClient client)
@@ -54,7 +130,7 @@ namespace cogbot.Actions.Movement
             {
                 s += "\nComputed ";
             }
-
+            if (route!=null)
             for (int i = 0; i < route.Length; i++)
             {
                 s += " \n" + i + ": " + route[i].ToInfoString();

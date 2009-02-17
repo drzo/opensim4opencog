@@ -41,6 +41,10 @@ namespace cogbot.TheOpenSims.Navigation
             return Create(_Position);
         }
 
+        public int ArcCount()
+        {
+            return _OutgoingArcs.Count;
+        }
         /// <summary>
         /// Gets the list of the arcs that lead to this node.
         /// </summary>
@@ -391,10 +395,11 @@ namespace cogbot.TheOpenSims.Navigation
 
         public static Vector3 RoundPoint(Vector3 point)
         {
+            double POINTS_PER_METER = SimPathStore.POINTS_PER_METER;
             Vector3 vect3 = new Vector3(point);
-            vect3.X = (float)Math.Round(vect3.X,0);
-            vect3.Y = (float)Math.Round(vect3.Y,0);
-            vect3.Z = (float)Math.Round(vect3.Z, 0);
+            vect3.X = (float)(Math.Round(vect3.X * POINTS_PER_METER, 0) / POINTS_PER_METER);
+            vect3.Y = (float)(Math.Round(vect3.Y * POINTS_PER_METER, 0) / POINTS_PER_METER);
+            vect3.Z = (float)Math.Round(vect3.Z);
             return vect3;
         }
 
@@ -437,6 +442,43 @@ namespace cogbot.TheOpenSims.Navigation
         internal static float Distance(SimWaypoint wp1, SimWaypoint wp2)
         {
             return Vector3.Distance(wp1.GetSimPosition(), wp2.GetSimPosition());
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns>true if something needed to be changed</returns>
+        public bool EnsureAtLeastOnePath()
+        {
+            bool needIt = true;
+            foreach (SimRoute A in _IncomingArcs)
+            {
+                if (A.Passable)
+                {
+                    needIt = false;
+                }
+            }
+            foreach (SimRoute A in _OutgoingArcs)
+            {
+                if (A.Passable)
+                {
+                    needIt = false;
+                }
+            }
+            if (needIt)
+            {
+                Passable = true;
+            }
+            return needIt;
+        }
+
+        internal bool GoesTo(SimWaypoint e)
+        {
+            foreach (SimRoute r in _OutgoingArcs)
+            {
+                if (r.EndNode == e) return true;
+            }
+            return false;
         }
     }
 

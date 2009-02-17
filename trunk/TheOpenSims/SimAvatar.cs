@@ -192,8 +192,12 @@ namespace cogbot.TheOpenSims
             if (IsLocal()) return Client.Self.SimRotation;
             return base.GetSimRotation();
         }
-        
 
+        static readonly List<Vector3> NOVECTORS = new List<Vector3>();
+        public override ICollection<Vector3> GetOccupied(float min, float max)
+        {           
+            return NOVECTORS;
+        }
 
         public void Think()
         {
@@ -534,15 +538,15 @@ namespace cogbot.TheOpenSims
             return new ThreadStart(delegate()
             {
                 Primitive targetPrim = obj.thePrim;
-                ClientSelf.RequestSit(targetPrim.ID, Vector3.Zero);
-                ClientSelf.Sit();
+               // ClientSelf.RequestSit(targetPrim.ID, Vector3.Zero);
+                //ClientSelf.Sit();
                 try
                 {
                     closure.Invoke();
                 }
                 finally
                 {
-                    ClientSelf.Stand();
+                    //ClientSelf.Stand();
                 }
             });
         }
@@ -736,7 +740,6 @@ namespace cogbot.TheOpenSims
 
         void TrackerLoop()
         {
-            Random somthing = new Random(Environment.TickCount);// We do stuff randomly here
             AgentManager ClientSelf = Client.Self;
             AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
             bool StartedFlying = false;// !IsFloating;
@@ -798,25 +801,13 @@ namespace cogbot.TheOpenSims
                         //ClientMovement.SendUpdate();
                         if (curDist < (ApproachDistance * 1.25))
                         {
-                            TurnToward(ApproachPosition);
-                            ClientMovement.AtPos = true;
-                            Thread.Sleep(25);
-                            ClientMovement.Stop = true;
-                            ClientMovement.AtPos = false;
-                            ClientMovement.NudgeAtPos = false;
-                            ClientMovement.SendUpdate(false);
-
-                            Thread.Sleep(100);
+                            MoveFast(ApproachPosition);
+                            //MoveSlow(ApproachPosition);
+                            //Thread.Sleep(100);
                         }
                         else
                         {
-                            TurnToward(ApproachPosition);
-                            ClientMovement.AtPos = true;
-                            ClientMovement.UpdateInterval = 0; //100
-                            ClientMovement.SendUpdate(false);
-                            Application.DoEvents();
-                            //(int)(25 * (1 + (curDist / ApproachDistance)))
-                            Thread.Sleep(somthing.Next(25, 100));
+                            MoveFast(ApproachPosition);
                         }
                         justStopped = true;
                     }
@@ -851,6 +842,35 @@ namespace cogbot.TheOpenSims
                 }
 
             }
+        }
+
+        private void MoveFast(SimPosition ApproachPosition)
+        {
+            Random somthing = new Random(Environment.TickCount);// We do stuff randomly here
+
+            Vector3 Destination = ApproachPosition.GetSimPosition();
+            Client.Self.Movement.AtPos = true;
+            Client.Self.Movement.UpdateInterval = 0; //100
+            Client.Self.Movement.SendUpdate(true);
+            //(int)(25 * (1 + (curDist / followDist)))
+            Thread.Sleep(somthing.Next(25, 100));
+        }
+
+        private void MoveSlow(SimPosition ApproachPosition)
+        {
+            Vector3 Destination = ApproachPosition.GetSimPosition();
+            Client.Self.Movement.TurnToward(Destination);
+            Client.Self.Movement.AtPos = true;
+            Client.Self.Movement.SendUpdate(true);
+            Thread.Sleep(125);
+            Client.Self.Movement.Stop = true;
+            Client.Self.Movement.AtPos = false;
+            Client.Self.Movement.NudgeAtPos = true;
+            Client.Self.Movement.SendUpdate(true);
+            Thread.Sleep(100);
+            Client.Self.Movement.NudgeAtPos = false;
+            Client.Self.Movement.SendUpdate(true);
+            Thread.Sleep(100);
         }
 
         public override SimWaypoint GetWaypoint()
@@ -955,11 +975,17 @@ namespace cogbot.TheOpenSims
         /// <returns></returns>
         public bool TryGotoTarget(SimPosition pos, out bool IsFake)
         {
-            SimWaypoint target = pos.GetWaypoint();
-            SimRoute[] routes = GetRouteList(target, out IsFake);
-            SimRouteMover ApproachPlan = new SimRouteMover(this, routes,pos.GetSimPosition(),pos.GetSizeDistance());
-            SimMoverState state = ApproachPlan.Goto();
-            if (state == SimMoverState.COMPLETE) return true;
+            IsFake = false;
+            SimMoverState state = SimMoverState.TRYAGAIN;
+            while (state == SimMoverState.TRYAGAIN)
+            {
+                SimWaypoint target = pos.GetWaypoint();
+                SimRoute[] routes = GetRouteList(target, out IsFake);
+                if (routes == null) return false;
+                SimRouteMover ApproachPlan = new SimRouteMover(this, routes, pos.GetSimPosition(), pos.GetSizeDistance());
+                state = ApproachPlan.Goto();
+                if (state == SimMoverState.COMPLETE) return true;
+            }
             return false;
             
             //== SimMoverState.COMPLETE;
@@ -1028,6 +1054,22 @@ namespace cogbot.TheOpenSims
             Vector3 v3 = new Vector3(xmul, ymul, 0);
             v3 = v3 * distance;
             Vector3 result = c + v3;
+            if (result.X > 254f)
+            {
+                result.X = 254;
+            }
+            else if (result.X < 1f)
+            {
+                result.X = 1;
+            }
+            if (result.Y > 254f)
+            {
+                result.Y = 254;
+            }
+            else if (result.Y < 1f)
+            {
+                result.Y = 1;
+            }
             return result;
             /*
              * Client.Self.Movement.SendManualUpdate(AgentManager.ControlFlags.AGENT_CONTROL_AT_POS, Client.Self.Movement.Camera.Position,
