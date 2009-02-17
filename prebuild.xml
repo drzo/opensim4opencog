@@ -357,6 +357,8 @@
       <Reference name="System.Xml" localCopy="false"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="ABCL.Net.dll" localCopy="false"/>
+      <Reference name="Irrlicht.Extensions" localCopy="false"/>
+      <Reference name="Irrlicht.NET" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
       <Files>
