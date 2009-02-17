@@ -1182,8 +1182,21 @@ with the respective left and right mouse buttons.", "Impossible action", Message
 
 			SuspendLayout();
 			// Dessin du graphe
-            lock (G.Nodes) foreach (SimWaypoint N in G.Nodes) DessinerNoeud(Grfx, N.Passable ? CrayonNoeuds : CrayonNoeudsInactifs, N);
-            lock (G.Arcs) foreach (SimRoute A in G.Arcs) DessinerArc(Grfx, A.Passable ? CrayonArcs : CrayonArcsInactifs, A);
+            ///lock (G.Nodes) foreach (SimWaypoint N in G.Nodes) DessinerNoeud(Grfx, N.Passable ? CrayonNoeuds : CrayonNoeudsInactifs, N);
+            lock (G.Arcs) foreach (SimRoute A in G.Arcs)
+                {
+                    if (A.Passable)
+                    {
+                        if (A.Length > SimPathStore.StepSize)
+                        {
+                            DessinerArc(Grfx, CrayonArcs,A);
+                        }
+                    }
+                    else
+                    {
+                        DessinerArc(Grfx, CrayonArcsInactifs, A);
+                    }
+                }
 
 			// Dessin du tracé temporaire courant
 			if ( Mode==Action.Dessiner )

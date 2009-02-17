@@ -321,7 +321,18 @@ namespace cogbot.TheOpenSims
         {
             get { return SimTypeSystem.GetObjectType("Useable"); }
         }
-
+        public static SimObjectType DOOR
+        {
+            get { return SimTypeSystem.GetObjectType("Door"); }
+        }
+        public static SimObjectType PASSABLE
+        {
+            get { return SimTypeSystem.GetObjectType("Passable"); }
+        }
+        public static SimObjectType BARRIER
+        {
+            get { return SimTypeSystem.GetObjectType("Barrier"); }
+        }
 
         /**
          * 

@@ -24,6 +24,7 @@ namespace cogbot.TheOpenSims.Navigation
     /// </summary>
     public class SimMovement
     {
+        static public bool SafeMode = false;
         /// <summary>
         /// A heuristic is a function that associates a value with a node to gauge it considering the node to reach.
         /// </summary>
@@ -75,7 +76,7 @@ namespace cogbot.TheOpenSims.Navigation
             get { return Track.DijkstraHeuristicBalance; }
             set
             {
-                if (value < 0 || value > 1) throw new ArgumentException("DijkstraHeuristicBalance value must belong to [0;1].");
+                if (SafeMode) if (value < 0 || value > 1) throw new ArgumentException("DijkstraHeuristicBalance value must belong to [0;1].");
                 Track.DijkstraHeuristicBalance = value;
             }
         }
@@ -149,7 +150,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="EndNode">The node to which the path must end.</param>
         public void Initialize(SimWaypoint StartNode, SimWaypoint EndNode)
         {
-            if (StartNode == null || EndNode == null) throw new ArgumentNullException();
+            if (SafeMode) if (StartNode == null || EndNode == null) throw new ArgumentNullException();
             _Closed.Clear();
             _Open.Clear();
             Track.Target = EndNode;
@@ -166,7 +167,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <returns>'true' unless the search ended.</returns>
         public bool NextStep()
         {
-            if (!Initialized) throw new InvalidOperationException("You must initialize AStar before launching the algorithm.");
+            if (SafeMode) if (!Initialized) throw new InvalidOperationException("You must initialize AStar before launching the algorithm.");
             if (_Open.Count == 0) return false;
             _NbIterations++;
 
@@ -234,7 +235,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         private void CheckSearchHasEnded()
         {
-            if (!SearchEnded) throw new InvalidOperationException("You cannot get a result unless the search has ended.");
+            if (SafeMode) if (!SearchEnded) throw new InvalidOperationException("You cannot get a result unless the search has ended.");
         }
 
         /// <summary>
@@ -338,12 +339,14 @@ namespace cogbot.TheOpenSims.Navigation
         public SimWaypoint EndNode;
         public Track Queue;
 
+        static public bool SafeMode = false;
+
         public static float DijkstraHeuristicBalance
         {
             get { return _Coeff; }
             set
             {
-                if (value < 0 || value > 1) throw new ArgumentException(
+                if (SafeMode) if (value < 0 || value > 1) throw new ArgumentException(
   @"The coefficient which balances the respective influences of Dijkstra and the Heuristic must belong to [0; 1].
 -> 0 will minimize the number of nodes explored but will not take the real cost into account.
 -> 0.5 will minimize the cost without developing more nodes than necessary.
@@ -376,7 +379,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public Track(SimWaypoint GraphNode)
         {
-            if (_Target == null) throw new InvalidOperationException("You must specify a target Node for the Track class.");
+            if (SafeMode) if (_Target == null) throw new InvalidOperationException("You must specify a target Node for the Track class.");
             _Cost = 0;
             _NbArcsVisited = 0;
             Queue = null;
@@ -385,7 +388,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public Track(Track PreviousTrack, SimRoute Transition)
         {
-            if (_Target == null) throw new InvalidOperationException("You must specify a target Node for the Track class.");
+            if (SafeMode) if (_Target == null) throw new InvalidOperationException("You must specify a target Node for the Track class.");
             Queue = PreviousTrack;
             _Cost = Queue.Cost + Transition.Cost;
             _NbArcsVisited = Queue._NbArcsVisited + 1;
@@ -402,7 +405,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             Track P1 = O1 as Track;
             Track P2 = O2 as Track;
-            if (P1 == null || P2 == null) throw new ArgumentException("Objects must be of 'Track' type.");
+            if (SafeMode) if (P1 == null || P2 == null) throw new ArgumentException("Objects must be of 'Track' type.");
             return P1.EndNode == P2.EndNode;
         }
     }

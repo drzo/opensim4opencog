@@ -62,9 +62,10 @@ namespace cogbot.TheOpenSims.Navigation
             _STATE = SimMoverState.MOVING;
             int CanSkip = 0;
             int Skipped = 0;
+            SimRoute prev = null;
+
             for (int cI = CurrentRouteIndex; cI < Routes.Length;cI++)
             {
-                Mover.StopMoving();
                 CurrentRouteIndex = cI;
 
                 if (false)
@@ -77,19 +78,24 @@ namespace cogbot.TheOpenSims.Navigation
                         cI = indexClosest;
                     }
                 }
+                if (cI > 0)
+                {
+                    prev = Routes[cI - 1];
+                }
 
                 SimRoute route = Routes[cI];
 
                 STATE = FollowRoute(route);
                 float distance = Vector3.Distance(Mover.GetSimPosition(), FinalLocation);
                 if (STATE == SimMoverState.BLOCKED)
-                {            
+                {
+                    Mover.StopMoving();
                     //  SetBlocked(route);
                     if (distance < FinalDistance)
                     {
                         return SimMoverState.COMPLETE;
                     }
-                    CreateSurroundWaypoints();
+                    //CreateSurroundWaypoints();
                     route.ReWeigth(1.1f);
                     route.BumpyCount++;
                     if (CanSkip > 0)
@@ -100,7 +106,12 @@ namespace cogbot.TheOpenSims.Navigation
                     }
                     if (route.BumpyCount > 0 && Skipped==0)
                     {
+
                         SetBlocked(route);
+                        if (prev!=null) if (FollowRoute(prev.Reverse()) == SimMoverState.COMPLETE)
+                        {
+                            return SimMoverState.TRYAGAIN;
+                        }
                     }
                     return STATE;
                 }
@@ -117,6 +128,7 @@ namespace cogbot.TheOpenSims.Navigation
                         Skipped++;
                         continue;
                     }
+                    Mover.StopMoving();
                     return SimMoverState.PAUSED;
                 }
                 if (distance < FinalDistance)
@@ -130,7 +142,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         private void CreateSurroundWaypoints()
         {
-            SimPathStore.Instance.CreateClosestWaypointBox(Mover.GetSimPosition(), 4, 5, 1.0f);
+            //SimPathStore.Instance.CreateClosestWaypointBox(Mover.GetSimPosition(), 4, 5, 1.0f);
         }
 
         private int ClosestToInRoute(SimRoute BestR)
@@ -154,7 +166,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             StuckAt = route;
             Debug("INACESSABLE: " + StuckAt);
-
+            //route.EndNode.Passable = false;
             StuckAt.Passable = false;
             StuckAt.ReWeigth(1.1f);
             
@@ -188,8 +200,19 @@ namespace cogbot.TheOpenSims.Navigation
             bool MadeIt = Mover.MoveTo(endVect, 1f, 7);
             vectMover = Mover.GetSimPosition();
             if (!MadeIt)
+            {
+                List<SimObject> nears = ((SimObject)Mover).GetNearByObjects(2f, false);
+                while (!MadeIt && nears.Count == 0)
+                {
+                    MadeIt = Mover.MoveTo(endVect, 1f, 7);
+                    vectMover = Mover.GetSimPosition();
+                    nears = ((SimObject)Mover).GetNearByObjects(2f, false);
+                }
+            }
+            if (!MadeIt)
             {               
                 Debug("FollowRoute: BLOCKED ROUTE " + vectMover + "-> " + endVect);
+                //route.Passable = false;
                 return SimMoverState.BLOCKED;
             }
 

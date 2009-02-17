@@ -17,6 +17,8 @@ namespace cogbot.Listeners
 
     public class WorldObjects : DebugAllEvents
     {
+
+        //readonly public OpenMetaverse.GUI.MiniMap miniMap;
         //protected Dictionary<string, Avatar> avatarCache = new Dictionary<string,Avatar>();
         public Vector3 compPos;
         public int searchStep;
@@ -30,6 +32,7 @@ namespace cogbot.Listeners
         public Dictionary<UUID, List<Primitive>> primGroups;
         public Object newLock = new Object();
         public Dictionary<uint, OSDMap> lastOSD = new Dictionary<uint, OSDMap>();
+        public int ExpectedObjects = 1000;
 
         DoubleDictionary<uint, UUID, Primitive> prims = new DoubleDictionary<uint, UUID, Primitive>();
         //DoubleDictionary<uint, UUID, Avatar> prims = new DoubleDictionary<uint, UUID, Avatar>();
@@ -85,6 +88,7 @@ namespace cogbot.Listeners
             {
                 GetSimObject(item);
             });
+            //miniMap.UpdateMiniMap(simulator);
         }
 
 
@@ -136,6 +140,7 @@ namespace cogbot.Listeners
         public WorldObjects(BotClient client)
             : base(client)
         {
+          //  miniMap = new OpenMetaverse.GUI.MiniMap(client);
             //	client.Self.OnMeanCollision += new AgentManager.MeanCollisionCallback(Self_OnMeanCollision);
 
             // primsAwaitingSelect = new List<Primitive>();
@@ -503,7 +508,16 @@ namespace cogbot.Listeners
             //        CalcStats(prim);
             //    }
             describePrimToAI(prim);
+            if (prims.Count>ExpectedObjects - 11)
+            {
+                OnPrimsLoaded();
+            }
+        }
 
+        private void OnPrimsLoaded()
+        {
+            output("OnPrimsLoaded");
+            ExpectedObjects += 2;
         }
 
 
@@ -1283,13 +1297,8 @@ namespace cogbot.Listeners
             }
             if (matches.Count == 0)
             {
-                foreach (SimObject obj in SimObjects)
-                {
-                    if (obj.Matches(name))
-                    {
-                        matches.Add(obj);
-                    }
-                }
+                matches.AddRange(GetAllSimObjects(name));
+
             }
             if (matches.Count == 0) return false;
             if (matches.Count == 1)
@@ -1662,16 +1671,16 @@ namespace cogbot.Listeners
                 ((fs & PrimFlags.CastShadows) != 0));
         }
 
-        internal ListAsSet<SimObject> GetAllSimObjects()
+        internal IEnumerable<SimObject> GetAllSimObjects()
         {
-            return SimObjects;
+            return SimObjects.CopyOf();
         }
 
         internal void DeletePrim(Primitive thePrim)
         {
             if (thePrim is Avatar) return;
             SimObjects.Remove(GetSimObject(thePrim));
-            client.Inventory.RequestDeRezToInventory(thePrim.LocalID);
+           // client.Inventory.RequestDeRezToInventory(thePrim.LocalID);
         }
 
         internal Primitive RequestMissingObject(uint localID)
@@ -1738,6 +1747,7 @@ namespace cogbot.Listeners
         public override void Parcels_OnParcelProperties(Simulator simulator, Parcel parcel, ParcelResult result, int selectedPrims, int sequenceID, bool snapSelection)
         {
             parcelLocalIds[parcel.LocalID] = parcel;
+            ExpectedObjects = parcel.SimWideTotalPrims;
             base.Parcels_OnParcelProperties(simulator, parcel, result, selectedPrims, sequenceID, snapSelection);
         }
         public override void Parcels_OnParcelDwell(UUID parcelID, int localID, float dwell)
@@ -1793,6 +1803,20 @@ namespace cogbot.Listeners
                 consume--;
             }
             return null;
+        }
+
+        internal List<SimObject> GetAllSimObjects(string name)
+        {
+            List<SimObject> matches = new List<SimObject>();
+            foreach (SimObject obj in GetAllSimObjects())
+            {
+                if (obj.Matches(name))
+                {
+                    matches.Add(obj);
+                }
+            }
+            matches.Sort(TheSimAvatar.CompareDistance);
+            return matches;
         }
     }
 }
