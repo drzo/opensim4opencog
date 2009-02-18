@@ -480,6 +480,11 @@ namespace cogbot.TheOpenSims.Navigation
             }
             return false;
         }
+
+        internal float Distance(Vector3 P)
+        {
+            return Vector3.Distance(P, _Position);
+        }
     }
 
     //public class SimMovementPoints : SimMovement

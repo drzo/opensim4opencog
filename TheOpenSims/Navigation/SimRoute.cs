@@ -25,7 +25,7 @@ namespace cogbot.TheOpenSims.Navigation
     public class SimRoute
     {
         SimWaypoint _StartNode, _EndNode;
-        float _Weight;
+        float _Weight = 1f;
         bool _Passable;
         float _Length;
         bool _LengthUpdated;
@@ -61,9 +61,25 @@ namespace cogbot.TheOpenSims.Navigation
                 if (EndNode != null && value.Equals(EndNode)) throw new ArgumentException("StartNode and EndNode must be different");
                 if (_StartNode != null) _StartNode.OutgoingArcs.Remove(this);
                 _StartNode = value;
+                if (EndNode != null) UpdateBounds();
                 _StartNode.OutgoingArcs.Add(this);
             }
             get { return _StartNode; }
+        }
+
+        float minX;
+        float maxX;
+        float minY;
+        float maxY;
+
+        private void UpdateBounds()
+        {
+            Vector3 start = _StartNode.Position;
+            Vector3 end = _EndNode.Position;
+            minX = Math.Min(start.X, end.X);
+            maxX = Math.Max(start.X, end.X);
+            minY = Math.Min(start.Y, end.Y);
+            maxY = Math.Max(start.Y, end.Y);
         }
 
         /// <summary>
@@ -82,6 +98,7 @@ namespace cogbot.TheOpenSims.Navigation
                 }
                 if (_EndNode != null) _EndNode.IncomingArcs.Remove(this);
                 _EndNode = value;
+                if (_StartNode != null) UpdateBounds();
                 _EndNode.IncomingArcs.Add(this);
             }
             get { return _EndNode; }
@@ -248,12 +265,17 @@ namespace cogbot.TheOpenSims.Navigation
         //{
         //}
 
+        internal SimRoute _Reverse;
         public virtual SimRoute Reverse()
         {
-            SimRoute movement = SimPathStore.Instance.InternArc(EndNode, StartNode,Weight);
-            SimRoute.CopyProperties(this, movement);
-            //movement.Cost = Cost;
-            return movement;
+            if (_Reverse == null)
+            {
+                _Reverse = SimPathStore.Instance.InternArc(EndNode, StartNode, Weight);
+                SimRoute.CopyProperties(this, _Reverse);
+                _Reverse._Reverse = this;
+                //movement.Cost = Cost;
+            }
+            return _Reverse;
         }
 
         public virtual SimRoute FillIn(float maxDist)
@@ -440,7 +462,7 @@ namespace cogbot.TheOpenSims.Navigation
             return s == StartNode && e == EndNode;
         }
 
-        internal void ReWeigth(float p)
+        internal void ReWeight(float p)
         {
             Weight = Weight * p;
         }
@@ -449,6 +471,105 @@ namespace cogbot.TheOpenSims.Navigation
         {
             return ToFileString();
         }
+
+        internal bool InRouteBox(Vector3 v3)
+        {
+            float x = v3.X, y = v3.Y;
+            if (x < minX || x > maxX || y < minY || y > maxY)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        internal bool OnRoute(Vector3 v3)
+        {
+            float x = v3.X, y = v3.Y;
+            if (x < minX || x > maxX || y < minY || y > maxY)
+            {
+                return false;
+            }           
+            return Distance(v3)<=SimPathStore.StepSize;
+        }
+
+        internal float Distance(Vector3 P)
+        {
+            Vector3 Projection = ProjectOnLine(P, _StartNode.Position, _EndNode.Position);
+            return Vector3.Distance(Projection,P);
+        }
+
+        /// <summary>
+        /// Returns the projection of a point on the line defined with two other points.
+        /// When the projection is out of the segment, then the closest extremity is returned.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">None of the arguments can be null.</exception>
+        /// <exception cref="ArgumentException">P1 and P2 must be different.</exception>
+        /// <param name="Pt">Point to project.</param>
+        /// <param name="P1">First point of the line.</param>
+        /// <param name="P2">Second point of the line.</param>
+        /// <returns>The projected point if it is on the segment / The closest extremity otherwise.</returns>
+        public static Vector3 ProjectOnLine(Vector3 Pt, Vector3 P1, Vector3 P2)
+        {
+            if (Pt == P1 || Pt == P2) return Pt;
+            //if (Pt == null || P1 == null || P2 == null) throw new ArgumentNullException("None of the arguments can be null.");
+            if (P1.Equals(P2)) throw new ArgumentException("P1 and P2 must be different.");
+            Vector3 VLine = MakeDiff(P1, P2);
+            Vector3 V1Pt = MakeDiff(P1, Pt);
+            Vector3 Translation = VLine * VectOR(VLine, V1Pt) / SquareNorm(VLine);
+            Vector3 Projection = P1 + Translation;
+
+            Vector3 V1Pjt = MakeDiff(P1, Projection);
+            float D1 = VectOR(V1Pjt, VLine);
+            if (D1 < 0) return P1;
+
+            Vector3 V2Pjt = MakeDiff(P2, Projection);
+            float D2 = VectOR(V2Pjt, VLine);
+            if (D2 > 0) return P2;
+
+            return Projection;
+        }
+
+        /// <summary>
+        /// Scalar product between two vectors.
+        /// </summary>
+        /// <param name="V1">First vector.</param>
+        /// <param name="V2">Second vector.</param>
+        /// <returns>Value resulting from the scalar product.</returns>
+        public static float VectOR(Vector3 V1, Vector3 V2)
+        {
+            float ScalarProduct = 0;
+            ScalarProduct += V1.X * V2.X;
+            ScalarProduct += V1.Y * V2.Y;
+            ScalarProduct += V1.Z * V2.Z;
+            return ScalarProduct;
+        }
+
+        /// <summary>
+        /// Constructs a Vector3D with two points.
+        /// </summary>
+        /// <param name="P1">First point of the vector.</param>
+        /// <param name="P2">Second point of the vector.</param>
+        public static Vector3 MakeDiff(Vector3 P1, Vector3 P2)
+        {
+            Vector3 v3 = new Vector3(0, 0, 0);
+            v3.X = P2.X - P1.X; v3.Y = P2.Y - P1.Y; v3.Z = P2.Z - P1.Z;
+            return v3;
+        }
+
+        /// <summary>
+        ///  Gets the square norm of the vector.
+        /// </summary>
+        /// <param name="v3">vector.</param>
+        static public float SquareNorm(Vector3 v3)
+        {
+            float Sum = 0;
+            //               for (int i = 0; i < 3; i++) 
+            Sum += v3.X * v3.X;
+            Sum += v3.Y * v3.Y;
+            Sum += v3.Z * v3.Z;
+            return Sum;
+        }
+
     }
 
     public class SimRouteMovement : SimRoute
