@@ -94,10 +94,17 @@ namespace cogbot.TheOpenSims
         public SimRoute[] GetRouteList(SimWaypoint to, out bool IsFake)
         {
             SimWaypoint from = this.GetWaypoint();
-            if (GraphFormer.DEBUGGER != null)
+            if (false)
             {
-                GraphFormer.DEBUGGER.SetTryPathNow(from, to);
-                GraphFormer.DEBUGGER.Invalidate();
+
+                if (GraphFormer.DEBUGGER != null)
+                {
+                    new Thread(new ThreadStart(delegate()
+                    {
+                        GraphFormer.DEBUGGER.Invalidate();
+                        GraphFormer.DEBUGGER.SetTryPathNow(from, to);
+                    })).Start();
+                }
             }
             return WorldSystem.SimPaths.GetRoute(from, to, out IsFake);
         }

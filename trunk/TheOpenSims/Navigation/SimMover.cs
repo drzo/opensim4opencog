@@ -96,7 +96,7 @@ namespace cogbot.TheOpenSims.Navigation
                         return SimMoverState.COMPLETE;
                     }
                     //CreateSurroundWaypoints();
-                    route.ReWeigth(1.1f);
+                    route.ReWeight(1.1f);
                     route.BumpyCount++;
                     if (CanSkip > 0)
                     {
@@ -168,12 +168,12 @@ namespace cogbot.TheOpenSims.Navigation
             Debug("INACESSABLE: " + StuckAt);
             //route.EndNode.Passable = false;
             StuckAt.Passable = false;
-            StuckAt.ReWeigth(1.1f);
+            StuckAt.ReWeight(1.1f);
             
             SimRoute reversed = StuckAt.Reverse();//
             
             reversed.Passable = false;
-            reversed.ReWeigth(1.1f);
+            reversed.ReWeight(1.1f);
            // SimPathStore.Instance.RemoveArc(StuckAt);
             ///SimPathStore.Instance.RemoveArc(reversed);
 

@@ -28,7 +28,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 	/// </summary>
     public partial class GraphFormer : System.Windows.Forms.Form
 	{
-        public readonly static float DSCALE = 5f;
+        public readonly static float DSCALE = 4.5f;
         volatile public static GraphFormer DEBUGGER = null;
 		#region Construction / Destruction
 
@@ -1187,7 +1187,7 @@ with the respective left and right mouse buttons.", "Impossible action", Message
                 {
                     if (A.Passable)
                     {
-                        if (A.Length > SimPathStore.StepSize)
+                      if (false)  if (A.Length > SimPathStore.StepSize)
                         {
                             DessinerArc(Grfx, CrayonArcs,A);
                         }
