@@ -649,7 +649,8 @@ namespace cogbot.Listeners
                     SimObject simObject = GetSimObject(objectUpdated);
                     if (update.Avatar)
                     {
-                        if (simObject != TheSimAvatar)
+                      if (false)
+                          if (simObject != TheSimAvatar)
                         {  // Way point creation from other avatars moving
                             new Thread(new ThreadStart(delegate()
                             {
@@ -1194,7 +1195,7 @@ namespace cogbot.Listeners
         Dictionary<Primitive, Vector3> primVect = new Dictionary<Primitive, Vector3>();
         public void SendNewEvent(string eventName, params object[] args)
         {
-            // if (true) return;
+            if (true) return;
             if (eventName.Contains("on-avatar-look")) return;
             //	Console.WriteLine(eventName + " " + client.argsListString(args));
             String evtStr = eventName.ToString();
@@ -1202,7 +1203,7 @@ namespace cogbot.Listeners
             {
                 Primitive prim = (Primitive)args[0];
                 Vector3 vect = (Vector3)args[1];
-
+				
                 if (!primVect.ContainsKey(prim))
                 {
                     primVect[prim] = vect;

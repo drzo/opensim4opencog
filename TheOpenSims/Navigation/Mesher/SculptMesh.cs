@@ -33,8 +33,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 
 //namespace PrimMesher
-namespace TheOpenSims.Navagation.Mesher
-
+namespace cogbot.TheOpenSims.Navigation.Mesher
 {
 
     public class SculptMesh

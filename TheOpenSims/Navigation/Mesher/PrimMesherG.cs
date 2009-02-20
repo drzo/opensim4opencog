@@ -11,7 +11,7 @@ using log4net.Core;
 using log4net.Repository;
 
 //namespace IdealistViewer
-namespace TheOpenSims.Navagation.Mesher
+namespace cogbot.TheOpenSims.Navigation.Mesher
 {
     public enum LevelOfDetail
     {

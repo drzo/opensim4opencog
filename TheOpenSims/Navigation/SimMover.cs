@@ -37,6 +37,7 @@ namespace cogbot.TheOpenSims.Navigation
         readonly float FinalDistance;
         int CurrentRouteIndex = 0;
         SimRoute StuckAt = null;
+        SimRoute OuterRoute = null;
         float CloseDistance = SimPathStore.LargeScale;
 
         public SimMoverState STATE
@@ -49,37 +50,21 @@ namespace cogbot.TheOpenSims.Navigation
         {
             Mover = (SimAvatar)mover;
             Routes = routes;
+            OuterRoute = new SimRouteMulti(routes);
             FinalDistance = finalDistance;
             FinalLocation = finalGoal;
         }
 
         public SimMoverState Goto()
         {
-            SimMoverState ST =  Goto1();
-            return ST;
-        }
-
-        public SimMoverState Goto1()
-        {
             _STATE = SimMoverState.MOVING;
             int CanSkip = 0;
             int Skipped = 0;
             SimRoute prev = null;
 
-            for (int cI = CurrentRouteIndex; cI < Routes.Count;cI++)
+            for (int cI = CurrentRouteIndex; cI < Routes.Count; cI++)
             {
                 CurrentRouteIndex = cI;
-
-                if (false)
-                {
-                    // Auto Advance when we are closer to the end if its in the future
-                    // but cant trust doing this if we are circling arround something
-                    int indexClosest = ClosestToInRoute(Routes[cI]);
-                    if (indexClosest > cI)
-                    {
-                        cI = indexClosest;
-                    }
-                }
                 if (cI > 0)
                 {
                     prev = Routes[cI - 1];
@@ -87,7 +72,9 @@ namespace cogbot.TheOpenSims.Navigation
 
                 SimRoute route = Routes[cI];
 
+                // TRY
                 STATE = FollowRoute(route);
+
                 float distance = Vector3.Distance(Mover.GetSimPosition(), FinalLocation);
                 if (STATE == SimMoverState.BLOCKED)
                 {
@@ -108,76 +95,60 @@ namespace cogbot.TheOpenSims.Navigation
                     }
                     if (route.BumpyCount > 0 && Skipped==0)
                     {
-
                         SetBlocked(route);
-                        if (prev!=null) if (FollowRoute(prev.Reverse) == SimMoverState.COMPLETE)
-                        {
-                            return SimMoverState.TRYAGAIN;
-                        }
+                      //  if (prev!=null) if (FollowRoute(prev.Reverse) == SimMoverState.COMPLETE)
+                       // {
+                         //   return SimMoverState.TRYAGAIN;
+                       // }
                     }
                     return STATE;
                 }
                 if (STATE == SimMoverState.PAUSED)
                 {
-                    CreateSurroundWaypoints();
                     if (distance < FinalDistance)
                     {
                         return SimMoverState.COMPLETE;
                     }
-                    if (CanSkip > 0)
-                    {
-                        CanSkip--;
-                        Skipped++;
-                        continue;
-                    }
-                    Mover.StopMoving();
-                    return SimMoverState.PAUSED;
+                    return SimMoverState.TRYAGAIN;
                 }
                 if (distance < FinalDistance)
                 {
                     return SimMoverState.COMPLETE;
                 }
             }
+            OuterRoute.ReWeight(0.7f); // Reward
+            SimPathStore.Instance.AddArc(OuterRoute);
             STATE = SimMoverState.COMPLETE;
             return STATE;
         }
 
-        private void CreateSurroundWaypoints()
+        private void SetBlocked(SimRoute StuckAt)
         {
-            //SimPathStore.Instance.CreateClosestWaypointBox(Mover.GetSimPosition(), 4, 5, 1.0f);
-        }
-
-        private int ClosestToInRoute(SimRoute BestR)
-        {
-            Vector3 current = Mover.GetSimPosition();
-            float BestDist = Vector3.Distance(current, BestR.StartNode.GetSimPosition());
-            int index = -1;
-            foreach (SimRoute R in Routes) {
-                index++;
-                float testDist = Vector3.Distance(current, R.StartNode.GetSimPosition());
-                if (testDist < BestDist)
+            Vector3 pos = Mover.GetSimPosition();
+            if (StuckAt.BlockedPoint(pos))
+            {
+                StuckAt.ReWeight(1.1f);
+                Debug("BLOCKED: " + StuckAt);
+            }
+            else
+            {
+                SimRoute StuckAt2 = OuterRoute.WhichRoute(pos);
+                if (StuckAt2 == null)
                 {
-                    BestR = R;
-                    BestDist = testDist;
+                    StuckAt.ReWeight(1.3f);
+                    OuterRoute.ReWeight(1.2f);
+                    Debug("INACESSABLE: " + StuckAt);
+                }
+                else
+                {
+                    StuckAt2.ReWeight(1.1f);
+                    Debug("ROUTE BLOCKED: " + StuckAt2);
+                    StuckAt2.BlockedPoint(pos);
                 }
             }
-            return index;
-        }
 
-        private void SetBlocked(SimRoute route)
-        {
-            StuckAt = route;
-            Debug("INACESSABLE: " + StuckAt);
-            //route.EndNode.Passable = false;
-            StuckAt.Passable = false;
-            StuckAt.ReWeight(1.1f);
-            
-            SimRoute reversed = StuckAt.Reverse;//
-            
-            reversed.Passable = false;
-            reversed.ReWeight(1.1f);
-           // SimPathStore.Instance.RemoveArc(StuckAt);
-            ///SimPathStore.Instance.RemoveArc(reversed);
+            // SimPathStore.Instance.RemoveArc(StuckAt);
+            ///SimPathStore.Instance.RemoveArc(StuckAt.Reverse);
 
             STATE = SimMoverState.BLOCKED;
         }
@@ -222,10 +193,10 @@ namespace cogbot.TheOpenSims.Navigation
         private bool MoveTo(Vector3 endVect)
         {
             bool MadeIt = Mover.MoveTo(endVect, CloseDistance, 6);
-            Vector3 vectMover = Mover.GetSimPosition();
             if (!MadeIt)
             {
                 return MadeIt;
+				Vector3 vectMover = Mover.GetSimPosition();
                 List<SimObject> nears = ((SimObject)Mover).GetNearByObjects(CloseDistance/2, false);
                 while (!MadeIt && nears.Count == 0)
                 {

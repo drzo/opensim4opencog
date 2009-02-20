@@ -62,7 +62,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 		/// </summary>
 		private void InitializeComponent()
 		{
-			System.Resources.ResourceManager resources = new System.Resources.ResourceManager(typeof(APropos));
+			//System.Resources.ResourceManager resources = new System.Resources.ResourceManager(typeof(APropos));
 			this.textBox1 = new System.Windows.Forms.TextBox();
 			this.textBox2 = new System.Windows.Forms.TextBox();
 			this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -279,7 +279,7 @@ Any feedback can be sent at the following e-mail adress :";
 			this.ClientSize = new System.Drawing.Size(536, 222);
 			this.Controls.AddRange(new System.Windows.Forms.Control[] {
 																		  this.tabControl1});
-			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+			//this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.MaximizeBox = false;
 			this.Name = "APropos";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;

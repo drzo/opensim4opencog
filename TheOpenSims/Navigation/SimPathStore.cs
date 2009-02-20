@@ -33,6 +33,7 @@ namespace cogbot.TheOpenSims.Navigation
         public static readonly float POINTS_PER_METER = 10f;
         public static readonly float StepSize = 1f / POINTS_PER_METER;
         public static readonly float LargeScale = 1f;//StepSize;//0.2f;
+        public static readonly bool LargeScaleRound = LargeScale == (float)Math.Round(LargeScale, 0);
         public static SimPathStore Instance = new SimPathStore("millspec.serz");
         IList<SimWaypoint> SimWaypoints;
         IList<SimRoute> SimRoutes;
@@ -333,7 +334,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         static float PI2 = (float)(Math.PI * 2f);
         static float RAD2DEG = 360f / PI2;
-        private static IList<SimRoute> GetSimplifedRoute(IList<SimRoute> v3s)
+        public IList<SimRoute> GetSimplifedRoute(IList<SimRoute> v3s)
         {
             IList<SimRoute> vectors = new List<SimRoute>();
             List<SimRoute> skipped = new List<SimRoute>();
@@ -361,9 +362,11 @@ namespace cogbot.TheOpenSims.Navigation
                         }
                         else
                         {
-                            SimRoute R = new SimRouteMovement(skipped.ToArray());
-                            vectors.Add(R);
+                            SimRoute R = new SimRouteMulti(skipped.ToArray());
+                            R.ReWeight(0.9f);
+                            AddArc(R);
                             skipped.Clear();
+                            vectors.Add(R);
                             skipped.Add(v3s[Current]);
                         }
                     }
@@ -421,7 +424,8 @@ namespace cogbot.TheOpenSims.Navigation
             {
                 // Full Path
                 IsFake = false;
-                return GetSimplifedRoute(  AS.PathByArcs);
+                return //GetSimplifedRoute
+					(  AS.PathByArcs);
             }
             // Partial Path
             IsFake = true;
@@ -747,15 +751,18 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="rotation"></param>
         public void Update(uint agentID, Vector3 point, Quaternion rotation)
         {
-            // return;
-            if (!TrackedAgents.ContainsKey(agentID))
+            lock (TrackedAgents) // the lock is more for the little PrimTrackers sequentuality than for this dictionary
             {
-                TrackedAgents[agentID] = new PrimTracker(SimWaypoint.Create(point), rotation, this);
-            }
-            else
-            {
-                PrimTracker tracker = TrackedAgents[agentID];
-                tracker.Update(point, rotation);
+                // return;
+                if (!TrackedAgents.ContainsKey(agentID))
+                {
+                    TrackedAgents[agentID] = new PrimTracker(SimWaypoint.Create(point), rotation, this);
+                }
+                else
+                {
+                    PrimTracker tracker = TrackedAgents[agentID];
+                    tracker.Update(point, rotation);
+                }
             }
         }
 
@@ -943,6 +950,12 @@ namespace cogbot.TheOpenSims.Navigation
             if (Dist < StepSize)
             {
                 V3Waypoint = Closest;
+                if (Closest.EnsureAtLeastOnePath())
+                {
+                    Debug("EnsureAtLeastOnePath {0}", Closest);
+                }
+
+                return Closest;
             }
             else
             {
@@ -1033,16 +1046,12 @@ namespace cogbot.TheOpenSims.Navigation
 
             }
         }
-        
+
+
         public void SetPointBlocked(float x, float y)
         {
-            SetPoint(x, y, false);            
-        }
-
-        public void SetPoint(float x, float y, bool UnBlock)
-        {
             x = RangeCheck(x); y = RangeCheck(y);
-            if (x != (float)Math.Round(x, 0) && y != (float)Math.Round(y, 0)) return;
+            if (LargeScaleRound) if (x != (float)Math.Round(x, 0) && y != (float)Math.Round(y, 0)) return;
             SimWaypoint point = saved[ARRAY_IDX(x), ARRAY_IDX(y)];
             if (point != null)
             {
@@ -1056,29 +1065,19 @@ namespace cogbot.TheOpenSims.Navigation
                 //            R.Passable = false;
                 //        }
                 //    }
-                point.Passable = UnBlock;
+                point.Passable = false;
                 return;
             }
-          ///  return;
             Vector3 P = new Vector3(x, y, SimZLevel);
             lock (SimRoutes) foreach (SimRoute A in SimRoutes)
                 {
-                    if (A.Passable != UnBlock)
-                        if (A.OnRoute(P))
-                        {
-                            SimRoute R = A.Reverse;
-                            A.Passable = UnBlock;
-                            Debug("SetPointBlocked: {0}  the {1}",P, R);
-                            R.Passable = UnBlock;
-                            return;
-                        }
+                    if (A.BlockedPoint(P))
+                    {
+                        Debug("SetPointBlocked: {0}  the {1}", P, A);
+                    }
                 }
         }
 
-
-
-
-        //                                    NewBitmap.SetPixel(x, y, EdgeColor);
         public delegate void EdgeAction(int x, int y);
 
         public static Bitmap EdgeDetection(Bitmap Image, double Threshold, EdgeAction EdgeColor)
