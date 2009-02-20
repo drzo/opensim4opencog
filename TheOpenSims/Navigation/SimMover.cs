@@ -12,6 +12,8 @@ namespace cogbot.TheOpenSims.Navigation
          //void SetMoveTarget(SimPosition v3);
         void StopMoving();
         bool MoveTo(Vector3 end, float maxDistance, int maxSeconds);
+        Quaternion GetSimRotation();
+        void Debug(string p, params object[] args);
         //float Distance(SimPosition v3);
 
     }
@@ -30,12 +32,12 @@ namespace cogbot.TheOpenSims.Navigation
 
         SimMoverState _STATE = SimMoverState.PAUSED;
         SimMover Mover;
-        SimRoute[] Routes;
+        IList<SimRoute> Routes;
         readonly Vector3 FinalLocation;
         readonly float FinalDistance;
         int CurrentRouteIndex = 0;
         SimRoute StuckAt = null;
-
+        float CloseDistance = SimPathStore.LargeScale;
 
         public SimMoverState STATE
         {
@@ -43,7 +45,7 @@ namespace cogbot.TheOpenSims.Navigation
             set { _STATE = value; }
         }
 
-        public SimRouteMover(SimMover mover, SimRoute[] routes, Vector3 finalGoal, float finalDistance)
+        public SimRouteMover(SimMover mover, IList<SimRoute> routes, Vector3 finalGoal, float finalDistance)
         {
             Mover = (SimAvatar)mover;
             Routes = routes;
@@ -64,7 +66,7 @@ namespace cogbot.TheOpenSims.Navigation
             int Skipped = 0;
             SimRoute prev = null;
 
-            for (int cI = CurrentRouteIndex; cI < Routes.Length;cI++)
+            for (int cI = CurrentRouteIndex; cI < Routes.Count;cI++)
             {
                 CurrentRouteIndex = cI;
 
@@ -108,7 +110,7 @@ namespace cogbot.TheOpenSims.Navigation
                     {
 
                         SetBlocked(route);
-                        if (prev!=null) if (FollowRoute(prev.Reverse()) == SimMoverState.COMPLETE)
+                        if (prev!=null) if (FollowRoute(prev.Reverse) == SimMoverState.COMPLETE)
                         {
                             return SimMoverState.TRYAGAIN;
                         }
@@ -170,7 +172,7 @@ namespace cogbot.TheOpenSims.Navigation
             StuckAt.Passable = false;
             StuckAt.ReWeight(1.1f);
             
-            SimRoute reversed = StuckAt.Reverse();//
+            SimRoute reversed = StuckAt.Reverse;//
             
             reversed.Passable = false;
             reversed.ReWeight(1.1f);
@@ -184,31 +186,20 @@ namespace cogbot.TheOpenSims.Navigation
         {
             Vector3 vectStart = route.StartNode.GetSimPosition();
             Vector3 vectMover = Mover.GetSimPosition();
-            float currentDistFromStart = Vector3.Distance(vectMover, vectStart);            
-            if (currentDistFromStart > 1f)
+            float currentDistFromStart = Vector3.Distance(vectMover, vectStart);
+            if (currentDistFromStart > CloseDistance)
             {
                 Debug("FollowRoute: TRYING for Start " + vectMover + " -> " + vectStart);
-                if (!Mover.MoveTo(vectStart, 1, 6))
+                if (!MoveTo(vectStart))
                 {
-                    //SimWaypoint stoppedAt = Mover.GetWaypoint();
                     Debug("FollowRoute: FAILED Start " + vectMover + " -> " + vectStart);
-                    return SimMoverState.PAUSED;
+                    return SimMoverState.TRYAGAIN;
                 }
             }
             Vector3 endVect = route.EndNode.GetSimPosition();
 
-            bool MadeIt = Mover.MoveTo(endVect, 1f, 7);
-            vectMover = Mover.GetSimPosition();
-            if (!MadeIt)
-            {
-                List<SimObject> nears = ((SimObject)Mover).GetNearByObjects(2f, false);
-                while (!MadeIt && nears.Count == 0)
-                {
-                    MadeIt = Mover.MoveTo(endVect, 1f, 7);
-                    vectMover = Mover.GetSimPosition();
-                    nears = ((SimObject)Mover).GetNearByObjects(2f, false);
-                }
-            }
+            bool MadeIt = MoveTo(endVect);
+
             if (!MadeIt)
             {               
                 Debug("FollowRoute: BLOCKED ROUTE " + vectMover + "-> " + endVect);
@@ -218,23 +209,46 @@ namespace cogbot.TheOpenSims.Navigation
 
             Vector3 endVectMover = Mover.GetSimPosition();
             float currentDistFromfinish = Vector3.Distance(endVectMover, endVect);
-            if (currentDistFromfinish > 1f)
+            if (currentDistFromfinish > CloseDistance)
             {
                 Debug("FollowRoute: CANNOT FINISH " + endVectMover + " -> " + endVect);
                 return SimMoverState.PAUSED;
             }
+            route.ReWeight(0.9f);
             Debug("FollowRoute: SUCCEED " + vectStart + " -> " + endVectMover);
             return SimMoverState.COMPLETE;
+        }
+
+        private bool MoveTo(Vector3 endVect)
+        {
+            bool MadeIt = Mover.MoveTo(endVect, CloseDistance, 6);
+            Vector3 vectMover = Mover.GetSimPosition();
+            if (!MadeIt)
+            {
+                return MadeIt;
+                List<SimObject> nears = ((SimObject)Mover).GetNearByObjects(CloseDistance/2, false);
+                while (!MadeIt && nears.Count == 0)
+                {
+                    MadeIt = Mover.MoveTo(endVect, CloseDistance, 6);
+                    vectMover = Mover.GetSimPosition();
+                    nears = ((SimObject)Mover).GetNearByObjects(2f, false);
+                }
+            }
+            if (!MadeIt)
+            {
+                Mover.StopMoving();
+            }
+            return MadeIt;
         }
 
         public override string ToString()
         {
 
-            SimWaypoint point = Routes[0].StartNode;
-            int c = Routes.Length;
-            SimWaypoint end = Routes[c-1].EndNode;
             string s = GetType().Name + "::" + Mover;// +" " + point.ToString() + " to " + end;
             return s;
+            SimWaypoint point = Routes[0].StartNode;
+            int c = Routes.Count;
+            SimWaypoint end = Routes[c - 1].EndNode;
             foreach (SimRoute A in Routes)
             {
                 SimWaypoint next = A.StartNode;
@@ -254,9 +268,26 @@ namespace cogbot.TheOpenSims.Navigation
 
         }
 
-        private void Debug(string p)
+        public Vector3 InFrontOf()
         {
-            ((SimAvatar)Mover).Debug(p + " for " + this.ToString());
+            return FrontOf(Mover.GetSimPosition(), CloseDistance, Mover.GetSimRotation());
+        }
+
+        static Vector3 FrontOf(Vector3 c, float distance, Quaternion r)
+        {
+            float ax, ay, az;
+            r.GetEulerAngles(out ax, out ay, out az);
+            float xmul = (float)Math.Cos(az);
+            float ymul = (float)Math.Sin(az);
+            Vector3 v3 = new Vector3(xmul, ymul, 0);
+            v3 = v3 * distance;
+            Vector3 front = c + v3;
+            return front;
+        }
+
+        private void Debug(string p, params object[] args)
+        {
+            Mover.Debug(p + " for " + this.ToString(),args);
         }
     }
 }

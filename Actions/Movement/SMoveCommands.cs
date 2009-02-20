@@ -120,7 +120,7 @@ namespace cogbot.Actions.Movement
             SimPosition v3 = WorldSystem.GetVector(args, out argsused);
             SimWaypoint wp = v3.GetWaypoint();
             bool IsFake;
-            SimRoute[] route = WorldSystem.TheSimAvatar.GetRouteList(wp,out IsFake);
+            IList<SimRoute> route = WorldSystem.TheSimAvatar.GetRouteList(wp, out IsFake);
             String s = "v3=" + WorldSystem.TheSimAvatar.DistanceVectorString(v3) + " wp=" + wp.ToString();
             if (IsFake)
             {
@@ -131,7 +131,7 @@ namespace cogbot.Actions.Movement
                 s += "\nComputed ";
             }
             if (route!=null)
-            for (int i = 0; i < route.Length; i++)
+            for (int i = 0; i < route.Count; i++)
             {
                 s += " \n" + i + ": " + route[i].ToInfoString();
             }
@@ -283,13 +283,13 @@ namespace cogbot.Actions.Movement
                 }
             }
 
-            Goto(target, distance);
+            WorldSystem.TheSimAvatar.AutoGoto(target, distance, 20000);
             return string.Format("gto {0} {1}", target.ToString(), distance);
         }
 
         public void Goto(Vector3 target, float distance)
         {
-            Approacher.AutoGoto1(Client, target, distance, 20000);
+            Approacher.AutoGoto(Client, target, distance, 20000);
             Vector2 v2 = new Vector2(target.X, target.Y);
             float d = Approacher.DistanceTo(Client, v2);
             if (d < distance) return;

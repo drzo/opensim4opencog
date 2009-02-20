@@ -19,10 +19,14 @@ namespace cogbot.Actions
             if (args.Length != 1)
                 return "Usage: priminfo [prim-uuid]";
 
-            if (UUIDTryParse(args[0], out primID))
+            if (UUIDTryParse(String.Join(" ",args), out primID))
             {
                 Primitive target = Client.Network.CurrentSim.ObjectsPrimitives.Find(
                     delegate(Primitive prim) { return prim.ID == primID; }
+                );
+
+                if (target==null) target = Client.Network.CurrentSim.ObjectsAvatars.Find(
+                    delegate(Avatar prim) { return prim.ID == primID; }
                 );
 
                 if (target != null)

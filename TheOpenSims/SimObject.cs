@@ -91,12 +91,11 @@ namespace cogbot.TheOpenSims
             //            return WorldSystem.SimPaths.CreateClosestWaypointBox(v3, 4f);
         }
 
-        public SimRoute[] GetRouteList(SimWaypoint to, out bool IsFake)
+        public IList<SimRoute> GetRouteList(SimWaypoint to, out bool IsFake)
         {
             SimWaypoint from = this.GetWaypoint();
-            if (false)
+            //if (false)
             {
-
                 if (GraphFormer.DEBUGGER != null)
                 {
                     new Thread(new ThreadStart(delegate()
@@ -304,7 +303,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public void UpdateObject(ObjectUpdate objectUpdate)
+        public void UpdateObject(ObjectUpdate objectUpdate, ObjectUpdate objectUpdateDiff)
         {
         }
 
@@ -457,7 +456,7 @@ namespace cogbot.TheOpenSims
 
         private bool BadLocation(Vector3 theLPos)
         {
-            if (theLPos.Z < 0.0f) return true;
+            if (theLPos.Z < -2.0f) return true;
             if (theLPos.X < 0.0f) return true;
             if (theLPos.X > 255.0f) return true;
             if (theLPos.Y < 0.0f) return true;
@@ -595,9 +594,9 @@ namespace cogbot.TheOpenSims
         {
             return SimTypeSystem.MatchString(ToString(), name);
         }
-        public virtual void Debug(string p)
+        public virtual void Debug(string p, params object[] args)
         {
-            WorldSystem.output(thePrim + ":" + p);
+            WorldSystem.output(String.Format(thePrim + ": " + p, args));
         }
 
         internal void SortByDistance(List<SimObject> sortme)
@@ -654,7 +653,7 @@ namespace cogbot.TheOpenSims
         /// </summary>
         /// <param name="ZSlice"> right now ussually 22 or 23</param>
         /// <returns>ICollection&lt;Vector3&gt; probly could be Vector2s but takes more time to wrap them</returns>
-        public virtual ICollection<Vector3> GetOccupied(float min,float max)
+        public virtual ICollection<Vector3> GetOccupied(float min, float max)
         {
             List<Vector3> copy = new List<Vector3>();
             foreach (Vector3 point in GetPointsList())
@@ -666,28 +665,26 @@ namespace cogbot.TheOpenSims
         }
 
         Mesh mesh;
-        List<Vector3> PointsOccupied = null;
+        HashSet<Vector3> PointsOccupied = null;
         internal ICollection<Vector3> GetPointsList()
         {
             if (PointsOccupied == null)
             {
-                PointsOccupied = new List<Vector3>();
-                mesh = PrimMesherG.PrimitiveToIrrMesh(thePrim, LevelOfDetail.High,GetSimRotation());
+                PointsOccupied = new HashSet<Vector3>();
+                mesh = PrimMesherG.PrimitiveToIrrMesh(thePrim, LevelOfDetail.High, GetSimRotation());
                 if (mesh == null)
                 {
                     List<Vector3> temp = new List<Vector3>();
                     temp.Add(GetSimPosition());
                     return temp;
                 }
-                                   int count = mesh.MeshBufferCount;
+
+                int count = mesh.MeshBufferCount;
                 for (int b = 0; b < count; b++)
                 {
                     foreach (Vector3 wp in BoxToPoints(mesh.GetMeshBuffer(b).BoundingBox, GetSimPosition(), SimPathStore.StepSize))
                     {
-                        if (!PointsOccupied.Contains(wp))
-                        {
                             PointsOccupied.Add(wp);
-                        }
                     }
                 }
             }
@@ -717,7 +714,7 @@ namespace cogbot.TheOpenSims
                 {
                     for (float z = minZ; z <= maxZ; z += StepLevel)
                     {
-                        Vector3 v3 = SimWaypoint.RoundPoint( new Vector3(x + loc.X, y + loc.Y, z + loc.Z));
+                        Vector3 v3 = SimWaypoint.RoundPoint(new Vector3(x + loc.X, y + loc.Y, z + loc.Z));
                         PointsOccupied.Add(v3);
                     }
                 }
@@ -735,5 +732,25 @@ namespace cogbot.TheOpenSims
         //    return theMesh;
         //}
 
+        List<SimPathStore> SimPathStores = new List<SimPathStore>();
+
+        internal virtual void UpdatePaths(SimPathStore simPathStore)
+        {
+            if (!CanGetSimPosition()) return;
+            if (IsPassable) return;
+            lock (SimPathStores)
+            {
+                if (SimPathStores.Contains(simPathStore)) return;
+                SimPathStores.Add(simPathStore);
+            }
+            float SimZLevel = simPathStore.SimZLevel;
+            ICollection<Vector3> points = GetOccupied(SimZLevel, SimZLevel + 1f);
+            {
+                foreach (Vector3 point in points)
+                {
+                    simPathStore.SetPointBlocked(point.X, point.Y);
+                }
+            }
+        }
     }
 }
