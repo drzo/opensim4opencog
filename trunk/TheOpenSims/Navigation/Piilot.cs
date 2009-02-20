@@ -538,7 +538,7 @@ namespace cogbot.TheOpenSims.Navigation
      class Approacher
     {
 
-        static public bool AutoGoto1(BotClient Client, Vector3 target3, float dist, long maxMs)
+        static public bool AutoGoto(BotClient Client, Vector3 target3, float dist, long maxMs)
         {
             long endAt = Environment.TickCount + maxMs;
             Vector2 target = new Vector2(target3.X, target3.Y);
@@ -796,7 +796,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             if (true)
             {
-                Approacher.AutoGoto1(bc, targ, dist, 10000);
+                Approacher.AutoGoto(bc, targ, dist, 10000);
                 return true;
             }
 

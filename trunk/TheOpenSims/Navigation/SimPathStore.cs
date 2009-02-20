@@ -1,5 +1,5 @@
-// Copyleft 2009 Douglas R. Miles (Daxtron Labs) - <dmiles@daxtron.com>
-// Copyright 2003 Eric Marchesin - <eric.marchesin@laposte.net>
+// Copyleft 2009 Douglas R. Miles (Daxtron Labs) - <dmiles@daxtron.com> 55%
+// Copyright 2003 Eric Marchesin - <eric.marchesin@laposte.net> 45%
 //
 // This source file(s) may be redistributed by any means PROVIDING they
 // are not sold for profit without the authors expressed written consent,
@@ -53,7 +53,7 @@ namespace cogbot.TheOpenSims.Navigation
             LoadFromFile();
         }
 
-        private float RangeCheck(float PtY)
+        public float RangeCheck(float PtY)
         {
             if (PtY > 255)
             {
@@ -109,7 +109,7 @@ namespace cogbot.TheOpenSims.Navigation
             Debug("START CreateDefaultRoutes StepSize={0}", LargeScale);
             float MX = 255f - LargeScale - StepSize;
             float MY = 255f - LargeScale - StepSize;
-            float Weight = 0.05f;
+            float Weight = 1f;
             for (float x = 0; x < MX; x += LargeScale)
             {
                 for (float y = 0; y < MY; y += LargeScale)
@@ -134,12 +134,18 @@ namespace cogbot.TheOpenSims.Navigation
             Debug("END CreateDefaultRoutes StepSize={0}", LargeScale);
         }
 
+
+        private SimWaypoint FindNode(float x, float y)
+        {
+            return saved[ARRAY_IDX( RangeCheck(x)), ARRAY_IDX( RangeCheck(y))];
+        }
+
         public SimWaypoint CreateFirstNode(float x, float y)
         {
             x = RangeCheck(x);
             y = RangeCheck(y);
-            int ix = INT(x);
-            int iy = INT(y);
+            int ix = ARRAY_IDX(x);
+            int iy = ARRAY_IDX(y);
             SimWaypoint wp = saved[ix, iy];
             if (wp == null)
             {
@@ -224,14 +230,14 @@ namespace cogbot.TheOpenSims.Navigation
         //    return C;
         //}
 
-        private int INT(double x)
+        private int ARRAY_IDX(double x)
         {
             if (x == 0.0) return 0;
             double i = Math.Round(x * POINTS_PER_METER, 1);
             int ii = (int)i;
             if ((double)i != ii)
             {
-                throw new ArgumentException("INT " + i + "!="+ii);
+                throw new ArgumentException("ARRAY_IDX " + i + "!="+ii);
             }
             return ii;
         }
@@ -301,6 +307,16 @@ namespace cogbot.TheOpenSims.Navigation
             return InternArc(s, e, Weight);
         }
 
+        //private SimRoute FindArc(SimWaypoint s, SimWaypoint e)
+        //{
+        //    int hash = s.GetHashCode() ^ e.GetHashCode(); 
+        //    lock (SimRoutes) foreach (SimRoute R in SimRoutes.GetHashedCollection(hash))
+        //        {
+        //            if (R.IsSame(s, e)) return R;
+        //        }
+        //    return null;
+        //}
+
         private SimRoute FindArc(SimWaypoint s, SimWaypoint e)
         {
             lock (SimRoutes) for (int i = SimRoutes.Count; i != 0; )
@@ -310,12 +326,93 @@ namespace cogbot.TheOpenSims.Navigation
                     {
                         return sr;
                     }
-
                 }
             return null;
         }
 
-        public SimRoute[] GetRoute(SimWaypoint StartNode, SimWaypoint EndNode, out bool IsFake)
+
+        static float PI2 = (float)(Math.PI * 2f);
+        static float RAD2DEG = 360f / PI2;
+        private static IList<SimRoute> GetSimplifedRoute(IList<SimRoute> v3s)
+        {
+            IList<SimRoute> vectors = new List<SimRoute>();
+            List<SimRoute> skipped = new List<SimRoute>();
+            float ZAngle = float.NaN;
+            bool ZAngleValid = false;
+            Vector3 currentV3 = v3s[0].StartNode.Position;
+            vectors.Add(v3s[0]);
+            for (int Current = 0; Current < v3s.Count;Current++ )
+            {
+                Vector3 compare = v3s[Current].EndNode.Position;
+                Vector3 dif = compare - currentV3;
+                float NewZAngle = ComparableAngle(Math.Atan2(dif.X, dif.Y));
+                if (!ZAngleValid)
+                {
+                    ZAngleValid = true;
+                }
+                else
+                {
+                    float adif = Math.Abs(NewZAngle - ZAngle);
+                    if (adif * RAD2DEG > 10)
+                    {
+                        if (skipped.Count == 0)
+                        {
+                            vectors.Add(v3s[Current]);
+                        }
+                        else
+                        {
+                            SimRoute R = new SimRouteMovement(skipped.ToArray());
+                            vectors.Add(R);
+                            skipped.Clear();
+                            skipped.Add(v3s[Current]);
+                        }
+                    }
+                    else
+                    {
+                        skipped.Add(v3s[Current]);
+                    }
+                }
+                ZAngle = NewZAngle;
+                currentV3 = compare;                
+            }
+
+            return vectors;
+        }
+
+        private static float ComparableAngle(double p)
+        {
+            while (p < 0)
+            {
+                p += PI2;
+            }
+            while (p > PI2)
+            {
+                p -= PI2;
+            }
+            return (float)p + PI2;
+        }
+
+
+        static internal IList<SimWaypoint> RouteListToPoints(IList<SimRoute> routeToSimplify)
+        {
+            IList<SimWaypoint> points = new List<SimWaypoint>();
+            SimWaypoint Last = null;
+            foreach (SimRoute move in routeToSimplify)
+            {
+                if (move.StartNode != Last)
+                {
+                    Last = move.StartNode;
+                    points.Add(Last);
+                }
+                if (move.EndNode != Last)
+                {
+                    Last = move.EndNode;
+                    points.Add(Last);
+                }
+            }
+            return points;
+        }
+        public IList<SimRoute> GetRoute(SimWaypoint StartNode, SimWaypoint EndNode, out bool IsFake)
         {
             SimMovement AS = new SimMovement(this);
             AS.Initialize(StartNode, EndNode);
@@ -324,7 +421,7 @@ namespace cogbot.TheOpenSims.Navigation
             {
                 // Full Path
                 IsFake = false;
-                return AS.PathByArcs;
+                return GetSimplifedRoute(  AS.PathByArcs);
             }
             // Partial Path
             IsFake = true;
@@ -361,12 +458,12 @@ namespace cogbot.TheOpenSims.Navigation
         /// <summary>
         /// Gets the List interface of the nodes in the graph.
         /// </summary>
-        public IList<SimWaypoint> Nodes { get { return SimWaypoints; } }
+        public ICollection<SimWaypoint> Nodes { get { return SimWaypoints; } }
 
         /// <summary>
         /// Gets the List interface of the arcs in the graph.
         /// </summary>
-        public IList<SimRoute> Arcs { get { return SimRoutes; } }
+        public ICollection<SimRoute> Arcs { get { return SimRoutes; } }
 
         /// <summary>
         /// Empties the graph.
@@ -526,14 +623,21 @@ namespace cogbot.TheOpenSims.Navigation
         /// <returns>The closest node that has been found.</returns>
         public SimWaypoint ClosestNode(float PtX, float PtY, float PtZ, out float Distance, bool IgnorePassableProperty)
         {
-
+            SimWaypoint NodeMin = FindNode(PtX, PtY);
+            if (NodeMin != null)
+            {
+                if (IgnorePassableProperty || NodeMin.Passable)
+                {
+                    Distance = 0;
+                    return NodeMin;
+                }
+            }
+            float DistanceMin = -1;
             PtX = RangeCheck(PtX);
             PtY = RangeCheck(PtY);
             PtZ = SimZLevel;
-
-            SimWaypoint NodeMin = null;
-            float DistanceMin = -1;
             Vector3 P = new Vector3(PtX, PtY, PtZ);
+
 
             lock (SimWaypoints) foreach (SimWaypoint N in SimWaypoints)
                 {
@@ -916,28 +1020,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         internal void UpdateFromObject(SimObject obj)
         {
-            //int SimZLevelWalk = SimZLevel + 1;
-            if (!obj.CanGetSimPosition()) return;
-            if (obj.IsPassable) return;
-            ICollection<Vector3> points = obj.GetOccupied((float)SimZLevel, (float)SimZLevel + 1f);
-            if (obj.IsPassable)
-            {
-                foreach (Vector3 point in points)
-                {
-                    {
-                        //    SetPointPassable(point.X, point.Y);
-                    }
-                }
-            }
-            else
-            {
-                foreach (Vector3 point in points)
-                {
-                    {
-                        SetPointBlocked(point.X, point.Y);
-                    }
-                }
-            }
+            obj.UpdatePaths(this);
         }
 
         public void SetPointPassable(float x, float y)
@@ -950,33 +1033,49 @@ namespace cogbot.TheOpenSims.Navigation
 
             }
         }
-
+        
         public void SetPointBlocked(float x, float y)
         {
-            //float Dist;
-            //SimRoute route = ClosestArc((double)x, (double)y, SimZLevel, out Dist, false);
-            //if (route.Passable) //no need to search
-            //    if (route.OnRoute(new Vector2((double)x, (double)y)))
-            //    {
-            //        Debug("Edge at " + route + " for " + x + " " + y);
-            //        route.Passable = false;
-            //        route.Reverse().Passable = false;
-            //        route.ReWeight(3f);
-            //    }
+            SetPoint(x, y, false);            
+        }
 
+        public void SetPoint(float x, float y, bool UnBlock)
+        {
+            x = RangeCheck(x); y = RangeCheck(y);
+            if (x != (float)Math.Round(x, 0) && y != (float)Math.Round(y, 0)) return;
+            SimWaypoint point = saved[ARRAY_IDX(x), ARRAY_IDX(y)];
+            if (point != null)
+            {
+                //lock (SimRoutes) foreach (SimRoute A in point.IncomingArcs)
+                //    {
+                //        if (A.Passable)
+                //        {
+                //            SimRoute R = A.Reverse;
+                //            A.Passable = false;
+                //            Debug("SetPointBlocked: {0}  the {1}", point, R);
+                //            R.Passable = false;
+                //        }
+                //    }
+                point.Passable = UnBlock;
+                return;
+            }
+          ///  return;
             Vector3 P = new Vector3(x, y, SimZLevel);
             lock (SimRoutes) foreach (SimRoute A in SimRoutes)
                 {
-                    if (A.Passable)
+                    if (A.Passable != UnBlock)
                         if (A.OnRoute(P))
                         {
-                            SimRoute R = A.Reverse();
-                            A.Passable = false;
+                            SimRoute R = A.Reverse;
+                            A.Passable = UnBlock;
                             Debug("SetPointBlocked: {0}  the {1}",P, R);
-                            R.Passable = false;
+                            R.Passable = UnBlock;
+                            return;
                         }
                 }
         }
+
+
 
 
         //                                    NewBitmap.SetPixel(x, y, EdgeColor);
@@ -1055,6 +1154,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public void Update(Vector3 point, Quaternion rotation)
         {
+           // return;
             float dist = Vector3.Distance(WayPoint, point);
             if (dist > MovedAllot)
             {

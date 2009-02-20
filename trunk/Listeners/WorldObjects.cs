@@ -394,6 +394,7 @@ namespace cogbot.Listeners
             //        coarse.Location[i].Z * 4));
             //}
 
+
             //OnEvent("On-Coarse-Location-Update", paramNamesOnCoarseLocationUpdate, paramTypesOnCoarseLocationUpdate, sim);
         }
 
@@ -470,6 +471,10 @@ namespace cogbot.Listeners
                 //lock (prim)                   prims.Add(prim.LocalID, prim.ID, prim);
                 EnsureSelected(prim.LocalID);
             }
+            RegisterUUID(prim.ID, prim);
+
+            // Make an intial "ObjectUpdate" for later diffing
+            lastObjectUpdate[prim.LocalID] = updatFromPrim(prim);
             //CalcStats(prim);
             //UpdateTextureQueue(prim.Textures);
         }
@@ -627,120 +632,111 @@ namespace cogbot.Listeners
         object Objects_OnObjectUpdated1Sync = new Object();
         public override void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
         {
-            lock (Objects_OnObjectUpdated1Sync)
+         /// lock (Objects_OnObjectUpdated1Sync)
                 Objects_OnObjectUpdated1(simulator, update, regionHandle, timeDilation);
         }
 
+
         private void Objects_OnObjectUpdated1(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
         {
-            Primitive objectUpdated = null;
+            Primitive objectUpdated = GetPrimitive(update.LocalID);
             //Console.WriteLine("timeDilation " + timeDilation);
-            if (update.Avatar)
-            {
-                Primitive prim;
-                if (prims.TryGetValue(update.LocalID, out prim))
-                {
-                    objectUpdated = prim;
-                    lock (prim)
-                    {
-                        SimAvatar simAvatar = (SimAvatar)GetSimObject(prim);
-                        if (!simAvatar.IsLocal())
-                        SimPaths.Update(update.LocalID, simAvatar.GetSimPosition(), update.Rotation);
 
-                        // output("Updating state for Avatar " + prim.Name);
-                        //  updateToPrim(prim, update);
-                        //CalcStats(prim);
-                        //   describePrimToAI(prim);
+            if (objectUpdated != null)
+            {
+                lock (objectUpdated)
+                {
+                    SimObject simObject = GetSimObject(objectUpdated);
+                    if (update.Avatar)
+                    {
+                        if (simObject != TheSimAvatar)
+                        {  // Way point creation from other avatars moving
+                            new Thread(new ThreadStart(delegate()
+                            {
+                                SimPaths.Update(update.LocalID, simObject.GetSimPosition(), update.Rotation);
+                            })).Start();
+                            // output("Updating state for Avatar " + prim.Name);
+                        }
                     }
 
-                }
+                    // other OMV code already updated the Primitive
+                    // updateToPrim(prim, update);
 
-            }
-            else
-            {
-                Primitive prim;
-
-                if (prims.TryGetValue(update.LocalID, out prim))
-                {
-                    objectUpdated = prim;
-                    lock (prim)
+                    if (objectUpdated.Properties != null)
                     {
-
-                        ///output("Updating state for Prim " + prim);
-                        updateToPrim(prim, update);
-                    }
-                    if (prim.Properties != null)
-                    {
-                        //CalcStats(prim);
-                        describePrimToAI(prim);
+                        //CalcStats(objectUpdated);
+                        describePrimToAI(objectUpdated);
                     }
                     else
                     {
-                        EnsureSelected(prim.LocalID);
+                        EnsureSelected(objectUpdated.LocalID);
                     }
-                }
-                else
-                {
-                    output("missing Objects_OnObjectUpdated");
-                }
-            }
-            if (objectUpdated != null)
-            {
-                bool needsOsdDiff = false; //for debugging should be false otherwise
-                if (!lastObjectUpdate.ContainsKey(update.LocalID))
-                {
-                    lastObjectUpdate[update.LocalID] = updatFromPrim(objectUpdated);
-                }
 
-                Object diffO = notifyUpdate(objectUpdated, lastObjectUpdate[update.LocalID], update, InformUpdate);
-                lastObjectUpdate[update.LocalID] = update;
+                    // bool needsOsdDiff = false; //for debugging should be false otherwise
 
-                if (diffO != null)
-                {
-                    ObjectUpdate diff = (ObjectUpdate)diffO;
-                    //if (lastObjectUpdateDiff.ContainsKey(update.LocalID))
-                    //{
-                    //    notifyUpdate(objectUpdated, lastObjectUpdateDiff[update.LocalID], diff, InformUpdateDiff);
-                    //}
-                    lastObjectUpdateDiff[update.LocalID] = diff;
-                }
-                else
-                {
-                    someThingElseNeedsUpdate(objectUpdated);
-                    needsOsdDiff = true;
-                }
-                // BlockUntilProperties(objectUpdated);
-                if (false && objectUpdated.Properties != null)
-                {
-                    OSDMap after = (OSDMap)objectUpdated.GetOSD();
-                    //  Console.WriteLine(OSDParser.SerializeLLSDXmlString(after));
-                    if (lastOSD.ContainsKey(update.LocalID))
+                    // Make a Last Object Update from the Primitive if we knew nothing about it
+                    if (!lastObjectUpdate.ContainsKey(update.LocalID))
                     {
-                        if (needsOsdDiff)
-                        {
-                            //Primitive before = lastDeepCopy[update.LocalID];
-                            OSDMap before = lastOSD[update.LocalID];
-                            String osdDiff = OSDDiff(before, after);
-                            if (osdDiff.Length > 0)
-                            {
-                                Console.WriteLine(osdDiff);
-                            }
-                        }
-
+                        lastObjectUpdate[update.LocalID] = updatFromPrim(objectUpdated);
                     }
 
-                    lastOSD[update.LocalID] = after;
+                    // Make a "diff" from previous
+                    Object diffO = notifyUpdate(objectUpdated, lastObjectUpdate[update.LocalID], update, InformUpdate);
+                    if (diffO != null)
+                    {
+                        ObjectUpdate diff = (ObjectUpdate)diffO;
+                        //if (lastObjectUpdateDiff.ContainsKey(update.LocalID))
+                        //{
+                        //    notifyUpdate(objectUpdated, lastObjectUpdateDiff[update.LocalID], diff, InformUpdateDiff);
+                        //}
+                        lastObjectUpdateDiff[update.LocalID] = diff;
+                    }
+                    else
+                    {
+                        // someThingElseNeedsUpdate(objectUpdated);
+                        //  needsOsdDiff = true;
+                    }
+
+                    if (simObject != null)
+                    {
+                        // Call SimObject Update the Previous object update will be saved in the "lastObjectUpdate[update.LocalID]"
+                       //Delegate d= new delegate()
+                        {
+                            simObject.UpdateObject(update, lastObjectUpdateDiff[update.LocalID]);
+                        }
+                    }
+                    // BlockUntilProperties(objectUpdated);
+                    //if (false && objectUpdated.Properties != null)
+                    //{
+                    //    OSDMap after = (OSDMap)objectUpdated.GetOSD();
+                    //    //  Console.WriteLine(OSDParser.SerializeLLSDXmlString(after));
+                    //    if (lastOSD.ContainsKey(update.LocalID))
+                    //    {
+                    //        if (needsOsdDiff)
+                    //        {
+                    //            //Primitive before = lastDeepCopy[update.LocalID];
+                    //            OSDMap before = lastOSD[update.LocalID];
+                    //            String osdDiff = OSDDiff(before, after);
+                    //            if (osdDiff.Length > 0)
+                    //            {
+                    //                Console.WriteLine(osdDiff);
+                    //            }
+                    //        }
+
+                    //    }
+
+                    //    lastOSD[update.LocalID] = after;
+                    //}
+
+                    //Primitive deep = (Primitive)deepCopy(objectUpdated);
+                    //lastDeepCopy[update.LocalID] = deep;
                 }
-
-                //Primitive deep = (Primitive)deepCopy(objectUpdated);
-                //lastDeepCopy[update.LocalID] = deep;
-
-
             }
             else
             {
-                lastObjectUpdate[update.LocalID] = update;
+                output("missing Objects_OnObjectUpdated");
             }
+            lastObjectUpdate[update.LocalID] = update;
         }
 
         delegate object DoWhat(Primitive objectUpdated, string p, Object vector3, Object vector3_4, Object diff);
@@ -889,10 +885,10 @@ namespace cogbot.Listeners
             return Primitive.FromOSD(osd);
         }
 
-        public void someThingElseNeedsUpdate(Primitive objectUpdated)
-        {
-            //throw new Exception("The method or operation is not implemented.");
-        }
+        //public void someThingElseNeedsUpdate(Primitive objectUpdated)
+        //{
+        //    //throw new Exception("The method or operation is not implemented.");
+        //}
 
         public ObjectUpdate updatFromPrim(Primitive fromPrim)
         {
@@ -1210,21 +1206,21 @@ namespace cogbot.Listeners
                 if (!primVect.ContainsKey(prim))
                 {
                     primVect[prim] = vect;
-                    // client.SendNewEvent(eventName, args);
+                    client.SendNewEvent(eventName, args);
                 }
                 else
                 {
                     Vector3 v3 = primVect[prim] - vect;
                     if (v3.Length() > 0.5)
                     {
-                        // client.SendNewEvent(eventName, args);
+                        client.SendNewEvent(eventName, args);
                         primVect[prim] = vect;
                     }
                 }
                 return;
 
             }
-            //client.SendNewEvent(eventName, args);
+            client.SendNewEvent(eventName, args);
         }
 
 
@@ -1345,13 +1341,13 @@ namespace cogbot.Listeners
 
         public void describePrimToAI(Primitive prim)
         {
+            if (true) return;
             if (prim is Avatar)
             {
                 Avatar avatar = (Avatar)prim;
                 describeAvatarToAI(avatar);
                 return;
-            }
-            if (true) return;
+            }     
             //if (!primsKnown.Contains(prim))	return;
             BlockUntilProperties(prim);
             if (prim.Properties.Name != null)

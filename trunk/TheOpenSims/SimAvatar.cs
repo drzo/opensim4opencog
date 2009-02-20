@@ -79,8 +79,8 @@ namespace cogbot.TheOpenSims
             avatarHeartbeatThread = new Thread(new ThreadStart(Aging));
             avatarHeartbeatThread.Name = "AvatarHeartbeatThread for " + Client;
             avatarHeartbeatThread.Start();
-            ApproachThread = new Thread(TrackerLoop);
-            ApproachThread.Name = "TrackerLoop for " + theAvatar.Name;
+          //  ApproachThread = new Thread(TrackerLoop);
+          //  ApproachThread.Name = "TrackerLoop for " + theAvatar.Name;
             MakeEnterable();
         }
 
@@ -118,6 +118,9 @@ namespace cogbot.TheOpenSims
             return ClientSelf.AgentID == theAvatar.ID || ClientSelf.LocalID == theAvatar.LocalID;
         }
 
+        internal override void UpdatePaths(SimPathStore simPathStore)
+        {
+        }
 
         public override string DebugInfo()
         {
@@ -521,9 +524,9 @@ namespace cogbot.TheOpenSims
             TalkTo(avatar, "" + talkAbout);
         }
 
-        public override void Debug(string p)
+        public override void Debug(string p, params object[] args)
         {
-            WorldSystem.output(p);
+            WorldSystem.output(String.Format(p,args));
         }
 
         public void Eat(SimObject target)
@@ -643,7 +646,7 @@ namespace cogbot.TheOpenSims
             if (IsLocal())
             {
                 WorldSystem.SetSimAvatar(this);
-                ApproachThread.Start();
+                //ApproachThread.Start();
             }
             //WorldSystem.AddTracking(this,Client);
         }
@@ -753,6 +756,30 @@ namespace cogbot.TheOpenSims
                     continue;
                 }
                 //ApproachDistance = ApproachPosition.GetSizeDistance();
+
+                Vector3 targetPosition = new Vector3(ApproachPosition.GetSimPosition());
+                if (AutoGoto(targetPosition, ApproachDistance, 2000))
+                {
+                    ApproachPosition = null;
+                }
+            }
+        }
+
+        void TrackerLoopOld()
+        {
+            AgentManager ClientSelf = Client.Self;
+            AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
+            bool StartedFlying = false;// !IsFloating;
+            Boolean justStopped = false;
+            while (true)
+            {
+                // Debug("TrackerLoop: " + Thread.CurrentThread);
+                if (ApproachPosition == null)
+                {
+                    Thread.Sleep(500);
+                    continue;
+                }
+                //ApproachDistance = ApproachPosition.GetSizeDistance();
                 try
                 {
                     Vector3 targetPosition = new Vector3(ApproachPosition.GetSimPosition());
@@ -801,13 +828,14 @@ namespace cogbot.TheOpenSims
                         //ClientMovement.SendUpdate();
                         if (curDist < (ApproachDistance * 1.25))
                         {
-                            MoveFast(ApproachPosition);
-                            //MoveSlow(ApproachPosition);
+                            //MoveFast(ApproachPosition);
+                            MoveSlow(ApproachPosition);
                             //Thread.Sleep(100);
                         }
                         else
                         {
                             MoveFast(ApproachPosition);
+                            if (ApproachPosition!=null) MoveSlow(ApproachPosition);
                         }
                         justStopped = true;
                     }
@@ -917,6 +945,12 @@ namespace cogbot.TheOpenSims
       /// <returns></returns>
         public bool MoveTo(Vector3 end, float maxDistance, int maxSeconds)
         {
+            if (true)
+            {
+                bool MadeIt = AutoGoto(end,maxDistance,maxSeconds*1000);
+                StopMoving();
+                return MadeIt;
+            }
             SimWaypoint wp = SimWaypoint.Create(end);
             ApproachDistance = maxDistance;
             TurnToward(wp);
@@ -980,7 +1014,7 @@ namespace cogbot.TheOpenSims
             while (state == SimMoverState.TRYAGAIN)
             {
                 SimWaypoint target = pos.GetWaypoint();
-                SimRoute[] routes = GetRouteList(target, out IsFake);
+                IList<SimRoute> routes = GetRouteList(target, out IsFake);
                 if (routes == null) return false;
                 SimRouteMover ApproachPlan = new SimRouteMover(this, routes, pos.GetSimPosition(), pos.GetSizeDistance());
                 state = ApproachPlan.Goto();
@@ -996,12 +1030,17 @@ namespace cogbot.TheOpenSims
         /// <param name="pos"></param>
         /// <returns></returns>
         public bool GotoTarget(SimPosition pos) {
-         
+
+            if (AutoGoto(pos.GetSimPosition(), pos.GetSizeDistance(), 2000))
+            {
+                Debug("EASY GotoTarget: " + pos);
+                return true;
+            }
             bool IsFake;
             for (int i = 0; i < 9; i++)
             {
-                Debug("Start GotoTarget: " + pos);
-               // StopMoving();
+                Debug("PLAN GotoTarget: " + pos);
+                // StopMoving();
                 if (TryGotoTarget(pos,out IsFake))
                 {
                     StopMoving();
@@ -1027,7 +1066,7 @@ namespace cogbot.TheOpenSims
                 StopMoving();
                 Debug("MOVELEFT GotoTarget: " + pos);
                 MoveTo(newPost, 2f, 4);
-                //if (IsFake) break;
+                if (IsFake) break;
             }
             Debug("FAILED GotoTarget: " + pos);
             return false;
@@ -1078,7 +1117,53 @@ namespace cogbot.TheOpenSims
                     AgentState.None, true);*/
         }
 
+        public bool AutoGoto(Vector3 target3, float dist, long maxMs)
+        {
+            long endAt = Environment.TickCount + maxMs;
+            Vector2 target = new Vector2(target3.X, target3.Y);
+            float d = Vector3.Distance(GetSimPosition(), target3);
+            if (d < dist) return true;
+            float ld = d;
+            float traveled = 0.0f;
+            uint x, y;
+            // Vector2 P = Position();
+            Utils.LongToUInts(Client.Network.CurrentSim.Handle, out x, out y);
+            Client.Self.AutoPilot((ulong)(x + target.X), (ulong)(y + target.Y), target3.Z);
+            bool AutoPilot = true;
+            while (AutoPilot)
+            {
+                // float moved = Vector2.Distance(P, Position());
+                // WriteLine("Moved=" + moved);
+                if (d < dist)
+                {
+                    AutoPilot = false;
+                }
+                else
+                    if (Environment.TickCount > endAt)
+                    {
+                        AutoPilot = false;
+                    }
+                    else
+                    {
+                        Application.DoEvents();
+                        d = Vector3.Distance(GetSimPosition(), target3);
+                        traveled = ld - d;
+                        if (traveled < 0)
+                        {
+                           // AutoPilot = false;
+                        }
+                        Client.Self.Movement.TurnToward(target3);
+                        ld = d;
+                    }
+                //    P = Position();
+            }
+            Client.Self.AutoPilotCancel();
+            Client.WorldSystem.TheSimAvatar.StopMoving();
+            Client.Self.Movement.TurnToward(target3);
+            return Vector3.Distance(GetSimPosition(), target3)<=dist;
+        }
 
     }
+
 
 }

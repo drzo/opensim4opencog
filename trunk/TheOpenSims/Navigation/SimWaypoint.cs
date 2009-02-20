@@ -268,7 +268,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// Object.GetHashCode override.
         /// </summary>
         /// <returns>HashCode value.</returns>
-        public override int GetHashCode() { return Position.GetHashCode(); }
+        public override int GetHashCode() { return _Position.GetHashCode(); }
 
         /// <summary>
         /// Returns the euclidian distance between two nodes : Sqrt(Dx²+Dy²+Dz²)
@@ -337,9 +337,11 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="NodesGroup">The list of nodes to wrap.</param>
         /// <param name="MinPoint">The point of minimal coordinates for the box.</param>
         /// <param name="MaxPoint">The point of maximal coordinates for the box.</param>
-        static public void BoundingBox(IList<SimWaypoint> NodesGroup, out float[] MinPoint, out float[] MaxPoint)
+        static public void BoundingBox(ICollection<SimWaypoint> NodesGroup, out float[] MinPoint, out float[] MaxPoint)
         {
-            SimWaypoint N1 = NodesGroup[0] as SimWaypoint;
+            IEnumerator E = NodesGroup.GetEnumerator();
+            E.MoveNext();
+            SimWaypoint N1 = E.Current as SimWaypoint;
             if (N1 == null) throw new ArgumentException("The list must only contain elements of type Node.");
             if (NodesGroup.Count == 0) throw new ArgumentException("The list of nodes is empty.");
             int Dim = 3;

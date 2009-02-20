@@ -1183,18 +1183,29 @@ with the respective left and right mouse buttons.", "Impossible action", Message
 			SuspendLayout();
 			// Dessin du graphe
             ///lock (G.Nodes) foreach (SimWaypoint N in G.Nodes) DessinerNoeud(Grfx, N.Passable ? CrayonNoeuds : CrayonNoeudsInactifs, N);
+
             lock (G.Arcs) foreach (SimRoute A in G.Arcs)
                 {
                     if (A.Passable)
                     {
-                      if (false)  if (A.Length > SimPathStore.StepSize)
-                        {
-                            DessinerArc(Grfx, CrayonArcs,A);
-                        }
                     }
                     else
                     {
                         DessinerArc(Grfx, CrayonArcsInactifs, A);
+                    }
+                }
+            lock (G.Arcs) foreach (SimRoute A in G.Arcs)
+                {
+                    if (A.Passable)
+                    {
+                        if (A.Weight != 1f)
+                        {
+                            DessinerArc(Grfx, CrayonArcs, A);
+                        }
+                    }
+                    else
+                    {
+                        // DessinerArc(Grfx, CrayonArcsInactifs, A);
                     }
                 }
 
