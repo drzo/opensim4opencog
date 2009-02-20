@@ -6,9 +6,9 @@ using cogbot.Listeners;
 using System.Threading;
 using cogbot.TheOpenSims.Navigation;
 using cogbot.TheOpenSims.Navigation.Debug;
+using cogbot.TheOpenSims.Navigation.Mesher;
 using Quaternion = OpenMetaverse.Quaternion;
 using IrrlichtNETCP;
-using TheOpenSims.Navagation.Mesher;
 
 namespace cogbot.TheOpenSims
 {

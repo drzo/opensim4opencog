@@ -79,8 +79,8 @@ namespace cogbot.TheOpenSims
             avatarHeartbeatThread = new Thread(new ThreadStart(Aging));
             avatarHeartbeatThread.Name = "AvatarHeartbeatThread for " + Client;
             avatarHeartbeatThread.Start();
-          //  ApproachThread = new Thread(TrackerLoop);
-          //  ApproachThread.Name = "TrackerLoop for " + theAvatar.Name;
+            ApproachThread = new Thread(TrackerLoop);
+            ApproachThread.Name = "TrackerLoop for " + theAvatar.Name;
             MakeEnterable();
         }
 
@@ -646,7 +646,7 @@ namespace cogbot.TheOpenSims
             if (IsLocal())
             {
                 WorldSystem.SetSimAvatar(this);
-                //ApproachThread.Start();
+                ApproachThread.Start();
             }
             //WorldSystem.AddTracking(this,Client);
         }
@@ -741,7 +741,7 @@ namespace cogbot.TheOpenSims
 
         object TrackerLoopLock = new object();
 
-        void TrackerLoop()
+        void TrackerLoopNew()
         {
             AgentManager ClientSelf = Client.Self;
             AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
@@ -765,7 +765,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        void TrackerLoopOld()
+        void TrackerLoop()
         {
             AgentManager ClientSelf = Client.Self;
             AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
@@ -782,6 +782,7 @@ namespace cogbot.TheOpenSims
                 //ApproachDistance = ApproachPosition.GetSizeDistance();
                 try
                 {
+                    Random somthing = new Random(Environment.TickCount);// We do stuff randomly here
                     Vector3 targetPosition = new Vector3(ApproachPosition.GetSimPosition());
                     float UpDown = targetPosition.Z - ClientSelf.SimPosition.Z;
                     float ZDist = Math.Abs(UpDown);
@@ -822,20 +823,38 @@ namespace cogbot.TheOpenSims
                         ClientMovement.NudgeUpPos = false;
                         // targetPosition.Z = ApproachPosition.GetSimPosition().Z;
                     }
+                    Vector3 Destination = ApproachPosition.GetSimPosition();
                     float curDist = Vector3.Distance(GetSimPosition(), targetPosition);
+                    Client.Self.Movement.TurnToward(targetPosition);
                     if (curDist > ApproachDistance)
                     {
                         //ClientMovement.SendUpdate();
                         if (curDist < (ApproachDistance * 1.25))
                         {
                             //MoveFast(ApproachPosition);
-                            MoveSlow(ApproachPosition);
+                            //MoveSlow(ApproachPosition);
                             //Thread.Sleep(100);
+                            Client.Self.Movement.AtPos = true;
+                            Client.Self.Movement.SendUpdate(true);
+                            Thread.Sleep(125);
+                            Client.Self.Movement.Stop = true;
+                            Client.Self.Movement.AtPos = false;
+                            Client.Self.Movement.NudgeAtPos = true;
+                            Client.Self.Movement.SendUpdate(true);
+                            Thread.Sleep(100);
+                            Client.Self.Movement.NudgeAtPos = false;
+                            Client.Self.Movement.SendUpdate(true);
+                            Thread.Sleep(100);
                         }
                         else
                         {
-                            MoveFast(ApproachPosition);
-                            if (ApproachPosition!=null) MoveSlow(ApproachPosition);
+                            Client.Self.Movement.AtPos = true;
+                            Client.Self.Movement.UpdateInterval = 0; //100
+                            Client.Self.Movement.SendUpdate(true);
+                            //(int)(25 * (1 + (curDist / followDist)))
+                            Thread.Sleep(somthing.Next(25, 100));
+                         //   MoveFast(ApproachPosition);
+                        //    if (ApproachPosition!=null) MoveSlow(ApproachPosition);
                         }
                         justStopped = true;
                     }
@@ -945,8 +964,10 @@ namespace cogbot.TheOpenSims
       /// <returns></returns>
         public bool MoveTo(Vector3 end, float maxDistance, int maxSeconds)
         {
-            if (true)
+            if (false)
             {
+				         
+				StopMoving();
                 bool MadeIt = AutoGoto(end,maxDistance,maxSeconds*1000);
                 StopMoving();
                 return MadeIt;
@@ -1061,11 +1082,11 @@ namespace cogbot.TheOpenSims
                 {
                     TurnAvoid -= 360;
                 }
-                Vector3 newPost = GetLeftPos(TurnAvoid, 4f);
+                //Vector3 newPost = GetLeftPos(TurnAvoid, 4f);
 
-                StopMoving();
-                Debug("MOVELEFT GotoTarget: " + pos);
-                MoveTo(newPost, 2f, 4);
+                //StopMoving();
+                //Debug("MOVELEFT GotoTarget: " + pos);
+                //MoveTo(newPost, 2f, 4);
                 if (IsFake) break;
             }
             Debug("FAILED GotoTarget: " + pos);
@@ -1160,6 +1181,7 @@ namespace cogbot.TheOpenSims
             Client.Self.AutoPilotCancel();
             Client.WorldSystem.TheSimAvatar.StopMoving();
             Client.Self.Movement.TurnToward(target3);
+			StopMoving();				
             return Vector3.Distance(GetSimPosition(), target3)<=dist;
         }
 

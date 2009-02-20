@@ -137,7 +137,6 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 		private void InitializeComponent()
 		{
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GraphFormer));
             this.GraphPanel = new cogbot.TheOpenSims.Navigation.Debug.FlickerFreePanel();
             this.EditionToolBar = new System.Windows.Forms.ToolBar();
             this.BoutonDessiner = new System.Windows.Forms.ToolBarButton();
@@ -249,13 +248,9 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             // 
             // ImagesActions
             // 
-            this.ImagesActions.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ImagesActions.ImageStream")));
+            this.ImagesActions.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
+            this.ImagesActions.ImageSize = new System.Drawing.Size(16, 16);
             this.ImagesActions.TransparentColor = System.Drawing.Color.Transparent;
-            this.ImagesActions.Images.SetKeyName(0, "");
-            this.ImagesActions.Images.SetKeyName(1, "");
-            this.ImagesActions.Images.SetKeyName(2, "");
-            this.ImagesActions.Images.SetKeyName(3, "");
-            this.ImagesActions.Images.SetKeyName(4, "");
             // 
             // GraphStatusBar
             // 
@@ -273,20 +268,18 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             // NbNodesPanel
             // 
             this.NbNodesPanel.AutoSize = System.Windows.Forms.StatusBarPanelAutoSize.Contents;
-            this.NbNodesPanel.Icon = ((System.Drawing.Icon)(resources.GetObject("NbNodesPanel.Icon")));
             this.NbNodesPanel.Name = "NbNodesPanel";
             this.NbNodesPanel.Text = "NbNodes";
             this.NbNodesPanel.ToolTipText = "Number of nodes";
-            this.NbNodesPanel.Width = 82;
+            this.NbNodesPanel.Width = 61;
             // 
             // NbArcsPanel
             // 
             this.NbArcsPanel.AutoSize = System.Windows.Forms.StatusBarPanelAutoSize.Contents;
-            this.NbArcsPanel.Icon = ((System.Drawing.Icon)(resources.GetObject("NbArcsPanel.Icon")));
             this.NbArcsPanel.Name = "NbArcsPanel";
             this.NbArcsPanel.Text = "NbArcs";
             this.NbArcsPanel.ToolTipText = "Number of arcs";
-            this.NbArcsPanel.Width = 72;
+            this.NbArcsPanel.Width = 51;
             // 
             // CoordsPanel
             // 
@@ -295,7 +288,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             this.CoordsPanel.BorderStyle = System.Windows.Forms.StatusBarPanelBorderStyle.None;
             this.CoordsPanel.Name = "CoordsPanel";
             this.CoordsPanel.Text = "Coordinates";
-            this.CoordsPanel.Width = 574;
+            this.CoordsPanel.Width = 616;
             // 
             // FichierToolBar
             // 
@@ -353,12 +346,9 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             // 
             // ImagesFichier
             // 
-            this.ImagesFichier.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ImagesFichier.ImageStream")));
+            this.ImagesFichier.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
+            this.ImagesFichier.ImageSize = new System.Drawing.Size(16, 16);
             this.ImagesFichier.TransparentColor = System.Drawing.Color.Transparent;
-            this.ImagesFichier.Images.SetKeyName(0, "");
-            this.ImagesFichier.Images.SetKeyName(1, "");
-            this.ImagesFichier.Images.SetKeyName(2, "");
-            this.ImagesFichier.Images.SetKeyName(3, "");
             // 
             // AEtoileToolBar
             // 
@@ -409,11 +399,9 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             // 
             // ImagesPasAPas
             // 
-            this.ImagesPasAPas.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ImagesPasAPas.ImageStream")));
+            this.ImagesPasAPas.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
+            this.ImagesPasAPas.ImageSize = new System.Drawing.Size(16, 16);
             this.ImagesPasAPas.TransparentColor = System.Drawing.Color.Transparent;
-            this.ImagesPasAPas.Images.SetKeyName(0, "");
-            this.ImagesPasAPas.Images.SetKeyName(1, "");
-            this.ImagesPasAPas.Images.SetKeyName(2, "");
             // 
             // LabelAide
             // 
@@ -437,7 +425,6 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             this.Controls.Add(this.EditionToolBar);
             this.Controls.Add(this.AEtoileToolBar);
             this.Controls.Add(this.LabelAide);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "GraphFormer";
             this.Text = "GraphFormer";
             ((System.ComponentModel.ISupportInitialize)(this.NbNodesPanel)).EndInit();

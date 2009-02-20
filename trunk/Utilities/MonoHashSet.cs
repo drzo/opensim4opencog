@@ -64,7 +64,7 @@ namespace System.Collections.Generic
 {
 
     [Serializable, HostProtection(SecurityAction.LinkDemand, MayLeakOnAbort = true)]
-    public class HashSet<T> : ICollection<T>, ISerializable, IDeserializationCallback
+    public class HashSet<T> :/*IList<T>,*/ ICollection<T>, ISerializable, IDeserializationCallback
     {
 
         const int INITIAL_SIZE = 10;
@@ -883,5 +883,61 @@ namespace System.Collections.Generic
 
             #endregion
         }
+
+        //#region IList<T> Members
+
+        //int IList<T>.IndexOf(T item)
+        //{
+        //    throw new Exception("The method or operation is not implemented.");
+        //}
+
+        //void IList<T>.Insert(int index, T item)
+        //{
+        //    throw new Exception("The method or operation is not implemented.");
+        //}
+
+        //void IList<T>.RemoveAt(int index)
+        //{
+        //    throw new Exception("The method or operation is not implemented.");
+        //}
+
+        //T IList<T>.this[int index]
+        //{
+        //    get
+        //    {
+        //        throw new Exception("The method or operation is not implemented.");
+        //    }
+        //    set
+        //    {
+        //        throw new Exception("The method or operation is not implemented.");
+        //    }
+        //}
+
+        //#endregion
+
+        #region ICollection<T> Members
+
+
+        void ICollection<T>.Clear()
+        {
+            ((HashSet<T>)this).Clear();
+        }
+
+        bool ICollection<T>.Contains(T item)
+        {
+            return ((HashSet<T>)this).Contains(item);
+        }
+
+        int ICollection<T>.Count
+        {
+            get { return count; }
+        }
+
+        bool ICollection<T>.Remove(T item)
+        {
+            return ((HashSet<T>)this).Remove(item);
+        }
+
+        #endregion
     }
 }
