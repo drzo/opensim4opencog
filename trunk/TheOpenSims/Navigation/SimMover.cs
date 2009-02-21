@@ -38,7 +38,7 @@ namespace cogbot.TheOpenSims.Navigation
         int CurrentRouteIndex = 0;
         SimRoute StuckAt = null;
         SimRoute OuterRoute = null;
-        float CloseDistance = SimPathStore.LargeScale;
+        float CloseDistance = SimPathStore.LargeScale-SimPathStore.StepSize;
 
         public SimMoverState STATE
         {
@@ -60,6 +60,7 @@ namespace cogbot.TheOpenSims.Navigation
             _STATE = SimMoverState.MOVING;
             int CanSkip = 0;
             int Skipped = 0;
+            int tried = 0;
             SimRoute prev = null;
 
             for (int cI = CurrentRouteIndex; cI < Routes.Count; cI++)
@@ -71,7 +72,13 @@ namespace cogbot.TheOpenSims.Navigation
                 }
 
                 SimRoute route = Routes[cI];
+                if (route.IsBlocked)
+                {
+                    STATE = SimMoverState.BLOCKED;
+                    continue;
+                }
 
+                tried++;
                 // TRY
                 STATE = FollowRoute(route);
 
@@ -111,10 +118,26 @@ namespace cogbot.TheOpenSims.Navigation
                     }
                     return SimMoverState.TRYAGAIN;
                 }
+                if (STATE == SimMoverState.COMPLETE)
+                {
+                    // if made it here then the prev was very good
+                    if (prev!=null)
+                        prev.ReWeight(0.8f);
+                }
+
                 if (distance < FinalDistance)
                 {
                     return SimMoverState.COMPLETE;
                 }
+            }
+            if (STATE != SimMoverState.COMPLETE)
+            {
+
+                if (tried == 0)
+                {
+                    return SimMoverState.TRYAGAIN;
+                }
+                return STATE;
             }
             OuterRoute.ReWeight(0.7f); // Reward
             SimPathStore.Instance.AddArc(OuterRoute);
@@ -136,14 +159,17 @@ namespace cogbot.TheOpenSims.Navigation
                 if (StuckAt2 == null)
                 {
                     StuckAt.ReWeight(1.3f);
-                    OuterRoute.ReWeight(1.2f);
+                    //OuterRoute.ReWeight(1.2f);
                     Debug("INACESSABLE: " + StuckAt);
+                    StuckAt.Passable = false;
                 }
                 else
                 {
                     StuckAt2.ReWeight(1.1f);
                     Debug("ROUTE BLOCKED: " + StuckAt2);
                     StuckAt2.BlockedPoint(pos);
+                    StuckAt2.Passable = false;
+                    StuckAt2.Reverse.Passable = false;
                 }
             }
 
@@ -185,7 +211,6 @@ namespace cogbot.TheOpenSims.Navigation
                 Debug("FollowRoute: CANNOT FINISH " + endVectMover + " -> " + endVect);
                 return SimMoverState.PAUSED;
             }
-            route.ReWeight(0.9f);
             Debug("FollowRoute: SUCCEED " + vectStart + " -> " + endVectMover);
             return SimMoverState.COMPLETE;
         }

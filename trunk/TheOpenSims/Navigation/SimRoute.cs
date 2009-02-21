@@ -127,7 +127,10 @@ namespace cogbot.TheOpenSims.Navigation
                 }
                 Reverse._Passable = value;
             }
-            get { return _Passable; }
+            get
+            {
+                return _Passable;
+            }
         }
 
         public bool LengthUpdated
@@ -263,7 +266,7 @@ namespace cogbot.TheOpenSims.Navigation
             //if (simMovement.MustAutoPilot) movement.MustAutoPilot = simMovement.MustAutoPilot;
             if (simMovement.MustCrouch) movement.MustCrouch = simMovement.MustCrouch;
             if (simMovement.MustFly) movement.MustFly = simMovement.MustFly;
-            if (simMovement.IsBlocked) movement.IsBlocked = simMovement.IsBlocked;
+            //if (simMovement.IsBlocked) movement.IsBlocked = simMovement.IsBlocked;
             //if (simMovement.IsOneDirrection) movement.IsOneDirrection = simMovement.IsOneDirrection;
             movement.Weight = simMovement.Weight;
             movement._Length = simMovement._Length;
@@ -739,6 +742,7 @@ namespace cogbot.TheOpenSims.Navigation
                     while (ri > 0)
                         ReverseMoveList.Add(MoveList[--ri].Reverse);
                     _Reverse = new SimRouteMulti(ReverseMoveList);
+                    _Reverse._Reverse = this;
                     CopyProperties(this, _Reverse);
                 }
                 return _Reverse;
