@@ -71,19 +71,26 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 		static Pen CrayonArcsInactifs;
 		static Pen CrayonTemp;
 		static Pen CrayonChemin;
-		static Pen CrayonArcsPas;
+        static Pen CrayonArcsPas;
+        static Pen CrayonArcsWeak;
+        static Pen CrayonArcsStrong;
 
 		static GraphFormer()
 		{
 			CrayonNoeuds = new Pen(Color.Black, Epaisseur);
-			CrayonNoeudsInactifs = new Pen(Color.Red, Epaisseur);
+            CrayonNoeudsInactifs = new Pen(Color.Red, Epaisseur);
+            CrayonArcsWeak = new Pen(Color.Pink, Epaisseur);
+            CrayonArcsStrong = new Pen(Color.Green, Epaisseur);
 
 			CrayonArcs = new Pen(Color.Black, Epaisseur);
-			CrayonArcs.EndCap = LineCap.Custom;
-			CrayonArcs.CustomEndCap = new AdjustableArrowCap(3, 6, true);
-			CrayonArcsInactifs = new Pen(Color.Red, Epaisseur);
-			CrayonArcsInactifs.EndCap = LineCap.Custom;
-			CrayonArcsInactifs.CustomEndCap = new AdjustableArrowCap(3, 6, true);
+            // Arrows
+            //CrayonArcs.EndCap = LineCap.Custom;
+			//CrayonArcs.CustomEndCap = new AdjustableArrowCap(3, 6, true);
+
+            CrayonArcsInactifs = new Pen(Color.Red, Epaisseur);
+            // Arrows
+            //CrayonArcsInactifs.EndCap = LineCap.Custom;
+			//CrayonArcsInactifs.CustomEndCap = new AdjustableArrowCap(3, 6, true);
 
 			CrayonTemp = new Pen(Color.Gray, Epaisseur);
 			CrayonTemp.DashStyle = DashStyle.Dash;
@@ -91,9 +98,10 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 			CrayonChemin = new Pen(Color.DarkTurquoise, 3);
 			CrayonChemin.DashStyle = DashStyle.Dot;
 
-			CrayonArcsPas = new Pen(Color.LawnGreen, 3);
-			CrayonArcsPas.EndCap = LineCap.Custom;
-			CrayonArcsPas.CustomEndCap = new AdjustableArrowCap(4, 8, true);
+            CrayonArcsPas = new Pen(Color.LawnGreen, 3);
+            // Arrows
+            //CrayonArcsPas.EndCap = LineCap.Custom;
+			//CrayonArcsPas.CustomEndCap = new AdjustableArrowCap(4, 8, true);
 		}
 
 		public GraphFormer(SimPathStore SPS)
@@ -1185,9 +1193,13 @@ with the respective left and right mouse buttons.", "Impossible action", Message
                 {
                     if (A.Passable)
                     {
-                        if (A.Weight != 1f)
+                        if (A.Weight > 1f)
                         {
-                            DessinerArc(Grfx, CrayonArcs, A);
+                            DessinerArc(Grfx, CrayonArcsWeak, A);
+                        } else
+                        if (A.Weight < 1f)
+                        {
+                            DessinerArc(Grfx, CrayonArcsStrong, A);
                         }
                     }
                     else

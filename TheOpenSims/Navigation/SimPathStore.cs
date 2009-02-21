@@ -756,7 +756,7 @@ namespace cogbot.TheOpenSims.Navigation
                 // return;
                 if (!TrackedAgents.ContainsKey(agentID))
                 {
-                    TrackedAgents[agentID] = new PrimTracker(SimWaypoint.Create(point), rotation, this);
+                    TrackedAgents[agentID] = new PrimTracker(SimWaypoint.Create(point), "agentID" + agentID, rotation, this);
                 }
                 else
                 {
@@ -945,34 +945,45 @@ namespace cogbot.TheOpenSims.Navigation
         public SimWaypoint CreateClosestWaypoint(Vector3 v3)
         {
             float Dist;
-            SimWaypoint Closest = ClosestNode(v3.X, v3.Y, SimZLevel, out Dist, false);
-            SimWaypoint V3Waypoint;
-            if (Dist < StepSize)
+            bool Made = false;
+            SimWaypoint Closest = ClosestNode(v3.X, v3.Y, SimZLevel, out Dist, true);
+            if (Dist > LargeScale/2)
             {
-                V3Waypoint = Closest;
-                if (Closest.EnsureAtLeastOnePath())
-                {
-                    Debug("EnsureAtLeastOnePath {0}", Closest);
-                }
+                Dist = StepSize;
+                Made = true;
+                Closest = CreateFirstNode(v3.X, v3.Y);
+            }
+            IList<SimWaypoint> more = new List<SimWaypoint>();
 
-                return Closest;
-            }
-            else
+            float Biggest = LargeScale;
+            while (more.Count < 4)
             {
-                V3Waypoint = CreateFirstNode(v3.X, v3.Y);
+                more = ClosestNodes(v3.X, v3.Y, SimZLevel, Dist, Biggest, false);
+                Biggest += StepSize;
             }
-            if (Closest != V3Waypoint)
+
+            foreach (SimWaypoint P in more)
             {
-                IList<SimWaypoint> more = ClosestNodes(v3.X, v3.Y, SimZLevel, StepSize, LargeScale + StepSize, false);
-                foreach (SimWaypoint P in more)
-                {
-                    if (P != V3Waypoint)
-                        Intern2Arc(P, V3Waypoint, 1f);
-                }
-                Intern2Arc(Closest, V3Waypoint, 1f);
+                if (P != Closest)
+                    if (Made)
+                    {
+                        SimRoute route = new SimRoute(P, Closest);
+                        route.Weight = 1.1f;
+                        lock (SimRoutes)
+                        {
+                            SimRoutes.Add(route);
+                            route = route.Reverse;
+                            route.Weight = 1.2f;
+                            SimRoutes.Add(route);
+                        }
+                    }
+                    else Intern2Arc(P, Closest, 1.2f);
             }
-             //V3Waypoint.EnsureAtLeastOnePath()
-            return V3Waypoint;
+            if (Closest.EnsureAtLeastOnePath())
+            {
+                Debug("EnsureAtLeastOnePath {0}", Closest);
+            } 
+            return Closest;
         }
         /// <summary>
         /// 
@@ -1136,33 +1147,82 @@ namespace cogbot.TheOpenSims.Navigation
         {
             Console.WriteLine("[SimPathStore] "+format, arg);
         }
+
+        internal SimWaypoint CreateTiedNode(Vector3 WayPoint)
+        {
+            float Dist;
+            SimWaypoint Closest = ClosestNode(WayPoint.X, WayPoint.Y, WayPoint.Z,out Dist, true);
+            if (Dist > StepSize)
+            {
+                SimWaypoint P = CreateFirstNode(WayPoint.X, WayPoint.Y);
+                SimRoute route = new SimRoute(P, Closest);
+                route.Weight = 1.0f;
+                lock (SimRoutes)
+                {
+                    SimRoutes.Add(route);
+                    route = route.Reverse;
+                    route.Weight = 1.0f;
+                    SimRoutes.Add(route);
+                }
+                Closest = P;
+            }
+            Closest.EnsureAtLeastOnePath();
+            return Closest;
+        }
     }
 
     public class PrimTracker
     {
         protected float MovedAllot = SimPathStore.StepSize;
-        Vector3 WayPoint;
+        SimWaypoint WayPoint;
         Quaternion Orientation;
         SimPathStore Store;
-        public PrimTracker(SimPosition firstP, Quaternion firtsR, SimPathStore store)
+        Queue<Vector3> Positions = new Queue<Vector3>();
+        Thread RouteMaker;
+        public PrimTracker(SimPosition firstP, String name, Quaternion firtsR, SimPathStore store)
         {
-            WayPoint = firstP.GetSimPosition();
             Store = store;
+            WayPoint = Store.CreateTiedNode(firstP.GetSimPosition());
             Orientation = firtsR;
+            RouteMaker = new Thread(new ThreadStart(MakeRoutes));
+            RouteMaker.Name = "RouteMaker for " + name;
+            RouteMaker.Priority = ThreadPriority.Lowest;
+            RouteMaker.Start();
         }
 
+        void MakeRoutes()
+        {
+            while (true)
+            {
+                Vector3 next;
+                lock (Positions)
+                {
+                    if (Positions.Count == 0)
+                    {
+                        Thread.Sleep(2000);
+                        continue;
+                    }
+                  //  Thread.Sleep(500);
+                    next = Positions.Dequeue();
+                }
+                if (next != null)
+                    MakeMovement(next);
+
+            }
+        }
         public void Update(Vector3 point, Quaternion rotation)
         {
            // return;
-            float dist = Vector3.Distance(WayPoint, point);
+            float dist = Vector3.Distance(WayPoint.Position, point);
             if (dist > MovedAllot)
             {
-                MakeMovement(point);
+                lock (Positions) Positions.Enqueue(point);
             }
             else
                 if (RotationDiffernt(rotation, Orientation))
                 {
-                    MakeMovement(point);
+                    lock (Positions)  Positions.Enqueue(point);
+                  //  MakeMovement(point);
                     Orientation = rotation;
                 }
         }
@@ -1170,14 +1230,19 @@ namespace cogbot.TheOpenSims.Navigation
 
         public void MakeMovement(Vector3 point)
         {
-            if (Vector3.Distance(WayPoint, point) > MovedAllot / 3)
+            if (Vector3.Distance(WayPoint.Position, point) > 8f)
+            {
+                Console.WriteLine("SKIP WAYPOINT " + WayPoint + " -> " + point);
+                WayPoint = Store.CreateTiedNode(point);
+            }
+            if (Vector3.Distance(WayPoint.Position, point) > MovedAllot)
             {
                 Console.WriteLine("WAYPOINT " + WayPoint + " -> " + point);
-                SimWaypoint tieIn1 = Store.CreateClosestWaypoint(point);
-                SimWaypoint tieIn2 = Store.CreateClosestWaypoint(WayPoint);
+                SimWaypoint tieIn1 = WayPoint;
+                SimWaypoint tieIn2 = Store.CreateTiedNode(point);
                 if (tieIn1 == tieIn2) return;
                 Store.Intern2Arc(tieIn1, tieIn2, 0.01f); //Cheap
-                WayPoint = point;
+                WayPoint = tieIn2;
             }
         }
 

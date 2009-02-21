@@ -649,13 +649,13 @@ namespace cogbot.Listeners
                     SimObject simObject = GetSimObject(objectUpdated);
                     if (update.Avatar)
                     {
-                      if (false)
-                          if (simObject != TheSimAvatar)
-                        {  // Way point creation from other avatars moving
-                            new Thread(new ThreadStart(delegate()
-                            {
-                                SimPaths.Update(update.LocalID, simObject.GetSimPosition(), update.Rotation);
-                            })).Start();
+                        //   if (false)
+                        if (update.LocalID != client.Self.LocalID)
+                        //  {  // Way point creation from other avatars moving
+                        //   new Thread(new ThreadStart(delegate()
+                        {
+                            SimPaths.Update(update.LocalID, simObject.GetSimPosition(), update.Rotation);
+                            //   })).Start();
                             // output("Updating state for Avatar " + prim.Name);
                         }
                     }

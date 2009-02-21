@@ -65,13 +65,15 @@ namespace cogbot.TheOpenSims.Navigation
                 foreach (SimRoute A in _IncomingArcs) A.Passable = value;
                 foreach (SimRoute A in _OutgoingArcs) A.Passable = value;
                 _Passable = value;
-                if (GraphFormer.DEBUGGER != null)
-                {
-                    GraphFormer.DEBUGGER.RepaintNow();
-                }
-
             }
-            get { return _Passable; }
+            get
+            {
+                if (!_Passable) return false;
+                foreach (SimRoute A in _IncomingArcs) if (A.Passable) return true;
+                foreach (SimRoute A in _OutgoingArcs) if (A.Passable) return true; 
+                return false;
+                //return _Passable;
+            }
         }
 
         /// <summary>

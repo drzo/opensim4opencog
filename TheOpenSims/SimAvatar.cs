@@ -771,19 +771,24 @@ namespace cogbot.TheOpenSims
             AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
             bool StartedFlying = false;// !IsFloating;
             Boolean justStopped = false;
+            Random somthing = new Random(Environment.TickCount);// We do stuff randomly here
             while (true)
             {
-                // Debug("TrackerLoop: " + Thread.CurrentThread);
-                if (ApproachPosition == null)
+                Vector3 targetPosition;
+                lock (TrackerLoopLock)
                 {
-                    Thread.Sleep(500);
-                    continue;
+                    // Debug("TrackerLoop: " + Thread.CurrentThread);
+                    if (ApproachPosition == null)
+                    {
+                        Thread.Sleep(500);
+                        continue;                    
+                    }
+                    targetPosition = new Vector3(ApproachPosition.GetSimPosition());
                 }
                 //ApproachDistance = ApproachPosition.GetSizeDistance();
                 try
                 {
-                    Random somthing = new Random(Environment.TickCount);// We do stuff randomly here
-                    Vector3 targetPosition = new Vector3(ApproachPosition.GetSimPosition());
+                    
                     float UpDown = targetPosition.Z - ClientSelf.SimPosition.Z;
                     float ZDist = Math.Abs(UpDown);
                     if (UpDown > 1)
@@ -823,7 +828,7 @@ namespace cogbot.TheOpenSims
                         ClientMovement.NudgeUpPos = false;
                         // targetPosition.Z = ApproachPosition.GetSimPosition().Z;
                     }
-                    Vector3 Destination = ApproachPosition.GetSimPosition();
+                  //  Vector3 Destination = ApproachPosition.GetSimPosition();
                     float curDist = Vector3.Distance(GetSimPosition(), targetPosition);
                     Client.Self.Movement.TurnToward(targetPosition);
                     if (curDist > ApproachDistance)
@@ -862,7 +867,7 @@ namespace cogbot.TheOpenSims
                     {
                         if (justStopped)
                         {
-                            TurnToward(ApproachPosition);
+                            Client.Self.Movement.TurnToward(targetPosition);
                             ClientMovement.AtPos = false;
                             ClientMovement.UpdateInterval = 0;
                             //ClientMovement.StandUp = true;
@@ -1058,7 +1063,7 @@ namespace cogbot.TheOpenSims
                 return true;
             }
             bool IsFake;
-            for (int i = 0; i < 9; i++)
+            for (int i = 0; i < 19; i++)
             {
                 Debug("PLAN GotoTarget: " + pos);
                 // StopMoving();
