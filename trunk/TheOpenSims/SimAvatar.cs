@@ -9,6 +9,7 @@ using System.Threading;
 using System.Windows.Forms;
 using cogbot.TheOpenSims.Navigation;
 using System.Collections;
+using System.Drawing;
 //Complex outcomes may be a result of simple causes, or they may just be complex by nature. 
 //Those complexities that turn out to have simple causes can be simulated and studied, 
 //thus increasing our knowledge without needing direct observation.
@@ -75,7 +76,7 @@ namespace cogbot.TheOpenSims
             WorldObjects.SimAvatars.Add(this);
             ObjectType.SuperType.Add(SimTypeSystem.GetObjectType("Avatar"));
             CurrentNeeds = new BotNeeds(90.0F);
-            AspectName = slAvatar.Name;
+            AspectName = slAvatar.ToString();
             avatarHeartbeatThread = new Thread(new ThreadStart(Aging));
             avatarHeartbeatThread.Name = "AvatarHeartbeatThread for " + Client;
             avatarHeartbeatThread.Start();
@@ -93,10 +94,7 @@ namespace cogbot.TheOpenSims
         {
             return true;
         }
-        public override SimObject GetParent()
-        {
-            return this;
-        }
+        public override SimObject Parent {  get { return this; }   }
 
         public bool IsSitting()
         {
@@ -118,7 +116,7 @@ namespace cogbot.TheOpenSims
             return ClientSelf.AgentID == theAvatar.ID || ClientSelf.LocalID == theAvatar.LocalID;
         }
 
-        internal override void UpdatePaths(SimPathStore simPathStore)
+        public override void UpdatePaths(SimPathStore simPathStore)
         {
         }
 
@@ -168,7 +166,7 @@ namespace cogbot.TheOpenSims
         {
             return (avatarThinkerThread != null);
         }
-        internal void PauseThinking()
+        public void PauseThinking()
         {
             if (avatarThinkerThread != null)
             {
@@ -194,12 +192,6 @@ namespace cogbot.TheOpenSims
         {
             if (IsLocal()) return Client.Self.SimRotation;
             return base.GetSimRotation();
-        }
-
-        static readonly List<Vector3> NOVECTORS = new List<Vector3>();
-        public override ICollection<Vector3> GetOccupied(float min, float max)
-        {           
-            return NOVECTORS;
         }
 
         public void Think()
@@ -241,7 +233,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        private BotAction GetNextAction()
+        public BotAction GetNextAction()
         {
             BotAction act = CurrentAction;
 
@@ -332,7 +324,7 @@ namespace cogbot.TheOpenSims
             return TodoBotActions;
         }
 
-        private List<BotAction> NewPossibleActions()
+        public List<BotAction> NewPossibleActions()
         {
             List<SimObject> knowns = GetKnownObjects();
             List<BotAction> acts = new List<BotAction>();
@@ -356,7 +348,7 @@ namespace cogbot.TheOpenSims
             return acts;
         }
 
-        internal void DoBestUse(SimObject someObject)
+        public void DoBestUse(SimObject someObject)
         {
             SimTypeUsage use = someObject.GetBestUse(CurrentNeeds);
             if (use == null)
@@ -694,7 +686,7 @@ namespace cogbot.TheOpenSims
             lock (TrackerLoopLock)
             {
                 ApproachPosition = null;
-
+            }
                 AgentManager ClientSelf = Client.Self;
                 ClientSelf.AutoPilotCancel();
                 AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
@@ -735,35 +727,11 @@ namespace cogbot.TheOpenSims
                 ClientMovement.YawPos = false;
 
                 ClientMovement.SendUpdate();
-            }
+            
         }
 
 
         object TrackerLoopLock = new object();
-
-        void TrackerLoopNew()
-        {
-            AgentManager ClientSelf = Client.Self;
-            AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
-            bool StartedFlying = false;// !IsFloating;
-            Boolean justStopped = false;
-            while (true)
-            {
-                // Debug("TrackerLoop: " + Thread.CurrentThread);
-                if (ApproachPosition == null)
-                {
-                    Thread.Sleep(500);
-                    continue;
-                }
-                //ApproachDistance = ApproachPosition.GetSizeDistance();
-
-                Vector3 targetPosition = new Vector3(ApproachPosition.GetSimPosition());
-                if (AutoGoto(targetPosition, ApproachDistance, 2000))
-                {
-                    ApproachPosition = null;
-                }
-            }
-        }
 
         void TrackerLoop()
         {
@@ -783,7 +751,7 @@ namespace cogbot.TheOpenSims
                         Thread.Sleep(500);
                         continue;                    
                     }
-                    targetPosition = new Vector3(ApproachPosition.GetSimPosition());
+                    targetPosition = ApproachPosition.GetUsePosition();
                 }
                 //ApproachDistance = ApproachPosition.GetSizeDistance();
                 try
@@ -826,9 +794,9 @@ namespace cogbot.TheOpenSims
                     if (!StartedFlying)
                     {
                         ClientMovement.NudgeUpPos = false;
-                        // targetPosition.Z = ApproachPosition.GetSimPosition().Z;
+                        // targetPosition.Z = ApproachPosition.Z;
                     }
-                  //  Vector3 Destination = ApproachPosition.GetSimPosition();
+                  //  Vector3 Destination = ApproachPosition;
                     float curDist = Vector3.Distance(GetSimPosition(), targetPosition);
                     Client.Self.Movement.TurnToward(targetPosition);
                     if (curDist > ApproachDistance)
@@ -896,35 +864,6 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        private void MoveFast(SimPosition ApproachPosition)
-        {
-            Random somthing = new Random(Environment.TickCount);// We do stuff randomly here
-
-            Vector3 Destination = ApproachPosition.GetSimPosition();
-            Client.Self.Movement.AtPos = true;
-            Client.Self.Movement.UpdateInterval = 0; //100
-            Client.Self.Movement.SendUpdate(true);
-            //(int)(25 * (1 + (curDist / followDist)))
-            Thread.Sleep(somthing.Next(25, 100));
-        }
-
-        private void MoveSlow(SimPosition ApproachPosition)
-        {
-            Vector3 Destination = ApproachPosition.GetSimPosition();
-            Client.Self.Movement.TurnToward(Destination);
-            Client.Self.Movement.AtPos = true;
-            Client.Self.Movement.SendUpdate(true);
-            Thread.Sleep(125);
-            Client.Self.Movement.Stop = true;
-            Client.Self.Movement.AtPos = false;
-            Client.Self.Movement.NudgeAtPos = true;
-            Client.Self.Movement.SendUpdate(true);
-            Thread.Sleep(100);
-            Client.Self.Movement.NudgeAtPos = false;
-            Client.Self.Movement.SendUpdate(true);
-            Thread.Sleep(100);
-        }
-
         public override SimWaypoint GetWaypoint()
         {
             Vector3 v3 = GetSimPosition();
@@ -977,14 +916,16 @@ namespace cogbot.TheOpenSims
                 StopMoving();
                 return MadeIt;
             }
-            SimWaypoint wp = SimWaypoint.Create(end);
-            ApproachDistance = maxDistance;
-            TurnToward(wp);
-            SetMoveTarget(wp);
+            lock (TrackerLoopLock)
+            {
+                SimWaypoint P = WorldSystem.SimPaths.CreateFirstNode(end.X,end.Y);
+                ApproachDistance = maxDistance;
+                ApproachPosition = P;
+            }
             for (int i = 0; i < maxSeconds; i++)
             {
                 Thread.Sleep(1000);
-                Application.DoEvents();
+                //Application.DoEvents();
                 float currentDist = Vector3.Distance(end,GetSimPosition());
 
                 if (currentDist > maxDistance)
@@ -993,6 +934,7 @@ namespace cogbot.TheOpenSims
                 }
                 else
                 {
+                   // StopMoving();
                     return true;
                 }
             }
@@ -1057,11 +999,17 @@ namespace cogbot.TheOpenSims
         /// <returns></returns>
         public bool GotoTarget(SimPosition pos) {
 
+
             if (AutoGoto(pos.GetSimPosition(), pos.GetSizeDistance(), 2000))
             {
                 Debug("EASY GotoTarget: " + pos);
                 return true;
             }
+            if (SimPathStore.OtherPathFinder)
+            {
+                return GotoSimVector(pos.GetUsePosition(), pos.GetSizeDistance());
+            }
+
             bool IsFake;
             for (int i = 0; i < 19; i++)
             {
@@ -1098,52 +1046,198 @@ namespace cogbot.TheOpenSims
             return false;
         }
 
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="zAngleFromFace"></param>
-        /// <param name="distance"></param>
-        /// <returns></returns>
-        private Vector3 GetLeftPos(int zAngleFromFace, float distance)
+        private bool GotoSimVector(Vector3 vector3, float finalDistance)
         {
-            Vector3 c = GetSimPosition();            
-            
-            Quaternion r = GetSimRotation();
-            Quaternion z_angle = Quaternion.CreateFromEulers(new Vector3(0, 0, zAngleFromFace /57.29577951f));
-            Quaternion next = z_angle;
-            float ax, ay, az;
-            next.GetEulerAngles(out ax, out ay, out az);
-            float xmul = (float)Math.Cos(az);
-            float ymul = (float)Math.Sin(az);
-            Vector3 v3 = new Vector3(xmul, ymul, 0);
-            v3 = v3 * distance;
-            Vector3 result = c + v3;
-            if (result.X > 254f)
+
+            int OneCount = 0;
+            Client.Self.Movement.TurnToward(vector3);
+            if (Vector3.Distance(GetSimPosition(), vector3) < finalDistance) return true;
+            for (int trial = 0; trial < 25; trial++)
             {
-                result.X = 254;
+                StopMoving();
+                Application.DoEvents();
+                bool failed = false;
+                Vector3 start = GetSimPosition();
+                Vector3 end = vector3;
+
+                List<Vector3> v3s =(List<Vector3>) WorldSystem.SimPaths.GetV3Route(start, end);
+                if (v3s.Count > 1)
+                {
+                    if (Vector3.Distance(v3s[0], start) > Vector3.Distance(v3s[v3s.Count - 1], start))
+                        v3s.Reverse();
+                }
+                else
+                {
+                  //  GetUsePosition();
+                    if (OneCount > 3) return false;
+                    OneCount++;
+                }
+
+                Debug("Path {1}: {0} " ,v3s.Count ,trial);
+                if (FollowPath(v3s, vector3, finalDistance)) return true;
+                if (Vector3.Distance(GetSimPosition(), vector3) < finalDistance) return true;
+
             }
-            else if (result.X < 1f)
-            {
-                result.X = 1;
-            }
-            if (result.Y > 254f)
-            {
-                result.Y = 254;
-            }
-            else if (result.Y < 1f)
-            {
-                result.Y = 1;
-            }
-            return result;
-            /*
-             * Client.Self.Movement.SendManualUpdate(AgentManager.ControlFlags.AGENT_CONTROL_AT_POS, Client.Self.Movement.Camera.Position,
-                    Client.Self.Movement.Camera.AtAxis, Client.Self.Movement.Camera.LeftAxis, Client.Self.Movement.Camera.UpAxis,
-                    Client.Self.Movement.BodyRotation, Client.Self.Movement.HeadRotation, Client.Self.Movement.Camera.Far, AgentFlags.None,
-                    AgentState.None, true);*/
+            return false;
         }
 
-        public bool AutoGoto(Vector3 target3, float dist, long maxMs)
+        private bool FollowPath(List<Vector3> v3sIn, Vector3 finalTarget,float finalDistance)
+        {
+            IList<Vector3> v3s = WorldSystem.SimPaths.GetSimplifedRoute(GetSimPosition(), v3sIn, 10, 8f);
+            Debug("FollowPath: {0} -> {1}", v3sIn.Count, v3s.Count);
+            float dist = 0.75f;
+            int CanSkip = 0;
+            int Skipped = 0;
+            bool failed = false;
+            foreach (Vector3 v3 in v3s)
+            {
+                //  if (Vector3.Distance(v3, GetSimPosition()) < dist) continue;
+                if (!MoveTo(v3, dist, 5))
+                {
+                    if (Vector3.Distance(GetSimPosition(), finalTarget) < finalDistance) return true;
+                    if (!MoveTo(v3, dist, 2))
+                    {
+                        // BlockTowardsVector(v3);
+                        if (CanSkip-- > 0)
+                        {
+                            Skipped++;
+                            continue;
+                        }
+                        return false;
+                    }
+                }
+                else
+                {
+                    CanSkip = 10;
+                }
+
+            }
+            return true;
+        }
+
+        private void BlockTowardsVector(Vector3 v3)
+        {
+            Point P1 = SimPathStore.Instance.ToPoint(GetSimPosition());
+            Vector3 cp = GetSimPosition();
+            Vector3 offset = v3 - cp;
+            float ZAngle = (float)Math.Atan2(offset.Y, offset.X);
+            Point Last = SimPathStore.Instance.ToPoint(v3);
+            float Dist = 0.3f;
+            Vector3 b1 = v3;
+            while (offset.Length() > 0.1)
+            {
+                offset *= 0.75f;
+                Vector3 blocked = cp + offset;
+                Point P2 = SimPathStore.Instance.ToPoint(blocked);
+                if (P2 != P1)
+                {
+                    Dist = offset.Length();
+                    Last = P2;
+                    b1 = blocked;
+                }
+            }
+            float x = Last.X / SimPathStore.Instance.POINTS_PER_METER;
+            float y = Last.Y / SimPathStore.Instance.POINTS_PER_METER;
+            SetBlocked(x, y);
+            float A45 = 45f / ((float)(180 / Math.PI));
+            Debug("Blocked {0},{1}", x, y);
+            Vector3 middle = ZAngleVector(ZAngle) * Dist;
+            middle += cp;
+            float mdist = Vector3.Distance(middle, b1);
+            if (mdist > 0.1)
+            {
+                Debug("Wierd mdist=" + mdist);
+            }
+            Dist = 0.4f;
+            BlockPoint(ZAngleVector(ZAngle) * Dist + cp);
+            BlockPoint(ZAngleVector(ZAngle - A45 * 0.5) * Dist + cp);
+            BlockPoint(ZAngleVector(ZAngle + A45 * 0.5) * Dist + cp);
+            BlockPoint(ZAngleVector(ZAngle - A45) * Dist + cp);
+            BlockPoint(ZAngleVector(ZAngle + A45) * Dist + cp);
+            BlockPoint(ZAngleVector(ZAngle - A45 * 1.5) * Dist + cp);
+            BlockPoint(ZAngleVector(ZAngle + A45 * 1.5) * Dist + cp);
+            // Run back
+            MoveTo(cp + ZAngleVector(ZAngle - Math.PI) * 2, 1f, 2);
+        }
+
+        private Vector3 ZAngleVector(double ZAngle)
+        {
+            return new Vector3((float)Math.Sin(ZAngle), (float)Math.Cos(ZAngle), 0);
+        }
+
+        private void BlockPoint(Vector3 vector3)
+        {
+            Point P = SimPathStore.Instance.ToPoint(vector3);
+            Debug("BlockPoint {0},{1}", P.X / SimPathStore.Instance.POINTS_PER_METER, P.Y / SimPathStore.Instance.POINTS_PER_METER);
+            SetBlocked(vector3.X, vector3.Y);
+        }
+
+        private void BlockForwardPos()
+        {
+            Point P1 = SimPathStore.Instance.ToPoint(GetSimPosition());
+            Point Last = Point.Empty;
+            for (float dist = 0.1f; dist < 0.75f; dist += 0.14f)
+            {
+                Vector3 blocked = GetLeftPos(0, dist);
+                Point P2 = SimPathStore.Instance.ToPoint(blocked);
+                if (P2 != P1 && Last != P2)
+                {
+                    SetBlocked(blocked.X, blocked.Y);
+                    Debug("Blocked {0},{1}", P2.X / SimPathStore.Instance.POINTS_PER_METER, P2.Y / SimPathStore.Instance.POINTS_PER_METER);
+                    Last = P2;
+                }            
+            }
+            for (float dist = 0.1f; dist < 0.75f; dist += 0.14f)
+            {
+                Vector3 blocked = GetLeftPos(45, dist);
+                Point P2 = SimPathStore.Instance.ToPoint(blocked);
+                if (P2 != P1 && Last != P2)
+                {
+                    SetBlocked(blocked.X, blocked.Y);
+                    Debug("Blocked {0},{1}", P2.X / SimPathStore.Instance.POINTS_PER_METER, P2.Y / SimPathStore.Instance.POINTS_PER_METER);
+                    Last = P2;
+                }
+            }
+            for (float dist = 0.1f; dist < 0.75f; dist += 0.14f)
+            {
+                Vector3 blocked = GetLeftPos(360-45, dist);
+                Point P2 = SimPathStore.Instance.ToPoint(blocked);
+                if (P2 != P1 && Last != P2)
+                {
+                    SetBlocked(blocked.X, blocked.Y);
+                    Debug("Blocked {0},{1}", P2.X / SimPathStore.Instance.POINTS_PER_METER, P2.Y / SimPathStore.Instance.POINTS_PER_METER);
+                    Last = P2;
+                }
+            }
+
+            Last = Point.Empty;
+            for (float dist = 0.1f; dist < 0.75f; dist += 0.14f)
+            {
+                Vector3 blocked = GetLeftPos(0, dist);
+                Point P2 = SimPathStore.Instance.ToPoint(blocked);
+                if (P2 != P1 && Last != P2)
+                {
+                    SimPathStore.Instance.SetPassable(blocked.X, blocked.Y);
+                    Debug("Unblocked {0},{1}", P2.X / SimPathStore.Instance.POINTS_PER_METER, P2.Y / SimPathStore.Instance.POINTS_PER_METER);
+                    Last = P2;
+                }
+            }
+            //Last = Point.Empty;
+            //for (float dist = 0.0f; dist < 1f; dist += 0.14f)
+            //{
+            //    Vector3 blocked = GetLeftPos(180, dist);
+            //    Point P2 = SimPathStore.Instance.ToPoint(blocked);
+            //    if (P2 != Last)
+            //    {
+            //        SimPathStore.Instance.SetPassable(blocked.X, blocked.Y);
+            //        Debug("Unblocked {0},{1}", P2.X / SimPathStore.Instance.POINTS_PER_METER, P2.Y / SimPathStore.Instance.POINTS_PER_METER);
+            //        Last = P2;
+            //    }
+            //}
+        }
+
+
+             public bool AutoGoto(Vector3 target3, float dist, long maxMs)
         {
             long endAt = Environment.TickCount + maxMs;
             Vector2 target = new Vector2(target3.X, target3.Y);

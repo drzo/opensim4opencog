@@ -34,6 +34,7 @@ namespace cogbot
 
     public partial class TextForm : Form
     {
+        public static bool DownloadTextures = false;
         public static int nextTcpPort = 5555;
         static public TextForm SingleInstance = null;
         public static int debugLevel = 2;
@@ -213,7 +214,7 @@ namespace cogbot
                     groupActions[verb].acceptInputWrapper(verb, "");
                 return true;
             }
-            if (BotByName.Count == 0) return lastBotClient.ExecuteCommand(text);
+            if (BotByName.Count == 0 && lastBotClient!=null) return lastBotClient.ExecuteCommand(text);
             bool handled = false;
             foreach (BotClient CurrentClient in BotByName.Values)
                 if (CurrentClient != null)

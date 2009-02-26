@@ -8,7 +8,6 @@ using System.Windows.Forms;
 using cogbot.TheOpenSims.Navigation.Debug;
 using System.Drawing;
 using System.Net;
-//using IdealistViewer;
 
 namespace cogbot.Actions.Movement
 {
@@ -43,9 +42,75 @@ namespace cogbot.Actions.Movement
         {
             GraphFormer gf = new GraphFormer(SimPathStore.Instance);
             gf.Reactivate();
-            return "ran srdebug";
+            return "ran " + Name;
         }
     }
+    class pfdebug : cogbot.Actions.Command
+    {
+        public pfdebug(BotClient client)
+        {
+            Name = GetType().Name;
+            Description = "Starts the pathfinder debuger";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            PathFinderDemo gf = SimPathStore.PathFinder;//.Instance;
+            gf.Show();
+            return "ran " + Name;
+        }
+    }
+
+
+    class pfg : cogbot.Actions.Command
+    {
+        public pfg(BotClient client)
+        {
+            Name = GetType().Name;
+            Description = "pfg 180 5 will move backwards 5";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            float Dist;
+            if (args.Length>1 && float.TryParse(args[1], out Dist))
+            {
+                Vector3 av = WorldSystem.TheSimAvatar.GetLeftPos(int.Parse(args[0]), Dist);
+                WorldSystem.TheSimAvatar.MoveTo(av, 1f, 4);
+            }
+            else
+            {
+                Vector3 av = WorldSystem.TheSimAvatar.GetLeftPos(int.Parse(args[0]), 10);
+                Client.Self.Movement.TurnToward(av);
+            }
+            return "ran " + Name;
+        }
+    }
+
+    class meshinfo : cogbot.Actions.Command
+    {
+        public meshinfo(BotClient client)
+        {
+            Name = GetType().Name;
+            Description = "Reads the sim prims for improving routes";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            IEnumerable<SimObject> objs = WorldSystem.GetAllSimObjects(String.Join(" ", args));
+            SimPathStore pathStore = WorldSystem.SimPaths;
+            foreach (SimObject o in objs)
+            {
+                WriteLine("MeshInfo: " + o);
+                WriteLine(o.GetMeshInfo());
+            }
+            return "ran " + Name;
+        }
+    }
+
     class srmap : cogbot.Actions.Command
     {
         public srmap(BotClient client)
@@ -86,25 +151,17 @@ namespace cogbot.Actions.Movement
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            IEnumerable<SimObject> objs = WorldSystem.GetAllSimObjects(String.Join(" ",args));
+            IEnumerable<SimObject> objs = WorldSystem.GetAllSimObjects(String.Join(" ", args));
             SimPathStore pathStore = WorldSystem.SimPaths;
             foreach (SimObject o in objs)
             {
-                if (o.IsPassable)
-                {
-                    pathStore.UpdateFromObject(o);
-                }
+                pathStore.UpdateFromObject(o);
             }
-            foreach (SimObject o in objs)
-            {
-                if (!o.IsPassable)
-                {
-                    pathStore.UpdateFromObject(o);
-                }
-            }
+            pathStore.CleanUnblocked();
             return "ran " + Name;
         }
     }
+
     class srpath : cogbot.Actions.Command
     {
         public srpath(BotClient client)
@@ -266,7 +323,7 @@ namespace cogbot.Actions.Movement
                 {
 
                     SimObject simObject = WorldSystem.GetSimObject(prim);
-                    if (simObject.CanGetSimPosition())
+                    if (simObject.IsRegionAttached())
                     {
                         target = simObject.GetSimPosition();
                         distance = 0.5f + simObject.GetSizeDistance();

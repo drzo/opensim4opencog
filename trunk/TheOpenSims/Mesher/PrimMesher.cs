@@ -31,7 +31,7 @@ using System.Text;
 using System.IO;
 
 //namespace PrimMesher
-namespace cogbot.TheOpenSims.Navigation.Mesher
+namespace THIRDPARTY.PrimMesher
 {
     public struct Quat
     {

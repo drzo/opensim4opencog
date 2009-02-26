@@ -18,7 +18,7 @@ namespace cogbot.Actions
             Description = "Dumps all of the textures from an avatars outfit to the hard drive. Usage: dumpoutfit [avatar-uuid]";
             Category = CommandCategory.Inventory;
 
-            ImageReceivedHandler = new AssetManager.ImageReceivedCallback(Assets_OnImageReceived);
+            if (TextForm.DownloadTextures) ImageReceivedHandler = new AssetManager.ImageReceivedCallback(Assets_OnImageReceived);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)

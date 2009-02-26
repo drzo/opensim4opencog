@@ -189,7 +189,9 @@ namespace cogbot.TheOpenSims.Navigation
 
         private void Propagate(Track TrackToPropagate)
         {
-            foreach (SimRoute A in TrackToPropagate.EndNode.OutgoingArcs)
+            lock (TrackToPropagate.EndNode.OutgoingArcs)
+                
+                foreach (SimRoute A in TrackToPropagate.EndNode.OutgoingArcs)
             {
                 if (A.Passable && A.EndNode.Passable)
                 {

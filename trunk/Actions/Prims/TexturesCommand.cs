@@ -16,10 +16,17 @@ namespace cogbot.Actions
             Name = "textures";
             Description = "Turns automatic texture downloading on or off. Usage: textures [on/off]";
             Category = CommandCategory.Objects;
+            if (TextForm.DownloadTextures)
+            {
 
-            testClient.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
-            testClient.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
-            testClient.Assets.OnImageReceived += new AssetManager.ImageReceivedCallback(Assets_OnImageReceived);
+                testClient.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
+                testClient.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
+                testClient.Assets.OnImageReceived += new AssetManager.ImageReceivedCallback(Assets_OnImageReceived);
+            }
+            else
+            {
+                testClient.ClientManager.GetTextures = false;
+            }
         }
 
         public override string Execute(string[] args, UUID fromAgentID)

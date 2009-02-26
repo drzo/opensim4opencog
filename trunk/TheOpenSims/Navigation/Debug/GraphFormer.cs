@@ -11,7 +11,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Forms;
 using System.Data;
@@ -74,8 +74,9 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         static Pen CrayonArcsPas;
         static Pen CrayonArcsWeak;
         static Pen CrayonArcsStrong;
+        SimPathStore PathStore;
 
-		static GraphFormer()
+        static GraphFormer()
 		{
 			CrayonNoeuds = new Pen(Color.Black, Epaisseur);
             CrayonNoeudsInactifs = new Pen(Color.Red, Epaisseur);
@@ -107,6 +108,8 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 		public GraphFormer(SimPathStore SPS)
 		{
             DEBUGGER = this;
+            PathStore = SPS;
+
 			MenuContextuel = new ContextMenu();
 			MenuContextuel.MenuItems.Add(new MenuItem("Automatic", new EventHandler(ChoixAutomatique)));
 			MenuContextuel.MenuItems.Add(new MenuItem("Step by step", new EventHandler(ChoixPasAPas)));
@@ -454,7 +457,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 		bool AjouterN1, AjouterN2;
 		SimMovement AE;
 		SimWaypoint NDepart, NArrivee;
-		SimWaypoint[] Chemin;
+		IList<SimWaypoint> Chemin;
 		Point TempP;
 		int NbHeuristique = 0;
 		
@@ -548,7 +551,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 			}
 			else
 			{
-                if (N == null) N = SimWaypoint.Create(X / DSCALE, Y / DSCALE, 0);
+                if (N == null) N = SimWaypoint.Create(X / DSCALE, Y / DSCALE, 0, PathStore);
                 else N.ChangeXYZDebug(X/DSCALE, Y/DSCALE, 0);
 				return true;
 			}
@@ -597,7 +600,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 				case Action.Dessiner:
 				{
 					AjouterN1 = NoeudSelonPosition(e.X, e.Y, ref TempN1);
-                    TempN2 = SimWaypoint.Create((float)((TempN1.X) / DSCALE), (float)((TempN1.Y) / DSCALE), (float)0);
+                    TempN2 = SimWaypoint.Create((float)((TempN1.X) / DSCALE), (float)((TempN1.Y) / DSCALE), (float)0, PathStore);
 					GraphPanel.Invalidate( Boite(TempN1, TempN2) );
 					break;
 				}
@@ -716,11 +719,11 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 						if ( TempN1==null ) break;
 						Rectangle AncienRect = Boite(TempN1.Molecule);
 
-						SimWaypoint[] AncienChemin = null;
+						IList<SimWaypoint> AncienChemin = null;
 						if ( Chemin!=null )
 						{
-							AncienChemin = new SimWaypoint[Chemin.Length];
-							for ( int i=0; i<AncienChemin.Length; i++ ) AncienChemin[i] = (SimWaypoint)Chemin[i].Clone();
+							AncienChemin = new SimWaypoint[Chemin.Count];
+							for ( int i=0; i<AncienChemin.Count; i++ ) AncienChemin[i] = (SimWaypoint)Chemin[i].Clone();
 						}
 
                         TempN1.ChangeXYZDebug(e.X / DSCALE, e.Y / DSCALE, 0);
@@ -813,7 +816,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 					}
 					else
 					{
-						ArrayList ListeNoeuds = new ArrayList();
+						System.Collections.ArrayList ListeNoeuds = new System.Collections.ArrayList();
 						foreach ( SimWaypoint N in G.Nodes )
 						{
 							if ( Zone.Contains(new Point((int)N.X, (int)N.Y)) )
@@ -906,10 +909,10 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 			}
 		}
 
-		bool CheminsDifferents(SimWaypoint[] C1, SimWaypoint[] C2)
+		bool CheminsDifferents(IList<SimWaypoint> C1, IList<SimWaypoint> C2)
 		{
-			if ( C1==null || C2==null || C1.Length!=C2.Length ) return true;
-			for ( int i=0; i<C1.Length; i++) if ( !C1[i].Equals(C2[i]) ) return true;
+            if (C1 == null || C2 == null || C1.Count != C2.Count) return true;
+            for (int i = 0; i < C1.Count; i++) if (!C1[i].Equals(C2[i])) return true;
 			return false;
 		}
 
@@ -919,7 +922,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 			{
 				if ( N==NDepart ) NDepart=null;
 				if ( N==NArrivee ) NArrivee=null;
-				if ( Chemin!=null && Array.IndexOf(Chemin, N)>=0 )
+				if ( Chemin!=null && Chemin.IndexOf(N)>=0 )
 				{
 					Chemin=null;
 					ZoneInvalide.Union(new Rectangle(new Point(0,0),GraphPanel.Size));				
@@ -955,13 +958,13 @@ with the respective left and right mouse buttons.", "Impossible action", Message
 		}
 
 
-        public void SetTryPathNow(SimWaypoint start,SimWaypoint end) {
+        public void SetTryPathNow(SimWaypoint start,SimWaypoint end, IList<SimWaypoint> ch) {
             NDepart = start;
             NArrivee = end;
          //   CalculPossible = true;
           //  AEtoile_Debut();
           //  AEtoile_Fin();
-            Chemin = AE.SearchPath(NDepart, NArrivee) ? AE.PathByNodes : null;
+            Chemin = ch;// AE.SearchPath(NDepart, NArrivee) ? AE.PathByNodes : null;
             GraphPanel.Invalidate();
         }
 
@@ -1324,9 +1327,9 @@ with the respective left and right mouse buttons.", "Impossible action", Message
 			Grfx.FillPath(Numero==1 ? Brushes.DarkTurquoise : Brushes.Blue, GP);
 		}
 
-		static private void DessinerChemin(Graphics Grfx, Pen P, SimWaypoint[] C)
+		static private void DessinerChemin(Graphics Grfx, Pen P, IList<SimWaypoint> C)
 		{
-			Point[] Pnts = new Point[C.Length];
+			Point[] Pnts = new Point[C.Count];
 			if ( Pnts.Length>1 )
 			{
 				for ( int i=0; i<Pnts.Length; i++ )

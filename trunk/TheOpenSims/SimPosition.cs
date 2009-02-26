@@ -13,7 +13,7 @@ namespace cogbot.TheOpenSims
         Vector3 GetUsePosition();
         float GetSizeDistance();
         SimWaypoint GetWaypoint();
-        bool CanGetSimPosition();
+        bool IsRegionAttached();
     }
 
 
