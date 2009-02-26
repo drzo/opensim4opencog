@@ -1501,6 +1501,7 @@ namespace OpenMetaverse
                 OSDMap mediaDataBlock = new OSDMap();
                 try /*OPENSIMWORKAROUND*/
                 {
+                    if (map["MediaData"] is OSDArray)
                     mediaDataBlock = (OSDMap)(((OSDArray)map["MediaData"])[0]);
                 }
                 catch (Exception) { }
