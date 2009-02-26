@@ -19,8 +19,11 @@ namespace cogbot.Actions
                 "Usage: downloadtexture [texture-uuid] [discardlevel]";
             Category = CommandCategory.Inventory;
 
-            testClient.Assets.OnImageReceiveProgress += new AssetManager.ImageReceiveProgressCallback(Assets_OnImageReceiveProgress);
-            testClient.Assets.OnImageReceived += new AssetManager.ImageReceivedCallback(Assets_OnImageReceived);
+            if (TextForm.DownloadTextures)
+            {
+                testClient.Assets.OnImageReceiveProgress += new AssetManager.ImageReceiveProgressCallback(Assets_OnImageReceiveProgress);
+                testClient.Assets.OnImageReceived += new AssetManager.ImageReceivedCallback(Assets_OnImageReceived);
+            }
         }
 
         public override string Execute(string[] args, UUID fromAgentID)

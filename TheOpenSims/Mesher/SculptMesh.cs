@@ -32,10 +32,8 @@ using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
 
-//namespace PrimMesher
-namespace cogbot.TheOpenSims.Navigation.Mesher
-{
-
+namespace THIRDPARTY.PrimMesher
+{    
     public class SculptMesh
     {
         public List<Coord> coords;

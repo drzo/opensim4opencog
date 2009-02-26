@@ -13,7 +13,7 @@ namespace cogbot.TheOpenSims.Navigation
         void StopMoving();
         bool MoveTo(Vector3 end, float maxDistance, int maxSeconds);
         Quaternion GetSimRotation();
-        void Debug(string p, params object[] args);
+        void Debug(string format, params object[] args);
         //float Distance(SimPosition v3);
 
     }
@@ -36,9 +36,8 @@ namespace cogbot.TheOpenSims.Navigation
         readonly Vector3 FinalLocation;
         readonly float FinalDistance;
         int CurrentRouteIndex = 0;
-        SimRoute StuckAt = null;
         SimRoute OuterRoute = null;
-        float CloseDistance = SimPathStore.LargeScale-SimPathStore.StepSize;
+        float CloseDistance = 1f;// SimPathStore.LargeScale-SimPathStore.StepSize;
 
         public SimMoverState STATE
         {
@@ -145,7 +144,7 @@ namespace cogbot.TheOpenSims.Navigation
             return STATE;
         }
 
-        private void SetBlocked(SimRoute StuckAt)
+        internal void SetBlocked(SimRoute StuckAt)
         {
             Vector3 pos = Mover.GetSimPosition();
             if (StuckAt.BlockedPoint(pos))
@@ -179,7 +178,7 @@ namespace cogbot.TheOpenSims.Navigation
             STATE = SimMoverState.BLOCKED;
         }
 
-        private SimMoverState FollowRoute(SimRoute route)
+        internal SimMoverState FollowRoute(SimRoute route)
         {
             Vector3 vectStart = route.StartNode.GetSimPosition();
             Vector3 vectMover = Mover.GetSimPosition();
@@ -215,7 +214,7 @@ namespace cogbot.TheOpenSims.Navigation
             return SimMoverState.COMPLETE;
         }
 
-        private bool MoveTo(Vector3 endVect)
+        internal bool MoveTo(Vector3 endVect)
         {
             bool MadeIt = Mover.MoveTo(endVect, CloseDistance, 6);
             if (!MadeIt)
@@ -281,7 +280,7 @@ namespace cogbot.TheOpenSims.Navigation
             return front;
         }
 
-        private void Debug(string p, params object[] args)
+        internal void Debug(string p, params object[] args)
         {
             Mover.Debug(p + " for " + this.ToString(),args);
         }

@@ -650,7 +650,7 @@ namespace cogbot.Listeners
                     if (update.Avatar)
                     {
                         //   if (false)
-                        if (update.LocalID != client.Self.LocalID)
+                    //    if (update.LocalID != client.Self.LocalID)
                         //  {  // Way point creation from other avatars moving
                         //   new Thread(new ThreadStart(delegate()
                         {
@@ -1720,7 +1720,7 @@ namespace cogbot.Listeners
             output("Rescaning " + count + " simobjects");
             foreach (SimObject obj in SimObjects)
             {
-                obj.GetParent();
+                //obj._Parent = obj.Parent;
                 obj.UpdateProperties(obj.thePrim.Properties);
             }
             if (count != SimObjects.Count)
@@ -1778,7 +1778,7 @@ namespace cogbot.Listeners
                         Single.TryParse(args[2], out target.Z);
                         argsUsed = 3;
                     }
-                    return SimWaypoint.Create(target);
+                    return SimWaypoint.Create(target,SimPaths);
                 }
             }
             int consume = args.Length;
@@ -1791,7 +1791,7 @@ namespace cogbot.Listeners
                 if (tryGetPrim(s, out prim))
                 {
                     SimObject simObject = GetSimObject(prim);
-                    if (simObject.CanGetSimPosition())
+                    if (simObject.IsRegionAttached())
                     {
                         argsUsed = consume;
                         return simObject;

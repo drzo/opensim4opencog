@@ -672,8 +672,11 @@ namespace cogbot.Listeners
             client.Groups.OnGroupNoticesList += Groups_OnGroupNoticesList;
             client.Assets.OnAssetReceived += Assets_OnAssetReceived;
             client.Assets.OnXferReceived += Assets_OnXferReceived;
-            client.Assets.OnImageReceived += Assets_OnImageReceived;
-            client.Assets.OnImageReceiveProgress += Assets_OnImageReceiveProgress;
+            if (TextForm.DownloadTextures)
+            {
+                client.Assets.OnImageReceived += Assets_OnImageReceived;
+                client.Assets.OnImageReceiveProgress += Assets_OnImageReceiveProgress;
+            }
             client.Assets.OnAssetUploaded += Assets_OnAssetUploaded;
             client.Assets.OnUploadProgress += Assets_OnUploadProgress;
             client.Appearance.OnAgentWearables += Appearance_OnAgentWearables;

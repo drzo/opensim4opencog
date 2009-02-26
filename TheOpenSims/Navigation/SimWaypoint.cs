@@ -4,6 +4,7 @@ using System.Text;
 using OpenMetaverse;
 using System.Collections;
 using cogbot.TheOpenSims.Navigation.Debug;
+using System.Drawing;
 
 namespace cogbot.TheOpenSims.Navigation
 {
@@ -14,13 +15,68 @@ namespace cogbot.TheOpenSims.Navigation
     [Serializable]
     public class SimWaypoint : SimPosition
     {
+
+        //Point _Point = Point.Empty;
+
+        //public int PointX
+        //{
+        //    get { return Point.X; }
+        //}
+        //public int PointY
+        //{
+        //    get { return Point.Y; }
+        //}
+
+        //public void UpdateMatrix(byte[,] matrix)
+        //{
+        //    matrix[PointX, PointY] =(byte)( Passable ? 0 : 255);
+        //}
+
+        //public Point Point
+        //{
+        //    get
+        //    {
+        //        if (_Point == Point.Empty)
+        //        {
+        //            _Point = new Point((int)(Math.Round(_Position.X, 0)), (int)(Math.Round(_Position.Y * 4, 0)));
+        //        }
+        //        return _Point;
+        //    }
+        //}
+
+        public IList OccupiedList = new List<SimObject>();
+
+        public bool NoObjectsBlock()
+        {
+            foreach (SimObject O in OccupiedList)
+            {
+                if (!O.IsPassable)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public string OccupiedString()
+        {
+            string S = "";
+            foreach (SimObject O in OccupiedList)
+            {
+                S += O.ToString();
+                S += "\n";
+            }
+            return S.TrimEnd();
+        }
+
+
         public SimWaypoint GetWaypoint()
         {
             return this;
         }
 
 
-        public bool CanGetSimPosition()
+        public bool IsRegionAttached()
         {
             return true;
         }
@@ -35,10 +91,9 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="PositionX">X coordinate.</param>
         /// <param name="PositionY">Y coordinate.</param>
         /// <param name="PositionZ">Z coordinate.</param>
-        static public SimWaypoint Create(float PositionX, float PositionY, float PositionZ)
+        static public SimWaypoint Create(float PositionX, float PositionY, float PositionZ, SimPathStore PathStore)
         {
-            Vector3 _Position = RoundPoint(new Vector3(PositionX, PositionY, PositionZ));
-            return Create(_Position);
+            return Create(new Vector3(PositionX, PositionY, PositionZ), PathStore);
         }
 
         public int ArcCount()
@@ -246,10 +301,10 @@ namespace cogbot.TheOpenSims.Navigation
             {
                 return GetSimPosition() == ((SimPosition)O).GetSimPosition();
             }
-            if (O is Vector3)
-            {
-                return Create((Vector3)O).Equals(this);
-            }
+            //if (O is Vector3)
+            //{
+            //    return Create((Vector3)O).Equals(this);
+            //}
             
             throw new ArgumentException("Type " + O.GetType() + " cannot be compared with type " + GetType() + " !");
         }
@@ -392,25 +447,25 @@ namespace cogbot.TheOpenSims.Navigation
 
         private SimWaypoint(Vector3 firstP)
         {
-            _Position = RoundPoint(firstP);
+            _Position = firstP;// RoundPoint(firstP, PathStore);
         }
 
         //protected Vector3 _Position;
 
-        public static Vector3 RoundPoint(Vector3 point)
+        public static Vector3 RoundPoint(Vector3 point,SimPathStore PathStore)
         {
-            double POINTS_PER_METER = SimPathStore.POINTS_PER_METER;
+            double POINTS_PER_METER = PathStore.POINTS_PER_METER;
             Vector3 vect3 = new Vector3(point);
             vect3.X = (float)(Math.Round(vect3.X * POINTS_PER_METER, 0) / POINTS_PER_METER);
             vect3.Y = (float)(Math.Round(vect3.Y * POINTS_PER_METER, 0) / POINTS_PER_METER);
-            vect3.Z = (float)Math.Round(vect3.Z);
+            vect3.Z = (float)(Math.Round(vect3.Z* POINTS_PER_METER, 0) / POINTS_PER_METER);
             return vect3;
         }
 
         static Dictionary<Vector3, SimWaypoint> InternedPoints = new Dictionary<Vector3, SimWaypoint>();
-        internal static SimWaypoint Create(Vector3 from)
+        public static SimWaypoint Create(Vector3 from, SimPathStore PathStore)
         {
-            Vector3 rounded = RoundPoint(from);
+            Vector3 rounded = RoundPoint(from, PathStore);
             if (InternedPoints.ContainsKey(rounded))
             {
                 return InternedPoints[rounded];
@@ -420,7 +475,7 @@ namespace cogbot.TheOpenSims.Navigation
             wp._IncomingArcs = new ArrayList();
             wp._OutgoingArcs = new ArrayList();
             InternedPoints[rounded] = wp;
-          //  SimPathStore.EnsureKnown(wp);
+          //  PathStore.EnsureKnown(wp);
             return wp;
         }
 
@@ -443,7 +498,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         #endregion
 
-        internal static float Distance(SimWaypoint wp1, SimWaypoint wp2)
+        public static float Distance(SimWaypoint wp1, SimWaypoint wp2)
         {
             return Vector3.Distance(wp1.GetSimPosition(), wp2.GetSimPosition());
         }
@@ -476,7 +531,7 @@ namespace cogbot.TheOpenSims.Navigation
             return needIt;
         }
 
-        internal bool GoesTo(SimWaypoint e)
+        public bool GoesTo(SimWaypoint e)
         {
             foreach (SimRoute r in _OutgoingArcs)
             {
@@ -485,10 +540,12 @@ namespace cogbot.TheOpenSims.Navigation
             return false;
         }
 
-        internal float Distance(Vector3 P)
+        public float Distance(Vector3 P)
         {
             return Vector3.Distance(P, _Position);
         }
+
+
     }
 
     //public class SimMovementPoints : SimMovement

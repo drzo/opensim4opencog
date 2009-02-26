@@ -70,7 +70,7 @@ namespace cogbot
 		public Listeners.WorldObjects WorldSystem;
         //   static public TextForm SingleInstance = null;
         public static int debugLevel = 2;
-        public bool GetTextures = true;
+        public bool GetTextures = TextForm.DownloadTextures;
 
         //  public cogbot.TextForm ClientManager;
         //  public VoiceManager VoiceManager;

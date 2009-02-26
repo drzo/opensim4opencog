@@ -614,7 +614,7 @@ namespace System.Collections.Generic
 
             public bool MoveNext()
             {
-                CheckState();
+              //  CheckState();
 
                 do
                 {
@@ -637,7 +637,7 @@ namespace System.Collections.Generic
             {
                 get
                 {
-                    CheckCurrent();
+                    //CheckCurrent();
 
                     return hashset.slots[current];
                 }
@@ -669,7 +669,7 @@ namespace System.Collections.Generic
 
             void CheckCurrent()
             {
-                CheckState();
+              //  CheckState();
 
                 if (current == NO_SLOT)
                     throw new InvalidOperationException("Current is not valid");
