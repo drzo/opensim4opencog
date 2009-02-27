@@ -30,7 +30,11 @@ namespace cogbot.TheOpenSims.Mesher
 
     public class SimMesh
     {
-        static bool UseExtremeDetail = true;
+        /// <summary>
+        /// UseExtremeDetailSize is compared to Scale X/Y/Z added together and if greater will try to
+        ///   generate more faces
+        /// </summary>
+        static float UseExtremeDetailSize = 5f;
         static bool UseViewerMode = false;
         public static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
      //   CollisionTest collider;
@@ -381,7 +385,8 @@ namespace cogbot.TheOpenSims.Mesher
         /// <returns></returns>
         public static PrimMesh PrimitiveToPrimMesh(Primitive thePrim, LevelOfDetail detail, Vector3 Scale, Quaternion rot)
         {
-            PrimMesh mesh = ConstructionDataToPrimMesh(thePrim.PrimData, detail);
+            bool UseExtremeDetail = Scale.X+Scale.Y+Scale.Z > UseExtremeDetailSize;
+            PrimMesh mesh = ConstructionDataToPrimMesh(thePrim.PrimData, detail, UseExtremeDetail);
             mesh.Scale(Scale.X, Scale.Y, Scale.Z);
            // if (rot != Quaternion.Identity)                
             mesh.AddRot(QuaternionToQuat(rot));
@@ -395,8 +400,9 @@ namespace cogbot.TheOpenSims.Mesher
 
 
         // from IdealistViewer.PrimMesherG.cs
-        public static PrimMesh ConstructionDataToPrimMesh(Primitive.ConstructionData primData, LevelOfDetail detail)
+        public static PrimMesh ConstructionDataToPrimMesh(Primitive.ConstructionData primData, LevelOfDetail detail, bool UseExtremeDetail)
         {
+            
             int sides = 4;
             int hollowsides = 4;
 
