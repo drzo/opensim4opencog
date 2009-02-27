@@ -28,7 +28,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 	/// </summary>
     public partial class GraphFormer : System.Windows.Forms.Form
 	{
-        public readonly static float DSCALE = 4.5f;
+        public readonly static float DSCALE = 8f;//4.5f;
         volatile public static GraphFormer DEBUGGER = null;
 		#region Construction / Destruction
 
@@ -600,7 +600,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 				case Action.Dessiner:
 				{
 					AjouterN1 = NoeudSelonPosition(e.X, e.Y, ref TempN1);
-                    TempN2 = SimWaypoint.Create((float)((TempN1.DX) / DSCALE), (float)((TempN1.DY) / DSCALE), (float)0, PathStore);
+                    TempN2 = SimWaypoint.Create((float)((TempN1.DX*DSCALE) / DSCALE), (float)((TempN1.DY*DSCALE) / DSCALE), (float)0, PathStore);
 					GraphPanel.Invalidate( Boite(TempN1, TempN2) );
 					break;
 				}
@@ -620,31 +620,31 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 		{
 			string Fleche = DoubleSens ? " <-> " : " -> ";
 			SimWaypoint N = NoeudSousJacent(X, Y);
-			string Cible = N!=null ? SB_Noeud((int)N.DX, (int)N.DY) : SB_Point((int)TempN2.DX, (int)TempN2.DY);
-			return SB_Point((int)TempN1.DX, (int)TempN1.DY)+Fleche+Cible+" : Length = "+(int)SimWaypoint.EuclidianDistance(TempN1, TempN2);
+			string Cible = N!=null ? SB_Noeud((int)(N.DX*DSCALE), (int)(N.DY*DSCALE)) : SB_Point((int)(TempN2.DX*DSCALE), (int)(TempN2.DY*DSCALE));
+			return SB_Point((int)(TempN1.DX*DSCALE), (int)(TempN1.DY*DSCALE))+Fleche+Cible+" : Length = "+(int)SimWaypoint.EuclidianDistance(TempN1, TempN2);
 		}
 		string SB_TempRectangle()
 		{
-			return SB_Point((int)TempN1.DX, (int)TempN1.DY)+" + "+SB_Point((int)Math.Abs(TempN1.DX-TempN2.DX), (int)Math.Abs(TempN1.DY-TempN2.DY));
+			return SB_Point((int)(TempN1.DX*DSCALE), (int)(TempN1.DY*DSCALE))+" + "+SB_Point((int)Math.Abs(TempN1.DX*DSCALE-TempN2.DX*DSCALE), (int)Math.Abs(TempN1.DY*DSCALE-TempN2.DY*DSCALE));
 		}
 		string SB_DetecterNoeud(int X, int Y)
 		{
 			SimWaypoint N = NoeudSousJacent(X, Y);
-			return N!=null ? SB_Noeud((int)N.DX, (int)N.DY) : SB_Point(X, Y);
+			return N!=null ? SB_Noeud((int)(N.DX*DSCALE), (int)(N.DY*DSCALE)) : SB_Point(X, Y);
 		}
 		string SB_DetecterNoeudOuArc(int X, int Y)
 		{
 			SimWaypoint N = NoeudSousJacent(X, Y);
-			if ( N!=null ) return SB_Noeud((int)N.DX, (int)N.DY);
+			if ( N!=null ) return SB_Noeud((int)(N.DX*DSCALE), (int)(N.DY*DSCALE));
 			SimRoute A = ArcSousJacent(X, Y);
-			if ( A!=null ) return "Arc "+SB_Point((int)A.StartNode.DX, (int)A.StartNode.DY)+" -> "+SB_Point((int)A.EndNode.DX, (int)A.EndNode.DY);
+			if ( A!=null ) return "Arc "+SB_Point((int)(A.StartNode.DX*DSCALE), (int)(A.StartNode.DY*DSCALE))+" -> "+SB_Point((int)(A.EndNode.DX*DSCALE), (int)(A.EndNode.DY*DSCALE));
 			return SB_Point(X, Y);
 		}
 		string SB_NoeudPlusProche(int X, int Y)
 		{
 			float Distance;
 			SimWaypoint N = G.ClosestNode(X/DSCALE, Y/DSCALE, 0, out Distance, true);
-			return N!=null ? SB_Noeud((int)N.DX, (int)N.DY) : SB_Point(X, Y);
+			return N!=null ? SB_Noeud((int)(N.DX*DSCALE), (int)(N.DY*DSCALE)) : SB_Point(X, Y);
 		}
 
 		void StatusBarMouseMove(System.Windows.Forms.MouseEventArgs e)
@@ -737,7 +737,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 						int DY = (int)(e.Y-TempP.Y);
 						TempP.X = e.X;
 						TempP.Y = e.Y;
-                        foreach (SimWaypoint N in G.Nodes) N.ChangeXYZDebug((float)(N.DX + DX) / DSCALE, (float)(N.DY + DY) / DSCALE, 0);
+                        foreach (SimWaypoint N in G.Nodes) N.ChangeXYZDebug((float)(N.DX*DSCALE + DX) / DSCALE, (float)(N.DY*DSCALE + DY) / DSCALE, 0);
 						GraphPanel.Invalidate();
 					}
 					break;
@@ -819,7 +819,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 						System.Collections.ArrayList ListeNoeuds = new System.Collections.ArrayList();
 						foreach ( SimWaypoint N in G.Nodes )
 						{
-							if ( Zone.Contains(new Point((int)N.DX, (int)N.DY)) )
+							if ( Zone.Contains(new Point((int)(N.DX*DSCALE), (int)(N.DY*DSCALE))) )
 							{
 								TestAEtoile(N, ref Invalide);
 								Invalide.Union( Boite(N.Molecule) );
@@ -1269,7 +1269,7 @@ with the respective left and right mouse buttons.", "Impossible action", Message
 		static private void DessinerNoeud(Graphics Grfx, Pen P, SimWaypoint N)
 		{
 			if ( N==null ) return;
-			Grfx.DrawEllipse(P, (int)N.DX-Rayon, (int)N.DY-Rayon, 2*Rayon+1, 2*Rayon+1);
+			Grfx.DrawEllipse(P, (int)N.DX*DSCALE-Rayon, (int)N.DY*DSCALE-Rayon, 2*Rayon+1, 2*Rayon+1);
 		}
 
 		static private void DessinerArc(Graphics Grfx, Pen P, SimRoute A)
@@ -1280,20 +1280,20 @@ with the respective left and right mouse buttons.", "Impossible action", Message
 		static private void DessinerArc(Graphics Grfx, Pen P, SimWaypoint N1, SimWaypoint N2)
 		{
 			if ( N1==null || N2==null ) return;
-			Grfx.DrawLine(P, (int)N1.DX, (int)N1.DY, (int)N2.DX, (int)N2.DY);
+			Grfx.DrawLine(P, (int)N1.DX*DSCALE, (int)N1.DY*DSCALE, (int)N2.DX*DSCALE, (int)N2.DY*DSCALE);
 		}
 
 		static private void DessinerNoeudPlein(Graphics Grfx, Brush B, SimWaypoint N)
 		{
 			if ( N==null ) return;
-			Rectangle R = new Rectangle((int)N.DX-Rayon, (int)N.DY-Rayon, 2*Rayon+1, 2*Rayon+1);
+			Rectangle R = new Rectangle((int)(N.DX*DSCALE)-Rayon, (int)(N.DY*DSCALE)-Rayon, 2*Rayon+1, 2*Rayon+1);
 			Grfx.FillEllipse(B, R);
 		}
 
 		static private void DessinerNoeudMoitie(Graphics Grfx, Brush B, SimWaypoint N)
 		{
 			if ( N==null ) return;
-			Rectangle R = new Rectangle((int)N.DX-Rayon, (int)N.DY-Rayon, 2*Rayon+1, 2*Rayon+1);
+			Rectangle R = new Rectangle((int)(N.DX*DSCALE)-Rayon, (int)(N.DY*DSCALE)-Rayon, 2*Rayon+1, 2*Rayon+1);
 			Grfx.FillPie(B, R, 0, 180);
 		}
 
@@ -1319,7 +1319,7 @@ with the respective left and right mouse buttons.", "Impossible action", Message
 			{
 				double Angle = 2*i*AnglePortion;
 				if ( Numero==1 ) Angle += AnglePortion/2;
-				Pts[i] = new Point(1+(int)(N.DX+(Rayon+1)*Math.Cos(Angle)), 1+(int)(N.DY+(Rayon+1)*Math.Sin(Angle)));
+				Pts[i] = new Point(1+(int)(N.DX*DSCALE+(Rayon+1)*Math.Cos(Angle)), 1+(int)(N.DY*DSCALE+(Rayon+1)*Math.Sin(Angle)));
 			}
 			GraphicsPath GP = new GraphicsPath();
 			GP.AddLines(Pts);
@@ -1334,8 +1334,8 @@ with the respective left and right mouse buttons.", "Impossible action", Message
 			{
 				for ( int i=0; i<Pnts.Length; i++ )
 				{
-					Pnts[i].X = (int)C[i].DX;
-					Pnts[i].Y = (int)C[i].DY;
+					Pnts[i].X = (int)(C[i].DX*DSCALE);
+					Pnts[i].Y = (int)(C[i].DY*DSCALE);
 				}
 				Grfx.DrawCurve(P, Pnts);
 			}

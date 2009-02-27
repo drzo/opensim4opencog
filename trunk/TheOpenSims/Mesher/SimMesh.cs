@@ -30,15 +30,18 @@ namespace cogbot.TheOpenSims.Mesher
 
     public class SimMesh
     {
+        static bool UseExtremeDetail = true;
+        static bool UseViewerMode = false;
         public static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
      //   CollisionTest collider;
         List<Mesh> MeshList = new List<Mesh>();
         List<Triangle> TriangleList = new List<Triangle>();
         Vector3 Scale;
-        SimObject Object;
+        //SimObject Object;
        // Vector3 Position;
         bool IsSolid = false;
         OpenMetaverse.Quaternion Rotation;
+        string name;
         
         readonly Box3Fill OuterBox = new Box3Fill();
         List<Box3Fill> InnerBoxes = new List<Box3Fill>();
@@ -47,7 +50,7 @@ namespace cogbot.TheOpenSims.Mesher
         {
            // collider = new CollisionTest(IsInside);
             simObject.theMesh = this;
-            Object = simObject;
+            name = simObject.thePrim.ID.ToString();
             Update(simObject);
         }
 
@@ -56,8 +59,6 @@ namespace cogbot.TheOpenSims.Mesher
             Rotation = simObject.GetSimRotation();
             //Position = simObject.Parent.GetSimPosition();
             Scale = simObject.GetSimScale();
-            Object = simObject;
-
             MeshList.Clear();
 
             if (simObject.thePrim.PrimData.ProfileHollow == 0.0f)
@@ -67,14 +68,14 @@ namespace cogbot.TheOpenSims.Mesher
 
             PrimMesh primMesh;
 
-            if (false)
-            {
+            //if (false)
+            //{
 
-                // Add Low PrimMesh (IdealistViewer code)
-                primMesh = PrimitiveToPrimMesh(simObject.thePrim, LevelOfDetail.Low, Scale, Rotation);
-                AddMesh(primMesh);
+            //    // Add Low PrimMesh (IdealistViewer code)
+            //    primMesh = PrimitiveToPrimMesh(simObject.thePrim, LevelOfDetail.Low, Scale, Rotation);
+            //    AddMesh(primMesh);
 
-            }
+            //}
 
             // Add High PrimMesh (IdealistViewer code)
             primMesh = PrimitiveToPrimMesh(simObject.thePrim, LevelOfDetail.High, Scale, Rotation);
@@ -145,7 +146,7 @@ namespace cogbot.TheOpenSims.Mesher
             {
                 if (M.primMesh != null)
                 {
-                    String name = "primMesh" + Object.thePrim.LocalID + "_" + index++;
+                    //String name = "primMesh" + Object.thePrim.LocalID + "_" + index++;
                     MI += "\n Mesh: "+name+" \n" + M.primMesh.ParamsToDisplayString();
                     M.primMesh.DumpRaw(".",name,"primMesher"+index);
                 }
@@ -460,8 +461,13 @@ namespace cogbot.TheOpenSims.Mesher
             else if ((HoleType)primData.ProfileHole == HoleType.Triangle)
                 hollowsides = 3;
 
+            if (UseExtremeDetail)
+            {
+                sides *= 2;
+                hollowsides *= 2;
+            }
             PrimMesh newPrim = new PrimMesh(sides, profileBegin, profileEnd, (float)primData.ProfileHollow, hollowsides);
-            newPrim.viewerMode = true;
+            newPrim.viewerMode = UseViewerMode;
             newPrim.holeSizeX = primData.PathScaleX;
             newPrim.holeSizeY = primData.PathScaleY;
             newPrim.pathCutBegin = primData.PathBegin;
@@ -484,6 +490,10 @@ namespace cogbot.TheOpenSims.Mesher
                     break;
             }
 
+            if (UseExtremeDetail)
+            {
+                newPrim.stepsPerRevolution *= 2;
+            }
             
 
             if (primData.PathCurve == PathCurve.Line)
@@ -503,19 +513,22 @@ namespace cogbot.TheOpenSims.Mesher
                 newPrim.ExtrudeCircular();
             }
 
-            int numViewerFaces = newPrim.viewerFaces.Count;
 
-            for (uint i = 0; i < numViewerFaces; i++)
+            if (UseViewerMode)
             {
-                ViewerFace vf = newPrim.viewerFaces[(int)i];
-
-                if (isSphere)
+                int numViewerFaces = newPrim.viewerFaces.Count;
+                for (uint i = 0; i < numViewerFaces; i++)
                 {
-                    vf.uv1.U = (vf.uv1.U - 0.5f) * 2.0f;
-                    vf.uv2.U = (vf.uv2.U - 0.5f) * 2.0f;
-                    vf.uv3.U = (vf.uv3.U - 0.5f) * 2.0f;
+                    ViewerFace vf = newPrim.viewerFaces[(int)i];
+
+                    if (isSphere)
+                    {
+                        vf.uv1.U = (vf.uv1.U - 0.5f) * 2.0f;
+                        vf.uv2.U = (vf.uv2.U - 0.5f) * 2.0f;
+                        vf.uv3.U = (vf.uv3.U - 0.5f) * 2.0f;
+                    }
                 }
-            }            
+            }
             return newPrim;
         }
 

@@ -111,6 +111,20 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             BtnPause.Enabled    = false;
         }
 
+
+        private delegate void ShowDelegate();
+        public new void Show()
+        {
+            if (this.InvokeRequired)
+            {
+                Invoke(new ShowDelegate(Show), new object[] { });
+                return;
+            }
+            base.Show();
+        }
+
+
+
         private delegate void UpdateTimeLabelDelegate(double time);
         private void UpdateTimeLabel(double time)
         {
