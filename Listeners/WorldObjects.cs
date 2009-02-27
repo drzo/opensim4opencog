@@ -42,8 +42,8 @@ namespace cogbot.Listeners
         Dictionary<Avatar, UUID> avatarAminCurrent = new Dictionary<Avatar, UUID>();
         //Dictionary<uint, uint> selectedPrims = new Dictionary<uint, uint>();
         //Dictionary<UUID, UUID> texturesFinished = new Dictionary<UUID, UUID>();
-        List<uint> primsAwaitingSelect = new List<uint>();
-        List<uint> primsSelectedOnce = new List<uint>();
+        static List<uint> primsAwaitingSelect = new List<uint>();
+        static List<uint> primsSelectedOnce = new List<uint>();
 
         public SimAvatar TheSimAvatar
         {
@@ -57,6 +57,7 @@ namespace cogbot.Listeners
                 return m_TheSimAvatar;
             }
         }
+
         public SimAvatar m_TheSimAvatar;
         internal void SetSimAvatar(SimAvatar simAvatar)
         {
@@ -65,13 +66,59 @@ namespace cogbot.Listeners
 
         static public ListAsSet<SimAvatar> SimAvatars = new ListAsSet<SimAvatar>();
         public SimPathStore SimPaths = SimPathStore.Instance;
-        internal static void AddTracking(SimAvatar simAvatar, BotClient Client)
+
+        static Thread TrackPathsThread;
+        static public Queue<SimObject> UpdateMeQueue = new Queue<SimObject>();
+        internal void AddTracking(SimObject simObject)
         {
+            if (true) return;
+            lock (UpdateMeQueue)
+                if (TrackPathsThread == null)
+                {
+                    TrackPathsThread = new Thread(new ThreadStart(TrackPaths));
+                    TrackPathsThread.Name = "TrackPathsThread";
+                    TrackPathsThread.Priority = ThreadPriority.Lowest;
+                    TrackPathsThread.Start();
+                }
+            //lock (UpdateMeQueue)
+            //{
+            //    UpdateMeQueue.Enqueue(simObject);
+            //}
+            //    if (!SimObjectsPathUpdates.Contains*() SimObjectsPathUpdates.Add(simObject);
+
             //  Client.Objects.OnObjectUpdated += Objects_OnObjectUpdated;
             //throw new Exception("The method or operation is not implemented.");
         }
+        static void TrackPaths()
+        {
+            int lastCount = 0;
+            while (true)
+            {
+                Thread.Sleep(10000);
 
-        ListAsSet<SimObject> SimObjects = new ListAsSet<SimObject>();
+                int thisCount = SimObjects.Count;
+                if (thisCount == lastCount) continue;
+                lastCount = thisCount;
+                //List<SimObject> DoNow = new List<SimObject>();
+
+                //lock (UpdateMeQueue)
+                //{
+                //    if (UpdateMeQueue.Count == 0) continue;
+                //    while (UpdateMeQueue.Count > 0)
+                //    {
+                //        DoNow.Add(UpdateMeQueue.Dequeue());
+                //    }
+                //}
+
+                foreach (SimObject O in SimObjects)
+                {
+                    O.UpdatePaths(SimPathStore.Instance);
+                }
+            }
+        }
+
+        // these will be shared between Clients
+        static ListAsSet<SimObject> SimObjects = new ListAsSet<SimObject>();
 
         //public static BotRegionModel BotWorld = null;
         //        TheBotsInspector inspector = new TheBotsInspector();
@@ -93,7 +140,7 @@ namespace cogbot.Listeners
 
 
 
-        Dictionary<uint, SimObject> LocalIdToSimObject = new Dictionary<uint, SimObject>();
+        static Dictionary<uint, SimObject> LocalIdToSimObject = new Dictionary<uint, SimObject>();
 
         public SimObject GetSimObject(Primitive prim)
         {
@@ -136,10 +183,15 @@ namespace cogbot.Listeners
         //    return obj0;
         //}
 
+        static WorldObjects Master;
+        public bool IsWorldMaster() {
+            return Master == this;
+        }
 
         public WorldObjects(BotClient client)
             : base(client)
         {
+            if (Master == null) Master = this;
           //  miniMap = new OpenMetaverse.GUI.MiniMap(client);
             //	client.Self.OnMeanCollision += new AgentManager.MeanCollisionCallback(Self_OnMeanCollision);
 
@@ -155,6 +207,8 @@ namespace cogbot.Listeners
             //objectHeuristics.Add(new ObjectHeuristic(nameLengthHeuristic));
             objectHeuristics.Add(new ObjectHeuristic(boringNamesHeuristic));
 
+            client.Settings.SIMULATOR_TIMEOUT = 3 * 60000;
+            client.Settings.CAPS_TIMEOUT = 3 * 60000;
             /*
                         client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
                         client.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
@@ -195,19 +249,23 @@ namespace cogbot.Listeners
                 //BotWorld = this;
                 SimTypeSystem.LoadDefaultTypes();
 
-                if (client.Network.CurrentSim != null)
+                if (IsWorldMaster())
                 {
-                    CatchUp(client.Network.CurrentSim);
-                }
-                else
-                {
-                    client.Network.OnLogin += delegate(LoginStatus login, string message)
+                    if (client.Network.CurrentSim != null)
                     {
-                        if (login == LoginStatus.Success)
-                            CatchUp(GetSimulator());
-                    };
+                        CatchUp(client.Network.CurrentSim);
+                    }
+                    else
+                    {
+                        client.Network.OnLogin += delegate(LoginStatus login, string message)
+                        {
+                            if (login == LoginStatus.Success)
+                                CatchUp(GetSimulator());
+                        };
+                    }
                 }
             }
+            if (IsWorldMaster()) RegisterAll();
         }
 
 
@@ -466,6 +524,7 @@ namespace cogbot.Listeners
 
         public override void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
         {
+            if (!IsWorldMaster()) return;
             lock (primsAwaitingSelect)
             {
                 //lock (prim)                   prims.Add(prim.LocalID, prim.ID, prim);
@@ -492,6 +551,7 @@ namespace cogbot.Listeners
         }
         private void Objects_OnObjectProperties1(Simulator simulator, Primitive.ObjectProperties props)
         {
+            if (!IsWorldMaster()) return;
             Primitive prim = GetPrimitive(props.ObjectID);
             if (prim != null)
             {
@@ -535,6 +595,7 @@ namespace cogbot.Listeners
         }
         private void Objects_OnNewAvatar1(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
         {
+            if (!IsWorldMaster()) return;
             //lock (prims)
             //GetSimAvatar(avatar);
             // prims.Add(avatar.LocalID, avatar.ID, avatar);
@@ -639,6 +700,7 @@ namespace cogbot.Listeners
 
         private void Objects_OnObjectUpdated1(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
         {
+            if (!IsWorldMaster()) return;
             Primitive objectUpdated = GetPrimitive(update.LocalID);
             //Console.WriteLine("timeDilation " + timeDilation);
 
@@ -647,6 +709,7 @@ namespace cogbot.Listeners
                 lock (objectUpdated)
                 {
                     SimObject simObject = GetSimObject(objectUpdated);
+                    AddTracking(simObject);
                     if (update.Avatar)
                     {
                         //   if (false)

@@ -33,7 +33,7 @@ namespace cogbot.TheOpenSims.Navigation
     public class SimPathStore
     {
         public static bool OtherPathFinder = true;
-        public float POINTS_PER_METER = 4f;
+        public float POINTS_PER_METER = 8f;
         public float LargeScale = 1f;//StepSize;//0.2f;
         public float SimZLevel = 22.25f;
         public float SimZHieght = 1f;
@@ -138,15 +138,10 @@ namespace cogbot.TheOpenSims.Navigation
         {
             int ix = ARRAY_IDX(RangeCheck(x));
             int iy = ARRAY_IDX(RangeCheck(y));
-            SimWaypoint W = mWaypoints[ix, iy];
-            if (W == null)
+
+            SimWaypoint W = Waypoint(ix, iy);
+            if (W.AddOccupied(simObject))
             {
-                W = SimWaypoint.Create(x, y, SimZLevel, this);
-                mWaypoints[ix, iy] = W;
-            }
-            if (!W.OccupiedList.Contains(simObject))
-            {
-                W.OccupiedList.Add(simObject);
                 if (mMatrix[ix, iy] > 9)
                 {
                     {
@@ -185,8 +180,9 @@ namespace cogbot.TheOpenSims.Navigation
 
 
 
-        public void SetBlocked(float x, float y)
+        public void SetBlocked(float x, float y, SimObject blocker)
         {
+            SetObjectAt(x, y, blocker);
             //SetObjectAt(x, y, obj);
             x = RangeCheck(x); y = RangeCheck(y);
             if (OtherPathFinder)
@@ -197,10 +193,10 @@ namespace cogbot.TheOpenSims.Navigation
                 // if was set Passable dont block
                 if (mMatrix[ix, iy] == 2)
                 {
-                    return;
+                  //  return;
                 }
                 mMatrix[ix, iy] = 0;
-                SetBubbleBlock(ix, iy);
+                SetBubbleBlock(ix, iy, blocker);
                 //PathFinder.SetBlocked(ix, iy + 1);
                 // PathFinder.SetBlocked(ix, iy - 1);
                 // PathFinder.SetWieght(ix + 1, iy, 1.5);
@@ -234,20 +230,31 @@ namespace cogbot.TheOpenSims.Navigation
                 }
         }
 
-        private void SetBubbleBlock(int ix, int iy)
+        private void SetBubbleBlock(int ix, int iy, SimObject blocker)
         {
-            int TWO =(int)Math.Round( POINTS_PER_METER / 2);
+            int TWO = (int)Math.Round(POINTS_PER_METER / 2);
             if (ix > TWO && iy > TWO && ix < MAPSPACE - TWO && iy < MAPSPACE - TWO)
             {
                 for (int x = ix - TWO; x < ix + TWO; x++)
                 {
                     for (int y = iy - TWO; y < iy + TWO; y++)
                     {
-                        if (x != ix && y != iy)
+                        if (x != ix || y != iy)
                         {
-                            //if (mMatrix[x, y] != 0)
+                            if (mMatrix[x, y] != 0)
                             {
-                                mMatrix[x, y] = (byte)(mMatrix[x, y] * 2);
+                                if (blocker != null)
+                                {
+                                    SimWaypoint W = Waypoint(x, y);
+                                    if (W.AddShadow(blocker) > 1)
+                                    {
+                                        mMatrix[x, y] = 0;
+                                    }
+                                    else
+                                    {
+                                        mMatrix[x, y] = (byte)(mMatrix[x, y] * 2);
+                                    }
+                                }
                             }
                         }
                     }
@@ -327,7 +334,10 @@ namespace cogbot.TheOpenSims.Navigation
             //CreateDefaultRoutes();
             for (int y = 0; y < mMatrix.GetUpperBound(1); y++)
                 for (int x = 0; x < mMatrix.GetUpperBound(0); x++)
+                {
                     mMatrix[x, y] = 10;
+                  //  mWaypoints[x, y] = SimWaypoint.Create(x / POINTS_PER_METER, y / POINTS_PER_METER, SimZLevel, this);
+                }
             LoadFromFile();
             //PathFinder.Show();
         }
@@ -430,10 +440,15 @@ namespace cogbot.TheOpenSims.Navigation
             y = RangeCheck(y);
             int ix = ARRAY_IDX(x);
             int iy = ARRAY_IDX(y);
+            return Waypoint(ix,iy);
+        }
+
+        private SimWaypoint Waypoint(int ix, int iy)
+        {
             SimWaypoint wp = mWaypoints[ix, iy];
             if (wp == null)
             {
-                wp = SimWaypoint.Create(x, y, SimZLevel, this);
+                wp = SimWaypoint.Create(ix/POINTS_PER_METER, iy/POINTS_PER_METER, SimZLevel, this);
                 SimWaypoints.Add(wp);
                 mWaypoints[ix, iy] = wp;
             }
@@ -757,12 +772,18 @@ namespace cogbot.TheOpenSims.Navigation
         bool PunishChangeDirection;
         public IList<Vector3> GetV3Route(Vector3 start, Vector3 end)
         {
+            if (!IsPassable(start))
+            {
+                throw new ArgumentException("start is not passable: " + start);
+            }
+            if (!IsPassable(end))
+            {
+                throw new ArgumentException("end is not passable: " + start);
+            }
             PunishChangeDirection = !PunishChangeDirection;    //toggle each time
             Point S = ToPoint(start);
             Point E = ToPoint(end);
             PathFinderFast pff = new PathFinderFast(mMatrix);
-            SetPassable(start.X, start.Y);
-            SetPassable(end.X, end.Y);
             PathFinder.SetStartEnd(S, E);
             //pff.ReopenCloseNodes = true;
             pff.SearchLimit = 10000000;
@@ -777,6 +798,15 @@ namespace cogbot.TheOpenSims.Navigation
             }
             PathFinder.ShowPath(pfn);
             return PathfinderNodesToV3s(pfn);
+        }
+
+        private bool IsPassable(Vector3 end)
+        {
+            float Dist;
+            if (GetNodeQuality(end) == 0) return false;
+            if (true) return true;
+            SimWaypoint W = ClosestNode(end.X, end.Y, end.Z, out Dist, true);
+            return W.Passable;
         }
 
         private IList<Vector3> PathfinderNodesToV3s(List<PathFinderNode> pfn)
@@ -1437,7 +1467,7 @@ namespace cogbot.TheOpenSims.Navigation
             Bitmap e = EdgeDetection(edges, 34f, delegate(int x, int y)
             {
                 edges.SetPixel(x, y, Color.Yellow);
-                SetBlocked((float)x, (float)y);
+                SetBlocked((float)x, (float)y,null);
             });
             Debug("END Edge detection");
             new DisplayImage("Clone", e).Activate();

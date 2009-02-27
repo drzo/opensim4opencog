@@ -14,37 +14,36 @@ namespace cogbot.TheOpenSims.Navigation
     /// </summary>
     [Serializable]
     public class SimWaypoint : SimPosition
-    {
+    {      
+        public byte GetMatrix()
+        {
+            return PathStore.mMatrix[PX, PY];
+        }
 
-        //Point _Point = Point.Empty;
+        public void SetMatrix(byte v)
+        {
+            PathStore.mMatrix[PX, PY] = v;
+        }
 
-        //public int PointX
-        //{
-        //    get { return Point.X; }
-        //}
-        //public int PointY
-        //{
-        //    get { return Point.Y; }
-        //}
+        internal int AddShadow(SimObject blocker)
+        {
+            IList ShadowList = OccupiedList;
+            if (!ShadowList.Contains(blocker))
+            {
+                ShadowList.Add(blocker);
+            }
+            return ShadowList.Count;
+        }
 
-        //public void UpdateMatrix(byte[,] matrix)
-        //{
-        //    matrix[PointX, PointY] =(byte)( Passable ? 0 : 255);
-        //}
+        internal bool AddOccupied(SimObject simObject)
+        {
+            if (OccupiedList.Contains(simObject)) return false;
+            OccupiedList.Add(simObject);
+            return true;
+        }
 
-        //public Point Point
-        //{
-        //    get
-        //    {
-        //        if (_Point == Point.Empty)
-        //        {
-        //            _Point = new Point((int)(Math.Round(_Position.X, 0)), (int)(Math.Round(_Position.Y * 4, 0)));
-        //        }
-        //        return _Point;
-        //    }
-        //}
-
-        public IList OccupiedList = new List<SimObject>();
+       // private IList ShadowList = new List<SimObject>();
+        internal IList OccupiedList = new List<SimObject>();
 
         public bool NoObjectsBlock()
         {
@@ -78,11 +77,11 @@ namespace cogbot.TheOpenSims.Navigation
 
         public bool IsRegionAttached()
         {
-            return true;
+            return PathStore!=null;
         }
          
         Vector3 _Position;
-        bool _Passable;
+        bool _Passable = true;
         ArrayList _IncomingArcs, _OutgoingArcs;
 
         /// <summary>
@@ -120,31 +119,42 @@ namespace cogbot.TheOpenSims.Navigation
                 foreach (SimRoute A in _IncomingArcs) A.Passable = value;
                 foreach (SimRoute A in _OutgoingArcs) A.Passable = value;
                 _Passable = value;
+                SetMatrix((byte)(value ? 2 : 0));
             }
             get
             {
                 if (!_Passable) return false;
                 foreach (SimRoute A in _IncomingArcs) if (A.Passable) return true;
-                foreach (SimRoute A in _OutgoingArcs) if (A.Passable) return true; 
-                return false;
-                //return _Passable;
+                foreach (SimRoute A in _OutgoingArcs) if (A.Passable) return true;
+                return GetMatrix() != 0;
             }
         }
 
         /// <summary>
         /// Gets X coordinate.
         /// </summary>
-        public double X { get { return Position.X * GraphFormer.DSCALE; } }
+        public int PX { get { return (int)Math.Round(Position.X * PathStore.POINTS_PER_METER); } }
 
         /// <summary>
         /// Gets Y coordinate.
         /// </summary>
-        public double Y { get { return Position.Y * GraphFormer.DSCALE; } }
+        public int PY { get { return (int)Math.Round(Position.Y * PathStore.POINTS_PER_METER); } }
+
+
+        /// <summary>
+        /// Gets X coordinate.
+        /// </summary>
+        public double DX { get { return Position.X * GraphFormer.DSCALE; } }
+
+        /// <summary>
+        /// Gets Y coordinate.
+        /// </summary>
+        public double DY { get { return Position.Y * GraphFormer.DSCALE; } }
 
         /// <summary>
         /// Gets Z coordinate.
         /// </summary>
-        public double Z { get { return Position.Z * GraphFormer.DSCALE; } }
+        public double DZ { get { return Position.Z * GraphFormer.DSCALE; } }
 
         /// <summary>
         /// Modifies X, Y and Z coordinates
@@ -316,7 +326,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <returns>The reference of the new object.</returns>
         public object Clone()
         {
-            SimWaypoint N = new SimWaypoint(_Position);
+            SimWaypoint N = new SimWaypoint(_Position, PathStore);
             N._Passable = _Passable;
             return N;
         }
@@ -445,9 +455,11 @@ namespace cogbot.TheOpenSims.Navigation
         //    return new Vector3d(v3.X, v3.Y, v3.Z);
         //}
 
-        private SimWaypoint(Vector3 firstP)
+        SimPathStore PathStore;
+        private SimWaypoint(Vector3 firstP, SimPathStore pathStore)
         {
             _Position = firstP;// RoundPoint(firstP, PathStore);
+            PathStore = pathStore;
         }
 
         //protected Vector3 _Position;
@@ -470,7 +482,7 @@ namespace cogbot.TheOpenSims.Navigation
             {
                 return InternedPoints[rounded];
             }
-            SimWaypoint wp = new SimWaypoint(rounded);
+            SimWaypoint wp = new SimWaypoint(rounded,PathStore);
             wp._Passable = true;
             wp._IncomingArcs = new ArrayList();
             wp._OutgoingArcs = new ArrayList();
@@ -544,7 +556,6 @@ namespace cogbot.TheOpenSims.Navigation
         {
             return Vector3.Distance(P, _Position);
         }
-
 
     }
 

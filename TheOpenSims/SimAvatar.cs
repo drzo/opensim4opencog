@@ -1000,16 +1000,17 @@ namespace cogbot.TheOpenSims
         public bool GotoTarget(SimPosition pos) {
 
 
-            if (AutoGoto(pos.GetSimPosition(), pos.GetSizeDistance(), 2000))
-            {
-                Debug("EASY GotoTarget: " + pos);
-                return true;
-            }
+
             if (SimPathStore.OtherPathFinder)
             {
                 return GotoSimVector(pos.GetUsePosition(), pos.GetSizeDistance());
             }
 
+            if (AutoGoto(pos.GetSimPosition(), pos.GetSizeDistance(), 2000))
+            {
+                Debug("EASY GotoTarget: " + pos);
+                return true;
+            }
             bool IsFake;
             for (int i = 0; i < 19; i++)
             {
@@ -1055,10 +1056,10 @@ namespace cogbot.TheOpenSims
             for (int trial = 0; trial < 25; trial++)
             {
                 StopMoving();
-                Application.DoEvents();
-                bool failed = false;
-                Vector3 start = GetSimPosition();
+                Application.DoEvents();             
+                Vector3 start = GetUsePosition();
                 Vector3 end = vector3;
+                
 
                 List<Vector3> v3s =(List<Vector3>) WorldSystem.SimPaths.GetV3Route(start, end);
                 if (v3s.Count > 1)
