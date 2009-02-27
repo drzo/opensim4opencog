@@ -120,6 +120,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                 Invoke(new ShowDelegate(Show), new object[] { });
                 return;
             }
+            Thread.Sleep(1000);
             base.Show();
         }
 
