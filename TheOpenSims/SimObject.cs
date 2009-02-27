@@ -332,6 +332,7 @@ namespace cogbot.TheOpenSims
 
         public void UpdateObject(ObjectUpdate objectUpdate, ObjectUpdate objectUpdateDiff)
         {
+            UpdatePaths(WorldSystem.SimPaths);
             _TOSRTING = null;
         }
 

@@ -20,9 +20,26 @@ namespace cogbot.TheOpenSims.Navigation
             return PathStore.mMatrix[PX, PY];
         }
 
-        public void SetMatrix(byte v)
+        public void SetMatrix(int v)
         {
-            PathStore.mMatrix[PX, PY] = v;
+            if (v < 0) v = 0; else if (v > 255) v = 255;
+            PathStore.mMatrix[PX, PY] = (byte)v;
+        }
+
+        public void UpdateMatrix()
+        {
+            bool IsBlocked = false;
+            bool WasBlocked = GetMatrix()==0;
+            foreach (SimObject O in OccupiedList)
+            {
+                if (!O.IsPassable) IsBlocked = true;
+            }
+            if (WasBlocked && !IsBlocked)
+            {
+                SetMatrix(2 + OccupiedList.Count * 2);
+                return;
+            }
+            else if (!WasBlocked && IsBlocked) SetMatrix(0);
         }
 
         internal int AddShadow(SimObject blocker)
@@ -131,30 +148,30 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
         /// <summary>
-        /// Gets X coordinate.
+        /// Gets Point.X coordinate on the PathStore.
         /// </summary>
-        public int PX { get { return (int)Math.Round(Position.X * PathStore.POINTS_PER_METER); } }
+        readonly public int PX;// { get { return (int)Math.Round(Position.X * PathStore.POINTS_PER_METER); } }
 
         /// <summary>
-        /// Gets Y coordinate.
+        /// Gets Point.Y coordinate on the PathStore.
         /// </summary>
-        public int PY { get { return (int)Math.Round(Position.Y * PathStore.POINTS_PER_METER); } }
+        readonly public int PY;// { get { return (int)Math.Round(Position.Y * PathStore.POINTS_PER_METER); } }
 
 
         /// <summary>
-        /// Gets X coordinate.
+        /// Gets X coordinate on the Graph debugger.
         /// </summary>
-        public double DX { get { return Position.X * GraphFormer.DSCALE; } }
+        public double DX { get { return Position.X; } }
 
         /// <summary>
-        /// Gets Y coordinate.
+        /// Gets Y coordinate on the Graph debugger
         /// </summary>
-        public double DY { get { return Position.Y * GraphFormer.DSCALE; } }
+        public double DY { get { return Position.Y; } }
 
         /// <summary>
         /// Gets Z coordinate.
         /// </summary>
-        public double DZ { get { return Position.Z * GraphFormer.DSCALE; } }
+        ///public double DZ { get { return Position.Z; } }
 
         /// <summary>
         /// Modifies X, Y and Z coordinates
@@ -458,8 +475,10 @@ namespace cogbot.TheOpenSims.Navigation
         SimPathStore PathStore;
         private SimWaypoint(Vector3 firstP, SimPathStore pathStore)
         {
-            _Position = firstP;// RoundPoint(firstP, PathStore);
             PathStore = pathStore;
+            _Position = firstP;// RoundPoint(firstP, PathStore);
+            PX = (int)Math.Round(firstP.X * PathStore.POINTS_PER_METER);
+            PY = (int)Math.Round(firstP.Y * PathStore.POINTS_PER_METER);
         }
 
         //protected Vector3 _Position;

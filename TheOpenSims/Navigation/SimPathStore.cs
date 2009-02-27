@@ -39,8 +39,8 @@ namespace cogbot.TheOpenSims.Navigation
         public float SimZHieght = 1f;
         public float SimZMaxLevel = 23.25f;
 
-        static float PI2 = (float)(Math.PI * 2f);
-        static float RAD2DEG = 360f / PI2;
+        public static float PI2 = (float)(Math.PI * 2f);
+        public static float RAD2DEG = 360f / PI2;
 
         public float StepSize;// = 1f / POINTS_PER_METER;
         public int MAPSPACE;// = 256 * ((int)POINTS_PER_METER);
@@ -800,11 +800,11 @@ namespace cogbot.TheOpenSims.Navigation
             return PathfinderNodesToV3s(pfn);
         }
 
-        private bool IsPassable(Vector3 end)
+        public bool IsPassable(Vector3 end)
         {
             float Dist;
             if (GetNodeQuality(end) == 0) return false;
-            if (true) return true;
+           // if (true) return true;
             SimWaypoint W = ClosestNode(end.X, end.Y, end.Z, out Dist, true);
             return W.Passable;
         }
@@ -1428,7 +1428,7 @@ namespace cogbot.TheOpenSims.Navigation
         public SimWaypoint CreateClosestWaypointBoxHistorical(Vector3 v3, float radius, int numPoints, float Weight)
         {
             SimWaypoint node = SimWaypoint.Create(v3, this);
-            double radiansStep = Math.PI * 2 / numPoints;
+            double radiansStep = PI2 / numPoints;
             SimWaypoint Last = node;
             Dictionary<SimWaypoint, List<SimWaypoint>> newWaypoints = new Dictionary<SimWaypoint, List<SimWaypoint>>();
             for (int Step = 0; Step < numPoints; Step++)
