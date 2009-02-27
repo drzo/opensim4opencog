@@ -81,7 +81,7 @@ namespace cogbot.TheOpenSims
         SimWaypoint swp;
         public virtual SimWaypoint GetWaypoint()
         {
-            Vector3 v3 = GetSimPosition();
+            Vector3 v3 = GetUsePosition();
             if (swp == null || !swp.Passable)
             {
                 swp = WorldSystem.SimPaths.CreateClosestWaypoint(v3);//, GetSizeDistance() + 1, 7, 1.0f);
@@ -536,6 +536,7 @@ namespace cogbot.TheOpenSims
             }
             return theLPos;
         }
+
         public bool BadLocation(Vector3 theLPos)
         {
             if (theLPos.Z < -2.0f) return true;
@@ -595,16 +596,16 @@ namespace cogbot.TheOpenSims
                     if (b > 0) return v3;
                 }
             }
+            Debug("Clearing area");
             for (float distance = 0; distance < useDist*1.5; distance += 0.25f)
             {
                 for (int dir = 0; dir < 360; dir += 15)
-                {
-                   
+                {                   
                      v3 = GetLeftPos(dir, distance);
                      b = WorldSystem.SimPaths.GetNodeQuality(v3);
                      if (b == 0)
                      {
-                         WorldSystem.SimPaths.SetPassable(v3.X, v3.Y);
+                        WorldSystem.SimPaths.SetPassable(v3.X, v3.Y);
                      }
                 }
             }
@@ -619,7 +620,8 @@ namespace cogbot.TheOpenSims
         /// <returns></returns>
         public Vector3 GetLeftPos(int zAngleFromFace, float distance)
         {
-            float DEG2RAD = 57.29577951f;
+            float RAD_TO_DEG = 57.29577951f;
+            float Pi2 = (float)(Math.PI * 2.0);
 
             while (zAngleFromFace > 360)
             {
@@ -630,24 +632,23 @@ namespace cogbot.TheOpenSims
                 zAngleFromFace += 360;
             }
 
-            float radAngle = zAngleFromFace / DEG2RAD;
+            float radAngle = zAngleFromFace / RAD_TO_DEG;
 
 
-            Quaternion r = GetSimRotation();
-            r.Normalize();
+            Quaternion rot = GetSimRotation();
+            rot.Normalize();
             float rx, ry, rz;
-            r.GetEulerAngles(out rx, out rz, out ry);
-            if (rx != 0f || ry != 0f)
-            {
-                Debug("180 Eulers:  {0} {1} {2}", rx * DEG2RAD, ry * DEG2RAD, rz * DEG2RAD);
-            }
-            else
-            {
-                Debug("Current Eulers:  {0} {1} {2}", rx * DEG2RAD, ry * DEG2RAD, rz * DEG2RAD);
-            }
+            rot.GetEulerAngles(out rx, out rz, out ry);
+            //if (rx != 0f || ry != 0f)
+            //{
+            //    Debug("180 Eulers:  {0} {1} {2}", rx * RAD_TO_DEG, ry * RAD_TO_DEG, rz * RAD_TO_DEG);
+            //}
+            //else
+            //{
+            //    Debug("Current Eulers:  {0} {1} {2}", rx * RAD_TO_DEG, ry * RAD_TO_DEG, rz * RAD_TO_DEG);
+            //}
             float az = rz + radAngle;
             
-            float Pi2 = (float)(Math.PI * 2.0);
 
             while (az < 0)
             {
@@ -838,7 +839,7 @@ namespace cogbot.TheOpenSims
         {
             if (!IsRegionAttached())
             {
-                Debug("!IsRegionAttached");
+                //Debug("!IsRegionAttached");
                 return;
             }
             // if (IsPassable) return;
@@ -864,21 +865,23 @@ namespace cogbot.TheOpenSims
 
         public void SetBlocked(float x, float y)
         {
-            SetLocated(x, y);
-            WorldSystem.SimPaths.SetBlocked(x, y);
+            WorldSystem.SimPaths.SetBlocked(x, y,this);
         }
 
-        private void ForceUpdatePaths(SimPathStore simPathStore)
+        internal void ForceUpdatePaths(SimPathStore simPathStore)
         {
+            if (!IsRegionAttached()) return;
             if (theMesh == null) theMesh = new SimMesh(this);
             float SimZLevel = simPathStore.SimZLevel;
             float SimZMaxLevel = simPathStore.SimZMaxLevel;
             Vector3 Position = GetSimPosition();
-            if (IsTypeOf(SimTypeSystem.DOOR) != null)
-            {
-                theMesh.SetOccupied(SetPassable, SimZLevel, SimZMaxLevel, Position, simPathStore.StepSize);
-                return;
-            }
+            //Console.WriteLine("ForceUpdatePaths: "+this);
+            // Commented because doors should not "attract"
+            //if (IsTypeOf(SimTypeSystem.DOOR) != null)
+            //{
+            //    theMesh.SetOccupied(SetPassable, SimZLevel, SimZMaxLevel, Position, simPathStore.StepSize);
+            //    return;
+            //}
             if (IsPassable)
             {
                 theMesh.SetOccupied(SetLocated, 10, 33, Position, simPathStore.StepSize);

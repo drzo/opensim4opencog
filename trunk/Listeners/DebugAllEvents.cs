@@ -9,6 +9,8 @@ namespace cogbot.Listeners
         public DebugAllEvents(BotClient bc)
             : base(bc)
         {
+           // the subclass must now run this
+            if (this.GetType()==typeof(DebugAllEvents))
             RegisterAll();
         }
 
