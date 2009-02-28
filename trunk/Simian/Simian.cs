@@ -10,6 +10,7 @@ using System.Security.Cryptography.X509Certificates;
 using ExtensionLoader;
 using ExtensionLoader.Config;
 using HttpServer;
+using HttpListener = HttpServer.HttpListener;
 using OpenMetaverse;
 using OpenMetaverse.Http;
 
@@ -20,12 +21,12 @@ namespace Simian
         public const string CONFIG_FILE = "Simian.ini";
         public const string DATA_DIR = "SimianData/";
 
-        public int UDPPort { get { return 19000; } }
-        public int HttpPort { get { return 18002; } }
+        public int UDPPort { get { return 9000; } }
+        public int HttpPort { get { return 8002; } }
         public bool SSL { get { return false; } }
         public string HostName { get { return Dns.GetHostName(); } }
 
-        public WebServer HttpServer;
+        public HttpListener HttpServer;
         public IniConfigSource ConfigFile;
 
         // Interfaces
@@ -42,7 +43,6 @@ namespace Simian
 
         // Persistent extensions
         public List<IPersistable> PersistentExtensions = new List<IPersistable>();
-        public GridClient periscopeClient;
 
         public Simian()
         {
@@ -66,8 +66,8 @@ namespace Simian
             }
 
             // TODO: SSL support
-            HttpServer = new WebServer(IPAddress.Any, HttpPort);
-            HttpServer.Start();
+            HttpServer = HttpListener.Create(log4netLogWriter.Instance, IPAddress.Any, HttpPort);
+            HttpServer.Start(10);
 
             try
             {

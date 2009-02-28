@@ -103,6 +103,7 @@ namespace cogbot
             groupActions = new Dictionary<string, Action>();
             groupActions["login"] = new Login(null);
 
+
             //   CurrentClient.Settings.LOGIN_SERVER = config.simURL;
             // extraSettings();
 
@@ -149,6 +150,7 @@ namespace cogbot
 
             //Client.Network.RegisterCallback(PacketType.AvatarAppearance, new NetworkManager.PacketCallback(AvatarAppearanceHandler));
             //Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(AlertMessageHandler));
+            RegisterBotSystemCommands(Assembly.GetExecutingAssembly());
             new Thread(new ThreadStart(delegate()
             {
                 if (config.startupLisp.Length > 1)
@@ -158,6 +160,33 @@ namespace cogbot
             })).Start();
         }
 
+        public void RegisterBotSystemCommands(Assembly assembly)
+        {
+            foreach (Type t in assembly.GetTypes())
+            {
+                try
+                {
+                    if (t.IsSubclassOf(typeof(Command)))
+                    {
+                        if (!typeof(BotSystemCommand).IsAssignableFrom(t)) continue;
+                        ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
+                        try
+                        {
+                            Command command = (Command)info.Invoke(new object[] { null });
+                            groupActions.Add(command.Name, command);
+                        }
+                        catch (Exception e)
+                        {
+                            output("RegisterBotSystemCommands: " + e.ToString() + "\n" + e.InnerException + "\n In " + t.Name);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    output(e.ToString());
+                }
+            }
+        }
         private LoginDetails GetDetailsFromConfig(Configuration config)
         {
             LoginDetails details = new LoginDetails();

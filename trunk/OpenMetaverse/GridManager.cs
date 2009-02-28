@@ -628,8 +628,40 @@ namespace OpenMetaverse
                     {
                         simulator.positionIndexPrey = i;
                     }
+                    /*
+                     * NEW CODE WILL BE
+                     
+                      simulator.avatarPositions.Add(
+                        coarse.AgentData[i].AgentID, 
+                        new Vector3(coarse.Location[i].X, coarse.Location[i].Y,
+                        coarse.Location[i].Z * 4));
+                     
+                     */
+
+                    /* 
+                     * OLD CODE WAS
+                     * 
+                     * 
                     simulator.avatarPositions.Add(new Vector3(coarse.Location[i].X, coarse.Location[i].Y,
                         coarse.Location[i].Z * 4));
+                     * */
+
+                    UUID AgentID;
+                    if (coarse.AgentData.Length > i)
+                    {
+                        AgentID = coarse.AgentData[i].AgentID;
+                    }
+                    else
+                    {
+                        //AgentID = Client.Self.AgentID;
+                        continue;
+                    }
+
+                    simulator.avatarPositions.Add(
+                          AgentID,
+                          new Vector3(coarse.Location[i].X, coarse.Location[i].Y,
+                          coarse.Location[i].Z * 4));
+                     
                 }
 
                 if (OnCoarseLocationUpdate != null)

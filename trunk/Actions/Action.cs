@@ -6,6 +6,12 @@ using OpenMetaverse; //using libsecondlife;
 
 namespace cogbot.Actions
 {
+    public interface BotMasterCommand
+    {
+    }
+    public interface BotSystemCommand
+    {
+    }
     abstract public class Action
     {
         /// <summary>
@@ -50,7 +56,7 @@ namespace cogbot.Actions
             get
             {
                 if (m_Client != null) return m_Client;
-                return m_Client;// TextForm.SingleInstance.CurrentClient;
+                return cogbot.Listeners.WorldObjects.Master.client;
             }
             set
             {
@@ -62,6 +68,7 @@ namespace cogbot.Actions
         {
             get
             {
+                if (m_Client == null) return cogbot.Listeners.WorldObjects.Master;                
                 return Client.WorldSystem;
             }
         }
@@ -88,7 +95,7 @@ namespace cogbot.Actions
         {
             String s = String.Format(format, arg);            
             Console.WriteLine(s);
-            Client.output(s);
+            if (Client!=null) Client.output(s);
         } // method: WriteLine
 
         public void acceptInputWrapper(string verb, string args)

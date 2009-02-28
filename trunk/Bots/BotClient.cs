@@ -119,7 +119,7 @@ namespace cogbot
 			updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(updateTimer_Elapsed);
 
 //            manager.AddTextFormCommands(this);
-			//          RegisterAllCommands(Assembly.GetExecutingAssembly());
+            //          RegisterAllCommands(Assembly.GetExecutingAssembly());
 
             Settings.LOG_LEVEL = Helpers.LogLevel.Info;
             Settings.LOG_RESENDS = false;
@@ -936,6 +936,7 @@ namespace cogbot
 			{
 				try {
 					if (t.IsSubclassOf(typeof(Command))) {
+                        if (typeof(BotSystemCommand).IsAssignableFrom(t)) continue;
 						ConstructorInfo info = t.GetConstructor(new Type[]{ typeof(BotClient)});
 						try {
 							Command command = (Command)info.Invoke(new object[]{ this});
