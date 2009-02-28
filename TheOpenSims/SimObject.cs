@@ -14,6 +14,32 @@ namespace cogbot.TheOpenSims
     //TheSims-like object
     public class SimObject : BotMentalAspect, SimPosition
     {
+        /// <summary>
+        /// Right now only sees if TouchName has been defined - need a relable way to see if script is defined
+        /// </summary>
+        public bool IsTouchDefined
+        {
+            get
+            {
+                if (thePrim.Properties != null)
+                    return !String.IsNullOrEmpty(thePrim.Properties.TouchName);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Right now only sees if SitName has been defined - need a relable way to see if script is defined
+        /// </summary>
+        public bool IsSitDefined
+        {
+            get
+            {
+                if (thePrim.Properties != null)
+                    return !String.IsNullOrEmpty(thePrim.Properties.SitName);
+                return false;
+            }
+        }
+
         public bool IsPassable
         {
             get
@@ -346,7 +372,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public virtual bool RestoreEnterable()
+        public virtual bool RestoreEnterable(SimAvatar actor)
         {
             bool changed = false;
             PrimFlags tempFlags = thePrim.Flags;
@@ -366,13 +392,23 @@ namespace cogbot.TheOpenSims
             if (changed) WorldSystem.SetPrimFlags(thePrim, tempFlags);
             if (!IsRoot())
             {
-                if (Parent.RestoreEnterable()) return true;
+                if (Parent.RestoreEnterable(actor)) return true;
             }
             return changed;
         }
 
-        public virtual bool MakeEnterable()
+        public virtual bool MakeEnterable(SimAvatar actor)
         {
+            if (IsTypeOf(SimTypeSystem.DOOR) != null)
+            {
+                if (!IsPhantom)
+                {
+                    actor.Touch(this);
+                    return true;
+                }
+                return false;
+            }
+
             bool changed = false;
             PrimFlags tempFlags = thePrim.Flags;
             if ((tempFlags & PrimFlags.Phantom) == 0)
@@ -391,7 +427,7 @@ namespace cogbot.TheOpenSims
             if (changed) WorldSystem.SetPrimFlags(thePrim, tempFlags);
             if (!IsRoot())
             {
-                if (Parent.MakeEnterable()) return true;
+                if (Parent.MakeEnterable(actor)) return true;
             }
             return changed;
 

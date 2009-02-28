@@ -181,21 +181,19 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         private void CenterOnStart()
         {
             ///throw new Exception("The method or operation is not implemented.");
-            if (mStart.X > 0)
-            {
-                int SX = mStart.X;
-                int SY = PathStore.MAPSPACE - mStart.Y;
-                OffsetXY(GridX, GridY);
-            }
+            OffsetXY((int)(GridX * GridSize * PathStore.POINTS_PER_METER),(int)( GridY * GridSize * PathStore.POINTS_PER_METER));
         }
 
         private void OffsetXY(int X, int Y)
         {
-            Size PS = this.Parent.Size;
-            int VisualX = PS.Width - 163;
-            int VisualY = PS.Height - 55;
-            this.Location = new System.Drawing.Point(-X, -Y);//- X, -1 - Y);
-            this.Size = new System.Drawing.Size(VisualX - Location.X, VisualY - Location.Y);
+            if (this.Parent != null)
+            {
+                Size PS = this.Parent.Size;
+                int VisualX = PS.Width - 163;
+                int VisualY = PS.Height - 55;
+                this.Location = new System.Drawing.Point(-X, -Y);//- X, -1 - Y);
+                this.Size = new System.Drawing.Size(VisualX - Location.X, VisualY - Location.Y);
+            }
         }
         
         #region Overrides

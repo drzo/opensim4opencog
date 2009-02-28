@@ -76,18 +76,26 @@ namespace cogbot.TheOpenSims
             WorldObjects.SimAvatars.Add(this);
             ObjectType.SuperType.Add(SimTypeSystem.GetObjectType("Avatar"));
             CurrentNeeds = new BotNeeds(90.0F);
-            AspectName = slAvatar.ToString();
+            try
+            {
+
+                AspectName = slAvatar.Name;
+            }
+            catch (Exception e)
+            {
+                AspectName += objectSystem.client + "_Avatar_" + slAvatar.LocalID;
+            }
             avatarHeartbeatThread = new Thread(new ThreadStart(Aging));
-            avatarHeartbeatThread.Name = "AvatarHeartbeatThread for " + Client;
+            avatarHeartbeatThread.Name = "AvatarHeartbeatThread for " + AspectName;
             avatarHeartbeatThread.Start();
             ApproachThread = new Thread(TrackerLoop);
-            ApproachThread.Name = "TrackerLoop for " + theAvatar.Name;
-            MakeEnterable();
+            ApproachThread.Name = "TrackerLoop for " + AspectName;
+            MakeEnterable(this);
         }
 
-        public override bool RestoreEnterable()
+        public override bool RestoreEnterable(SimAvatar agent)
         {
-            return false;// base.RestoreEnterable();
+            return false;// base.RestoreEnterable(this);
         }
 
         public override bool IsRoot()
@@ -622,7 +630,14 @@ namespace cogbot.TheOpenSims
 
         public override string GetName()
         {
-            return theAvatar.Name;
+            try
+            {
+                return theAvatar.Name;
+            }
+            catch (Exception)
+            {
+                return AspectName;
+            }
         }
 
         public override string ToString()
@@ -638,7 +653,11 @@ namespace cogbot.TheOpenSims
             if (IsLocal())
             {
                 WorldSystem.SetSimAvatar(this);
-                ApproachThread.Start();
+                if (ApproachThread != null)
+                {
+                    if (!ApproachThread.IsAlive)                    
+                        ApproachThread.Start();
+                }
             }
             //WorldSystem.AddTracking(this,Client);
         }
@@ -674,7 +693,7 @@ namespace cogbot.TheOpenSims
                 if (sit != 0)
                 {
                     UnPhantom = WorldSystem.GetSimObject(WorldSystem.GetPrimitive(sit));
-                    UnPhantom.MakeEnterable();
+                    UnPhantom.MakeEnterable(this);
                     ClientSelf.Stand();
                 }
             }
@@ -959,13 +978,13 @@ namespace cogbot.TheOpenSims
             ApproachDistance = obj.GetSizeDistance() + 0.5f;
             string str = "Approaching " + obj + " " + DistanceVectorString(obj) + " to get " + ApproachDistance;
             Debug(str);
-            obj.MakeEnterable();
+            obj.MakeEnterable(this);
             if (!MoveTo(obj.GetSimPosition(), obj.GetSizeDistance() + 0.5f, 12))
             {
                 GotoTarget(obj);
             }
             if (UnPhantom != null)
-                UnPhantom.RestoreEnterable();
+                UnPhantom.RestoreEnterable(this);
 
             return Distance(obj);
         }
@@ -1103,7 +1122,9 @@ namespace cogbot.TheOpenSims
                  if (PathStore.IsPassable(next))
                  {
                      if (MoveTo(next,1f,3)) {
-                         LastTurn = A45;
+                         LastTurn += angle;  // update for next use
+                         if (LastTurn > SimPathStore.PI2)
+                             LastTurn -= SimPathStore.PI2;
                          return next;
                      }
                  }
@@ -1146,8 +1167,13 @@ namespace cogbot.TheOpenSims
             return true;
         }
 
+        /// <summary>
+        /// Blocks points -45 to +45 degrees in front of Bot (assumes the bot is heading toward V3)
+        /// </summary>
+        /// <param name="v3"></param>
         private void BlockTowardsVector(Vector3 v3)
         {
+            OpenNearbyClosedPassages();
             SimPathStore PathStore = WorldSystem.SimPaths;
             Point P1 = PathStore.ToPoint(GetSimPosition());
             Vector3 cp = GetSimPosition();
@@ -1170,7 +1196,7 @@ namespace cogbot.TheOpenSims
             }
             float x = Last.X / PathStore.POINTS_PER_METER;
             float y = Last.Y / PathStore.POINTS_PER_METER;
-            SetBlocked(x, y);
+            BlockPoint(new Vector3( x, y,v3.Z));
             float A45 = 45f / SimPathStore.RAD2DEG;
             Debug("Blocked {0},{1}", x, y);
             Vector3 middle = ZAngleVector(ZAngle) * Dist;
@@ -1188,8 +1214,23 @@ namespace cogbot.TheOpenSims
             BlockPoint(ZAngleVector(ZAngle + A45) * Dist + cp);
             BlockPoint(ZAngleVector(ZAngle - A45 * 1.5) * Dist + cp);
             BlockPoint(ZAngleVector(ZAngle + A45 * 1.5) * Dist + cp);
-            // Run back
-            MoveTo(cp + ZAngleVector(ZAngle - Math.PI) * 2, 1f, 2);
+            //Dont Run back
+            //MoveTo(cp + ZAngleVector(ZAngle - Math.PI) * 2, 1f, 2);
+        }
+
+        private void OpenNearbyClosedPassages()
+        {
+            SimObjectType DOOR = SimTypeSystem.DOOR;
+            // look for closed doors
+            foreach (SimObject O in GetNearByObjects(2, false))
+            {
+                if (O.IsTypeOf(DOOR)!=null)
+                {
+                    O.MakeEnterable(this);
+                }
+            }
+            
+            
         }
 
         private Vector3 ZAngleVector(double ZAngle)
@@ -1204,13 +1245,34 @@ namespace cogbot.TheOpenSims
             }
             return new Vector3((float)Math.Sin(ZAngle), (float)Math.Cos(ZAngle), 0);
         }
-
+        /// <summary>
+        /// Blocks a point temporarilly (one minute)
+        /// </summary>
+        /// <param name="vector3"></param>
         private void BlockPoint(Vector3 vector3)
         {
             SimPathStore PathStore = WorldSystem.SimPaths;
             Point P = PathStore.ToPoint(vector3);
             Debug("BlockPoint {0},{1}", P.X / PathStore.POINTS_PER_METER, P.Y / PathStore.POINTS_PER_METER);
-            SetBlocked(vector3.X, vector3.Y);
+            byte oldValue = PathStore.GetNodeQuality(vector3);
+            if (oldValue == 0) // aready blocked
+                return;
+            PathStore.SetNodeQuality(vector3, 0);
+            new Thread(new ThreadStart(delegate()
+            {
+                Thread.Sleep(60000);
+                byte newValue = PathStore.GetNodeQuality(vector3);
+                if (newValue != 0)
+                {
+                    // its been changed by something else since we set to Zero
+                    Debug("BlockPoint Thread out of date {0} value changed to {1}", vector3, newValue);
+                }
+                else
+                {
+                    PathStore.SetNodeQuality(vector3, oldValue);
+                    Debug("Unblock {0} value reset to {1}", vector3, oldValue);
+                }
+            })).Start();
         }
 
         private void BlockForwardPos()
@@ -1224,7 +1286,7 @@ namespace cogbot.TheOpenSims
                 Point P2 = PathStore.ToPoint(blocked);
                 if (P2 != P1 && Last != P2)
                 {
-                    SetBlocked(blocked.X, blocked.Y);
+                    BlockPoint(blocked);
                     Debug("Blocked {0},{1}", P2.X / PathStore.POINTS_PER_METER, P2.Y / PathStore.POINTS_PER_METER);
                     Last = P2;
                 }            
@@ -1235,7 +1297,7 @@ namespace cogbot.TheOpenSims
                 Point P2 = PathStore.ToPoint(blocked);
                 if (P2 != P1 && Last != P2)
                 {
-                    SetBlocked(blocked.X, blocked.Y);
+                    BlockPoint(blocked);
                     Debug("Blocked {0},{1}", P2.X / PathStore.POINTS_PER_METER, P2.Y / PathStore.POINTS_PER_METER);
                     Last = P2;
                 }
@@ -1246,7 +1308,7 @@ namespace cogbot.TheOpenSims
                 Point P2 = PathStore.ToPoint(blocked);
                 if (P2 != P1 && Last != P2)
                 {
-                    SetBlocked(blocked.X, blocked.Y);
+                    BlockPoint(blocked);
                     Debug("Blocked {0},{1}", P2.X / PathStore.POINTS_PER_METER, P2.Y / PathStore.POINTS_PER_METER);
                     Last = P2;
                 }
@@ -1326,6 +1388,14 @@ namespace cogbot.TheOpenSims
             return Vector3.Distance(GetSimPosition(), target3)<=dist;
         }
 
+
+        public void Touch(SimObject simObject)
+        {
+            if (IsLocal())
+            {
+                Client.Self.Touch(simObject.thePrim.LocalID);
+            }
+        }
     }
 
 

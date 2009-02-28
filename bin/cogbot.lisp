@@ -39,7 +39,7 @@
   (block
     ;; (thisClient.output (@"fromLispExample: (on-network-connected )" ) )
     (thisClient.ExecuteCommand (@"say Hello World"))   
-    (thisClient.ExecuteCommand (@"use HMG to wear"))
+;; Ghosted right now    (thisClient.ExecuteCommand (@"use HMG to wear"))
     )
  )
 

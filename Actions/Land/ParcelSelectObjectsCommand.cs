@@ -27,7 +27,7 @@ namespace cogbot.Actions
             StringBuilder result = new StringBuilder();
             // test argument that is is a valid integer, then verify we have that parcel data stored in the dictionary
             if (Int32.TryParse(args[0], out parcelID) 
-                && UUIDTryParse(args[1], out ownerUUID))
+                && UUIDTryParse(args,1, out ownerUUID))
             {
                 AutoResetEvent wait = new AutoResetEvent(false);
                 ParcelManager.ForceSelectObjects callback = delegate(Simulator simulator, List<uint> objectIDs, bool resetList)

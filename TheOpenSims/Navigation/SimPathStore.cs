@@ -26,9 +26,9 @@ namespace cogbot.TheOpenSims.Navigation
     delegate void PassibleType(float x, float y);
 
     /// <summary>
-	/// Graph structure. It is defined with :
-	/// It is defined with both a list of nodes and a list of arcs.
-	/// </summary>
+    /// Graph structure. It is defined with :
+    /// It is defined with both a list of nodes and a list of arcs.
+    /// </summary>
     [Serializable]
     public class SimPathStore
     {
@@ -118,6 +118,11 @@ namespace cogbot.TheOpenSims.Navigation
             return mMatrix[ARRAY_IDX(RangeCheck(v3.X)), ARRAY_IDX(RangeCheck(v3.Y))];
         }
 
+        public void SetNodeQuality(Vector3 v3, byte v)
+        {
+            mMatrix[ARRAY_IDX(RangeCheck(v3.X)), ARRAY_IDX(RangeCheck(v3.Y))] = v;
+        }
+
         //public void SetWieght(float fx, float fy, float ZeroToTwo)
         //{
         //    if (ZeroToTwo > 1.6) SetBlocked(fx, fy);
@@ -193,7 +198,7 @@ namespace cogbot.TheOpenSims.Navigation
                 // if was set Passable dont block
                 if (mMatrix[ix, iy] == 2)
                 {
-                  //  return;
+                    //  return;
                 }
                 mMatrix[ix, iy] = 0;
                 SetBubbleBlock(ix, iy, blocker);
@@ -336,7 +341,7 @@ namespace cogbot.TheOpenSims.Navigation
                 for (int x = 0; x < mMatrix.GetUpperBound(0); x++)
                 {
                     mMatrix[x, y] = 10;
-                  //  mWaypoints[x, y] = SimWaypoint.Create(x / POINTS_PER_METER, y / POINTS_PER_METER, SimZLevel, this);
+                    //  mWaypoints[x, y] = SimWaypoint.Create(x / POINTS_PER_METER, y / POINTS_PER_METER, SimZLevel, this);
                 }
             LoadFromFile();
             //PathFinder.Show();
@@ -440,7 +445,7 @@ namespace cogbot.TheOpenSims.Navigation
             y = RangeCheck(y);
             int ix = ARRAY_IDX(x);
             int iy = ARRAY_IDX(y);
-            return Waypoint(ix,iy);
+            return Waypoint(ix, iy);
         }
 
         private SimWaypoint Waypoint(int ix, int iy)
@@ -448,8 +453,8 @@ namespace cogbot.TheOpenSims.Navigation
             SimWaypoint wp = mWaypoints[ix, iy];
             if (wp == null)
             {
-                wp = SimWaypoint.Create(ix/POINTS_PER_METER, iy/POINTS_PER_METER, SimZLevel, this);
-                SimWaypoints.Add(wp);
+                wp = SimWaypoint.Create(ix / POINTS_PER_METER, iy / POINTS_PER_METER, SimZLevel, this);
+                lock (SimWaypoints) SimWaypoints.Add(wp);
                 mWaypoints[ix, iy] = wp;
             }
             return wp;
@@ -466,8 +471,8 @@ namespace cogbot.TheOpenSims.Navigation
             if (wp == null)
             {
                 wp = SimWaypoint.Create(x, y, SimZLevel, this);
-                //lock (SimWaypoints)
-                SimWaypoints.Add(wp);
+                lock (SimWaypoints)
+                    SimWaypoints.Add(wp);
                 mWaypoints[ix, iy] = wp;
                 madeIt = true;
             }
@@ -701,7 +706,7 @@ namespace cogbot.TheOpenSims.Navigation
             IList<Vector3> vectors = new List<Vector3>();
             float ZAngle = float.NaN;
             bool ZAngleValid = false;
-            int Max = v3s.Count-1;
+            int Max = v3s.Count - 1;
             for (int Current = 0; Current < Max; Current++)
             {
                 bool UsePoint = false;
@@ -720,7 +725,7 @@ namespace cogbot.TheOpenSims.Navigation
                         UsePoint = true;
                     else
                         if (Vector3.Distance(currentV3, v3s[Current]) > MaxDist)
-                            UsePoint = true;                       
+                            UsePoint = true;
                 }
                 if (UsePoint)
                 {
@@ -730,7 +735,7 @@ namespace cogbot.TheOpenSims.Navigation
                 }
             }
             // add last
-            vectors.Add(v3s[v3s.Count-1]);
+            vectors.Add(v3s[v3s.Count - 1]);
             return vectors;
         }
 
@@ -804,7 +809,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             float Dist;
             if (GetNodeQuality(end) == 0) return false;
-           // if (true) return true;
+            // if (true) return true;
             SimWaypoint W = ClosestNode(end.X, end.Y, end.Z, out Dist, true);
             return W.Passable;
         }
@@ -1467,7 +1472,7 @@ namespace cogbot.TheOpenSims.Navigation
             Bitmap e = EdgeDetection(edges, 34f, delegate(int x, int y)
             {
                 edges.SetPixel(x, y, Color.Yellow);
-                SetBlocked((float)x, (float)y,null);
+                SetBlocked((float)x, (float)y, null);
             });
             Debug("END Edge detection");
             new DisplayImage("Clone", e).Activate();
@@ -1609,10 +1614,10 @@ namespace cogbot.TheOpenSims.Navigation
                         Thread.Sleep(2000);
                         continue;
                     }
-                  //  Thread.Sleep(500);
+                    //  Thread.Sleep(500);
                     next = Positions.Dequeue();
                 }
-               // if (next != null)                 
+                // if (next != null)                 
                 MakeMovement(next);
             }
         }
@@ -1627,8 +1632,8 @@ namespace cogbot.TheOpenSims.Navigation
             else
                 if (RotationDiffernt(rotation, Orientation))
                 {
-                    lock (Positions)  Positions.Enqueue(point);
-                  //  MakeMovement(point);
+                    lock (Positions) Positions.Enqueue(point);
+                    //  MakeMovement(point);
                     Orientation = rotation;
                 }
         }

@@ -22,7 +22,7 @@ namespace cogbot.Actions
 
             UUID target;
 
-            if (UUIDTryParse(args[0], out target))
+            if (UUIDTryParse(args,0, out target))
             {
                 Primitive targetPrim = Client.Network.CurrentSim.ObjectsPrimitives.Find(
                     delegate(Primitive prim)

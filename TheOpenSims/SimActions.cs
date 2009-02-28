@@ -143,18 +143,23 @@ namespace cogbot.TheOpenSims
                 closure = TheBot.WithSitOn(Target, closure);
 
 
-            Target.MakeEnterable();
             // Approach Target
-            float howClose = TheBot.Approach(Target, TypeUsage.maximumDistance);
-
-            if (howClose-1 > TypeUsage.maximumDistance+0.5f)
+            try
             {
-                TheBot.Debug("Too far away " + howClose + " from " + this);
-                return;
+                float howClose = TheBot.Approach(Target, TypeUsage.maximumDistance);
+
+                if (howClose - 1 > TypeUsage.maximumDistance + 0.5f)
+                {
+                    TheBot.Debug("Too far away " + howClose + " from " + this);
+                    return;
+                }
+                Target.MakeEnterable(TheBot);
+                closure.Invoke();
             }
-         
-            closure.Invoke();
-            Target.RestoreEnterable();
+            finally
+            {
+                Target.RestoreEnterable(TheBot);
+            }
         }
 
         public virtual void InvokeBotSideEffect(SimAvatar TheBot)

@@ -22,7 +22,7 @@ namespace cogbot.Actions
                 return "Usage: findtexture [face-index] [texture-uuid]";
 
             if (Int32.TryParse(args[0], out faceIndex) &&
-                UUIDTryParse(args[1], out textureID))
+                UUIDTryParse(args,1, out textureID))
             {
                 Client.Network.CurrentSim.ObjectsPrimitives.ForEach(
                     delegate(Primitive prim)
