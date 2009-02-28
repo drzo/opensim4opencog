@@ -117,14 +117,29 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         {
             if (this.InvokeRequired)
             {
-                Invoke(new ShowDelegate(Show), new object[] { });
+                Invoke(new ShowDelegate(Reactivate), new object[] { });
                 return;
             }
-            Thread.Sleep(1000);
-            base.Show();
+            Reactivate();
+        }
+        public new void Activate()
+        {
+            if (this.InvokeRequired)
+            {
+                Invoke(new ShowDelegate(Reactivate), new object[] { });
+                return;
+            }
+            Reactivate();
         }
 
-
+        void Reactivate()
+        {
+            base.Show();
+            //if (this.WindowState == FormWindowState.Minimized)              
+            base.WindowState = FormWindowState.Normal;
+            base.Visible = true;
+            base.Activate();
+        }
 
         private delegate void UpdateTimeLabelDelegate(double time);
         private void UpdateTimeLabel(double time)

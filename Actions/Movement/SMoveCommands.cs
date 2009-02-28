@@ -29,7 +29,7 @@ namespace cogbot.Actions.Movement
             return "ran "+Name;
         }
     }
-    class srdebug : cogbot.Actions.Command
+    class srdebug : cogbot.Actions.Command, BotSystemCommand
     {
         public srdebug(BotClient client)
         {
@@ -41,11 +41,11 @@ namespace cogbot.Actions.Movement
         public override string Execute(string[] args, UUID fromAgentID)
         {
             GraphFormer gf = new GraphFormer(SimPathStore.Instance);
-            gf.Reactivate();
+            gf.Show();
             return "ran " + Name;
         }
     }
-    class pfdebug : cogbot.Actions.Command
+    class pfdebug : cogbot.Actions.Command, BotSystemCommand
     {
         public pfdebug(BotClient client)
         {

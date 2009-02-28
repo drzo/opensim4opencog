@@ -56,8 +56,9 @@
         </Files>
       </Project>
       -->
-<!---->
-      <Project name="HttpServer" path="HttpServer" type="Library" >
+<!--
+
+      <Project name="HttpServer" path="HttpServer" type="Library" guid="455E7D70-1C85-4D7F-9F01-DC801B8B8C34">
         <Configuration name="Debug">
           <Options>
             <OutputPath>../bin/</OutputPath>
@@ -76,7 +77,7 @@
           <Match pattern="*.cs" recurse="true"/>
         </Files>
       </Project>
-
+-->
       <!-- Libraries -->
 
       <Project name="OpenMetaverseTypes" path="OpenMetaverse/Types" type="Library" rootNamespace="OpenMetaverse">
@@ -139,7 +140,7 @@
         <Reference name="System.Xml"/>
         <Reference name="OpenMetaverseTypes"/>
         <Reference name="OpenMetaverse.StructuredData"/>
-        <Reference name="HttpServer"/>
+        <Reference name="HttpServer.dll"/>
         <Reference name="log4net"/>
         <Reference name="Mono.Security"/>
         <Files>
@@ -185,6 +186,7 @@
             <Exclude name="BlockingQueue.cs"/>
             <Exclude name="DoubleDictionary.cs"/>
             <Exclude name="ExpiringCache.cs"/>
+            <Exclude name="CircularQueue.cs"/>
           </Match>
         </Files>
       </Project>
@@ -256,28 +258,6 @@
           <Match pattern="*.cs" recurse="true"/>
         </Files>
       </Project>
-<!--
-      <Project name="OpenMetaverse.Rendering.GPL" path="OpenMetaverse.Rendering.GPL" type="Library">
-        <Configuration name="Debug">
-          <Options>
-            <OutputPath>../bin/</OutputPath>
-          </Options>
-        </Configuration>
-        <Configuration name="Release">
-          <Options>
-            <OutputPath>../bin/</OutputPath>
-          </Options>
-        </Configuration>
-
-        <ReferencePath>../bin/</ReferencePath>
-        <Reference name="System"/>
-        <Reference name="OpenMetaverse"/>
-        <Reference name="OpenMetaverseTypes"/>
-        <Files>
-          <Match pattern="*.cs" recurse="true"/>
-        </Files>
-      </Project>
-      -->
 
       <Project name="OpenMetaverse.GUI" path="OpenMetaverse.GUI" type="Library">
         <Configuration name="Debug">
@@ -303,6 +283,29 @@
           <Match pattern="*.cs" recurse="true"/>
         </Files>
       </Project>
+
+<!--
+      <Project name="OpenMetaverse.Rendering.GPL" path="OpenMetaverse.Rendering.GPL" type="Library">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+
+        <ReferencePath>../bin/</ReferencePath>
+        <Reference name="System"/>
+        <Reference name="OpenMetaverse"/>
+        <Reference name="OpenMetaverseTypes"/>
+        <Files>
+          <Match pattern="*.cs" recurse="true"/>
+        </Files>
+      </Project>
+      -->
 
 
     <Project name="DotLisp" path="dotlisp" type="Library">
@@ -348,7 +351,7 @@
       <Reference name="OpenMetaverse.Utilities" localCopy="false"/>
       <Reference name="OpenMetaverse.StructuredData" localCopy="false"/>
       <Reference name="OpenMetaverse.Http" localCopy="false"/>
-      <Reference name="HttpServer" localCopy="false"/>
+      <Reference name="HttpServer.dll" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
       <Reference name="DotLisp" localCopy="false"/>
       <Reference name="System.Drawing" localCopy="false"/>

@@ -34,7 +34,7 @@ namespace cogbot.Listeners
         public Dictionary<uint, OSDMap> lastOSD = new Dictionary<uint, OSDMap>();
         public int ExpectedObjects = 1000;
 
-        DoubleDictionary<uint, UUID, Primitive> prims = new DoubleDictionary<uint, UUID, Primitive>();
+        static Dictionary<uint, Primitive> prims = new Dictionary<uint,Primitive>();
         //DoubleDictionary<uint, UUID, Avatar> prims = new DoubleDictionary<uint, UUID, Avatar>();
         Dictionary<uint, ObjectUpdate> lastObjectUpdate = new Dictionary<uint, ObjectUpdate>();
         Dictionary<uint, ObjectUpdate> lastObjectUpdateDiff = new Dictionary<uint, ObjectUpdate>();
@@ -208,7 +208,7 @@ namespace cogbot.Listeners
         //    return obj0;
         //}
 
-        volatile static WorldObjects Master;
+        public volatile static WorldObjects Master;
         public bool IsWorldMaster() {
             return Master == this;
         }
@@ -1249,12 +1249,13 @@ namespace cogbot.Listeners
                 }
             // lock (GetPrimitiveLock)
             {
-                Primitive prim;
-                if (prims.TryGetValue(id, out prim))
-                {
-                    RegisterUUID(id, prim);
-                    return prim;
-                }
+                //Primitive prim;
+                //Object obj;
+                //if (uuidTypeObject.TryGetValue(id, out obj))
+                //{
+                //    RegisterUUID(id, prim);
+                //    return prim;
+                //}
                 //lock (GetSimulator().ObjectsAvatars)
                 {
                     Primitive found = GetSimulator().ObjectsPrimitives.Find(delegate(Primitive prim0)
@@ -1276,7 +1277,7 @@ namespace cogbot.Listeners
                     });
                     if (found != null)
                     {
-                        lock (prims) prims.Add(found.LocalID, found.ID, found);
+                        lock (prims) prims.Add(found.LocalID, found);
                         RegisterUUID(found.ID, found);
                     }
                     return found;
@@ -1298,14 +1299,14 @@ namespace cogbot.Listeners
                     RegisterUUID(prim.ID, prim);
                     EnsureSelected(prim.LocalID);
                     EnsureSelected(prim.ParentID);
-                    lock (prims) prims.Add(prim.LocalID, prim.ID, prim);
+                    lock (prims) prims.Add(prim.LocalID, prim);
                     return prim;
                 };
                 Avatar avatar;
                 if (GetSimulator().ObjectsAvatars.TryGetValue(id, out avatar))
                 {
                     RegisterUUID(avatar.ID, avatar);
-                    lock (prims) prims.Add(avatar.LocalID, avatar.ID, avatar);
+                    lock (prims) prims.Add(avatar.LocalID, avatar);
                     return avatar;
                 };
                 EnsureSelected(id);

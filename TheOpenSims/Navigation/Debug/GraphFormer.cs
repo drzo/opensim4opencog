@@ -121,13 +121,33 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 			Mode = Action.Dessiner;
 		}
 
-        public void Reactivate()
+        private delegate void ShowDelegate();
+        public new void Show()
         {
-            this.Show();
+            if (this.InvokeRequired)
+            {
+                Invoke(new ShowDelegate(Reactivate), new object[] { });
+                return;
+            }
+            Reactivate();
+        }
+        public new void Activate()
+        {
+            if (this.InvokeRequired)
+            {
+                Invoke(new ShowDelegate(Reactivate), new object[] { });
+                return;
+            }
+            Reactivate();
+        }
+
+        void Reactivate()
+        {
+            base.Show();
             //if (this.WindowState == FormWindowState.Minimized)              
-            this.WindowState = FormWindowState.Normal;
-            this.Visible = true;
-            this.Activate();
+            base.WindowState = FormWindowState.Normal;
+            base.Visible = true;
+            base.Activate();
         }
 
 		/// <summary>
