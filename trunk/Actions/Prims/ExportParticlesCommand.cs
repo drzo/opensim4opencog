@@ -21,7 +21,7 @@ namespace cogbot.Actions
                 return "Usage: exportparticles [prim-uuid]";
 
             UUID id;
-            if (!UUIDTryParse(args[0], out id))
+            if (!UUIDTryParse(args,0, out id))
                 return "Usage: exportparticles [prim-uuid]";
 
             lock (Client.Network.Simulators)

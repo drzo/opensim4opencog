@@ -42,7 +42,7 @@ namespace cogbot.Actions
             if (args.Length == 2)
             {
                 file = args[1];
-                if (!UUIDTryParse(args[0], out id))
+                if (!UUIDTryParse(args,0, out id))
                     return "Usage: export uuid outputfile.xml";
             }
             else

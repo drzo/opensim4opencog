@@ -26,6 +26,10 @@ namespace cogbot.Actions
             return UUID.Parse(p);
         }
 
+        public bool UUIDTryParse(string[]p, int start, out UUID target)
+        {
+            return UUIDTryParse(String.Join(" ",p,start,p.Length-start),out target);
+        }
         public bool UUIDTryParse(string p, out UUID target)
         {
             if (p.Contains("-") && UUID.TryParse(p,out target)) return true;

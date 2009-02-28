@@ -22,7 +22,7 @@ namespace cogbot.Actions
             if (args.Length != 1)
                 return "Usage: touch UUID";
             
-            if (UUIDTryParse(args[0], out target))
+            if (UUIDTryParse(args,0, out target))
             {
                 Primitive targetPrim = Client.Network.CurrentSim.ObjectsPrimitives.Find(
                     delegate(Primitive prim)

@@ -23,7 +23,7 @@ namespace cogbot.Actions
             }
 
             UUID landmark = new UUID();
-            if (!UUIDTryParse(args[0], out landmark))
+            if (!UUIDTryParse(args,0, out landmark))
             {
                 return "Invalid LLUID";
             }

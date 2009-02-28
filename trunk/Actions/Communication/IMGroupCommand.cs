@@ -25,7 +25,7 @@ namespace cogbot.Actions
 
 
 
-            if (UUIDTryParse(args[0], out ToGroupID))
+            if (UUIDTryParse(args,0, out ToGroupID))
             {
                 string message = String.Empty;
                 for (int ct = 1; ct < args.Length; ct++)

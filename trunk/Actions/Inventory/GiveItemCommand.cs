@@ -22,7 +22,7 @@ namespace cogbot.Actions.Inventory.Shell
                 return "Usage: give <agent uuid> <item1> [item2] [item3] [...]";
             }
             UUID dest;
-            if (!UUIDTryParse(args[0], out dest))
+            if (!UUIDTryParse(args,0, out dest))
             {
                 return "First argument expected agent UUID.";
             }

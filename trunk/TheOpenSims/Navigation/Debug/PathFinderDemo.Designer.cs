@@ -615,8 +615,8 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             this.TBarX.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.TBarX.AutoSize = false;
             this.TBarX.Location = new System.Drawing.Point(5, 353);
-            this.TBarX.Maximum = 1000;
-            this.TBarX.Minimum = 1;
+            this.TBarX.Maximum = 254;
+            this.TBarX.Minimum = 0;
             this.TBarX.Name = "TBarX";
             this.TBarX.Size = new System.Drawing.Size(144, 33);
             this.TBarX.TabIndex = 32;
@@ -629,8 +629,8 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             this.TBarY.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.TBarY.AutoSize = false;
             this.TBarY.Location = new System.Drawing.Point(4, 377);
-            this.TBarY.Maximum = 1000;
-            this.TBarY.Minimum = 1;
+            this.TBarY.Maximum = 254;
+            this.TBarY.Minimum = 0;
             this.TBarY.Name = "TBarY";
             this.TBarY.Size = new System.Drawing.Size(144, 33);
             this.TBarY.TabIndex = 24;

@@ -838,7 +838,7 @@ namespace cogbot.TheOpenSims.Navigation
             {
                 foreach (SimObject obj in madePhantom)
                 {
-                    obj.RestoreEnterable();
+                    obj.RestoreEnterable(Client.WorldSystem.TheSimAvatar);
                 }
                 madePhantom.Clear();
             }
@@ -926,7 +926,7 @@ namespace cogbot.TheOpenSims.Navigation
             foreach (SimObject obj in SimObject.GetNearByObjects(Client.Self.SimPosition, Client.WorldSystem, null, 2.0f, true)) //should be false
             {
                 madePhantom.AddTo(obj);
-                obj.MakeEnterable();
+                obj.MakeEnterable(Client.WorldSystem.TheSimAvatar);
             }
         }
 
