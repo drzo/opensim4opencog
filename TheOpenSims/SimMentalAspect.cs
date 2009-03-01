@@ -11,18 +11,18 @@ using System.Collections;
 namespace cogbot.TheOpenSims
 {
     // Mental Aspects
-    abstract public class BotMentalAspect
+    public interface BotMentalAspect
     {
-        public BotMentalAspect(string s)
-        {
-            AspectName = s;
-        }
-        public string AspectName;
-        public UUID SLRef; // the overhead bubble
-        public override string ToString()
-        {
-            return GetType().Name + "::" + AspectName;
-        }
+        //public BotMentalAspect(string s)
+        //{
+        //    AspectName = s;
+        //}
+        //public string AspectName;
+        //public UUID SLRef; // the overhead bubble
+        //public override string ToString()
+        //{
+        //    return GetType().Name + "::" + AspectName;
+        //}
     }
 
     // See SimTypeSystem.cs for information on SimObjectType:BotMentalAspect

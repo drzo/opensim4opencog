@@ -923,7 +923,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         private void PhantomizeArea()
         {
-            foreach (SimObject obj in SimObject.GetNearByObjects(Client.Self.SimPosition, Client.WorldSystem, null, 2.0f, true)) //should be false
+            foreach (SimObject obj in Client.WorldSystem.GetNearByObjects(Client.Self.SimPosition, null, 2.0f, true)) //should be false
             {
                 madePhantom.AddTo(obj);
                 obj.MakeEnterable(Client.WorldSystem.TheSimAvatar);

@@ -7,15 +7,17 @@ using System.Threading;
 using cogbot.TheOpenSims.Navigation;
 using cogbot.TheOpenSims.Navigation.Debug;
 using cogbot.TheOpenSims.Mesher;
+using Simian;
 
 namespace cogbot.TheOpenSims
 {
 
     //TheSims-like object
-    public class SimObject : BotMentalAspect, SimPosition
+    public class SimObject : SimPosition, BotMentalAspect
     {
+
         /// <summary>
-        /// Right now only sees if TouchName has been defined - need a relable way to see if script is defined
+        /// Right now only sees if TouchName has been defined - need a relable way to see if script is defined.
         /// </summary>
         public bool IsTouchDefined
         {
@@ -23,12 +25,13 @@ namespace cogbot.TheOpenSims
             {
                 if (thePrim.Properties != null)
                     return !String.IsNullOrEmpty(thePrim.Properties.TouchName);
+                if ((thePrim.Flags & PrimFlags.Touch) != 0) return true;
                 return false;
             }
         }
 
         /// <summary>
-        /// Right now only sees if SitName has been defined - need a relable way to see if script is defined
+        /// Need a more relable way to see if script is defined.
         /// </summary>
         public bool IsSitDefined
         {
@@ -36,6 +39,7 @@ namespace cogbot.TheOpenSims
             {
                 if (thePrim.Properties != null)
                     return !String.IsNullOrEmpty(thePrim.Properties.SitName);
+                if (thePrim.ClickAction == ClickAction.Sit) return true;
                 return false;
             }
         }
@@ -110,8 +114,9 @@ namespace cogbot.TheOpenSims
             Vector3 v3 = GetUsePosition();
             if (swp == null || !swp.Passable)
             {
-                swp = WorldSystem.SimPaths.CreateClosestWaypoint(v3);//, GetSizeDistance() + 1, 7, 1.0f);
-                WorldSystem.SimPaths.EnsureFillSmallSteps(v3.X, v3.Y);
+                SimPathStore PathStore = WorldSystem.SimPaths;
+                swp = PathStore.CreateClosestWaypoint(v3);//, GetSizeDistance() + 1, 7, 1.0f);
+                PathStore.EnsureFillSmallSteps(v3.X, v3.Y);
                 if (!swp.Passable)
                 {
                     float dist = Vector3.Distance(v3, swp.GetSimPosition());
@@ -124,24 +129,25 @@ namespace cogbot.TheOpenSims
                     List<SimObject> objs = GetNearByObjects(3f, false);
                     foreach (SimObject O in objs)
                     {
-                        O.UpdatePaths(WorldSystem.SimPaths);
+                        O.UpdatePaths(PathStore);
                     }
                 }
                 if (!swp.Passable)
                 {
                     float dist = Vector3.Distance(v3, swp.GetSimPosition());
                     WorldSystem.output("BAD: " + v3 + " <- " + dist + " -> " + swp + " " + this);
-                    swp = WorldSystem.SimPaths.ClosestNode(v3.X, v3.Y, v3.Y, out dist, false);//, GetSizeDistance() + 1, 7, 1.0f);
+                    swp = PathStore.ClosestNode(v3.X, v3.Y, v3.Y, out dist, false);//, GetSizeDistance() + 1, 7, 1.0f);
                 }
             }
             return swp;
-            //            return WorldSystem.SimPaths.CreateClosestWaypointBox(v3, 4f);
+            //            return PathStore.CreateClosestWaypointBox(v3, 4f);
         }
 
         public IList<SimRoute> GetRouteList(SimWaypoint to, out bool IsFake)
         {
             SimWaypoint from = this.GetWaypoint();
-            IList<SimRoute> route = WorldSystem.SimPaths.GetRoute(from, to, out IsFake);
+            SimPathStore PathStore = WorldSystem.SimPaths;
+            IList<SimRoute> route = PathStore.GetRoute(from, to, out IsFake);
             if (false)
             {
                 //pathByNodes
@@ -150,11 +156,11 @@ namespace cogbot.TheOpenSims
                     new Thread(new ThreadStart(delegate()
                     {
                         //GraphFormer.DEBUGGER.Invalidate();
-                  //      GraphFormer.DEBUGGER.SetTryPathNow(from, to, pathByNodes);
+                        //      GraphFormer.DEBUGGER.SetTryPathNow(from, to, pathByNodes);
                     })).Start();
                 }
             }
-            return WorldSystem.SimPaths.GetRoute(from, to, out IsFake);
+            return PathStore.GetRoute(from, to, out IsFake);
         }
 
 
@@ -165,13 +171,33 @@ namespace cogbot.TheOpenSims
             return Vector3.Distance(GetSimPosition(), prim.GetSimPosition());
         }
 
-        readonly public Primitive thePrim; // the prim in Secondlife
+        // the prim in Secondlife
+
+        public Primitive thePrim;
+        //{
+        //    get { return base.Prim; }
+        //    set { Prim = value; }
+        //}
         readonly public SimObjectType ObjectType;
         public WorldObjects WorldSystem;
         bool MadeNonPhysical = false;
         bool MadePhantom = false;
         bool needUpdate = true;
+        bool WasKilled;
 
+        public bool IsKilled
+        {
+            get { return WasKilled; }
+            set
+            {
+                WasKilled = value;
+                List<SimObject> AttachedChildren = GetChildren();
+                lock (AttachedChildren) foreach (SimObject C in AttachedChildren)
+                    {
+                        C.IsKilled = true;
+                    }
+            }
+        }
 
         public SimObjectType IsTypeOf(SimObjectType superType)
         {
@@ -182,9 +208,6 @@ namespace cogbot.TheOpenSims
 
         public ListAsSet<SimObject> GetChildren()
         {
-            if (AttachedChildren.Count == 0)
-            {
-            }
             return AttachedChildren;
         }
 
@@ -195,7 +218,8 @@ namespace cogbot.TheOpenSims
         public float scaleOnNeeds = 1.11F;
 
         public SimObject(Primitive prim, WorldObjects objectSystem)
-            : base(prim.ID.ToString())
+            //: base(prim.ID.ToString())
+           // :base(prim,null)
         {
             thePrim = prim;
             WorldSystem = objectSystem;
@@ -253,11 +277,13 @@ namespace cogbot.TheOpenSims
 
         public bool IsTyped()
         {
+            if (IsKilled) return false;
             return ObjectType.IsComplete();
         }
 
         public virtual bool IsRoot()
         {
+            if (IsKilled) return false;
             if (thePrim.ParentID == 0) return true;
             _Parent = Parent;
             return false;
@@ -358,7 +384,8 @@ namespace cogbot.TheOpenSims
 
         public void UpdateObject(ObjectUpdate objectUpdate, ObjectUpdate objectUpdateDiff)
         {
-            UpdatePaths(WorldSystem.SimPaths);
+            SimPathStore PathStore = WorldSystem.SimPaths;
+            UpdatePaths(PathStore);
             _TOSRTING = null;
         }
 
@@ -477,6 +504,7 @@ namespace cogbot.TheOpenSims
                     str += "(Audible)";
                 if (!IsPassable)
                     str += "(!IsPassable)";
+                if (IsKilled) str += "(IsKilled)";
                 _TOSRTING = str.Replace("  ", " ").Replace(") (", ")(");
             }
             return _TOSRTING;
@@ -495,6 +523,7 @@ namespace cogbot.TheOpenSims
 
         public bool IsRegionAttached()
         {
+            if (IsKilled) return false;
             if (IsRoot()) return true;
             if (_Parent == null)
             {
@@ -511,9 +540,8 @@ namespace cogbot.TheOpenSims
 
         public virtual Vector3 GetSimScale()
         {
-            if (true) return thePrim.Scale;
-
-            if (!IsRegionAttached()) throw new ArithmeticException("GetSimScale !IsRegionAttached: " + this);
+            if (true) return thePrim.Scale; // the scale is all in the prim w/o parents?
+            if (!IsRegionAttached()) throw Error("GetSimScale !IsRegionAttached: " + this);
             Primitive theLPrim = thePrim;
             Vector3 theLPos = theLPrim.Scale;
             while (theLPrim.ParentID != 0)
@@ -525,7 +553,8 @@ namespace cogbot.TheOpenSims
                     Thread.Sleep(100);
                     theLPrim = WorldSystem.RequestMissingObject(theLPrimParentID);
                 }
-                theLPos = theLPos * theLPrim.Scale;
+                // maybe plus?
+                theLPos = theLPos + theLPrim.Scale;
             }
             return theLPos;
         }
@@ -533,6 +562,7 @@ namespace cogbot.TheOpenSims
 
         public virtual OpenMetaverse.Quaternion GetSimRotation()
         {
+            if (!IsRegionAttached()) throw Error("GetSimRotation !IsRegionAttached: " + this);
             Primitive theLPrim = thePrim;
             Quaternion theLPos = theLPrim.Rotation;
             while (theLPrim.ParentID != 0)
@@ -544,17 +574,16 @@ namespace cogbot.TheOpenSims
                     Thread.Sleep(100);
                     theLPrim = WorldSystem.RequestMissingObject(theLPrimParentID);
                 }
-                theLPos = theLPos + theLPrim.Rotation;
+                theLPos = theLPos * theLPrim.Rotation;
                 theLPos.Normalize();
             }
             return theLPos;
         }
         public virtual Vector3 GetSimPosition()
         {
-            if (!IsRegionAttached()) throw new ArithmeticException("GetSimPosition !IsRegionAttached: " + this);
+            if (!IsRegionAttached()) throw Error("GetSimPosition !IsRegionAttached: " + this);
             Primitive theLPrim = thePrim;
             Vector3 theLPos = theLPrim.Position;
-          //  if (true) return theLPos;
             while (theLPrim.ParentID != 0)
             {
                 uint theLPrimParentID = theLPrim.ParentID;
@@ -564,12 +593,12 @@ namespace cogbot.TheOpenSims
                     Thread.Sleep(100);
                     theLPrim = WorldSystem.RequestMissingObject(theLPrimParentID);
                 }
-                theLPos = theLPos + theLPrim.Position;
+                theLPos = theLPrim.Position + Vector3.Transform(theLPos, Matrix4.CreateFromQuaternion(theLPrim.Rotation));
             }
             if (BadLocation(theLPos))
             {
                 Debug("-------------------------" + this + " shouldnt be at " + theLPos);
-             //   WorldSystem.DeletePrim(thePrim);
+                //   WorldSystem.DeletePrim(thePrim);
             }
             return theLPos;
         }
@@ -620,8 +649,9 @@ namespace cogbot.TheOpenSims
 
         public Vector3 GetUsePosition()
         {
+            SimPathStore PathStore = WorldSystem.SimPaths;
             Vector3 v3 = GetSimPosition();
-            byte b = WorldSystem.SimPaths.GetNodeQuality(v3);
+            byte b = PathStore.GetNodeQuality(v3);
             float useDist = GetSizeDistance();
             if (b > 0) return v3;
             for (float distance = useDist / 2; distance < useDist * 5; distance += 0.25f)
@@ -629,21 +659,21 @@ namespace cogbot.TheOpenSims
                 for (int dir = 0; dir < 360; dir += 15)
                 {
                     v3 = GetLeftPos(dir, distance);
-                    b = WorldSystem.SimPaths.GetNodeQuality(v3);
+                    b = PathStore.GetNodeQuality(v3);
                     if (b > 0) return v3;
                 }
             }
             Debug("Clearing area");
-            for (float distance = 0; distance < useDist*1.5; distance += 0.25f)
+            for (float distance = 0; distance < useDist * 1.5; distance += 0.25f)
             {
                 for (int dir = 0; dir < 360; dir += 15)
-                {                   
-                     v3 = GetLeftPos(dir, distance);
-                     b = WorldSystem.SimPaths.GetNodeQuality(v3);
-                     if (b == 0)
-                     {
-                        WorldSystem.SimPaths.SetPassable(v3.X, v3.Y);
-                     }
+                {
+                    v3 = GetLeftPos(dir, distance);
+                    b = PathStore.GetNodeQuality(v3);
+                    if (b == 0)
+                    {
+                        PathStore.SetPassable(v3.X, v3.Y);
+                    }
                 }
             }
             return GetSimPosition();
@@ -685,7 +715,7 @@ namespace cogbot.TheOpenSims
             //    Debug("Current Eulers:  {0} {1} {2}", rx * RAD_TO_DEG, ry * RAD_TO_DEG, rz * RAD_TO_DEG);
             //}
             float az = rz + radAngle;
-            
+
 
             while (az < 0)
             {
@@ -741,7 +771,7 @@ namespace cogbot.TheOpenSims
         {
             float size = 1;
 
-//            if (IsPhantom) return size;
+            //            if (IsPhantom) return size;
 
             float fx = thePrim.Scale.X;
             if (fx > size) size = fx;
@@ -755,11 +785,13 @@ namespace cogbot.TheOpenSims
                 if (fx > size) size = fx;
                 fy = cp.Scale.Y;
                 if (fy > size) size = fy;
+                float childSize = obj.GetSizeDistance();
+                if (childSize > size) size = childSize;
             }
             return size;
         }
 
-        public List<SimObject> GetNearByObjects(float maxDistance, bool rootOnly)
+        public virtual List<SimObject> GetNearByObjects(float maxDistance, bool rootOnly)
         {
             if (!IsRegionAttached())
             {
@@ -771,7 +803,7 @@ namespace cogbot.TheOpenSims
                 }
                 return objs;
             }
-            List<SimObject> objs2 = GetNearByObjects(GetSimPosition(), WorldSystem, this, maxDistance, rootOnly);
+            List<SimObject> objs2 = WorldSystem.GetNearByObjects(GetSimPosition(), this, maxDistance, rootOnly);
             SortByDistance(objs2);
             return objs2;
         }
@@ -786,17 +818,6 @@ namespace cogbot.TheOpenSims
         //    return KnowsAboutList;
         //}
 
-        public static List<SimObject> GetNearByObjects(Vector3 here, WorldObjects WorldSystem, object thiz, float pUse, bool rootOnly)
-        {
-            List<SimObject> nearby = new List<SimObject>();
-            foreach (SimObject obj in WorldSystem.GetAllSimObjects())
-            {
-                if (!(rootOnly && !obj.IsRoot() && !obj.IsTyped()))
-                    if (obj != thiz && obj.IsRegionAttached() && Vector3.Distance(obj.GetSimPosition(), here) <= pUse)
-                        nearby.Add(obj);
-            };
-            return nearby;
-        }
 
         public virtual bool Matches(string name)
         {
@@ -805,6 +826,13 @@ namespace cogbot.TheOpenSims
         public virtual void Debug(string p, params object[] args)
         {
             WorldSystem.output(String.Format(thePrim + ": " + p, args));
+        }
+
+        public Exception Error(string p, params object[] args)
+        {
+            string str = String.Format(p, args);
+            Debug(str);
+            return new ArgumentException(str);
         }
 
         public void SortByDistance(List<SimObject> sortme)
@@ -892,17 +920,20 @@ namespace cogbot.TheOpenSims
         public void SetPassable(float x, float y)
         {
             SetLocated(x, y);
-            WorldSystem.SimPaths.SetPassable(x, y);
+            SimPathStore PathStore = WorldSystem.SimPaths;
+            PathStore.SetPassable(x, y);
         }
 
         private void SetLocated(float x, float y)
         {
-             WorldSystem.SimPaths.SetObjectAt(x,y,this);
+            SimPathStore PathStore = WorldSystem.SimPaths;
+            PathStore.SetObjectAt(x, y, this);
         }
 
         public void SetBlocked(float x, float y)
         {
-            WorldSystem.SimPaths.SetBlocked(x, y,this);
+            SimPathStore PathStore = WorldSystem.SimPaths;
+            PathStore.SetBlocked(x, y, this);
         }
 
         internal void ForceUpdatePaths(SimPathStore simPathStore)
@@ -925,6 +956,29 @@ namespace cogbot.TheOpenSims
                 return;
             }
             theMesh.SetOccupied(SetBlocked, SimZLevel, SimZMaxLevel, Position, simPathStore.StepSize);
+        }
+
+        protected SimRegion _CurrentRegion;
+        public virtual SimRegion CurrentRegion
+        {
+            get
+            {
+                if (_CurrentRegion == null)
+                {
+                    _CurrentRegion = WorldSystem.GetRegion(thePrim.RegionHandle);
+                }
+                return _CurrentRegion;
+            }
+        }
+
+        public SimPathStore GetPathSystem()
+        {
+            return CurrentRegion.PathStore;
+        }
+
+        internal virtual void UpdatePaths()
+        {
+            UpdatePaths(GetPathSystem());
         }
     }
 }

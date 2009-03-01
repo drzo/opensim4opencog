@@ -14,6 +14,7 @@ namespace cogbot.TheOpenSims.Navigation
         bool MoveTo(Vector3 end, float maxDistance, int maxSeconds);
         Quaternion GetSimRotation();
         void Debug(string format, params object[] args);
+        SimPathStore GetPathSystem();
         //float Distance(SimPosition v3);
 
     }
@@ -139,7 +140,7 @@ namespace cogbot.TheOpenSims.Navigation
                 return STATE;
             }
             OuterRoute.ReWeight(0.7f); // Reward
-            SimPathStore.Instance.AddArc(OuterRoute);
+            Mover.GetPathSystem().AddArc(OuterRoute);
             STATE = SimMoverState.COMPLETE;
             return STATE;
         }

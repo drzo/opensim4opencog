@@ -37,9 +37,11 @@ namespace cogbot.TheOpenSims
         // Superclasses
         readonly public List<SimObjectType> SuperType = new List<SimObjectType>();
 
+        public string AspectName;
         public SimObjectType(string name)
-            : base(name)
+            //: base(name)
         {
+            AspectName = name;
         }
 
         public SimObjectType IsSubType(SimObjectType superType)
@@ -189,7 +191,9 @@ namespace cogbot.TheOpenSims
                         throw new Exception("unkown supertype " + arg + " for " + type);
                     }
                     AddSuperType(test);
-                    usage = type.CreateObjectUsage(arg);
+                    //Not all types need to be by defualt usage types - was cousing problems
+                    // use types are fined by "Verb"
+                    // usage = type.CreateObjectUsage(arg);
                     continue;
                 }
                 //if (s == "Match")

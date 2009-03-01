@@ -40,7 +40,7 @@ namespace cogbot.Actions.Movement
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            GraphFormer gf = new GraphFormer(SimPathStore.Instance);
+            GraphFormer gf = new GraphFormer(WorldSystem.SimPaths);
             gf.Show();
             return "ran " + Name;
         }
@@ -56,7 +56,7 @@ namespace cogbot.Actions.Movement
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            PathFinderDemo gf = SimPathStore.PathFinder;//.Instance;
+            PathFinderDemo gf = new PathFinderDemo(WorldSystem.SimPaths);//.Instance;
             gf.Show();
             return "ran " + Name;
         }
@@ -101,7 +101,6 @@ namespace cogbot.Actions.Movement
         public override string Execute(string[] args, UUID fromAgentID)
         {
             IEnumerable<SimObject> objs = WorldSystem.GetAllSimObjects(String.Join(" ", args));
-            SimPathStore pathStore = WorldSystem.SimPaths;
             foreach (SimObject o in objs)
             {
                 WriteLine("MeshInfo: " + o);

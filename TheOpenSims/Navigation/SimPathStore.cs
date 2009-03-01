@@ -47,8 +47,6 @@ namespace cogbot.TheOpenSims.Navigation
         public readonly bool LargeScaleRound;// = LargeScale == (float)Math.Round(LargeScale, 0);
         public readonly byte[,] mMatrix;// = new byte[MAPSPACE, MAPSPACE];
         public readonly SimWaypoint[,] mWaypoints;// = new SimWaypoint[MAPSPACE, MAPSPACE];
-        public static SimPathStore Instance = new SimPathStore("millspec.serz");
-        public static PathFinderDemo PathFinder = new PathFinderDemo(Instance);
         IList<SimWaypoint> SimWaypoints;
         IList<SimRoute> SimRoutes;
         readonly string RegionFileName;
@@ -324,9 +322,8 @@ namespace cogbot.TheOpenSims.Navigation
         /// <summary>
         /// Constructor.
         /// </summary>
-        private SimPathStore(String simName)
+        internal SimPathStore(String simName)
         {
-            Instance = this;
             StepSize = 1f / POINTS_PER_METER;
             MAPSPACE = 256 * ((int)POINTS_PER_METER);
             LargeScaleRound = LargeScale == (float)Math.Round(LargeScale, 0);
@@ -789,7 +786,7 @@ namespace cogbot.TheOpenSims.Navigation
             Point S = ToPoint(start);
             Point E = ToPoint(end);
             PathFinderFast pff = new PathFinderFast(mMatrix);
-            PathFinder.SetStartEnd(S, E);
+            //TODO            PathFinder.SetStartEnd(S, E);
             //pff.ReopenCloseNodes = true;
             pff.SearchLimit = 10000000;
             pff.PunishChangeDirection = PunishChangeDirection;
@@ -801,7 +798,7 @@ namespace cogbot.TheOpenSims.Navigation
                 temp.Add(end);
                 return temp;
             }
-            PathFinder.ShowPath(pfn);
+            //TODOPathFinder.ShowPath(pfn);
             return PathfinderNodesToV3s(pfn);
         }
 
@@ -1055,7 +1052,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             PtX = RangeCheck(PtX);
             PtY = RangeCheck(PtY);
-            SimWaypoint NodeMin = mWaypoints[ARRAY_IDX((PtX)), ARRAY_IDX((PtY))];
+            SimWaypoint NodeMin = mWaypoints[ARRAY_IDX(PtX), ARRAY_IDX(PtY)];
             if (NodeMin != null)
             {
                 if (IgnorePassableProperty || NodeMin.Passable)
@@ -1080,6 +1077,8 @@ namespace cogbot.TheOpenSims.Navigation
                     }
                 }
             Distance = DistanceMin;
+            
+            
             return NodeMin;
         }
 
@@ -1389,6 +1388,8 @@ namespace cogbot.TheOpenSims.Navigation
                 if (Closest.OutgoingArcs.Count > 1) return Closest;
                 if (Closest.IncomingArcs.Count > 1) return Closest;
             }
+
+            if (OtherPathFinder) return Closest;
 
             IList<SimWaypoint> more = new List<SimWaypoint>();
 

@@ -470,6 +470,7 @@ namespace cogbot
             if (msg.Contains("esend")) return;
 			if (msg.Contains("resent packet")) return;
 			if (msg.Contains("Rate limit"))	return;
+            if (msg.Contains("ecoded image with unhandled number of compo")) return;
 			if (debugLevel < 3 && msg.Contains("Array index is out of range")) return;
 			if (debugLevel < 3 && (msg.Contains("nloadi") || msg.Contains("ransfer"))) return;
             if (level == Helpers.LogLevel.Warning || level == Helpers.LogLevel.Debug)
@@ -1076,6 +1077,15 @@ namespace cogbot
         public void Talk(string str)
         {
           Self.Chat(str, 0, ChatType.Normal);
+        }
+
+        internal void Intern(string n, object v)
+        {
+            if (lispTaskInterperter == null)
+            {
+                initTaskInterperter();
+            } 
+            lispTaskInterperter.Intern(n, v);
         }
     }
 

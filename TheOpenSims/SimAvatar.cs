@@ -43,6 +43,13 @@ namespace cogbot.TheOpenSims
             return KnownSimObjects;
         }
 
+        public override List<SimObject> GetNearByObjects(float maxDistance, bool rootOnly)
+        {
+            List<SimObject> near = base.GetNearByObjects(maxDistance, rootOnly);
+            AddKnowns(near);
+            return near;
+        }
+
         // which will result in 
         public List<BotAction> KnownBotActions = new List<BotAction>();
 
@@ -70,6 +77,7 @@ namespace cogbot.TheOpenSims
 
 
 
+        string AspectName;
         public SimAvatar(Avatar slAvatar, WorldObjects objectSystem)
             : base(slAvatar, objectSystem)
         {
@@ -90,6 +98,7 @@ namespace cogbot.TheOpenSims
             avatarHeartbeatThread.Start();
             ApproachThread = new Thread(TrackerLoop);
             ApproachThread.Name = "TrackerLoop for " + AspectName;
+            //ApproachThread.Start();
             MakeEnterable(this);
         }
 
@@ -100,9 +109,10 @@ namespace cogbot.TheOpenSims
 
         public override bool IsRoot()
         {
-            return true;
+            return theAvatar.ParentID == 0;
         }
-        public override SimObject Parent {  get { return this; }   }
+       
+       // public override SimObject Parent {  get { return this; }   }
 
         public bool IsSitting()
         {
@@ -192,13 +202,22 @@ namespace cogbot.TheOpenSims
 
         public override Vector3 GetSimPosition()
         {
-            if (IsLocal()) return Client.Self.SimPosition;
+            if (IsLocal())
+            {
+                if (Client.Settings.OBJECT_TRACKING)
+                    return Client.Self.SimPosition;
+            }
+            if (theAvatar.ParentID == 0) return theAvatar.Position;
             return base.GetSimPosition();
         }
 
         public override Quaternion GetSimRotation()
         {
-            if (IsLocal()) return Client.Self.SimRotation;
+            if (IsLocal())
+            {
+                if (Client.Settings.OBJECT_TRACKING)
+                    return Client.Self.SimRotation;
+            }
             return base.GetSimRotation();
         }
 
@@ -447,6 +466,16 @@ namespace cogbot.TheOpenSims
         public void ScanNewObjects(int minimum, float sightRange)
         {
             List<SimObject> objects = GetNearByObjects(sightRange, true);
+            // ill do this for us: AddKnowns(objects);
+            if (KnownSimObjects.Count < minimum)
+            {
+                if (sightRange < 255)
+                    ScanNewObjects(minimum, sightRange + 10);
+            }
+        }
+
+        private void AddKnowns(List<SimObject> objects)
+        {
             lock (objects)
             {
                 foreach (SimObject obj in objects)
@@ -455,24 +484,19 @@ namespace cogbot.TheOpenSims
                         if (obj.IsRoot() || obj.IsTyped())
                         {
                             lock (KnownSimObjects) if (!KnownSimObjects.Contains(obj))
-                            {
-                                KnownSimObjects.Add(obj);
-                                IList<SimTypeUsage> uses = obj.GetTypeUsages();
-                                foreach (SimTypeUsage use in uses)
                                 {
-                                    lock (KnownTypeUsages) if (!KnownTypeUsages.Contains(use))
+                                    KnownSimObjects.Add(obj);
+                                    IList<SimTypeUsage> uses = obj.GetTypeUsages();
+                                    foreach (SimTypeUsage use in uses)
                                     {
-                                        KnownTypeUsages.Add(use);
+                                        lock (KnownTypeUsages) if (!KnownTypeUsages.Contains(use))
+                                            {
+                                                KnownTypeUsages.Add(use);
+                                            }
                                     }
                                 }
-                            }
                         }
                 }
-            }
-            if (KnownSimObjects.Count < minimum)
-            {
-                if (sightRange < 255)
-                    ScanNewObjects(minimum, sightRange + 10);
             }
         }
 
@@ -541,7 +565,7 @@ namespace cogbot.TheOpenSims
             return new ThreadStart(delegate()
             {
                 Primitive targetPrim = obj.thePrim;
-               // ClientSelf.RequestSit(targetPrim.ID, Vector3.Zero);
+                //ClientSelf.RequestSit(targetPrim.ID, Vector3.Zero);
                 //ClientSelf.Sit();
                 try
                 {
@@ -549,7 +573,7 @@ namespace cogbot.TheOpenSims
                 }
                 finally
                 {
-                    //ClientSelf.Stand();
+                  //  ClientSelf.Stand();
                 }
             });
         }
@@ -602,9 +626,9 @@ namespace cogbot.TheOpenSims
             BotClient Client = GetGridClient();
             if (!String.IsNullOrEmpty(lisp))
             {
-                Client.lispTaskInterperter.Intern("TheBot", this);
-                Client.lispTaskInterperter.Intern("Target", botObjectAction.Target);
-                Client.lispTaskInterperter.Intern("botObjectAction", botObjectAction);
+                Client.Intern("TheBot", this);
+                Client.Intern("Target", botObjectAction.Target);
+                Client.Intern("botObjectAction", botObjectAction);
                 Client.evalLispString((String)lisp);
             }
         }
@@ -614,16 +638,15 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                AgentManager ClientSelf = Client.Self;
-                AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
-                return ClientMovement.Fly;
+                if (IsLocal())
+                    return Client.Self.Movement.Fly;
+                return false;
             }
             set
             {
                 if (IsFloating != value)
                 {
-                    AgentManager ClientSelf = Client.Self;
-                    ClientSelf.Fly(value);
+                    if (IsLocal()) Client.Self.Fly(value);
                 }
             }
         }
@@ -665,9 +688,9 @@ namespace cogbot.TheOpenSims
         public SimObject FindSimObject(SimObjectType pUse)
         {
             IList<SimObject> objects = GetKnownObjects();
-            foreach (SimObject obj in objects)
+            foreach (SimObject O in objects)
             {
-                if (obj.IsTypeOf(pUse) != null) return obj;
+                if (O.IsTypeOf(pUse) != null) return O;
             }
             return null;
         }
@@ -885,8 +908,8 @@ namespace cogbot.TheOpenSims
 
         public override SimWaypoint GetWaypoint()
         {
-            SimPathStore PathStore = WorldSystem.SimPaths;
             Vector3 v3 = GetSimPosition();
+            SimPathStore PathStore = GetPathSystem();
             SimWaypoint swp = PathStore.CreateClosestWaypoint(v3);
             float dist = Vector3.Distance(v3, swp.GetSimPosition());
             if (!swp.Passable)
@@ -894,7 +917,6 @@ namespace cogbot.TheOpenSims
                 WorldSystem.output("CreateClosestWaypoint: " + v3 + " <- " + dist + " -> " + swp + " " + this);
             }
             return swp;
-            //            return PathStore.CreateClosestWaypointBox(v3, 4f);
         }
 
 
@@ -938,7 +960,7 @@ namespace cogbot.TheOpenSims
             }
             lock (TrackerLoopLock)
             {
-                SimPathStore PathStore = WorldSystem.SimPaths;
+                SimPathStore PathStore = GetPathSystem();
                 SimWaypoint P = PathStore.CreateFirstNode(end.X,end.Y);
                 ApproachDistance = maxDistance;
                 ApproachPosition = P;
@@ -1019,8 +1041,10 @@ namespace cogbot.TheOpenSims
         /// <param name="pos"></param>
         /// <returns></returns>
         public bool GotoTarget(SimPosition pos) {
-
-
+            if (!IsLocal())
+            {
+                throw Error("GotoTarget !IsLocal()");
+            }
 
             if (SimPathStore.OtherPathFinder)
             {
@@ -1071,7 +1095,11 @@ namespace cogbot.TheOpenSims
         private bool GotoSimVector(Vector3 vector3, float finalDistance)
         {
 
-            SimPathStore PathStore = WorldSystem.SimPaths;
+            if (!IsLocal())
+            {
+                throw Error("GotoSimVector !IsLocal()");
+            }
+            SimPathStore PathStore = GetPathSystem();
             int OneCount = 0;
             Client.Self.Movement.TurnToward(vector3);
             if (Vector3.Distance(GetSimPosition(), vector3) < finalDistance) return true;
@@ -1088,7 +1116,7 @@ namespace cogbot.TheOpenSims
                 Vector3 end = vector3;
 
 
-                List<Vector3> v3s = (List<Vector3>)PathStore.GetV3Route(start, end);
+                List<Vector3> v3s = (List<Vector3>)CurrentRegion.GetV3Route(start, end);
                 if (v3s.Count > 1)
                 {
                     if (Vector3.Distance(v3s[0], start) > Vector3.Distance(v3s[v3s.Count - 1], start))
@@ -1114,7 +1142,7 @@ namespace cogbot.TheOpenSims
         float LastTurn = 0f;
         public Vector3 MoveToPassableArround(Vector3 start)
         {
-            SimPathStore PathStore = WorldSystem.SimPaths;
+            SimPathStore PathStore = GetPathSystem();
             float A45 = 45f / SimPathStore.RAD2DEG;
             for (float angle = A45; angle < SimPathStore.PI2; angle += A45)
             {
@@ -1134,7 +1162,7 @@ namespace cogbot.TheOpenSims
 
         private bool FollowPath(List<Vector3> v3sIn, Vector3 finalTarget, float finalDistance)
         {
-            SimPathStore PathStore = WorldSystem.SimPaths;
+            SimPathStore PathStore = GetPathSystem();
             IList<Vector3> v3s = PathStore.GetSimplifedRoute(GetSimPosition(), v3sIn, 10, 8f);
             Debug("FollowPath: {0} -> {1}", v3sIn.Count, v3s.Count);
             float dist = 0.75f;
@@ -1174,7 +1202,7 @@ namespace cogbot.TheOpenSims
         private void BlockTowardsVector(Vector3 v3)
         {
             OpenNearbyClosedPassages();
-            SimPathStore PathStore = WorldSystem.SimPaths;
+            SimPathStore PathStore = GetPathSystem();
             Point P1 = PathStore.ToPoint(GetSimPosition());
             Vector3 cp = GetSimPosition();
             Vector3 offset = v3 - cp;
@@ -1251,7 +1279,7 @@ namespace cogbot.TheOpenSims
         /// <param name="vector3"></param>
         private void BlockPoint(Vector3 vector3)
         {
-            SimPathStore PathStore = WorldSystem.SimPaths;
+            SimPathStore PathStore = GetPathSystem();
             Point P = PathStore.ToPoint(vector3);
             Debug("BlockPoint {0},{1}", P.X / PathStore.POINTS_PER_METER, P.Y / PathStore.POINTS_PER_METER);
             byte oldValue = PathStore.GetNodeQuality(vector3);
@@ -1277,7 +1305,7 @@ namespace cogbot.TheOpenSims
 
         private void BlockForwardPos()
         {
-            SimPathStore PathStore = WorldSystem.SimPaths;
+            SimPathStore PathStore = GetPathSystem();
             Point P1 = PathStore.ToPoint(GetSimPosition());
             Point Last = Point.Empty;
             for (float dist = 0.1f; dist < 0.75f; dist += 0.14f)
@@ -1341,8 +1369,13 @@ namespace cogbot.TheOpenSims
         }
 
 
-             public bool AutoGoto(Vector3 target3, float dist, long maxMs)
+             
+        public bool AutoGoto(Vector3 target3, float dist, long maxMs)
         {
+            if (!IsLocal())
+            {
+                throw Error("AutoGoto !IsLocal()");
+            }
             long endAt = Environment.TickCount + maxMs;
             Vector2 target = new Vector2(target3.X, target3.Y);
             float d = Vector3.Distance(GetSimPosition(), target3);
@@ -1388,6 +1421,17 @@ namespace cogbot.TheOpenSims
             return Vector3.Distance(GetSimPosition(), target3)<=dist;
         }
 
+        public override SimRegion CurrentRegion
+        {
+            get
+            {
+                if (_CurrentRegion == null)
+                {
+                    _CurrentRegion = WorldSystem.GetRegion(Client.Network.CurrentSim.Handle);
+                }
+                return _CurrentRegion;
+            }
+        }
 
         public void Touch(SimObject simObject)
         {
@@ -1395,6 +1439,15 @@ namespace cogbot.TheOpenSims
             {
                 Client.Self.Touch(simObject.thePrim.LocalID);
             }
+        }
+
+        internal void RemoveObject(SimObject O)
+        {
+            KnownSimObjects.Remove(O);
+        }
+
+        internal override void UpdatePaths()
+        {
         }
     }
 

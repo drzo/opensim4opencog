@@ -117,7 +117,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         {
             if (this.InvokeRequired)
             {
-                Invoke(new ShowDelegate(Reactivate), new object[] { });
+                Invoke(new ShowDelegate(Show), new object[] { });
                 return;
             }
             Reactivate();
@@ -126,7 +126,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         {
             if (this.InvokeRequired)
             {
-                Invoke(new ShowDelegate(Reactivate), new object[] { });
+                Invoke(new ShowDelegate(Activate), new object[] { });
                 return;
             }
             Reactivate();
