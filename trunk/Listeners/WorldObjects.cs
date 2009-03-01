@@ -17,6 +17,26 @@ namespace cogbot.Listeners
 
     public class WorldObjects : DebugAllEvents
     {
+        public SimPathStore SimPaths
+        {
+            get { return TheSimAvatar.CurrentRegion.PathStore; }
+        }
+        public override void Grid_OnGridRegion(GridRegion region)
+        {
+            ulong id = region.RegionHandle;
+            lock (_CurrentRegionLock)
+            {
+                if (!_CurrentRegions.ContainsKey(id))
+                    _CurrentRegions[id] = new SimRegion(region.Name, this);
+                _CurrentRegions[id].theGridRegion = region;
+            }
+            base.Grid_OnGridRegion(region);
+        }
+        public override void Grid_OnRegionHandleReply(UUID regionID, ulong regionHandle)
+        {
+            RegisterUUID(regionID, GetRegion(regionHandle));
+            base.Grid_OnRegionHandleReply(regionID, regionHandle);
+        }
 
         //readonly public OpenMetaverse.GUI.MiniMap miniMap;
         //protected Dictionary<string, Avatar> avatarCache = new Dictionary<string,Avatar>();
@@ -34,7 +54,7 @@ namespace cogbot.Listeners
         public Dictionary<uint, OSDMap> lastOSD = new Dictionary<uint, OSDMap>();
         public int ExpectedObjects = 1000;
 
-        static Dictionary<uint, Primitive> prims = new Dictionary<uint,Primitive>();
+        static Dictionary<uint, Primitive> prims = new Dictionary<uint, Primitive>();
         //DoubleDictionary<uint, UUID, Avatar> prims = new DoubleDictionary<uint, UUID, Avatar>();
         Dictionary<uint, ObjectUpdate> lastObjectUpdate = new Dictionary<uint, ObjectUpdate>();
         Dictionary<uint, ObjectUpdate> lastObjectUpdateDiff = new Dictionary<uint, ObjectUpdate>();
@@ -65,7 +85,7 @@ namespace cogbot.Listeners
         }
 
         static public ListAsSet<SimAvatar> SimAvatars = new ListAsSet<SimAvatar>();
-        public SimPathStore SimPaths = SimPathStore.Instance;
+        //public SimPathStore SimPaths = SimPathStore.Instance;
 
         static Thread TrackPathsThread;
         static public Queue<SimObject> UpdateMeQueue = new Queue<SimObject>();
@@ -73,7 +93,7 @@ namespace cogbot.Listeners
         {
             if (simObject.IsRegionAttached())
             {
-                simObject.UpdatePaths(SimPathStore.Instance);
+                simObject.UpdatePaths();
                 return;
             }
             lock (UpdateMeQueue)
@@ -88,7 +108,7 @@ namespace cogbot.Listeners
             {
                 UpdateMeQueue.Enqueue(simObject);
             }
-            
+
             //if (!SimObjectsPathUpdates.Contains*() SimObjectsPathUpdates.Add(simObject);
 
             //  Client.Objects.OnObjectUpdated += Objects_OnObjectUpdated;
@@ -118,7 +138,7 @@ namespace cogbot.Listeners
                 foreach (SimObject O in DoNow)
                 {
                     if (O.IsRegionAttached())
-                        O.UpdatePaths(SimPathStore.Instance);
+                        O.UpdatePaths();//SimPathStore.Instance);
                     else AddTracking(O); //reque
                 }
             }
@@ -136,13 +156,13 @@ namespace cogbot.Listeners
                 foreach (SimObject O in SimObjects)
                 {
                     if (O.IsRegionAttached())
-                        O.UpdatePaths(SimPathStore.Instance);
+                        O.UpdatePaths();//SimPathStore.Instance);
                 }
                 Console.WriteLine("TrackPaths Completed: " + thisCount);
             }
         }
 
-        // these will be shared between Clients
+        // these will be shared between Clients and regions
         static ListAsSet<SimObject> SimObjects = new ListAsSet<SimObject>();
 
         //public static BotRegionModel BotWorld = null;
@@ -209,7 +229,8 @@ namespace cogbot.Listeners
         //}
 
         public volatile static WorldObjects Master;
-        public bool IsWorldMaster() {
+        public bool IsWorldMaster()
+        {
             return Master == this;
         }
 
@@ -300,6 +321,7 @@ namespace cogbot.Listeners
                         TrackPathsThread.Name = "TrackPathsThread";
                         // TrackPathsThread.Priority = ThreadPriority.Highest;
                         TrackPathsThread.Start();
+                        client.Settings.USE_TEXTURE_CACHE = true;
                     }
                     else
                     {
@@ -313,13 +335,15 @@ namespace cogbot.Listeners
                         client.Settings.ENABLE_CAPS = false;
                         client.Settings.ENABLE_SIMSTATS = false;
                         client.Settings.STORE_LAND_PATCHES = false;
-                        client.Settings.USE_TEXTURE_CACHE = false;
-                        client.Settings.SEND_PINGS = false;
+                        //client.Settings.USE_TEXTURE_CACHE = false;
+                        client.Settings.SEND_PINGS = true;
 
+                        client.Settings.USE_TEXTURE_CACHE = true;
                         //client.Settings.AVATAR_TRACKING = false;
                     }
                 }
             }
+            client.Settings.THROTTLE_OUTGOING_PACKETS = false;
         }
 
 
@@ -521,6 +545,18 @@ namespace cogbot.Listeners
             Primitive p;
             if (prims.TryGetValue(objectID, out p))
             {
+                SimObject O = GetSimObject(p);
+                if (O != null)
+                {
+                    O.IsKilled = true;
+                    lock (SimAvatars)
+                        foreach (SimAvatar A in SimAvatars)
+                        {
+                            A.RemoveObject(O);
+                        }
+                    lock (SimObjects) SimObjects.Remove(O);
+
+                }
                 SendNewEvent("on-prim-killed", p);
             }
             else
@@ -625,7 +661,7 @@ namespace cogbot.Listeners
             //        CalcStats(prim);
             //    }
             describePrimToAI(prim);
-            if (prims.Count>ExpectedObjects - 11)
+            if (prims.Count > ExpectedObjects - 11)
             {
                 OnPrimsLoaded();
             }
@@ -753,8 +789,8 @@ namespace cogbot.Listeners
         object Objects_OnObjectUpdated1Sync = new Object();
         public override void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
         {
-         /// lock (Objects_OnObjectUpdated1Sync)
-                Objects_OnObjectUpdated1(simulator, update, regionHandle, timeDilation);
+            /// lock (Objects_OnObjectUpdated1Sync)
+            Objects_OnObjectUpdated1(simulator, update, regionHandle, timeDilation);
         }
 
 
@@ -776,7 +812,10 @@ namespace cogbot.Listeners
                         //  {  // Way point creation from other avatars moving
                         //   new Thread(new ThreadStart(delegate()
                         {
-                            SimPaths.Update(update.LocalID, simObject.GetSimPosition(), update.Rotation);
+                           // if (m_TheSimAvatar!=null) {
+                                GetRegion(regionHandle).PathStore.
+                                Update(update.LocalID, simObject.GetSimPosition(), update.Rotation);
+                           // }
                             //   })).Start();
                             // output("Updating state for Avatar " + prim.Name);
                         }
@@ -838,7 +877,7 @@ namespace cogbot.Listeners
                                 {
                                     lastObjectUpdateDiff[update.LocalID] = TheDiff;
                                 }
-                            }                                
+                            }
                             simObject.UpdateObject(update, TheDiff);
                         }
                     }
@@ -1340,7 +1379,7 @@ namespace cogbot.Listeners
             {
                 Primitive prim = (Primitive)args[0];
                 Vector3 vect = (Vector3)args[1];
-				
+
                 if (!primVect.ContainsKey(prim))
                 {
                     primVect[prim] = vect;
@@ -1485,7 +1524,7 @@ namespace cogbot.Listeners
                 Avatar avatar = (Avatar)prim;
                 describeAvatarToAI(avatar);
                 return;
-            }     
+            }
             //if (!primsKnown.Contains(prim))	return;
             BlockUntilProperties(prim);
             if (prim.Properties.Name != null)
@@ -1814,7 +1853,7 @@ namespace cogbot.Listeners
         {
             if (thePrim is Avatar) return;
             SimObjects.Remove(GetSimObject(thePrim));
-           // client.Inventory.RequestDeRezToInventory(thePrim.LocalID);
+            // client.Inventory.RequestDeRezToInventory(thePrim.LocalID);
         }
 
         internal Primitive RequestMissingObject(uint localID)
@@ -1941,7 +1980,7 @@ namespace cogbot.Listeners
                 if (tryGetPrim(s, out prim))
                 {
                     SimObject simObject = GetSimObject(prim);
-           //         if (simObject.IsRegionAttached())
+                    //         if (simObject.IsRegionAttached())
                     {
                         argsUsed = consume;
                         return simObject.thePrim;
@@ -1964,6 +2003,46 @@ namespace cogbot.Listeners
             }
             matches.Sort(TheSimAvatar.CompareDistance);
             return matches;
+        }
+
+        public List<SimObject> GetNearByObjects(Vector3 here, object except, float maxDistance, bool rootOnly)
+        {
+            List<SimObject> nearby = new List<SimObject>();
+            foreach (SimObject obj in GetAllSimObjects())
+            {
+                if (obj != except)
+                    if (!(rootOnly && !obj.IsRoot() && !obj.IsTyped()))
+                        if (obj.IsRegionAttached() && Vector3.Distance(obj.GetSimPosition(), here) <= maxDistance)
+                            nearby.Add(obj);
+            };
+            return nearby;
+        }
+
+        static Dictionary<ulong,SimRegion> _CurrentRegions = new Dictionary<ulong,SimRegion>();
+        static object _CurrentRegionLock = new object();
+        internal SimRegion GetRegion(ulong id)
+        {
+            lock (_CurrentRegionLock)
+            {
+                if (!_CurrentRegions.ContainsKey(id))
+                {
+
+                    string simName = GetSimName();
+                    SimRegion R = new SimRegion(simName, this);
+                    GridRegion r;
+                    if (client.Grid.GetGridRegion(simName, GridLayerType.Objects, out r))
+                    {
+                        R.theGridRegion = r;
+                    }
+                    _CurrentRegions[id] = R;
+                }
+                return _CurrentRegions[id];
+            }
+        }
+
+        private string GetSimName()
+        {
+            return client.Network.CurrentSim.Name;
         }
     }
 }

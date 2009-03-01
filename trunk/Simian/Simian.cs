@@ -21,8 +21,8 @@ namespace Simian
         public const string CONFIG_FILE = "Simian.ini";
         public const string DATA_DIR = "SimianData/";
 
-        public int UDPPort { get { return 9000; } }
-        public int HttpPort { get { return 8002; } }
+        public int UDPPort { get { return 19000; } }
+        public int HttpPort { get { return 18002; } }
         public bool SSL { get { return false; } }
         public string HostName { get { return Dns.GetHostName(); } }
 

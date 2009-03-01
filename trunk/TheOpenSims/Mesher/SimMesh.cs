@@ -70,7 +70,7 @@ namespace cogbot.TheOpenSims.Mesher
                 IsSolid = true;
             }
 
-            PrimMesh primMesh;
+            //PrimMesh primMesh;
 
             //if (false)
             //{
@@ -82,8 +82,8 @@ namespace cogbot.TheOpenSims.Mesher
             //}
 
             // Add High PrimMesh (IdealistViewer code)
-            primMesh = PrimitiveToPrimMesh(simObject.thePrim, LevelOfDetail.High, Scale, Rotation);
-            AddMesh(primMesh);
+            Mesh mesh = PrimitiveToMesh(simObject.thePrim, LevelOfDetail.High, Scale, Rotation);
+            AddMesh(mesh);
 
 
             //if (false)
@@ -375,6 +375,127 @@ namespace cogbot.TheOpenSims.Mesher
             return mesh;
         }
 
+
+        public static Mesh PrimitiveToMesh(Primitive primitive, LevelOfDetail detail, Vector3 Scale, Quaternion rot)
+        {
+
+            if (primitive.Sculpt != null)
+            {
+                OpenMetaverse.Primitive.SculptData SD = primitive.Sculpt;
+                byte[] bytes = SD.GetBytes();
+                SculptMesh SM = ToSculptMesh(bytes,primitive.Sculpt.Type,Scale,rot);
+                if (SM!=null)                
+                    return ToMesh(SM.coords, SM.faces, SM.viewerFaces,primitive.PrimData.Type==PrimType.Sphere);
+            }
+
+            bool UseExtremeDetail = Scale.X + Scale.Y + Scale.Z > UseExtremeDetailSize;
+
+            PrimMesh primMesh = ConstructionDataToPrimMesh(primitive.PrimData, detail, UseExtremeDetail);
+            primMesh.Scale(Scale.X, Scale.Y, Scale.Z);
+            primMesh.AddRot(QuaternionToQuat(rot));
+            return PrimMeshToMesh(primMesh);
+        }
+
+        public static Mesh ToMesh(List<Coord> coords, List<Face> faces, List<ViewerFace> viewerFaces, bool isSphere)
+        {
+            Mesh mesh = new Mesh();
+
+            int numCoords = coords.Count;
+            int numFaces = faces.Count;
+
+            for (int i = 0; i < numCoords; i++)
+            {
+                Coord c = coords[i];
+                mesh.vertices.Add(new Vertex(c.X, c.Y, c.Z));
+            }
+
+            List<Vertex> vertices = mesh.vertices;
+            for (int i = 0; i < numFaces; i++)
+            {
+                Face f = faces[i];
+                mesh.triangles.Add(new Triangle(vertices[f.v1], vertices[f.v2], vertices[f.v3]));
+            }
+            if (UseViewerMode && viewerFaces != null)
+            {
+                int numViewerFaces = viewerFaces.Count;
+                for (uint i = 0; i < numViewerFaces; i++)
+                {
+                    ViewerFace vf = viewerFaces[(int)i];
+
+                    if (isSphere)
+                    {
+                        vf.uv1.U = (vf.uv1.U - 0.5f) * 2.0f;
+                        vf.uv2.U = (vf.uv2.U - 0.5f) * 2.0f;
+                        vf.uv3.U = (vf.uv3.U - 0.5f) * 2.0f;
+                    }
+                }
+            }
+            return mesh;
+        }
+
+        // partly from OpenSim.Region.Physics.Meshing
+        public static SculptMesh ToSculptMesh(byte[] sculptData, OpenMetaverse.SculptType sculptTypeIn, Vector3 size, Quaternion Rotation)
+        {
+            SculptMesh sculptMesh;
+            if (sculptData==null || sculptData.Length == 0)
+                return null;
+            
+            System.Drawing.Image idata = null;
+
+            try
+            {
+                OpenMetaverse.Imaging.ManagedImage managedImage;  // we never use this
+                OpenMetaverse.Imaging.OpenJPEG.DecodeToImage(sculptData, out managedImage, out idata);
+
+            }
+            catch (DllNotFoundException)
+            {
+                System.Console.WriteLine("[PHYSICS]: OpenJpeg is not installed correctly on this system. Physics Proxy generation failed.  Often times this is because of an old version of GLIBC.  You must have version 2.4 or above!");
+                return null;
+            }
+            catch (IndexOutOfRangeException)
+            {
+                System.Console.WriteLine("[PHYSICS]: OpenJpeg was unable to decode this.   Physics Proxy generation failed");
+                return null;
+            }
+            catch (Exception)
+            {
+                System.Console.WriteLine("[PHYSICS]: Unable to generate a Sculpty physics proxy.  Sculpty texture decode failed!");
+                return null;
+            }
+
+            SculptMesh.SculptType sculptType;
+
+            switch (sculptTypeIn)
+            {
+                case OpenMetaverse.SculptType.Cylinder:
+                    sculptType = SculptMesh.SculptType.cylinder;
+                    break;
+                case OpenMetaverse.SculptType.Plane:
+                    sculptType = SculptMesh.SculptType.plane;
+                    break;
+                case OpenMetaverse.SculptType.Torus:
+                    sculptType = SculptMesh.SculptType.torus;
+                    break;
+                case OpenMetaverse.SculptType.Sphere:
+                default:
+                    sculptType = SculptMesh.SculptType.sphere;
+                    break;
+            }
+            if (idata == null) return null;
+            sculptMesh = new SculptMesh((System.Drawing.Bitmap)idata, sculptType, (int)64, false);
+
+            idata.Dispose();
+
+        //    sculptMesh.DumpRaw(baseDir, primName, "primMesh");
+
+            sculptMesh.AddRot(QuaternionToQuat(Rotation));
+            sculptMesh.Scale(size.X, size.Y, size.Z);
+            return sculptMesh;          
+        }
+
+
+
         /// <summary>
         /// Convert a Openmetaverse.Primitive to a PrimMesh
         /// </summary>
@@ -385,10 +506,10 @@ namespace cogbot.TheOpenSims.Mesher
         /// <returns></returns>
         public static PrimMesh PrimitiveToPrimMesh(Primitive thePrim, LevelOfDetail detail, Vector3 Scale, Quaternion rot)
         {
-            bool UseExtremeDetail = Scale.X+Scale.Y+Scale.Z > UseExtremeDetailSize;
+            bool UseExtremeDetail = Scale.X + Scale.Y + Scale.Z > UseExtremeDetailSize;
             PrimMesh mesh = ConstructionDataToPrimMesh(thePrim.PrimData, detail, UseExtremeDetail);
             mesh.Scale(Scale.X, Scale.Y, Scale.Z);
-           // if (rot != Quaternion.Identity)                
+            // if (rot != Quaternion.Identity)                
             mesh.AddRot(QuaternionToQuat(rot));
             return mesh;
         }

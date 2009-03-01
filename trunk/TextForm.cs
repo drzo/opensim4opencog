@@ -38,6 +38,9 @@ namespace cogbot
         public static int nextTcpPort = 5555;
         static public TextForm SingleInstance = null;
         public static int debugLevel = 2;
+
+        public BotClient OnlyOneCurrentBotClient;
+
         //public bool GetTextures = false;
 
         //public UUID GroupID = UUID.Zero;
@@ -229,6 +232,43 @@ namespace cogbot
 
             }
         }
+        public void SetOnlyOneCurrentBotClient(string CurrentBotClient)
+        {
+            if (String.IsNullOrEmpty(CurrentBotClient)) {
+                OnlyOneCurrentBotClient = null;
+                return;
+            }
+            BotClient OBotClient = GetBotByName(CurrentBotClient);
+            if (OBotClient == null)
+                output("SetOnlyOneCurrentBotClient to unkown bot: " + CurrentBotClient);
+            else OnlyOneCurrentBotClient = OBotClient;
+            
+        }
+
+        public static BotClient GetBotByName(string CurrentBotClient)
+        {
+            if (BotByName.ContainsKey(CurrentBotClient))
+                return BotByName[CurrentBotClient];
+            else
+            {
+                String lCurrentBotClient = CurrentBotClient.ToLower();
+                foreach (string name in BotByName.Keys)
+                {
+                    if (name.ToLower() == lCurrentBotClient)
+                    {
+                        return BotByName[name];
+                    }
+                }
+                foreach (string name in BotByName.Keys)
+                {
+                    if (name.ToLower().Contains(lCurrentBotClient))
+                    {
+                        return BotByName[name];
+                    }
+                }
+            }
+            return null;
+        }
         public bool ExecuteCommand(string text)
         {
             //text = text.Replace("\"", "");
@@ -244,6 +284,10 @@ namespace cogbot
                 return true;
             }
             if (BotByName.Count == 0 && lastBotClient!=null) return lastBotClient.ExecuteCommand(text);
+            if (OnlyOneCurrentBotClient != null)
+            {
+                return OnlyOneCurrentBotClient.ExecuteCommand(text);
+            }
             bool handled = false;
             foreach (BotClient CurrentClient in BotByName.Values)
                 if (CurrentClient != null)
@@ -498,7 +542,7 @@ namespace cogbot
         {
 
         }
-        public Dictionary<string, BotClient> BotByName = new Dictionary<string, BotClient>();
+        static public Dictionary<string, BotClient> BotByName = new Dictionary<string, BotClient>();
         public BotClient lastBotClient = null;
         public BotClient CreateBotClient(string first, string last, string passwd, string simurl)
         {

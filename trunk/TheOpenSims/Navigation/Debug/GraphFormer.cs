@@ -1372,7 +1372,7 @@ with the respective left and right mouse buttons.", "Impossible action", Message
 			{
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new GraphFormer(SimPathStore.Instance));
+                Application.Run(new GraphFormer(new SimPathStore("default")));
 			}
 			catch (Exception e) { MessageBox.Show(e.ToString()); }
 		}

@@ -14,7 +14,7 @@ namespace cogbot.TheOpenSims
         public String UsageName;
 
         public SimUsage(string name)
-            : base(name)
+           // : base(name)
         {
             UsageName = name;
         }
@@ -202,6 +202,10 @@ namespace cogbot.TheOpenSims
     {
         public SimTypeUsage(String name):base(name)
         {
+            if (name == "Passable")
+            {
+                throw new ArgumentException();
+            }
             
         }
 

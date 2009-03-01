@@ -286,13 +286,14 @@ namespace cogbot.TheOpenSims.Navigation
         //}
 
         public SimRoute _Reverse;
+        public SimPathStore PathStore;
         public virtual SimRoute Reverse
         {
             get
             {
                 if (_Reverse == null)
                 {
-                    _Reverse = SimPathStore.Instance.InternArc(EndNode, StartNode, Weight);
+                    _Reverse = PathStore.InternArc(EndNode, StartNode, Weight);
                     SimRoute.CopyProperties(this, _Reverse);
                     _Reverse._Reverse = this;
                     //movement.Cost = Cost;

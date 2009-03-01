@@ -8,7 +8,7 @@
           <OptimizeCode>false</OptimizeCode>
           <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
           <AllowUnsafe>true</AllowUnsafe>
-          <WarningLevel>4</WarningLevel>
+          <WarningLevel>3</WarningLevel>
           <WarningsAsErrors>false</WarningsAsErrors>
           <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
           <OutputPath>bin</OutputPath>
@@ -23,7 +23,7 @@
           <OptimizeCode>true</OptimizeCode>
           <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
           <AllowUnsafe>true</AllowUnsafe>
-          <WarningLevel>4</WarningLevel>
+          <WarningLevel>3</WarningLevel>
           <WarningsAsErrors>false</WarningsAsErrors>
           <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
           <OutputPath>bin</OutputPath>
@@ -332,7 +332,6 @@
    <Project name="cogbot" path="." type="Exe">
       <Configuration name="Debug">
         <Options>
-            <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
           <OutputPath>bin/</OutputPath>
         </Options>
       </Configuration>
@@ -361,8 +360,6 @@
       <Reference name="System.Xml" localCopy="false"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="ABCL.Net.dll" localCopy="false"/>
-      <Reference name="Irrlicht.Extensions" localCopy="false"/>
-      <Reference name="Irrlicht.NET" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
       <Files>
@@ -374,9 +371,9 @@
           <Match path="Properties" pattern="*.cs" recurse="true"/>
           <Match path="Tutorials" pattern="*.cs" recurse="true"/>
           <Match path="Utilities" pattern="*.cs" recurse="true"/>
-          <Match path="DotCYC" pattern="CycConnectionForm.resx" recurse="false" subType="Settings"  buildAction="None"/>
-          <Match path="DotCYC" pattern="CycConnectionForm.cs" recurse="false"/>
-          <Match path="DotCYC" pattern="CycConnectionForm.Designer.cs" recurse="false"/>
+          <Match path="DotCYC" pattern="CycConnectionForm.resx" recurse="false" subType="Settings"  buildAction="EmbeddedResource"/>
+          <Match path="DotCYC" pattern="CycConnectionForm.cs" recurse="false" subType="Form"/>
+          <Match path="DotCYC" pattern="CycConnectionForm.Designer.cs" recurse="false"  subType="Form"/>
           <Match path="ScriptEngines" pattern="*.cs" recurse="true"/>
           <Match path="TheOpenSims/Navigation/Debug" pattern="*.cs" recurse="false" subType="Form"/>
           <Match path="TheOpenSims/Navigation" pattern="*.cs" recurse="false" subType="Code"/>
