@@ -576,6 +576,16 @@ namespace cogbot.TheOpenSims.Navigation
             return Vector3.Distance(P, _Position);
         }
 
+
+        #region SimPosition Members
+
+
+        public Quaternion GetSimRotation()
+        {
+            return Quaternion.Identity;
+        }
+
+        #endregion
     }
 
     //public class SimMovementPoints : SimMovement

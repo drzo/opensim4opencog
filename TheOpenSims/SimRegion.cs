@@ -113,5 +113,15 @@ namespace cogbot.TheOpenSims
         {
             return PathStore.CreateClosestWaypoint(v3);
         }
+
+        #region SimPosition Members
+
+
+        public Quaternion GetSimRotation()
+        {
+            return Quaternion.Identity;
+        }
+
+        #endregion
     }
 }

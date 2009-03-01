@@ -161,39 +161,39 @@ namespace cogbot.Actions.Movement
         }
     }
 
-    class srpath : cogbot.Actions.Command
-    {
-        public srpath(BotClient client)
-        {
-            Name = GetType().Name;
-            Description = "Show the route to the object";
-            Category = cogbot.Actions.CommandCategory.Movement;
-        }
+    //class srpath : cogbot.Actions.Command
+    //{
+    //    public srpath(BotClient client)
+    //    {
+    //        Name = GetType().Name;
+    //        Description = "Show the route to the object";
+    //        Category = cogbot.Actions.CommandCategory.Movement;
+    //    }
 
-        public override string Execute(string[] args, UUID fromAgentID)
-        {
-            int argsused;
-            SimPosition v3 = WorldSystem.GetVector(args, out argsused);
-            SimWaypoint wp = v3.GetWaypoint();
-            bool IsFake;
-            IList<SimRoute> route = WorldSystem.TheSimAvatar.GetRouteList(wp, out IsFake);
-            String s = "v3=" + WorldSystem.TheSimAvatar.DistanceVectorString(v3) + " wp=" + wp.ToString();
-            if (IsFake)
-            {
-                s += "\nIsFake: ";
-            }
-            else
-            {
-                s += "\nComputed ";
-            }
-            if (route!=null)
-            for (int i = 0; i < route.Count; i++)
-            {
-                s += " \n" + i + ": " + route[i].ToInfoString();
-            }
-            return s;
-        }
-    }
+    //    public override string Execute(string[] args, UUID fromAgentID)
+    //    {
+    //        int argsused;
+    //        SimPosition v3 = WorldSystem.GetVector(args, out argsused);
+    //        SimWaypoint wp = v3.GetWaypoint();
+    //        bool IsFake;
+    //        IList<SimRoute> route = WorldSystem.TheSimAvatar.GetRouteList(wp, out IsFake);
+    //        String s = "v3=" + WorldSystem.TheSimAvatar.DistanceVectorString(v3) + " wp=" + wp.ToString();
+    //        if (IsFake)
+    //        {
+    //            s += "\nIsFake: ";
+    //        }
+    //        else
+    //        {
+    //            s += "\nComputed ";
+    //        }
+    //        if (route!=null)
+    //        for (int i = 0; i < route.Count; i++)
+    //        {
+    //            s += " \n" + i + ": " + route[i].ToInfoString();
+    //        }
+    //        return s;
+    //    }
+    //}
 
     class srwp : cogbot.Actions.Command
     {
