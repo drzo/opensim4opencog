@@ -1001,7 +1001,7 @@ namespace cogbot.TheOpenSims
             string str = "Approaching " + obj + " " + DistanceVectorString(obj) + " to get " + ApproachDistance;
             Debug(str);
             obj.MakeEnterable(this);
-            if (!MoveTo(obj.GetSimPosition(), obj.GetSizeDistance() + 0.5f, 12))
+           // if (!MoveTo(obj.GetSimPosition(), obj.GetSizeDistance() + 0.5f, 12))
             {
                 GotoTarget(obj);
             }
@@ -1011,30 +1011,6 @@ namespace cogbot.TheOpenSims
             return Distance(obj);
         }
 
-        int TurnAvoid = 90;
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="pos"></param>
-        /// <param name="IsFake"></param>
-        /// <returns></returns>
-        public bool TryGotoTarget(SimPosition pos, out bool IsFake)
-        {
-            IsFake = false;
-            SimMoverState state = SimMoverState.TRYAGAIN;
-            while (state == SimMoverState.TRYAGAIN)
-            {
-                SimWaypoint target = pos.GetWaypoint();
-                IList<SimRoute> routes = GetRouteList(target, out IsFake);
-                if (routes == null) return false;
-                SimRouteMover ApproachPlan = new SimRouteMover(this, routes, pos.GetSimPosition(), pos.GetSizeDistance());
-                state = ApproachPlan.Goto();
-                if (state == SimMoverState.COMPLETE) return true;
-            }
-            return false;
-            
-            //== SimMoverState.COMPLETE;
-        }
         /// <summary>
         /// 
         /// </summary>
@@ -1048,7 +1024,13 @@ namespace cogbot.TheOpenSims
 
             if (SimPathStore.OtherPathFinder)
             {
-                return GotoSimVector(pos.GetUsePosition(), pos.GetSizeDistance());
+                bool result = GotoSimVector(pos.GetUsePosition(), pos.GetSizeDistance());
+                if (result)
+                {
+                    SetMoveTarget(pos);
+                }
+                return result;
+
             }
 
             if (AutoGoto(pos.GetSimPosition(), pos.GetSizeDistance(), 2000))
@@ -1056,319 +1038,32 @@ namespace cogbot.TheOpenSims
                 Debug("EASY GotoTarget: " + pos);
                 return true;
             }
-            bool IsFake;
-            for (int i = 0; i < 19; i++)
-            {
-                Debug("PLAN GotoTarget: " + pos);
-                // StopMoving();
-                if (TryGotoTarget(pos,out IsFake))
-                {
-                    StopMoving();
-                    TurnToward(pos);
-                    Debug("SUCCESS GotoTarget: " + pos);
-                    return true;
-                }
-
-                //TurnToward(pos);
-                float posDist = Vector3.Distance(GetSimPosition(), pos.GetSimPosition());
-                if (posDist <= pos.GetSizeDistance() + 0.5)
-                {
-                    Debug("OK GotoTarget: " + pos);
-                    return true;
-                }
-                TurnAvoid += 115;
-                while (TurnAvoid > 360)
-                {
-                    TurnAvoid -= 360;
-                }
-                //Vector3 newPost = GetLeftPos(TurnAvoid, 4f);
-
-                //StopMoving();
-                //Debug("MOVELEFT GotoTarget: " + pos);
-                //MoveTo(newPost, 2f, 4);
-                if (IsFake) break;
-            }
-            Debug("FAILED GotoTarget: " + pos);
-            return false;
+            return GotoSimRoute(pos);
         }
 
-        private bool GotoSimVector(Vector3 vector3, float finalDistance)
+        private bool GotoSimRoute(SimPosition pos)
         {
-
             if (!IsLocal())
             {
                 throw Error("GotoSimVector !IsLocal()");
             }
-            SimPathStore PathStore = GetPathSystem();
-            int OneCount = 0;
-            Client.Self.Movement.TurnToward(vector3);
-            if (Vector3.Distance(GetSimPosition(), vector3) < finalDistance) return true;
-            for (int trial = 0; trial < 25; trial++)
-            {
-                StopMoving();
-                Application.DoEvents();             
-                Vector3 start = GetUsePosition();
-
-                if (!PathStore.IsPassable(start))
-                {
-                   start = MoveToPassableArround(start);
-                }
-                Vector3 end = vector3;
-
-
-                List<Vector3> v3s = (List<Vector3>)CurrentRegion.GetV3Route(start, end);
-                if (v3s.Count > 1)
-                {
-                    if (Vector3.Distance(v3s[0], start) > Vector3.Distance(v3s[v3s.Count - 1], start))
-                        v3s.Reverse();
-                }
-                else
-                {
-                    MoveToPassableArround(GetSimPosition());
-                  //  GetUsePosition();
-                    if (OneCount > 3) return false;
-                    OneCount++;
-                }
-
-                Debug("Path {1}: {0} " ,v3s.Count ,trial);
-                if (FollowPath(v3s, vector3, finalDistance)) return true;
-                if (Vector3.Distance(GetSimPosition(), vector3) < finalDistance) return true;
-
-            }
-            return false;
+            SimAbstractMover mover = new SimReRouteMover(this, pos, pos.GetSizeDistance());
+            return mover.Goto() == SimMoverState.COMPLETE;
         }
 
+       
 
-        float LastTurn = 0f;
-        public Vector3 MoveToPassableArround(Vector3 start)
+
+        private bool GotoSimVector(Vector3 vector3, float distance)
         {
-            SimPathStore PathStore = GetPathSystem();
-            float A45 = 45f / SimPathStore.RAD2DEG;
-            for (float angle = A45; angle < SimPathStore.PI2; angle += A45)
+            if (!IsLocal())
             {
-                Vector3 next = ZAngleVector(angle + LastTurn) * 2 + start;
-                 if (PathStore.IsPassable(next))
-                 {
-                     if (MoveTo(next,1f,3)) {
-                         LastTurn += angle;  // update for next use
-                         if (LastTurn > SimPathStore.PI2)
-                             LastTurn -= SimPathStore.PI2;
-                         return next;
-                     }
-                 }
+                throw Error("GotoSimVector !IsLocal()");
             }
-            return start;
-        }
-
-        private bool FollowPath(List<Vector3> v3sIn, Vector3 finalTarget, float finalDistance)
-        {
-            SimPathStore PathStore = GetPathSystem();
-            IList<Vector3> v3s = PathStore.GetSimplifedRoute(GetSimPosition(), v3sIn, 10, 8f);
-            Debug("FollowPath: {0} -> {1}", v3sIn.Count, v3s.Count);
-            float dist = 0.75f;
-            int CanSkip = 2;
-            int Skipped = 0;
-            foreach (Vector3 v3 in v3s)
-            {
-                //  if (Vector3.Distance(v3, GetSimPosition()) < dist) continue;
-                if (!MoveTo(v3, dist, 5))
-                {
-                    if (Vector3.Distance(GetSimPosition(), finalTarget) < finalDistance) return true;
-                    if (!MoveTo(v3, dist, 2))
-                    {
-                        if (Skipped++ <= CanSkip)
-                        {
-                            MoveToPassableArround(GetSimPosition());
-                            Skipped++;
-                            continue;
-                        }
-                        BlockTowardsVector(v3);
-                        return false;
-                    }
-                }
-                else
-                {
-                    Skipped = 0;
-                }
-
-            }
-            return true;
-        }
-
-        /// <summary>
-        /// Blocks points -45 to +45 degrees in front of Bot (assumes the bot is heading toward V3)
-        /// </summary>
-        /// <param name="v3"></param>
-        private void BlockTowardsVector(Vector3 v3)
-        {
-            OpenNearbyClosedPassages();
-            SimPathStore PathStore = GetPathSystem();
-            Point P1 = PathStore.ToPoint(GetSimPosition());
-            Vector3 cp = GetSimPosition();
-            Vector3 offset = v3 - cp;
-            float ZAngle = (float)Math.Atan2(offset.Y, offset.X);
-            Point Last = PathStore.ToPoint(v3);
-            float Dist = 0.3f;
-            Vector3 b1 = v3;
-            while (offset.Length() > 0.1)
-            {
-                offset *= 0.75f;
-                Vector3 blocked = cp + offset;
-                Point P2 = PathStore.ToPoint(blocked);
-                if (P2 != P1)
-                {
-                    Dist = offset.Length();
-                    Last = P2;
-                    b1 = blocked;
-                }
-            }
-            float x = Last.X / PathStore.POINTS_PER_METER;
-            float y = Last.Y / PathStore.POINTS_PER_METER;
-            BlockPoint(new Vector3( x, y,v3.Z));
-            float A45 = 45f / SimPathStore.RAD2DEG;
-            Debug("Blocked {0},{1}", x, y);
-            Vector3 middle = ZAngleVector(ZAngle) * Dist;
-            middle += cp;
-            float mdist = Vector3.Distance(middle, b1);
-            if (mdist > 0.1)
-            {
-                Debug("Wierd mdist=" + mdist);
-            }
-            Dist = 0.4f;
-            BlockPoint(ZAngleVector(ZAngle) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle - A45 * 0.5) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle + A45 * 0.5) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle - A45) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle + A45) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle - A45 * 1.5) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle + A45 * 1.5) * Dist + cp);
-            //Dont Run back
-            //MoveTo(cp + ZAngleVector(ZAngle - Math.PI) * 2, 1f, 2);
-        }
-
-        private void OpenNearbyClosedPassages()
-        {
-            SimObjectType DOOR = SimTypeSystem.DOOR;
-            // look for closed doors
-            foreach (SimObject O in GetNearByObjects(2, false))
-            {
-                if (O.IsTypeOf(DOOR)!=null)
-                {
-                    O.MakeEnterable(this);
-                }
-            }
-            
+            SimAbstractMover mover = new SimVectorMover(this, vector3, distance);
+            return mover.Goto()==SimMoverState.COMPLETE;
             
         }
-
-        private Vector3 ZAngleVector(double ZAngle)
-        {
-            while (ZAngle <0)
-            {
-                ZAngle += SimPathStore.PI2;
-            }
-            while (ZAngle > SimPathStore.PI2)
-            {
-                ZAngle -= SimPathStore.PI2;
-            }
-            return new Vector3((float)Math.Sin(ZAngle), (float)Math.Cos(ZAngle), 0);
-        }
-        /// <summary>
-        /// Blocks a point temporarilly (one minute)
-        /// </summary>
-        /// <param name="vector3"></param>
-        private void BlockPoint(Vector3 vector3)
-        {
-            SimPathStore PathStore = GetPathSystem();
-            Point P = PathStore.ToPoint(vector3);
-            Debug("BlockPoint {0},{1}", P.X / PathStore.POINTS_PER_METER, P.Y / PathStore.POINTS_PER_METER);
-            byte oldValue = PathStore.GetNodeQuality(vector3);
-            if (oldValue == 0) // aready blocked
-                return;
-            PathStore.SetNodeQuality(vector3, 0);
-            new Thread(new ThreadStart(delegate()
-            {
-                Thread.Sleep(60000);
-                byte newValue = PathStore.GetNodeQuality(vector3);
-                if (newValue != 0)
-                {
-                    // its been changed by something else since we set to Zero
-                    Debug("BlockPoint Thread out of date {0} value changed to {1}", vector3, newValue);
-                }
-                else
-                {
-                    PathStore.SetNodeQuality(vector3, oldValue);
-                    Debug("Unblock {0} value reset to {1}", vector3, oldValue);
-                }
-            })).Start();
-        }
-
-        private void BlockForwardPos()
-        {
-            SimPathStore PathStore = GetPathSystem();
-            Point P1 = PathStore.ToPoint(GetSimPosition());
-            Point Last = Point.Empty;
-            for (float dist = 0.1f; dist < 0.75f; dist += 0.14f)
-            {
-                Vector3 blocked = GetLeftPos(0, dist);
-                Point P2 = PathStore.ToPoint(blocked);
-                if (P2 != P1 && Last != P2)
-                {
-                    BlockPoint(blocked);
-                    Debug("Blocked {0},{1}", P2.X / PathStore.POINTS_PER_METER, P2.Y / PathStore.POINTS_PER_METER);
-                    Last = P2;
-                }            
-            }
-            for (float dist = 0.1f; dist < 0.75f; dist += 0.14f)
-            {
-                Vector3 blocked = GetLeftPos(45, dist);
-                Point P2 = PathStore.ToPoint(blocked);
-                if (P2 != P1 && Last != P2)
-                {
-                    BlockPoint(blocked);
-                    Debug("Blocked {0},{1}", P2.X / PathStore.POINTS_PER_METER, P2.Y / PathStore.POINTS_PER_METER);
-                    Last = P2;
-                }
-            }
-            for (float dist = 0.1f; dist < 0.75f; dist += 0.14f)
-            {
-                Vector3 blocked = GetLeftPos(360-45, dist);
-                Point P2 = PathStore.ToPoint(blocked);
-                if (P2 != P1 && Last != P2)
-                {
-                    BlockPoint(blocked);
-                    Debug("Blocked {0},{1}", P2.X / PathStore.POINTS_PER_METER, P2.Y / PathStore.POINTS_PER_METER);
-                    Last = P2;
-                }
-            }
-
-            Last = Point.Empty;
-            for (float dist = 0.1f; dist < 0.75f; dist += 0.14f)
-            {
-                Vector3 blocked = GetLeftPos(0, dist);
-                Point P2 = PathStore.ToPoint(blocked);
-                if (P2 != P1 && Last != P2)
-                {
-                    PathStore.SetPassable(blocked.X, blocked.Y);
-                    Debug("Unblocked {0},{1}", P2.X / PathStore.POINTS_PER_METER, P2.Y / PathStore.POINTS_PER_METER);
-                    Last = P2;
-                }
-            }
-            //Last = Point.Empty;
-            //for (float dist = 0.0f; dist < 1f; dist += 0.14f)
-            //{
-            //    Vector3 blocked = GetLeftPos(180, dist);
-            //    Point P2 = PathStore.ToPoint(blocked);
-            //    if (P2 != Last)
-            //    {
-            //        PathStore.SetPassable(blocked.X, blocked.Y);
-            //        Debug("Unblocked {0},{1}", P2.X / PathStore.POINTS_PER_METER, P2.Y / PathStore.POINTS_PER_METER);
-            //        Last = P2;
-            //    }
-            //}
-        }
-
-
              
         public bool AutoGoto(Vector3 target3, float dist, long maxMs)
         {
@@ -1449,6 +1144,16 @@ namespace cogbot.TheOpenSims
         internal override void UpdatePaths()
         {
         }
+
+        #region SimMover Members
+
+        public void TurnToward(Vector3 targetPosition)
+        {
+            Client.Self.Movement.TurnToward(targetPosition);
+        }
+
+        #endregion
+
     }
 
 

@@ -143,26 +143,6 @@ namespace cogbot.TheOpenSims
             //            return PathStore.CreateClosestWaypointBox(v3, 4f);
         }
 
-        public IList<SimRoute> GetRouteList(SimWaypoint to, out bool IsFake)
-        {
-            SimWaypoint from = this.GetWaypoint();
-            SimPathStore PathStore = WorldSystem.SimPaths;
-            IList<SimRoute> route = PathStore.GetRoute(from, to, out IsFake);
-            if (false)
-            {
-                //pathByNodes
-                if (GraphFormer.DEBUGGER != null)
-                {
-                    new Thread(new ThreadStart(delegate()
-                    {
-                        //GraphFormer.DEBUGGER.Invalidate();
-                        //      GraphFormer.DEBUGGER.SetTryPathNow(from, to, pathByNodes);
-                    })).Start();
-                }
-            }
-            return PathStore.GetRoute(from, to, out IsFake);
-        }
-
 
         public float Distance(SimPosition prim)
         {
@@ -685,7 +665,7 @@ namespace cogbot.TheOpenSims
         /// <param name="zAngleFromFace"></param>
         /// <param name="distance"></param>
         /// <returns></returns>
-        public Vector3 GetLeftPos(int zAngleFromFace, float distance)
+        static public Vector3 GetLeftPos(SimPosition pos, int zAngleFromFace, float distance)
         {
             float RAD_TO_DEG = 57.29577951f;
             float Pi2 = (float)(Math.PI * 2.0);
@@ -702,7 +682,7 @@ namespace cogbot.TheOpenSims
             float radAngle = zAngleFromFace / RAD_TO_DEG;
 
 
-            Quaternion rot = GetSimRotation();
+            Quaternion rot = pos.GetSimRotation();
             rot.Normalize();
             float rx, ry, rz;
             rot.GetEulerAngles(out rx, out rz, out ry);
@@ -730,7 +710,7 @@ namespace cogbot.TheOpenSims
             float ymul = (float)Math.Sin(az);
             Vector3 diff = new Vector3(xmul, ymul, 0) * distance;
 
-            Vector3 result = GetSimPosition() + diff;
+            Vector3 result = pos.GetSimPosition() + diff;
 
             if (result.X > 254f)
             {
@@ -979,6 +959,11 @@ namespace cogbot.TheOpenSims
         internal virtual void UpdatePaths()
         {
             UpdatePaths(GetPathSystem());
+        }
+
+        internal Vector3 GetLeftPos(int angle, float Dist)
+        {
+            return GetLeftPos(this, angle, Dist);
         }
     }
 }

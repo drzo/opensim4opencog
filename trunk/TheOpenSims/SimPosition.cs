@@ -14,6 +14,7 @@ namespace cogbot.TheOpenSims
         float GetSizeDistance();
         SimWaypoint GetWaypoint();
         bool IsRegionAttached();
+        Quaternion GetSimRotation();
     }
 
 
