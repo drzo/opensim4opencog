@@ -41,7 +41,7 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
         protected SimMoverState _STATE = SimMoverState.PAUSED;
-        protected SimMover Mover;
+        protected SimAvatar Mover;
         protected readonly Vector3 FinalLocation;
         protected readonly float FinalDistance;
         protected float CloseDistance = 1f;// SimPathStore.LargeScale-SimPathStore.StepSize;
@@ -88,6 +88,7 @@ namespace cogbot.TheOpenSims.Navigation
             bool MadeIt = Mover.MoveTo(endVect, CloseDistance, 6);
             if (!MadeIt)
             {
+                Debug("!MadeIt " + endVect);
                 return MadeIt;
                 Vector3 vectMover = Mover.GetSimPosition();
                 List<SimObject> nears = ((SimObject)Mover).GetNearByObjects(CloseDistance / 2, false);
@@ -101,11 +102,10 @@ namespace cogbot.TheOpenSims.Navigation
             if (!MadeIt)
             {
                 Mover.StopMoving();
-                Debug("!MadeIt " + endVect);
+
             }
             else
-            {
-                Debug("MadeIt " + endVect);
+            {              
             }
             return MadeIt;
         }
@@ -645,7 +645,7 @@ namespace cogbot.TheOpenSims.Navigation
                 Vector3 end = vector3;
 
 
-                List<Vector3> v3s = (List<Vector3>)PathStore.GetV3Route(start, end);
+                List<Vector3> v3s = (List<Vector3>)Mover.CurrentRegion.GetV3Route(start, end);
                 if (v3s.Count > 1)
                 {
                     if (Vector3.Distance(v3s[0], start) > Vector3.Distance(v3s[v3s.Count - 1], start))
@@ -682,7 +682,7 @@ namespace cogbot.TheOpenSims.Navigation
                 {
                     STATE = SimMoverState.TRYAGAIN;
                     if (Vector3.Distance(GetSimPosition(), finalTarget) < finalDistance) return true;
-                    if (!MoveTo(v3))
+                    if (!Mover.MoveTo(v3,PathStore.LargeScale,4))
                     {
                         if (Skipped++ <= CanSkip)
                         {

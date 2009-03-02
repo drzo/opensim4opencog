@@ -114,7 +114,7 @@ namespace cogbot.TheOpenSims
             Vector3 v3 = GetUsePosition();
             if (swp == null || !swp.Passable)
             {
-                SimPathStore PathStore = WorldSystem.SimPaths;
+                SimPathStore PathStore = GetPathSystem();
                 swp = PathStore.CreateClosestWaypoint(v3);//, GetSizeDistance() + 1, 7, 1.0f);
                 PathStore.EnsureFillSmallSteps(v3.X, v3.Y);
                 if (!swp.Passable)
@@ -362,9 +362,9 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public void UpdateObject(ObjectUpdate objectUpdate, ObjectUpdate objectUpdateDiff)
+        public virtual void UpdateObject(ObjectUpdate objectUpdate, ObjectUpdate objectUpdateDiff)
         {
-            SimPathStore PathStore = WorldSystem.SimPaths;
+            SimPathStore PathStore = GetPathSystem();
             UpdatePaths(PathStore);
             _TOSRTING = null;
         }
@@ -417,6 +417,10 @@ namespace cogbot.TheOpenSims
             }
 
             bool changed = false;
+            if (true)
+            {
+                return changed;
+            }
             PrimFlags tempFlags = thePrim.Flags;
             if ((tempFlags & PrimFlags.Phantom) == 0)
             {
@@ -629,34 +633,7 @@ namespace cogbot.TheOpenSims
 
         public Vector3 GetUsePosition()
         {
-            SimPathStore PathStore = WorldSystem.SimPaths;
-            Vector3 v3 = GetSimPosition();
-            byte b = PathStore.GetNodeQuality(v3);
-            float useDist = GetSizeDistance();
-            if (b > 0) return v3;
-            for (float distance = useDist / 2; distance < useDist * 5; distance += 0.25f)
-            {
-                for (int dir = 0; dir < 360; dir += 15)
-                {
-                    v3 = GetLeftPos(dir, distance);
-                    b = PathStore.GetNodeQuality(v3);
-                    if (b > 0) return v3;
-                }
-            }
-            Debug("Clearing area");
-            for (float distance = 0; distance < useDist * 1.5; distance += 0.25f)
-            {
-                for (int dir = 0; dir < 360; dir += 15)
-                {
-                    v3 = GetLeftPos(dir, distance);
-                    b = PathStore.GetNodeQuality(v3);
-                    if (b == 0)
-                    {
-                        PathStore.SetPassable(v3.X, v3.Y);
-                    }
-                }
-            }
-            return GetSimPosition();
+            return CurrentRegion.GetUsePositionOf(GetSimPosition(),GetSizeDistance());
         }
 
         /// <summary>
@@ -900,19 +877,19 @@ namespace cogbot.TheOpenSims
         public void SetPassable(float x, float y)
         {
             SetLocated(x, y);
-            SimPathStore PathStore = WorldSystem.SimPaths;
+            SimPathStore PathStore = GetPathSystem();
             PathStore.SetPassable(x, y);
         }
 
         private void SetLocated(float x, float y)
         {
-            SimPathStore PathStore = WorldSystem.SimPaths;
+            SimPathStore PathStore = GetPathSystem();
             PathStore.SetObjectAt(x, y, this);
         }
 
         public void SetBlocked(float x, float y)
         {
-            SimPathStore PathStore = WorldSystem.SimPaths;
+            SimPathStore PathStore = GetPathSystem();
             PathStore.SetBlocked(x, y, this);
         }
 
@@ -951,7 +928,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public SimPathStore GetPathSystem()
+        public virtual SimPathStore GetPathSystem()
         {
             return CurrentRegion.PathStore;
         }

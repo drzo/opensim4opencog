@@ -1122,10 +1122,15 @@ namespace cogbot.TheOpenSims
             {
                 if (_CurrentRegion == null)
                 {
+                    if (Client == null) return WorldObjects.Master.TheSimAvatar.CurrentRegion;
                     _CurrentRegion = WorldSystem.GetRegion(Client.Network.CurrentSim.Handle);
                 }
                 return _CurrentRegion;
             }
+        }
+
+        public override void UpdateObject(ObjectUpdate objectUpdate, ObjectUpdate objectUpdateDiff)
+        {
         }
 
         public void Touch(SimObject simObject)
@@ -1136,6 +1141,18 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        public override SimPathStore GetPathSystem()
+        {
+
+            if (_CurrentRegion != null)
+            {
+                return _CurrentRegion.PathStore;
+            }
+            if (Client == null)
+                return WorldSystem.SimPaths;
+            return base.GetPathSystem();
+
+        }
         internal void RemoveObject(SimObject O)
         {
             KnownSimObjects.Remove(O);

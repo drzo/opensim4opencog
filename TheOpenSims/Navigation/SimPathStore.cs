@@ -698,9 +698,12 @@ namespace cogbot.TheOpenSims.Navigation
             return vectors;
         }
 
-        public IList<Vector3> GetSimplifedRoute(Vector3 currentV3, IList<Vector3> v3s, int MaxTurnDegrees, float MaxDist)
+        public IList<Vector3> GetSimplifedRoute(Vector3 currentV3In, IList<Vector3> v3s, int MaxTurnDegrees, float MaxDist)
         {
+            if (v3s.Count < 3) return v3s;
+            Vector3 currentV3 = currentV3In;
             IList<Vector3> vectors = new List<Vector3>();
+            float MaxTurnRadians = MaxTurnDegrees / RAD2DEG;
             float ZAngle = float.NaN;
             bool ZAngleValid = false;
             int Max = v3s.Count - 1;
@@ -709,24 +712,25 @@ namespace cogbot.TheOpenSims.Navigation
                 bool UsePoint = false;
                 Vector3 compare = v3s[Current];
                 Vector3 dif = compare - currentV3;
-                float NewZAngle = ComparableAngle(Math.Atan2(dif.X, dif.Y));
+                float NewZAngle = ComparableAngle(Math.Atan2(dif.Y, dif.X));
                 if (!ZAngleValid)
                 {
                     ZAngleValid = true;
                     ZAngle = NewZAngle;
+                   // UsePoint = true;
                 }
                 else
                 {
                     float adif = Math.Abs(NewZAngle - ZAngle);
-                    if (adif * RAD2DEG > MaxTurnDegrees)
+                    if (adif > MaxTurnRadians)
                         UsePoint = true;
                     else
-                        if (Vector3.Distance(currentV3, v3s[Current]) > MaxDist)
+                        if (Vector3.Distance(currentV3, compare) > MaxDist)
                             UsePoint = true;
                 }
                 if (UsePoint)
                 {
-                    vectors.Add(v3s[Current]);
+                    vectors.Add(compare);
                     currentV3 = compare;
                     ZAngle = NewZAngle;
                 }
@@ -772,7 +776,7 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
         bool PunishChangeDirection;
-        public IList<Vector3> GetV3Route(Vector3 start, Vector3 end)
+        public IList<Vector3> GetV3Route0(Vector3 start, Vector3 end, PathFinderDemo panel)
         {
             if (!IsPassable(start))
             {
@@ -786,7 +790,7 @@ namespace cogbot.TheOpenSims.Navigation
             Point S = ToPoint(start);
             Point E = ToPoint(end);
             PathFinderFast pff = new PathFinderFast(mMatrix);
-            //TODO            PathFinder.SetStartEnd(S, E);
+            if (panel != null) panel.SetStartEnd(S, E);
             //pff.ReopenCloseNodes = true;
             pff.SearchLimit = 10000000;
             pff.PunishChangeDirection = PunishChangeDirection;
@@ -798,7 +802,7 @@ namespace cogbot.TheOpenSims.Navigation
                 temp.Add(end);
                 return temp;
             }
-            //TODOPathFinder.ShowPath(pfn);
+            if (panel != null) panel.ShowPath(pfn);
             return PathfinderNodesToV3s(pfn);
         }
 

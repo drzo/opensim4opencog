@@ -56,8 +56,7 @@ namespace cogbot.Actions.Movement
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            PathFinderDemo gf = new PathFinderDemo(WorldSystem.SimPaths);//.Instance;
-            gf.Show();
+            WorldSystem.TheSimAvatar.CurrentRegion.ShowDebugger();
             return "ran " + Name;
         }
     }
