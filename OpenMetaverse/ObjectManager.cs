@@ -871,7 +871,7 @@ namespace OpenMetaverse
             extra.ObjectData[0].ObjectLocalID = localID;
             extra.ObjectData[0].ParamType = (byte)type;
             extra.ObjectData[0].ParamInUse = false;
-            extra.ObjectData[0].ParamData = new byte[0];
+            extra.ObjectData[0].ParamData = Utils.EmptyBytes;
             extra.ObjectData[0].ParamSize = 0;
 
             Client.Network.SendPacket(extra, simulator);
@@ -1616,6 +1616,7 @@ namespace OpenMetaverse
                         avatar.PrimData = data;
                         avatar.GenericData = block.Data;
                         avatar.ParentID = block.ParentID;
+                        avatar.RegionHandle = update.RegionData.RegionHandle;
 
                         SetAvatarSittingOn(simulator, avatar, block.ParentID, oldSeatID);
 
@@ -2202,19 +2203,21 @@ namespace OpenMetaverse
 
                 if (Client.Settings.OBJECT_TRACKING)
                 {
-                    Primitive findPrim = sim.ObjectsPrimitives.Find(
-                        delegate(Primitive prim) { return prim.ID == props.ObjectID; });
-
-                    if (findPrim != null)
+                    lock (sim.ObjectsPrimitives.Dictionary)
                     {
-                        lock (sim.ObjectsPrimitives.Dictionary)
+                        Primitive findPrim = sim.ObjectsPrimitives.Find(
+                            delegate(Primitive prim) { return prim.ID == props.ObjectID; });
+
+                        if (findPrim != null)
                         {
-                            if (sim.ObjectsPrimitives.Dictionary.ContainsKey(findPrim.LocalID))
-                                sim.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties = props;
+                            lock (sim.ObjectsPrimitives.Dictionary)
+                            {
+                                if (sim.ObjectsPrimitives.Dictionary.ContainsKey(findPrim.LocalID))
+                                    sim.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties = props;
+                            }
                         }
                     }
                 }
-
                 FireOnObjectProperties(sim, props);
             }
         }

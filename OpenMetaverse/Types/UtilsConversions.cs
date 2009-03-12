@@ -468,7 +468,7 @@ namespace OpenMetaverse
         /// <returns>A null-terminated UTF8 byte array</returns>
         public static byte[] StringToBytes(string str)
         {
-            if (String.IsNullOrEmpty(str)) { return new byte[0]; }
+            if (String.IsNullOrEmpty(str)) { return Utils.EmptyBytes; }
             if (!str.EndsWith("\0")) { str += "\0"; }
             return System.Text.UTF8Encoding.UTF8.GetBytes(str);
         }
@@ -485,7 +485,7 @@ namespace OpenMetaverse
             if (handleDirty)
             {
                 if (String.IsNullOrEmpty(hexString))
-                    return new byte[0];
+                    return Utils.EmptyBytes;
 
                 StringBuilder stripped = new StringBuilder(hexString.Length);
                 char c;
@@ -822,6 +822,16 @@ namespace OpenMetaverse
                 result = default(T);
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Swaps the high and low words in a byte. Converts aaaabbbb to bbbbaaaa
+        /// </summary>
+        /// <param name="value">Byte to swap the words in</param>
+        /// <returns>Byte value with the words swapped</returns>
+        public static byte SwapWords(byte value)
+        {
+            return (byte)(((value & 0xF0) >> 4) | ((value & 0x0F) << 4));
         }
 
         #endregion Miscellaneous
