@@ -771,24 +771,29 @@ namespace cogbot.TheOpenSims
 
         public string DistanceVectorString(SimPosition obj)
         {
-            String str;
-            Vector3 loc;
             if (!obj.IsRegionAttached())
             {
-                str = "unknown relative ";
-                loc = obj.GetSimPosition();
+                Vector3 loc = obj.GetSimPosition();
+                SimRegion R = obj.GetSimRegion();
+                return String.Format("unknown relative {0}/{1:0.00}/{2:0.00}/{3:0.00}",
+                    R.RegionName, loc.X, loc.Y, loc.Z);
             }
-            else
-            {
-                loc = obj.GetSimPosition();
-                double dist = Distance(obj);
-                if (dist == double.NaN)
-                {
-                    throw new InvalidCastException("NaN is not a number");
-                }
-                str = String.Format("{0:0.00}m ", dist);
-            }
-            return str + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}",obj.GetSimRegion().RegionName,loc.X, loc.Y, loc.Z);
+            return DistanceVectorString(obj.GetWorldPosition());
+        }
+
+        public string DistanceVectorString(Vector3d loc3d)
+        {
+            Vector3 loc = SimRegion.GlobalToLocal(loc3d);
+            SimRegion R = SimRegion.GetRegion(loc3d);
+            return String.Format("{0:0.00}m ", Vector3d.Distance(GetWorldPosition(), loc3d))
+               + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
+        }
+
+        public string DistanceVectorString(Vector3 loc)
+        {
+            SimRegion R = GetSimRegion();
+            return String.Format("{0:0.00}m ", Vector3.Distance(GetSimPosition(), loc))
+               + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
         }
 
         public virtual string GetName()

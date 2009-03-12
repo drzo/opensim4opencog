@@ -955,7 +955,8 @@ namespace cogbot.TheOpenSims
         /// <returns></returns>
         public bool MoveTo(Vector3d end, double maxDistance, int maxSeconds)
         {
-
+            double currentDist = Vector3d.Distance(end, GetWorldPosition());
+            if (currentDist < maxDistance) return true;
             lock (TrackerLoopLock)
             {
                 SimWaypoint P = SimWaypoint.CreateGlobal(end);
@@ -966,9 +967,8 @@ namespace cogbot.TheOpenSims
             {
                 Thread.Sleep(1000);
                 //Application.DoEvents();
-                double currentDist = Vector3d.Distance(end, GetWorldPosition());
+                currentDist = Vector3d.Distance(end, GetWorldPosition());
 
-                Debug("MoveTo " + currentDist);
                 if (currentDist > maxDistance)
                 {
                     continue;
@@ -979,6 +979,7 @@ namespace cogbot.TheOpenSims
                     return true;
                 }
             }
+            Debug("!MoveTo " + DistanceVectorString(end));
             StopMoving();
             return false;
         }
@@ -1188,7 +1189,8 @@ namespace cogbot.TheOpenSims
             Point Last = PathStore.ToPoint(v3);
             float Dist = 0.3f;
             Vector3 b1 = v3;
-            while (offset.Length() > 0.1)
+            float StepSize = GetSimRegion().PathStore.StepSize;
+            while (offset.Length() > StepSize)
             {
                 offset *= 0.75f;
                 Vector3 blocked = cp + offset;
@@ -1202,15 +1204,16 @@ namespace cogbot.TheOpenSims
             }
             float x = Last.X / PathStore.POINTS_PER_METER;
             float y = Last.Y / PathStore.POINTS_PER_METER;
-            BlockPoint(new Vector3(x, y, v3.Z));
+            Vector3 v3o = new Vector3(x, y, v3.Z);
+            BlockPoint(v3o);
             double A45 = 45f / SimPathStore.RAD2DEG;
-            Debug("Blocked {0},{1}", x, y);
+            Debug("BlockTowardsVector {0}", DistanceVectorString(v3o));
             Vector3 middle = ZAngleVector(ZAngle) * Dist;
             middle += cp;
             double mdist = Vector3.Distance(middle, b1);
             if (mdist > 0.1)
             {
-                Debug("Wierd mdist=" + mdist);
+                Debug("Wierd mdist = " + mdist);
             }
             Dist = 0.4f;
             BlockPoint(ZAngleVector(ZAngle) * Dist + cp);
@@ -1251,18 +1254,18 @@ namespace cogbot.TheOpenSims
         public bool FollowPathTo(List<Vector3d> v3s, Vector3d finalTarget, double finalDistance)
         {
             SimPathStore PathStore = GetSimRegion();
-            Debug("FollowPath: {0} -> {1}", v3s.Count, finalTarget);
-            int CanSkip = UseSkipping?2:0;
+            Debug("FollowPath: {0} -> {1}", v3s.Count, DistanceVectorString(finalTarget));
+            int CanSkip = UseSkipping?0:0;
             int Skipped = 0;
             UseSkipping = !UseSkipping;
 
             foreach (Vector3d v3 in v3s)
             {
                 //  if (Vector3d.Distance(v3, GetWorldPosition()) < dist) continue;
-                if (!MoveTo(v3, 2f, 6))
+                if (!MoveTo(v3, PathStore.StepSize, 6))
                 {
                     if (Vector3d.Distance(GetWorldPosition(), finalTarget) < finalDistance) return true;
-                    if (!MoveTo(v3, PathStore.LargeScale, 4))
+                    if (!MoveTo(v3, PathStore.LargeScale, 2))
                     {
                         if (Skipped++ <= CanSkip)
                         {
@@ -1271,7 +1274,7 @@ namespace cogbot.TheOpenSims
                             continue;
                         }
                         BlockTowardsVector(SimRegion.GlobalToLocal(v3));
-                        Debug("Failed: {0} -> {1}", GetWorldPosition(), finalTarget);
+                        Debug("Failed: {0} -> {1}", DistanceVectorString(GetWorldPosition()),DistanceVectorString( finalTarget));
                         return false;
                     }
                 }
@@ -1280,7 +1283,7 @@ namespace cogbot.TheOpenSims
                     Skipped = 0;
                 }
             }
-            Debug("Complete: {0} -> {1}", GetWorldPosition(), finalTarget);
+            Debug("Complete: {0} -> {1}", DistanceVectorString(GetWorldPosition()), DistanceVectorString(finalTarget));
             return true;
         }
 
