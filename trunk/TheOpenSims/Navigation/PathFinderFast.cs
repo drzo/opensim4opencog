@@ -207,7 +207,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             lock(this)
             {
-                HighResolutionTime.Start();
+                //HighResolutionTime.Start();
 
                 // Is faster if we don't clear the matrix, just assign different values for open and close and ignore the rest
                 // I could have user Array.Clear() but using unsafe code is faster, no much but it is.
@@ -265,7 +265,7 @@ namespace cogbot.TheOpenSims.Navigation
                     if (mCloseNodeCounter > mSearchLimit)
                     {
                         mStopped = true;
-                        mCompletedTime = HighResolutionTime.GetTime();
+                        mCompletedTime = 0;// HighResolutionTime.GetTime();
                         return null;
                     }
 
@@ -388,7 +388,7 @@ namespace cogbot.TheOpenSims.Navigation
                     #endif
                 }
 
-                mCompletedTime = HighResolutionTime.GetTime();
+                mCompletedTime = 0;// HighResolutionTime.GetTime();
                 if (mFound)
                 {
                     mClose.Clear();

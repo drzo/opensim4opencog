@@ -146,7 +146,7 @@ namespace cogbot.TheOpenSims
             // Approach Target
             try
             {
-                float howClose = TheBot.Approach(Target, TypeUsage.maximumDistance);
+                double howClose = TheBot.Approach(Target, TypeUsage.maximumDistance);
 
                 if (howClose - 1 > TypeUsage.maximumDistance + 0.5f)
                 {

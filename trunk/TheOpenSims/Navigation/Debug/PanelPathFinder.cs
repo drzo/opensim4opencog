@@ -34,7 +34,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
     #endregion
 
     [Author("Franco, Gustavo")]
-    public class PanelPathFinder : UserControl
+    public partial class PanelPathFinder : UserControl
     {
         #region Variables Declaration
         private byte                mNodeWeight     = 1;

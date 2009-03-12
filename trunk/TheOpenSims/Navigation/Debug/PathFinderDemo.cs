@@ -117,28 +117,56 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         {
             if (this.InvokeRequired)
             {
-                Invoke(new ShowDelegate(Show), new object[] { });
+                Invoke(new ShowDelegate(Reactivate), new object[] { });
                 return;
             }
             Reactivate();
         }
-        public new void Activate()
-        {
-            if (this.InvokeRequired)
-            {
-                Invoke(new ShowDelegate(Activate), new object[] { });
-                return;
-            }
-            Reactivate();
-        }
+        //public new void Activate()
+        //{
+        //    if (true || this.InvokeRequired)
+        //    {
+        //        Invoke(new ShowDelegate(Reactivate), new object[] { });
+        //        return;
+        //    }
+        //    Reactivate();
+        //}
 
         void Reactivate()
         {
-            base.Show();
-            //if (this.WindowState == FormWindowState.Minimized)              
-            base.WindowState = FormWindowState.Normal;
-            base.Visible = true;
-            base.Activate();
+            try
+            {
+                baseShow();
+
+                //if (this.WindowState == FormWindowState.Minimized)              
+                base.WindowState = FormWindowState.Normal;
+                SimPathStore S = GetPathStore();
+                String name = S.GetSimRegion().RegionName + " Level " + S.TheSimZLevel(128, 128);
+                this.Text = name;
+                if (!base.Visible) base.Visible = true;
+                base.Activate();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("" + e);
+            }
+        }
+
+        private void baseShow()
+        {
+            try
+            {
+                base.Show();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("" + e);
+            }
+        }
+
+        private SimPathStore GetPathStore()
+        {
+            return PnlGUI.PathStore;//.GetSimRegion();
         }
 
         private delegate void UpdateTimeLabelDelegate(double time);

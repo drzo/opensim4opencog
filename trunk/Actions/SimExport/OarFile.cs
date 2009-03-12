@@ -58,8 +58,8 @@ namespace cogbot.Actions.SimExport
             // Delete all of the old linkset files
             try
             {
-                if (false) Directory.Delete(path, true);
-                if (!Directory.Exists(path))Directory.CreateDirectory(path);
+                Directory.Delete(path, true);
+                Directory.CreateDirectory(path);
             }
             catch (Exception ex)
             {
@@ -122,7 +122,7 @@ namespace cogbot.Actions.SimExport
             writer.WriteEndElement();
         }
 
-        static void SOPToXml(XmlTextWriter writer, Primitive prim, Primitive Client)
+        static void SOPToXml(XmlTextWriter writer, Primitive prim, Primitive parent)
         {
             writer.WriteStartElement("SceneObjectPart");
             writer.WriteAttributeString("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
@@ -141,10 +141,10 @@ namespace cogbot.Actions.SimExport
             writer.WriteElementString("ScriptAccessPin", "0");
 
             Vector3 groupPosition;
-            if (Client == null)
+            if (parent == null)
                 groupPosition = prim.Position;
             else
-                groupPosition = Client.Position;
+                groupPosition = parent.Position;
 
             WriteVector(writer, "GroupPosition", groupPosition);
             WriteVector(writer, "OffsetPosition", groupPosition - prim.Position);
@@ -165,8 +165,8 @@ namespace cogbot.Actions.SimExport
             writer.WriteElementString("TouchName", prim.Properties.TouchName);
 
             uint linknum = 0;
-            //if (Client != null)
-            //    linknum = prim.LocalID - Client.LocalID;
+            //if (parent != null)
+            //    linknum = prim.LocalID - parent.LocalID;
 
             writer.WriteElementString("LinkNum", linknum.ToString());
             writer.WriteElementString("ClickAction", ((int)prim.ClickAction).ToString());
@@ -204,7 +204,7 @@ namespace cogbot.Actions.SimExport
             if (prim.Textures != null)
                 te = prim.Textures.ToBytes();
             else
-                te = new byte[0];
+                te = Utils.EmptyBytes;
 
             writer.WriteBase64(te, 0, te.Length);
             writer.WriteEndElement();

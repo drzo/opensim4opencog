@@ -1,5 +1,8 @@
 using System;
 using OpenMetaverse;
+// older LibOMV
+//using AgentFlags = OpenMetaverse.AgentManager.AgentFlags;
+//using AgentState = OpenMetaverse.AgentManager.AgentState;
 
 namespace cogbot.Actions.Movement
 {

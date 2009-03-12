@@ -4,6 +4,11 @@ using System.IO;
 using System.Threading;
 using System.Xml;
 using OpenMetaverse;
+// older LibOMV
+//using TeleportFlags = OpenMetaverse.AgentManager.TeleportFlags;
+//using TeleportStatus = OpenMetaverse.AgentManager.TeleportStatus;
+//using AgentFlags = OpenMetaverse.AgentManager.AgentFlags;
+//using AgentState = OpenMetaverse.AgentManager.AgentState;
 // taken initially from http://openmetaverse.org/svn/omf/libopenmetaverse/trunk/Programs/SimExport -r2392
 namespace cogbot.Actions.SimExport
 {

@@ -188,7 +188,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public List<PathFinderNode> FindPath(Point start, Point end)
         {
-            HighResolutionTime.Start();
+            //HighResolutionTime.Start();
 
             PathFinderNode parentNode;
             bool found  = false;
@@ -373,7 +373,7 @@ namespace cogbot.TheOpenSims.Navigation
                 #endif
             }
 
-            mCompletedTime = HighResolutionTime.GetTime();
+            mCompletedTime = 0;// HighResolutionTime.GetTime();
             if (found)
             {
                 PathFinderNode fNode = mClose[mClose.Count - 1];

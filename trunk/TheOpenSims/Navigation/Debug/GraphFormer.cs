@@ -11,7 +11,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Collections.Generic;
+using System.Collections;
 using System.ComponentModel;
 using System.Windows.Forms;
 using System.Data;
@@ -23,151 +23,125 @@ using cogbot.TheOpenSims.Navigation;
 
 namespace cogbot.TheOpenSims.Navigation.Debug
 {
-	/// <summary>
-	/// Summary description for Form1.
-	/// </summary>
+    /// <summary>
+    /// Summary description for Form1.
+    /// </summary>
     public partial class GraphFormer : System.Windows.Forms.Form
-	{
-        public readonly static float DSCALE = 8f;//4.5f;
+    {
         volatile public static GraphFormer DEBUGGER = null;
-		#region Construction / Destruction
+        #region Construction / Destruction
 
-		private ContextMenu MenuContextuel;
-		APropos DialogueAPropos = new APropos();
-		private FlickerFreePanel GraphPanel;
+        private ContextMenu MenuContextuel;
+        APropos DialogueAPropos = new APropos();
+        private FlickerFreePanel GraphPanel;
 
-		private System.Windows.Forms.ToolBarButton AEtoileEtape;
-		private System.Windows.Forms.ImageList ImagesActions;
-		private System.Windows.Forms.ImageList ImagesPasAPas;
-		private System.Windows.Forms.ToolBar FichierToolBar;
-		private System.Windows.Forms.ImageList ImagesFichier;
-		private System.Windows.Forms.ToolBarButton BoutonSauver;
-		private System.Windows.Forms.ToolBarButton BoutonCharger;
-		private System.Windows.Forms.ToolBarButton Sep1;
-		private System.Windows.Forms.ToolBarButton Sep2;
-		private System.Windows.Forms.Label LabelAide;
-		private System.Windows.Forms.ToolBarButton BoutonNouveau;
-		private System.Windows.Forms.ToolBarButton BoutonDessiner;
-		private System.Windows.Forms.ToolBarButton BoutonEffacer;
-		private System.Windows.Forms.ToolBarButton BoutonDeplacer;
-		private System.Windows.Forms.ToolBarButton BoutonChangerEtat;
-		private System.Windows.Forms.ToolBarButton BoutonAEtoile;
-		private System.Windows.Forms.ToolBarButton BoutonAProposDe;
-		private System.Windows.Forms.StatusBar GraphStatusBar;
-		private System.Windows.Forms.StatusBarPanel NbNodesPanel;
-		private System.Windows.Forms.StatusBarPanel NbArcsPanel;
-		private System.Windows.Forms.StatusBarPanel CoordsPanel;
-		private System.Windows.Forms.ToolBar EditionToolBar;
-		private System.Windows.Forms.ToolBar AEtoileToolBar;
-		private System.Windows.Forms.ToolBarButton AEtoileDebut;
-		private System.Windows.Forms.ToolBarButton AEtoileFin;
-		private System.ComponentModel.IContainer components;
+        private System.Windows.Forms.ToolBarButton AEtoileEtape;
+        private System.Windows.Forms.ImageList ImagesActions;
+        private System.Windows.Forms.ImageList ImagesPasAPas;
+        private System.Windows.Forms.ToolBar FichierToolBar;
+        private System.Windows.Forms.ImageList ImagesFichier;
+        private System.Windows.Forms.ToolBarButton BoutonSauver;
+        private System.Windows.Forms.ToolBarButton BoutonCharger;
+        private System.Windows.Forms.ToolBarButton Sep1;
+        private System.Windows.Forms.ToolBarButton Sep2;
+        private System.Windows.Forms.Label LabelAide;
+        private System.Windows.Forms.ToolBarButton BoutonNouveau;
+        private System.Windows.Forms.ToolBarButton BoutonDessiner;
+        private System.Windows.Forms.ToolBarButton BoutonEffacer;
+        private System.Windows.Forms.ToolBarButton BoutonDeplacer;
+        private System.Windows.Forms.ToolBarButton BoutonChangerEtat;
+        private System.Windows.Forms.ToolBarButton BoutonAEtoile;
+        private System.Windows.Forms.ToolBarButton BoutonAProposDe;
+        private System.Windows.Forms.StatusBar GraphStatusBar;
+        private System.Windows.Forms.StatusBarPanel NbNodesPanel;
+        private System.Windows.Forms.StatusBarPanel NbArcsPanel;
+        private System.Windows.Forms.StatusBarPanel CoordsPanel;
+        private System.Windows.Forms.ToolBar EditionToolBar;
+        private System.Windows.Forms.ToolBar AEtoileToolBar;
+        private System.Windows.Forms.ToolBarButton AEtoileDebut;
+        private System.Windows.Forms.ToolBarButton AEtoileFin;
+        private System.ComponentModel.IContainer components;
 
-		static int Rayon = 6;
-		static int Epaisseur = 1;
-		static Pen CrayonNoeuds;
-		static Pen CrayonArcs;
-		static Pen CrayonNoeudsInactifs;
-		static Pen CrayonArcsInactifs;
-		static Pen CrayonTemp;
-		static Pen CrayonChemin;
+        static int Rayon = 6;
+        static int Epaisseur = 1;
+        static Pen CrayonNoeuds;
+        static Pen CrayonArcs;
+        static Pen CrayonNoeudsInactifs;
+        static Pen CrayonArcsInactifs;
+        static Pen CrayonTemp;
+        static Pen CrayonChemin;
         static Pen CrayonArcsPas;
-        static Pen CrayonArcsWeak;
-        static Pen CrayonArcsStrong;
-        SimPathStore PathStore;
+
+        public readonly static double DSCALE = 1;// / 32;
 
         static GraphFormer()
-		{
-			CrayonNoeuds = new Pen(Color.Black, Epaisseur);
+        {
+            CrayonNoeuds = new Pen(Color.Black, Epaisseur);
             CrayonNoeudsInactifs = new Pen(Color.Red, Epaisseur);
-            CrayonArcsWeak = new Pen(Color.Pink, Epaisseur);
-            CrayonArcsStrong = new Pen(Color.Green, Epaisseur);
 
-			CrayonArcs = new Pen(Color.Black, Epaisseur);
-            // Arrows
-            //CrayonArcs.EndCap = LineCap.Custom;
-			//CrayonArcs.CustomEndCap = new AdjustableArrowCap(3, 6, true);
-
+            CrayonArcs = new Pen(Color.Black, Epaisseur);
+            CrayonArcs.EndCap = LineCap.Custom;
+            CrayonArcs.CustomEndCap = new AdjustableArrowCap(3, 6, true);
             CrayonArcsInactifs = new Pen(Color.Red, Epaisseur);
-            // Arrows
-            //CrayonArcsInactifs.EndCap = LineCap.Custom;
-			//CrayonArcsInactifs.CustomEndCap = new AdjustableArrowCap(3, 6, true);
+            CrayonArcsInactifs.EndCap = LineCap.Custom;
+            CrayonArcsInactifs.CustomEndCap = new AdjustableArrowCap(3, 6, true);
 
-			CrayonTemp = new Pen(Color.Gray, Epaisseur);
-			CrayonTemp.DashStyle = DashStyle.Dash;
+            CrayonTemp = new Pen(Color.Gray, Epaisseur);
+            CrayonTemp.DashStyle = DashStyle.Dash;
 
-			CrayonChemin = new Pen(Color.DarkTurquoise, 3);
-			CrayonChemin.DashStyle = DashStyle.Dot;
+            CrayonChemin = new Pen(Color.DarkTurquoise, 3);
+            CrayonChemin.DashStyle = DashStyle.Dot;
 
             CrayonArcsPas = new Pen(Color.LawnGreen, 3);
-            // Arrows
-            //CrayonArcsPas.EndCap = LineCap.Custom;
-			//CrayonArcsPas.CustomEndCap = new AdjustableArrowCap(4, 8, true);
-		}
+            CrayonArcsPas.EndCap = LineCap.Custom;
+            CrayonArcsPas.CustomEndCap = new AdjustableArrowCap(4, 8, true);
+        }
 
-		public GraphFormer(SimPathStore SPS)
-		{
+        public static int StartX, StartY;
+        public GraphFormer(SimGlobalRoutes SPS)
+        {
             DEBUGGER = this;
-            PathStore = SPS;
-
-			MenuContextuel = new ContextMenu();
-			MenuContextuel.MenuItems.Add(new MenuItem("Automatic", new EventHandler(ChoixAutomatique)));
-			MenuContextuel.MenuItems.Add(new MenuItem("Step by step", new EventHandler(ChoixPasAPas)));
-			InitializeComponent();
-			BoutonAEtoile.DropDownMenu = MenuContextuel;
+            StartX = SPS.StartX;
+            StartY = SPS.StartY;
+            MenuContextuel = new ContextMenu();
+            MenuContextuel.MenuItems.Add(new MenuItem("Automatic", new EventHandler(ChoixAutomatique)));
+            MenuContextuel.MenuItems.Add(new MenuItem("Step by step", new EventHandler(ChoixPasAPas)));
+            InitializeComponent();
+            BoutonAEtoile.DropDownMenu = MenuContextuel;
 
             G = SPS;// SimPathStore.Default;
-			NouveauGraphe();
-			Mode = Action.Dessiner;
-		}
-
-        private delegate void ShowDelegate();
-        public new void Show()
-        {
-            if (this.InvokeRequired)
-            {
-                Invoke(new ShowDelegate(Reactivate), new object[] { });
-                return;
-            }
-            Reactivate();
-        }
-        public new void Activate()
-        {
-            if (this.InvokeRequired)
-            {
-                Invoke(new ShowDelegate(Reactivate), new object[] { });
-                return;
-            }
-            Reactivate();
+            NouveauGraphe();
+            Mode = Action.Dessiner;
         }
 
-        void Reactivate()
+        public void Reactivate()
         {
-            base.Show();
+            this.Show();
             //if (this.WindowState == FormWindowState.Minimized)              
-            base.WindowState = FormWindowState.Normal;
-            base.Visible = true;
-            base.Activate();
+            this.WindowState = FormWindowState.Normal;
+            this.Visible = true;
+            this.Activate();
         }
 
-		/// <summary>
-		/// Clean up any resources being used.
-		/// </summary>
-		protected override void Dispose( bool disposing )
-		{
-			if( disposing && components != null) components.Dispose();
-			base.Dispose( disposing );
-		}
-		#endregion
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && components != null) components.Dispose();
+            base.Dispose(disposing);
+        }
+        #endregion
 
-		#region Windows Form Designer generated code
-		/// <summary>
-		/// Required method for Designer support - do not modify
-		/// the contents of this method with the code editor.
-		/// </summary>
-		private void InitializeComponent()
-		{
+        #region Windows Form Designer generated code
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GraphFormer));
             this.GraphPanel = new cogbot.TheOpenSims.Navigation.Debug.FlickerFreePanel();
             this.EditionToolBar = new System.Windows.Forms.ToolBar();
             this.BoutonDessiner = new System.Windows.Forms.ToolBarButton();
@@ -279,9 +253,13 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             // 
             // ImagesActions
             // 
-            this.ImagesActions.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
-            this.ImagesActions.ImageSize = new System.Drawing.Size(16, 16);
+            this.ImagesActions.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ImagesActions.ImageStream")));
             this.ImagesActions.TransparentColor = System.Drawing.Color.Transparent;
+            this.ImagesActions.Images.SetKeyName(0, "");
+            this.ImagesActions.Images.SetKeyName(1, "");
+            this.ImagesActions.Images.SetKeyName(2, "");
+            this.ImagesActions.Images.SetKeyName(3, "");
+            this.ImagesActions.Images.SetKeyName(4, "");
             // 
             // GraphStatusBar
             // 
@@ -299,18 +277,20 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             // NbNodesPanel
             // 
             this.NbNodesPanel.AutoSize = System.Windows.Forms.StatusBarPanelAutoSize.Contents;
+            this.NbNodesPanel.Icon = ((System.Drawing.Icon)(resources.GetObject("NbNodesPanel.Icon")));
             this.NbNodesPanel.Name = "NbNodesPanel";
             this.NbNodesPanel.Text = "NbNodes";
             this.NbNodesPanel.ToolTipText = "Number of nodes";
-            this.NbNodesPanel.Width = 61;
+            this.NbNodesPanel.Width = 82;
             // 
             // NbArcsPanel
             // 
             this.NbArcsPanel.AutoSize = System.Windows.Forms.StatusBarPanelAutoSize.Contents;
+            this.NbArcsPanel.Icon = ((System.Drawing.Icon)(resources.GetObject("NbArcsPanel.Icon")));
             this.NbArcsPanel.Name = "NbArcsPanel";
             this.NbArcsPanel.Text = "NbArcs";
             this.NbArcsPanel.ToolTipText = "Number of arcs";
-            this.NbArcsPanel.Width = 51;
+            this.NbArcsPanel.Width = 72;
             // 
             // CoordsPanel
             // 
@@ -319,7 +299,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             this.CoordsPanel.BorderStyle = System.Windows.Forms.StatusBarPanelBorderStyle.None;
             this.CoordsPanel.Name = "CoordsPanel";
             this.CoordsPanel.Text = "Coordinates";
-            this.CoordsPanel.Width = 616;
+            this.CoordsPanel.Width = 574;
             // 
             // FichierToolBar
             // 
@@ -377,9 +357,12 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             // 
             // ImagesFichier
             // 
-            this.ImagesFichier.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
-            this.ImagesFichier.ImageSize = new System.Drawing.Size(16, 16);
+            this.ImagesFichier.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ImagesFichier.ImageStream")));
             this.ImagesFichier.TransparentColor = System.Drawing.Color.Transparent;
+            this.ImagesFichier.Images.SetKeyName(0, "");
+            this.ImagesFichier.Images.SetKeyName(1, "");
+            this.ImagesFichier.Images.SetKeyName(2, "");
+            this.ImagesFichier.Images.SetKeyName(3, "");
             // 
             // AEtoileToolBar
             // 
@@ -430,9 +413,11 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             // 
             // ImagesPasAPas
             // 
-            this.ImagesPasAPas.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
-            this.ImagesPasAPas.ImageSize = new System.Drawing.Size(16, 16);
+            this.ImagesPasAPas.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ImagesPasAPas.ImageStream")));
             this.ImagesPasAPas.TransparentColor = System.Drawing.Color.Transparent;
+            this.ImagesPasAPas.Images.SetKeyName(0, "");
+            this.ImagesPasAPas.Images.SetKeyName(1, "");
+            this.ImagesPasAPas.Images.SetKeyName(2, "");
             // 
             // LabelAide
             // 
@@ -456,6 +441,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             this.Controls.Add(this.EditionToolBar);
             this.Controls.Add(this.AEtoileToolBar);
             this.Controls.Add(this.LabelAide);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "GraphFormer";
             this.Text = "GraphFormer";
             ((System.ComponentModel.ISupportInitialize)(this.NbNodesPanel)).EndInit();
@@ -464,918 +450,891 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             this.ResumeLayout(false);
             this.PerformLayout();
 
-		}
-		#endregion
+        }
+        #endregion
 
-		#region Etats
+        #region Etats
 
-		bool BoutonDEnfonce = false;
-		bool BoutonGEnfonce = false;
+        bool BoutonDEnfonce = false;
+        bool BoutonGEnfonce = false;
 
-		SimPathStore G;
-		SimWaypoint TempN1, TempN2;
-		bool AjouterN1, AjouterN2;
-		SimMovement AE;
-		SimWaypoint NDepart, NArrivee;
-		IList<SimWaypoint> Chemin;
-		Point TempP;
-		int NbHeuristique = 0;
-		
-		bool _PasAPas;
-		bool PasAPas
-		{
-			get { return _PasAPas; }
-			set
-			{
-				_PasAPas = value;
-				if ( AdapterAEtoile() ) GraphPanel.Invalidate();
-				MenuContextuel.MenuItems[0].Checked = !_PasAPas;
-				MenuContextuel.MenuItems[1].Checked = _PasAPas;
-				AEtoileToolBar.Visible = _PasAPas;
-			}
-		}
+        SimGlobalRoutes G;
+        SimWaypoint TempN1, TempN2;
+        bool AjouterN1, AjouterN2;
+        SimMovement AE;
+        SimWaypoint NDepart, NArrivee;
+        SimWaypoint[] Chemin;
+        Point TempP;
+        int NbHeuristique = 0;
 
-		bool CalculPossible { get { return NDepart!=null && NArrivee!=null; } }
+        bool _PasAPas;
+        bool PasAPas
+        {
+            get { return _PasAPas; }
+            set
+            {
+                _PasAPas = value;
+                if (AdapterAEtoile()) GraphPanel.Invalidate();
+                MenuContextuel.MenuItems[0].Checked = !_PasAPas;
+                MenuContextuel.MenuItems[1].Checked = _PasAPas;
+                AEtoileToolBar.Visible = _PasAPas;
+            }
+        }
 
-		enum Action { Dessiner, Effacer, Deplacer, ChangerEtat, AEtoile }
-		Action _Mode;
-		Action Mode
-		{
-			get { return _Mode; }
-			set
-			{
-				_Mode = value;
-				foreach ( ToolBarButton B in EditionToolBar.Buttons ) B.Pushed = false; // Actions exclusives
-				EditionToolBar.Buttons[(int)_Mode].Pushed = true;
-				switch( _Mode )
-				{
-					case Action.AEtoile:
-					{
-						LabelAide.Text = "Choose starting and ending nodes with the respective left and right mouse buttons";
-						AfficherInfosResultat();
-						break;
-					}
-					case Action.ChangerEtat:
-					{
-						LabelAide.Text = "Select a node or an arc to activate/deactivate";
-						break;
-					}
-					case Action.Deplacer:
-					{
-						LabelAide.Text = "Select a node with left button to move it (right button to move the entire graph)";
-						break;
-					}
-					case Action.Dessiner:
-					{
-						LabelAide.Text = "Clic and drag to draw an arc between 2 nodes (right button for bidirectional arcs)";
-						break;
-					}
-					case Action.Effacer:
-					{
-						LabelAide.Text = "Chose nodes to delete (clic or select a rectangle)";
-						break;
-					}
-				}
-			}
-		}
-		#endregion
+        bool CalculPossible { get { return NDepart != null && NArrivee != null; } }
 
-		#region Methodes outils
-		static Rectangle Boite(params SimWaypoint[] NoeudsAEnglober)
-		{
-			Rectangle R = RectangleCentres(NoeudsAEnglober);
-			Size S = new Size(Rayon+2*Epaisseur, Rayon+2*Epaisseur);
-			R.Inflate(S);
-			return R;
-		}
+        enum Action { Dessiner, Effacer, Deplacer, ChangerEtat, AEtoile }
+        Action _Mode;
+        Action Mode
+        {
+            get { return _Mode; }
+            set
+            {
+                _Mode = value;
+                foreach (ToolBarButton B in EditionToolBar.Buttons) B.Pushed = false; // Actions exclusives
+                EditionToolBar.Buttons[(int)_Mode].Pushed = true;
+                switch (_Mode)
+                {
+                    case Action.AEtoile:
+                        {
+                            LabelAide.Text = "Choose starting and ending nodes with the respective left and right mouse buttons";
+                            AfficherInfosResultat();
+                            break;
+                        }
+                    case Action.ChangerEtat:
+                        {
+                            LabelAide.Text = "Select a node or an arc to activate/deactivate";
+                            break;
+                        }
+                    case Action.Deplacer:
+                        {
+                            LabelAide.Text = "Select a node with left button to move it (right button to move the entire graph)";
+                            break;
+                        }
+                    case Action.Dessiner:
+                        {
+                            LabelAide.Text = "Clic and drag to draw an arc between 2 nodes (right button for bidirectional arcs)";
+                            break;
+                        }
+                    case Action.Effacer:
+                        {
+                            LabelAide.Text = "Chose nodes to delete (clic or select a rectangle)";
+                            break;
+                        }
+                }
+            }
+        }
+        #endregion
 
-		static Rectangle RectangleCentres(params SimWaypoint[] NoeudsAEnglober)
-		{
-			float[] Min, Max;
-			SimWaypoint.BoundingBox(NoeudsAEnglober, out Min, out Max);
-			return Rectangle.FromLTRB((int)(Min[0]* DSCALE), (int)(Min[1]* DSCALE), (int)(Max[0]* DSCALE), (int)(Max[1]* DSCALE));
-		}
+        #region Methodes outils
+        static Rectangle Boite(params SimWaypoint[] NoeudsAEnglober)
+        {
+            Rectangle R = RectangleCentres(NoeudsAEnglober);
+            Size S = new Size(Rayon + 2 * Epaisseur, Rayon + 2 * Epaisseur);
+            R.Inflate(S);
+            return R;
+        }
 
-		static bool Collision(SimWaypoint N1, SimWaypoint N2)
-		{
-			return SimWaypoint.SquareEuclidianDistance(N1, N2)<=Rayon*Rayon;
-		}
+        static Rectangle RectangleCentres(params SimWaypoint[] NoeudsAEnglober)
+        {
+            double[] Min, Max;
+            SimWaypoint.BoundingBox(NoeudsAEnglober, out Min, out Max);
+            return Rectangle.FromLTRB((int)(Min[0] * DSCALE), (int)(Min[1] * DSCALE), (int)(Max[0] * DSCALE), (int)(Max[1] * DSCALE));
+        }
 
-		bool NoeudSelonPosition(int X, int Y, ref SimWaypoint N)
-		{
-			SimWaypoint NSJ = NoeudSousJacent(X, Y);
-			if ( NSJ!=null )
-			{
-				N = NSJ;
-				return false;
-			}
-			else
-			{
-                if (N == null) N = SimWaypoint.Create(X / DSCALE, Y / DSCALE, 0, PathStore);
-                else N.ChangeXYZDebug(X/DSCALE, Y/DSCALE, 0);
-				return true;
-			}
-		}
+        static bool Collision(SimWaypoint N1, SimWaypoint N2)
+        {
+            return SimWaypoint.SquareEuclidianDistance(N1, N2) <= Rayon * Rayon;
+        }
 
-		SimWaypoint NoeudSousJacent(int X, int Y)
-		{
-			float Distance;
-            SimWaypoint ClosestNode = G.ClosestNode((float)(X / DSCALE), (float)(Y / DSCALE), 0, out Distance, false);
-			return (Distance* DSCALE)<=2*Rayon ? ClosestNode : null;
-		}
+        bool NoeudSelonPosition(int X, int Y, ref SimWaypoint N)
+        {
+            SimWaypoint NSJ = NoeudSousJacent(X, Y);
+            if (NSJ != null)
+            {
+                N = NSJ;
+                return false;
+            }
+            else
+            {
+                if (N == null) N = SimWaypoint.CreateGlobal(X / DSCALE + StartX, Y / DSCALE + StartY, 0);
+                else N.ChangeXYZDebug(X / DSCALE + StartX, Y / DSCALE + StartY, 0);
+                return true;
+            }
+        }
 
-		SimRoute ArcSousJacent(int X, int Y)
-		{
-            float Distance;
-			SimRoute ArcPlusProche = G.ClosestArc((float)(X/ DSCALE), (float)(Y/ DSCALE), 0, out Distance, false);
+        SimWaypoint NoeudSousJacent(int X, int Y)
+        {
+            double Distance;
+            SimWaypoint ClosestNode = G.ClosestNode((double)(X / DSCALE) + StartX, (double)(Y / DSCALE) + StartY, 0, out Distance, false);
+            return (Distance * DSCALE) <= 2 * Rayon ? ClosestNode : null;
+        }
+
+        SimRoute ArcSousJacent(int X, int Y)
+        {
+            double Distance;
+            SimRoute ArcPlusProche = G.ClosestArc((double)(X / DSCALE) + StartX, (double)(Y / DSCALE) + StartY, 0, out Distance, false);
             return (Distance * DSCALE) <= Rayon ? ArcPlusProche : null;
-		}
-		#endregion
+        }
+        #endregion
 
-		#region Réponses aux actions
-		private void GraphToolBar_ButtonClick(object sender, System.Windows.Forms.ToolBarButtonClickEventArgs e)
-		{
-			Mode = (Action)e.Button.Tag;
-		}
+        #region Réponses aux actions
+        private void GraphToolBar_ButtonClick(object sender, System.Windows.Forms.ToolBarButtonClickEventArgs e)
+        {
+            Mode = (Action)e.Button.Tag;
+        }
 
-		private void ChoixAutomatique(object sender, EventArgs e) { PasAPas = false; }
-		private void ChoixPasAPas(object sender, EventArgs e) { PasAPas = true; }
+        private void ChoixAutomatique(object sender, EventArgs e) { PasAPas = false; }
+        private void ChoixPasAPas(object sender, EventArgs e) { PasAPas = true; }
 
-		private void GraphPanel_MouseLeave(object sender, System.EventArgs e)
-		{
-			if ( !CalculPossible ) CoordsPanel.Text = String.Empty;
-		}
+        private void GraphPanel_MouseLeave(object sender, System.EventArgs e)
+        {
+            if (!CalculPossible) CoordsPanel.Text = String.Empty;
+        }
 
-		private void GraphPanel_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
-		{
-			if ( e.Button==MouseButtons.Left ) BoutonGEnfonce = true;
-			else if ( e.Button==MouseButtons.Right ) BoutonDEnfonce = true;
-			else return;
-			if ( BoutonGEnfonce && BoutonDEnfonce ) return;
+        private void GraphPanel_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left) BoutonGEnfonce = true;
+            else if (e.Button == MouseButtons.Right) BoutonDEnfonce = true;
+            else return;
+            if (BoutonGEnfonce && BoutonDEnfonce) return;
 
-			TempN1 = TempN2 = null;
-			switch ( Mode )
-			{
-				case Action.Effacer:
-				case Action.Dessiner:
-				{
-					AjouterN1 = NoeudSelonPosition(e.X, e.Y, ref TempN1);
-                    TempN2 = SimWaypoint.Create((float)((TempN1.DX*DSCALE) / DSCALE), (float)((TempN1.DY*DSCALE) / DSCALE), (float)0, PathStore);
-					GraphPanel.Invalidate( Boite(TempN1, TempN2) );
-					break;
-				}
-				case Action.Deplacer:
-				{
-					TempP = new Point(e.X, e.Y);
-					TempN1 = NoeudSousJacent(e.X, e.Y);
-					break;
-				}
-				default: break;
-			}
-		}
+            TempN1 = TempN2 = null;
+            switch (Mode)
+            {
+                case Action.Effacer:
+                case Action.Dessiner:
+                    {
+                        AjouterN1 = NoeudSelonPosition(e.X, e.Y, ref TempN1);
+                        TempN2 = SimWaypoint.CreateGlobal((double)((TempN1.DX) / DSCALE) + StartX, (double)((TempN1.DY) / DSCALE) + StartY, (double)0);
+                        GraphPanel.Invalidate(Boite(TempN1, TempN2));
+                        break;
+                    }
+                case Action.Deplacer:
+                    {
+                        TempP = new Point(e.X, e.Y);
+                        TempN1 = NoeudSousJacent(e.X, e.Y);
+                        break;
+                    }
+                default: break;
+            }
+        }
 
-		string SB_Point(int X, int Y) { return "{"+X+";"+Y+"}"; }
-		string SB_Noeud(int X, int Y) { return "Node "+SB_Point(X, Y); }
-		string SB_TempArc(int X, int Y, bool DoubleSens)
-		{
-			string Fleche = DoubleSens ? " <-> " : " -> ";
-			SimWaypoint N = NoeudSousJacent(X, Y);
-			string Cible = N!=null ? SB_Noeud((int)(N.DX*DSCALE), (int)(N.DY*DSCALE)) : SB_Point((int)(TempN2.DX*DSCALE), (int)(TempN2.DY*DSCALE));
-			return SB_Point((int)(TempN1.DX*DSCALE), (int)(TempN1.DY*DSCALE))+Fleche+Cible+" : Length = "+(int)SimWaypoint.EuclidianDistance(TempN1, TempN2);
-		}
-		string SB_TempRectangle()
-		{
-			return SB_Point((int)(TempN1.DX*DSCALE), (int)(TempN1.DY*DSCALE))+" + "+SB_Point((int)Math.Abs(TempN1.DX*DSCALE-TempN2.DX*DSCALE), (int)Math.Abs(TempN1.DY*DSCALE-TempN2.DY*DSCALE));
-		}
-		string SB_DetecterNoeud(int X, int Y)
-		{
-			SimWaypoint N = NoeudSousJacent(X, Y);
-			return N!=null ? SB_Noeud((int)(N.DX*DSCALE), (int)(N.DY*DSCALE)) : SB_Point(X, Y);
-		}
-		string SB_DetecterNoeudOuArc(int X, int Y)
-		{
-			SimWaypoint N = NoeudSousJacent(X, Y);
-			if ( N!=null ) return SB_Noeud((int)(N.DX*DSCALE), (int)(N.DY*DSCALE));
-			SimRoute A = ArcSousJacent(X, Y);
-			if ( A!=null ) return "Arc "+SB_Point((int)(A.StartNode.DX*DSCALE), (int)(A.StartNode.DY*DSCALE))+" -> "+SB_Point((int)(A.EndNode.DX*DSCALE), (int)(A.EndNode.DY*DSCALE));
-			return SB_Point(X, Y);
-		}
-		string SB_NoeudPlusProche(int X, int Y)
-		{
-			float Distance;
-			SimWaypoint N = G.ClosestNode(X/DSCALE, Y/DSCALE, 0, out Distance, true);
-			return N!=null ? SB_Noeud((int)(N.DX*DSCALE), (int)(N.DY*DSCALE)) : SB_Point(X, Y);
-		}
+        string SB_Point(int X, int Y) { return "{" + X + ";" + Y + "}"; }
+        string SB_Noeud(int X, int Y) { return "Node " + SB_Point(X, Y); }
+        string SB_TempArc(int X, int Y, bool DoubleSens)
+        {
+            string Fleche = DoubleSens ? " <-> " : " -> ";
+            SimWaypoint N = NoeudSousJacent(X, Y);
+            string Cible = N != null ? SB_Noeud((int)N.DX, (int)N.DY) : SB_Point((int)TempN2.DX, (int)TempN2.DY);
+            return SB_Point((int)TempN1.DX, (int)TempN1.DY) + Fleche + Cible + " : Length = " + (int)SimWaypoint.EuclidianDistance(TempN1, TempN2);
+        }
+        string SB_TempRectangle()
+        {
+            return SB_Point((int)TempN1.DX, (int)TempN1.DY) + " + " + SB_Point((int)Math.Abs(TempN1.DX - TempN2.DX), (int)Math.Abs(TempN1.DY - TempN2.DY));
+        }
+        string SB_DetecterNoeud(int X, int Y)
+        {
+            SimWaypoint N = NoeudSousJacent(X, Y);
+            return N != null ? SB_Noeud((int)N.DX, (int)N.DY) : SB_Point(X, Y);
+        }
+        string SB_DetecterNoeudOuArc(int X, int Y)
+        {
+            SimWaypoint N = NoeudSousJacent(X, Y);
+            if (N != null) return SB_Noeud((int)N.DX, (int)N.DY);
+            SimRoute A = ArcSousJacent(X, Y);
+            if (A != null) return "Arc " + SB_Point((int)A.StartNode.DX, (int)A.StartNode.DY) + " -> " + SB_Point((int)A.EndNode.DX, (int)A.EndNode.DY);
+            return SB_Point(X, Y);
+        }
+        string SB_NoeudPlusProche(int X, int Y)
+        {
+            double Distance;
+            SimWaypoint N = G.ClosestNode(X / DSCALE + StartX, Y / DSCALE + StartY, 0, out Distance, true);
+            return N != null ? SB_Noeud((int)N.DX, (int)N.DY) : SB_Point(X, Y);
+        }
 
-		void StatusBarMouseMove(System.Windows.Forms.MouseEventArgs e)
-		{
-			int X = e.X;
-			int Y = e.Y;
-			bool BoutonEnfonce = e.Button==MouseButtons.Left || e.Button==MouseButtons.Right;
+        void StatusBarMouseMove(System.Windows.Forms.MouseEventArgs e)
+        {
+            int X = e.X;
+            int Y = e.Y;
+            bool BoutonEnfonce = e.Button == MouseButtons.Left || e.Button == MouseButtons.Right;
 
-			switch( Mode )
-			{
-				case Action.Dessiner:
-				{
-					CoordsPanel.Text = BoutonEnfonce ? SB_TempArc(X, Y, e.Button==MouseButtons.Right) : SB_DetecterNoeud(X, Y);
-					break;
-				}
-				case Action.Effacer:
-				{
-					CoordsPanel.Text = BoutonEnfonce ? SB_TempRectangle() : SB_DetecterNoeudOuArc(X, Y);
-					break;
-				}
-				case Action.Deplacer:
-				{
-					if ( e.Button==MouseButtons.Right ) CoordsPanel.Text = String.Empty;
-					else
-					{
-						if ( BoutonEnfonce )
-							CoordsPanel.Text = TempN1!=null ? SB_Noeud(X, Y) : SB_Point(X, Y);
-						else
-							CoordsPanel.Text = SB_DetecterNoeud(X, Y);
-					}
-					break;
-				}
-				case Action.ChangerEtat:
-				{
-					CoordsPanel.Text = SB_DetecterNoeudOuArc(X, Y);
-					break;
-				}
-				case Action.AEtoile:
-				{
-					string S = String.Empty;
-					if ( NDepart==null && NArrivee==null ) S = "Select STARTING and ENDING nodes";
-					else if ( NDepart==null ) S = "Select STARTING node (with left button)";
-					else if ( NArrivee==null ) S = "Select ENDING node (with right button)";
-					CoordsPanel.Text = S+". Current : "+SB_NoeudPlusProche(X, Y);
-					break;
-				}
-			}
-		}
+            switch (Mode)
+            {
+                case Action.Dessiner:
+                    {
+                        CoordsPanel.Text = BoutonEnfonce ? SB_TempArc(X, Y, e.Button == MouseButtons.Right) : SB_DetecterNoeud(X, Y);
+                        break;
+                    }
+                case Action.Effacer:
+                    {
+                        CoordsPanel.Text = BoutonEnfonce ? SB_TempRectangle() : SB_DetecterNoeudOuArc(X, Y);
+                        break;
+                    }
+                case Action.Deplacer:
+                    {
+                        if (e.Button == MouseButtons.Right) CoordsPanel.Text = String.Empty;
+                        else
+                        {
+                            if (BoutonEnfonce)
+                                CoordsPanel.Text = TempN1 != null ? SB_Noeud(X, Y) : SB_Point(X, Y);
+                            else
+                                CoordsPanel.Text = SB_DetecterNoeud(X, Y);
+                        }
+                        break;
+                    }
+                case Action.ChangerEtat:
+                    {
+                        CoordsPanel.Text = SB_DetecterNoeudOuArc(X, Y);
+                        break;
+                    }
+                case Action.AEtoile:
+                    {
+                        string S = String.Empty;
+                        if (NDepart == null && NArrivee == null) S = "Select STARTING and ENDING nodes";
+                        else if (NDepart == null) S = "Select STARTING node (with left button)";
+                        else if (NArrivee == null) S = "Select ENDING node (with right button)";
+                        CoordsPanel.Text = S + ". Current : " + SB_NoeudPlusProche(X, Y);
+                        break;
+                    }
+            }
+        }
 
-		private void GraphPanel_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
-		{
-			if ( BoutonGEnfonce && BoutonDEnfonce ) return;
-			switch( Mode )
-			{
-				case Action.Effacer:
-				case Action.Dessiner:
-				{
-					if ( e.Button==MouseButtons.Left || e.Button==MouseButtons.Right )
-					{
-						if ( TempN1==null || TempN2==null ) return;
-						Rectangle AncienRect = Boite(TempN1, TempN2);
-                        TempN2.ChangeXYZDebug(e.X / DSCALE, e.Y / DSCALE, 0);
-						Rectangle NouveauRect = Boite(TempN1, TempN2);
-						GraphPanel.Invalidate( Rectangle.Union(AncienRect, NouveauRect) );
-					}
-					break;
-				}
-				case Action.Deplacer:
-				{
-					if ( e.Button==MouseButtons.Left )
-					{
-						if ( TempN1==null ) break;
-						Rectangle AncienRect = Boite(TempN1.Molecule);
+        private void GraphPanel_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (BoutonGEnfonce && BoutonDEnfonce) return;
+            switch (Mode)
+            {
+                case Action.Effacer:
+                case Action.Dessiner:
+                    {
+                        if (e.Button == MouseButtons.Left || e.Button == MouseButtons.Right)
+                        {
+                            if (TempN1 == null || TempN2 == null) return;
+                            Rectangle AncienRect = Boite(TempN1, TempN2);
+                            TempN2.ChangeXYZDebug(e.X / DSCALE + StartX, e.Y / DSCALE + StartY, 0);
+                            Rectangle NouveauRect = Boite(TempN1, TempN2);
+                            GraphPanel.Invalidate(Rectangle.Union(AncienRect, NouveauRect));
+                        }
+                        break;
+                    }
+                case Action.Deplacer:
+                    {
+                        if (e.Button == MouseButtons.Left)
+                        {
+                            if (TempN1 == null) break;
+                            Rectangle AncienRect = Boite(TempN1.Molecule);
 
-						IList<SimWaypoint> AncienChemin = null;
-						if ( Chemin!=null )
-						{
-							AncienChemin = new SimWaypoint[Chemin.Count];
-							for ( int i=0; i<AncienChemin.Count; i++ ) AncienChemin[i] = (SimWaypoint)Chemin[i].Clone();
-						}
+                            SimWaypoint[] AncienChemin = null;
+                            if (Chemin != null)
+                            {
+                                AncienChemin = new SimWaypoint[Chemin.Length];
+                                for (int i = 0; i < AncienChemin.Length; i++) AncienChemin[i] = (SimWaypoint)Chemin[i].Clone();
+                            }
 
-                        TempN1.ChangeXYZDebug(e.X / DSCALE, e.Y / DSCALE, 0);
-						Rectangle NouveauRect = Boite(TempN1.Molecule);
-						if ( AdapterAEtoile() && CheminsDifferents(AncienChemin, Chemin) ) GraphPanel.Invalidate();
-						else GraphPanel.Invalidate( Rectangle.Union(AncienRect, NouveauRect) );
-					}
-					else if ( e.Button==MouseButtons.Right )
-					{
-						int DX = (int)(e.X-TempP.X);
-						int DY = (int)(e.Y-TempP.Y);
-						TempP.X = e.X;
-						TempP.Y = e.Y;
-                        foreach (SimWaypoint N in G.Nodes) N.ChangeXYZDebug((float)(N.DX*DSCALE + DX) / DSCALE, (float)(N.DY*DSCALE + DY) / DSCALE, 0);
-						GraphPanel.Invalidate();
-					}
-					break;
-				}
-				default: break;
-			}
-			if ( !CalculPossible ) StatusBarMouseMove(e);
-		}
+                            TempN1.ChangeXYZDebug(e.X / DSCALE + StartX, e.Y / DSCALE + StartY, 0);
+                            Rectangle NouveauRect = Boite(TempN1.Molecule);
+                            if (AdapterAEtoile() && CheminsDifferents(AncienChemin, Chemin)) GraphPanel.Invalidate();
+                            else GraphPanel.Invalidate(Rectangle.Union(AncienRect, NouveauRect));
+                        }
+                        else if (e.Button == MouseButtons.Right)
+                        {
+                            int DX = (int)(e.X - TempP.X);
+                            int DY = (int)(e.Y - TempP.Y);
+                            TempP.X = e.X;
+                            TempP.Y = e.Y;
+                            foreach (SimWaypoint N in G.Nodes) N.ChangeXYZDebug((double)(N.DX + DX) / DSCALE + StartX, (double)(N.DY + DY) / DSCALE + StartY, 0);
+                            GraphPanel.Invalidate();
+                        }
+                        break;
+                    }
+                default: break;
+            }
+            if (!CalculPossible) StatusBarMouseMove(e);
+        }
 
-		private void GraphPanel_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
-		{
-			bool Retour = BoutonGEnfonce && BoutonDEnfonce;
-			if ( e.Button==MouseButtons.Left ) BoutonGEnfonce = false;
-			else if ( e.Button==MouseButtons.Right ) BoutonDEnfonce = false;
-			else return;
-			if ( Retour ) return;
+        private void GraphPanel_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            bool Retour = BoutonGEnfonce && BoutonDEnfonce;
+            if (e.Button == MouseButtons.Left) BoutonGEnfonce = false;
+            else if (e.Button == MouseButtons.Right) BoutonDEnfonce = false;
+            else return;
+            if (Retour) return;
 
-			switch( Mode )
-			{
-				case Action.Dessiner:
-				{
-					if ( TempN1==null || TempN2==null ) return;
-					bool AjouterArc = false;
-					Rectangle AncienRect = Boite(TempN1, TempN2);
-					AjouterN2 = NoeudSelonPosition(e.X, e.Y, ref TempN2);
-					if ( AjouterN1 ) { TempN1.Isolate(); G.AddNode(TempN1); }
-					if ( !Collision(TempN1, TempN2) )
-					{
-						if ( AjouterN2 ) { TempN2.Isolate(); G.AddNode(TempN2); }
-						if ( e.Button == MouseButtons.Left )
-							G.AddArc(TempN1, TempN2, 1);
-						else if ( e.Button == MouseButtons.Right ) G.Add2Arcs(TempN1, TempN2, 1);
-						NbArcsPanel.Text = G.Arcs.Count.ToString();
-						AjouterArc = true;
-					}
-					NbNodesPanel.Text = G.Nodes.Count.ToString();
+            switch (Mode)
+            {
+                case Action.Dessiner:
+                    {
+                        if (TempN1 == null || TempN2 == null) return;
+                        bool AjouterArc = false;
+                        Rectangle AncienRect = Boite(TempN1, TempN2);
+                        AjouterN2 = NoeudSelonPosition(e.X, e.Y, ref TempN2);
+                        if (AjouterN1) { TempN1.Isolate(); G.AddNode(TempN1); }
+                        if (!Collision(TempN1, TempN2))
+                        {
+                            if (AjouterN2) { TempN2.Isolate(); G.AddNode(TempN2); }
+                            if (e.Button == MouseButtons.Left)
+                                G.AddArc(TempN1, TempN2, 1);
+                            else if (e.Button == MouseButtons.Right) G.Add2Arcs(TempN1, TempN2, 1);
+                            NbArcsPanel.Text = G.Arcs.Count.ToString();
+                            AjouterArc = true;
+                        }
+                        NbNodesPanel.Text = G.Nodes.Count.ToString();
 
-					if ( AjouterArc && ( !AjouterN1 || !AjouterN2 ) && AdapterAEtoile() ) GraphPanel.Invalidate();
-					else
-					{
-						Rectangle NouveauRect = Boite(TempN1, TempN2);
-						GraphPanel.Invalidate( Rectangle.Union(AncienRect, NouveauRect) );
-					}
-					break;
-				}
-				case Action.Effacer:
-				{
-					if ( TempN1==null || TempN2==null ) return;
-					bool Selection = false;
-					Rectangle Zone = RectangleCentres(TempN1, TempN2);
-					Zone.Inflate(1,1);
-					Region Invalide = new Region(Zone);
-					if ( Zone.Size.Width<2*Rayon && Zone.Size.Height<2*Rayon )
-					{
-						SimWaypoint N = NoeudSousJacent(e.X, e.Y);
-						if ( N!=null )
-						{
-							TestAEtoile(N, ref Invalide);
-							Invalide.Union(Boite(N.Molecule));
-							G.RemoveNode(N);
-							NbNodesPanel.Text = G.Nodes.Count.ToString();
-							NbArcsPanel.Text = G.Arcs.Count.ToString();
-							Selection = true;
-						}
-						else
-						{
-							SimRoute A = ArcSousJacent(e.X, e.Y);
-							if ( A!=null )
-							{
-								Invalide.Union( Boite(A.StartNode, A.EndNode) );
-								G.RemoveArc(A);
-								NbArcsPanel.Text = G.Arcs.Count.ToString();
-								Selection = true;
-							}
-						}
-					}
-					else
-					{
-						System.Collections.ArrayList ListeNoeuds = new System.Collections.ArrayList();
-						foreach ( SimWaypoint N in G.Nodes )
-						{
-							if ( Zone.Contains(new Point((int)(N.DX*DSCALE), (int)(N.DY*DSCALE))) )
-							{
-								TestAEtoile(N, ref Invalide);
-								Invalide.Union( Boite(N.Molecule) );
-								ListeNoeuds.Add(N);
-								Selection = true;
-							}
-						}
-						foreach ( SimWaypoint N in ListeNoeuds ) G.RemoveNode(N);
-						NbNodesPanel.Text = G.Nodes.Count.ToString();
-						NbArcsPanel.Text = G.Arcs.Count.ToString();
-					}
+                        if (AjouterArc && (!AjouterN1 || !AjouterN2) && AdapterAEtoile()) GraphPanel.Invalidate();
+                        else
+                        {
+                            Rectangle NouveauRect = Boite(TempN1, TempN2);
+                            GraphPanel.Invalidate(Rectangle.Union(AncienRect, NouveauRect));
+                        }
+                        break;
+                    }
+                case Action.Effacer:
+                    {
+                        if (TempN1 == null || TempN2 == null) return;
+                        bool Selection = false;
+                        Rectangle Zone = RectangleCentres(TempN1, TempN2);
+                        Zone.Inflate(1, 1);
+                        Region Invalide = new Region(Zone);
+                        if (Zone.Size.Width < 2 * Rayon && Zone.Size.Height < 2 * Rayon)
+                        {
+                            SimWaypoint N = NoeudSousJacent(e.X, e.Y);
+                            if (N != null)
+                            {
+                                TestAEtoile(N, ref Invalide);
+                                Invalide.Union(Boite(N.Molecule));
+                                G.RemoveNode(N);
+                                NbNodesPanel.Text = G.Nodes.Count.ToString();
+                                NbArcsPanel.Text = G.Arcs.Count.ToString();
+                                Selection = true;
+                            }
+                            else
+                            {
+                                SimRoute A = ArcSousJacent(e.X, e.Y);
+                                if (A != null)
+                                {
+                                    Invalide.Union(Boite(A.StartNode, A.EndNode));
+                                    G.RemoveArc(A);
+                                    NbArcsPanel.Text = G.Arcs.Count.ToString();
+                                    Selection = true;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ArrayList ListeNoeuds = new ArrayList();
+                            foreach (SimWaypoint N in G.Nodes)
+                            {
+                                if (Zone.Contains(new Point((int)N.DX, (int)N.DY)))
+                                {
+                                    TestAEtoile(N, ref Invalide);
+                                    Invalide.Union(Boite(N.Molecule));
+                                    ListeNoeuds.Add(N);
+                                    Selection = true;
+                                }
+                            }
+                            foreach (SimWaypoint N in ListeNoeuds) G.RemoveNode(N);
+                            NbNodesPanel.Text = G.Nodes.Count.ToString();
+                            NbArcsPanel.Text = G.Arcs.Count.ToString();
+                        }
 
-					if ( Selection && AdapterAEtoile() ) GraphPanel.Invalidate();
-					else GraphPanel.Invalidate(Invalide);
-					break;
-				}
-				case Action.ChangerEtat:
-				{
-					SimWaypoint N = NoeudSousJacent(e.X, e.Y);
-					Region Invalide = null;
-					if ( N!=null )
-					{
-						N.Passable = !N.Passable;
-						Invalide = new Region(Boite(N.Molecule));
-					}
-					else
-					{
-						SimRoute A = ArcSousJacent(e.X, e.Y);
-						if ( A!=null )
-						{
-							A.Passable = !A.Passable;
-							Invalide = new Region(Boite(A.StartNode, A.EndNode));
-						}
-					}
+                        if (Selection && AdapterAEtoile()) GraphPanel.Invalidate();
+                        else GraphPanel.Invalidate(Invalide);
+                        break;
+                    }
+                case Action.ChangerEtat:
+                    {
+                        SimWaypoint N = NoeudSousJacent(e.X, e.Y);
+                        Region Invalide = null;
+                        if (N != null)
+                        {
+                            N.Passable = !N.Passable;
+                            Invalide = new Region(Boite(N.Molecule));
+                        }
+                        else
+                        {
+                            SimRoute A = ArcSousJacent(e.X, e.Y);
+                            if (A != null)
+                            {
+                                A.Passable = !A.Passable;
+                                Invalide = new Region(Boite(A.StartNode, A.EndNode));
+                            }
+                        }
 
-					if ( Invalide!=null )
-					{
-						if ( AdapterAEtoile() ) GraphPanel.Invalidate();
-						else GraphPanel.Invalidate(Invalide);
-					}
-					break;
-				}
-				case Action.AEtoile:
-				{
-					float Distance;
-					SimWaypoint NoeudPlusProche = G.ClosestNode(e.X/DSCALE, e.Y/DSCALE, 0, out Distance, true);
-					if ( NoeudPlusProche==null ) break;
-					Rectangle Invalide = Boite(NoeudPlusProche);
+                        if (Invalide != null)
+                        {
+                            if (AdapterAEtoile()) GraphPanel.Invalidate();
+                            else GraphPanel.Invalidate(Invalide);
+                        }
+                        break;
+                    }
+                case Action.AEtoile:
+                    {
+                        double Distance;
+                        SimWaypoint NoeudPlusProche = G.ClosestNode(e.X / DSCALE + StartX, e.Y / DSCALE + StartY, 0, out Distance, true);
+                        if (NoeudPlusProche == null) break;
+                        Rectangle Invalide = Boite(NoeudPlusProche);
 
-					if ( NDepart!=null ) Invalide = Rectangle.Union(Invalide, Boite(NDepart));
-					if ( NArrivee!=null ) Invalide = Rectangle.Union(Invalide, Boite(NArrivee));
+                        if (NDepart != null) Invalide = Rectangle.Union(Invalide, Boite(NDepart));
+                        if (NArrivee != null) Invalide = Rectangle.Union(Invalide, Boite(NArrivee));
 
-					if ( e.Button==MouseButtons.Left ) NDepart = NDepart==NoeudPlusProche ? null : NoeudPlusProche;
-					else if ( e.Button==MouseButtons.Right ) NArrivee = NArrivee==NoeudPlusProche ? null : NoeudPlusProche;
+                        if (e.Button == MouseButtons.Left) NDepart = NDepart == NoeudPlusProche ? null : NoeudPlusProche;
+                        else if (e.Button == MouseButtons.Right) NArrivee = NArrivee == NoeudPlusProche ? null : NoeudPlusProche;
 
-					if ( AdapterAEtoile() ) GraphPanel.Invalidate();
-					else
-					{
-						if ( Chemin!=null )
-						{
-							Chemin = null;
-							GraphPanel.Invalidate();
-						}
-						else GraphPanel.Invalidate(Invalide);
-					}
-					break;
-				}
-				default: break;
-			}
-			TempN1 = TempN2 = null;
-		}
+                        if (AdapterAEtoile()) GraphPanel.Invalidate();
+                        else
+                        {
+                            if (Chemin != null)
+                            {
+                                Chemin = null;
+                                GraphPanel.Invalidate();
+                            }
+                            else GraphPanel.Invalidate(Invalide);
+                        }
+                        break;
+                    }
+                default: break;
+            }
+            TempN1 = TempN2 = null;
+        }
 
-		// retourne true s'il faut invalider tout le panel
-		bool AdapterAEtoile()
-		{
-			if ( !PasAPas )
-			{
-				if ( !CalculPossible ) return false;
-				AEtoile_Fin();
-				return true;
-			}
-			else
-			{
-				bool IlResteDesPas  = AE.Closed.Length>0 || AE.Open.Length>1;
-				AEtoile_Debut();
-				return IlResteDesPas;
-			}
-		}
+        // retourne true s'il faut invalider tout le panel
+        bool AdapterAEtoile()
+        {
+            if (!PasAPas)
+            {
+                if (!CalculPossible) return false;
+                AEtoile_Fin();
+                return true;
+            }
+            else
+            {
+                bool IlResteDesPas = AE.Closed.Length > 0 || AE.Open.Length > 1;
+                AEtoile_Debut();
+                return IlResteDesPas;
+            }
+        }
 
-		bool CheminsDifferents(IList<SimWaypoint> C1, IList<SimWaypoint> C2)
-		{
-            if (C1 == null || C2 == null || C1.Count != C2.Count) return true;
-            for (int i = 0; i < C1.Count; i++) if (!C1[i].Equals(C2[i])) return true;
-			return false;
-		}
+        bool CheminsDifferents(SimWaypoint[] C1, SimWaypoint[] C2)
+        {
+            if (C1 == null || C2 == null || C1.Length != C2.Length) return true;
+            for (int i = 0; i < C1.Length; i++) if (!C1[i].Equals(C2[i])) return true;
+            return false;
+        }
 
-		void TestAEtoile(SimWaypoint N, ref Region ZoneInvalide)
-		{
-			if ( N!=null )
-			{
-				if ( N==NDepart ) NDepart=null;
-				if ( N==NArrivee ) NArrivee=null;
-				if ( Chemin!=null && Chemin.IndexOf(N)>=0 )
-				{
-					Chemin=null;
-					ZoneInvalide.Union(new Rectangle(new Point(0,0),GraphPanel.Size));				
-				}
-			}
-		}
+        void TestAEtoile(SimWaypoint N, ref Region ZoneInvalide)
+        {
+            if (N != null)
+            {
+                if (N == NDepart) NDepart = null;
+                if (N == NArrivee) NArrivee = null;
+                if (Chemin != null && Array.IndexOf(Chemin, N) >= 0)
+                {
+                    Chemin = null;
+                    ZoneInvalide.Union(new Rectangle(new Point(0, 0), GraphPanel.Size));
+                }
+            }
+        }
 
-		private void AEtoileToolBar_ButtonClick(object sender, System.Windows.Forms.ToolBarButtonClickEventArgs e)
-		{
-			if ( !CalculPossible ) MessageBox.Show(
-									   @"Before performing A* you must choose the starting and ending nodes
+        private void AEtoileToolBar_ButtonClick(object sender, System.Windows.Forms.ToolBarButtonClickEventArgs e)
+        {
+            if (!CalculPossible) MessageBox.Show(
+                                     @"Before performing A* you must choose the starting and ending nodes
 with the respective left and right mouse buttons.", "Impossible action", MessageBoxButtons.OK, MessageBoxIcon.Stop);
 
-			switch( (int)e.Button.Tag )
-			{
-				case 0:
-				{
-					AEtoile_Debut();
-					break;
-				}
-				case 1:
-				{
-					AEtoile_Etape();
-					break;
-				}
-				case 2:
-				{
-					AEtoile_Fin();
-					break;
-				}
-			}
-			GraphPanel.Invalidate();
-		}
-
-
-        public void SetTryPathNow(SimWaypoint start,SimWaypoint end, IList<SimWaypoint> ch) {
-            NDepart = start;
-            NArrivee = end;
-         //   CalculPossible = true;
-          //  AEtoile_Debut();
-          //  AEtoile_Fin();
-            Chemin = ch;// AE.SearchPath(NDepart, NArrivee) ? AE.PathByNodes : null;
+            switch ((int)e.Button.Tag)
+            {
+                case 0:
+                    {
+                        AEtoile_Debut();
+                        break;
+                    }
+                case 1:
+                    {
+                        AEtoile_Etape();
+                        break;
+                    }
+                case 2:
+                    {
+                        AEtoile_Fin();
+                        break;
+                    }
+            }
             GraphPanel.Invalidate();
         }
 
-		private void AEtoile_Debut()
-		{
-			if ( !CalculPossible )
-			{
-				foreach ( ToolBarButton B in AEtoileToolBar.Buttons ) B.Enabled = false;
-				return;
-			}
-			else
-			{
-				AEtoileDebut.Enabled = false;
-				AEtoileFin.Enabled = true;
-				AEtoileEtape.Enabled = true;
-				Chemin = null;
-				AE.Initialize(NDepart, NArrivee);
-				AfficherInfosResultat();
-			}
-		}
 
-		private void AEtoile_Etape()
-		{
-			if ( !CalculPossible ) return;
-			if ( !AE.NextStep() )
-			{
-				Chemin = AE.PathByNodes;
-				AEtoileFin.Enabled = false;
-				AEtoileEtape.Enabled = false;
-			}
-			AfficherInfosResultat();
-			AEtoileDebut.Enabled = true;
-		}
+        public void SetTryPathNow(SimWaypoint start, SimWaypoint end)
+        {
+            NDepart = start;
+            NArrivee = end;
+            //   CalculPossible = true;
+            //  AEtoile_Debut();
+            //  AEtoile_Fin();
+            Chemin = AE.SearchPath(NDepart, NArrivee) ? AE.PathByNodes : null;
+            GraphPanel.Invalidate();
+        }
 
-		private void AEtoile_Fin()
-		{
-			if ( !CalculPossible ) return;
-			Chemin = AE.SearchPath(NDepart, NArrivee) ? AE.PathByNodes : null;
-			AfficherInfosResultat();
-			AEtoileDebut.Enabled = true;
-			AEtoileFin.Enabled = false;
-			AEtoileEtape.Enabled = false;
-		}
+        private void AEtoile_Debut()
+        {
+            if (!CalculPossible)
+            {
+                foreach (ToolBarButton B in AEtoileToolBar.Buttons) B.Enabled = false;
+                return;
+            }
+            else
+            {
+                AEtoileDebut.Enabled = false;
+                AEtoileFin.Enabled = true;
+                AEtoileEtape.Enabled = true;
+                Chemin = null;
+                AE.Initialize(NDepart, NArrivee);
+                AfficherInfosResultat();
+            }
+        }
 
-		void AfficherInfosResultat()
-		{
-			if ( !CalculPossible ) return;
+        private void AEtoile_Etape()
+        {
+            if (!CalculPossible) return;
+            if (!AE.NextStep())
+            {
+                Chemin = AE.PathByNodes;
+                AEtoileFin.Enabled = false;
+                AEtoileEtape.Enabled = false;
+            }
+            AfficherInfosResultat();
+            AEtoileDebut.Enabled = true;
+        }
 
-			else if ( Chemin==null )
-			{
-				if ( PasAPas ) CoordsPanel.Text = String.Format("Open list : {0} (green) ; Closed list : {1} (red)   -   Current step : {2}", AE.Open.Length, AE.Closed.Length, AE.StepCounter);
-				else CoordsPanel.Text = "There is no possible path in this configuration.";
-			}
-			else 
-			{
-				int NbArcsParcourus;
-				float Cout;
-				if ( AE.PathFound )
-				{
-					AE.ResultInformation(out NbArcsParcourus, out Cout);
-					CoordsPanel.Text = String.Format("Shortest path found in {0} step(s) : {1} arc(s) \\ cost = {2}", AE.StepCounter, NbArcsParcourus, (int)Cout);
-				}
-			}
+        private void AEtoile_Fin()
+        {
+            if (!CalculPossible) return;
+            Chemin = AE.SearchPath(NDepart, NArrivee) ? AE.PathByNodes : null;
+            AfficherInfosResultat();
+            AEtoileDebut.Enabled = true;
+            AEtoileFin.Enabled = false;
+            AEtoileEtape.Enabled = false;
+        }
 
-			if ( PasAPas && AE.SearchEnded && !AE.PathFound )
-			{
-				GraphPanel.Invalidate();
-				MessageBox.Show(
-					@"In this configuration, there is no possible path. You can :
+        void AfficherInfosResultat()
+        {
+            if (!CalculPossible) return;
+
+            else if (Chemin == null)
+            {
+                if (PasAPas) CoordsPanel.Text = String.Format("Open list : {0} (green) ; Closed list : {1} (red)   -   Current step : {2}", AE.Open.Length, AE.Closed.Length, AE.StepCounter);
+                else CoordsPanel.Text = "There is no possible path in this configuration.";
+            }
+            else
+            {
+                int NbArcsParcourus;
+                double Cout;
+                if (AE.PathFound)
+                {
+                    AE.ResultInformation(out NbArcsParcourus, out Cout);
+                    CoordsPanel.Text = String.Format("Shortest path found in {0} step(s) : {1} arc(s) \\ cost = {2}", AE.StepCounter, NbArcsParcourus, (int)Cout);
+                }
+            }
+
+            if (PasAPas && AE.SearchEnded && !AE.PathFound)
+            {
+                GraphPanel.Invalidate();
+                MessageBox.Show(
+                    @"In this configuration, there is no possible path. You can :
 - either modify the graph
 - or change the starting and/or ending nodes.", "No result", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-			}
-		}
+            }
+        }
 
-		private void FichierToolBar_ButtonClick(object sender, System.Windows.Forms.ToolBarButtonClickEventArgs e)
-		{
-			switch( (int)e.Button.Tag )
-			{
-				case 0:
-				{
-					if ( G.Nodes.Count>0 )
-					{
-						DialogResult DR = MessageBox.Show("You are about to clear the current graph. Do you confirm ?", "New graph", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-						if ( DR==DialogResult.No ) break;
-					}
-					G.Clear();
-					NouveauGraphe();
-					GraphPanel.Invalidate();
-					break;
-				}
-				case 1:
-				{
-					if ( G.Nodes.Count>0 )
-					{
-						DialogResult DR = MessageBox.Show("You are about to replace the current graph with another. Do you confirm ?", "Load a graph", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-						if ( DR==DialogResult.No ) break;
-					}
-					if ( Charger() )
-					{
-						NouveauGraphe();
-						GraphPanel.Invalidate();
-					}
-					break;
-				}
-				case 2:
-				{
-					if ( Sauver() ) GraphPanel.Invalidate();
-					break;
-				}
-				case 3:
-				{
-					DialogueAPropos.DijkstraHeuristiqueBalance = AE.DijkstraHeuristicBalance;
-					DialogueAPropos.HeuristiqueChoisie = NbHeuristique;
+        private void FichierToolBar_ButtonClick(object sender, System.Windows.Forms.ToolBarButtonClickEventArgs e)
+        {
+            switch ((int)e.Button.Tag)
+            {
+                case 0:
+                    {
+                        if (G.Nodes.Count > 0)
+                        {
+                            DialogResult DR = MessageBox.Show("You are about to clear the current graph. Do you confirm ?", "New graph", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                            if (DR == DialogResult.No) break;
+                        }
+                        G.Clear();
+                        NouveauGraphe();
+                        GraphPanel.Invalidate();
+                        break;
+                    }
+                case 1:
+                    {
+                        if (G.Nodes.Count > 0)
+                        {
+                            DialogResult DR = MessageBox.Show("You are about to replace the current graph with another. Do you confirm ?", "Load a graph", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                            if (DR == DialogResult.No) break;
+                        }
+                        if (Charger())
+                        {
+                            NouveauGraphe();
+                            GraphPanel.Invalidate();
+                        }
+                        break;
+                    }
+                case 2:
+                    {
+                        if (Sauver()) GraphPanel.Invalidate();
+                        break;
+                    }
+                case 3:
+                    {
+                        DialogueAPropos.DijkstraHeuristiqueBalance = AE.DijkstraHeuristicBalance;
+                        DialogueAPropos.HeuristiqueChoisie = NbHeuristique;
 
-					DialogResult DR = DialogueAPropos.ShowDialog(this);
-					if ( DR==DialogResult.OK ) AppliquerChangement(DialogueAPropos);
-					break;
-				}
-			}
-		}
+                        DialogResult DR = DialogueAPropos.ShowDialog(this);
+                        if (DR == DialogResult.OK) AppliquerChangement(DialogueAPropos);
+                        break;
+                    }
+            }
+        }
 
-		internal void AppliquerChangement(APropos DialogueAPropos)
-		{
-			AE.DijkstraHeuristicBalance = DialogueAPropos.DijkstraHeuristiqueBalance;
-			if ( NbHeuristique != DialogueAPropos.HeuristiqueChoisie )
-			{
-				NbHeuristique = DialogueAPropos.HeuristiqueChoisie;
-				switch ( NbHeuristique )
-				{
-					case 0: AE.ChoosenHeuristic = SimMovement.EuclidianHeuristic; break;
-					case 1: AE.ChoosenHeuristic = SimMovement.ManhattanHeuristic; break;
-					case 2: AE.ChoosenHeuristic = SimMovement.MaxAlongAxisHeuristic; break;
-				}
-			}
-			AdapterAEtoile();
-			GraphPanel.Invalidate();
-		}
+        internal void AppliquerChangement(APropos DialogueAPropos)
+        {
+            AE.DijkstraHeuristicBalance = DialogueAPropos.DijkstraHeuristiqueBalance;
+            if (NbHeuristique != DialogueAPropos.HeuristiqueChoisie)
+            {
+                NbHeuristique = DialogueAPropos.HeuristiqueChoisie;
+                switch (NbHeuristique)
+                {
+                    case 0: AE.ChoosenHeuristic = SimMovement.EuclidianHeuristic; break;
+                    case 1: AE.ChoosenHeuristic = SimMovement.ManhattanHeuristic; break;
+                    case 2: AE.ChoosenHeuristic = SimMovement.MaxAlongAxisHeuristic; break;
+                }
+            }
+            AdapterAEtoile();
+            GraphPanel.Invalidate();
+        }
 
         void NouveauGraphe()
-		{
-			TempN1 = TempN2 = null;
-			AjouterN1 = AjouterN2 = false;
-			AE = new SimMovement(G);
-			CoordsPanel.Text = String.Empty;;
-			NbNodesPanel.Text = G.Nodes.Count.ToString();
-			NbArcsPanel.Text = G.Arcs.Count.ToString();
-			NDepart = NArrivee = null;
-			Chemin = null;
-			PasAPas = false;
-			AEtoileToolBar.Visible = false;
-		}
-		#endregion
+        {
+            TempN1 = TempN2 = null;
+            AjouterN1 = AjouterN2 = false;
+            AE = new SimMovement(G);
+            CoordsPanel.Text = String.Empty; ;
+            NbNodesPanel.Text = G.Nodes.Count.ToString();
+            NbArcsPanel.Text = G.Arcs.Count.ToString();
+            NDepart = NArrivee = null;
+            Chemin = null;
+            PasAPas = false;
+            AEtoileToolBar.Visible = false;
+        }
+        #endregion
 
-		#region Archivage
-		bool Charger()
-		{
-			try
-			{
-			//	Stream StreamRead;
-				OpenFileDialog DialogueCharger = new OpenFileDialog();
-				if( DialogueCharger.ShowDialog() == DialogResult.OK )
-				{
+        #region Archivage
+        bool Charger()
+        {
+            try
+            {
+                //	Stream StreamRead;
+                OpenFileDialog DialogueCharger = new OpenFileDialog();
+                if (DialogueCharger.ShowDialog() == DialogResult.OK)
+                {
                     if (G.LoadFile(DialogueCharger.FileName))
                     {
                         return true;
                     }
-				}
-			}
-			catch {}
-			return false;
-		}
+                }
+            }
+            catch { }
+            return false;
+        }
 
-		bool Sauver()
-		{
-			try
-			{
-				//Stream StreamWrite;
-				SaveFileDialog DialogueSauver = new SaveFileDialog();
-				if( DialogueSauver.ShowDialog() == DialogResult.OK )
-				{
+        bool Sauver()
+        {
+            try
+            {
+                //Stream StreamWrite;
+                SaveFileDialog DialogueSauver = new SaveFileDialog();
+                if (DialogueSauver.ShowDialog() == DialogResult.OK)
+                {
                     return G.SaveFile(DialogueSauver.FileName);
-				}
-			}
-			catch {}
-			return false;
-		}
-		#endregion
+                }
+            }
+            catch { }
+            return false;
+        }
+        #endregion
 
 
         public void RepaintNow()
         {
-         //   GraphPanel_Paint(null, null);
+            //   GraphPanel_Paint(null, null);
             GraphPanel.Invalidate();
         }
         Graphics GrfxI;
         #region Dessin
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
+        /// <summary>
         /// 
-		private void GraphPanel_Paint(object senderee, System.Windows.Forms.PaintEventArgs eee)
-		{
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// 
+        private void GraphPanel_Paint(object senderee, System.Windows.Forms.PaintEventArgs eee)
+        {
             if (eee != null)
             {
                 // Needed at least once
-               GrfxI = eee.Graphics;
+                GrfxI = eee.Graphics;
             }
             Graphics Grfx = GrfxI;
             Grfx.SmoothingMode = SmoothingMode.AntiAlias;
             Grfx.PixelOffsetMode = PixelOffsetMode.None;
 
-			SuspendLayout();
-			// Dessin du graphe
-            ///lock (G.Nodes) foreach (SimWaypoint N in G.Nodes) DessinerNoeud(Grfx, N.Passable ? CrayonNoeuds : CrayonNoeudsInactifs, N);
+            SuspendLayout();
+            // Dessin du graphe
+            lock (G.Nodes) foreach (SimWaypoint N in G.Nodes) DessinerNoeud(Grfx, N.Passable ? CrayonNoeuds : CrayonNoeudsInactifs, N);
+            lock (G.Arcs) foreach (SimRoute A in G.Arcs) DessinerArc(Grfx, A.Passable ? CrayonArcs : CrayonArcsInactifs, A);
 
-            lock (G.Arcs) foreach (SimRoute A in G.Arcs)
+            // Dessin du tracé temporaire courant
+            if (Mode == Action.Dessiner)
+            {
+                DessinerNoeud(Grfx, CrayonTemp, TempN1);
+                DessinerNoeud(Grfx, CrayonTemp, TempN2);
+                DessinerArc(Grfx, CrayonTemp, TempN1, TempN2);
+            }
+            else if (Mode == Action.Effacer)
+            {
+                if (TempN1 != null && TempN2 != null)
+                    Grfx.DrawRectangle(CrayonTemp, RectangleCentres(TempN1, TempN2));
+            }
+
+            DessinerDrapeau(Grfx, NDepart, 1);
+            DessinerDrapeau(Grfx, NArrivee, 2);
+
+            // Dessins des noeuds "pas à pas"
+            if (PasAPas && CalculPossible)
+            {
+                SimWaypoint[] DerniersNoeudsClosed = new SimWaypoint[AE.Closed.Length];
+                for (int i = 0; i < AE.Closed.Length; i++)
                 {
-                    if (A.Passable)
-                    {
-                    }
-                    else
-                    {
-                        DessinerArc(Grfx, CrayonArcsInactifs, A);
-                    }
+                    DerniersNoeudsClosed[i] = AE.Closed[i][AE.Closed[i].Length - 1];
+                    DessinerNoeudPlein(Grfx, Brushes.Red, DerniersNoeudsClosed[i]);
                 }
-            lock (G.Arcs) foreach (SimRoute A in G.Arcs)
+                if (Chemin == null)
                 {
-                    if (A.Passable)
+                    for (int i = 0; i < AE.Open.Length; i++)
                     {
-                        if (A.Weight > 1f)
+                        SimWaypoint[] Nodes = AE.Open[i];
+                        int L = Nodes.Length;
+                        SimWaypoint DernierNoeud = Nodes[L - 1];
+                        if (Array.IndexOf(DerniersNoeudsClosed, DernierNoeud) >= 0)
+                            DessinerNoeudMoitie(Grfx, Brushes.LawnGreen, DernierNoeud);
+                        else
+                            DessinerNoeudPlein(Grfx, Brushes.LimeGreen, DernierNoeud);
+                    }
+                    for (int i = 0; i < AE.Open.Length; i++)
+                    {
+                        SimWaypoint[] Nodes = AE.Open[i];
+                        int L = Nodes.Length;
+                        if (L > 1)
                         {
-                            DessinerArc(Grfx, CrayonArcsWeak, A);
-                        } else
-                        if (A.Weight < 1f)
-                        {
-                            DessinerArc(Grfx, CrayonArcsStrong, A);
+                            DessinerArc(Grfx, CrayonArcsPas, Nodes[L - 2], Nodes[L - 1]);
+                            DessinerNumero(Grfx, Nodes[L - 2], Nodes[L - 1], i + 1);
                         }
                     }
-                    else
-                    {
-                        // DessinerArc(Grfx, CrayonArcsInactifs, A);
-                    }
                 }
+            }
 
-			// Dessin du tracé temporaire courant
-			if ( Mode==Action.Dessiner )
-			{
-				DessinerNoeud(Grfx, CrayonTemp, TempN1);
-				DessinerNoeud(Grfx, CrayonTemp, TempN2);
-				DessinerArc(Grfx, CrayonTemp, TempN1, TempN2);
-			}
-			else if ( Mode==Action.Effacer )
-			{
-				if ( TempN1!=null && TempN2!=null )
-					Grfx.DrawRectangle(CrayonTemp, RectangleCentres(TempN1, TempN2));
-			}
+            // Dessins AEtoile
+            if (Chemin != null) DessinerChemin(Grfx, CrayonChemin, Chemin);
+            ResumeLayout(false);
+        }
 
-			DessinerDrapeau(Grfx, NDepart, 1);
-			DessinerDrapeau(Grfx, NArrivee, 2);
+        static private void DessinerNoeud(Graphics Grfx, Pen P, SimWaypoint N)
+        {
+            if (N == null) return;
+            Grfx.DrawEllipse(P, (int)N.DX - Rayon, (int)N.DY - Rayon, 2 * Rayon + 1, 2 * Rayon + 1);
+        }
 
-			// Dessins des noeuds "pas à pas"
-			if ( PasAPas && CalculPossible )
-			{
-				SimWaypoint[] DerniersNoeudsClosed = new SimWaypoint[AE.Closed.Length];
-				for ( int i=0; i<AE.Closed.Length; i++ )
-				{
-					DerniersNoeudsClosed[i] = AE.Closed[i][AE.Closed[i].Length-1];
-					DessinerNoeudPlein(Grfx, Brushes.Red, DerniersNoeudsClosed[i]);
-				}
-				if (Chemin==null)
-				{
-					for ( int i=0; i<AE.Open.Length; i++ )
-					{
-						SimWaypoint[] Nodes = AE.Open[i];
-						int L = Nodes.Length;
-						SimWaypoint DernierNoeud = Nodes[L-1];
-						if ( Array.IndexOf(DerniersNoeudsClosed, DernierNoeud)>=0 )
-							DessinerNoeudMoitie(Grfx, Brushes.LawnGreen, DernierNoeud);
-						else
-							DessinerNoeudPlein(Grfx, Brushes.LimeGreen, DernierNoeud);
-					}
-					for ( int i=0; i<AE.Open.Length; i++ )
-					{
-						SimWaypoint[] Nodes = AE.Open[i];
-						int L = Nodes.Length;
-						if ( L>1 )
-						{
-							DessinerArc(Grfx, CrayonArcsPas, Nodes[L-2], Nodes[L-1]);
-							DessinerNumero(Grfx, Nodes[L-2], Nodes[L-1], i+1);
-						}
-					}
-				}
-			}
-			
-			// Dessins AEtoile
-			if ( Chemin!=null ) DessinerChemin(Grfx, CrayonChemin, Chemin);
-			ResumeLayout(false);
-		}
+        static private void DessinerArc(Graphics Grfx, Pen P, SimRoute A)
+        {
+            DessinerArc(Grfx, P, A.StartNode, A.EndNode);
+        }
 
-		static private void DessinerNoeud(Graphics Grfx, Pen P, SimWaypoint N)
-		{
-			if ( N==null ) return;
-			Grfx.DrawEllipse(P, (int)N.DX*DSCALE-Rayon, (int)N.DY*DSCALE-Rayon, 2*Rayon+1, 2*Rayon+1);
-		}
+        static private void DessinerArc(Graphics Grfx, Pen P, SimWaypoint N1, SimWaypoint N2)
+        {
+            if (N1 == null || N2 == null) return;
+            Grfx.DrawLine(P, (int)N1.DX, (int)N1.DY, (int)N2.DX, (int)N2.DY);
+        }
 
-		static private void DessinerArc(Graphics Grfx, Pen P, SimRoute A)
-		{
-			DessinerArc(Grfx, P, A.StartNode, A.EndNode);
-		}
+        static private void DessinerNoeudPlein(Graphics Grfx, Brush B, SimWaypoint N)
+        {
+            if (N == null) return;
+            Rectangle R = new Rectangle((int)N.DX - Rayon, (int)N.DY - Rayon, 2 * Rayon + 1, 2 * Rayon + 1);
+            Grfx.FillEllipse(B, R);
+        }
 
-		static private void DessinerArc(Graphics Grfx, Pen P, SimWaypoint N1, SimWaypoint N2)
-		{
-			if ( N1==null || N2==null ) return;
-			Grfx.DrawLine(P, (int)N1.DX*DSCALE, (int)N1.DY*DSCALE, (int)N2.DX*DSCALE, (int)N2.DY*DSCALE);
-		}
+        static private void DessinerNoeudMoitie(Graphics Grfx, Brush B, SimWaypoint N)
+        {
+            if (N == null) return;
+            Rectangle R = new Rectangle((int)N.DX - Rayon, (int)N.DY - Rayon, 2 * Rayon + 1, 2 * Rayon + 1);
+            Grfx.FillPie(B, R, 0, 180);
+        }
 
-		static private void DessinerNoeudPlein(Graphics Grfx, Brush B, SimWaypoint N)
-		{
-			if ( N==null ) return;
-			Rectangle R = new Rectangle((int)(N.DX*DSCALE)-Rayon, (int)(N.DY*DSCALE)-Rayon, 2*Rayon+1, 2*Rayon+1);
-			Grfx.FillEllipse(B, R);
-		}
+        static private void DessinerNumero(Graphics Grfx, SimWaypoint N1, SimWaypoint N2, int i)
+        {
+            StringFormat F = new StringFormat();
+            F.Alignment = StringAlignment.Center;
+            F.LineAlignment = StringAlignment.Center;
+            Rectangle R = RectangleCentres(N1, N2);
+            Font Police = DefaultFont;
+            int LargeurMin = (int)Police.GetHeight();
+            R.Inflate(LargeurMin, LargeurMin);
+            Grfx.DrawString(i.ToString(), Police, Brushes.Black, R, F);
+        }
 
-		static private void DessinerNoeudMoitie(Graphics Grfx, Brush B, SimWaypoint N)
-		{
-			if ( N==null ) return;
-			Rectangle R = new Rectangle((int)(N.DX*DSCALE)-Rayon, (int)(N.DY*DSCALE)-Rayon, 2*Rayon+1, 2*Rayon+1);
-			Grfx.FillPie(B, R, 0, 180);
-		}
+        static private void DessinerDrapeau(Graphics Grfx, SimWaypoint N, int Numero)
+        {
+            if (N == null) return;
+            Point[] Pts = new Point[5];
 
-		static private void DessinerNumero(Graphics Grfx, SimWaypoint N1, SimWaypoint N2, int i)
-		{
-			StringFormat F = new StringFormat();
-			F.Alignment = StringAlignment.Center;
-			F.LineAlignment = StringAlignment.Center;
-			Rectangle R = RectangleCentres(N1, N2);
-			Font Police = DefaultFont;
-			int LargeurMin = (int)Police.GetHeight();
-			R.Inflate(LargeurMin, LargeurMin);
-			Grfx.DrawString(i.ToString(), Police, Brushes.Black, R, F);
-		}
+            double AnglePortion = (double)(2 * Math.PI) / Pts.Length;
+            for (int i = 0; i < Pts.Length; i++)
+            {
+                double Angle = 2 * i * AnglePortion;
+                if (Numero == 1) Angle += AnglePortion / 2;
+                Pts[i] = new Point(1 + (int)(N.DX + (Rayon + 1) * Math.Cos(Angle)), 1 + (int)(N.DY + (Rayon + 1) * Math.Sin(Angle)));
+            }
+            GraphicsPath GP = new GraphicsPath();
+            GP.AddLines(Pts);
+            GP.FillMode = FillMode.Winding;
+            Grfx.FillPath(Numero == 1 ? Brushes.DarkTurquoise : Brushes.Blue, GP);
+        }
 
-		static private void DessinerDrapeau(Graphics Grfx, SimWaypoint N, int Numero)
-		{
-			if ( N==null ) return;
-			Point[] Pts = new Point[5];
+        static private void DessinerChemin(Graphics Grfx, Pen P, SimWaypoint[] C)
+        {
+            Point[] Pnts = new Point[C.Length];
+            if (Pnts.Length > 1)
+            {
+                for (int i = 0; i < Pnts.Length; i++)
+                {
+                    Pnts[i].X = (int)C[i].DX;
+                    Pnts[i].Y = (int)C[i].DY;
+                }
+                Grfx.DrawCurve(P, Pnts);
+            }
+        }
+        #endregion
 
-			double AnglePortion =(double) (2*Math.PI)/Pts.Length;
-			for ( int i=0; i<Pts.Length; i++ )
-			{
-				double Angle = 2*i*AnglePortion;
-				if ( Numero==1 ) Angle += AnglePortion/2;
-				Pts[i] = new Point(1+(int)(N.DX*DSCALE+(Rayon+1)*Math.Cos(Angle)), 1+(int)(N.DY*DSCALE+(Rayon+1)*Math.Sin(Angle)));
-			}
-			GraphicsPath GP = new GraphicsPath();
-			GP.AddLines(Pts);
-			GP.FillMode = FillMode.Winding;
-			Grfx.FillPath(Numero==1 ? Brushes.DarkTurquoise : Brushes.Blue, GP);
-		}
-
-		static private void DessinerChemin(Graphics Grfx, Pen P, IList<SimWaypoint> C)
-		{
-			Point[] Pnts = new Point[C.Count];
-			if ( Pnts.Length>1 )
-			{
-				for ( int i=0; i<Pnts.Length; i++ )
-				{
-					Pnts[i].X = (int)(C[i].DX*DSCALE);
-					Pnts[i].Y = (int)(C[i].DY*DSCALE);
-				}
-				Grfx.DrawCurve(P, Pnts);
-			}
-		}
-		#endregion
-
-		/// <summary>
-		/// The main entry point for the application.
-		/// </summary>
-		[STAThread]
-		static void MainDebug() 
-		{
-			try
-			{
+        /// <summary>
+        /// The main entry point for the application.
+        /// </summary>
+        [STAThread]
+        static void MainDebug()
+        {
+            try
+            {
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new GraphFormer(new SimPathStore("default")));
-			}
-			catch (Exception e) { MessageBox.Show(e.ToString()); }
-		}
+                Application.Run(new GraphFormer(SimGlobalRoutes.Instance));
+            }
+            catch (Exception e) { MessageBox.Show(e.ToString()); }
+        }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {

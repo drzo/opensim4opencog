@@ -17,7 +17,7 @@ using System.Windows.Forms;
 
 namespace cogbot.TheOpenSims.Navigation.Debug
 {
-	public class APropos : System.Windows.Forms.Form
+    public partial class APropos : System.Windows.Forms.Form
 	{
 		private System.Windows.Forms.TextBox textBox1;
 		private System.Windows.Forms.TextBox textBox2;
@@ -62,7 +62,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 		/// </summary>
 		private void InitializeComponent()
 		{
-			//System.Resources.ResourceManager resources = new System.Resources.ResourceManager(typeof(APropos));
+			System.Resources.ResourceManager resources = new System.Resources.ResourceManager(typeof(APropos));
 			this.textBox1 = new System.Windows.Forms.TextBox();
 			this.textBox2 = new System.Windows.Forms.TextBox();
 			this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -279,7 +279,7 @@ Any feedback can be sent at the following e-mail adress :";
 			this.ClientSize = new System.Drawing.Size(536, 222);
 			this.Controls.AddRange(new System.Windows.Forms.Control[] {
 																		  this.tabControl1});
-			//this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.MaximizeBox = false;
 			this.Name = "APropos";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
@@ -305,14 +305,14 @@ Any feedback can be sent at the following e-mail adress :";
 			GF.AppliquerChangement(this);
 		}
 
-		public float DijkstraHeuristiqueBalance
+		public double DijkstraHeuristiqueBalance
 		{
 			set
 			{
 				if ( value<0 || value>1 ) throw new ArgumentException("Value must belong to [0; 1]");
 				trackBar.Value = (int)(trackBar.Maximum*value);
 			}
-			get { return ((float)trackBar.Value)/trackBar.Maximum; }
+			get { return ((double)trackBar.Value)/trackBar.Maximum; }
 		}
 
 		public int HeuristiqueChoisie

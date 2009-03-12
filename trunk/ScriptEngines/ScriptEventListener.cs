@@ -7,6 +7,7 @@ using System.IO;
 using System.Collections;
 using OpenMetaverse;
 using System.Reflection;
+using cogbot.TheOpenSims;
 
 namespace cogbot.ScriptEngines
 {
@@ -120,7 +121,7 @@ namespace cogbot.ScriptEngines
             Type type = arg.GetType();
             if (arg is Simulator)
             {
-                return argString(((Simulator)arg).Name);
+                return "'(simulator " + argString(((Simulator)arg).Name) + ")";
             }
             if (arg is Avatar)
             {
@@ -142,6 +143,10 @@ namespace cogbot.ScriptEngines
                     arg = arg + " " + argString(prim.Properties.Name);
                 }
                 return arg + ")";
+            }
+            if (arg is SimObject)
+            {
+                return argString(((SimObject)arg).thePrim);
             }
             if (type.IsEnum)
             {
