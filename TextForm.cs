@@ -269,46 +269,49 @@ namespace cogbot
             }
             return null;
         }
+
         public bool ExecuteCommand(string text)
         {
-            //text = text.Replace("\"", "");
-            text = text.Trim();
-            output("textform> " + text);
-            string verb = text.Split(null)[0];
-            if (groupActions.ContainsKey(verb))
+            try
             {
-                if (text.Length > verb.Length)
-                    groupActions[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1));
-                else
-                    groupActions[verb].acceptInputWrapper(verb, "");
-                return true;
-            }
-            if (BotByName.Count == 0 && lastBotClient!=null) return lastBotClient.ExecuteCommand(text);
-            if (OnlyOneCurrentBotClient != null)
-            {
-                return OnlyOneCurrentBotClient.ExecuteCommand(text);
-            }
-            bool handled = false;
-            foreach (BotClient CurrentClient in BotByName.Values)
-                if (CurrentClient != null)
+                //text = text.Replace("\"", "");
+                text = text.Trim();
+                output("textform> " + text);
+                if (BotByName.Count == 0 && lastBotClient != null) return lastBotClient.ExecuteCommand(text);
+                if (OnlyOneCurrentBotClient != null)
                 {
-                    try
-                    {
-                        if (CurrentClient.ExecuteCommand(text)) handled = true;
-                    }
-                    catch (Exception e)
-                    {
-                        output("" + CurrentClient.Self.Name + ": " + e);
-                    }
+                    return OnlyOneCurrentBotClient.ExecuteCommand(text);
 
                 }
+                bool handled = false;
+                foreach (BotClient CurrentClient in BotByName.Values)
+                    if (CurrentClient != null)
+                    {
 
-            if (!handled)
-            {
-                output("I don't understand the verb " + verb + ".");
-                output("Type \"help\" for help.");
+                        if (CurrentClient.ExecuteCommand(text)) handled = true;
+                    }
+
+                if (!handled)
+                {
+                    string verb = text.Split(null)[0];
+                    if (groupActions.ContainsKey(verb))
+                    {
+                        if (text.Length > verb.Length)
+                            groupActions[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1));
+                        else
+                            groupActions[verb].acceptInputWrapper(verb, "");
+                        return true;
+                    }
+                    output("I don't understand the verb " + verb + ".");
+                    output("Type \"help\" for help.");
+                }
+                return handled;
             }
-            return handled;
+            catch (Exception e)
+            {
+                output("TextForm:" + e);
+                return false;
+            }
         }
 
 

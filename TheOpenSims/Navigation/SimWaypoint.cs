@@ -14,7 +14,7 @@ namespace cogbot.TheOpenSims.Navigation
     /// </summary>
     [Serializable]
     public class SimWaypoint : SimPosition
-    {      
+    {
         public byte GetMatrix()
         {
             return PathStore.mMatrix[PX, PY];
@@ -29,7 +29,7 @@ namespace cogbot.TheOpenSims.Navigation
         public void UpdateMatrix()
         {
             bool IsBlocked = false;
-            bool WasBlocked = GetMatrix()==0;
+            bool WasBlocked = GetMatrix() == 0;
             foreach (SimObject O in OccupiedList)
             {
                 if (!O.IsPassable) IsBlocked = true;
@@ -59,7 +59,7 @@ namespace cogbot.TheOpenSims.Navigation
             return true;
         }
 
-       // private IList ShadowList = new List<SimObject>();
+        // private IList ShadowList = new List<SimObject>();
         internal IList OccupiedList = new List<SimObject>();
 
         public bool NoObjectsBlock()
@@ -94,10 +94,10 @@ namespace cogbot.TheOpenSims.Navigation
 
         public bool IsRegionAttached()
         {
-            return PathStore!=null;
+            return PathStore != null;
         }
-         
-        Vector3 _Position;
+
+        Vector3d _Position;
         bool _Passable = true;
         ArrayList _IncomingArcs, _OutgoingArcs;
 
@@ -107,24 +107,40 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="PositionX">X coordinate.</param>
         /// <param name="PositionY">Y coordinate.</param>
         /// <param name="PositionZ">Z coordinate.</param>
-        static public SimWaypoint Create(float PositionX, float PositionY, float PositionZ, SimPathStore PathStore)
+        static public SimWaypoint CreateLocal(float PositionX, float PositionY, float PositionZ, SimPathStore PathStore)
         {
-            return Create(new Vector3(PositionX, PositionY, PositionZ), PathStore);
+            return CreateLocal(new Vector3(PositionX, PositionY, PositionZ), PathStore);
         }
 
         public int ArcCount()
         {
-            return _OutgoingArcs.Count;
+            if (_OutgoingArcs != null)
+                return _OutgoingArcs.Count;
+            return 0;
         }
         /// <summary>
         /// Gets the list of the arcs that lead to this node.
         /// </summary>
-        public IList IncomingArcs { get { return _IncomingArcs; } }
+        public IList IncomingArcs
+        {
+            get
+            {
+                if (_IncomingArcs == null) _IncomingArcs = new ArrayList();
+                return _IncomingArcs;
+            }
+        }
 
         /// <summary>
         /// Gets the list of the arcs that start from this node.
         /// </summary>
-        public IList OutgoingArcs { get { return _OutgoingArcs; } }
+        public IList OutgoingArcs
+        {
+            get
+            {
+                if (_OutgoingArcs == null) _OutgoingArcs = new ArrayList();
+                return _OutgoingArcs;
+            }
+        }
 
         /// Gets/Sets the functional state of the node.
         /// 'true' means that the node is in its normal state.
@@ -133,16 +149,16 @@ namespace cogbot.TheOpenSims.Navigation
         {
             set
             {
-                foreach (SimRoute A in _IncomingArcs) A.Passable = value;
-                foreach (SimRoute A in _OutgoingArcs) A.Passable = value;
+                if (_IncomingArcs != null) foreach (SimRoute A in _IncomingArcs) A.Passable = value;
+                if (_OutgoingArcs != null) foreach (SimRoute A in _OutgoingArcs) A.Passable = value;
                 _Passable = value;
                 SetMatrix((byte)(value ? 2 : 0));
             }
             get
             {
                 if (!_Passable) return false;
-                foreach (SimRoute A in _IncomingArcs) if (A.Passable) return true;
-                foreach (SimRoute A in _OutgoingArcs) if (A.Passable) return true;
+                if (_IncomingArcs != null) foreach (SimRoute A in _IncomingArcs) if (A.Passable) return true;
+                if (_OutgoingArcs != null) foreach (SimRoute A in _OutgoingArcs) if (A.Passable) return true;
                 return GetMatrix() != 0;
             }
         }
@@ -159,14 +175,14 @@ namespace cogbot.TheOpenSims.Navigation
 
 
         /// <summary>
-        /// Gets X coordinate on the Graph debugger.
+        /// Gets X coordinate on the Graph debugger (whole world position).
         /// </summary>
-        public double DX { get { return Position.X; } }
+        public double DX { get { return (Position.X / GraphFormer.DSCALE) - GraphFormer.StartX; } }
 
         /// <summary>
         /// Gets Y coordinate on the Graph debugger
         /// </summary>
-        public double DY { get { return Position.Y; } }
+        public double DY { get { return (Position.Y / GraphFormer.DSCALE) - GraphFormer.StartY; } }
 
         /// <summary>
         /// Gets Z coordinate.
@@ -179,23 +195,25 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="PositionX">X coordinate.</param>
         /// <param name="PositionY">Y coordinate.</param>
         /// <param name="PositionZ">Z coordinate.</param>
-        public void ChangeXYZDebug(float PositionX, float PositionY, float PositionZ)
+        public void ChangeXYZDebug(double PositionX, double PositionY, double PositionZ)
         {
-            Position = new Vector3((float)PositionX, (float)PositionY,(float) PositionZ);
+            Vector3d v3d = new Vector3d(PositionX, PositionY, PositionZ);
+            PathStore = SimRegion.GetRegion(v3d).PathStore;
+            _Position = v3d;// SimRegion.GlobaltoLocalPosition(v3d);
         }
 
         /// <summary>
         /// Gets/Sets the geographical position of the node.
         /// </summary>
         /// <exception cref="ArgumentNullException">Cannot set the Position to null.</exception>
-        public Vector3 Position
+        public Vector3d Position
         {
             set
             {
-                if (value == null) throw new ArgumentNullException();
-                foreach (SimRoute A in _IncomingArcs) A.LengthUpdated = false;
-                foreach (SimRoute A in _OutgoingArcs) A.LengthUpdated = false;
-                _Position = value;
+                //if (value == null) throw new ArgumentNullException();
+                if (_IncomingArcs != null) foreach (SimRoute A in _IncomingArcs) A.LengthUpdated = false;
+                if (_OutgoingArcs != null) foreach (SimRoute A in _OutgoingArcs) A.LengthUpdated = false;
+                ChangeXYZDebug(value.X, value.Y, value.Z);
             }
             get { return _Position; }
         }
@@ -207,7 +225,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             get
             {
-                SimWaypoint[] Tableau = new SimWaypoint[_OutgoingArcs.Count];
+                SimWaypoint[] Tableau = new SimWaypoint[OutgoingArcs.Count];
                 int i = 0;
                 foreach (SimRoute A in OutgoingArcs) Tableau[i++] = A.EndNode;
                 return Tableau;
@@ -221,7 +239,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             get
             {
-                SimWaypoint[] Tableau = new SimWaypoint[_IncomingArcs.Count];
+                SimWaypoint[] Tableau = new SimWaypoint[IncomingArcs.Count];
                 int i = 0;
                 foreach (SimRoute A in IncomingArcs) Tableau[i++] = A.StartNode;
                 return Tableau;
@@ -235,7 +253,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             get
             {
-                int NbNodes = 1 + _OutgoingArcs.Count + _IncomingArcs.Count;
+                int NbNodes = 1 + OutgoingArcs.Count + IncomingArcs.Count;
                 SimWaypoint[] Tableau = new SimWaypoint[NbNodes];
                 Tableau[0] = this;
                 int i = 1;
@@ -259,9 +277,12 @@ namespace cogbot.TheOpenSims.Navigation
         /// </summary>
         public void UntieIncomingArcs()
         {
-            foreach (SimRoute A in _IncomingArcs)
-                A.StartNode.OutgoingArcs.Remove(A);
-            _IncomingArcs.Clear();
+            if (_IncomingArcs != null)
+            {
+                foreach (SimRoute A in _IncomingArcs)
+                    A.StartNode.OutgoingArcs.Remove(A);
+                _IncomingArcs.Clear();
+            }
         }
 
         /// <summary>
@@ -269,9 +290,12 @@ namespace cogbot.TheOpenSims.Navigation
         /// </summary>
         public void UntieOutgoingArcs()
         {
-            foreach (SimRoute A in _OutgoingArcs)
-                A.EndNode.IncomingArcs.Remove(A);
-            _OutgoingArcs.Clear();
+            if (_OutgoingArcs != null)
+            {
+                foreach (SimRoute A in _OutgoingArcs)
+                    A.EndNode.IncomingArcs.Remove(A);
+                _OutgoingArcs.Clear();
+            }
         }
 
         /// <summary>
@@ -283,8 +307,8 @@ namespace cogbot.TheOpenSims.Navigation
         public SimRoute ArcGoingTo(SimWaypoint N)
         {
             if (N == null) throw new ArgumentNullException();
-            foreach (SimRoute A in _OutgoingArcs)
-                if (A.EndNode == N) return A;
+            if (_OutgoingArcs != null) foreach (SimRoute A in _OutgoingArcs)
+                    if (A.EndNode == N) return A;
             return null;
         }
 
@@ -297,15 +321,15 @@ namespace cogbot.TheOpenSims.Navigation
         public SimRoute ArcComingFrom(SimWaypoint N)
         {
             if (N == null) throw new ArgumentNullException();
-            foreach (SimRoute A in _IncomingArcs)
-                if (A.StartNode == N) return A;
+            if (_IncomingArcs != null) foreach (SimRoute A in _IncomingArcs)
+                    if (A.StartNode == N) return A;
             return null;
         }
 
         void Invalidate()
         {
-            foreach (SimRoute A in _IncomingArcs) A.LengthUpdated = false;
-            foreach (SimRoute A in _OutgoingArcs) A.LengthUpdated = false;
+            if (_IncomingArcs != null) foreach (SimRoute A in _IncomingArcs) A.LengthUpdated = false;
+            if (_OutgoingArcs != null) foreach (SimRoute A in _OutgoingArcs) A.LengthUpdated = false;
         }
 
         /// <summary>
@@ -326,13 +350,13 @@ namespace cogbot.TheOpenSims.Navigation
         {
             if (O is SimPosition)
             {
-                return GetSimPosition() == ((SimPosition)O).GetSimPosition();
+                return Position == ((SimPosition)O).GetWorldPosition();
             }
-            //if (O is Vector3)
+            //if (O is Vector3d)
             //{
-            //    return Create((Vector3)O).Equals(this);
+            //    return Create((Vector3d)O).Equals(this);
             //}
-            
+
             throw new ArgumentException("Type " + O.GetType() + " cannot be compared with type " + GetType() + " !");
         }
 
@@ -352,7 +376,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// Object.GetHashCode override.
         /// </summary>
         /// <returns>HashCode value.</returns>
-        public override int GetHashCode() { return _Position.GetHashCode(); }
+        public override int GetHashCode() { return Position.GetHashCode(); }
 
         /// <summary>
         /// Returns the euclidian distance between two nodes : Sqrt(Dx²+Dy²+Dz²)
@@ -360,9 +384,9 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="N1">First node.</param>
         /// <param name="N2">Second node.</param>
         /// <returns>Distance value.</returns>
-        public static float EuclidianDistance(SimWaypoint N1, SimWaypoint N2)
+        public static double EuclidianDistance(SimWaypoint N1, SimWaypoint N2)
         {
-            return (float)Math.Sqrt(SquareEuclidianDistance(N1, N2));
+            return (double)Math.Sqrt(SquareEuclidianDistance(N1, N2));
         }
 
         /// <summary>
@@ -372,13 +396,13 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="N1">First node.</param>
         /// <param name="N2">Second node.</param>
         /// <returns>Distance value.</returns>
-        public static float SquareEuclidianDistance(SimWaypoint N1, SimWaypoint N2)
+        public static double SquareEuclidianDistance(SimWaypoint N1, SimWaypoint N2)
         {
             if (N1 == null || N2 == null) throw new ArgumentNullException();
-            float DX = N1.Position.X - N2.Position.X;
-            float DY = N1.Position.Y - N2.Position.Y;
-            float DZ = N1.Position.Z - N2.Position.Z;
-            return DX * DX + DY * DY + DZ * DZ;
+            double DX = N1.Position.X - N2.Position.X;
+            double DY = N1.Position.Y - N2.Position.Y;
+            double DZ = N1.Position.Z - N2.Position.Z;
+            return (double)(DX * DX + DY * DY + DZ * DZ);
         }
 
         /// <summary>
@@ -388,13 +412,13 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="N1">First node.</param>
         /// <param name="N2">Second node.</param>
         /// <returns>Distance value.</returns>
-        public static float ManhattanDistance(SimWaypoint N1, SimWaypoint N2)
+        public static double ManhattanDistance(SimWaypoint N1, SimWaypoint N2)
         {
             if (N1 == null || N2 == null) throw new ArgumentNullException();
-            float DX = N1.Position.X - N2.Position.X;
-            float DY = N1.Position.Y - N2.Position.Y;
-            float DZ = N1.Position.Z - N2.Position.Z;
-            return Math.Abs(DX) + Math.Abs(DY) + Math.Abs(DZ);
+            double DX = N1.Position.X - N2.Position.X;
+            double DY = N1.Position.Y - N2.Position.Y;
+            double DZ = N1.Position.Z - N2.Position.Z;
+            return (double)(Math.Abs(DX) + Math.Abs(DY) + Math.Abs(DZ));
         }
 
         /// <summary>
@@ -404,13 +428,13 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="N1">First node.</param>
         /// <param name="N2">Second node.</param>
         /// <returns>Distance value.</returns>
-        public static float MaxDistanceAlongAxis(SimWaypoint N1, SimWaypoint N2)
+        public static double MaxDistanceAlongAxis(SimWaypoint N1, SimWaypoint N2)
         {
             if (N1 == null || N2 == null) throw new ArgumentNullException();
-            float DX = Math.Abs(N1.Position.X - N2.Position.X);
-            float DY = Math.Abs(N1.Position.Y - N2.Position.Y);
-            float DZ = Math.Abs(N1.Position.Z - N2.Position.Z);
-            return Math.Max(DX, Math.Max(DY, DZ));
+            double DX = Math.Abs(N1.Position.X - N2.Position.X);
+            double DY = Math.Abs(N1.Position.Y - N2.Position.Y);
+            double DZ = Math.Abs(N1.Position.Z - N2.Position.Z);
+            return (double)Math.Max(DX, Math.Max(DY, DZ));
         }
 
         /// <summary>
@@ -421,7 +445,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="NodesGroup">The list of nodes to wrap.</param>
         /// <param name="MinPoint">The point of minimal coordinates for the box.</param>
         /// <param name="MaxPoint">The point of maximal coordinates for the box.</param>
-        static public void BoundingBox(ICollection<SimWaypoint> NodesGroup, out float[] MinPoint, out float[] MaxPoint)
+        static public void BoundingBox(ICollection<SimWaypoint> NodesGroup, out double[] MinPoint, out double[] MaxPoint)
         {
             IEnumerator E = NodesGroup.GetEnumerator();
             E.MoveNext();
@@ -429,20 +453,20 @@ namespace cogbot.TheOpenSims.Navigation
             if (N1 == null) throw new ArgumentException("The list must only contain elements of type Node.");
             if (NodesGroup.Count == 0) throw new ArgumentException("The list of nodes is empty.");
             int Dim = 3;
-            MinPoint = new float[Dim];
-            MaxPoint = new float[Dim];
-            for (int i = 0; i < Dim; i++) MinPoint[i] = MaxPoint[i] = N1.PositionXYZ(i);
+            MinPoint = new double[Dim];
+            MaxPoint = new double[Dim];
+            for (int i = 0; i < Dim; i++) MinPoint[i] = MaxPoint[i] = N1.GlobalXYZ(i);
             foreach (SimWaypoint N in NodesGroup)
             {
                 for (int i = 0; i < Dim; i++)
                 {
-                    if (MinPoint[i] > N.PositionXYZ(i)) MinPoint[i] = N.PositionXYZ(i);
-                    if (MaxPoint[i] < N.PositionXYZ(i)) MaxPoint[i] = N.PositionXYZ(i);
+                    if (MinPoint[i] > N.GlobalXYZ(i)) MinPoint[i] = N.GlobalXYZ(i);
+                    if (MaxPoint[i] < N.GlobalXYZ(i)) MaxPoint[i] = N.GlobalXYZ(i);
                 }
             }
         }
 
-        private float PositionXYZ(int i)
+        private double GlobalXYZ(int i)
         {
             switch (i)
             {
@@ -457,70 +481,78 @@ namespace cogbot.TheOpenSims.Navigation
             }
         }
 
-        //public static implicit operator Vector3(SimWaypoint m)
+        //public static implicit operator Vector3d(SimWaypoint m)
         //{
         //    return m.GetSimPosition();
         //}
         //public static implicit operator Vector2(SimWaypoint m)
         //{
-        //    Vector3 v3 = m.GetSimPosition();
+        //    Vector3d v3 = m.GetSimPosition();
         //    return new Vector2(v3.X, v3.Y);
         //}
         //public static implicit operator Vector3d(SimWaypoint m)
         //{
-        //    Vector3 v3 = m.GetSimPosition();
+        //    Vector3d v3 = m.GetSimPosition();
         //    return new Vector3d(v3.X, v3.Y, v3.Z);
         //}
 
         SimPathStore PathStore;
-        private SimWaypoint(Vector3 firstP, SimPathStore pathStore)
+        private SimWaypoint(Vector3d firstP, SimPathStore pathStore)
         {
             PathStore = pathStore;
             _Position = firstP;// RoundPoint(firstP, PathStore);
-            PX = (int)Math.Round(firstP.X * PathStore.POINTS_PER_METER);
-            PY = (int)Math.Round(firstP.Y * PathStore.POINTS_PER_METER);
+            Vector3 LocalPos = GetSimPosition();
+            PX = (int)Math.Round(LocalPos.X * PathStore.POINTS_PER_METER);
+            PY = (int)Math.Round(LocalPos.Y * PathStore.POINTS_PER_METER);
         }
 
-        //protected Vector3 _Position;
+        //protected Vector3d _Position;
 
-        public static Vector3 RoundPoint(Vector3 point,SimPathStore PathStore)
+        public static Vector3 RoundPoint(Vector3 point, SimPathStore PathStore)
         {
             double POINTS_PER_METER = PathStore.POINTS_PER_METER;
             Vector3 vect3 = new Vector3(point);
             vect3.X = (float)(Math.Round(vect3.X * POINTS_PER_METER, 0) / POINTS_PER_METER);
             vect3.Y = (float)(Math.Round(vect3.Y * POINTS_PER_METER, 0) / POINTS_PER_METER);
-            vect3.Z = (float)(Math.Round(vect3.Z* POINTS_PER_METER, 0) / POINTS_PER_METER);
+            vect3.Z = (float)(Math.Round(vect3.Z * POINTS_PER_METER, 0) / POINTS_PER_METER);
             return vect3;
         }
 
-        static Dictionary<Vector3, SimWaypoint> InternedPoints = new Dictionary<Vector3, SimWaypoint>();
-        public static SimWaypoint Create(Vector3 from, SimPathStore PathStore)
+        static Dictionary<SimPathStore, Dictionary<Vector3, SimWaypoint>> InternedPointsStore = new Dictionary<SimPathStore, Dictionary<Vector3, SimWaypoint>>();
+        public static SimWaypoint CreateLocal(Vector3 from, SimPathStore PathStore)
         {
+            if (!InternedPointsStore.ContainsKey(PathStore))
+            {
+                InternedPointsStore[PathStore] = new Dictionary<Vector3, SimWaypoint>();
+            }
+            Dictionary<Vector3, SimWaypoint> InternedPoints = InternedPointsStore[PathStore];
+
             Vector3 rounded = RoundPoint(from, PathStore);
             if (InternedPoints.ContainsKey(rounded))
             {
                 return InternedPoints[rounded];
             }
-            SimWaypoint wp = new SimWaypoint(rounded,PathStore);
+            Vector3d GlobalPos = PathStore.GetSimRegion().LocalToGlobal(rounded);
+            SimWaypoint wp = new SimWaypoint(GlobalPos, PathStore);
             wp._Passable = true;
-            wp._IncomingArcs = new ArrayList();
-            wp._OutgoingArcs = new ArrayList();
+            // wp._IncomingArcs = new ArrayList();
+            // wp._OutgoingArcs = new ArrayList();
             InternedPoints[rounded] = wp;
-          //  PathStore.EnsureKnown(wp);
+            //  PathStore.EnsureKnown(wp);
             return wp;
         }
 
         public Vector3 GetSimPosition()
         {
-            return _Position;
+            return SimRegion.GlobalToLocal(_Position); ;
         }
 
         #region SimPosition Members
 
-        public Vector3 GetUsePosition()
-        {
-            return GetSimPosition();
-        }
+        //public Vector3 GetUsePosition()
+        //{
+        //    return GetSimPosition();
+        //}
 
         public float GetSizeDistance()
         {
@@ -529,32 +561,34 @@ namespace cogbot.TheOpenSims.Navigation
 
         #endregion
 
-        public static float Distance(SimWaypoint wp1, SimWaypoint wp2)
+        public static double Distance(SimWaypoint wp1, SimWaypoint wp2)
         {
-            return Vector3.Distance(wp1.GetSimPosition(), wp2.GetSimPosition());
+            return Vector3d.Distance(wp1.Position, wp2.Position);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns>true if something needed to be changed</returns>
+        // <summary>
+
+        // </summary>
+        // <returns>true if something needed to be changed</returns>
         public bool EnsureAtLeastOnePath()
         {
             bool needIt = true;
-            foreach (SimRoute A in _IncomingArcs)
-            {
-                if (A.Passable)
+            if (_IncomingArcs != null)
+                foreach (SimRoute A in _IncomingArcs)
                 {
-                    needIt = false;
+                    if (A.Passable)
+                    {
+                        needIt = false;
+                    }
                 }
-            }
-            foreach (SimRoute A in _OutgoingArcs)
-            {
-                if (A.Passable)
+            if (_OutgoingArcs != null)
+                foreach (SimRoute A in _OutgoingArcs)
                 {
-                    needIt = false;
+                    if (A.Passable)
+                    {
+                        needIt = false;
+                    }
                 }
-            }
             if (needIt)
             {
                 Passable = true;
@@ -564,16 +598,18 @@ namespace cogbot.TheOpenSims.Navigation
 
         public bool GoesTo(SimWaypoint e)
         {
-            foreach (SimRoute r in _OutgoingArcs)
-            {
-                if (r.EndNode == e) return true;
-            }
+
+            if (_OutgoingArcs != null)
+                foreach (SimRoute r in _OutgoingArcs)
+                {
+                    if (r.EndNode == e) return true;
+                }
             return false;
         }
 
-        public float Distance(Vector3 P)
+        public double Distance(Vector3d P)
         {
-            return Vector3.Distance(P, _Position);
+            return Vector3d.Distance(P, Position);
         }
 
 
@@ -586,18 +622,49 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
         #endregion
+
+        #region SimPosition Members
+
+
+        public Vector3d GetWorldPosition()
+        {
+            return Position;
+        }
+
+        #endregion
+
+        #region SimPosition Members
+
+
+        public SimRegion GetSimRegion()
+        {
+            return PathStore.GetSimRegion();
+        }
+
+        #endregion
+
+        internal static SimWaypoint CreateGlobal(double gx, double gy, double gz)
+        {
+            return CreateGlobal(new Vector3d(gx, gy, gz));
+        }
+
+        internal static SimWaypoint CreateGlobal(Vector3d v3d)
+        {
+            SimRegion R = SimRegion.GetRegion(v3d);
+            return CreateLocal(SimRegion.GlobalToLocal(v3d), R.PathStore);
+        }
     }
 
     //public class SimMovementPoints : SimMovement
     //{
-    //    List<Vector3> ThePoints;// = new List<Vector3>();
-    //    public SimMovementPoints(List<Vector3> points)
+    //    List<Vector3d> ThePoints;// = new List<Vector3d>();
+    //    public SimMovementPoints(List<Vector3d> points)
     //        : base(points[0], points[points.Count - 1])
     //    {
     //        ThePoints = points;
     //    }
 
-    //    public override List<Vector3> GetPoints()
+    //    public override List<Vector3d> GetPoints()
     //    {
     //        return ThePoints;
     //    }

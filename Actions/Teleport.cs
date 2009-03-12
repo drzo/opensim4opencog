@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse; //using libsecondlife;
+// older LibOMV
+//using TeleportFlags = OpenMetaverse.AgentManager.TeleportFlags;
+//using TeleportStatus = OpenMetaverse.AgentManager.TeleportStatus;
 
 namespace cogbot.Actions
 {

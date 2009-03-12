@@ -40,7 +40,7 @@ namespace cogbot.Actions.Movement
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            GraphFormer gf = new GraphFormer(WorldSystem.SimPaths);
+            GraphFormer gf = new GraphFormer(WorldSystem.GlobalRoutes);
             gf.Show();
             return "ran " + Name;
         }
@@ -56,11 +56,48 @@ namespace cogbot.Actions.Movement
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            WorldSystem.TheSimAvatar.CurrentRegion.ShowDebugger();
+            //WorldSystem.TheSimAvatar.CurrentRegion.ShowDebugger();
+            if (args.Length == 0)
+            {
+                lock (Client.Network.Simulators)
+                {
+                    foreach (Simulator S in Client.Network.Simulators)
+                    {
+                        SimRegion.GetRegion(S).ShowDebugger();
+                    }
+                }
+            }
+            else
+            {
+                SimRegion R = SimRegion.GetRegion(args[0]);
+                if (R != null) R.ShowDebugger();
+                else return "cant find region " + args[0];
+            }
             return "ran " + Name;
         }
     }
 
+    class pfcatchup : cogbot.Actions.Command
+    {
+        public pfcatchup(BotClient client)
+        {
+            Name = GetType().Name;
+            Description = "Starts the pathfinder debuger";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            lock (Client.Network.Simulators)
+            {
+                foreach (Simulator S in Client.Network.Simulators)
+                {
+                    WorldSystem.CatchUp(S);
+                }
+            }
+            return "ran " + Name;
+        }
+    }
 
     class pfg : cogbot.Actions.Command
     {
@@ -76,13 +113,13 @@ namespace cogbot.Actions.Movement
             float Dist;
             if (args.Length>1 && float.TryParse(args[1], out Dist))
             {
-                Vector3 av = WorldSystem.TheSimAvatar.GetLeftPos(int.Parse(args[0]), Dist);
+                Vector3d av = WorldSystem.TheSimAvatar.GetGlobalLeftPos(int.Parse(args[0]), Dist);
                 WorldSystem.TheSimAvatar.MoveTo(av, 1f, 4);
             }
             else
             {
-                Vector3 av = WorldSystem.TheSimAvatar.GetLeftPos(int.Parse(args[0]), 10);
-                Client.Self.Movement.TurnToward(av);
+                Vector3d av = WorldSystem.TheSimAvatar.GetGlobalLeftPos(int.Parse(args[0]), 10);
+                WorldSystem.TheSimAvatar.TurnToward(av);
             }
             return "ran " + Name;
         }
@@ -194,24 +231,6 @@ namespace cogbot.Actions.Movement
     //    }
     //}
 
-    class srwp : cogbot.Actions.Command
-    {
-        public srwp(BotClient client)
-        {
-            Name = GetType().Name;
-            Description = "Show the waypoint for object";
-            Category = cogbot.Actions.CommandCategory.Movement;
-        }
-
-        public override string Execute(string[] args, UUID fromAgentID)
-        {
-            int argsused;
-            SimPosition v3 = WorldSystem.GetVector(args, out argsused);
-            SimWaypoint wp = v3.GetWaypoint();
-
-            return "v3=" + WorldSystem.TheSimAvatar.DistanceVectorString(v3) + " wp=" + wp.ToString();
-        }
-    }
 
     class srm : cogbot.Actions.Command
     {
@@ -237,7 +256,7 @@ namespace cogbot.Actions.Movement
             }
             string str = "MoveTo(" + pos.GetSimPosition() + ", " + maxDistance + ", " + maxSeconds + ")";
             WriteLine("Starting  " +str);
-            bool MadIt = WorldSystem.TheSimAvatar.MoveTo(pos.GetSimPosition(), maxDistance, maxSeconds);
+            bool MadIt = WorldSystem.TheSimAvatar.MoveTo(pos.GetWorldPosition(), maxDistance, maxSeconds);
             if (MadIt)
             {
                 return ("SUCCESS " + str);
@@ -299,17 +318,21 @@ namespace cogbot.Actions.Movement
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            Vector3 target = new Vector3();
+            SimPosition simObject;
             float distance = 2.0f;
 
             if (args.Length > 3 || args.Length == 0)
                 return "Usage: gto [prim | [x y [dist]]";
 
-            if (float.TryParse(args[0], out target.X) &&
-                float.TryParse(args[1], out target.Y))
+            Vector3 local = new Vector3();
+            if (float.TryParse(args[0], out local.X) &&
+                float.TryParse(args[1], out local.Y))
             {
-                target.Z = Client.Self.SimPosition.Z;
+                local.Z = Client.Self.SimPosition.Z;
+                Vector3d target = WorldSystem.TheSimAvatar.GetSimRegion().LocalToGlobal(local);
+                simObject = SimWaypoint.CreateGlobal(target);
                 if (args.Length == 3) Single.TryParse(args[2], out distance);
+
             }
             else
             {
@@ -320,17 +343,12 @@ namespace cogbot.Actions.Movement
                 if (WorldSystem.tryGetPrim(s, out prim))
                 {
 
-                    SimObject simObject = WorldSystem.GetSimObject(prim);
-                    if (simObject.IsRegionAttached())
-                    {
-                        target = simObject.GetSimPosition();
-                        distance = 0.5f + simObject.GetSizeDistance();
-                    }
-                    else
+                    simObject = WorldSystem.GetSimObject(prim);
+                    if (!simObject.IsRegionAttached())
                     {
                         return "Cannot get Sim Position of " + simObject;
                     }
-
+                    distance = 0.5f + simObject.GetSizeDistance();
                 }
                 else
                 {
@@ -338,8 +356,10 @@ namespace cogbot.Actions.Movement
                 }
             }
 
-            WorldSystem.TheSimAvatar.AutoGoto(target, distance, 20000);
-            return string.Format("gto {0} {1}", target.ToString(), distance);
+            WriteLine("gto {0} {1}", simObject, distance);
+            WorldSystem.TheSimAvatar.MoveTo(simObject.GetWorldPosition(), distance, 10);
+            WorldSystem.TheSimAvatar.StopMoving();
+            return WorldSystem.TheSimAvatar.DistanceVectorString(simObject);
         }
 
         public void Goto(Vector3 target, float distance)

@@ -14,6 +14,7 @@ namespace cogbot.Utilities
 {
     public class TcpServer : SimEventSubscriber
     {
+        bool DisableEventStore = true;// TODO this needs to be falso but running out of memory
         public Thread thrSvr;
         BotClient parent;
         GridClient client;
@@ -189,7 +190,7 @@ namespace cogbot.Utilities
 
 
         public void GetWhileAwayAndClear(TextWriter tw)
-        {
+        {                  
             lock (whileClientIsAway)
             {
                 while (whileClientIsAway.Count>0)
@@ -523,6 +524,7 @@ namespace cogbot.Utilities
 
         void SimEventSubscriber.OnEvent(SimEvent evt)
         {
+            if (DisableEventStore) return;
             whileClientIsAway.Enqueue("("+evt.GetName()+" "+parent.argsListString(evt.GetArgs())+")");
         }
 

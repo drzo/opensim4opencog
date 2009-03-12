@@ -30,6 +30,8 @@ namespace cogbot.Actions
                     count += primcount;
                 }
             }
+            WriteLine("{0} (Avatars: {1} Primitives: {2})",
+                        "WorldSystem", WorldSystem.numAvatars(), cogbot.Listeners.WorldObjects.SimObjects.Count);
 
 			return "Tracking a total of " + count + " objects";
 		}

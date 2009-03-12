@@ -13,6 +13,9 @@ using System.IO;
 using cogbot.Listeners;
 using Action=cogbot.Actions.Action;
 using cogbot.TheOpenSims;
+// older LibOMV
+//using TeleportFlags = OpenMetaverse.AgentManager.TeleportFlags;
+//using TeleportStatus = OpenMetaverse.AgentManager.TeleportStatus;
 
 namespace cogbot
 {
@@ -122,20 +125,30 @@ namespace cogbot
             //          RegisterAllCommands(Assembly.GetExecutingAssembly());
 
             Settings.LOG_LEVEL = Helpers.LogLevel.Info;
-            Settings.LOG_RESENDS = false;
-            Settings.ALWAYS_DECODE_OBJECTS = true;
-            Settings.ALWAYS_REQUEST_OBJECTS = true;
-            Settings.SEND_AGENT_UPDATES = true;
-            Settings.OBJECT_TRACKING = true;
-            //Settings.STORE_LAND_PATCHES = true;
-            //Settings.USE_TEXTURE_CACHE = true;
-            //Settings.PARCEL_TRACKING = true;
-            //Settings.FETCH_MISSING_INVENTORY = true;
-			// Optimize the throttle
-            Throttle.Wind = 0;
-            Throttle.Cloud = 0;
-            Throttle.Land = 1000000;
-            Throttle.Task = 1000000;
+         //   Settings.LOG_RESENDS = false;
+         //   Settings.ALWAYS_DECODE_OBJECTS = true;
+         //   Settings.ALWAYS_REQUEST_OBJECTS = true;
+         //   Settings.SEND_AGENT_UPDATES = true;
+         ////   Settings.SYNC_PACKETCALLBACKS = true;
+         //   Settings.OBJECT_TRACKING = true;
+         //   //Settings.STORE_LAND_PATCHES = true;
+         //   //Settings.USE_TEXTURE_CACHE = true;
+         //   //Settings.PARCEL_TRACKING = true;
+         //   //Settings.FETCH_MISSING_INVENTORY = true;
+         //   // Optimize the throttle
+         //   Throttle.Wind = 0;
+         //   Throttle.Cloud = 0;
+         //   Throttle.Land = 1000000;
+         //   Throttle.Task = 1000000;
+            ////Throttle.Total = 250000;
+           // Settings.CAPS_TIMEOUT = 6 * 1000;
+            Settings.RESEND_TIMEOUT = 40 * 1000;
+            Settings.MAX_RESEND_COUNT = 10;
+            Settings.LOGIN_TIMEOUT = 120 * 1000;
+            Settings.LOGOUT_TIMEOUT = 16 * 1000;
+            Settings.SIMULATOR_TIMEOUT = 5 * 60000;
+            Settings.SEND_PINGS = true;
+            ////Settings.MULTIPLE_SIMS = false;
 
 			VoiceManager = new VoiceManager(this);
 			//manager.AddBotClientToTextForm(this);
@@ -150,6 +163,8 @@ namespace cogbot
             Settings.ALWAYS_REQUEST_OBJECTS = true;
             Settings.OBJECT_TRACKING = true;
             Settings.AVATAR_TRACKING = true;
+            Settings.STORE_LAND_PATCHES = true;
+
 
             //  Manager = Inventory;
             //Inventory = Manager.Store;
@@ -158,16 +173,9 @@ namespace cogbot
             // config.loadConfig();
             /// Settings.LOGIN_SERVER = config.simURL;
             // Opensim recommends 250k total
-            Throttle.Total = 250000;
-            Settings.CAPS_TIMEOUT = 5 * 1000;
-            Settings.RESEND_TIMEOUT = 4 * 1000;
-            Settings.LOGIN_TIMEOUT = 16 * 1000;
-            Settings.LOGOUT_TIMEOUT = 16 * 1000;
-            Settings.SIMULATOR_TIMEOUT = 90 * 1000;
-            Settings.SEND_PINGS = true;
-            Settings.MULTIPLE_SIMS = false;
+
             //Settings.ENABLE_CAPS = true;
-            //Self.Movement.Camera.Far = 32;
+            Self.Movement.Camera.Far = 512f;
             //Settings.LOG_ALL_CAPS_ERRORS = true;
             //Settings.FETCH_MISSING_INVENTORY = true;
             //Settings.SEND_AGENT_THROTTLE = false;
@@ -1039,19 +1047,27 @@ namespace cogbot
 
         public bool ExecuteCommand(string text)
         {
-//            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
-            //text = text.Replace("\"", "");
-            string verb = text.Split(null)[0];
-            if (Commands!=null && Commands.ContainsKey(verb))
+            try
             {
-                if (text.Length > verb.Length)
-                    Commands[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1));
+                //            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
+                //text = text.Replace("\"", "");
+                string verb = text.Split(null)[0];
+                if (Commands != null && Commands.ContainsKey(verb))
+                {
+                    if (text.Length > verb.Length)
+                        Commands[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1));
+                    else
+                        Commands[verb].acceptInputWrapper(verb, "");
+                    return true;
+                }
                 else
-                    Commands[verb].acceptInputWrapper(verb, "");
-                return true;
+                {
+                    return false;
+                }
             }
-            else
+            catch (Exception e)
             {
+                output("" + e);
                 return false;
             }
         }
@@ -1087,6 +1103,7 @@ namespace cogbot
             } 
             lispTaskInterperter.Intern(n, v);
         }
+
     }
 
 }

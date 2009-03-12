@@ -7,7 +7,6 @@ using System.Threading;
 using cogbot.TheOpenSims.Navigation;
 using cogbot.TheOpenSims.Navigation.Debug;
 using cogbot.TheOpenSims.Mesher;
-using Simian;
 
 namespace cogbot.TheOpenSims
 {
@@ -15,6 +14,13 @@ namespace cogbot.TheOpenSims
     //TheSims-like object
     public class SimObject : SimPosition, BotMentalAspect
     {
+
+        internal void ResetRegion(ulong regionHandle)
+        {
+            _CurrentRegion = null;
+            thePrim.RegionHandle = regionHandle;
+            Debug("Changing regions " + this);
+        }
 
         /// <summary>
         /// Right now only sees if TouchName has been defined - need a relable way to see if script is defined.
@@ -44,14 +50,18 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        public bool IsSculpted
+        {
+            get { return thePrim.Sculpt != null; }
+        }
         public bool IsPassable
         {
             get
             {
                 if (IsPhantom) return true;
-                if (!IsRoot() && IsRegionAttached()) return Parent.IsPassable;
                 if (IsTypeOf(SimTypeSystem.PASSABLE) != null) return true;
                 if (IsRoot() || true) return false;
+                if (!IsRoot() && IsRegionAttached()) return Parent.IsPassable;
                 if (Parent == null) return true;
                 return Parent.IsPassable;
             }
@@ -61,8 +71,8 @@ namespace cogbot.TheOpenSims
             get
             {
                 if (MadePhantom) return true;
-                if (!IsRoot() && IsRegionAttached()) return Parent.IsPhantom;
                 if (IsRoot() || true) return (thePrim.Flags & PrimFlags.Phantom) == PrimFlags.Phantom;
+                if (!IsRoot() && IsRegionAttached()) return Parent.IsPhantom;
                 if (Parent == null) return true;
                 return Parent.IsPhantom;
             }
@@ -107,48 +117,48 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        Vector3 lastPos;
-        SimWaypoint swp;
-        public virtual SimWaypoint GetWaypoint()
-        {
-            Vector3 v3 = GetUsePosition();
-            if (swp == null || !swp.Passable)
-            {
-                SimPathStore PathStore = GetPathSystem();
-                swp = PathStore.CreateClosestWaypoint(v3);//, GetSizeDistance() + 1, 7, 1.0f);
-                PathStore.EnsureFillSmallSteps(v3.X, v3.Y);
-                if (!swp.Passable)
-                {
-                    float dist = Vector3.Distance(v3, swp.GetSimPosition());
-                    swp.EnsureAtLeastOnePath();
-                    WorldSystem.output("CreateClosestWaypoint: " + v3 + " <- " + dist + " -> " + swp + " " + this);
-                }
-                if (lastPos != v3)
-                {
-                    lastPos = v3;
-                    List<SimObject> objs = GetNearByObjects(3f, false);
-                    foreach (SimObject O in objs)
-                    {
-                        O.UpdatePaths(PathStore);
-                    }
-                }
-                if (!swp.Passable)
-                {
-                    float dist = Vector3.Distance(v3, swp.GetSimPosition());
-                    WorldSystem.output("BAD: " + v3 + " <- " + dist + " -> " + swp + " " + this);
-                    swp = PathStore.ClosestNode(v3.X, v3.Y, v3.Y, out dist, false);//, GetSizeDistance() + 1, 7, 1.0f);
-                }
-            }
-            return swp;
-            //            return PathStore.CreateClosestWaypointBox(v3, 4f);
-        }
+        //Vector3d lastPos;
+        //SimWaypoint swp;
+        //public virtual SimWaypoint GetWaypoint()
+        //{
+        //    Vector3d v3 = GetWorldPosition();
+
+        //    if (swp == null || !swp.Passable)
+        //    {
+        //        SimPathStore PathStore = GetPathSystem();
+        //        swp = PathStore.CreateClosestWaypoint(v3);//, GetSizeDistance() + 1, 7, 1.0f);
+        //        if (!swp.Passable)
+        //        {
+        //            double dist = Vector3d.Distance(v3, swp.GetWorldPosition());
+        //            swp.EnsureAtLeastOnePath();
+        //            WorldSystem.output("CreateClosestWaypoint: " + v3 + " <- " + dist + " -> " + swp + " " + this);
+        //        }
+        //        if (lastPos != v3)
+        //        {
+        //            lastPos = v3;
+        //            List<SimObject> objs = GetNearByObjects(3f, false);
+        //            foreach (SimObject O in objs)
+        //            {
+        //                O.UpdatePaths(PathStore);
+        //            }
+        //        }
+        //        if (!swp.Passable)
+        //        {
+        //            double dist = Vector3d.Distance(v3, swp.GetWorldPosition());
+        //            WorldSystem.output("BAD: " + v3 + " <- " + dist + " -> " + swp + " " + this);
+        //            swp = PathStore.ClosestNode(v3.X, v3.Y, v3.Y, out dist, false);//, GetSizeDistance() + 1, 7, 1.0f);
+        //        }
+        //    }
+        //    return swp;
+        //    //            return PathStore.CreateClosestWaypointBox(v3, 4f);
+        //}
 
 
-        public float Distance(SimPosition prim)
+        public double Distance(SimPosition prim)
         {
             if (!prim.IsRegionAttached()) return 1300;
             if (!IsRegionAttached()) return 1300;
-            return Vector3.Distance(GetSimPosition(), prim.GetSimPosition());
+            return Vector3d.Distance(GetWorldPosition(), prim.GetWorldPosition());
         }
 
         // the prim in Secondlife
@@ -197,7 +207,7 @@ namespace cogbot.TheOpenSims
         /// </summary>
         public float scaleOnNeeds = 1.11F;
 
-        public SimObject(Primitive prim, WorldObjects objectSystem)
+        public SimObject(Primitive prim, WorldObjects objectSystem, SimRegion reg)
             //: base(prim.ID.ToString())
            // :base(prim,null)
         {
@@ -205,6 +215,11 @@ namespace cogbot.TheOpenSims
             WorldSystem = objectSystem;
             ObjectType = SimTypeSystem.GetObjectType(prim.ID.ToString());
             UpdateProperties(thePrim.Properties);
+            _CurrentRegion = reg;
+            if (thePrim.Sculpt != null)
+            {
+                objectSystem.StartTextureDownload(thePrim.Sculpt.SculptTexture);
+            }
             // Parent; // at least request it
         }
 
@@ -219,14 +234,15 @@ namespace cogbot.TheOpenSims
                     uint parent = thePrim.ParentID;
                     if (parent != 0)
                     {
-                        Primitive prim = WorldSystem.GetPrimitive(parent);
+                        Simulator simu = GetSimulator();
+                        Primitive prim = WorldSystem.GetPrimitive(parent, simu);
                         if (prim == null)
                         {
                             // try to request for next time
-                            WorldSystem.EnsureSelected(parent);
+                            WorldSystem.EnsureSelected(parent, simu);
                             return null;
                         }
-                        _Parent = WorldSystem.GetSimObject(prim);
+                        _Parent = WorldSystem.GetSimObject(prim,simu);
                         _Parent.AddChild(this);
                     }
                     else
@@ -277,7 +293,7 @@ namespace cogbot.TheOpenSims
             return str;
         }
 
-        public float RateIt(BotNeeds needs)
+        public double RateIt(BotNeeds needs)
         {
             return ObjectType.RateIt(needs, GetBestUse(needs)) * scaleOnNeeds;
         }
@@ -463,7 +479,17 @@ namespace cogbot.TheOpenSims
                 if (ParentId != 0)
                 {
                     str += " (parent ";
-                    Primitive pp = WorldSystem.GetPrimitive(ParentId);
+
+                    Primitive pp = null;
+                    if (_Parent != null)
+                    {
+                        pp = _Parent.thePrim;
+                    }
+                    else
+                    {
+                        Simulator simu = GetSimulator();
+                        pp = WorldSystem.GetPrimitive(ParentId, simu);
+                    }
                     if (pp != null)
                     {
                         str += WorldSystem.GetPrimTypeName(pp) + " " + pp.ID.ToString().Substring(0, 8);
@@ -497,10 +523,11 @@ namespace cogbot.TheOpenSims
         public string SuperTypeString()
         {
             String str = "[";
-            ObjectType.SuperType.ForEach(delegate(SimObjectType item)
-            {
-                str += item.GetTypeName() + " ";
-            });
+            lock (ObjectType.SuperType)
+                ObjectType.SuperType.ForEach(delegate(SimObjectType item)
+                {
+                    str += item.GetTypeName() + " ";
+                });
             return str.TrimEnd() + "]";
         }
 
@@ -511,14 +538,20 @@ namespace cogbot.TheOpenSims
             if (IsRoot()) return true;
             if (_Parent == null)
             {
-                Primitive pUse = WorldSystem.GetPrimitive(thePrim.ParentID);
+                Simulator simu = GetSimulator();
+                Primitive pUse = WorldSystem.GetPrimitive(thePrim.ParentID, simu);
                 if (pUse == null)
                 {
-                    WorldSystem.EnsureSelected(thePrim.ParentID);
+                    WorldSystem.EnsureSelected(thePrim.ParentID, simu);
                     return false;
                 }
             }
             return Parent.IsRegionAttached();
+        }
+
+        public Simulator GetSimulator()
+        {
+            return GetSimRegion().TheSimulator;
         }
 
 
@@ -531,11 +564,12 @@ namespace cogbot.TheOpenSims
             while (theLPrim.ParentID != 0)
             {
                 uint theLPrimParentID = theLPrim.ParentID;
-                theLPrim = WorldSystem.GetPrimitive(theLPrimParentID);
+                Simulator simu = GetSimulator();
+                theLPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
                 while (theLPrim == null)
                 {
                     Thread.Sleep(100);
-                    theLPrim = WorldSystem.RequestMissingObject(theLPrimParentID);
+                    theLPrim = WorldSystem.RequestMissingObject(theLPrimParentID,simu);
                 }
                 // maybe plus?
                 theLPos = theLPos + theLPrim.Scale;
@@ -552,11 +586,12 @@ namespace cogbot.TheOpenSims
             while (theLPrim.ParentID != 0)
             {
                 uint theLPrimParentID = theLPrim.ParentID;
-                theLPrim = WorldSystem.GetPrimitive(theLPrimParentID);
+                Simulator simu = GetSimulator();
+                theLPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
                 while (theLPrim == null)
                 {
                     Thread.Sleep(100);
-                    theLPrim = WorldSystem.RequestMissingObject(theLPrimParentID);
+                    theLPrim = WorldSystem.RequestMissingObject(theLPrimParentID,simu);
                 }
                 theLPos = theLPos * theLPrim.Rotation;
                 theLPos.Normalize();
@@ -565,21 +600,22 @@ namespace cogbot.TheOpenSims
         }
         public virtual Vector3 GetSimPosition()
         {
-            if (!IsRegionAttached()) throw Error("GetSimPosition !IsRegionAttached: " + this);
+            if (!IsRegionAttached()) throw Error("GetWorldPosition !IsRegionAttached: " + this);
             Primitive theLPrim = thePrim;
             Vector3 theLPos = theLPrim.Position;
             while (theLPrim.ParentID != 0)
             {
                 uint theLPrimParentID = theLPrim.ParentID;
-                theLPrim = WorldSystem.GetPrimitive(theLPrimParentID);
+                Simulator simu = GetSimulator();
+                theLPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
                 while (theLPrim == null)
                 {
                     Thread.Sleep(100);
-                    theLPrim = WorldSystem.RequestMissingObject(theLPrimParentID);
+                    theLPrim = WorldSystem.RequestMissingObject(theLPrimParentID,simu);
                 }
                 theLPos = theLPrim.Position + Vector3.Transform(theLPos, Matrix4.CreateFromQuaternion(theLPrim.Rotation));
             }
-            if (BadLocation(theLPos))
+            if (false && BadLocation(theLPos))
             {
                 Debug("-------------------------" + this + " shouldnt be at " + theLPos);
                 //   WorldSystem.DeletePrim(thePrim);
@@ -618,10 +654,10 @@ namespace cogbot.TheOpenSims
             IList<SimTypeUsage> all = ObjectType.GetTypeUsages();
             if (all.Count == 0) return null;
             SimTypeUsage typeUsage = all[0];
-            float typeUsageRating = 0.0f;
+            double typeUsageRating = 0.0f;
             foreach (SimTypeUsage use in all)
             {
-                float f = ObjectType.RateIt(needs, use);
+                double f = ObjectType.RateIt(needs, use);
                 if (f > typeUsageRating)
                 {
                     typeUsageRating = f;
@@ -631,90 +667,11 @@ namespace cogbot.TheOpenSims
             return typeUsage;
         }
 
-        public Vector3 GetUsePosition()
-        {
-            return CurrentRegion.GetUsePositionOf(GetSimPosition(),GetSizeDistance());
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="zAngleFromFace"></param>
-        /// <param name="distance"></param>
-        /// <returns></returns>
-        static public Vector3 GetLeftPos(SimPosition pos, int zAngleFromFace, float distance)
-        {
-            float RAD_TO_DEG = 57.29577951f;
-            float Pi2 = (float)(Math.PI * 2.0);
-
-            while (zAngleFromFace > 360)
-            {
-                zAngleFromFace -= 360;
-            }
-            while (zAngleFromFace < 0)
-            {
-                zAngleFromFace += 360;
-            }
-
-            float radAngle = zAngleFromFace / RAD_TO_DEG;
-
-
-            Quaternion rot = pos.GetSimRotation();
-            rot.Normalize();
-            float rx, ry, rz;
-            rot.GetEulerAngles(out rx, out rz, out ry);
-            //if (rx != 0f || ry != 0f)
-            //{
-            //    Debug("180 Eulers:  {0} {1} {2}", rx * RAD_TO_DEG, ry * RAD_TO_DEG, rz * RAD_TO_DEG);
-            //}
-            //else
-            //{
-            //    Debug("Current Eulers:  {0} {1} {2}", rx * RAD_TO_DEG, ry * RAD_TO_DEG, rz * RAD_TO_DEG);
-            //}
-            float az = rz + radAngle;
-
-
-            while (az < 0)
-            {
-                az += Pi2;
-            }
-            while (az > Pi2)
-            {
-                az -= Pi2;
-            }
-
-            float xmul = (float)Math.Cos(az);
-            float ymul = (float)Math.Sin(az);
-            Vector3 diff = new Vector3(xmul, ymul, 0) * distance;
-
-            Vector3 result = pos.GetSimPosition() + diff;
-
-            if (result.X > 254f)
-            {
-                result.X = 254;
-            }
-            else if (result.X < 1f)
-            {
-                result.X = 1;
-            }
-            if (result.Y > 254f)
-            {
-                result.Y = 254;
-            }
-            else if (result.Y < 1f)
-            {
-                result.Y = 1;
-            }
-            return result;
-            /*
-             * Client.Self.Movement.SendManualUpdate(AgentManager.ControlFlags.AGENT_CONTROL_AT_POS, Client.Self.Movement.Camera.Position,
-                    Client.Self.Movement.Camera.AtAxis, Client.Self.Movement.Camera.LeftAxis, Client.Self.Movement.Camera.UpAxis,
-                    Client.Self.Movement.BodyRotation, Client.Self.Movement.HeadRotation, Client.Self.Movement.Camera.Far, AgentFlags.None,
-                    AgentState.None, true);*/
-        }
-
-
-
+        //public Vector3 GetUsePosition()
+        //{
+        //    return GetSimRegion().GetUsePositionOf(GetSimPosition(),GetSizeDistance());
+        //}
+     
         public BotNeeds GetProposedUpdate(string pUse)
         {
             return ObjectType.GetUsagePromise(pUse).Magnify(scaleOnNeeds);
@@ -726,13 +683,13 @@ namespace cogbot.TheOpenSims
         /// <returns>1-255</returns>
         public virtual float GetSizeDistance()
         {
-            float size = 1;
+            double size = 1;
 
             //            if (IsPhantom) return size;
 
-            float fx = thePrim.Scale.X;
+            double fx = thePrim.Scale.X;
             if (fx > size) size = fx;
-            float fy = thePrim.Scale.Y;
+            double fy = thePrim.Scale.Y;
             if (fy > size) size = fy;
 
             foreach (SimObject obj in AttachedChildren)
@@ -742,13 +699,13 @@ namespace cogbot.TheOpenSims
                 if (fx > size) size = fx;
                 fy = cp.Scale.Y;
                 if (fy > size) size = fy;
-                float childSize = obj.GetSizeDistance();
+                double childSize = obj.GetSizeDistance();
                 if (childSize > size) size = childSize;
             }
-            return size;
+            return (float) size;
         }
 
-        public virtual List<SimObject> GetNearByObjects(float maxDistance, bool rootOnly)
+        public virtual List<SimObject> GetNearByObjects(double maxDistance, bool rootOnly)
         {
             if (!IsRegionAttached())
             {
@@ -760,11 +717,15 @@ namespace cogbot.TheOpenSims
                 }
                 return objs;
             }
-            List<SimObject> objs2 = WorldSystem.GetNearByObjects(GetSimPosition(), this, maxDistance, rootOnly);
+            List<SimObject> objs2 = WorldSystem.GetNearByObjects(GetWorldPosition(), this,(float) maxDistance, rootOnly);
             SortByDistance(objs2);
             return objs2;
         }
 
+        public Vector3d GetWorldPosition()
+        {
+            return GetSimRegion().LocalToGlobal(GetSimPosition());
+        }
         //static ListAsSet<SimObject> CopyObjects(List<SimObject> objects)
         //{
         //    ListAsSet<SimObject> KnowsAboutList = new ListAsSet<SimObject>();
@@ -802,10 +763,10 @@ namespace cogbot.TheOpenSims
             return (int)(Distance(p1) - Distance(p2));
         }
 
-        public int CompareDistance(Vector3 v1, Vector3 v2)
+        public int CompareDistance(Vector3d v1, Vector3d v2)
         {
-            Vector3 rp = GetSimPosition();
-            return (int)(Vector3.Mag(rp - v1) - Vector3.Mag(rp - v2));
+            Vector3d rp = GetWorldPosition();
+            return (int)(Vector3d.Distance(rp , v1) - Vector3d.Distance(rp , v2));
         }
 
         public string DistanceVectorString(SimPosition obj)
@@ -815,19 +776,19 @@ namespace cogbot.TheOpenSims
             if (!obj.IsRegionAttached())
             {
                 str = "unknown relative ";
-                loc = obj.GetUsePosition();
+                loc = obj.GetSimPosition();
             }
             else
             {
                 loc = obj.GetSimPosition();
-                float dist = Vector3.Distance(GetSimPosition(), loc);
-                if (dist == float.NaN)
+                double dist = Distance(obj);
+                if (dist == double.NaN)
                 {
                     throw new InvalidCastException("NaN is not a number");
                 }
                 str = String.Format("{0:0.00}m ", dist);
             }
-            return str + String.Format("<{0:0.00}, {1:0.00}, {2:0.00}>", loc.X, loc.Y, loc.Z);
+            return str + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}",obj.GetSimRegion().RegionName,loc.X, loc.Y, loc.Z);
         }
 
         public virtual string GetName()
@@ -865,12 +826,23 @@ namespace cogbot.TheOpenSims
                 return;
             }
             // if (IsPassable) return;
+            if (simPathStore.GetSimRegion() != GetSimRegion()) return;
             lock (SimPathStores)
             {
                 if (SimPathStores.Contains(simPathStore)) return;
                 SimPathStores.Add(simPathStore);
             }
-            ForceUpdatePaths(simPathStore);
+            try
+            {
+                ForceUpdatePaths(simPathStore);
+            }
+            catch (Exception e)
+            {
+                lock (SimPathStores)
+                {
+                    SimPathStores.Remove(simPathStore);
+                } 
+            }
         }
 
 
@@ -893,13 +865,20 @@ namespace cogbot.TheOpenSims
             PathStore.SetBlocked(x, y, this);
         }
 
+        static void AllTerrainMinMaxLevel(float x, float y, out double minLevel, out double maxLevel)
+        {
+            minLevel = double.MinValue;
+            maxLevel = double.MaxValue;
+        }
+
         internal void ForceUpdatePaths(SimPathStore simPathStore)
         {
+            //SimZMinMaxLevel MinMax = AllTerrainMinMaxLevel;
             if (!IsRegionAttached()) return;
+            if (simPathStore.GetSimRegion() != GetSimRegion()) return;
             if (theMesh == null) theMesh = new SimMesh(this);
-            float SimZLevel = simPathStore.SimZLevel;
-            float SimZMaxLevel = simPathStore.SimZMaxLevel;
-            Vector3 Position = GetSimPosition();
+            //double SimZLevel = simPathStore.SimZLevel;
+            //double SimZMaxLevel = simPathStore.SimZMaxLevel;
             //Console.WriteLine("ForceUpdatePaths: "+this);
             // Commented because doors should not "attract"
             //if (IsTypeOf(SimTypeSystem.DOOR) != null)
@@ -907,30 +886,53 @@ namespace cogbot.TheOpenSims
             //    theMesh.SetOccupied(SetPassable, SimZLevel, SimZMaxLevel, Position, simPathStore.StepSize);
             //    return;
             //}
-            if (IsPassable)
+            if (!theMesh.IsSculpted)
             {
-                theMesh.SetOccupied(SetLocated, 10, 33, Position, simPathStore.StepSize);
+                UpdatePathBlocked(simPathStore);
                 return;
             }
-            theMesh.SetOccupied(SetBlocked, SimZLevel, SimZMaxLevel, Position, simPathStore.StepSize);
+            new Thread(new ThreadStart(delegate()
+            {
+                try
+                {
+                    UpdatePathBlocked(simPathStore);
+                }
+                catch (Exception)
+                {
+                    lock (SimPathStores)
+                    {
+                        SimPathStores.Remove(simPathStore);
+                    }
+                }
+            })).Start();
+
         }
 
-        protected SimRegion _CurrentRegion;
-        public virtual SimRegion CurrentRegion
+        private void UpdatePathBlocked(SimPathStore simPathStore)
         {
-            get
+            if (simPathStore.GetSimRegion() != GetSimRegion()) return;
+            Vector3 Position = GetSimPosition();
+            if (IsPassable)
             {
+                theMesh.SetOccupied(SetLocated, 10, 60, Position, simPathStore.StepSize);
+                return;
+            }
+            theMesh.SetOccupied(SetBlocked, simPathStore.TheSimZMinMaxLevel, Position, simPathStore.StepSize);
+        }
+
+        public SimRegion _CurrentRegion;
+        public virtual SimRegion GetSimRegion()
+        {
                 if (_CurrentRegion == null)
                 {
-                    _CurrentRegion = WorldSystem.GetRegion(thePrim.RegionHandle);
+                    _CurrentRegion = SimRegion.GetRegion(thePrim.RegionHandle);
                 }
                 return _CurrentRegion;
-            }
         }
 
         public virtual SimPathStore GetPathSystem()
         {
-            return CurrentRegion.PathStore;
+            return GetSimRegion().PathStore;
         }
 
         internal virtual void UpdatePaths()
@@ -938,9 +940,19 @@ namespace cogbot.TheOpenSims
             UpdatePaths(GetPathSystem());
         }
 
-        internal Vector3 GetLeftPos(int angle, float Dist)
+        internal Vector3d GetGlobalLeftPos(int angle, double Dist)
         {
-            return GetLeftPos(this, angle, Dist);
+            return SimRegion.GetGlobalLeftPos(this, angle, Dist);
         }
+
+        #region SimPosition Members
+
+
+        public SimWaypoint GetWaypoint()
+        {
+            return GetSimRegion().CreateClosestRegionWaypoint(GetSimPosition(),2);
+        }
+
+        #endregion
     }
 }

@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using System.Reflection; //using OpenMetaverse;
+// older LibOMV
+//using TeleportFlags = OpenMetaverse.AgentManager.TeleportFlags;
+//using TeleportStatus = OpenMetaverse.AgentManager.TeleportStatus;
+//using AgentFlags = OpenMetaverse.AgentManager.AgentFlags;
+//using AgentState = OpenMetaverse.AgentManager.AgentState;
 
 namespace cogbot.Listeners
 {
@@ -45,7 +50,7 @@ namespace cogbot.Listeners
         static readonly string[] paramNamesOnSimConnecting = new string[] { "simulator" };
         static readonly Type[] paramTypesOnSimConnecting = new Type[] { typeof(Simulator) };
 
-        public bool Network_OnSimConnecting(Simulator simulator)
+        public virtual bool Network_OnSimConnecting(Simulator simulator)
         { return BooleanOnEvent("On-Sim-Connecting", paramNamesOnSimConnecting, paramTypesOnSimConnecting, simulator); }
 
         static readonly string[] paramNamesOnSimConnected = new string[] { "simulator" };
@@ -623,6 +628,7 @@ namespace cogbot.Listeners
             client.Self.OnChatSessionMemberAdded += Self_OnChatSessionMemberAdded;
             client.Self.OnChatSessionMemberLeft += Self_OnChatSessionMemberLeft;
             client.Avatars.OnAvatarAppearance += Avatars_OnAvatarAppearance;
+            // not in older LibOMV
             client.Avatars.OnAvatarAnimation += Avatars_OnAvatarAnimation;
 
             client.Avatars.OnAvatarNames += Avatars_OnAvatarNames;
@@ -742,7 +748,7 @@ namespace cogbot.Listeners
             client.Self.OnChatSessionMemberAdded -= Self_OnChatSessionMemberAdded;
             client.Self.OnChatSessionMemberLeft -= Self_OnChatSessionMemberLeft;
             client.Avatars.OnAvatarAppearance -= Avatars_OnAvatarAppearance;
-            client.Avatars.OnAvatarAnimation -= Avatars_OnAvatarAnimation;
+            //client.Avatars.OnAvatarAnimation -= Avatars_OnAvatarAnimation;
 
             client.Avatars.OnAvatarNames -= Avatars_OnAvatarNames;
             client.Avatars.OnAvatarInterests -= Avatars_OnAvatarInterests;

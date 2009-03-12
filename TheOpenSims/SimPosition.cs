@@ -10,11 +10,13 @@ namespace cogbot.TheOpenSims
     public interface SimPosition
     {
         Vector3 GetSimPosition();
-        Vector3 GetUsePosition();
+      //  Vector3 GetUsePosition();
         float GetSizeDistance();
         SimWaypoint GetWaypoint();
         bool IsRegionAttached();
         Quaternion GetSimRotation();
+        SimRegion GetSimRegion();
+        Vector3d GetWorldPosition();
     }
 
 

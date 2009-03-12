@@ -7,7 +7,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 	/// <summary>
 	/// Summary description for FlickerFreePanel.
 	/// </summary>
-	public class FlickerFreePanel : Panel
+    public partial class FlickerFreePanel : Panel
 	{
 		public FlickerFreePanel()
 		{

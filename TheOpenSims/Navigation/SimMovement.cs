@@ -24,13 +24,12 @@ namespace cogbot.TheOpenSims.Navigation
     /// </summary>
     public class SimMovement
     {
-        static public bool SafeMode = false;
         /// <summary>
         /// A heuristic is a function that associates a value with a node to gauge it considering the node to reach.
         /// </summary>
-        public delegate float Heuristic(SimWaypoint NodeToEvaluate, SimWaypoint TargetNode);
+        public delegate double Heuristic(SimWaypoint NodeToEvaluate, SimWaypoint TargetNode);
 
-        SimPathStore _Graph;
+        SimGlobalRoutes _Graph;
         SortableList _Open, _Closed;
         Track _LeafToGoBackUp;
         int _NbIterations = -1;
@@ -71,12 +70,12 @@ namespace cogbot.TheOpenSims.Navigation
         /// If this value is set to 1, then the cost to come to the current node will not be used whereas only the heuristic will be taken into account.
         /// </summary>
         /// <exception cref="ArgumentException">Value must belong to [0;1].</exception>
-        public float DijkstraHeuristicBalance
+        public double DijkstraHeuristicBalance
         {
             get { return Track.DijkstraHeuristicBalance; }
             set
             {
-                if (SafeMode) if (value < 0 || value > 1) throw new ArgumentException("DijkstraHeuristicBalance value must belong to [0;1].");
+                if (value < 0 || value > 1) throw new ArgumentException("DijkstraHeuristicBalance value must belong to [0;1].");
                 Track.DijkstraHeuristicBalance = value;
             }
         }
@@ -85,7 +84,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// AStar Constructor.
         /// </summary>
         /// <param name="G">The graph on which AStar will perform the search.</param>
-        public SimMovement(SimPathStore G)
+        public SimMovement(SimGlobalRoutes G)
         {
             _Graph = G;
             _Open = new SortableList();
@@ -150,7 +149,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="EndNode">The node to which the path must end.</param>
         public void Initialize(SimWaypoint StartNode, SimWaypoint EndNode)
         {
-            if (SafeMode) if (StartNode == null || EndNode == null) throw new ArgumentNullException();
+            if (StartNode == null || EndNode == null) throw new ArgumentNullException();
             _Closed.Clear();
             _Open.Clear();
             Track.Target = EndNode;
@@ -167,7 +166,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <returns>'true' unless the search ended.</returns>
         public bool NextStep()
         {
-            if (SafeMode) if (!Initialized) throw new InvalidOperationException("You must initialize AStar before launching the algorithm.");
+            if (!Initialized) throw new InvalidOperationException("You must initialize AStar before launching the algorithm.");
             if (_Open.Count == 0) return false;
             _NbIterations++;
 
@@ -189,9 +188,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         private void Propagate(Track TrackToPropagate)
         {
-            lock (TrackToPropagate.EndNode.OutgoingArcs)
-                
-                foreach (SimRoute A in TrackToPropagate.EndNode.OutgoingArcs)
+            foreach (SimRoute A in TrackToPropagate.EndNode.OutgoingArcs)
             {
                 if (A.Passable && A.EndNode.Passable)
                 {
@@ -237,7 +234,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         private void CheckSearchHasEnded()
         {
-            if (SafeMode) if (!SearchEnded) throw new InvalidOperationException("You cannot get a result unless the search has ended.");
+            if (!SearchEnded) throw new InvalidOperationException("You cannot get a result unless the search has ended.");
         }
 
         /// <summary>
@@ -246,7 +243,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="NbArcsOfPath">The number of arcs in the result path / -1 if no result.</param>
         /// <param name="CostOfPath">The cost of the result path / -1 if no result.</param>
         /// <returns>'true' if the search succeeded / 'false' if it failed.</returns>
-        public bool ResultInformation(out int NbArcsOfPath, out float CostOfPath)
+        public bool ResultInformation(out int NbArcsOfPath, out double CostOfPath)
         {
             CheckSearchHasEnded();
             if (!PathFound)
@@ -309,14 +306,14 @@ namespace cogbot.TheOpenSims.Navigation
         /// Gets the array of points representing the found path.
         /// </summary>
         /// <exception cref="InvalidOperationException">You cannot get a result unless the search has ended.</exception>
-        public Vector3[] PathByCoordinates
+        public Vector3d[] PathByCoordinates
         {
             get
             {
                 CheckSearchHasEnded();
                 if (!PathFound) return null;
                 int Nb = _LeafToGoBackUp.NbArcsVisited;
-                Vector3[] Path = new Vector3[Nb + 1];
+                Vector3d[] Path = new Vector3d[Nb + 1];
                 Track Cur = _LeafToGoBackUp;
                 for (int i = Nb; i >= 0; i--, Cur = Cur.Queue)
                     Path[i] = Cur.EndNode.Position;
@@ -333,7 +330,7 @@ namespace cogbot.TheOpenSims.Navigation
     internal class Track : IComparable
     {
         private static SimWaypoint _Target = null;
-        private static float _Coeff = 0.5f;
+        private static double _Coeff = 0.5f;
         private static cogbot.TheOpenSims.Navigation.SimMovement.Heuristic _ChoosenHeuristic = SimMovement.EuclidianHeuristic;
 
         public static SimWaypoint Target { set { _Target = value; } get { return _Target; } }
@@ -341,14 +338,12 @@ namespace cogbot.TheOpenSims.Navigation
         public SimWaypoint EndNode;
         public Track Queue;
 
-        static public bool SafeMode = false;
-
-        public static float DijkstraHeuristicBalance
+        public static double DijkstraHeuristicBalance
         {
             get { return _Coeff; }
             set
             {
-                if (SafeMode) if (value < 0 || value > 1) throw new ArgumentException(
+                if (value < 0 || value > 1) throw new ArgumentException(
   @"The coefficient which balances the respective influences of Dijkstra and the Heuristic must belong to [0; 1].
 -> 0 will minimize the number of nodes explored but will not take the real cost into account.
 -> 0.5 will minimize the cost without developing more nodes than necessary.
@@ -366,10 +361,10 @@ namespace cogbot.TheOpenSims.Navigation
         private int _NbArcsVisited;
         public int NbArcsVisited { get { return _NbArcsVisited; } }
 
-        private float _Cost;
-        public float Cost { get { return _Cost; } }
+        private double _Cost;
+        public double Cost { get { return _Cost; } }
 
-        virtual public float Evaluation
+        virtual public double Evaluation
         {
             get
             {
@@ -381,7 +376,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public Track(SimWaypoint GraphNode)
         {
-            if (SafeMode) if (_Target == null) throw new InvalidOperationException("You must specify a target Node for the Track class.");
+            if (_Target == null) throw new InvalidOperationException("You must specify a target Node for the Track class.");
             _Cost = 0;
             _NbArcsVisited = 0;
             Queue = null;
@@ -390,7 +385,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public Track(Track PreviousTrack, SimRoute Transition)
         {
-            if (SafeMode) if (_Target == null) throw new InvalidOperationException("You must specify a target Node for the Track class.");
+            if (_Target == null) throw new InvalidOperationException("You must specify a target Node for the Track class.");
             Queue = PreviousTrack;
             _Cost = Queue.Cost + Transition.Cost;
             _NbArcsVisited = Queue._NbArcsVisited + 1;
@@ -407,7 +402,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             Track P1 = O1 as Track;
             Track P2 = O2 as Track;
-            if (SafeMode) if (P1 == null || P2 == null) throw new ArgumentException("Objects must be of 'Track' type.");
+            if (P1 == null || P2 == null) throw new ArgumentException("Objects must be of 'Track' type.");
             return P1.EndNode == P2.EndNode;
         }
     }
