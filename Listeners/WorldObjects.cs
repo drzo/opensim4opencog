@@ -347,61 +347,7 @@ namespace cogbot.Listeners
         //public SimPathStore SimPaths = SimPathStore.Instance;
 
         static Thread TrackPathsThread;
-        static public Queue<SimObject> UpdateMeQueue = new Queue<SimObject>();
-        static void AddTracking(SimObject simObject)
-        {
-            if (simObject.IsRegionAttached())
-            {
-                simObject.UpdatePaths();
-                return;
-            }
-            lock (UpdateMeQueue)
-                if (TrackPathsThread == null)
-                {
-                    TrackPathsThread = new Thread(new ThreadStart(TrackPaths));
-                    TrackPathsThread.Name = "TrackPathsThread";
-                    TrackPathsThread.Priority = ThreadPriority.Lowest;
-                    TrackPathsThread.Start();
-                }
-            lock (UpdateMeQueue)
-            {
-                UpdateMeQueue.Enqueue(simObject);
-            }
 
-            //if (!SimObjectsPathUpdates.Contains*() SimObjectsPathUpdates.Add(simObject);
-
-            //  Client.Objects.OnObjectUpdated += Objects_OnObjectUpdated;
-            //throw new Exception("The method or operation is not implemented.");
-        }
-        static void TrackPathsOld()
-        {
-            int lastCount = 0;
-            while (true)
-            {
-                Thread.Sleep(10000);
-
-                int thisCount = SimObjects.Count;
-                if (thisCount == lastCount) continue;
-                lastCount = thisCount;
-                List<SimObject> DoNow = new List<SimObject>();
-
-                lock (UpdateMeQueue)
-                {
-                    if (UpdateMeQueue.Count == 0) continue;
-                    while (UpdateMeQueue.Count > 0)
-                    {
-                        SimObject O = UpdateMeQueue.Dequeue();
-                        DoNow.Add(O);
-                    }
-                }
-                foreach (SimObject O in DoNow)
-                {
-                    if (O.IsRegionAttached())
-                        O.UpdatePaths();//SimPathStore.Instance);
-                    else AddTracking(O); //reque
-                }
-            }
-        }
         static void TrackPaths()
         {
             for (int i = 0; i < 30; i++)
@@ -444,11 +390,12 @@ namespace cogbot.Listeners
                 lastCount = thisCount;
                 foreach (SimObject O in SimObjects)
                 {
-                    Application.DoEvents();
+                    //Application.DoEvents();
                     if (O.IsRegionAttached())
-                        O.UpdatePaths();//SimPathStore.Instance);
+                        O.UpdateOccupied();
                 }
                 Debug("TrackPaths Completed: " + thisCount);
+                SimRegion.BakeRegions();
             }
         }
 

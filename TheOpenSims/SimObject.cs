@@ -15,6 +15,11 @@ namespace cogbot.TheOpenSims
     public class SimObject : SimPosition, BotMentalAspect
     {
 
+        public Box3Fill OuterBox
+        {
+            get { return Mesh.OuterBox; }
+        }
+
         internal void ResetRegion(ulong regionHandle)
         {
             _CurrentRegion = null;
@@ -139,7 +144,7 @@ namespace cogbot.TheOpenSims
         //            List<SimObject> objs = GetNearByObjects(3f, false);
         //            foreach (SimObject O in objs)
         //            {
-        //                O.UpdatePaths(PathStore);
+        //                O.UpdateBlocked(PathStore);
         //            }
         //        }
         //        if (!swp.Passable)
@@ -381,7 +386,7 @@ namespace cogbot.TheOpenSims
         public virtual void UpdateObject(ObjectUpdate objectUpdate, ObjectUpdate objectUpdateDiff)
         {
             SimPathStore PathStore = GetPathSystem();
-            UpdatePaths(PathStore);
+            UpdateOccupied(PathStore);
             _TOSRTING = null;
         }
 
@@ -808,54 +813,80 @@ namespace cogbot.TheOpenSims
             return ToString();
         }
 
-        public SimMesh theMesh;
+        public SimMesh _Mesh;
+
+        public SimMesh Mesh
+        {
+            get
+            {
+                if (_Mesh == null)
+                {
+                    _Mesh = new SimMesh(this);
+                }
+                return _Mesh;
+            }
+        }
+        
 
         public string GetMeshInfo()
         {
-            if (theMesh == null) theMesh = new SimMesh(this);
-            foreach (SimPathStore PS in SimPathStores)
+            foreach (SimPathStore PS in SimPathStoresOccupied)
             {
-                ForceUpdatePaths(PS);
+                ForceUpdateOccupied(PS);
             }
-            return theMesh.GetMeshInfo(Parent.GetSimPosition());
+            return Mesh.GetMeshInfo(Parent.GetSimPosition());
 
         }
 
-        List<SimPathStore> SimPathStores = new List<SimPathStore>();
-
-        public virtual void UpdatePaths(SimPathStore simPathStore)
+        public static int CompareLowestZ(SimObject p1, SimObject p2)
         {
-            if (!IsRegionAttached())
+            Box3Fill b1 = p1.OuterBox;
+            Box3Fill b2 = p2.OuterBox;
+            if (b1 == b2) return 0;
+            // One is fully above the other
+            if (b1.MaxZ < b2.MinZ) return -1;
+            if (b2.MaxZ < b1.MinZ) return 1;
+            // One is partially above the other
+            if (b1.MaxZ < b2.MaxZ) return -1;
+            if (b2.MaxZ < b1.MaxZ) return 1;
+            // they are the same hieght (basically) so compare bottems
+            return (int)(b1.MinZ - b2.MinZ);
+        }
+
+        internal float BottemArea()
+        {
+            float bottemX = OuterBox.MaxX - OuterBox.MinX;
+            float bottemY = OuterBox.MaxY - OuterBox.MinY;
+            return bottemX * bottemY;
+        }
+
+        List<SimPathStore> SimPathStoresOccupied = new List<SimPathStore>();
+
+        public virtual void UpdateOccupied(SimPathStore simPathStore)
+        {
+           if (!IsRegionAttached())
             {
                 //Debug("!IsRegionAttached");
                 return;
             }
             // if (IsPassable) return;
             if (simPathStore.GetSimRegion() != GetSimRegion()) return;
-            lock (SimPathStores)
+            lock (SimPathStoresOccupied)
             {
-                if (SimPathStores.Contains(simPathStore)) return;
-                SimPathStores.Add(simPathStore);
+                if (SimPathStoresOccupied.Contains(simPathStore)) return;
+                SimPathStoresOccupied.Add(simPathStore);
             }
             try
             {
-                ForceUpdatePaths(simPathStore);
+                ForceUpdateOccupied(simPathStore);
             }
             catch (Exception e)
             {
-                lock (SimPathStores)
+                lock (SimPathStoresOccupied)
                 {
-                    SimPathStores.Remove(simPathStore);
+                    SimPathStoresOccupied.Remove(simPathStore);
                 } 
-            }
-        }
-
-
-        public void SetPassable(float x, float y)
-        {
-            SetLocated(x, y);
-            SimPathStore PathStore = GetPathSystem();
-            PathStore.SetPassable(x, y);
+            };
         }
 
         private void SetLocated(float x, float y)
@@ -864,11 +895,6 @@ namespace cogbot.TheOpenSims
             PathStore.SetObjectAt(x, y, this);
         }
 
-        public void SetBlocked(float x, float y)
-        {
-            SimPathStore PathStore = GetPathSystem();
-            PathStore.SetBlocked(x, y, this);
-        }
 
         static void AllTerrainMinMaxLevel(float x, float y, out double minLevel, out double maxLevel)
         {
@@ -876,54 +902,39 @@ namespace cogbot.TheOpenSims
             maxLevel = double.MaxValue;
         }
 
-        internal void ForceUpdatePaths(SimPathStore simPathStore)
+        internal void ForceUpdateOccupied(SimPathStore simPathStore)
         {
-            //SimZMinMaxLevel MinMax = AllTerrainMinMaxLevel;
             if (!IsRegionAttached()) return;
             if (simPathStore.GetSimRegion() != GetSimRegion()) return;
-            if (theMesh == null) theMesh = new SimMesh(this);
-            //double SimZLevel = simPathStore.SimZLevel;
-            //double SimZMaxLevel = simPathStore.SimZMaxLevel;
-            //Console.WriteLine("ForceUpdatePaths: "+this);
-            // Commented because doors should not "attract"
-            //if (IsTypeOf(SimTypeSystem.DOOR) != null)
-            //{
-            //    theMesh.SetOccupied(SetPassable, SimZLevel, SimZMaxLevel, Position, simPathStore.StepSize);
-            //    return;
-            //}
-            if (!theMesh.IsSculpted)
+            if (!Mesh.IsSculpted)
             {
-                UpdatePathBlocked(simPathStore);
+                UpdatePathOccupied(simPathStore);
                 return;
             }
             new Thread(new ThreadStart(delegate()
             {
                 try
                 {
-                    UpdatePathBlocked(simPathStore);
+                    UpdatePathOccupied(simPathStore);
                 }
                 catch (Exception)
                 {
-                    lock (SimPathStores)
+                    lock (SimPathStoresOccupied)
                     {
-                        SimPathStores.Remove(simPathStore);
+                        SimPathStoresOccupied.Remove(simPathStore);
                     }
                 }
             })).Start();
-
         }
 
-        private void UpdatePathBlocked(SimPathStore simPathStore)
+
+        private void UpdatePathOccupied(SimPathStore simPathStore)
         {
             if (simPathStore.GetSimRegion() != GetSimRegion()) return;
             Vector3 Position = GetSimPosition();
-            if (IsPassable)
-            {
-                theMesh.SetOccupied(SetLocated, 10, 60, Position, simPathStore.StepSize);
-                return;
-            }
-            theMesh.SetOccupied(SetBlocked, simPathStore.TheSimZMinMaxLevel, Position, simPathStore.StepSize);
+            Mesh.SetOccupied(SetLocated, 10, 60, simPathStore.StepSize);
         }
+
 
         public SimRegion _CurrentRegion;
         public virtual SimRegion GetSimRegion()
@@ -940,10 +951,13 @@ namespace cogbot.TheOpenSims
             return GetSimRegion().PathStore;
         }
 
-        internal virtual void UpdatePaths()
+
+        public virtual void UpdateOccupied()
         {
-            UpdatePaths(GetPathSystem());
+            UpdateOccupied(GetPathSystem());
         }
+
+
 
         internal Vector3d GetGlobalLeftPos(int angle, double Dist)
         {
@@ -953,11 +967,13 @@ namespace cogbot.TheOpenSims
         #region SimPosition Members
 
 
-        public SimWaypoint GetWaypoint()
-        {
-            return GetSimRegion().CreateClosestRegionWaypoint(GetSimPosition(),2);
-        }
+        //public SimWaypoint GetWaypoint()
+        //{
+        //    return GetSimRegion().CreateClosestRegionWaypoint(GetSimPosition(),2);
+        //}
 
         #endregion
+
+
     }
 }

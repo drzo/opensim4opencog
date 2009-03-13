@@ -41,7 +41,7 @@ namespace cogbot.TheOpenSims.Navigation
             {
                 if (_TheSimZ == -1f)
                 {
-                    _TheSimZ = TheSimZLevel(127f, 127f);
+                    _TheSimZ = SimLevel(127f, 127f);
                 }
                 return _TheSimZ;
             }
@@ -57,19 +57,22 @@ namespace cogbot.TheOpenSims.Navigation
         }
         public void MinMaxLevel(float x, float y, out float minLevel, out float maxLevel)
         {
-            minLevel = TheSimZLevel(x, y) + 1f;
+            minLevel = SimLevel(x, y) + 1f;
             maxLevel = minLevel + 1f;
-        }
-
-        public float SimLevel(float x, float y)
-        {
-            return 21.5f;
         }
       
         public float POINTS_PER_METER = 8f;
         public float LargeScale = 1f;//StepSize;//0.2f;
 
-        public SimZLevel TheSimZLevel;
+        public float SimLevel(float vx, float vy)
+        {
+            int ix = ARRAY_IDX(RangeCheck(vx));
+            int iy = ARRAY_IDX(RangeCheck(vy));
+            SimWaypoint WP = mWaypoints[ix, iy];
+            if (WP == null) return GetSimRegion().GetGroundLevel(vx, vy);
+            return WP.GetZLevel();
+        }
+
         public SimZMinMaxLevel TheSimZMinMaxLevel;
         public static float PI2 = (float)(Math.PI * 2f);
         public static float RAD2DEG = 360f / PI2;
@@ -190,6 +193,21 @@ namespace cogbot.TheOpenSims.Navigation
             mMatrix[ix, iy] = 2;
         }
 
+        static List<SimObject> NOOBJECTS = new List<SimObject>();
+        internal IEnumerable<SimObject> ObjectsAt(float x, float y)
+        {
+            x = RangeCheck(x); y = RangeCheck(y);
+            ///Debug("SetBlocked: {0} {1}", x, y);
+            int ix = ARRAY_IDX(x);
+            int iy = ARRAY_IDX(y);
+            SimWaypoint P = mWaypoints[ix, iy];
+            if (P == null)
+            {
+                return NOOBJECTS;
+            }
+            return P.OccupiedList;
+        }
+
 
 
         public void SetBlocked(float x, float y, SimObject blocker)
@@ -243,13 +261,6 @@ namespace cogbot.TheOpenSims.Navigation
                 }
             }
         }
-
-
-        public void UpdateFromObject(SimObject obj)
-        {
-            obj.UpdatePaths(this);
-        }
-
     
         SimRegion TheSimRegion;
         internal SimRegion GetSimRegion()
@@ -268,7 +279,6 @@ namespace cogbot.TheOpenSims.Navigation
         internal SimPathStore(String simName, ulong regionHandle)           
         {
             Handle = regionHandle;
-            TheSimZLevel = new SimZLevel(SimLevel);
             TheSimZMinMaxLevel = new SimZMinMaxLevel(MinMaxLevel);
             StepSize = 1f / POINTS_PER_METER;
             MAPSPACE = 256 * ((int)POINTS_PER_METER);
@@ -316,14 +326,14 @@ namespace cogbot.TheOpenSims.Navigation
             return Waypoint(ix, iy);
         }
 
-        private SimWaypoint Waypoint(int ix, int iy)
+        internal SimWaypoint Waypoint(int ix, int iy)
         {
             SimWaypoint wp = mWaypoints[ix, iy];
             if (wp == null)
             {
                 float x = ix / POINTS_PER_METER;
                 float y = iy / POINTS_PER_METER;
-                wp = SimWaypoint.CreateLocal(x, y, TheSimZLevel(x, y), this);
+                wp = SimWaypoint.CreateLocal(x, y, SimLevel(x, y), this);
                 mWaypoints[ix, iy] = wp;
             }
             return wp;
@@ -517,7 +527,7 @@ namespace cogbot.TheOpenSims.Navigation
             {
                 float x = UNARRAY_IDX(P.X);
                 float y = UNARRAY_IDX(P.Y);
-                Vector3d v3 = new Vector3d(x + V.X, y+V.Y, TheSimZLevel(x, y));
+                Vector3d v3 = new Vector3d(x + V.X, y+V.Y, SimLevel(x, y));
                 v3s.Add(v3);
             }
             return GetSimplifedRoute(v3s[0],v3s,10,8f);
@@ -620,23 +630,16 @@ namespace cogbot.TheOpenSims.Navigation
             Console.WriteLine("[SimPathStore] " + format, arg);
         }
 
-        internal void CleanUnblocked()
+        internal void UpdateMatrix()
         {
+            GetSimRegion().BakeTerrain();
             for (int x = 0; x < MAPSPACE; x++)
             {
                 for (int y = 0; y < MAPSPACE; y++)
                 {
-                    if (mMatrix[x, y] == 0)
-                    {
                         SimWaypoint W = mWaypoints[x, y];
                         if (W != null)
-                        {
-                            if (W.NoObjectsBlock())
-                            {
-                                mMatrix[x, y] = 30;
-                            }
-                        }
-                    }
+                            W.UpdateMatrix();                    
                 }
             }
         }

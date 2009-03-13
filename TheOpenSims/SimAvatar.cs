@@ -131,7 +131,10 @@ namespace cogbot.TheOpenSims
             return ClientSelf.AgentID == theAvatar.ID || ClientSelf.LocalID == theAvatar.LocalID;
         }
 
-        public override void UpdatePaths(SimPathStore simPathStore)
+        public override void UpdateOccupied()
+        {
+        }
+        public override void UpdateOccupied(SimPathStore simPathStore)
         {
         }
 
@@ -949,17 +952,17 @@ namespace cogbot.TheOpenSims
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="end"></param>
+        /// <param name="finalTarget"></param>
         /// <param name="maxDistance"></param>
         /// <param name="maxSeconds"></param>
         /// <returns></returns>
-        public bool MoveTo(Vector3d end, double maxDistance, int maxSeconds)
+        public bool MoveTo(Vector3d finalTarget, double maxDistance, int maxSeconds)
         {
-            double currentDist = Vector3d.Distance(end, GetWorldPosition());
+            double currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
             if (currentDist < maxDistance) return true;
             lock (TrackerLoopLock)
             {
-                SimWaypoint P = SimWaypoint.CreateGlobal(end);
+                SimWaypoint P = SimWaypoint.CreateGlobal(finalTarget);
                 ApproachDistance = maxDistance;
                 ApproachPosition = P;
             }
@@ -967,7 +970,7 @@ namespace cogbot.TheOpenSims
             {
                 Thread.Sleep(1000);
                 //Application.DoEvents();
-                currentDist = Vector3d.Distance(end, GetWorldPosition());
+                currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
 
                 if (currentDist > maxDistance)
                 {
@@ -979,7 +982,6 @@ namespace cogbot.TheOpenSims
                     return true;
                 }
             }
-            Debug("!MoveTo " + DistanceVectorString(end));
             StopMoving();
             return false;
         }
@@ -1067,9 +1069,7 @@ namespace cogbot.TheOpenSims
             KnownSimObjects.Remove(O);
         }
 
-        internal override void UpdatePaths()
-        {
-        }
+
 
         #region SimMover Members
 
@@ -1273,8 +1273,10 @@ namespace cogbot.TheOpenSims
                             Skipped++;
                             continue;
                         }
-                        BlockTowardsVector(SimRegion.GlobalToLocal(v3));
-                        Debug("Failed: {0} -> {1}", DistanceVectorString(GetWorldPosition()),DistanceVectorString( finalTarget));
+                        Vector3 l3 = SimRegion.GlobalToLocal(v3);
+                        BlockTowardsVector(l3);
+                        Debug("!MoveTo: {0} -> {1} -> {2} ", DistanceVectorString(GetWorldPosition()), DistanceVectorString(v3), DistanceVectorString(finalTarget));
+                        MoveToPassableArround(l3);
                         return false;
                     }
                 }
