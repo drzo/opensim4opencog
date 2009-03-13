@@ -23,7 +23,7 @@ using System.Drawing;
 
 namespace cogbot.TheOpenSims.Navigation
 {
-    public delegate void CallbackXY(float x, float y);
+    public delegate void CallbackXY(float x, float y, float minZ, float maxZ);
 
     public delegate float SimZLevel(float x, float y);
     public delegate void SimZMinMaxLevel(float x, float y, out float minLevel, out float maxLevel);
@@ -137,7 +137,7 @@ namespace cogbot.TheOpenSims.Navigation
             Color c = Color.Olive;
             if (simWaypoint != null)
             {
-                int dense = simWaypoint.OccupiedList.Count;
+                int dense = simWaypoint.OccupiedListObject.Count;
                 int A = 240 - 10 * dense;
                 if (A < 0) A = 20;
 
@@ -162,13 +162,13 @@ namespace cogbot.TheOpenSims.Navigation
             SetPassable(x, y);
         }
 
-        public void SetObjectAt(float x, float y, SimObject simObject)
+        public void SetObjectAt(float x, float y, SimObject simObject, float minZ, float maxZ)
         {
             int ix = ARRAY_IDX(RangeCheck(x));
             int iy = ARRAY_IDX(RangeCheck(y));
 
             SimWaypoint W = Waypoint(ix, iy);
-            if (W.AddOccupied(simObject))
+            if (W.AddOccupied(simObject,minZ,maxZ))
             {
                 if (mMatrix[ix, iy] > 9)
                 {
@@ -205,7 +205,7 @@ namespace cogbot.TheOpenSims.Navigation
             {
                 return NOOBJECTS;
             }
-            return P.OccupiedList;
+            return P.OccupiedListObject;
         }
 
 
@@ -213,7 +213,7 @@ namespace cogbot.TheOpenSims.Navigation
         public void SetBlocked(float x, float y, SimObject blocker)
         {
             x = RangeCheck(x); y = RangeCheck(y);
-            if (blocker!=null) SetObjectAt(x, y, blocker);
+            if (blocker != null) SetObjectAt(x, y, blocker,SimZAverage,SimZAverage+1f);
 
             int ix = ARRAY_IDX(x);
             int iy = ARRAY_IDX(y);
@@ -224,43 +224,43 @@ namespace cogbot.TheOpenSims.Navigation
                 //  return;
             }
             mMatrix[ix, iy] = 0;
-            SetBubbleBlock(ix, iy, blocker);
+         //   SetBubbleBlock(ix, iy, blocker);
         }
 
-        private void SetBubbleBlock(int ix, int iy, SimObject blocker)
-        {
-            int TWO = 2;// (int)Math.Round(POINTS_PER_METER / 2);
-            int ONE = 1;// (int)Math.Round(POINTS_PER_METER / 2);
-            if (ix > TWO && iy > TWO && ix < MAPSPACE - TWO && iy < MAPSPACE - TWO)
-            {
-                for (int x = ix - ONE; x < ix + TWO; x++)
-                {
-                    for (int y = iy - ONE; y < iy + TWO; y++)
-                    {
-                        if (x != ix || y != iy)
-                        {
-                            if (mMatrix[x, y] != 0)
-                            {
-                                if (blocker != null)
-                                {
-                                    SimWaypoint W = Waypoint(x, y);
-                                    if (W.AddShadow(blocker) > 1)
-                                    {
-                                        mMatrix[x, y] = 0;
-                                    }
-                                    else
-                                    {
-                                        int newV = mMatrix[x, y] * 2;
-                                        if (newV > 200) newV = 200;
-                                        mMatrix[x, y] = (byte)newV;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        //private void SetBubbleBlock(int ix, int iy, SimObject blocker)
+        //{
+        //    int TWO = 2;// (int)Math.Round(POINTS_PER_METER / 2);
+        //    int ONE = 1;// (int)Math.Round(POINTS_PER_METER / 2);
+        //    if (ix > TWO && iy > TWO && ix < MAPSPACE - TWO && iy < MAPSPACE - TWO)
+        //    {
+        //        for (int x = ix - ONE; x < ix + TWO; x++)
+        //        {
+        //            for (int y = iy - ONE; y < iy + TWO; y++)
+        //            {
+        //                if (x != ix || y != iy)
+        //                {
+        //                    if (mMatrix[x, y] != 0)
+        //                    {
+        //                        if (blocker != null)
+        //                        {
+        //                            SimWaypoint W = Waypoint(x, y);
+        //                            if (W.AddShadow(blocker) > 1)
+        //                            {
+        //                                mMatrix[x, y] = 0;
+        //                            }
+        //                            else
+        //                            {
+        //                                int newV = mMatrix[x, y] * 2;
+        //                                if (newV > 200) newV = 200;
+        //                                mMatrix[x, y] = (byte)newV;
+        //                            }
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
     
         SimRegion TheSimRegion;
         internal SimRegion GetSimRegion()
@@ -630,8 +630,22 @@ namespace cogbot.TheOpenSims.Navigation
             Console.WriteLine("[SimPathStore] " + format, arg);
         }
 
+
+        internal void TaintMatrix()
+        {
+            for (int x = 0; x < MAPSPACE; x++)
+            {
+                for (int y = 0; y < MAPSPACE; y++)
+                {
+                    SimWaypoint W = mWaypoints[x, y];
+                    if (W != null)
+                        W.TaintMatrix();
+                }
+            }
+        }
         internal void UpdateMatrix()
         {
+            TaintMatrix();
             GetSimRegion().BakeTerrain();
             for (int x = 0; x < MAPSPACE; x++)
             {

@@ -532,7 +532,7 @@ namespace cogbot.TheOpenSims
 
         public List<Vector3d> GetLocalPath(Vector3 start, Vector3 end)
         {
-            BakeTerrain();
+            if (!TerrainBaked) BakeTerrain();
             return (List<Vector3d>)PathStore.GetLocalPath(GetUsableLocalPositionOf(start,4), GetUsableLocalPositionOf(end,4), PathFinder);
         }
 
@@ -541,15 +541,15 @@ namespace cogbot.TheOpenSims
             PathStore.SetPassable(x, y);
         }
 
-        public void SetObjectAt(float x, float y, SimObject simObject)
+        public void SetObjectAt(float x, float y, SimObject simObject, float minZ, float maxZ)
         {
-            PathStore.SetObjectAt(x, y, simObject);
+            PathStore.SetObjectAt(x, y, simObject,minZ,maxZ);
         }
 
-        public void SetBlocked(float x, float y, SimObject simObject)
-        {
-            PathStore.SetBlocked(x, y, simObject);
-        }
+        //public void SetBlocked(float x, float y, SimObject simObject)
+        //{
+        //    PathStore.SetBlocked(x, y, simObject);
+        //}
 
         public SimWaypoint CreateClosestRegionWaypoint(Vector3 v3, float dist)
         {
@@ -598,31 +598,31 @@ namespace cogbot.TheOpenSims
             return objects;
         }
 
-        public void SimZLevelBlocks(CallbackXY cb)
-        {
-            int N = (int)NESW.N;
-            int NW = (int)NESW.NW;
-            for (int x = 1; x < 254; x++)
-            {
-                for (int y = 1; y < 254; y++)
-                {
-                    float average = 0.0f;
-                    for (int i = N; i <= NW; i++)
-                    {
+        //public void SimZLevelBlocks(CallbackXY cb)
+        //{
+        //    int N = (int)NESW.N;
+        //    int NW = (int)NESW.NW;
+        //    for (int x = 1; x < 254; x++)
+        //    {
+        //        for (int y = 1; y < 254; y++)
+        //        {
+        //            float average = 0.0f;
+        //            for (int i = N; i <= NW; i++)
+        //            {
 
-                        float d = SimZLevel(x + XYOf[i].X, y + XYOf[i].Y);
-                        average += d;
-                    }
-                    average /= 8f;
-                    float diff = Math.Abs(average - SimZLevel(x, y));
-                    if (diff > 1f)
-                    {
-                        // bump
-                        cb(x, y);
-                    }
-                }
-            }
-        }
+        //                float d = SimZLevel(x + XYOf[i].X, y + XYOf[i].Y);
+        //                average += d;
+        //            }
+        //            average /= 8f;
+        //            float diff = Math.Abs(average - SimZLevel(x, y));
+        //            if (diff > 1f)
+        //            {
+        //                // bump
+        //                cb(x, y);
+        //            }
+        //        }
+        //    }
+        //}
 
         #endregion
 
@@ -636,7 +636,7 @@ namespace cogbot.TheOpenSims
         public float GetGroundLevel(float x, float y)
         {
             float height;
-            if (Client.Terrain.TerrainHeightAtPoint(RegionHandle, (int)x, (int)y, out height))
+            if (Client!=null && Client.Terrain.TerrainHeightAtPoint(RegionHandle, (int)x, (int)y, out height))
             {
                 AverageHieght = height;
                 return height;
@@ -723,7 +723,7 @@ namespace cogbot.TheOpenSims
             {
                 while (sy >= y)
                 {
-                    SetBlocked(sx, sy, null);
+                    PathStore.SetBlocked(sx, sy, null);
                     sy -= StepSize;
                 }
                 sy = loopY;
