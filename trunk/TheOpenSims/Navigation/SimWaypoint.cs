@@ -28,46 +28,58 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
 
-        public bool _BlockedKnown = false;
-        public bool _Blocked = false;
+        public bool _SolidKnown = false;
+        public bool _Solid = false;
         public bool IsSolid
         {
             get
             {
-                if (!_BlockedKnown)
+                if (!_SolidKnown)
                 {
-                    _BlockedKnown = true;
-                    _Blocked = false;
-                    foreach (SimObject O in OccupiedList)
+                    _SolidKnown = true;
+                    _Solid = false;
+
+                    foreach (SimObject O in OccupiedListObject)
                     {
                         if (!O.IsPassable)
                         {
-                            _Blocked = true;
+                            _Solid = true;
                         }
                     }
-                    _BlockedKnown = true;
+                    _SolidKnown = true;
                 }
-                return _Blocked;
+                return _Solid;
             }
         }
+
+        public void TaintMatrix()
+        {
+            _SolidKnown = false;
+            _ZLevelCache = float.MinValue;
+            _GroundLevelCache = float.MinValue;
+        }
+
         public void UpdateMatrix()
         {
             bool WasBlocked = GetMatrix() == 0;
             bool Blocked = false;
-           if (IsSolid)
+            if (IsSolid)
             {
-                float groundLevel = LowestSurrounding();
-                float ground = GetZLevel();
-
-                if (ground + 1.2 < groundLevel || ground > groundLevel + 1)
+                if (SurroundingBump())
                     Blocked = true;
-                //      if (O.Mesh.IsInside(_LocalPos.X, _LocalPos.Y, groundLevel + 1f))
+                else
+                {
+                    float zlevel = GetZLevel();
+                    float groundLevel = GetGroundLevel();
+                    if (SomethingBetween(groundLevel + 0.3f, groundLevel + 2)) Blocked = true;
+                }
+                //      if (O.Mesh.IsInside(_LocalPos.X, _LocalPos.Y, zlevelSurround + 1f))
 
             }
             if (WasBlocked && !Blocked)
             {
                 //  Passable = !IsSolid;
-                SetMatrix(2 + OccupiedList.Count * 2);
+                SetMatrix(20 + OccupiedListObject.Count * 2);
                 return;
             }
             else if (!WasBlocked && Blocked)
@@ -77,113 +89,189 @@ namespace cogbot.TheOpenSims.Navigation
             }
         }
 
-        private float LowestSurrounding()
+        private bool SomethingBetween(float low, float high)
         {
-            float original = GetZLevel();
-            float mostDiff = original;
-
-            //return GetGroundLevel();
-            if (PX < 1 || PY < 1 || _LocalPos.X > 254 || _LocalPos.Y > 254)
-                return mostDiff;
-            
-
-            SimWaypoint O = null;
-
-            SimWaypoint[,] mWaypoints = PathStore.mWaypoints;
-
-            O = mWaypoints[PX, PY + 1];
-            if (O != null)
-                mostDiff = MostDiff(O.GetZLevel(), mostDiff, original);
-
-            O = mWaypoints[PX + 1, PY + 1];
-            if (O != null)
-                mostDiff = MostDiff(O.GetZLevel(), mostDiff, original);
-
-            O = mWaypoints[PX + 1, PY];
-            if (O != null)
-                mostDiff = MostDiff(O.GetZLevel(), mostDiff, original);
-
-            O = mWaypoints[PX + 1, PY - 1];
-            if (O != null)
-                mostDiff = MostDiff(O.GetZLevel(), mostDiff, original);
-
-            O = mWaypoints[PX, PY - 1];
-            if (O != null)
-                mostDiff = MostDiff(O.GetZLevel(), mostDiff, original);
-
-            O = mWaypoints[PX - 1, PY - 1];
-            if (O != null)
-                mostDiff = MostDiff(O.GetZLevel(), mostDiff, original);
-
-            O = mWaypoints[PX - 1, PY];
-            if (O != null)
-                mostDiff = MostDiff(O.GetZLevel(), mostDiff, original);
-
-            O = mWaypoints[PX - 1, PY + 1];
-            if (O != null)
-                mostDiff = MostDiff(O.GetZLevel(), mostDiff, original);
-
-            float gl = GetGroundLevel();
-            if (mostDiff == original) return gl;
-
-            return mostDiff;
-        }
-
-        static float MostDiff(float other, float mostDiff, float original)
-        {
-            if (Math.Abs(original - mostDiff) > Math.Abs(original - other)) return mostDiff;
-            return other;
-        }
-
-        private float GetGroundLevel()
-        {
-            return GetSimRegion().GetGroundLevel(_LocalPos.X, _LocalPos.Y);
-        }
-
-        internal int AddShadow(SimObject blocker)
-        {
-            IList<SimObject> ShadowList = OccupiedList;
-            if (!ShadowList.Contains(blocker))
-            {
-                ShadowList.Add(blocker);
-                _ZLevel = float.MinValue;
-            }
-            return ShadowList.Count;
-        }
-
-        internal bool AddOccupied(SimObject simObject)
-        {
-            if (OccupiedList.Contains(simObject)) return false;
-            OccupiedList.Add(simObject);
-            _ZLevel = float.MinValue;
-            return true;
-        }
-
-        // private IList ShadowList = new List<SimObject>();
-        internal IList<SimObject> OccupiedList = new List<SimObject>();
-
-        public bool NoObjectsBlock()
-        {
-            foreach (SimObject O in OccupiedList)
+            foreach (SimObject O in OccupiedListObject)
             {
                 if (!O.IsPassable)
                 {
-                    return false;
+                    Box3Fill box = O.OuterBox;
+                    if (low > box.MaxZ) continue;
+                    if (high < box.MinZ) continue;
+                    return true;
                 }
             }
-            return true;
+            return false;
         }
+
+        public bool SurroundingBump()
+        {
+            float original = GetZLevel();
+
+            //return GetGroundLevel();
+            if (PX < 1 || PY < 1 || _LocalPos.X > 254 || _LocalPos.Y > 254)
+                return false;
+
+            float O;
+            float MostDiff = 0.5f;
+
+            O = WpLevel(PX, PY + 1);
+            if (!DiffLessThan(O, original, MostDiff)) return true;
+
+            O = WpLevel(PX + 1, PY + 1);
+            if (!DiffLessThan(O, original, MostDiff)) return true;
+
+            O = WpLevel(PX + 1, PY);
+            if (!DiffLessThan(O, original, MostDiff)) return true;
+
+            O = WpLevel(PX + 1, PY - 1);
+            if (!DiffLessThan(O, original, MostDiff)) return true;
+
+            O = WpLevel(PX, PY - 1);
+            if (!DiffLessThan(O, original, MostDiff)) return true;
+
+            O = WpLevel(PX - 1, PY - 1);
+            if (!DiffLessThan(O, original, MostDiff)) return true;
+
+            O = WpLevel(PX - 1, PY);
+            if (!DiffLessThan(O, original, MostDiff)) return true;
+
+            O = WpLevel(PX - 1, PY + 1);
+            if (!DiffLessThan(O, original, MostDiff)) return true;
+
+            return false;
+        }
+
+        private float WpLevel(int PX, int PY)
+        {
+            SimWaypoint WP = PathStore.mWaypoints[PX, PY];
+            if (WP != null) return WP.GetZLevel();
+            float x = PX / PathStore.POINTS_PER_METER;
+            float y = PY / PathStore.POINTS_PER_METER;
+            return GetSimRegion().GetGroundLevel(x, y);
+        }
+
+
+        float _GroundLevelCache = float.MinValue;
+        public float GetGroundLevel()
+        {
+            return GetZLevel();
+            if (_GroundLevelCache > 0) return _GroundLevelCache;
+            _GroundLevelCache = GetSimRegion().GetGroundLevel(_LocalPos.X, _LocalPos.Y);
+            if (false)foreach (SimObject O in OccupiedListObject)
+            {
+                if (O.IsPassable) continue;
+                Box3Fill box = O.OuterBox;
+                if (Math.Abs(_GroundLevelCache - box.MinZ) < 1 && Math.Abs(_GroundLevelCache - box.MaxZ) > 1.0)
+                {
+                    _GroundLevelCache = box.MaxZ;
+                    break;
+                }
+            }
+            return _GroundLevelCache;
+        }
+
+        float _ZLevelCache = float.MinValue;
+        public float GetZLevel()
+        {
+            // when the Two Zs are differnt that means global Pos has been computed
+            if (_ZLevelCache > 0) return _ZLevelCache;
+            _ZLevelCache = GetSimRegion().GetGroundLevel(_LocalPos.X, _LocalPos.Y);
+            int len = OccupiedListObject.Count;
+            if (len > 0)
+            {
+                lock (OccupiedListObject)
+                {
+                    for (int d = 0; d < 2; d++)
+                        for (int i = 0; i < len; i++)
+                        {
+                            SimObject O = OccupiedListObject[i];
+                            if (O.IsPassable) continue;
+                            Box3Fill OuterBox = O.Mesh.OuterBox;
+                            float MinZ = OuterBox.MinZ;
+                            float MaxZ = OuterBox.MaxZ;
+                            // MinZ = MinMaxZ.X;
+                            // MaxZ = MinMaxZ.Y;
+                            // MinMaxZ.X;
+                            // Box3Fill box = O.OuterBox;
+                            if (DiffLessThan(MinZ, _ZLevelCache, 1f) || DiffLessThan(MaxZ, _ZLevelCache, 1f))
+                                if (_ZLevelCache < MaxZ) _ZLevelCache = MaxZ;
+
+                            Vector2 MinMaxZ = OccupiedListMinMaxZ[i];
+                            MinZ = MinMaxZ.X;
+                            MaxZ = MinMaxZ.Y;
+
+                            if (DiffLessThan(MinZ, _ZLevelCache, 1f) || DiffLessThan(MaxZ, _ZLevelCache, 1f))
+                                if (_ZLevelCache < MaxZ) _ZLevelCache = MaxZ;
+
+                        }
+                }
+            }
+            _LocalPos.Z = _ZLevelCache;
+            _GlobalPos.Z = _ZLevelCache + 1;
+            return _ZLevelCache;
+        }
+
+        private bool DiffLessThan(float A, float B, float D)
+        {
+            return Math.Abs(A-B) <= D;
+        }
+
+
+        public bool AddOccupied(SimObject simObject, float minZ, float maxZ)
+        {
+            int i = OccupiedListObject.IndexOf(simObject);
+            _ZLevelCache = float.MinValue;
+            if (i == -1)
+            {
+                OccupiedListObject.Add(simObject);
+                OccupiedListMinMaxZ.Add(new Vector2(minZ, maxZ));
+                return true;
+            }
+            else
+            {
+                Vector2 v2 = OccupiedListMinMaxZ[i];
+                //bool changed = false;
+                if (minZ < v2.X)
+                {
+                    v2.X = minZ;
+                    //  changed = true;
+                }
+                if (maxZ > v2.Y)
+                {
+                    v2.Y = maxZ;
+                    //  changed = true;
+                }
+                return false;
+                //return changed;
+            }
+        }
+
+        // public IList ShadowList = new List<SimObject>();
+        public IList<SimObject> OccupiedListObject = new List<SimObject>();
+        public IList<Vector2> OccupiedListMinMaxZ = new List<Vector2>();
 
         public string OccupiedString()
         {
-            GetZLevel();
             string S = "";
-            foreach (SimObject O in OccupiedList)
+
+            int len = OccupiedListObject.Count;
+            if (len > 0)
             {
-                S += O.ToString();
-                S += "\n";
+                lock (OccupiedListObject)
+                {
+                    for (int i = 0; i < len; i++)
+                    {
+                        SimObject O = OccupiedListObject[i];
+                        Vector2 MinMaxZ = OccupiedListMinMaxZ[i];
+                        S += MinMaxZ.ToString();
+                        S += " ";
+                        S += O.ToString();
+                        S += "\n";
+                    }
+                }
             }
-            return S + this.ToString() + "\nZLevel=" + GetZLevel();
+            return S + this.ToString() + " GLevel=" + GetGroundLevel() + " ZLevel=" + GetZLevel();
         }
 
 
@@ -301,7 +389,7 @@ namespace cogbot.TheOpenSims.Navigation
             SetGlobalPos(new Vector3d(PositionX, PositionY, PositionZ));
         }
 
-        private void SetGlobalPos(Vector3d v3d)
+        public void SetGlobalPos(Vector3d v3d)
         {
             SimRegion R = SimRegion.GetRegion(v3d);
             PathStore = R.PathStore;
@@ -581,7 +669,7 @@ namespace cogbot.TheOpenSims.Navigation
             }
         }
 
-        private double GlobalXYZ(int i)
+        public double GlobalXYZ(int i)
         {
             switch (i)
             {
@@ -613,7 +701,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         SimPathStore PathStore;
         Vector3 _LocalPos;
-        private SimWaypoint(Vector3 local, Vector3d global, SimPathStore pathStore)
+        public SimWaypoint(Vector3 local, Vector3d global, SimPathStore pathStore)
         {
             PathStore = pathStore;
             _GlobalPos = global;// RoundPoint(firstP, PathStore);
@@ -752,42 +840,18 @@ namespace cogbot.TheOpenSims.Navigation
 
         #endregion
 
-        internal static SimWaypoint CreateGlobal(double gx, double gy, double gz)
+        public static SimWaypoint CreateGlobal(double gx, double gy, double gz)
         {
             return CreateGlobal(new Vector3d(gx, gy, gz));
         }
 
-        internal static SimWaypoint CreateGlobal(Vector3d v3d)
+        public static SimWaypoint CreateGlobal(Vector3d v3d)
         {
             SimRegion R = SimRegion.GetRegion(v3d);
             return CreateLocal(SimRegion.GlobalToLocal(v3d), R.PathStore);
         }
 
-        float _ZLevel = float.MinValue;
-        internal float GetZLevel()
-        {
-            // when the Two Zs are differnt that means global Pos has been computed
-            if (_ZLevel > -10) return _ZLevel;
-            float ground = GetGroundLevel();
-            lock (OccupiedList)
-            {
-                foreach (SimObject O in OccupiedList)
-                {
-                    if (O.IsPassable) continue;
-                    Box3Fill box = O.OuterBox;
-                    if (box.MinZ < ground + 1)
-                        if (ground + 1 < box.MaxZ)
-                        {
-                            ground = box.MaxZ;
-                            _LocalPos.Z = ground;
-                            _GlobalPos.Z = ground + 1;
-                        }
-                }
-            }
-            _ZLevel = ground;
-            return ground;
-        }
-    }
+    }     
 
     //public class SimMovementPoints : SimMovement
     //{

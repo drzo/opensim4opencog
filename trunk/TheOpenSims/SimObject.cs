@@ -889,10 +889,10 @@ namespace cogbot.TheOpenSims
             };
         }
 
-        private void SetLocated(float x, float y)
+        private void SetLocated(float x, float y, float minZ, float maxZ)
         {
             SimPathStore PathStore = GetPathSystem();
-            PathStore.SetObjectAt(x, y, this);
+            PathStore.SetObjectAt(x, y, this,minZ,maxZ);
         }
 
 
@@ -975,5 +975,14 @@ namespace cogbot.TheOpenSims
         #endregion
 
 
+
+        internal string ToMeshString()
+        {
+            if (_Mesh != null)
+            {
+               return _Mesh.ToString();
+            }
+            return ToString();
+        }
     }
 }

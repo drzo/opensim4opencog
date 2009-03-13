@@ -25,7 +25,7 @@ namespace cogbot.TheOpenSims.Mesher
         High
     }
 
-   public delegate bool CollisionTest(float x, float y, float z);
+    public delegate bool CollisionTest(float x, float y, float z);
 
 
     public class SimMesh
@@ -37,26 +37,36 @@ namespace cogbot.TheOpenSims.Mesher
         static float UseExtremeDetailSize = 5f;
         static bool UseViewerMode = false;
         public static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-     //   CollisionTest collider;
+        //   CollisionTest collider;
         List<Mesh> MeshList = new List<Mesh>();
         List<Triangle> TriangleList = new List<Triangle>();
         Vector3 Scale;
         //SimObject Object;
-       // Vector3 Position;
+        // Vector3 Position;
         bool IsSolid = false;
+        readonly SimObject RootObject;
         OpenMetaverse.Quaternion Rotation;
         string name;
-        
-        internal readonly Box3Fill OuterBox = new Box3Fill();
+
+        internal readonly Box3Fill OuterBox = new Box3Fill(true);
+
         List<Box3Fill> InnerBoxes = new List<Box3Fill>();
 
         public readonly bool IsSculpted;
         public SimMesh(SimObject simObject)
         {
-           // collider = new CollisionTest(IsInside);
+            // collider = new CollisionTest(IsInside);
             name = simObject.thePrim.ID.ToString();
             IsSculpted = simObject.thePrim.Sculpt != null;
+            RootObject = simObject;
             Update(simObject);
+        }
+
+        public override string ToString()
+        {
+            string s = "Mesh " + OuterBox.ToString();
+            if (IsSculpted) s = " Sculpty" + s;
+            return s + " for " + RootObject;
         }
 
         public bool Update(SimObject simObject)
@@ -121,7 +131,7 @@ namespace cogbot.TheOpenSims.Mesher
         /// </summary>
         void CalcBoxesFromMeshes(Vector3 pos)
         {
-            InnerBoxes.Clear();           
+            InnerBoxes.Clear();
             OuterBox.Reset();
 
             foreach (Mesh M in MeshList)
@@ -142,11 +152,8 @@ namespace cogbot.TheOpenSims.Mesher
                 }
             }
             //int InnerBoxesCountBefore = InnerBoxes.Count;
-            ////InnerBoxes = Box3Fill.Simplify(InnerBoxes);
-            //if (InnerBoxesCountBefore != InnerBoxes.Count)
-            //{
-            //    Console.WriteLine("InnerBoxesCountBefore diff " + InnerBoxesCountBefore + "->" + InnerBoxes.Count);
-            //}
+            InnerBoxes = Box3Fill.Simplify(InnerBoxes);
+            //if (InnerBoxesCountBefore != InnerBoxes2.Count) Console.WriteLine("InnerBoxesCountBefore diff " + InnerBoxesCountBefore + "->" + InnerBoxes.Count);
             AddPos(pos);
         }
 
@@ -159,8 +166,8 @@ namespace cogbot.TheOpenSims.Mesher
                 if (M.primMesh != null)
                 {
                     //String name = "primMesh" + Object.thePrim.LocalID + "_" + index++;
-                    MI += "\n Mesh: "+name+" \n" + M.primMesh.ParamsToDisplayString();
-                    M.primMesh.DumpRaw(".",name,"primMesher"+index);
+                    MI += "\n Mesh: " + name + " \n" + M.primMesh.ParamsToDisplayString();
+                    M.primMesh.DumpRaw(".", name, "primMesher" + index);
                 }
             }
 
@@ -173,12 +180,13 @@ namespace cogbot.TheOpenSims.Mesher
             //foreach (Vector3 B in GetOccupiedList()){
             //    MI += "\n    Point: " + B;
             //}
-            
+
             return MI;
         }
 
 
-        public void AddPos(Vector3 offset) {
+        public void AddPos(Vector3 offset)
+        {
             OuterBox.AddPos(offset);
             foreach (Box3Fill B in InnerBoxes)
             {
@@ -194,7 +202,7 @@ namespace cogbot.TheOpenSims.Mesher
                 // aready known?
                 if (SharedVertexs(t, T) > 2) return false;
             }
-            Box3Fill box = new Box3Fill();
+            Box3Fill box = new Box3Fill(true);
             if (IsSolid)
             {
                 foreach (Triangle T in TriangleList)
@@ -210,7 +218,7 @@ namespace cogbot.TheOpenSims.Mesher
             }
             box.AddTriange(t);
             if (!InnerBoxes.Contains(box))
-            InnerBoxes.Add(box);    
+                InnerBoxes.Add(box);
             TriangleList.Add(t);
             return OuterBox.AddTriange(t);
         }
@@ -230,11 +238,17 @@ namespace cogbot.TheOpenSims.Mesher
             return sharedV;
         }
 
-        public bool IsInside(float x,float y,float z) {
+        public bool IsInside(float x, float y, float z)
+        {
             // Offset position
 
             if (OuterBox.IsInside(x, y, z)) // Is possible?
             {
+                if (InnerBoxes.Count == 0)
+                {
+                    Console.WriteLine("using outerbox for " + this);
+                    return true;
+                }
                 foreach (Box3Fill box in InnerBoxes)
                 {
                     if (box.IsInside(x, y, z)) return true;
@@ -256,16 +270,29 @@ namespace cogbot.TheOpenSims.Mesher
             //    OuterBox.SetOccupied(p, SimZLevel, SimZMaxLevel,Position);
             //}
             //else
+            if (InnerBoxes.Count == 0)
+            {
+                Console.WriteLine("using outerbox for " + this);
+                OuterBox.SetOccupied(p, SimZLevel, SimZMaxLevel, detail);
+                return;
+            }
+
             {
                 foreach (Box3Fill box in InnerBoxes)
                 {
-                    box.SetOccupied(p, SimZLevel, SimZMaxLevel,detail);
+                    box.SetOccupied(p, SimZLevel, SimZMaxLevel, detail);
                 }
             }
         }
 
         internal void SetOccupied(CallbackXY p, SimZMinMaxLevel MinMaxZ, float detail)
         {
+            if (InnerBoxes.Count == 0)
+            {
+                Console.WriteLine("using outerbox for " + this);
+                OuterBox.SetOccupied(p, MinMaxZ, detail);
+                return;
+            }
             foreach (Box3Fill box in InnerBoxes)
             {
                 box.SetOccupied(p, MinMaxZ, detail);
@@ -353,16 +380,16 @@ namespace cogbot.TheOpenSims.Mesher
                         Vector3 v3 = new Vector3(x, y, z);
                         if (test(x, y, z))
                         {
-                                PointsOccupied.Add(v3);
+                            PointsOccupied.Add(v3);
                         }
                         else
                         {
-                                PointsUnOccupied.Add(v3);
+                            PointsUnOccupied.Add(v3);
                         }
                     }
                 }
             }
-        }        
+        }
 
         /// <summary>
         /// Convert a PrimMesher.PrimMesh to OpenSim.Region.Physics.Meshing.Mesh
@@ -403,9 +430,9 @@ namespace cogbot.TheOpenSims.Mesher
             {
                 Primitive.SculptData SD = primitive.Sculpt;
                 byte[] bytes = SimRegion.GetRegion(primitive.RegionHandle).TextureBytesToUUID(SD.SculptTexture);
-                SculptMesh SM = ToSculptMesh(bytes,primitive.Sculpt.Type,Scale,rot);
-                if (SM!=null)                
-                    return ToMesh(SM.coords, SM.faces, SM.viewerFaces,primitive.Type==PrimType.Sphere);
+                SculptMesh SM = ToSculptMesh(bytes, primitive.Sculpt.Type, Scale, rot);
+                if (SM != null)
+                    return ToMesh(SM.coords, SM.faces, SM.viewerFaces, primitive.Type == PrimType.Sphere);
             }
 
             bool UseExtremeDetail = Scale.X + Scale.Y + Scale.Z > UseExtremeDetailSize;
@@ -457,9 +484,9 @@ namespace cogbot.TheOpenSims.Mesher
         public static SculptMesh ToSculptMesh(byte[] sculptData, OpenMetaverse.SculptType sculptTypeIn, Vector3 size, Quaternion Rotation)
         {
             SculptMesh sculptMesh;
-            if (sculptData==null || sculptData.Length == 0)
+            if (sculptData == null || sculptData.Length == 0)
                 return null;
-            
+
             System.Drawing.Image idata = null;
 
             try
@@ -507,11 +534,11 @@ namespace cogbot.TheOpenSims.Mesher
 
             idata.Dispose();
 
-        //    sculptMesh.DumpRaw(baseDir, primName, "primMesh");
+            //    sculptMesh.DumpRaw(baseDir, primName, "primMesh");
 
             sculptMesh.AddRot(QuaternionToQuat(Rotation));
             sculptMesh.Scale(size.X, size.Y, size.Z);
-            return sculptMesh;          
+            return sculptMesh;
         }
 
 
@@ -543,7 +570,7 @@ namespace cogbot.TheOpenSims.Mesher
         // from IdealistViewer.PrimMesherG.cs
         public static PrimMesh ConstructionDataToPrimMesh(Primitive.ConstructionData primData, LevelOfDetail detail, bool UseExtremeDetail)
         {
-            
+
             int sides = 4;
             int hollowsides = 4;
 
@@ -641,7 +668,7 @@ namespace cogbot.TheOpenSims.Mesher
             {
                 newPrim.stepsPerRevolution *= 2;
             }
-            
+
 
             if (primData.PathCurve == PathCurve.Line)
             {
@@ -687,7 +714,7 @@ namespace cogbot.TheOpenSims.Mesher
         //    return mesh;
         //}
 
-       
+
         ///// <summary>
         ///// [05:31] <AFrisby> dmiles_afk, search my blog, I wrote a function for converting OpenMetaverse.Primitive to OpenSimulator.SceneObjectGroup
         ///// 
@@ -835,20 +862,29 @@ namespace cogbot.TheOpenSims.Mesher
         //}
 
     }
-    public class Box3Fill
+    public class Box3Fill : IComparable<Box3Fill>, IEquatable<Box3Fill>
     {
+
+        #region IEquatable<Box3Fill> Members
+
+        public bool Equals(Box3Fill other)
+        {
+            if (other.MaxX == MaxX &&
+                other.MaxY == MaxY &&
+                other.MaxZ == MaxZ &&
+                other.MinX == MinX &&
+                other.MinY == MinY &&
+                other.MinZ == MinZ) return true;
+            return false;
+        }
+
+        #endregion
 
         public override bool Equals(object obj)
         {
             if (obj is Box3Fill)
             {
-                Box3Fill other = obj as Box3Fill;
-                if (other.MaxX == MaxX &&
-                    other.MaxY == MaxY &&
-                    other.MaxZ == MaxZ &&
-                    other.MinX == MinX &&
-                    other.MinY == MinY &&
-                    other.MinZ == MinZ) return true;
+                return Equals((Box3Fill)obj);
             }
             return false;
         }
@@ -875,21 +911,30 @@ namespace cogbot.TheOpenSims.Mesher
             return !o1.Equals(o2);
         }
 
-        public float MinX = float.MaxValue;
-        public float MaxX = float.MinValue;
-        public float MinY = float.MaxValue;
-        public float MaxY = float.MinValue;
-        public float MinZ = float.MaxValue;
-        public float MaxZ = float.MinValue;
+
+        public float MinX;// = float.MaxValue;
+        public float MaxX;// = float.MinValue;
+        public float MinY;// = float.MaxValue;
+        public float MaxY;// = float.MinValue;
+        public float MinZ;// = float.MaxValue;
+        public float MaxZ;// = float.MinValue;
         /// <summary>
         /// Construct an infinately small box
         /// </summary>
-        public Box3Fill()
-        {
-        }
+        //public Box3Fill(bool b) { Reset(); }
         /// <summary>
         ///  Make the box infinatly small
         /// </summary>
+        public Box3Fill(bool b)
+        {
+            MinX = float.MaxValue;
+            MaxX = float.MinValue;
+            MinY = float.MaxValue;
+            MaxY = float.MinValue;
+            MinZ = float.MaxValue;
+            MaxZ = float.MinValue;
+        }
+
         public void Reset()
         {
             MinX = float.MaxValue;
@@ -914,7 +959,7 @@ namespace cogbot.TheOpenSims.Mesher
 
         internal void SetOccupied(CallbackXY p, SimZMinMaxLevel MinMaxZ, float detail)
         {
-           // detail /= 2f;
+            // detail /= 2f;
             //float MinX = this.MinX + offset.X;
             //float MaxX = this.MaxX + offset.X;
             //float MinY = this.MinY + offset.Y;
@@ -935,7 +980,7 @@ namespace cogbot.TheOpenSims.Mesher
                         // this box is not between the Z levels
                         continue;
                     }
-                    p(x, y);
+                    p(x, y, MinZ, MaxZ);
                 }
             }
             /// the for/next loop probably missed this last point
@@ -945,7 +990,7 @@ namespace cogbot.TheOpenSims.Mesher
                 // this box is not between the Z levels
                 return;
             }
-            p(MaxX, MaxY);
+            p(MaxX, MaxY, MinZ, MaxZ);
         }
 
         internal void SetOccupied(CallbackXY p, float SimZMinLevel, float SimZMaxLevel, float detail)
@@ -957,7 +1002,7 @@ namespace cogbot.TheOpenSims.Mesher
             //float MinZ = this.MinZ + offset.Z;
             //float MaxZ = this.MaxZ + offset.Z;
 
-            
+
             if (SimZMinLevel > MaxZ || SimZMaxLevel < MinZ)
             {
                 // this box is not between the Z levels
@@ -969,17 +1014,17 @@ namespace cogbot.TheOpenSims.Mesher
             {
                 for (float y = MinY; y <= MaxY; y += detail)
                 {
-                    p(x, y);
+                    p(x, y, MinZ, MaxZ);
                 }
             }
             /// the for/next loop probably missed this last point
-            p(MaxX, MaxY);
+            p(MaxX, MaxY, MinZ, MaxZ);
         }
 
 
         public string ToString(Vector3 offset)
         {
-            string s = "(" + (Vector3)(MinEdge + offset) + " - " + (Vector3)(MaxEdge + offset) + " mass= "+Mass()+")";
+            string s = "(" + (Vector3)(MinEdge + offset) + " - " + (Vector3)(MaxEdge + offset) + " mass= " + Mass() + ")";
             return s;
         }
 
@@ -993,7 +1038,7 @@ namespace cogbot.TheOpenSims.Mesher
             bool changed = false;
             if (v.X < MinX)
             {
-                MinX = v.X -PAD;
+                MinX = v.X - PAD;
                 changed = true;
             }
             if (v.Y < MinY)
@@ -1003,7 +1048,7 @@ namespace cogbot.TheOpenSims.Mesher
             }
             if (v.Z < MinZ)
             {
-                MinZ = v.Z - PAD;
+                MinZ = v.Z;// -PAD;
                 changed = true;
             }
 
@@ -1066,36 +1111,36 @@ namespace cogbot.TheOpenSims.Mesher
 
         public float Mass()
         {
-            Vector3 size = MaxEdge - MinEdge;
-            return size.X * size.Y * size.Z;
+            return (MaxX - MinX) * (MaxY - MinY) * (MaxZ - MinZ);
         }
 
-        public bool IsCompletelyInside(Box3Fill inner) {
-            if (inner.MaxX > MaxX) return false;
-            if (inner.MinX < MinX) return false;
-            if (inner.MaxY > MaxY) return false;
-            if (inner.MinY < MinY) return false;
-            if (inner.MaxZ > MaxZ) return false;
-            if (inner.MinZ < MinZ) return false;
+        public bool IsCompletelyInside(Box3Fill inner)
+        {
+            if ((inner.MaxX > MaxX) ||
+             (inner.MinX < MinX) ||
+             (inner.MaxY > MaxY) ||
+             (inner.MinY < MinY) ||
+             (inner.MaxZ > MaxZ) ||
+             (inner.MinZ < MinZ)) return false;
             return true;
         }
 
         public static List<Box3Fill> Simplify(List<Box3Fill> simpl)
         {
-            List<Box3Fill> temp = new List<Box3Fill>(simpl);
+            simpl.Sort(Bigger);
             List<Box3Fill> retval = new List<Box3Fill>();
-
-            temp.Sort(Bigger);
-            temp.Reverse();
-            for (int i = 0; i < temp.Count; i++)
+            int len = simpl.Count;
+            int len1 = len - 1;
+            for (int i = 0; i < len; i++)
             {
-                Box3Fill bi = temp[i];
+                Box3Fill bi = simpl[i];
                 bool foundInside = false;
-                for (int ii = i + 1; ii < temp.Count; i++)
+                for (int ii = len1; ii > i; ii--)
                 {
-                    if (temp[ii].IsCompletelyInside(bi))
+                    if (simpl[ii].IsCompletelyInside(bi))
                     {
                         foundInside = true;
+                        break;
                     }
                 }
                 if (!foundInside)
@@ -1105,31 +1150,54 @@ namespace cogbot.TheOpenSims.Mesher
             }
             return retval;
         }
-        static int Bigger(Box3Fill b1,Box3Fill b2) {
+
+        #region IComparable<Box3Fill> Members
+
+        public int CompareTo(Box3Fill other)
+        {
+            return Bigger(this, other);
+        }
+
+        #endregion
+
+        static int Bigger(Box3Fill b1, Box3Fill b2)
+        {
             if (b1 == b2) return 0;
+
+            if (b1.MinX > b2.MinX)
+            {
+                return -1;
+            }
+            if (b1.MinY > b2.MinY)
+            {
+                return -1;
+            }
+            if (b1.MinZ > b2.MinZ)
+            {
+                return -1;
+            }
+
+            if (b1.MaxX < b2.MaxX)
+            {
+                return -1;
+            }
+            if (b1.MaxY < b2.MaxY)
+            {
+                return -1;
+            }
+            if (b1.MaxZ < b2.MaxZ)
+            {
+                return -1;
+            }
+
             float f1 = b1.Mass();
             float f2 = b2.Mass();
             if (f1 == f2)
             {
-                Vector3 v1 = b1.MinEdge;
-                Vector3 v2 = b2.MinEdge;
-                float l1 = v1.Length();
-                float l2 = v2.Length();
-                if (l1 < l2)
-                {
-                    return -1;
-                }
-                else if (l1 > l2)
-                {
-                    return 1;
-                }
-                if (v1.X < v2.X)
-                {
-                    return -1;
-                }
                 return 1;
             }
             return f1 < f2 ? -1 : 1;
         }
+
     }
 }
