@@ -47,14 +47,13 @@ namespace cogbot.TheOpenSims.Mesher
         OpenMetaverse.Quaternion Rotation;
         string name;
         
-        readonly Box3Fill OuterBox = new Box3Fill();
+        internal readonly Box3Fill OuterBox = new Box3Fill();
         List<Box3Fill> InnerBoxes = new List<Box3Fill>();
 
         public readonly bool IsSculpted;
         public SimMesh(SimObject simObject)
         {
            // collider = new CollisionTest(IsInside);
-            simObject.theMesh = this;
             name = simObject.thePrim.ID.ToString();
             IsSculpted = simObject.thePrim.Sculpt != null;
             Update(simObject);
@@ -104,7 +103,7 @@ namespace cogbot.TheOpenSims.Mesher
             //    }
             //}
 
-            CalcBoxesFormMeshes();
+            CalcBoxesFromMeshes(simObject.GetSimPosition());
             return true;
         }
 
@@ -120,7 +119,7 @@ namespace cogbot.TheOpenSims.Mesher
         /// <summary>
         /// Build the Boxes
         /// </summary>
-        void CalcBoxesFormMeshes()
+        void CalcBoxesFromMeshes(Vector3 pos)
         {
             InnerBoxes.Clear();           
             OuterBox.Reset();
@@ -148,6 +147,7 @@ namespace cogbot.TheOpenSims.Mesher
             //{
             //    Console.WriteLine("InnerBoxesCountBefore diff " + InnerBoxesCountBefore + "->" + InnerBoxes.Count);
             //}
+            AddPos(pos);
         }
 
         internal string GetMeshInfo(Vector3 Position)
@@ -175,6 +175,15 @@ namespace cogbot.TheOpenSims.Mesher
             //}
             
             return MI;
+        }
+
+
+        public void AddPos(Vector3 offset) {
+            OuterBox.AddPos(offset);
+            foreach (Box3Fill B in InnerBoxes)
+            {
+                B.AddPos(offset);
+            }
         }
 
         public bool AddBox(Triangle t)
@@ -221,11 +230,8 @@ namespace cogbot.TheOpenSims.Mesher
             return sharedV;
         }
 
-        public bool IsInside(float x,float y,float z,Vector3 Position) {
+        public bool IsInside(float x,float y,float z) {
             // Offset position
-            x -= Position.X;
-            y -= Position.Y;
-            z -= Position.Z;
 
             if (OuterBox.IsInside(x, y, z)) // Is possible?
             {
@@ -237,7 +243,7 @@ namespace cogbot.TheOpenSims.Mesher
             return false;
         }
 
-        internal void SetOccupied(CallbackXY p, float SimZLevel, float SimZMaxLevel, Vector3 Position, float detail)
+        internal void SetOccupied(CallbackXY p, float SimZLevel, float SimZMaxLevel, float detail)
         {
             //Vector3 loc = GetSimPosition();
             // TODO do we need High?
@@ -253,16 +259,16 @@ namespace cogbot.TheOpenSims.Mesher
             {
                 foreach (Box3Fill box in InnerBoxes)
                 {
-                    box.SetOccupied(p, SimZLevel, SimZMaxLevel,Position,detail);
+                    box.SetOccupied(p, SimZLevel, SimZMaxLevel,detail);
                 }
             }
         }
 
-        internal void SetOccupied(CallbackXY p, SimZMinMaxLevel minmaxZ, Vector3 Position, float detail)
+        internal void SetOccupied(CallbackXY p, SimZMinMaxLevel MinMaxZ, float detail)
         {
             foreach (Box3Fill box in InnerBoxes)
             {
-                box.SetOccupied(p, minmaxZ, Position, detail);
+                box.SetOccupied(p, MinMaxZ, detail);
             }
         }
 
@@ -317,32 +323,32 @@ namespace cogbot.TheOpenSims.Mesher
         /// <summary>
         /// Make a List of Vector3 inside the bounding box
         /// </summary>
-        /// <param name="min"></param>
-        /// <param name="max"></param>
+        /// <param name="Min"></param>
+        /// <param name="Max"></param>
         /// <param name="detailLevel"></param>
         /// <param name="PointsOccupied"></param>
         /// <param name="PointsUnOccupied"></param>
         /// <param name="test"></param>
-        public static void MakePointsList(Vector3 min, Vector3 max, int detailLevel, out ICollection<Vector3> PointsOccupied, out ICollection<Vector3> PointsUnOccupied, CollisionTest test)
+        public static void MakePointsList(Vector3 Min, Vector3 Max, int detailLevel, out ICollection<Vector3> PointsOccupied, out ICollection<Vector3> PointsUnOccupied, CollisionTest test)
         {
             PointsOccupied = new List<Vector3>();
             PointsUnOccupied = new List<Vector3>();
             float StepLevel = (float)(1f / (float)detailLevel);
-            float minX = (float)(Math.Round((double)min.X * detailLevel) / detailLevel);
-            float minY = (float)(Math.Round((double)min.Y * detailLevel) / detailLevel);
-            float minZ = (float)(Math.Round((double)min.Z * detailLevel) / detailLevel);
-            float maxX = (float)(Math.Round((double)max.X * detailLevel) / detailLevel);
-            float maxY = (float)(Math.Round((double)max.Y * detailLevel) / detailLevel);
-            float maxZ = (float)(Math.Round((double)max.Z * detailLevel) / detailLevel);
-            if (maxX < minX || maxZ < minZ || maxY < minY)
+            float MinX = (float)(Math.Round((double)Min.X * detailLevel) / detailLevel);
+            float MinY = (float)(Math.Round((double)Min.Y * detailLevel) / detailLevel);
+            float MinZ = (float)(Math.Round((double)Min.Z * detailLevel) / detailLevel);
+            float MaxX = (float)(Math.Round((double)Max.X * detailLevel) / detailLevel);
+            float MaxY = (float)(Math.Round((double)Max.Y * detailLevel) / detailLevel);
+            float MaxZ = (float)(Math.Round((double)Max.Z * detailLevel) / detailLevel);
+            if (MaxX < MinX || MaxZ < MinZ || MaxY < MinY)
             {
-                throw new ArgumentException("is box3d.MinEdge and box3d.MaxEdge in the TopLeft-to-BottemRight Order? " + min + " > " + max);
+                throw new ArgumentException("is box3d.MinEdge and box3d.MaxEdge in the TopLeft-to-BottemRight Order? " + Min + " > " + Max);
             }
-            for (float x = minX; x <= maxX; x += StepLevel)
+            for (float x = MinX; x <= MaxX; x += StepLevel)
             {
-                for (float y = minY; y <= maxY; y += StepLevel)
+                for (float y = MinY; y <= MaxY; y += StepLevel)
                 {
-                    for (float z = minZ; z <= maxZ; z += StepLevel)
+                    for (float z = MinZ; z <= MaxZ; z += StepLevel)
                     {
                         Vector3 v3 = new Vector3(x, y, z);
                         if (test(x, y, z))
@@ -827,6 +833,7 @@ namespace cogbot.TheOpenSims.Mesher
 
         //    return sopShape;
         //}
+
     }
     public class Box3Fill
     {
@@ -836,14 +843,24 @@ namespace cogbot.TheOpenSims.Mesher
             if (obj is Box3Fill)
             {
                 Box3Fill other = obj as Box3Fill;
-                if (other.maxX == maxX &&
-                    other.maxY == maxY &&
-                    other.maxZ == maxZ &&
-                    other.minX == minX &&
-                    other.minY == minY &&
-                    other.minZ == minZ) return true;
+                if (other.MaxX == MaxX &&
+                    other.MaxY == MaxY &&
+                    other.MaxZ == MaxZ &&
+                    other.MinX == MinX &&
+                    other.MinY == MinY &&
+                    other.MinZ == MinZ) return true;
             }
             return false;
+        }
+
+        public void AddPos(Vector3 offset)
+        {
+            MinX += offset.X;
+            MaxX += offset.X;
+            MinY += offset.Y;
+            MaxY += offset.Y;
+            MinZ += offset.Z;
+            MaxZ += offset.Z;
         }
 
         public static bool operator ==(Box3Fill o1, Box3Fill o2)
@@ -858,12 +875,12 @@ namespace cogbot.TheOpenSims.Mesher
             return !o1.Equals(o2);
         }
 
-        float minX = float.MaxValue;
-        float maxX = float.MinValue;
-        float minY = float.MaxValue;
-        float maxY = float.MinValue;
-        float minZ = float.MaxValue;
-        float maxZ = float.MinValue;
+        public float MinX = float.MaxValue;
+        public float MaxX = float.MinValue;
+        public float MinY = float.MaxValue;
+        public float MaxY = float.MinValue;
+        public float MinZ = float.MaxValue;
+        public float MaxZ = float.MinValue;
         /// <summary>
         /// Construct an infinately small box
         /// </summary>
@@ -875,12 +892,12 @@ namespace cogbot.TheOpenSims.Mesher
         /// </summary>
         public void Reset()
         {
-            minX = float.MaxValue;
-            maxX = float.MinValue;
-            minY = float.MaxValue;
-            maxY = float.MinValue;
-            minZ = float.MaxValue;
-            maxZ = float.MinValue;
+            MinX = float.MaxValue;
+            MaxX = float.MinValue;
+            MinY = float.MaxValue;
+            MaxY = float.MinValue;
+            MinZ = float.MaxValue;
+            MaxZ = float.MinValue;
         }
 
         const float PAD = 0.33f;// SimPathStore.StepSize*0.75f;
@@ -895,25 +912,25 @@ namespace cogbot.TheOpenSims.Mesher
             return "(" + MinEdge + " - " + MaxEdge + ")";
         }
 
-        internal void SetOccupied(CallbackXY p, SimZMinMaxLevel minmaxZ, Vector3 offset, float detail)
+        internal void SetOccupied(CallbackXY p, SimZMinMaxLevel MinMaxZ, float detail)
         {
            // detail /= 2f;
-            float minX = this.minX + offset.X;
-            float maxX = this.maxX + offset.X;
-            float minY = this.minY + offset.Y;
-            float maxY = this.maxY + offset.Y;
-            float minZ = this.minZ + offset.Z;
-            float maxZ = this.maxZ + offset.Z;
+            //float MinX = this.MinX + offset.X;
+            //float MaxX = this.MaxX + offset.X;
+            //float MinY = this.MinY + offset.Y;
+            //float MaxY = this.MaxY + offset.Y;
+            //float MinZ = this.MinZ + offset.Z;
+            //float MaxZ = this.MaxZ + offset.Z;
 
             float SimZMinLevel, SimZMaxLevel;
 
             // = SimPathStore.StepSize;
-            for (float x = minX; x <= maxX; x += detail)
+            for (float x = MinX; x <= MaxX; x += detail)
             {
-                for (float y = minY; y <= maxY; y += detail)
+                for (float y = MinY; y <= MaxY; y += detail)
                 {
-                    minmaxZ(x, y, out SimZMinLevel, out SimZMaxLevel);
-                    if (SimZMinLevel > maxZ || SimZMaxLevel < minZ)
+                    MinMaxZ(x, y, out SimZMinLevel, out SimZMaxLevel);
+                    if (SimZMinLevel > MaxZ || SimZMaxLevel < MinZ)
                     {
                         // this box is not between the Z levels
                         continue;
@@ -922,41 +939,41 @@ namespace cogbot.TheOpenSims.Mesher
                 }
             }
             /// the for/next loop probably missed this last point
-            minmaxZ(maxX, maxY, out SimZMinLevel, out SimZMaxLevel);
-            if (SimZMinLevel > maxZ || SimZMaxLevel < minZ)
+            MinMaxZ(MaxX, MaxY, out SimZMinLevel, out SimZMaxLevel);
+            if (SimZMinLevel > MaxZ || SimZMaxLevel < MinZ)
             {
                 // this box is not between the Z levels
                 return;
             }
-            p(maxX, maxY);
+            p(MaxX, MaxY);
         }
 
-        internal void SetOccupied(CallbackXY p, float SimZMinLevel, float SimZMaxLevel, Vector3 offset, float detail)
+        internal void SetOccupied(CallbackXY p, float SimZMinLevel, float SimZMaxLevel, float detail)
         {
-            float minX = this.minX + offset.X;
-            float maxX = this.maxX + offset.X;
-            float minY = this.minY + offset.Y;
-            float maxY = this.maxY + offset.Y;
-            float minZ = this.minZ + offset.Z;
-            float maxZ = this.maxZ + offset.Z;
+            //float MinX = this.MinX + offset.X;
+            //float MaxX = this.MaxX + offset.X;
+            //float MinY = this.MinY + offset.Y;
+            //float MaxY = this.MaxY + offset.Y;
+            //float MinZ = this.MinZ + offset.Z;
+            //float MaxZ = this.MaxZ + offset.Z;
 
             
-            if (SimZMinLevel > maxZ || SimZMaxLevel < minZ)
+            if (SimZMinLevel > MaxZ || SimZMaxLevel < MinZ)
             {
                 // this box is not between the Z levels
                 return;
             }
 
             // = SimPathStore.StepSize;
-            for (float x = minX; x <= maxX; x += detail)
+            for (float x = MinX; x <= MaxX; x += detail)
             {
-                for (float y = minY; y <= maxY; y += detail)
+                for (float y = MinY; y <= MaxY; y += detail)
                 {
                     p(x, y);
                 }
             }
             /// the for/next loop probably missed this last point
-            p(maxX, maxY);
+            p(MaxX, MaxY);
         }
 
 
@@ -974,35 +991,35 @@ namespace cogbot.TheOpenSims.Mesher
         public bool AddVertex(Vertex v)
         {
             bool changed = false;
-            if (v.X < minX)
+            if (v.X < MinX)
             {
-                minX = v.X -PAD;
+                MinX = v.X -PAD;
                 changed = true;
             }
-            if (v.Y < minY)
+            if (v.Y < MinY)
             {
-                minY = v.Y - PAD;
+                MinY = v.Y - PAD;
                 changed = true;
             }
-            if (v.Z < minZ)
+            if (v.Z < MinZ)
             {
-                minZ = v.Z - PAD;
+                MinZ = v.Z - PAD;
                 changed = true;
             }
 
-            if (v.X > maxX)
+            if (v.X > MaxX)
             {
-                maxX = v.X + PAD;
+                MaxX = v.X + PAD;
                 changed = true;
             }
-            if (v.Y > maxY)
+            if (v.Y > MaxY)
             {
-                maxY = v.Y + PAD;
+                MaxY = v.Y + PAD;
                 changed = true;
             }
-            if (v.Z > maxZ)
+            if (v.Z > MaxZ)
             {
-                maxZ = v.Z + PAD;
+                MaxZ = v.Z + PAD;
                 changed = true;
             }
             return changed;
@@ -1024,26 +1041,26 @@ namespace cogbot.TheOpenSims.Mesher
         {
             get
             {
-                return new Vector3(minX, minY, minZ);
+                return new Vector3(MinX, MinY, MinZ);
             }
         }
         public Vector3 MaxEdge
         {
             get
             {
-                return new Vector3(maxX, maxY, maxZ);
+                return new Vector3(MaxX, MaxY, MaxZ);
             }
         }
 
         public bool IsInside(float x, float y, float z)
         {
             if (
-             (x < minX) ||
-             (y < minY) ||
-             (z < minZ) ||
-             (x > maxX) ||
-             (y > maxY) ||
-             (z > maxZ)) return false;
+             (x < MinX) ||
+             (y < MinY) ||
+             (z < MinZ) ||
+             (x > MaxX) ||
+             (y > MaxY) ||
+             (z > MaxZ)) return false;
             return true;
         }
 
@@ -1054,12 +1071,12 @@ namespace cogbot.TheOpenSims.Mesher
         }
 
         public bool IsCompletelyInside(Box3Fill inner) {
-            if (inner.maxX > maxX) return false;
-            if (inner.minX < minX) return false;
-            if (inner.maxY > maxY) return false;
-            if (inner.minY < minY) return false;
-            if (inner.maxZ > maxZ) return false;
-            if (inner.minZ < minZ) return false;
+            if (inner.MaxX > MaxX) return false;
+            if (inner.MinX < MinX) return false;
+            if (inner.MaxY > MaxY) return false;
+            if (inner.MinY < MinY) return false;
+            if (inner.MaxZ > MaxZ) return false;
+            if (inner.MinZ < MinZ) return false;
             return true;
         }
 

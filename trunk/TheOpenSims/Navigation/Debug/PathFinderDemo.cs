@@ -141,7 +141,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                 //if (this.WindowState == FormWindowState.Minimized)              
                 base.WindowState = FormWindowState.Normal;
                 SimPathStore S = GetPathStore();
-                String name = S.GetSimRegion().RegionName + " Level " + S.TheSimZLevel(128, 128);
+                String name = S.GetSimRegion().RegionName + " Level " + S.SimLevel(128, 128);
                 this.Text = name;
                 if (!base.Visible) base.Visible = true;
                 base.Activate();

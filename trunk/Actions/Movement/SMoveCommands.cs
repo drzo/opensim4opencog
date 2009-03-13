@@ -82,7 +82,7 @@ namespace cogbot.Actions.Movement
         public pfcatchup(BotClient client)
         {
             Name = GetType().Name;
-            Description = "Starts the pathfinder debuger";
+            Description = "Catches up the pathfinder";
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
@@ -146,6 +146,32 @@ namespace cogbot.Actions.Movement
         }
     }
 
+    class simzinfo : cogbot.Actions.Command
+    {
+        public simzinfo(BotClient client)
+        {
+            Name = GetType().Name;
+            Description = "Calulates the Z level of walking at point. Usage: simzinfo 120 123";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            int argcount;
+            SimPosition pos = WorldSystem.GetVector(args, out argcount);
+            SimRegion R = pos.GetSimRegion();
+            Vector3 v3 = pos.GetSimPosition();
+            WriteLine("SimZInfo: " + pos + " " + R.GetGroundLevel(v3.X,v3.Y));
+            List<SimObject> ObjByStack = R.ObjectsBottemToTop(v3.X, v3.Y);
+            foreach (SimObject O in ObjByStack)
+            {
+                WriteLine("Obj: {0} {1}",O.OuterBox, O.ToString());
+            }
+            return "ran " + Name;
+        }
+    }
+
+
     class srmap : cogbot.Actions.Command
     {
         public srmap(BotClient client)
@@ -180,19 +206,18 @@ namespace cogbot.Actions.Movement
         public srprim(BotClient client)
         {
             Name = GetType().Name;
-            Description = "Reads the sim prims for improving routes";
+            Description = "Reads the sim prims for improving routes then bakes the region";
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
             IEnumerable<SimObject> objs = WorldSystem.GetAllSimObjects(String.Join(" ", args));
-            SimPathStore pathStore = WorldSystem.SimPaths;
             foreach (SimObject o in objs)
             {
-                pathStore.UpdateFromObject(o);
+                o.UpdateOccupied();
             }
-            pathStore.CleanUnblocked();
+            SimRegion.BakeRegions();
             return "ran " + Name;
         }
     }

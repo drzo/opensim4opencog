@@ -266,7 +266,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 
             if (e.Button == MouseButtons.None || mDrawMode == DrawModeSetup.None)
             {
-                SimWaypoint o = PathStore.mWaypoints[x, y];
+                SimWaypoint o = PathStore.Waypoint(x, y);
                 if (o != null)
                 {
                     tip.SetToolTip(this, o.OccupiedString() + " " + PathStore.mMatrix[x, y]);

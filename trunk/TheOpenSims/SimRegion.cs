@@ -5,6 +5,7 @@ using OpenMetaverse;
 using cogbot.TheOpenSims.Navigation;
 using cogbot.Listeners;
 using cogbot.TheOpenSims.Navigation.Debug;
+using cogbot.TheOpenSims.Mesher;
 
 namespace cogbot.TheOpenSims
 {
@@ -21,6 +22,17 @@ namespace cogbot.TheOpenSims
     /// </summary>
     public class SimRegion
     {
+
+        internal static void BakeRegions()
+        {
+            lock (_CurrentRegions)
+            {
+                foreach (SimRegion R in _CurrentRegions.Values)
+                {
+                    R.PathStore.UpdateMatrix();
+                }
+            }
+        }
 
         public static implicit operator SimPathStore(SimRegion m)
         {
@@ -334,7 +346,6 @@ namespace cogbot.TheOpenSims
             //WorldSystem = worldSystem;
             //Console.WriteLine("++++++++++++++++++++++++++Created region: ");
             PathStore = new SimPathStore("region" + Handle + ".serz", Handle);
-            PathStore.TheSimZLevel = SimZLevel;
         }
 
         public void ShowDebugger()
@@ -521,7 +532,7 @@ namespace cogbot.TheOpenSims
 
         public List<Vector3d> GetLocalPath(Vector3 start, Vector3 end)
         {
-            ScanTerrainBlockages();
+            BakeTerrain();
             return (List<Vector3d>)PathStore.GetLocalPath(GetUsableLocalPositionOf(start,4), GetUsableLocalPositionOf(end,4), PathFinder);
         }
 
@@ -553,6 +564,39 @@ namespace cogbot.TheOpenSims
             return Quaternion.Identity;
         }
 
+        public List<SimObject> ObjectsBottemToTop(float ix, float iy)
+        {
+            return SortObjectByStacked(ObjectsAt1x1(ix, iy),GetGroundLevel((int)ix,(int)iy));
+        }
+
+        private List<SimObject> SortObjectByStacked(List<SimObject> list, float groundLevel)
+        {
+            if (list.Count > 1)
+            {
+                list.Sort(SimObject.CompareLowestZ);
+            }
+            return list;
+        }
+
+        public List<SimObject> ObjectsAt1x1(float ix, float iy)
+        {
+            List<SimObject> objects = new List<SimObject>();
+            float fx = (float)Math.Floor(ix);
+            float fy = (float)Math.Floor(iy);
+            float fex = fx + 1f;
+            float fey = fy + 1f;
+            float StepSize = PathStore.StepSize;
+            for (float x = fx; x < fex; x += StepSize)
+                for (float y = fy; y < fey; y += StepSize)
+                {
+                    foreach (SimObject A in PathStore.ObjectsAt(x, y))
+                    {
+                        if (!objects.Contains(A))
+                            objects.Add(A);
+                    }
+                }
+            return objects;
+        }
 
         public void SimZLevelBlocks(CallbackXY cb)
         {
@@ -584,7 +628,12 @@ namespace cogbot.TheOpenSims
 
         public float AverageHieght = 21.5f;
 
-        public float SimZLevel(float x, float y)
+        float SimZLevel(float vx, float vy)
+        {
+            return PathStore.SimLevel(vx,vy);          
+        }
+
+        public float GetGroundLevel(float x, float y)
         {
             float height;
             if (Client.Terrain.TerrainHeightAtPoint(RegionHandle, (int)x, (int)y, out height))
@@ -592,7 +641,7 @@ namespace cogbot.TheOpenSims
                 AverageHieght = height;
                 return height;
             }
-           // Console.WriteLine("BADDDDD Height " + x + " " + y + " returning " + AverageHieght + " sim " + RegionName);
+            // Console.WriteLine("BADDDDD Height " + x + " " + y + " returning " + AverageHieght + " sim " + RegionName);
             return AverageHieght;
         }
 
@@ -639,21 +688,22 @@ namespace cogbot.TheOpenSims
 
         bool TerrainBaked = false;
         object TerrainBakedLock = new object();
-        void ScanTerrainBlockages()
+        internal void BakeTerrain()
         {
             lock (TerrainBakedLock)
             {
-                if (TerrainBaked) return;
-                float LastHieght = SimZLevel(0, 0);
+               // if (TerrainBaked) return;
+                float LastHieght = GetGroundLevel(0, 0);
 
                 Console.WriteLine("ScanTerrainBlockages: " + RegionName);
                 float WH = GridInfo.WaterHeight;
                 for (int y = 0; y < 256; y++)
                     for (int x = 0; x < 256; x++)
                     {
-                        float thisH = SimZLevel(x, y);
-                        float thisH2 = SimZLevel(x, y + 1);
-                        if (Math.Abs(thisH - LastHieght) > 3 || Math.Abs(thisH - thisH2) > 3)
+                        float thisH = GetGroundLevel(x, y);
+                        float thisH2 = GetGroundLevel(x, y + 1);
+                        float thisH3 = GetGroundLevel(x+1, y);
+                        if (Math.Abs(thisH - LastHieght) > 1 || Math.Abs(thisH - thisH2) > 1 || Math.Abs(thisH - thisH3) > 1)
                         {
                             BlockRange(x - 0.5f, y - 0.5f, 1f, 1f);
                         }
@@ -676,7 +726,7 @@ namespace cogbot.TheOpenSims
                     SetBlocked(sx, sy, null);
                     sy -= StepSize;
                 }
-                loopY = sy;
+                sy = loopY;
                 sx -= StepSize;
             }
         }
