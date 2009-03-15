@@ -15,6 +15,11 @@ namespace cogbot.TheOpenSims
     public class SimObject : SimPosition, BotMentalAspect
     {
 
+        public Vector2 MinMaxZ
+        {
+            get { return new Vector2(OuterBox.MinZ, OuterBox.MaxZ); }
+        }
+
         public Box3Fill OuterBox
         {
             get { return Mesh.OuterBox; }
@@ -834,7 +839,7 @@ namespace cogbot.TheOpenSims
             {
                 ForceUpdateOccupied(PS);
             }
-            return Mesh.GetMeshInfo(Parent.GetSimPosition());
+            return Mesh.DebugString();
 
         }
 

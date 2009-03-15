@@ -580,10 +580,10 @@ namespace cogbot.TheOpenSims
             return Quaternion.Identity;
         }
 
-        public List<SimObject> ObjectsBottemToTop(float ix, float iy)
-        {
-            return SortObjectByStacked(ObjectsAt1x1(ix, iy),GetGroundLevel((int)ix,(int)iy));
-        }
+        //public List<SimObject> ObjectsBottemToTop(float ix, float iy)
+        //{
+        //    return SortObjectByStacked(ObjectsAt1x1(ix, iy),GetGroundLevel((int)ix,(int)iy));
+        //}
 
         private List<SimObject> SortObjectByStacked(List<SimObject> list, float groundLevel)
         {
@@ -594,25 +594,25 @@ namespace cogbot.TheOpenSims
             return list;
         }
 
-        public List<SimObject> ObjectsAt1x1(float ix, float iy)
-        {
-            List<SimObject> objects = new List<SimObject>();
-            float fx = (float)Math.Floor(ix);
-            float fy = (float)Math.Floor(iy);
-            float fex = fx + 1f;
-            float fey = fy + 1f;
-            float StepSize = PathStore.StepSize;
-            for (float x = fx; x < fex; x += StepSize)
-                for (float y = fy; y < fey; y += StepSize)
-                {
-                    foreach (SimObject A in PathStore.ObjectsAt(x, y))
-                    {
-                        if (!objects.Contains(A))
-                            objects.Add(A);
-                    }
-                }
-            return objects;
-        }
+        //public List<SimObject> ObjectsAt1x1(float ix, float iy)
+        //{
+        //    List<SimObject> objects = new List<SimObject>();
+        //    float fx = (float)Math.Floor(ix);
+        //    float fy = (float)Math.Floor(iy);
+        //    float fex = fx + 1f;
+        //    float fey = fy + 1f;
+        //    float StepSize = PathStore.StepSize;
+        //    for (float x = fx; x < fex; x += StepSize)
+        //        for (float y = fy; y < fey; y += StepSize)
+        //        {
+        //            foreach (SimObject A in PathStore.ObjectsAt(x, y))
+        //            {
+        //                if (!objects.Contains(A))
+        //                    objects.Add(A);
+        //            }
+        //        }
+        //    return objects;
+        //}
 
         //public void SimZLevelBlocks(CallbackXY cb)
         //{

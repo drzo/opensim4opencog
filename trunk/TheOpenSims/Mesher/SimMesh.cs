@@ -38,26 +38,27 @@ namespace cogbot.TheOpenSims.Mesher
         static bool UseViewerMode = false;
         public static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         //   CollisionTest collider;
-        List<Mesh> MeshList = new List<Mesh>();
-        List<Triangle> TriangleList = new List<Triangle>();
-        Vector3 Scale;
+        //Vector3 Scale;
         //SimObject Object;
         // Vector3 Position;
         bool IsSolid = false;
         readonly SimObject RootObject;
-        OpenMetaverse.Quaternion Rotation;
-        string name;
+        //OpenMetaverse.Quaternion Rotation;
+       // string name;
 
         internal readonly Box3Fill OuterBox = new Box3Fill(true);
 
         List<Box3Fill> InnerBoxes = new List<Box3Fill>();
 
-        public readonly bool IsSculpted;
+        public bool IsSculpted
+        {
+            get { return RootObject.thePrim.Sculpt != null; }
+        }
         public SimMesh(SimObject simObject)
         {
             // collider = new CollisionTest(IsInside);
-            name = simObject.thePrim.ID.ToString();
-            IsSculpted = simObject.thePrim.Sculpt != null;
+          //  name = simObject.thePrim.ID.ToString();
+            //Position = simObject.Parent.GetSimPosition();
             RootObject = simObject;
             Update(simObject);
         }
@@ -71,10 +72,9 @@ namespace cogbot.TheOpenSims.Mesher
 
         public bool Update(SimObject simObject)
         {
-            Rotation = simObject.GetSimRotation();
-            //Position = simObject.Parent.GetSimPosition();
-            Scale = simObject.GetSimScale();
-            MeshList.Clear();
+            Quaternion Rotation = simObject.GetSimRotation();
+            Vector3 Scale = simObject.GetSimScale();
+            List<Mesh> MeshList = new List<Mesh>();
 
             if (simObject.thePrim.PrimData.ProfileHollow == 0.0f)
             {
@@ -94,7 +94,7 @@ namespace cogbot.TheOpenSims.Mesher
 
             // Add High PrimMesh (IdealistViewer code)
             Mesh mesh = PrimitiveToMesh(simObject.thePrim, LevelOfDetail.High, Scale, Rotation);
-            AddMesh(mesh);
+            MeshList.Add(mesh);
 
 
             //if (false)
@@ -113,27 +113,20 @@ namespace cogbot.TheOpenSims.Mesher
             //    }
             //}
 
-            CalcBoxesFromMeshes(simObject.GetSimPosition());
+            InnerBoxes.Clear();
+            OuterBox.Reset();
+            CalcBoxesFromMeshes(MeshList);
+            MeshList.Clear();
+            MeshList = null;
+            AddPos(simObject.GetSimPosition());
             return true;
-        }
-
-        private void AddMesh(PrimMesh primMesh)
-        {
-            AddMesh(PrimMeshToMesh(primMesh));
-        }
-        private void AddMesh(Mesh mesh)
-        {
-            MeshList.Add(mesh);
         }
 
         /// <summary>
         /// Build the Boxes
         /// </summary>
-        void CalcBoxesFromMeshes(Vector3 pos)
+        void CalcBoxesFromMeshes(List<Mesh> MeshList)
         {
-            InnerBoxes.Clear();
-            OuterBox.Reset();
-
             foreach (Mesh M in MeshList)
             {
                 foreach (Vertex v in M.vertices)
@@ -143,9 +136,10 @@ namespace cogbot.TheOpenSims.Mesher
                         OuterBox.AddVertex(v);
                     }
                 }
+                List<Triangle> TriangleList = new List<Triangle>();
                 foreach (Triangle t in M.triangles)
                 {
-                    if (AddBox(t))
+                    if (AddBox(t, TriangleList))
                     {
                         throw new IndexOutOfRangeException("Triangle outside of OuterBox");
                     }
@@ -154,28 +148,17 @@ namespace cogbot.TheOpenSims.Mesher
             //int InnerBoxesCountBefore = InnerBoxes.Count;
             InnerBoxes = Box3Fill.Simplify(InnerBoxes);
             //if (InnerBoxesCountBefore != InnerBoxes2.Count) Console.WriteLine("InnerBoxesCountBefore diff " + InnerBoxesCountBefore + "->" + InnerBoxes.Count);
-            AddPos(pos);
+            //Position = pos;
         }
 
-        internal string GetMeshInfo(Vector3 Position)
+        internal string DebugString()
         {
-            string MI = " ";
-            int index = 1;
-            foreach (Mesh M in MeshList)
-            {
-                if (M.primMesh != null)
-                {
-                    //String name = "primMesh" + Object.thePrim.LocalID + "_" + index++;
-                    MI += "\n Mesh: " + name + " \n" + M.primMesh.ParamsToDisplayString();
-                    M.primMesh.DumpRaw(".", name, "primMesher" + index);
-                }
-            }
+            string MI = ToString() + " ";
 
-            MI += "\n Outer: " + OuterBox.ToString(Position);
             MI += "\n Box Info:";
             foreach (Box3Fill B in InnerBoxes)
             {
-                MI += "\n    Box: " + B.ToString(Position);
+                MI += "\n    Box: " + B.ToString();
             }
             //foreach (Vector3 B in GetOccupiedList()){
             //    MI += "\n    Point: " + B;
@@ -194,7 +177,7 @@ namespace cogbot.TheOpenSims.Mesher
             }
         }
 
-        public bool AddBox(Triangle t)
+        public bool AddBox(Triangle t,List<Triangle> TriangleList)
         {
             if (t == null) return false;
             foreach (Triangle T in TriangleList)

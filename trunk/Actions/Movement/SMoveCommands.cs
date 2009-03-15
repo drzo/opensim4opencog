@@ -161,12 +161,9 @@ namespace cogbot.Actions.Movement
             SimPosition pos = WorldSystem.GetVector(args, out argcount);
             SimRegion R = pos.GetSimRegion();
             Vector3 v3 = pos.GetSimPosition();
-            WriteLine("SimZInfo: " + pos + " " + R.GetGroundLevel(v3.X,v3.Y));
-            List<SimObject> ObjByStack = R.ObjectsBottemToTop(v3.X, v3.Y);
-            foreach (SimObject O in ObjByStack)
-            {
-                WriteLine("Obj: {0} {1}",O.OuterBox, O.ToString());
-            }
+            WriteLine("SimZInfo: " + pos + " " + R.GetGroundLevel(v3.X, v3.Y));
+            SimWaypoint WP = R.GetWaypointOf(v3);
+            WriteLine("Waypoint {0} -> {1} ", WP, WP.OccupiedString());
             return "ran " + Name;
         }
     }
