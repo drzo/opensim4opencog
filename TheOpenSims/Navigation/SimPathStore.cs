@@ -140,7 +140,7 @@ namespace cogbot.TheOpenSims.Navigation
             Color c = Color.Olive;
             if (simWaypoint != null)
             {
-                int dense = simWaypoint.OccupiedListObject.Count;
+                int dense = simWaypoint.OccupiedCount;
                 int A = 240 - 10 * dense;
                 if (A < 0) A = 20;
 
@@ -196,20 +196,20 @@ namespace cogbot.TheOpenSims.Navigation
             mMatrix[ix, iy] = STICKY_PASSABLE;
         }
 
-        static List<SimObject> NOOBJECTS = new List<SimObject>();
-        internal IEnumerable<SimObject> ObjectsAt(float x, float y)
-        {
-            x = RangeCheck(x); y = RangeCheck(y);
-            ///Debug("SetBlocked: {0} {1}", x, y);
-            int ix = ARRAY_IDX(x);
-            int iy = ARRAY_IDX(y);
-            SimWaypoint P = mWaypoints[ix, iy];
-            if (P == null)
-            {
-                return NOOBJECTS;
-            }
-            return P.OccupiedListObject;
-        }
+        //static List<SimObject> NOOBJECTS = new List<SimObject>();
+        //internal IEnumerable<SimObject> ObjectsAt(float x, float y)
+        //{
+        //    x = RangeCheck(x); y = RangeCheck(y);
+        //    ///Debug("SetBlocked: {0} {1}", x, y);
+        //    int ix = ARRAY_IDX(x);
+        //    int iy = ARRAY_IDX(y);
+        //    SimWaypoint P = mWaypoints[ix, iy];
+        //    if (P == null)
+        //    {
+        //        return NOOBJECTS;
+        //    }
+        //    return P.OccupiedListObject;
+        //}
 
 
 

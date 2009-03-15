@@ -21,6 +21,10 @@ namespace cogbot.TheOpenSims.Navigation
             return PathStore.mMatrix[PX, PY];
         }
 
+        public int OccupiedCount;
+        float OMinZ = float.MaxValue;
+        float OMaxZ = float.MinValue;
+
         public void SetMatrix(int v)
         {
             if (v < 0) v = 0; else if (v > 255) v = 255;
@@ -64,13 +68,13 @@ namespace cogbot.TheOpenSims.Navigation
         {
             bool WasBlocked = GetMatrix() == SimPathStore.BLOCKED;
             bool Blocked = false;
+            float zlevel = GetZLevel();
             if (IsSolid)
             {
                 if (SurroundingBump())
                     Blocked = true;
                 else
                 {
-                    float zlevel = GetZLevel();
                     if (SomethingBetween(zlevel + 0.35f, zlevel + 2)) Blocked = true;
                 }
                 //      if (O.Mesh.IsInside(_LocalPos.X, _LocalPos.Y, zlevelSurround + 1f))
@@ -79,14 +83,14 @@ namespace cogbot.TheOpenSims.Navigation
             if (WasBlocked && !Blocked)
             {
                 //  Passable = !IsSolid;
-                SetMatrix(20 + OccupiedListObject.Count * 2);
-                return;
+                SetMatrix(20 + OccupiedCount * 2);       
             }
             else if (!WasBlocked && Blocked)
             {
                 //Passable = !IsSolid;
                 SetMatrix(SimPathStore.BLOCKED);
             }
+            OccupiedListObject.TrimExcess();
         }
 
         private bool SomethingBetween(float low, float high)
@@ -165,7 +169,7 @@ namespace cogbot.TheOpenSims.Navigation
             // when the Two Zs are differnt that means global Pos has been computed
             if (_ZLevelCache > 0) return _ZLevelCache;
             _ZLevelCache = GetGroundLevel();
-            int len = OccupiedListObject.Count;
+            int len = OccupiedCount;
             if (len > 0)
             {
                 lock (OccupiedListObject)
@@ -185,12 +189,12 @@ namespace cogbot.TheOpenSims.Navigation
                             if (DiffLessThan(MinZ, _ZLevelCache, 1f) || DiffLessThan(MaxZ, _ZLevelCache, 1f))
                                 if (_ZLevelCache < MaxZ) _ZLevelCache = MaxZ;
 
-                            Vector2 MinMaxZ = OccupiedListMinMaxZ[i];
-                            MinZ = MinMaxZ.X;
-                            MaxZ = MinMaxZ.Y;
+                            //Vector2 MinMaxZ = OccupiedListMinMaxZ[i];
+                            //MinZ = MinMaxZ.X;
+                            //MaxZ = MinMaxZ.Y;
 
-                            if (DiffLessThan(MinZ, _ZLevelCache, 1f) || DiffLessThan(MaxZ, _ZLevelCache, 1f))
-                                if (_ZLevelCache < MaxZ) _ZLevelCache = MaxZ;
+                            //if (DiffLessThan(MinZ, _ZLevelCache, 1f) || DiffLessThan(MaxZ, _ZLevelCache, 1f))
+                            //    if (_ZLevelCache < MaxZ) _ZLevelCache = MaxZ;
 
                         }
                 }
@@ -202,7 +206,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         private bool DiffLessThan(float A, float B, float D)
         {
-            return Math.Abs(A-B) <= D;
+            return Math.Abs(A - B) <= D;
         }
 
 
@@ -213,37 +217,42 @@ namespace cogbot.TheOpenSims.Navigation
             if (i == -1)
             {
                 OccupiedListObject.Add(simObject);
-                OccupiedListMinMaxZ.Add(new Vector2(minZ, maxZ));
+                OccupiedCount++;
+                //OccupiedListMinMaxZ.Add(new Vector2(minZ, maxZ));
                 return true;
             }
             else
             {
-                Vector2 v2 = OccupiedListMinMaxZ[i];
-                //bool changed = false;
-                if (minZ < v2.X)
+                if (simObject.IsPassable) return false;
+                //Vector2 v2 = OccupiedListMinMaxZ[i];
+                if (minZ < OMinZ)
                 {
-                    v2.X = minZ;
-                    //  changed = true;
+                    OMinZ = minZ;
+                    if (maxZ > OMaxZ)
+                    {
+                        OMaxZ = maxZ;
+                    }
+                    return true;
                 }
-                if (maxZ > v2.Y)
+                if (maxZ > OMaxZ)
                 {
-                    v2.Y = maxZ;
-                    //  changed = true;
+                    OMaxZ = maxZ;
+                    return true;
                 }
                 return false;
-                //return changed;
             }
         }
 
         // public IList ShadowList = new List<SimObject>();
-        public IList<SimObject> OccupiedListObject = new List<SimObject>();
-        public IList<Vector2> OccupiedListMinMaxZ = new List<Vector2>();
+        readonly private List<SimObject> OccupiedListObject = new List<SimObject>();
+        //string OcString = null;
+        //public IList<Vector2> OccupiedListMinMaxZ = new List<Vector2>();
 
         public string OccupiedString()
         {
             string S = "";
 
-            int len = OccupiedListObject.Count;
+            int len = OccupiedCount;
             if (len > 0)
             {
                 lock (OccupiedListObject)
@@ -251,7 +260,7 @@ namespace cogbot.TheOpenSims.Navigation
                     for (int i = 0; i < len; i++)
                     {
                         SimObject O = OccupiedListObject[i];
-                        Vector2 MinMaxZ = OccupiedListMinMaxZ[i];
+                        Vector2 MinMaxZ = O.MinMaxZ;// OccupiedListMinMaxZ[i];
                         S += MinMaxZ.ToString();
                         S += " ";
                         S += O.ToString();
@@ -329,7 +338,7 @@ namespace cogbot.TheOpenSims.Navigation
                 if (_IncomingArcs != null) foreach (SimRoute A in _IncomingArcs) A.Passable = value;
                 if (_OutgoingArcs != null) foreach (SimRoute A in _OutgoingArcs) A.Passable = value;
                 _Passable = value;
-                SetMatrix((byte)(value ?SimPathStore.PASSABLE : SimPathStore.BLOCKED));
+                SetMatrix((byte)(value ? SimPathStore.PASSABLE : SimPathStore.BLOCKED));
             }
             get
             {
@@ -839,7 +848,7 @@ namespace cogbot.TheOpenSims.Navigation
             return CreateLocal(SimRegion.GlobalToLocal(v3d), R.PathStore);
         }
 
-    }     
+    }
 
     //public class SimMovementPoints : SimMovement
     //{
