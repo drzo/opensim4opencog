@@ -24,6 +24,7 @@ namespace cogbot.TheOpenSims.Navigation
         public void SetMatrix(int v)
         {
             if (v < 0) v = 0; else if (v > 255) v = 255;
+            if (PathStore.mMatrix[PX, PY] == SimPathStore.STICKY_PASSABLE) return;
             PathStore.mMatrix[PX, PY] = (byte)v;
         }
 
@@ -61,7 +62,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public void UpdateMatrix()
         {
-            bool WasBlocked = GetMatrix() == 0;
+            bool WasBlocked = GetMatrix() == SimPathStore.BLOCKED;
             bool Blocked = false;
             if (IsSolid)
             {
@@ -70,8 +71,7 @@ namespace cogbot.TheOpenSims.Navigation
                 else
                 {
                     float zlevel = GetZLevel();
-                    float groundLevel = GetGroundLevel();
-                    if (SomethingBetween(groundLevel + 0.3f, groundLevel + 2)) Blocked = true;
+                    if (SomethingBetween(zlevel + 0.35f, zlevel + 2)) Blocked = true;
                 }
                 //      if (O.Mesh.IsInside(_LocalPos.X, _LocalPos.Y, zlevelSurround + 1f))
 
@@ -85,7 +85,7 @@ namespace cogbot.TheOpenSims.Navigation
             else if (!WasBlocked && Blocked)
             {
                 //Passable = !IsSolid;
-                SetMatrix(0);
+                SetMatrix(SimPathStore.BLOCKED);
             }
         }
 
@@ -108,7 +108,6 @@ namespace cogbot.TheOpenSims.Navigation
         {
             float original = GetZLevel();
 
-            //return GetGroundLevel();
             if (PX < 1 || PY < 1 || _LocalPos.X > 254 || _LocalPos.Y > 254)
                 return false;
 
@@ -155,19 +154,8 @@ namespace cogbot.TheOpenSims.Navigation
         float _GroundLevelCache = float.MinValue;
         public float GetGroundLevel()
         {
-            return GetZLevel();
             if (_GroundLevelCache > 0) return _GroundLevelCache;
             _GroundLevelCache = GetSimRegion().GetGroundLevel(_LocalPos.X, _LocalPos.Y);
-            if (false)foreach (SimObject O in OccupiedListObject)
-            {
-                if (O.IsPassable) continue;
-                Box3Fill box = O.OuterBox;
-                if (Math.Abs(_GroundLevelCache - box.MinZ) < 1 && Math.Abs(_GroundLevelCache - box.MaxZ) > 1.0)
-                {
-                    _GroundLevelCache = box.MaxZ;
-                    break;
-                }
-            }
             return _GroundLevelCache;
         }
 
@@ -176,7 +164,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             // when the Two Zs are differnt that means global Pos has been computed
             if (_ZLevelCache > 0) return _ZLevelCache;
-            _ZLevelCache = GetSimRegion().GetGroundLevel(_LocalPos.X, _LocalPos.Y);
+            _ZLevelCache = GetGroundLevel();
             int len = OccupiedListObject.Count;
             if (len > 0)
             {
@@ -341,14 +329,14 @@ namespace cogbot.TheOpenSims.Navigation
                 if (_IncomingArcs != null) foreach (SimRoute A in _IncomingArcs) A.Passable = value;
                 if (_OutgoingArcs != null) foreach (SimRoute A in _OutgoingArcs) A.Passable = value;
                 _Passable = value;
-                SetMatrix((byte)(value ? 2 : 0));
+                SetMatrix((byte)(value ?SimPathStore.PASSABLE : SimPathStore.BLOCKED));
             }
             get
             {
                 if (!_Passable) return false;
                 if (_IncomingArcs != null) foreach (SimRoute A in _IncomingArcs) if (A.Passable) return true;
                 if (_OutgoingArcs != null) foreach (SimRoute A in _OutgoingArcs) if (A.Passable) return true;
-                return GetMatrix() != 0;
+                return GetMatrix() != SimPathStore.BLOCKED;
             }
         }
 

@@ -257,6 +257,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         }
 
         ToolTip tip = new ToolTip();
+        APropos tipForm ;
         protected override void OnMouseMove(MouseEventArgs e)
         {
             int x = e.X / mGridSize;
@@ -266,17 +267,34 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 
             if (e.Button == MouseButtons.None || mDrawMode == DrawModeSetup.None)
             {
+                string str;
                 SimWaypoint o = PathStore.Waypoint(x, y);
                 if (o != null)
                 {
-                    tip.SetToolTip(this, o.OccupiedString() + " " + PathStore.mMatrix[x, y]);
+                    str = o.OccupiedString() + " " + PathStore.mMatrix[x, y];
                 }
                 else
-                {             
-                    tip.SetToolTip(this, "" + PathStore.mMatrix[x, y]);
+                {
+                    str = "" + PathStore.mMatrix[x, y];
                 }
+
+                // For times that tooltips are not working
+                if (e.Button == MouseButtons.Right)
+                {
+                    if (tipForm == null || tipForm.IsDisposed)
+                    {
+                        tipForm = new APropos();
+                    }
+                    tipForm.textBox1.Text = str;
+                    tipForm.Show();
+                    tipForm.Activate();
+                    return;
+                }
+
+                tip.SetToolTip(this, str);
                 return;
             }
+
 
             byte[,] mMatrix = PathStore.mMatrix;
             switch (mDrawMode)

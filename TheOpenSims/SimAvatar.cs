@@ -30,7 +30,7 @@ namespace cogbot.TheOpenSims
         public SimAvatar InDialogWith = null;
 
         readonly public BotNeeds CurrentNeeds;
-        public double SightRange = 30.0f;
+        public double SightRange = 60.0f;
 
 
         // things the bot cycles through mentally
@@ -942,6 +942,7 @@ namespace cogbot.TheOpenSims
                     StopMoving();
                 }
                 ApproachPosition = target;
+                ApproachDistance = target.GetSizeDistance();
             }
         }
 
@@ -969,7 +970,7 @@ namespace cogbot.TheOpenSims
             for (int i = 0; i < maxSeconds; i++)
             {
                 Thread.Sleep(1000);
-                //Application.DoEvents();
+                Application.DoEvents();
                 currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
 
                 if (currentDist > maxDistance)
@@ -1100,6 +1101,7 @@ namespace cogbot.TheOpenSims
 
             while (OnlyStart && MadeIt)
             {
+                if (Vector3d.Distance(GetWorldPosition(), globalEnd) < distance) return true;
                 List<Vector3d> route = SimRegion.GetPath(GetWorldPosition(), globalEnd, out OnlyStart);
                 MadeIt = FollowPathTo(route, globalEnd, distance);
             }
@@ -1254,7 +1256,7 @@ namespace cogbot.TheOpenSims
         public bool FollowPathTo(List<Vector3d> v3s, Vector3d finalTarget, double finalDistance)
         {
             SimPathStore PathStore = GetSimRegion();
-            Debug("FollowPath: {0} -> {1}", v3s.Count, DistanceVectorString(finalTarget));
+            Debug("FollowPath: {0} -> {1} for {2}", v3s.Count, DistanceVectorString(finalTarget),finalDistance);
             int CanSkip = UseSkipping?0:0;
             int Skipped = 0;
             UseSkipping = !UseSkipping;

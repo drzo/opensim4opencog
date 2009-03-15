@@ -19,7 +19,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 {
     public partial class APropos : System.Windows.Forms.Form
 	{
-		private System.Windows.Forms.TextBox textBox1;
+		public System.Windows.Forms.TextBox textBox1;
 		private System.Windows.Forms.TextBox textBox2;
 		private System.Windows.Forms.TabControl tabControl1;
 		private System.Windows.Forms.TabPage tabPage1;

@@ -157,42 +157,42 @@ namespace cogbot.Listeners
         List<ulong> MasteringRegions = new List<ulong>();
         public static Dictionary<ulong, WorldObjects> SimMaster = new Dictionary<ulong, WorldObjects>();
         //public volatile static WorldObjects Master;
-        public void WorldMaster(bool simulator)
+        public void WorldMaster(bool isMaster)
         {
             lock (WorldObjectsMasterLock)
             {
-                if (simulator) Master = this;
-                if (MasteringRegions.Count > 0 && !simulator) throw new ArgumentException("Cant unmaster!");
+                if (isMaster) Master = this;
+                if (MasteringRegions.Count > 0 && !isMaster) throw new ArgumentException("Cant unmaster!");
 
-                client.Settings.OBJECT_TRACKING = simulator;
-                //client.Settings.PARCEL_TRACKING = simulator;
-                //client.Settings.FETCH_MISSING_INVENTORY = simulator;
+                client.Settings.OBJECT_TRACKING = isMaster;
+                //client.Settings.PARCEL_TRACKING = isMaster;
+                //client.Settings.FETCH_MISSING_INVENTORY = isMaster;
                 //client.Settings.ALWAYS_DECODE_OBJECTS = true;
-                //client.Settings.ALWAYS_REQUEST_OBJECTS = simulator;
-                //client.Settings.ALWAYS_REQUEST_PARCEL_DWELL = simulator;
-                //client.Settings.ALWAYS_REQUEST_PARCEL_ACL = simulator;
+                //client.Settings.ALWAYS_REQUEST_OBJECTS = isMaster;
+                //client.Settings.ALWAYS_REQUEST_PARCEL_DWELL = isMaster;
+                //client.Settings.ALWAYS_REQUEST_PARCEL_ACL = isMaster;
                 //client.Settings.ENABLE_CAPS = true;
-                // client.Settings.ENABLE_SIMSTATS = simulator;
-                //client.Settings.STORE_LAND_PATCHES = simulator;
+                // client.Settings.ENABLE_SIMSTATS = isMaster;
+                //client.Settings.STORE_LAND_PATCHES = isMaster;
                 //client.Settings.USE_TEXTURE_CACHE = false;
                 client.Settings.SEND_PINGS = true;
 
-                if (simulator) RegisterAll();
-                //if (simulator)
+                if (isMaster) RegisterAll();
+                //if (isMaster)
                 //    lock (SimMaster)
-                //        if (!SimMaster.ContainsKey(simulator))
+                //        if (!SimMaster.ContainsKey(isMaster))
                 //        {
-                //            SimMaster[simulator] = this;
+                //            SimMaster[isMaster] = this;
                 //            RegisterAll();
                 //            {
                 //                client.Network.OnLogin += delegate(LoginStatus login, string message)
                 //                        {
                 //                            if (login == LoginStatus.Success)
-                //                                CatchUp(simulator);
+                //                                CatchUp(isMaster);
                 //                        };
 
                 //            }
-                //            Debug("-------------------SimMaster {0} {1}", simulator, client);
+                //            Debug("-------------------SimMaster {0} {1}", isMaster, client);
                 //        }
             }
         }
@@ -1005,7 +1005,15 @@ namespace cogbot.Listeners
                             ulong rh  =AV.theAvatar.RegionHandle;
                             if (rh != regionHandle)
                             {
-                                AV.ResetRegion(regionHandle); 
+                                AV.ResetRegion(regionHandle);
+                            }
+                            else
+                            {
+                                if (av.ParentID == 0)
+                                {
+                                    SimPathStore PathStore = AV.GetPathSystem();
+                                    PathStore.UpdateTraveled(av.ID, av.Position, av.Rotation);
+                                }
                             }
 
                         }

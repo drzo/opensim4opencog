@@ -60,7 +60,10 @@ namespace cogbot.TheOpenSims.Navigation
             minLevel = SimLevel(x, y) + 1f;
             maxLevel = minLevel + 1f;
         }
-      
+
+        public const byte BLOCKED = 0;
+        public const byte PASSABLE = 1;
+        public const byte STICKY_PASSABLE = 2;
         public float POINTS_PER_METER = 8f;
         public float LargeScale = 1f;//StepSize;//0.2f;
 
@@ -110,7 +113,7 @@ namespace cogbot.TheOpenSims.Navigation
         internal Color GetColor(int x, int y)
         {
             byte p = mMatrix[x, y];
-            if (p == 0)
+            if (p == BLOCKED)
             {
                 return BlockedColor(mWaypoints[x, y]);
             }
@@ -122,8 +125,8 @@ namespace cogbot.TheOpenSims.Navigation
             Color sb = lastColour[p];
             if (sb == Color.Empty)
             {
-                if (p == 1) return (Color.White);
-                if (p == 2) return (Color.Green);
+                if (p == PASSABLE) return (Color.Yellow);
+                if (p == STICKY_PASSABLE) return (Color.Green);
                 int colorIndex = 240 - ((int)(Math.Log10(p) * 127));
                 colorIndex = colorIndex < 0 ? 0 : colorIndex > 255 ? 255 : colorIndex;
                 sb = Color.FromArgb(255, colorIndex, colorIndex, colorIndex);
@@ -190,7 +193,7 @@ namespace cogbot.TheOpenSims.Navigation
             {
                 return;
             }
-            mMatrix[ix, iy] = 2;
+            mMatrix[ix, iy] = STICKY_PASSABLE;
         }
 
         static List<SimObject> NOOBJECTS = new List<SimObject>();
@@ -219,7 +222,7 @@ namespace cogbot.TheOpenSims.Navigation
             int iy = ARRAY_IDX(y);
             ///Debug("SetBlocked: {0} {1}", x, y);
             // if was set Passable dont re-block
-            if (mMatrix[ix, iy] == 2)
+            if (mMatrix[ix, iy] == STICKY_PASSABLE)
             {
                 //  return;
             }
@@ -511,7 +514,7 @@ namespace cogbot.TheOpenSims.Navigation
         public bool IsPassable(Vector3 end)
         {
             double Dist;
-            if (GetNodeQuality(end) == 0) return false;
+            if (GetNodeQuality(end) == BLOCKED) return false;
             // if (true) return true;
             SimWaypoint W = ClosestRegionNode(end.X, end.Y, end.Z, out Dist, true);
             return W.Passable;
@@ -728,6 +731,75 @@ namespace cogbot.TheOpenSims.Navigation
                 }
             })).Start();
 
+        }
+
+        Dictionary<UUID, MoverTracking> LaskKnownPos = new Dictionary<UUID, MoverTracking>();
+
+        internal void UpdateTraveled(UUID uUID, Vector3 after, Quaternion rot)
+        {
+            if (!LaskKnownPos.ContainsKey(uUID))
+            {
+                LaskKnownPos[uUID] = new MoverTracking(after, rot, this);
+            }
+            else
+            {
+                LaskKnownPos[uUID].Update(after, rot);
+            }
+        }
+    }
+
+    public class MoverTracking
+    {
+        protected double MovedAllot = 3.0f;
+        Vector3 LastPosition;
+        Quaternion LastRotation;
+        SimPathStore Store;
+        public MoverTracking(Vector3 firstP, Quaternion firtsR, SimPathStore store)
+        {
+            LastPosition = firstP;
+            Store = store;
+            LastRotation = firtsR;
+        }
+
+        public void Update(Vector3 nextPosition, Quaternion rotation)
+        {
+            double dist = Vector3.Distance(LastPosition, nextPosition);
+            if (dist > MovedAllot)
+            {
+                MakeMovement(nextPosition);
+            }
+            else
+                if (RotationDiffernt(rotation, LastRotation))
+                {
+                    MakeMovement(nextPosition);
+                    LastRotation = rotation;
+                }
+        }
+
+        private void MakeMovement(Vector3 nextPosition)
+        {
+            float dist = Vector3.Distance(LastPosition, nextPosition);
+            if (dist > Store.StepSize)
+            {
+                Vector3 dif = LastPosition - nextPosition;
+                int stepsNeeded = (int)(dist * Store.POINTS_PER_METER)+1;
+                Console.WriteLine("MakeMovement " + LastPosition + " -> " + stepsNeeded + " -> " + nextPosition);
+                Vector3 vstep = dif / stepsNeeded;
+                Vector3 traveled = nextPosition;
+                Store.SetTraveled(nextPosition.X, nextPosition.Y);
+                for (int i = 0; i < stepsNeeded; i++)
+                {
+                    traveled = traveled + vstep;
+                    Store.SetTraveled(traveled.X, traveled.Y);
+                }
+                LastPosition = nextPosition;
+            }
+        }
+
+        static bool RotationDiffernt(Quaternion rotation, Quaternion LastRotation)
+        {
+            Quaternion diff = rotation - LastRotation;
+            return (diff.Length() > 0.2);
         }
     }
 }
