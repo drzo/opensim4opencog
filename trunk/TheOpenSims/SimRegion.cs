@@ -484,17 +484,33 @@ namespace cogbot.TheOpenSims
             SimRegion regEnd = posEnd.GetSimRegion();
             Vector3 localStart = posStart.GetSimPosition();
             Vector3 localEnd = posEnd.GetSimPosition();
+            List<Vector3d> route;
             // Same region?
             if (regStart == regEnd)
             {
-                OnlyStart = false;
-                return regStart.GetLocalPath(localStart, localEnd);
+                Vector3 newEnd = localEnd;
+                route = regStart.GetLocalPath(localStart, newEnd);
+                if (route.Count > 1)
+                {
+                    OnlyStart = false;
+                    return route;
+                }
+                OnlyStart = true;
+                Vector3 diff = localEnd - localStart;
+                while (diff.Length()>10)
+                {
+                    diff = diff * 0.8f;
+                    newEnd = localStart + diff;
+                    route = regStart.GetLocalPath(localStart, newEnd);
+                    if (route.Count > 1) return route;
+                }
+                return route;
             }
             OnlyStart = true; // will be only a partial path
             SimRegion nextRegion;
             Vector3 localLast = regStart.LocalOuterEdge(localStart, posEnd, out nextRegion);
             // needs to go to edge
-            List<Vector3d> route = regStart.GetLocalPath(localStart, localLast);
+            route = regStart.GetLocalPath(localStart, localLast);
             // at egde so make a crossing
             Vector3 enterEdge = EnterEdge(localLast, nextRegion.GetGridLocation() - regStart.GetGridLocation());
             route.Add(nextRegion.LocalToGlobal(enterEdge));

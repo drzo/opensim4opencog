@@ -688,14 +688,14 @@ namespace cogbot.TheOpenSims
         /// <returns>1-255</returns>
         public virtual float GetSizeDistance()
         {
-            double size = 1;
+            double size = Math.Sqrt(BottemArea())/2;
 
             //            if (IsPhantom) return size;
 
-            double fx = thePrim.Scale.X;
-            if (fx > size) size = fx;
-            double fy = thePrim.Scale.Y;
-            if (fy > size) size = fy;
+            double fx;// = thePrim.Scale.X;
+            //if (fx > size) size = fx;
+            double fy;// = thePrim.Scale.Y;
+            //if (fy > size) size = fy;
 
             foreach (SimObject obj in AttachedChildren)
             {

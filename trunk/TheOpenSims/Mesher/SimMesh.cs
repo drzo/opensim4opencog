@@ -945,7 +945,8 @@ namespace cogbot.TheOpenSims.Mesher
             MaxZ = float.MinValue;
         }
 
-        const float PAD = 0.33f;// SimPathStore.StepSize*0.75f;
+        const float PADXY = 0.33f;// SimPathStore.StepSize*0.75f;
+        const float PADZ = 0.20f;// SimPathStore.StepSize*0.75f;
 
         public override int GetHashCode()
         {
@@ -1038,33 +1039,33 @@ namespace cogbot.TheOpenSims.Mesher
             bool changed = false;
             if (v.X < MinX)
             {
-                MinX = v.X - PAD;
+                MinX = v.X - PADXY;
                 changed = true;
             }
             if (v.Y < MinY)
             {
-                MinY = v.Y - PAD;
+                MinY = v.Y - PADXY;
                 changed = true;
             }
             if (v.Z < MinZ)
             {
-                MinZ = v.Z;// -PAD;
+                MinZ = v.Z;// -PADZ;
                 changed = true;
             }
 
             if (v.X > MaxX)
             {
-                MaxX = v.X + PAD;
+                MaxX = v.X + PADXY;
                 changed = true;
             }
             if (v.Y > MaxY)
             {
-                MaxY = v.Y + PAD;
+                MaxY = v.Y + PADXY;
                 changed = true;
             }
             if (v.Z > MaxZ)
             {
-                MaxZ = v.Z + PAD;
+                MaxZ = v.Z + PADZ;
                 changed = true;
             }
             return changed;
