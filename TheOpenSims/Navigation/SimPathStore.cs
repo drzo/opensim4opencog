@@ -649,6 +649,7 @@ namespace cogbot.TheOpenSims.Navigation
         internal void UpdateMatrix()
         {
             TaintMatrix();
+            System.GC.Collect();
             GetSimRegion().BakeTerrain();
             for (int x = 0; x < MAPSPACE; x++)
             {
@@ -659,6 +660,7 @@ namespace cogbot.TheOpenSims.Navigation
                             W.UpdateMatrix();                    
                 }
             }
+            System.GC.Collect();
         }
 
         internal SimRoute InternArc(SimWaypoint StartNode, SimWaypoint EndNode, double Weight)

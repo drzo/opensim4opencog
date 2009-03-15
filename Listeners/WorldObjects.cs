@@ -350,7 +350,7 @@ namespace cogbot.Listeners
 
         static void TrackPaths()
         {
-            for (int i = 0; i < 30; i++)
+            for (int i = 0; i < 90; i++)
             {
                 Thread.Sleep(1000);
                 Application.DoEvents();
@@ -358,6 +358,7 @@ namespace cogbot.Listeners
             int lastCount = 0;
             while (true)
             {
+                Thread.Sleep(30000);
                 ObjectUpdateItem U;
                 int updates = 0;
                 lock (updateQueue)
@@ -377,8 +378,6 @@ namespace cogbot.Listeners
                         U();
                     }
                 }
-
-                Thread.Sleep(30000);
                 lock (Master.client.Network.Simulators)
                     foreach (Simulator S in Master.client.Network.Simulators)
                     {
@@ -394,9 +393,19 @@ namespace cogbot.Listeners
                     if (O.IsRegionAttached())
                         O.UpdateOccupied();
                 }
+                HeapShot();
                 Debug("TrackPaths Completed: " + thisCount);
                 SimRegion.BakeRegions();
+                HeapShot();
             }
+        }
+
+        private static void HeapShot()
+        {
+            System.GC.Collect();
+            Console.WriteLine("kill -PROF ");
+            //System.Runtime.InteropServices.SEHException
+           /// Console.WriteLine(Console.ReadLine());
         }
 
         static void Debug(string p)
@@ -419,11 +428,13 @@ namespace cogbot.Listeners
             //{
             //    GetSimObject(item, simulator);
             //});
-            lock (simulator.ObjectsPrimitives.Dictionary)
+            List<Primitive> primsCatchup = new List<Primitive>();
+            //lock (simulator.ObjectsPrimitives.Dictionary)
                 simulator.ObjectsPrimitives.ForEach(delegate(Primitive item)
                 {
-                    GetSimObject(item, simulator);
-                });
+                    primsCatchup.Add(item);
+                });           
+            foreach (Primitive item in primsCatchup) GetSimObject(item, simulator);
             //miniMap.UpdateMiniMap(simulator);
         }
 

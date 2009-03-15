@@ -46,7 +46,9 @@ namespace cogbot.TheOpenSims.Mesher
         //OpenMetaverse.Quaternion Rotation;
        // string name;
 
-        internal readonly Box3Fill OuterBox = new Box3Fill(true);
+        Box3Fill OuterBox {
+            get { return RootObject.OuterBox; }
+        }
 
         List<Box3Fill> InnerBoxes = new List<Box3Fill>();
 
