@@ -21,7 +21,7 @@ namespace cogbot.TheOpenSims.Navigation
             return PathStore.mMatrix[PX, PY];
         }
 
-        public int OccupiedCount;
+        public byte OccupiedCount;
         float OMinZ = float.MaxValue;
         float OMaxZ = float.MinValue;
 
@@ -33,33 +33,10 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
 
-        public bool _SolidKnown = false;
-        public bool _Solid = false;
-        public bool IsSolid
-        {
-            get
-            {
-                if (!_SolidKnown)
-                {
-                    _SolidKnown = true;
-                    _Solid = false;
-
-                    foreach (SimObject O in OccupiedListObject)
-                    {
-                        if (!O.IsPassable)
-                        {
-                            _Solid = true;
-                        }
-                    }
-                    _SolidKnown = true;
-                }
-                return _Solid;
-            }
-        }
+        public byte IsSolid = 0;
 
         public void TaintMatrix()
         {
-            _SolidKnown = false;
             _ZLevelCache = float.MinValue;
             _GroundLevelCache = float.MinValue;
         }
@@ -68,8 +45,9 @@ namespace cogbot.TheOpenSims.Navigation
         {
             bool WasBlocked = GetMatrix() == SimPathStore.BLOCKED;
             bool Blocked = false;
+            _ZLevelCache = float.MinValue;
             float zlevel = GetZLevel();
-            if (IsSolid)
+            if (IsSolid != 0)
             {
                 if (SurroundingBump())
                     Blocked = true;
@@ -78,12 +56,11 @@ namespace cogbot.TheOpenSims.Navigation
                     if (SomethingBetween(zlevel + 0.35f, zlevel + 2)) Blocked = true;
                 }
                 //      if (O.Mesh.IsInside(_LocalPos.X, _LocalPos.Y, zlevelSurround + 1f))
-
             }
             if (WasBlocked && !Blocked)
             {
                 //  Passable = !IsSolid;
-                SetMatrix(20 + OccupiedCount * 2);       
+                SetMatrix(20 + OccupiedCount * 2);
             }
             else if (!WasBlocked && Blocked)
             {
@@ -95,6 +72,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         private bool SomethingBetween(float low, float high)
         {
+            if (IsSolid == 0) return false;
             foreach (SimObject O in OccupiedListObject)
             {
                 if (!O.IsPassable)
@@ -163,42 +141,41 @@ namespace cogbot.TheOpenSims.Navigation
             return _GroundLevelCache;
         }
 
+
         float _ZLevelCache = float.MinValue;
         public float GetZLevel()
         {
             // when the Two Zs are differnt that means global Pos has been computed
             if (_ZLevelCache > 0) return _ZLevelCache;
             _ZLevelCache = GetGroundLevel();
-            int len = OccupiedCount;
-            if (len > 0)
-            {
+            if (IsSolid != 0)
                 lock (OccupiedListObject)
                 {
-                    for (int d = 0; d < 2; d++)
-                        for (int i = 0; i < len; i++)
+                    SimObject Flooring = null;
+                    for (byte d = 0; d < IsSolid; d++)
+                    {
+                        foreach (SimObject O in OccupiedListObject)
                         {
-                            SimObject O = OccupiedListObject[i];
                             if (O.IsPassable) continue;
-                            Box3Fill OuterBox = O.Mesh.OuterBox;
-                            float MinZ = OuterBox.MinZ;
-                            float MaxZ = OuterBox.MaxZ;
-                            // MinZ = MinMaxZ.X;
-                            // MaxZ = MinMaxZ.Y;
-                            // MinMaxZ.X;
-                            // Box3Fill box = O.OuterBox;
-                            if (DiffLessThan(MinZ, _ZLevelCache, 1f) || DiffLessThan(MaxZ, _ZLevelCache, 1f))
-                                if (_ZLevelCache < MaxZ) _ZLevelCache = MaxZ;
-
-                            //Vector2 MinMaxZ = OccupiedListMinMaxZ[i];
-                            //MinZ = MinMaxZ.X;
-                            //MaxZ = MinMaxZ.Y;
-
-                            //if (DiffLessThan(MinZ, _ZLevelCache, 1f) || DiffLessThan(MaxZ, _ZLevelCache, 1f))
-                            //    if (_ZLevelCache < MaxZ) _ZLevelCache = MaxZ;
+                            float MinZ = O.OuterBox.MinZ;
+                            float MaxZ = O.OuterBox.MaxZ;
+                            // The object is higher
+                            if (_ZLevelCache < MaxZ)
+                                // And the object is below or the bottem of object is less than a meter above or the top of object is less than 1.5 meters
+                                if (MinZ <= _ZLevelCache || DiffLessThan(MinZ, _ZLevelCache, 1f) || DiffLessThan(MaxZ, _ZLevelCache, 1.5f))
+                                {
+                                    Flooring = O;
+                                    _ZLevelCache = MaxZ;
+                                }
 
                         }
+                    }
+                    if (Flooring != null)
+                    {
+                        OccupiedListObject.Remove(Flooring);
+                        OccupiedListObject.Insert(0, Flooring);
+                    }
                 }
-            }
             _LocalPos.Z = _ZLevelCache;
             _GlobalPos.Z = _ZLevelCache + 1;
             return _ZLevelCache;
@@ -212,35 +189,30 @@ namespace cogbot.TheOpenSims.Navigation
 
         public bool AddOccupied(SimObject simObject, float minZ, float maxZ)
         {
-            int i = OccupiedListObject.IndexOf(simObject);
-            _ZLevelCache = float.MinValue;
-            if (i == -1)
+            if (!simObject.IsPassable)
             {
-                OccupiedListObject.Add(simObject);
-                OccupiedCount++;
-                //OccupiedListMinMaxZ.Add(new Vector2(minZ, maxZ));
-                return true;
-            }
-            else
-            {
-                if (simObject.IsPassable) return false;
-                //Vector2 v2 = OccupiedListMinMaxZ[i];
+                IsSolid++;
                 if (minZ < OMinZ)
                 {
                     OMinZ = minZ;
-                    if (maxZ > OMaxZ)
-                    {
-                        OMaxZ = maxZ;
-                    }
-                    return true;
+                    _ZLevelCache = float.MinValue;
+                    //  return true;
                 }
                 if (maxZ > OMaxZ)
                 {
                     OMaxZ = maxZ;
-                    return true;
+                    _ZLevelCache = float.MinValue;
+                    // return true;
                 }
-                return false;
             }
+            if (!OccupiedListObject.Contains(simObject))
+            {
+                OccupiedListObject.Add(simObject);
+                OccupiedCount++;
+                _ZLevelCache = float.MinValue;
+                return true;
+            }
+            return false;
         }
 
         // public IList ShadowList = new List<SimObject>();
@@ -252,15 +224,13 @@ namespace cogbot.TheOpenSims.Navigation
         {
             string S = "";
 
-            int len = OccupiedCount;
-            if (len > 0)
+            if (OccupiedCount > 0)
             {
                 lock (OccupiedListObject)
                 {
-                    for (int i = 0; i < len; i++)
+                    foreach (SimObject O in OccupiedListObject)
                     {
-                        SimObject O = OccupiedListObject[i];
-                        Vector2 MinMaxZ = O.MinMaxZ;// OccupiedListMinMaxZ[i];
+                        Box3Fill MinMaxZ = O.OuterBox;// OccupiedListMinMaxZ[i];
                         S += MinMaxZ.ToString();
                         S += " ";
                         S += O.ToString();

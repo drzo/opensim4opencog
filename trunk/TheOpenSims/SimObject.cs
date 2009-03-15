@@ -15,15 +15,7 @@ namespace cogbot.TheOpenSims
     public class SimObject : SimPosition, BotMentalAspect
     {
 
-        public Vector2 MinMaxZ
-        {
-            get { return new Vector2(OuterBox.MinZ, OuterBox.MaxZ); }
-        }
-
-        public Box3Fill OuterBox
-        {
-            get { return Mesh.OuterBox; }
-        }
+        public Box3Fill OuterBox = new Box3Fill(true);
 
         internal void ResetRegion(ulong regionHandle)
         {
@@ -818,19 +810,19 @@ namespace cogbot.TheOpenSims
             return ToString();
         }
 
-        public SimMesh _Mesh;
+        //public SimMesh _Mesh;
 
-        public SimMesh Mesh
-        {
-            get
-            {
-                if (_Mesh == null)
-                {
-                    _Mesh = new SimMesh(this);
-                }
-                return _Mesh;
-            }
-        }
+        //SimMesh _Mesh;
+        //{
+        //    get
+        //    {
+        //        if (_Mesh == null)
+        //        {
+        //            _Mesh = new SimMesh(this);
+        //        }
+        //        return _Mesh;
+        //    }
+        //}
         
 
         public string GetMeshInfo()
@@ -839,7 +831,7 @@ namespace cogbot.TheOpenSims
             {
                 ForceUpdateOccupied(PS);
             }
-            return Mesh.DebugString();
+            return (new SimMesh(this)).DebugString();
 
         }
 
@@ -911,7 +903,7 @@ namespace cogbot.TheOpenSims
         {
             if (!IsRegionAttached()) return;
             if (simPathStore.GetSimRegion() != GetSimRegion()) return;
-            if (!Mesh.IsSculpted)
+            if (!IsSculpted)
             {
                 UpdatePathOccupied(simPathStore);
                 return;
@@ -937,7 +929,7 @@ namespace cogbot.TheOpenSims
         {
             if (simPathStore.GetSimRegion() != GetSimRegion()) return;
             Vector3 Position = GetSimPosition();
-            Mesh.SetOccupied(SetLocated, 10, 60, simPathStore.StepSize);
+            (new SimMesh(this)).SetOccupied(SetLocated, 10, 60, simPathStore.StepSize);
         }
 
 
@@ -981,13 +973,13 @@ namespace cogbot.TheOpenSims
 
 
 
-        internal string ToMeshString()
-        {
-            if (_Mesh != null)
-            {
-               return _Mesh.ToString();
-            }
-            return ToString();
-        }
+        //internal string ToMeshString()
+        //{
+        //    if (_Mesh != null)
+        //    {
+        //       return _Mesh.ToString();
+        //    }
+        //    return ToString();
+        //}
     }
 }
