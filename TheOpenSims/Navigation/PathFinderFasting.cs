@@ -25,7 +25,7 @@ namespace cogbot.TheOpenSims.Navigation
 //namespace Algorithms
 {
     [Author("Franco, Gustavo")]
-    public class PathFinderFast : IPathFinder
+    public class PathFinderFasting : IPathFinder
     {
         #region Structs
         [Author("Franco, Gustavo")]
@@ -85,8 +85,9 @@ namespace cogbot.TheOpenSims.Navigation
         private int                             mCloseNodeCounter       = 0;
         private ushort                          mGridX                  = 0;
         private ushort                          mGridY                  = 0;
-        private ushort                          mGridXMinus1            = 0;
-        private ushort                          mGridYLog2              = 0;
+       // private ushort                          mGridXMinus1            = 0;
+      //  private ushort                          mGridYLog2              = 0;
+        private ushort mGridYMag = 0;
         private bool                            mFound                  = false;
         private sbyte[,]                        mDirection              = new sbyte[8,2]{{0,-1} , {1,0}, {0,1}, {-1,0}, {1,-1}, {1,1}, {-1,1}, {-1,-1}};
         private int                             mEndLocation            = 0;
@@ -94,7 +95,7 @@ namespace cogbot.TheOpenSims.Navigation
         #endregion
 
         #region Constructors
-        public PathFinderFast(byte[,] grid)
+        public PathFinderFasting(byte[,] grid)
         {
             if (grid == null)
                 throw new Exception("Grid cannot be null");
@@ -102,13 +103,15 @@ namespace cogbot.TheOpenSims.Navigation
             mGrid           = grid;
             mGridX          = (ushort) (mGrid.GetUpperBound(0) + 1);
             mGridY          = (ushort) (mGrid.GetUpperBound(1) + 1);
-            mGridXMinus1    = (ushort) (mGridX - 1);
-            mGridYLog2      = (ushort) Math.Log(mGridY, 2);
+            //mGridXMinus1    = (ushort) (mGridX - 1);
+            // mGridYLog2      = (ushort) Math.Log(mGridY, 2);
+
+            mGridYMag = mGridX;
 
             // This should be done at the constructor, for now we leave it here.
-            if (Math.Log(mGridX, 2) != (int) Math.Log(mGridX, 2) ||
-                Math.Log(mGridY, 2) != (int) Math.Log(mGridY, 2))
-                throw new Exception("Invalid Grid, size in X and Y must be power of 2");
+            //if (Math.Log(mGridX, 2) != (int) Math.Log(mGridX, 2) ||
+            //    Math.Log(mGridY, 2) != (int) Math.Log(mGridY, 2))
+            //    throw new Exception("Invalid Grid, size in X and Y must be power of 2");
 
             if (mCalcGrid == null || mCalcGrid.Length != (mGridX * mGridY))
                 mCalcGrid = new PathFinderNodeFast[mGridX * mGridY];
@@ -230,8 +233,8 @@ namespace cogbot.TheOpenSims.Navigation
                     PathFinderDebug(0, 0, end.X, end.Y, PathFinderNodeType.End, -1, -1);
                 #endif
 
-                mLocation                      = (start.Y << mGridYLog2) + start.X;
-                mEndLocation                   = (end.Y << mGridYLog2) + end.X;
+                mLocation = (start.Y * mGridYMag) + start.X;
+                mEndLocation = (end.Y * mGridYMag) + end.X;
                 mCalcGrid[mLocation].G         = 0;
                 mCalcGrid[mLocation].F         = mHEstimate;
                 mCalcGrid[mLocation].PX        = (ushort) start.X;
@@ -247,12 +250,12 @@ namespace cogbot.TheOpenSims.Navigation
                     if (mCalcGrid[mLocation].Status == mCloseNodeValue)
                         continue;
 
-                    mLocationX   = (ushort) (mLocation & mGridXMinus1);
-                    mLocationY   = (ushort) (mLocation >> mGridYLog2);
+                    mLocationX = (ushort)(mLocation %  mGridYMag);
+                    mLocationY   = (ushort) (mLocation / mGridYMag);
                     
                     #if DEBUGON
                     if (mDebugProgress && PathFinderDebug != null)
-                        PathFinderDebug(0, 0, mLocation & mGridXMinus1, mLocation >> mGridYLog2, PathFinderNodeType.Current, -1, -1);
+                        PathFinderDebug(0, 0, mLocation %  mGridYMag, mLocation / mGridYMag, PathFinderNodeType.Current, -1, -1);
                     #endif
 
                     if (mLocation == mEndLocation)
@@ -277,7 +280,7 @@ namespace cogbot.TheOpenSims.Navigation
                     {
                         mNewLocationX = (ushort) (mLocationX + mDirection[i,0]);
                         mNewLocationY = (ushort) (mLocationY + mDirection[i,1]);
-                        mNewLocation  = (mNewLocationY << mGridYLog2) + mNewLocationX;
+                        mNewLocation  = (mNewLocationY * mGridYMag) + mNewLocationX;
 
                         if (mNewLocationX >= mGridX || mNewLocationY >= mGridY)
                             continue;
@@ -395,7 +398,7 @@ namespace cogbot.TheOpenSims.Navigation
                     int posX = end.X;
                     int posY = end.Y;
 
-                    PathFinderNodeFast fNodeTmp = mCalcGrid[(end.Y << mGridYLog2) + end.X];
+                    PathFinderNodeFast fNodeTmp = mCalcGrid[(end.Y * mGridYMag) + end.X];
                     PathFinderNode fNode;
                     fNode.F  = fNodeTmp.F;
                     fNode.G  = fNodeTmp.G;
@@ -414,7 +417,7 @@ namespace cogbot.TheOpenSims.Navigation
                         #endif
                         posX = fNode.PX;
                         posY = fNode.PY;
-                        fNodeTmp = mCalcGrid[(posY << mGridYLog2) + posX];
+                        fNodeTmp = mCalcGrid[(posY * mGridYMag) + posX];
                         fNode.F  = fNodeTmp.F;
                         fNode.G  = fNodeTmp.G;
                         fNode.H  = 0;

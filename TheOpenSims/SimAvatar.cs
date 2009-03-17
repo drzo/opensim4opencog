@@ -78,7 +78,7 @@ namespace cogbot.TheOpenSims
 
 
         string AspectName;
-        public SimAvatar(Avatar slAvatar, WorldObjects objectSystem, SimRegion reg)
+        public SimAvatar(Avatar slAvatar, WorldObjects objectSystem, Simulator reg)
             : base(slAvatar, objectSystem, reg)
         {
             WorldObjects.SimAvatars.Add(this);
@@ -678,15 +678,19 @@ namespace cogbot.TheOpenSims
                 //  WorldSystem = Client.WorldSystem;
                 if (IsLocal())
                 {
-                    WorldSystem.SetSimAvatar(this);
-                    ApproachThread = new Thread(TrackerLoop);
-                    ApproachThread.Name = "TrackerLoop for " + Client;
-                    ApproachThread.Start();
-                    //if (ApproachThread != null)
-                    //{
-                    //    if (!ApproachThread.IsAlive)                    
-                    //        ApproachThread.Start();
-                    //}
+                    if (ApproachThread == null)
+                    {
+
+                        WorldSystem.SetSimAvatar(this);
+                        ApproachThread = new Thread(TrackerLoop);
+                        ApproachThread.Name = "TrackerLoop for " + Client;
+                        ApproachThread.Start();
+                        //if (ApproachThread != null)
+                        //{
+                        //    if (!ApproachThread.IsAlive)                    
+                        //        ApproachThread.Start();
+                        //}
+                    }
                 }
             }
             //WorldSystem.AddTracking(this,Client);

@@ -51,8 +51,8 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         #region Constructors
         public PanelPathFinder(SimPathStore simPathStore)
         {
-            InitializeComponent();
             PathStore = simPathStore;
+            InitializeComponent();
            // ResetMatrix(mMatrix);
         }
         #endregion
@@ -180,6 +180,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 
         private void CenterOnStart()
         {
+            if (PathStore == null) return;
             ///throw new Exception("The method or operation is not implemented.");
             OffsetXY((int)(GridX * GridSize * PathStore.POINTS_PER_METER),(int)( GridY * GridSize * PathStore.POINTS_PER_METER));
         }
@@ -257,7 +258,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         }
 
         ToolTip tip = new ToolTip();
-        APropos tipForm ;
+        WaypointProperties tipForm ;
         protected override void OnMouseMove(MouseEventArgs e)
         {
             int x = e.X / mGridSize;
@@ -277,21 +278,19 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                 {
                     str = "" + PathStore.mMatrix[x, y];
                 }
-
-                // For times that tooltips are not working
-                if (e.Button == MouseButtons.Right)
-                {
-                    if (tipForm == null || tipForm.IsDisposed)
-                    {
-                        tipForm = new APropos();
-                    }
-                    tipForm.textBox1.Text = str;
-                    tipForm.Show();
-                    tipForm.Activate();
-                    return;
-                }
-
                 tip.SetToolTip(this, str);
+                return;
+            }
+            // For times that tooltips are not working
+            if (e.Button == MouseButtons.Right)
+            {
+                if (tipForm == null || tipForm.IsDisposed)
+                {
+                    tipForm = new WaypointProperties();
+                }
+                tipForm.SetWaypoint(PathStore.Waypoint(x, y));
+                tipForm.Show();
+                tipForm.Activate();
                 return;
             }
 

@@ -350,7 +350,7 @@ namespace cogbot.Listeners
 
         static void TrackPaths()
         {
-            for (int i = 0; i < 90; i++)
+            for (int i = 0; i < 10; i++)
             {
                 Thread.Sleep(1000);
                 Application.DoEvents();
@@ -358,7 +358,6 @@ namespace cogbot.Listeners
             int lastCount = 0;
             while (true)
             {
-                Thread.Sleep(30000);
                 ObjectUpdateItem U;
                 int updates = 0;
                 lock (updateQueue)
@@ -367,7 +366,10 @@ namespace cogbot.Listeners
                 }
                 if (updates > 0)
                 {
-                    Debug("Processing Updates: " + updates);
+                    int did = 0;
+                    Debug("Start Processing Updates: " + updates);
+                    Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
+
                     while (updates > 0)
                     {
                         lock (updateQueue)
@@ -376,27 +378,54 @@ namespace cogbot.Listeners
                             updates = updateQueue.Count;
                         }
                         U();
+                        did++;
                     }
+                    Debug("Done processing Updates: " + did);
+                    Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
+
                 }
+                int beforeCatchUp = SimObjects.Count;
                 lock (Master.client.Network.Simulators)
                     foreach (Simulator S in Master.client.Network.Simulators)
                     {
                         Master.CatchUp(S);
                     }
                 int thisCount = SimObjects.Count;
-                if (thisCount == lastCount) continue;
+                if (beforeCatchUp != thisCount)
+                {
+                    Debug("Simulator catchup found: " + beforeCatchUp + " -> " + thisCount);
+                    Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
+                }
+                if (thisCount == lastCount)
+                {
+                    Thread.Sleep(20000);
+                    Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
+                    continue;
+                }
+
                 Debug("TrackPaths Started: " + lastCount + "->" + thisCount);
+                Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
                 lastCount = thisCount;
+                int occUpdate = 0;
                 foreach (SimObject O in SimObjects)
                 {
-                    //Application.DoEvents();
+                    //   Application.DoEvents();
                     if (O.IsRegionAttached())
+                    {
                         O.UpdateOccupied();
+                        occUpdate++;
+                    }
+                    if (occUpdate % 100 == 0)
+                    {
+                        Console.Write(".");
+                        Console.Out.Flush();
+                    }
+                    //if (occUpdate
                 }
-                HeapShot();
                 Debug("TrackPaths Completed: " + thisCount);
+                Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
                 SimRegion.BakeRegions();
-                HeapShot();
+                Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
             }
         }
 
@@ -488,12 +517,12 @@ namespace cogbot.Listeners
                         BlockUntilPrimValid(prim, simulator);
                         Debug("  - - -#$%#$%#$%% - ------- - Unwird Avatar " + prim);
                     }
-                    obj0 = new SimAvatar((Avatar)prim, this, SimRegion.GetRegion(simulator));
+                    obj0 = new SimAvatar((Avatar)prim, this, simulator);
                     lock (SimAvatars) SimAvatars.Add((SimAvatar)obj0);
                 }
                 else
                 {
-                    obj0 = new SimObject(prim, this, SimRegion.GetRegion(prim.RegionHandle));
+                    obj0 = new SimObject(prim, this, simulator);
                 }
                 RegisterUUID(prim.ID, obj0);
                 lock (SimObjects) SimObjects.AddTo((SimObject)obj0);
@@ -837,14 +866,13 @@ namespace cogbot.Listeners
         static Queue<ObjectUpdateItem> updateQueue = new Queue<ObjectUpdateItem>();
 
         delegate void ObjectUpdateItem();
-        static object Objects_OnObjectPropertiesLock = new object();
         public override void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties props)
         {
 
             CheckConnected(simulator);
-            // lock (Objects_OnObjectPropertiesLock)
+            // lock (updateQueue)
             //if (prim != null)
-                lock (Objects_OnObjectPropertiesLock) updateQueue.Enqueue(delegate()
+            lock (updateQueue) updateQueue.Enqueue(delegate()
             {
                 Objects_OnObjectProperties1(simulator, props);
             });
@@ -889,7 +917,7 @@ namespace cogbot.Listeners
         internal void Objects_OnNewAvatar1(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
         {
             Objects_OnNewPrim(simulator, avatar, regionHandle, timeDilation);
-            lock (Objects_OnObjectPropertiesLock) updateQueue.Enqueue(delegate()
+            lock (updateQueue) updateQueue.Enqueue(delegate()
             {
                 SimAvatar AV = (SimAvatar)GetSimObject(avatar, simulator);
                 if (avatar.LocalID == client.Self.LocalID)
@@ -997,6 +1025,7 @@ namespace cogbot.Listeners
 
         public override void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
         {
+           /// return;
             if (simulator.Handle != regionHandle)
             {
                 Debug("Strange update" + simulator);
@@ -1033,7 +1062,7 @@ namespace cogbot.Listeners
                 return;
             }
             return;
-            lock (Objects_OnObjectPropertiesLock) updateQueue.Enqueue(delegate()
+            lock (updateQueue) updateQueue.Enqueue(delegate()
           {
               Objects_OnObjectUpdated1(simulator, update, regionHandle, timeDilation);
           });

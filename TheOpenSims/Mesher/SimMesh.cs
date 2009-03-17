@@ -34,19 +34,15 @@ namespace cogbot.TheOpenSims.Mesher
         /// UseExtremeDetailSize is compared to Scale X/Y/Z added together and if greater will try to
         ///   generate more faces
         /// </summary>
-        static float UseExtremeDetailSize = 5f;
+        static float UseExtremeDetailSize = 3f;
         static bool UseViewerMode = false;
         public static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        //   CollisionTest collider;
-        //Vector3 Scale;
-        //SimObject Object;
-        // Vector3 Position;
-        bool IsSolid = false;
         readonly SimObject RootObject;
-        //OpenMetaverse.Quaternion Rotation;
-       // string name;
 
-        Box3Fill OuterBox {
+        float PADXY = 0.2f;
+
+        Box3Fill OuterBox
+        {
             get { return RootObject.OuterBox; }
         }
 
@@ -58,9 +54,6 @@ namespace cogbot.TheOpenSims.Mesher
         }
         public SimMesh(SimObject simObject)
         {
-            // collider = new CollisionTest(IsInside);
-          //  name = simObject.thePrim.ID.ToString();
-            //Position = simObject.Parent.GetSimPosition();
             RootObject = simObject;
             Update(simObject);
         }
@@ -77,11 +70,6 @@ namespace cogbot.TheOpenSims.Mesher
             Quaternion Rotation = simObject.GetSimRotation();
             Vector3 Scale = simObject.GetSimScale();
             List<Mesh> MeshList = new List<Mesh>();
-
-            if (simObject.thePrim.PrimData.ProfileHollow == 0.0f)
-            {
-                IsSolid = true;
-            }
 
             //PrimMesh primMesh;
 
@@ -135,22 +123,39 @@ namespace cogbot.TheOpenSims.Mesher
                 {
                     if (v != null)
                     {
-                        OuterBox.AddVertex(v);
+                        OuterBox.AddVertex(v, PADXY);
                     }
                 }
-                List<Triangle> TriangleList = new List<Triangle>();
-                foreach (Triangle t in M.triangles)
+                Triangle[] ts = M.triangles.ToArray();
+                int len = ts.Length - 1;
+                for (int i = 0; i < ts.Length; i++)
                 {
-                    if (AddBox(t, TriangleList))
+                    Triangle t1 = ts[i];
+                    bool used = false;
+                    OuterBox.AddTriange(t1, PADXY);
+                    for (int ii = i + 1; ii < ts.Length; ii++)
                     {
-                        throw new IndexOutOfRangeException("Triangle outside of OuterBox");
+                        Triangle t2 = ts[ii];
+                        int shared = SharedVertexs(t1, t2);
+                        if (shared == 3) continue;
+                        if (shared == 2)
+                        {
+                            Box3Fill B = new Box3Fill(true);
+                            B.AddTriange(t1, PADXY);
+                            B.AddTriange(t2, PADXY);
+                            InnerBoxes.Add(B);
+                            used = true;
+                        }
+                    }
+                    if (!used)
+                    {
+                        Box3Fill B = new Box3Fill(true);
+                        B.AddTriange(t1, PADXY);
+                        InnerBoxes.Add(B);
                     }
                 }
             }
-            //int InnerBoxesCountBefore = InnerBoxes.Count;
             InnerBoxes = Box3Fill.Simplify(InnerBoxes);
-            //if (InnerBoxesCountBefore != InnerBoxes2.Count) Console.WriteLine("InnerBoxesCountBefore diff " + InnerBoxesCountBefore + "->" + InnerBoxes.Count);
-            //Position = pos;
         }
 
         internal string DebugString()
@@ -162,10 +167,6 @@ namespace cogbot.TheOpenSims.Mesher
             {
                 MI += "\n    Box: " + B.ToString();
             }
-            //foreach (Vector3 B in GetOccupiedList()){
-            //    MI += "\n    Point: " + B;
-            //}
-
             return MI;
         }
 
@@ -177,35 +178,6 @@ namespace cogbot.TheOpenSims.Mesher
             {
                 B.AddPos(offset);
             }
-        }
-
-        public bool AddBox(Triangle t,List<Triangle> TriangleList)
-        {
-            if (t == null) return false;
-            foreach (Triangle T in TriangleList)
-            {
-                // aready known?
-                if (SharedVertexs(t, T) > 2) return false;
-            }
-            Box3Fill box = new Box3Fill(true);
-            if (IsSolid)
-            {
-                foreach (Triangle T in TriangleList)
-                {
-                    int sharedVs = SharedVertexs(t, T);
-                    if (sharedVs == 2)
-                    {
-                        box.AddTriange(T);
-                        //TriangleList.Remove(T);
-                        //break;
-                    }
-                }
-            }
-            box.AddTriange(t);
-            if (!InnerBoxes.Contains(box))
-                InnerBoxes.Add(box);
-            TriangleList.Add(t);
-            return OuterBox.AddTriange(t);
         }
 
         private int SharedVertexs(Triangle t1, Triangle t2)
@@ -244,17 +216,6 @@ namespace cogbot.TheOpenSims.Mesher
 
         internal void SetOccupied(CallbackXY p, float SimZLevel, float SimZMaxLevel, float detail)
         {
-            //Vector3 loc = GetSimPosition();
-            // TODO do we need High?
-            // IrrlichtNETCP.Mesh mesh = IdealistViewer.PrimMesherG.PrimitiveToIrrMesh(thePrim, IdealistViewer.LevelOfDetail.High);
-            //ProfileCurve pc = (ProfileCurve)Object.thePrim.PrimData.profileCurve;
-            //PrimType pt = Object.thePrim.PrimData.Type;
-
-            //if (pt == PrimType.Box)
-            //{
-            //    OuterBox.SetOccupied(p, SimZLevel, SimZMaxLevel,Position);
-            //}
-            //else
             if (InnerBoxes.Count == 0)
             {
                 Console.WriteLine("using outerbox for " + this);
@@ -284,98 +245,7 @@ namespace cogbot.TheOpenSims.Mesher
             }
         }
 
-        //public List<Vector3>[] ZSlices = new List<Vector3>[10];
-        ///// <summary>
-        ///// </summary>
-        ///// <param name="ZSlice"> right now ussually 22 or 23</param>
-        ///// <returns>ICollection&lt;Vector3&gt; probly could be Vector2s but takes more time to wrap them</returns>
-        //public virtual ICollection<Vector3> GetOccupied(float ZSlice)
-        //{
-        //    //  float SimZRange = (SimZHieght / 2)*1.5;
-        //    int ZSliceIndex = (int)Math.Round((double)(ZSlice - 18) / SimPathStore.SimZHieght);
-        //    float SimZLow = ZSlice;
-        //    float SimZHigh = SimZLow + SimPathStore.SimZHieght;
-
-        //    if (ZSliceIndex < 0)
-        //    {
-        //        ZSliceIndex = 0;
-        //    }
-        //    else if (ZSliceIndex > 9)
-        //    {
-        //        ZSliceIndex = 9;
-        //    }
-        //    lock (ZSlices)
-        //    {
-        //       // if (ZSlices[ZSliceIndex] == null)
-        //        {
-        //            List<Vector3> occpuied = new List<Vector3>();
-        //            ZSlices[ZSliceIndex] = occpuied;
-        //            foreach (Vector3 point in GetOccupiedList())
-        //            {
-        //                //if (SimZLow <= point.Z && SimZHigh >= point.Z)
-        //                {
-        //                    occpuied.Add(point);
-        //                }
-        //               // else
-        //                {
-        //                 //   occpuied.Add(point);
-        //                }
-        //            }
-        //        }
-        //        return ZSlices[ZSliceIndex];
-        //    }
-        //}
-
-
-        ////////////////////////////////////////
-        // Static Helpers
-        ////////////////////////////////////////
-
-
-        /// <summary>
-        /// Make a List of Vector3 inside the bounding box
-        /// </summary>
-        /// <param name="Min"></param>
-        /// <param name="Max"></param>
-        /// <param name="detailLevel"></param>
-        /// <param name="PointsOccupied"></param>
-        /// <param name="PointsUnOccupied"></param>
-        /// <param name="test"></param>
-        public static void MakePointsList(Vector3 Min, Vector3 Max, int detailLevel, out ICollection<Vector3> PointsOccupied, out ICollection<Vector3> PointsUnOccupied, CollisionTest test)
-        {
-            PointsOccupied = new List<Vector3>();
-            PointsUnOccupied = new List<Vector3>();
-            float StepLevel = (float)(1f / (float)detailLevel);
-            float MinX = (float)(Math.Round((double)Min.X * detailLevel) / detailLevel);
-            float MinY = (float)(Math.Round((double)Min.Y * detailLevel) / detailLevel);
-            float MinZ = (float)(Math.Round((double)Min.Z * detailLevel) / detailLevel);
-            float MaxX = (float)(Math.Round((double)Max.X * detailLevel) / detailLevel);
-            float MaxY = (float)(Math.Round((double)Max.Y * detailLevel) / detailLevel);
-            float MaxZ = (float)(Math.Round((double)Max.Z * detailLevel) / detailLevel);
-            if (MaxX < MinX || MaxZ < MinZ || MaxY < MinY)
-            {
-                throw new ArgumentException("is box3d.MinEdge and box3d.MaxEdge in the TopLeft-to-BottemRight Order? " + Min + " > " + Max);
-            }
-            for (float x = MinX; x <= MaxX; x += StepLevel)
-            {
-                for (float y = MinY; y <= MaxY; y += StepLevel)
-                {
-                    for (float z = MinZ; z <= MaxZ; z += StepLevel)
-                    {
-                        Vector3 v3 = new Vector3(x, y, z);
-                        if (test(x, y, z))
-                        {
-                            PointsOccupied.Add(v3);
-                        }
-                        else
-                        {
-                            PointsUnOccupied.Add(v3);
-                        }
-                    }
-                }
-            }
-        }
-
+    
         /// <summary>
         /// Convert a PrimMesher.PrimMesh to OpenSim.Region.Physics.Meshing.Mesh
         /// </summary>
@@ -690,163 +560,8 @@ namespace cogbot.TheOpenSims.Mesher
             }
             return newPrim;
         }
-
-
-
-        //static public Mesh CreateMesh(String primName, PrimitiveBaseShape primShape, PhysicsVector size, float lod, bool isPhysical, Quat rot)
-        //{
-        //    Mesh mesh = (Mesh)Meshmerizer.CreateMesh(primName, primShape, size, lod, isPhysical, rot);
-        //    return mesh;
-        //}
-
-
-        ///// <summary>
-        ///// [05:31] <AFrisby> dmiles_afk, search my blog, I wrote a function for converting OpenMetaverse.Primitive to OpenSimulator.SceneObjectGroup
-        ///// 
-        ///// from: http://www.adamfrisby.com/blog/2008/10/code-snippet-converting-openmetaverseprimitive-to-opensimulatorsceneobjectpart/
-        ///// </summary>
-        ///// <param name="orig"></param>
-        ///// <returns></returns>
-        //static public PrimitiveBaseShape PrimToBaseShape(Primitive orig) {
-        //    //bool root = orig.ParentID == 0;
-
-        //    //SceneObjectPart sop = new SceneObjectPart();
-        //    //sop.LastOwnerID = orig.OwnerID;
-        //    //sop.OwnerID = orig.OwnerID;
-        //    //sop.GroupID = orig.GroupID;
-
-        //    //sop.CreatorID = orig.Properties.CreatorID;
-
-        //    //sop.OwnershipCost = orig.Properties.OwnershipCost;
-        //    //sop.ObjectSaleType = (byte)orig.Properties.SaleType;
-        //    //sop.SalePrice = orig.Properties.SalePrice;
-        //    //sop.CreationDate = (int)Utils.DateTimeToUnixTime(orig.Properties.CreationDate);
-
-        //    //// Special   
-        //    //sop.ParentID = 0;
-
-        //    //sop.OwnerMask = (uint)orig.Properties.Permissions.OwnerMask;
-        //    //sop.NextOwnerMask = (uint)orig.Properties.Permissions.NextOwnerMask;
-        //    //sop.GroupMask = (uint)orig.Properties.Permissions.GroupMask;
-        //    //sop.EveryoneMask = (uint)orig.Properties.Permissions.EveryoneMask;
-        //    //sop.BaseMask = (uint)orig.Properties.Permissions.BaseMask;
-
-        //    //sop.ParticleSystem = orig.ParticleSys.GetBytes();
-
-        //    //// OS only   
-        //    //sop.TimeStampFull = 0;
-        //    //sop.TimeStampLastActivity = 0;
-        //    //sop.TimeStampTerse = 0;
-
-        //    //// Not sure nessecary   
-        //    //sop.UpdateFlag = 2;
-
-        //    //sop.InventorySerial = 0;
-        //    //sop.UUID = orig.ID;
-        //    //sop.LocalId = orig.LocalID;
-        //    //sop.Name = orig.Properties.Name;
-        //    //sop.Flags = orig.Flags;
-        //    //sop.Material = 0;
-        //    //sop.RegionHandle = orig.RegionHandle;
-
-        //    //sop.GroupPosition = orig.Position;
-
-        //    //if (!root)
-        //    //    sop.OffsetPosition = orig.Position;
-        //    //else
-        //    //    sop.OffsetPosition = Vector3.Zero;
-
-        //    //sop.RotationOffset = orig.Rotation;
-        //    //sop.Velocity = orig.Velocity;
-        //    //sop.RotationalVelocity = Vector3.Zero;
-        //    //sop.AngularVelocity = Vector3.Zero;
-        //    //sop.Acceleration = Vector3.Zero;
-
-        //    //sop.Description = orig.Properties.Description;
-        //    //sop.Color = Color.White;
-        //    //sop.Text = orig.Text;
-        //    //sop.SitName = orig.Properties.SitName;
-        //    //sop.TouchName = orig.Properties.TouchName;
-        //    //sop.ClickAction = (byte)orig.ClickAction;
-
-        //    //sop.PayPrice = new int[1];
-
-        //    PrimitiveBaseShape sopShape = new PrimitiveBaseShape(true);
-        //    //sopShape.Scale = orig.Scale;
-        //    sopShape.FlexiEntry = false;
-        //    if (orig.Flexible != null)
-        //    {
-        //        sopShape.FlexiDrag = orig.Flexible.Drag;
-        //        sopShape.FlexiEntry = false;
-        //        sopShape.FlexiForceX = orig.Flexible.Force.X;
-        //        sopShape.FlexiForceY = orig.Flexible.Force.Y;
-        //        sopShape.FlexiForceZ = orig.Flexible.Force.Z;
-        //        sopShape.FlexiGravity = orig.Flexible.Gravity;
-        //        sopShape.FlexiSoftness = orig.Flexible.Softness;
-        //        sopShape.FlexiTension = orig.Flexible.Tension;
-        //        sopShape.FlexiWind = orig.Flexible.Wind;
-        //    }
-
-        //    Primitive.ConstructionData origPrimData = orig.PrimData;
-
-        //    switch (origPrimData.ProfileHole)
-        //    {
-        //        case HoleType.Circle:
-        //            sopShape.HollowShape = HollowShape.Circle;
-        //            break;
-        //        case HoleType.Square:
-        //            sopShape.HollowShape = HollowShape.Square;
-        //            break;
-        //        case HoleType.Triangle:
-        //            sopShape.HollowShape = HollowShape.Triangle;
-        //            break;
-        //        default:
-        //        case HoleType.Same:
-        //            sopShape.HollowShape = HollowShape.Same;
-        //            break;
-        //    }
-
-        //    sopShape.LightEntry = false;
-        //    if (orig.Light != null)
-        //    {
-        //        sopShape.LightColorA = orig.Light.Color.A;
-        //        sopShape.LightColorB = orig.Light.Color.B;
-        //        sopShape.LightColorG = orig.Light.Color.G;
-        //        sopShape.LightColorR = orig.Light.Color.R;
-        //        sopShape.LightCutoff = orig.Light.Cutoff;
-        //        sopShape.LightEntry = false;
-        //        sopShape.LightFalloff = orig.Light.Falloff;
-        //        sopShape.LightIntensity = orig.Light.Intensity;
-        //        sopShape.LightRadius = orig.Light.Radius;
-        //    }
-
-        //    sopShape.PathBegin = Primitive.PackBeginCut(origPrimData.PathBegin);
-        //    sopShape.PathCurve = (byte)origPrimData.PathCurve;
-        //    sopShape.PathEnd = Primitive.PackEndCut(origPrimData.PathEnd);
-        //    sopShape.PathRadiusOffset = Primitive.PackPathTwist(origPrimData.PathRadiusOffset);
-        //    sopShape.PathRevolutions = Primitive.PackPathRevolutions(origPrimData.PathRevolutions);
-        //    sopShape.PathScaleX = Primitive.PackPathScale(origPrimData.PathScaleX);
-        //    sopShape.PathScaleY = Primitive.PackPathScale(origPrimData.PathScaleY);
-        //    sopShape.PathShearX = (byte)Primitive.PackPathShear(origPrimData.PathShearX);
-        //    sopShape.PathShearY = (byte)Primitive.PackPathShear(origPrimData.PathShearY);
-        //    sopShape.PathSkew = Primitive.PackPathTwist(origPrimData.PathSkew);
-        //    sopShape.PathTaperX = Primitive.PackPathTaper(origPrimData.PathTaperX);
-        //    sopShape.PathTaperY = Primitive.PackPathTaper(origPrimData.PathTaperY);
-        //    sopShape.PathTwist = Primitive.PackPathTwist(origPrimData.PathTwist);
-        //    sopShape.PathTwistBegin = Primitive.PackPathTwist(origPrimData.PathTwistBegin);
-        //    sopShape.PCode = (byte)origPrimData.PCode;
-        //    sopShape.ProfileBegin = Primitive.PackBeginCut(origPrimData.ProfileBegin);
-        //    sopShape.ProfileCurve = origPrimData.profileCurve;
-        //    sopShape.ProfileEnd = Primitive.PackEndCut(origPrimData.ProfileEnd);
-        //    sopShape.ProfileHollow = Primitive.PackProfileHollow(origPrimData.ProfileHollow);
-        //    sopShape.ProfileShape = (ProfileShape)(byte)origPrimData.ProfileCurve;
-
-        //    sopShape.Textures = orig.Textures;
-
-        //    return sopShape;
-        //}
-
     }
+
     public class Box3Fill : IComparable<Box3Fill>, IEquatable<Box3Fill>
     {
 
@@ -930,7 +645,7 @@ namespace cogbot.TheOpenSims.Mesher
             MaxZ = float.MinValue;
         }
 
-        const float PADXY = 0.33f;// SimPathStore.StepSize*0.75f;
+        //const float PADXY = 0.33f;// SimPathStore.StepSize*0.75f;
         const float PADZ = 0.20f;// SimPathStore.StepSize*0.75f;
 
         public override int GetHashCode()
@@ -1019,38 +734,43 @@ namespace cogbot.TheOpenSims.Mesher
         /// </summary>
         /// <param name="v"></param>
         /// <returns>true if the box has grown</returns>
-        public bool AddVertex(Vertex v)
+        internal bool AddVertex(Vertex v, float PADXY)
+        {
+            return AddPoint(v.X, v.Y, v.Z, PADXY);
+        }
+
+        internal bool AddPoint(float x, float y, float z, float PADXY)
         {
             bool changed = false;
-            if (v.X < MinX)
+            if (x < MinX)
             {
-                MinX = v.X - PADXY;
+                MinX = x - PADXY;
                 changed = true;
             }
-            if (v.Y < MinY)
+            if (y < MinY)
             {
-                MinY = v.Y - PADXY;
+                MinY = y - PADXY;
                 changed = true;
             }
-            if (v.Z < MinZ)
+            if (z < MinZ)
             {
-                MinZ = v.Z;// -PADZ;
+                MinZ = z;// -PADZ;
                 changed = true;
             }
 
-            if (v.X > MaxX)
+            if (x > MaxX)
             {
-                MaxX = v.X + PADXY;
+                MaxX = x + PADXY;
                 changed = true;
             }
-            if (v.Y > MaxY)
+            if (y > MaxY)
             {
-                MaxY = v.Y + PADXY;
+                MaxY = y + PADXY;
                 changed = true;
             }
-            if (v.Z > MaxZ)
+            if (z > MaxZ)
             {
-                MaxZ = v.Z + PADZ;
+                MaxZ = z + PADZ;
                 changed = true;
             }
             return changed;
@@ -1061,11 +781,11 @@ namespace cogbot.TheOpenSims.Mesher
         /// </summary>
         /// <param name="t"></param>
         /// <returns>true if the boxsize was increased</returns>
-        public bool AddTriange(Triangle t)
+        public bool AddTriange(Triangle t, float PADXY)
         {
-            return AddVertex(t.v1) ||
-             AddVertex(t.v2) ||
-             AddVertex(t.v3);
+            return AddVertex(t.v1, PADXY) ||
+             AddVertex(t.v2, PADXY) ||
+             AddVertex(t.v3, PADXY);
         }
 
         public Vector3 MinEdge
