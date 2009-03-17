@@ -2163,6 +2163,9 @@ namespace OpenMetaverse
         /// false</returns>
         public bool Teleport(string simName, Vector3 position, Vector3 lookAt)
         {
+            if (Client.Network.CurrentSim == null)
+                return false;
+
             teleportStat = TeleportStatus.None;
             simName = simName.ToLower();
 
@@ -3375,7 +3378,7 @@ namespace OpenMetaverse
                 message.RegionID = msg["region_id"].AsUUID();
                 message.Position = ((OSDArray)msg["position"]).AsVector3();
                 message.Dialog = (InstantMessageDialog)msgdata["type"].AsInteger();
-                message.GroupIM = true;
+                message.GroupIM = msg["from_group"].AsBoolean();
                 message.IMSessionID = map["session_id"].AsUUID();
                 message.Timestamp = new DateTime(msgdata["timestamp"].AsInteger());
                 message.Message = msg["message"].AsString();

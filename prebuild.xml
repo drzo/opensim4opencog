@@ -172,6 +172,7 @@
         <Reference name="OpenMetaverse.Http"/>
         <Files>
           <Match pattern="*.cs" recurse="true">
+            <Exclude name="CRC32.cs"/>
             <Exclude name="Color4.cs"/>
             <Exclude name="Matrix4.cs"/>
             <Exclude name="Quaternion.cs"/>

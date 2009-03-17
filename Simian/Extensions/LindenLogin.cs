@@ -7,7 +7,7 @@ using ExtensionLoader;
 using HttpServer;
 using OpenMetaverse;
 
-namespace Simian.Extensions
+namespace Simian
 {
     public class LindenLogin : IExtension<Simian>
     {
@@ -17,7 +17,7 @@ namespace Simian.Extensions
         {
         }
 
-        public void Start(Simian server)
+        public bool Start(Simian server)
         {
             this.server = server;
 
@@ -32,7 +32,7 @@ namespace Simian.Extensions
 
             // Client LLSD login
             server.HttpServer.AddHandler("post", "application/xml", "^/$", LoginLLSDPostHandler);
-
+            return true;
         }
 
         public void Stop()
@@ -175,63 +175,68 @@ namespace Simian.Extensions
 
         LoginResponseData HandleLogin(string firstName, string lastName, string password, string start, string version, string channel)
         {
-            LoginResponseData response = new LoginResponseData();
-            Agent agent;
+            ISceneProvider scene = server.Grid.GetDefaultLocalScene();
 
+            LoginResponseData response = new LoginResponseData();
+            AgentInfo agentInfo;
+
+            // Attempt to authenticate
             UUID agentID = server.Authentication.Authenticate(firstName, lastName, password);
             if (agentID != UUID.Zero)
             {
                 // Authentication successful, create a login instance of this agent
-                agent = server.Accounts.CreateInstance(agentID);
-
-                // Create a seed capability for this agent
-                Uri seedCap = server.Capabilities.CreateCapability(server.Scene.SeedCapabilityHandler, false, agentID);
-
-                if (agent != null)
+                agentInfo = server.Accounts.CreateInstance(agentID);
+                if (agentInfo != null)
                 {
-                    // Assign a circuit code and insert the agent into the unassociatedAgents dictionary
-                    agent.CircuitCode = server.UDP.CreateCircuit(agent);
+                    Agent agent = new Agent(new SimulationObject(new Avatar(), scene), agentInfo);
+                    
+                    // Set the avatar ID
+                    agent.Avatar.Prim.ID = agentInfo.ID;
+
+                    // Random session IDs
+                    agent.SessionID = UUID.Random();
+                    agent.SecureSessionID = UUID.Random();
+
+                    // Create a seed capability for this agent
+                    agent.SeedCapability = server.Capabilities.CreateCapability(scene.SeedCapabilityHandler, false, agentID);
 
                     agent.TickLastPacketReceived = Environment.TickCount;
-                    agent.LastLoginTime = Utils.DateTimeToUnixTime(DateTime.Now);
+                    agent.Info.LastLoginTime = Utils.DateTimeToUnixTime(DateTime.Now);
 
-                    // Get this machine's IP address
-                    IPHostEntry addresses = Dns.GetHostByName(Dns.GetHostName());
-                    IPAddress simIP = addresses.AddressList.Length > 0 ?
-                        addresses.AddressList[addresses.AddressList.Length - 1] : IPAddress.Loopback;
+                    // Assign a circuit code and track the agent as an unassociated agent (no UDP connection yet)
+                    agent.CircuitCode = scene.UDP.CreateCircuit(agent);
 
-                    agent.CurrentRegionHandle = server.Scene.RegionHandle;
-                    agent.HomeRegionHandle = server.Scene.RegionHandle;
-
-                    response.AgentID = agent.Avatar.ID;
+                    response.AgentID = agent.ID;
                     response.SecureSessionID = agent.SecureSessionID;
                     response.SessionID = agent.SessionID;
                     response.CircuitCode = agent.CircuitCode;
-                    response.AgentAccess = agent.AccessLevel;
+                    response.AgentAccess = agent.Info.AccessLevel;
                     response.BuddyList = null; // FIXME:
-                    response.FirstName = agent.FirstName;
-                    response.HomeLookAt = agent.HomeLookAt;
-                    response.HomePosition = agent.HomePosition;
-                    response.HomeRegion = agent.HomeRegionHandle;
-                    response.InventoryRoot = agent.InventoryRoot;
+                    response.FirstName = agent.Info.FirstName;
+                    response.HomeLookAt = agent.Info.HomeLookAt;
+                    response.HomePosition = agent.Info.HomePosition;
+                    response.HomeRegion = agent.Info.HomeRegionHandle;
+                    response.InventoryRoot = agent.Info.InventoryRoot;
                     response.InventorySkeleton = null; // FIXME:
-                    response.LastName = agent.LastName;
-                    response.LibraryOwner = agent.InventoryLibraryOwner;
-                    response.LibraryRoot = agent.InventoryLibraryRoot;
+                    response.LastName = agent.Info.LastName;
+                    response.LibraryOwner = agent.Info.InventoryLibraryOwner;
+                    response.LibraryRoot = agent.Info.InventoryLibraryRoot;
                     response.LibrarySkeleton = null; // FIXME:
                     response.LookAt = agent.CurrentLookAt;
                     response.Message = "Welcome to Simian";
                     response.Reason = String.Empty;
 
-                    response.RegionX = server.Scene.RegionX * 256;
-                    response.RegionY = server.Scene.RegionY * 256;
+                    response.RegionX = scene.RegionX * 256;
+                    response.RegionY = scene.RegionY * 256;
 
                     response.SecondsSinceEpoch = DateTime.Now;
-                    response.SeedCapability = seedCap.ToString();
-                    response.SimIP = simIP;
-                    response.SimPort = (ushort)server.UDPPort;
+                    response.SeedCapability = agent.SeedCapability.ToString();
+                    response.SimIP = scene.IPAndPort.Address;
+                    response.SimPort = (ushort)scene.IPAndPort.Port;
                     response.StartLocation = "last"; // FIXME:
                     response.Success = true;
+
+                    Logger.DebugLog("Sending a login success response with circuit_code " + response.CircuitCode);
                 }
                 else
                 {

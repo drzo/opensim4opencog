@@ -65,15 +65,18 @@ namespace ExtensionLoader
     /// ExtensionLoader&lt;MyApp&gt;
     /// </summary>
     /// <typeparam name="TOwner"></typeparam>
-    public static class ExtensionLoader<TOwner>
+    public class ExtensionLoader<TOwner>
     {
         /// <summary>Currently loaded extensions</summary>
-        public static List<IExtension<TOwner>> Extensions;
+        public List<IExtension<TOwner>> Extensions;
         
-        static CodeDomProvider CSCompiler;
-        static CompilerParameters CSCompilerParams;
+        CodeDomProvider CSCompiler;
+        CompilerParameters CSCompilerParams;
 
-        static ExtensionLoader()
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        public ExtensionLoader()
         {
             Extensions = new List<IExtension<TOwner>>();
 
@@ -105,13 +108,8 @@ namespace ExtensionLoader
         /// dlls, for example MyApp.Extension.*.dll</param>
         /// <param name="sourceSearchPattern">Search pattern for extension
         /// source code files, for example MyApp.Extension.*.cs</param>
-        /// <param name="assignablesParent">The object containing the 
-        /// assignable interfaces</param>
-        /// <param name="assignableInterfaces">A list of interface references
-        /// to assign extensions to</param>
-        public static void LoadAllExtensions(Assembly assembly, string path, List<string> extensionList,
-            List<string> referencedAssemblies, string assemblySearchPattern, string sourceSearchPattern,
-            object assignablesParent, List<FieldInfo> assignableInterfaces)
+        public void LoadAllExtensions(Assembly assembly, string path, List<string> extensionList,
+            List<string> referencedAssemblies, string assemblySearchPattern, string sourceSearchPattern)
         {
             // Add referenced assemblies to the C# compiler
             CSCompilerParams.ReferencedAssemblies.Clear();
@@ -168,32 +166,41 @@ namespace ExtensionLoader
                 // Copy the sorted list back
                 Extensions = new List<IExtension<TOwner>>(sorted.Values);
             }
+        }
 
-            if (assignableInterfaces != null)
+        /// <summary>
+        /// Automatically assign loaded extensions to members of an object. Will
+        /// thrown an exception if an extension is missing for one or more of 
+        /// the interfaces
+        /// </summary>
+        /// <param name="assignablesParent">The object containing the 
+        /// assignable interfaces</param>
+        /// <param name="assignableInterfaces">A list of interface references
+        /// to assign extensions to</param>
+        public void AssignExtensions(object assignablesParent, List<FieldInfo> assignableInterfaces)
+        {
+            // Assign extensions to interfaces
+            foreach (FieldInfo assignable in assignableInterfaces)
             {
-                // Assign extensions to interfaces
-                foreach (FieldInfo assignable in assignableInterfaces)
+                Type type = assignable.FieldType;
+
+                for (int i = Extensions.Count - 1; i >= 0; i--)
                 {
-                    Type type = assignable.FieldType;
+                    IExtension<TOwner> extension = Extensions[i];
 
-                    for (int i = Extensions.Count - 1; i >= 0; i--)
+                    if (extension.GetType().GetInterface(type.Name) != null)
                     {
-                        IExtension<TOwner> extension = Extensions[i];
-
-                        if (extension.GetType().GetInterface(type.Name) != null)
-                        {
-                            assignable.SetValue(assignablesParent, extension);
-                            break;
-                        }
+                        assignable.SetValue(assignablesParent, extension);
+                        break;
                     }
                 }
+            }
 
-                // Check for unassigned interfaces
-                foreach (FieldInfo assignable in assignableInterfaces)
-                {
-                    if (assignable.GetValue(assignablesParent) == null)
-                        throw new ExtensionException("Unassigned interface " + assignable.FieldType.Name);
-                }
+            // Check for unassigned interfaces
+            foreach (FieldInfo assignable in assignableInterfaces)
+            {
+                if (assignable.GetValue(assignablesParent) == null)
+                    throw new ExtensionException("Unassigned interface " + assignable.FieldType.Name);
             }
         }
 
@@ -204,7 +211,7 @@ namespace ExtensionLoader
         /// <param name="path">File path to search for assemblies</param>
         /// <param name="searchPattern">Search pattern, for example MyApp.*.dll</param>
         /// <returns>A list of file names for assemblies</returns>
-        public static List<string> ListExtensionAssemblies(string path, string searchPattern)
+        public List<string> ListExtensionAssemblies(string path, string searchPattern)
         {
             List<string> plugins = new List<string>();
             string[] files = Directory.GetFiles(path, searchPattern);
@@ -237,7 +244,7 @@ namespace ExtensionLoader
         /// <param name="path">File path to search for source code</param>
         /// <param name="searchPattern">Search pattern, for example MyApp.*.cs</param>
         /// <returns>A list of file names for source code</returns>
-        public static List<string> ListExtensionSourceFiles(string path, string searchPattern)
+        public List<string> ListExtensionSourceFiles(string path, string searchPattern)
         {
             List<string> plugins = new List<string>();
             string[] files = Directory.GetFiles(path, searchPattern);
@@ -259,7 +266,7 @@ namespace ExtensionLoader
         /// <param name="assembly">Assembly to load extensions from</param>
         /// <param name="whitelist">An optional whitelist of extension names to
         /// load. Pass null to disable whitelist checking</param>
-        public static void LoadAssemblyExtensions(Assembly assembly, List<string> whitelist)
+        public void LoadAssemblyExtensions(Assembly assembly, List<string> whitelist)
         {
             Type[] constructorParams = new Type[] { };
             object[] parameters = new object[] { };
@@ -268,8 +275,27 @@ namespace ExtensionLoader
             {
                 try
                 {
-                    if (t.GetInterface(typeof(IExtension<TOwner>).Name) != null && 
-                        (whitelist == null || whitelist.Contains(t.Name)))
+                    bool match = false;
+
+                    Type[] interfaces = t.GetInterfaces();
+                    foreach (Type i in interfaces)
+                    {
+                        if (i.Name.StartsWith("IExtension"))
+                        {
+                            Type[] generics = i.GetGenericArguments();
+                            foreach (Type g in generics)
+                            {
+                                if (g == typeof(TOwner))
+                                {
+                                    match = true;
+                                    goto MatchFinished;
+                                }
+                            }
+                        }
+                    }
+
+MatchFinished:
+                    if (match && (whitelist == null || whitelist.Contains(t.Name)))
                     {
                         ConstructorInfo info = t.GetConstructor(constructorParams);
                         IExtension<TOwner> extension = (IExtension<TOwner>)info.Invoke(parameters);
@@ -294,7 +320,7 @@ namespace ExtensionLoader
         /// FieldInfo for</param>
         /// <returns>FieldInfo for the static class member if the member was
         /// found, otherwise null</returns>
-        public static FieldInfo GetInterface(Type ownerType, string memberName)
+        public FieldInfo GetInterface(Type ownerType, string memberName)
         {
             FieldInfo fieldInfo = ownerType.GetField(memberName);
             if (fieldInfo.FieldType.IsInterface)
@@ -311,7 +337,7 @@ namespace ExtensionLoader
         /// <param name="ownerObject">Object containing the assignable
         /// interfaces</param>
         /// <returns>List of FieldInfo objects for each of the interfaces</returns>
-        public static List<FieldInfo> GetInterfaces(object ownerObject)
+        public List<FieldInfo> GetInterfaces(object ownerObject)
         {
             List<FieldInfo> interfaces = new List<FieldInfo>();
 

@@ -522,6 +522,14 @@ namespace OpenMetaverse
             return value;
         }
 
+        public static Vector3 operator *( float scaleFactor, Vector3 value)
+        {
+            value.X *= scaleFactor;
+            value.Y *= scaleFactor;
+            value.Z *= scaleFactor;
+            return value;
+        }
+
         public static Vector3 operator *(Vector3 vec, Quaternion rot)
         {
             Vector3 vec2;

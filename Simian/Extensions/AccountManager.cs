@@ -4,54 +4,46 @@ using ExtensionLoader;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Simian.Extensions
+namespace Simian
 {
     public class AccountManager : IExtension<Simian>, IAccountProvider, IPersistable
     {
         Simian server;
-        DoubleDictionary<string, UUID, Agent> accounts = new DoubleDictionary<string, UUID, Agent>();
+        DoubleDictionary<string, UUID, AgentInfo> accounts = new DoubleDictionary<string, UUID, AgentInfo>();
 
         public AccountManager()
         {
         }
 
-        public void Start(Simian server)
+        public bool Start(Simian server)
         {
             this.server = server;
+            return true;
         }
 
         public void Stop()
         {
         }
 
-        public void AddAccount(Agent agent)
+        public void AddAccount(AgentInfo agent)
         {
-            accounts.Add(agent.FullName, agent.Avatar.ID, agent);
+            accounts.Add(agent.FirstName + " " + agent.LastName, agent.ID, agent);
         }
 
         public bool RemoveAccount(UUID agentID)
         {
-            Agent agent;
+            AgentInfo agent;
             if (accounts.TryGetValue(agentID, out agent))
-                return accounts.Remove(agent.FullName, agentID);
+                return accounts.Remove(agent.FirstName + " " + agent.LastName, agentID);
             else
                 return false;
         }
 
-        public Agent CreateInstance(UUID agentID)
+        public AgentInfo CreateInstance(UUID agentID)
         {
-            Agent agent;
+            AgentInfo agent;
             if (accounts.TryGetValue(agentID, out agent))
             {
-                // Random session IDs
-                agent.SessionID = UUID.Random();
-                agent.SecureSessionID = UUID.Random();
-
-                // Avatar flags
-                agent.Flags = PrimFlags.Physics | PrimFlags.ObjectModify | PrimFlags.ObjectCopy |
-                    PrimFlags.ObjectAnyOwner | PrimFlags.ObjectMove | PrimFlags.InventoryEmpty |
-                    PrimFlags.ObjectTransfer | PrimFlags.ObjectOwnerModify | PrimFlags.ObjectYouOwner;
-
                 return agent;
             }
             else
@@ -62,12 +54,12 @@ namespace Simian.Extensions
             }
         }
 
-        public bool TryGetAccount(UUID agentID, out Agent agent)
+        public bool TryGetAccount(UUID agentID, out AgentInfo agent)
         {
             return accounts.TryGetValue(agentID, out agent);
         }
 
-        public bool TryGetAccount(string fullName, out Agent agent)
+        public bool TryGetAccount(string fullName, out AgentInfo agent)
         {
             return accounts.TryGetValue(fullName, out agent);
         }
@@ -78,10 +70,9 @@ namespace Simian.Extensions
         {
             OSDArray array = new OSDArray(accounts.Count);
 
-            accounts.ForEach(delegate(Agent agent)
+            accounts.ForEach(delegate(AgentInfo agent)
             {
                 OSDMap agentMap = OSD.SerializeMembers(agent);
-                agentMap["AgentID"] = OSD.FromUUID(agent.Avatar.ID);
                 array.Add(agentMap);
             });
 
@@ -99,14 +90,14 @@ namespace Simian.Extensions
 
             for (int i = 0; i < array.Count; i++)
             {
-                Agent agent = new Agent();
-                object agentRef = (object)agent;
                 OSDMap map = array[i] as OSDMap;
-                OSD.DeserializeMembers(ref agentRef, map);
-                agent = (Agent)agentRef;
-                agent.Avatar.ID = map["AgentID"].AsUUID();
 
-                accounts.Add(agent.FullName, agent.Avatar.ID, agent);
+                AgentInfo agentInfo = new AgentInfo();
+                object agentRef = (object)agentInfo;
+                OSD.DeserializeMembers(ref agentRef, map);
+                agentInfo = (AgentInfo)agentRef;
+
+                accounts.Add(agentInfo.FirstName + " " + agentInfo.LastName, agentInfo.ID, agentInfo);
             }
 
             Logger.Log(String.Format("Deserialized the agent store with {0} entries", accounts.Count),
