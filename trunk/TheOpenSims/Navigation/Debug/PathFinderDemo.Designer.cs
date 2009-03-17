@@ -29,6 +29,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         /// </summary>
         private void InitializeComponent()
         {
+            this.PnlGUI = new PanelPathFinder(null);
             this.ToolStrp = new System.Windows.Forms.ToolStrip();
             this.BtnNew = new System.Windows.Forms.ToolStripButton();
             this.BtnLoad = new System.Windows.Forms.ToolStripButton();
@@ -761,7 +762,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator12;
         private System.Windows.Forms.ToolStripButton BtnX;
         private System.Windows.Forms.CheckBox ChkTieBraker;
-        public PanelPathFinder PnlGUI;
+        private PanelPathFinder PnlGUI;
         private System.Windows.Forms.Button BtnStartStop;
         private System.Windows.Forms.Panel PnlSettings;
         private System.Windows.Forms.NumericUpDown NumSearchLimit;

@@ -64,7 +64,9 @@ namespace cogbot.TheOpenSims.Navigation
         public const byte BLOCKED = 0;
         public const byte PASSABLE = 1;
         public const byte STICKY_PASSABLE = 2;
-        public float POINTS_PER_METER = 8f;
+        public const byte INITIALLY = 20;
+        public const byte MAYBE_BLOCKED = 255;
+        public float POINTS_PER_METER = 5f;
         public float LargeScale = 1f;//StepSize;//0.2f;
 
         public float SimLevel(float vx, float vy)
@@ -113,20 +115,20 @@ namespace cogbot.TheOpenSims.Navigation
         internal Color GetColor(int x, int y)
         {
             byte p = mMatrix[x, y];
-            if (p == BLOCKED)
+            switch (p)
             {
-                return BlockedColor(mWaypoints[x, y]);
-            }
-
-            // if (lastsb != null)
-            {
-                //if (p == lastColorByte) return lastsb;
+                case BLOCKED:
+                    return OccupiedColor(Color.Olive, mWaypoints[x, y]);
+                case MAYBE_BLOCKED:
+                    return OccupiedColor(Color.Pink, mWaypoints[x, y]);
+                case PASSABLE:
+                    return OccupiedColor(Color.Blue, mWaypoints[x, y]);
+                case STICKY_PASSABLE:
+                    return OccupiedColor(Color.Green, mWaypoints[x, y]);
             }
             Color sb = lastColour[p];
             if (sb == Color.Empty)
             {
-                if (p == PASSABLE) return (Color.Yellow);
-                if (p == STICKY_PASSABLE) return (Color.Green);
                 int colorIndex = 240 - ((int)(Math.Log10(p) * 127));
                 colorIndex = colorIndex < 0 ? 0 : colorIndex > 255 ? 255 : colorIndex;
                 sb = Color.FromArgb(255, colorIndex, colorIndex, colorIndex);
@@ -135,9 +137,8 @@ namespace cogbot.TheOpenSims.Navigation
             return sb;
         }
 
-        private Color BlockedColor(SimWaypoint simWaypoint)
+        private Color OccupiedColor(Color c, SimWaypoint simWaypoint)
         {
-            Color c = Color.Olive;
             if (simWaypoint != null)
             {
                 int dense = simWaypoint.OccupiedCount;
@@ -165,22 +166,20 @@ namespace cogbot.TheOpenSims.Navigation
             SetPassable(x, y);
         }
 
-        public void SetObjectAt(float x, float y, SimObject simObject, float minZ, float maxZ)
+        public SimWaypoint SetObjectAt(float x, float y, SimObject simObject, float minZ, float maxZ)
         {
             int ix = ARRAY_IDX(RangeCheck(x));
             int iy = ARRAY_IDX(RangeCheck(y));
 
             SimWaypoint W = Waypoint(ix, iy);
-            if (W.AddOccupied(simObject,minZ,maxZ))
+            if (W.AddOccupied(simObject, minZ, maxZ))
             {
+                NeedsUpdate = true;
                 if (mMatrix[ix, iy] > 9)
-                {
-                    {
-                        if (mMatrix[ix, iy] < 30)
-                            mMatrix[ix, iy] += 2;
-                    }
-                }
+                    if (mMatrix[ix, iy] < 200)
+                        mMatrix[ix, iy] = W.GetOccupiedValue();
             }
+            return W;
         }
 
         public void SetPassable(float x, float y)
@@ -294,7 +293,7 @@ namespace cogbot.TheOpenSims.Navigation
             for (int y = 0; y < mMatrix.GetUpperBound(1); y++)
                 for (int x = 0; x < mMatrix.GetUpperBound(0); x++)
                 {
-                    mMatrix[x, y] = 10;
+                    mMatrix[x, y] = INITIALLY;
                     //  mWaypoints[x, y] = SimWaypoint.Create(x / POINTS_PER_METER, y / POINTS_PER_METER, SimZLevel, this);
                 }
         }
@@ -331,15 +330,21 @@ namespace cogbot.TheOpenSims.Navigation
 
         internal SimWaypoint Waypoint(int ix, int iy)
         {
-            SimWaypoint wp = mWaypoints[ix, iy];
-            if (wp == null)
+            lock (mWaypoints)
             {
-                float x = ix / POINTS_PER_METER;
-                float y = iy / POINTS_PER_METER;
-                wp = SimWaypoint.CreateLocal(x, y, SimLevel(x, y), this);
-                mWaypoints[ix, iy] = wp;
+                SimWaypoint wp = mWaypoints[ix, iy];
+                if (wp == null)
+                {
+                    float x = ix / POINTS_PER_METER;
+                    float y = iy / POINTS_PER_METER;
+                    wp = SimWaypoint.CreateLocal(x, y, SimLevel(x, y), this);
+                    if (mWaypoints[ix, iy] != wp)
+                    {
+                        Debug("diff wapoints in same space {0} != {1}", mWaypoints[ix, iy], wp);
+                    }
+                }
+                return wp;
             }
-            return wp;
         }
 
  
@@ -486,7 +491,7 @@ namespace cogbot.TheOpenSims.Navigation
             List<PathFinderNode> pfn = null;
             try
             {
-                PathFinderFast pff = new PathFinderFast(mMatrix);
+                PathFinderFasting pff = new PathFinderFasting(mMatrix);
                 if (panel != null) panel.SetStartEnd(S, E);
                 pff.Diagonals = false;
                 //pff.ReopenCloseNodes = true;
@@ -636,7 +641,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         internal void TaintMatrix()
         {
-            for (int x = 0; x < MAPSPACE; x++)
+            lock (mWaypoints) for (int x = 0; x < MAPSPACE; x++)
             {
                 for (int y = 0; y < MAPSPACE; y++)
                 {
@@ -646,21 +651,31 @@ namespace cogbot.TheOpenSims.Navigation
                 }
             }
         }
+        bool NeedsUpdate = true;
         internal void UpdateMatrix()
         {
-            TaintMatrix();
-            System.GC.Collect();
-            GetSimRegion().BakeTerrain();
-            for (int x = 0; x < MAPSPACE; x++)
+            lock (mWaypoints)
             {
+                if (!NeedsUpdate) return;
+                SimRegion R = GetSimRegion();
+                NeedsUpdate = false;
+                TaintMatrix();
+                R.BakeTerrain();
+                Console.WriteLine("Start UpdateMatrix: " + R);
                 for (int y = 0; y < MAPSPACE; y++)
                 {
+                    System.Windows.Forms.Application.DoEvents();
+                    for (int x = 0; x < MAPSPACE; x++)
+                    {
                         SimWaypoint W = mWaypoints[x, y];
                         if (W != null)
-                            W.UpdateMatrix();                    
+                            W.UpdateMatrix();
+                    }
                 }
+                foreach (SimObject O in WorldObjects.SimObjects) O.Mesh = null;
+                Console.WriteLine("End UpdateMatrix: " + R);
+                System.GC.Collect();
             }
-            System.GC.Collect();
         }
 
         internal SimRoute InternArc(SimWaypoint StartNode, SimWaypoint EndNode, double Weight)
@@ -746,6 +761,34 @@ namespace cogbot.TheOpenSims.Navigation
             else
             {
                 LaskKnownPos[uUID].Update(after, rot);
+            }
+        }
+
+        internal void Refresh(cogbot.TheOpenSims.Mesher.Box3Fill changed)
+        {
+            int xs = (int)changed.MinX;
+            int ys = (int)changed.MaxX;
+            int xe = (int)changed.MinY;
+            int ye = (int)changed.MaxY;
+            if (xs > 0) xs--;
+            if (ys > 0) ys--;
+            int MAX = MAPSPACE - 1;
+            if (xe < MAX) xe++;
+            if (ys < MAX) ye++;
+            lock (mWaypoints)
+            {
+                for (int x = xs; x <= xe; x++)
+                    for (int y = ys; y <= ye; y++)
+                    {
+                        SimWaypoint WP = mWaypoints[x, y];
+                        if (WP != null) WP.TaintMatrix();
+                    }
+                for (int x = xs; x <= xe; x++)
+                    for (int y = ys; y <= ye; y++)
+                    {
+                        SimWaypoint WP = mWaypoints[x, y];
+                        if (WP != null) WP.UpdateMatrix();
+                    }
             }
         }
     }

@@ -767,6 +767,14 @@ namespace cogbot.TheOpenSims
 
         #endregion
 
+        public override string ToString()
+        {
+            Simulator sim = TheSimulator;
+            if (sim != null) return sim.ToString();
+            return "sim " + RegionName;
+
+        }
+
         /// <summary>
         /// 
         /// </summary>

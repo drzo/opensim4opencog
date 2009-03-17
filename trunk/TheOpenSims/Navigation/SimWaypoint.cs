@@ -22,18 +22,19 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
         public byte OccupiedCount;
-        float OMinZ = float.MaxValue;
-        float OMaxZ = float.MinValue;
+        internal float OMinZ = float.MaxValue;
+        internal float OMaxZ = float.MinValue;
 
         public void SetMatrix(int v)
         {
-            if (v < 0) v = 0; else if (v > 255) v = 255;
+            if (v < 0) v = 0; else if (v > 250) v = 250;
             if (PathStore.mMatrix[PX, PY] == SimPathStore.STICKY_PASSABLE) return;
+            //if (PathStore.mMatrix[PX, PY] == SimPathStore.MAYBE_BLOCKED) return;
             PathStore.mMatrix[PX, PY] = (byte)v;
         }
 
 
-        public byte IsSolid = 0;
+        byte IsSolid = 0;
 
         public void TaintMatrix()
         {
@@ -41,84 +42,86 @@ namespace cogbot.TheOpenSims.Navigation
             _GroundLevelCache = float.MinValue;
         }
 
-        public void UpdateMatrix()
+        int ZOrder(SimObject O1, SimObject O2)
         {
-            bool WasBlocked = GetMatrix() == SimPathStore.BLOCKED;
-            bool Blocked = false;
-            _ZLevelCache = float.MinValue;
-            float zlevel = GetZLevel();
-            if (IsSolid != 0)
-            {
-                if (SurroundingBump())
-                    Blocked = true;
-                else
-                {
-                    if (SomethingBetween(zlevel + 0.35f, zlevel + 2)) Blocked = true;
-                }
-                //      if (O.Mesh.IsInside(_LocalPos.X, _LocalPos.Y, zlevelSurround + 1f))
-            }
-            if (WasBlocked && !Blocked)
-            {
-                //  Passable = !IsSolid;
-                SetMatrix(20 + OccupiedCount * 2);
-            }
-            else if (!WasBlocked && Blocked)
-            {
-                //Passable = !IsSolid;
-                SetMatrix(SimPathStore.BLOCKED);
-            }
-            OccupiedListObject.TrimExcess();
+            Vector2 V1 = O1.GetMinMaxZ(Point);
+            Vector2 V2 = O2.GetMinMaxZ(Point);
+            //if (V1.Y != V2.Y) return (int)((V2.Y - V1.Y) * 10);
+            //if (V1.X != V2.X) return (int)((V2.X - V1.X) * 10);
+            return V1.CompareTo(V2);
         }
 
-        private bool SomethingBetween(float low, float high)
+        public bool IsGroundLevel()
+        {
+            return GetZLevel() == GetGroundLevel();
+        }
+        public byte GetOccupiedValue() {
+            int b =SimPathStore.INITIALLY + OccupiedCount * 3 + IsSolid * 3;
+            if (b > 240) return 240;
+            return (byte)b;
+        }
+        public void UpdateMatrix()
+        {
+            PathStore.mMatrix[PX, PY] = GetOccupiedValue();
+            if (IsSolid != 0)
+            {
+                _ZLevelCache = float.MinValue;
+                float zlevel = GetZLevel();
+                if (SurroundingBump(zlevel, 0.4f) || SomethingBetween(zlevel + 0.35f, zlevel + 2, OccupiedListObject))
+                    SetMatrix(SimPathStore.BLOCKED);
+                else
+                    if (IsGroundLevel() || SurroundingBump(zlevel, 0.2f))
+                        PathStore.mMatrix[PX, PY] = SimPathStore.MAYBE_BLOCKED;
+            }
+        }
+
+        private bool SomethingBetween(float low, float high, IEnumerable OccupiedListObject)
         {
             if (IsSolid == 0) return false;
-            foreach (SimObject O in OccupiedListObject)
+            lock (OccupiedListObject) foreach (SimObject O in OccupiedListObject)
             {
                 if (!O.IsPassable)
                 {
-                    Box3Fill box = O.OuterBox;
-                    if (low > box.MaxZ) continue;
-                    if (high < box.MinZ) continue;
+                    Vector2 box = O.GetMinMaxZ(Point);
+                    if (low > box.Y) continue;
+                    if (high < box.X) continue;
                     return true;
                 }
             }
             return false;
         }
 
-        public bool SurroundingBump()
+        public bool SurroundingBump(float original, float mostDiff)
         {
-            float original = GetZLevel();
 
             if (PX < 1 || PY < 1 || _LocalPos.X > 254 || _LocalPos.Y > 254)
                 return false;
 
             float O;
-            float MostDiff = 0.5f;
 
             O = WpLevel(PX, PY + 1);
-            if (!DiffLessThan(O, original, MostDiff)) return true;
+            if (!DiffLessThan(O, original, mostDiff)) return true;
 
             O = WpLevel(PX + 1, PY + 1);
-            if (!DiffLessThan(O, original, MostDiff)) return true;
+            if (!DiffLessThan(O, original, mostDiff)) return true;
 
             O = WpLevel(PX + 1, PY);
-            if (!DiffLessThan(O, original, MostDiff)) return true;
+            if (!DiffLessThan(O, original, mostDiff)) return true;
 
             O = WpLevel(PX + 1, PY - 1);
-            if (!DiffLessThan(O, original, MostDiff)) return true;
+            if (!DiffLessThan(O, original, mostDiff)) return true;
 
             O = WpLevel(PX, PY - 1);
-            if (!DiffLessThan(O, original, MostDiff)) return true;
+            if (!DiffLessThan(O, original, mostDiff)) return true;
 
             O = WpLevel(PX - 1, PY - 1);
-            if (!DiffLessThan(O, original, MostDiff)) return true;
+            if (!DiffLessThan(O, original, mostDiff)) return true;
 
             O = WpLevel(PX - 1, PY);
-            if (!DiffLessThan(O, original, MostDiff)) return true;
+            if (!DiffLessThan(O, original, mostDiff)) return true;
 
             O = WpLevel(PX - 1, PY + 1);
-            if (!DiffLessThan(O, original, MostDiff)) return true;
+            if (!DiffLessThan(O, original, mostDiff)) return true;
 
             return false;
         }
@@ -148,40 +151,52 @@ namespace cogbot.TheOpenSims.Navigation
             // when the Two Zs are differnt that means global Pos has been computed
             if (_ZLevelCache > 0) return _ZLevelCache;
             _ZLevelCache = GetGroundLevel();
+            OccupiedListObject.Sort(ZOrder);
+            OccupiedListObject.Reverse();
             if (IsSolid != 0)
-                lock (OccupiedListObject)
                 {
+                    bool ChangeD = false;
                     SimObject Flooring = null;
                     for (byte d = 0; d < IsSolid; d++)
-                    {
-                        foreach (SimObject O in OccupiedListObject)
-                        {
-                            if (O.IsPassable) continue;
-                            float MinZ = O.OuterBox.MinZ;
-                            float MaxZ = O.OuterBox.MaxZ;
-                            // The object is higher
-                            if (_ZLevelCache < MaxZ)
-                                // And the object is below or the bottem of object is less than a meter above or the top of object is less than 1.5 meters
-                                if (MinZ <= _ZLevelCache || DiffLessThan(MinZ, _ZLevelCache, 1f) || DiffLessThan(MaxZ, _ZLevelCache, 1.5f))
+                    {              
+                        lock (OccupiedListObject)
+                            foreach (SimObject O in OccupiedListObject)
+                            {
+                                if (O.IsPassable) continue;
+                                Vector2 MM = O.GetMinMaxZ(Point);
+                                float MinZ = MM.X;// = O.OuterBox.MinZ;
+                                float MaxZ = MM.Y;// = O.OuterBox.MaxZ;
+                                //bool wpfound = O.GetZLevel(Point, out MinZ, out MaxZ);
                                 {
-                                    Flooring = O;
-                                    _ZLevelCache = MaxZ;
+                                    // The object is higher
+                                    if (_ZLevelCache < MaxZ)
+                                        // And the object is below or the bottem of object is less than a meter above or the top of object is less than 1.5 meters
+                                        if (MinZ <= _ZLevelCache || DiffLessThan(MinZ, _ZLevelCache, 1.5f) || DiffLessThan(MaxZ, _ZLevelCache, 2f))
+                                        {
+                                            Flooring = O;
+                                            ChangeD = true;
+                                            _ZLevelCache = MaxZ;
+                                        }
                                 }
 
-                        }
+                            }
+                        if (!ChangeD) break;
                     }
-                    if (Flooring != null)
-                    {
-                        OccupiedListObject.Remove(Flooring);
-                        OccupiedListObject.Insert(0, Flooring);
-                    }
+                    //if (Flooring != null)
+                    //{
+                    //    if (ChangeD) lock (OccupiedListObject)
+                    //    {
+                    //        OccupiedListObject.Remove(Flooring);
+                    //        OccupiedListObject.Insert(0, Flooring);
+                    //    }
+                    //}
                 }
             _LocalPos.Z = _ZLevelCache;
             _GlobalPos.Z = _ZLevelCache + 1;
             return _ZLevelCache;
         }
 
-        private bool DiffLessThan(float A, float B, float D)
+        static bool DiffLessThan(float A, float B, float D)
         {
             return Math.Abs(A - B) <= D;
         }
@@ -189,9 +204,9 @@ namespace cogbot.TheOpenSims.Navigation
 
         public bool AddOccupied(SimObject simObject, float minZ, float maxZ)
         {
-            if (!simObject.IsPassable)
+            bool IsPassable = simObject.IsPassable;
+            if (!IsPassable)
             {
-                IsSolid++;
                 if (minZ < OMinZ)
                 {
                     OMinZ = minZ;
@@ -205,18 +220,21 @@ namespace cogbot.TheOpenSims.Navigation
                     // return true;
                 }
             }
-            if (!OccupiedListObject.Contains(simObject))
-            {
-                OccupiedListObject.Add(simObject);
-                OccupiedCount++;
-                _ZLevelCache = float.MinValue;
-                return true;
-            }
+            lock (OccupiedListObject)
+                if (!OccupiedListObject.Contains(simObject))
+                {
+                    OccupiedListObject.Add(simObject);
+                    OccupiedCount++;
+                    if (!IsPassable)
+                        IsSolid++;
+                    _ZLevelCache = float.MinValue;
+                    return true;
+                }
             return false;
         }
 
         // public IList ShadowList = new List<SimObject>();
-        readonly private List<SimObject> OccupiedListObject = new List<SimObject>();
+        readonly internal List<SimObject> OccupiedListObject = new List<SimObject>();
         //string OcString = null;
         //public IList<Vector2> OccupiedListMinMaxZ = new List<Vector2>();
 
@@ -230,15 +248,16 @@ namespace cogbot.TheOpenSims.Navigation
                 {
                     foreach (SimObject O in OccupiedListObject)
                     {
-                        Box3Fill MinMaxZ = O.OuterBox;// OccupiedListMinMaxZ[i];
-                        S += MinMaxZ.ToString();
+                        S+= O.GetMinMaxZ(Point);
                         S += " ";
+
+
                         S += O.ToString();
-                        S += "\n";
+                        S += "\r\n";
                     }
                 }
             }
-            return S + this.ToString() + " GLevel=" + GetGroundLevel() + " ZLevel=" + GetZLevel();
+            return S + this.ToString() + " GLevel=" + GetGroundLevel() + " OMin/MaxZ=" + OMinZ + "/" + OMaxZ + " ZLevel=" + GetZLevel();
         }
 
 
@@ -319,31 +338,33 @@ namespace cogbot.TheOpenSims.Navigation
             }
         }
 
+        public Point Point;
+
         /// <summary>
         /// Gets Point.X coordinate on the PathStore.
         /// </summary>
-        public int PX;// { get { return (int)Math.Round(Position.X * PathStore.POINTS_PER_METER); } }
+        public int PX;// { get { return (int)Math.Round(_GlobalPos.X * PathStore.POINTS_PER_METER); } }
 
         /// <summary>
         /// Gets Point.Y coordinate on the PathStore.
         /// </summary>
-        public int PY;// { get { return (int)Math.Round(Position.Y * PathStore.POINTS_PER_METER); } }
+        public int PY;// { get { return (int)Math.Round(_GlobalPos.Y * PathStore.POINTS_PER_METER); } }
 
 
         /// <summary>
         /// Gets X coordinate on the Graph debugger (whole world position).
         /// </summary>
-        public double DX { get { return (Position.X / GraphFormer.DSCALE) - GraphFormer.StartX; } }
+        public double DX { get { return (_GlobalPos.X / GraphFormer.DSCALE) - GraphFormer.StartX; } }
 
         /// <summary>
         /// Gets Y coordinate on the Graph debugger
         /// </summary>
-        public double DY { get { return (Position.Y / GraphFormer.DSCALE) - GraphFormer.StartY; } }
+        public double DY { get { return (_GlobalPos.Y / GraphFormer.DSCALE) - GraphFormer.StartY; } }
 
         /// <summary>
         /// Gets Z coordinate.
         /// </summary>
-        ///public double DZ { get { return Position.Z; } }
+        ///public double DZ { get { return _GlobalPos.Z; } }
 
         /// <summary>
         /// Modifies X, Y and Z coordinates
@@ -364,6 +385,8 @@ namespace cogbot.TheOpenSims.Navigation
             _GlobalPos = R.LocalToGlobal(_LocalPos);
             PX = (int)Math.Round(_LocalPos.X * PathStore.POINTS_PER_METER);
             PY = (int)Math.Round(_LocalPos.Y * PathStore.POINTS_PER_METER);
+            Point.X = PX;
+            Point.Y = PY;
             if (_IncomingArcs != null) foreach (SimRoute A in _IncomingArcs) A.LengthUpdated = false;
             if (_OutgoingArcs != null) foreach (SimRoute A in _OutgoingArcs) A.LengthUpdated = false;
         }
@@ -371,7 +394,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <summary>
         /// Gets/Sets the geographical position of the node.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Cannot set the Position to null.</exception>
+        /// <exception cref="ArgumentNullException">Cannot set the _GlobalPos to null.</exception>
         public Vector3d Position
         {
             set
@@ -503,7 +526,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <returns>String describing this node.</returns>
         public override string ToString()
         {
-            //    return "(" + Position.ToRawString() + ")"; 
+            //    return "(" + _GlobalPos.ToRawString() + ")"; 
             SimRegion R = GetSimRegion();
             Vector3 loc = GetSimPosition();
             return String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
@@ -520,7 +543,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             if (O is SimPosition)
             {
-                return Position == ((SimPosition)O).GetWorldPosition();
+                return _GlobalPos == ((SimPosition)O).GetWorldPosition();
             }
             //if (O is Vector3d)
             //{
@@ -546,7 +569,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// Object.GetHashCode override.
         /// </summary>
         /// <returns>HashCode value.</returns>
-        public override int GetHashCode() { return Position.GetHashCode(); }
+        public override int GetHashCode() { return _GlobalPos.GetHashCode(); }
 
         /// <summary>
         /// Returns the euclidian distance between two nodes : Sqrt(Dx²+Dy²+Dz²)
@@ -569,9 +592,9 @@ namespace cogbot.TheOpenSims.Navigation
         public static double SquareEuclidianDistance(SimWaypoint N1, SimWaypoint N2)
         {
             if (N1 == null || N2 == null) throw new ArgumentNullException();
-            double DX = N1.Position.X - N2.Position.X;
-            double DY = N1.Position.Y - N2.Position.Y;
-            double DZ = N1.Position.Z - N2.Position.Z;
+            double DX = N1._GlobalPos.X - N2._GlobalPos.X;
+            double DY = N1._GlobalPos.Y - N2._GlobalPos.Y;
+            double DZ = N1._GlobalPos.Z - N2._GlobalPos.Z;
             return (double)(DX * DX + DY * DY + DZ * DZ);
         }
 
@@ -585,9 +608,9 @@ namespace cogbot.TheOpenSims.Navigation
         public static double ManhattanDistance(SimWaypoint N1, SimWaypoint N2)
         {
             if (N1 == null || N2 == null) throw new ArgumentNullException();
-            double DX = N1.Position.X - N2.Position.X;
-            double DY = N1.Position.Y - N2.Position.Y;
-            double DZ = N1.Position.Z - N2.Position.Z;
+            double DX = N1._GlobalPos.X - N2._GlobalPos.X;
+            double DY = N1._GlobalPos.Y - N2._GlobalPos.Y;
+            double DZ = N1._GlobalPos.Z - N2._GlobalPos.Z;
             return (double)(Math.Abs(DX) + Math.Abs(DY) + Math.Abs(DZ));
         }
 
@@ -601,9 +624,9 @@ namespace cogbot.TheOpenSims.Navigation
         public static double MaxDistanceAlongAxis(SimWaypoint N1, SimWaypoint N2)
         {
             if (N1 == null || N2 == null) throw new ArgumentNullException();
-            double DX = Math.Abs(N1.Position.X - N2.Position.X);
-            double DY = Math.Abs(N1.Position.Y - N2.Position.Y);
-            double DZ = Math.Abs(N1.Position.Z - N2.Position.Z);
+            double DX = Math.Abs(N1._GlobalPos.X - N2._GlobalPos.X);
+            double DY = Math.Abs(N1._GlobalPos.Y - N2._GlobalPos.Y);
+            double DZ = Math.Abs(N1._GlobalPos.Z - N2._GlobalPos.Z);
             return (double)Math.Max(DX, Math.Max(DY, DZ));
         }
 
@@ -641,11 +664,11 @@ namespace cogbot.TheOpenSims.Navigation
             switch (i)
             {
                 case 0:
-                    return Position.X;
+                    return _GlobalPos.X;
                 case 1:
-                    return Position.Y;
+                    return _GlobalPos.Y;
                 case 2:
-                    return Position.Z;
+                    return _GlobalPos.Z;
                 default:
                     throw new ArgumentException("Waypoints dont have arg " + i);
             }
@@ -666,7 +689,7 @@ namespace cogbot.TheOpenSims.Navigation
         //    return new Vector3d(v3.X, v3.Y, v3.Z);
         //}
 
-        SimPathStore PathStore;
+        public SimPathStore PathStore;
         Vector3 _LocalPos;
         public SimWaypoint(Vector3 local, Vector3d global, SimPathStore pathStore)
         {
@@ -675,6 +698,9 @@ namespace cogbot.TheOpenSims.Navigation
             _LocalPos = local;
             PX = (int)Math.Round(_LocalPos.X * PathStore.POINTS_PER_METER);
             PY = (int)Math.Round(_LocalPos.Y * PathStore.POINTS_PER_METER);
+            Point.X = PX;
+            Point.Y = PY;
+            PathStore.mWaypoints[PX, PY] = this;
         }
 
         //protected Vector3d _GlobalPos;
@@ -691,14 +717,19 @@ namespace cogbot.TheOpenSims.Navigation
 
         public static SimWaypoint CreateLocal(Vector3 from, SimPathStore PathStore)
         {
-            int PX = (int)Math.Round(from.X * PathStore.POINTS_PER_METER);
-            int PY = (int)Math.Round(from.Y * PathStore.POINTS_PER_METER);
-            SimWaypoint WP = PathStore.mWaypoints[PX, PY];
-            if (WP != null) return WP;
-            Vector3 rounded = new Vector3(PX / PathStore.POINTS_PER_METER, PY / PathStore.POINTS_PER_METER, from.Z);
-            Vector3d GlobalPos = PathStore.GetSimRegion().LocalToGlobal(rounded);
-            WP = new SimWaypoint(rounded, GlobalPos, PathStore);
-            PathStore.mWaypoints[PX, PY] = WP;
+            float POINTS_PER_METER = PathStore.POINTS_PER_METER;
+            int PX = (int)Math.Round(from.X * POINTS_PER_METER);
+            int PY = (int)Math.Round(from.Y * POINTS_PER_METER);
+            SimWaypoint WP;
+            lock (PathStore.mWaypoints)
+            {
+                WP = PathStore.mWaypoints[PX, PY];
+                if (WP != null) return WP;
+                Vector3 rounded = new Vector3(PX / POINTS_PER_METER, PY / POINTS_PER_METER, from.Z);
+                Vector3d GlobalPos = PathStore.GetSimRegion().LocalToGlobal(rounded);
+                WP = new SimWaypoint(rounded, GlobalPos, PathStore);
+                PathStore.mWaypoints[PX, PY] = WP;
+            }
             WP._Passable = true;
             // wp._IncomingArcs = new ArrayList();
             // wp._OutgoingArcs = new ArrayList();
@@ -727,7 +758,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public static double Distance(SimWaypoint wp1, SimWaypoint wp2)
         {
-            return Vector3d.Distance(wp1.Position, wp2.Position);
+            return Vector3d.Distance(wp1._GlobalPos, wp2._GlobalPos);
         }
 
         // <summary>
@@ -773,7 +804,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public double Distance(Vector3d P)
         {
-            return Vector3d.Distance(P, Position);
+            return Vector3d.Distance(P, _GlobalPos);
         }
 
 
@@ -792,7 +823,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public Vector3d GetWorldPosition()
         {
-            return Position;
+            return _GlobalPos;
         }
 
         #endregion
@@ -818,6 +849,25 @@ namespace cogbot.TheOpenSims.Navigation
             return CreateLocal(SimRegion.GlobalToLocal(v3d), R.PathStore);
         }
 
+        internal void RemoveObject(SimObject simObject)
+        {
+            if (OccupiedListObject.Contains(simObject))
+            {
+                OccupiedCount--;
+                if (!simObject.IsPassable) IsSolid--;
+                TaintMatrix();
+                OccupiedListObject.Remove(simObject);
+            }
+        }
+
+        internal void RemeshWayppointObjects() {
+            Box3Fill changed = new Box3Fill(true);
+            foreach (SimObject O in new List<SimObject>(OccupiedListObject))
+            {
+                O.RemeshObject(changed);
+            }
+            PathStore.Refresh(changed);
+        }
     }
 
     //public class SimMovementPoints : SimMovement

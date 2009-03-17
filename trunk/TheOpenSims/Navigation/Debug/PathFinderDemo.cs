@@ -49,10 +49,13 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         #endregion
 
         #region Constuctors
+        SimPathStore PathStore;
         public PathFinderDemo(SimPathStore pathStore)
         {
-            this.PnlGUI = new PanelPathFinder(pathStore);
+            PathStore = pathStore;
+            //this.PnlGUI = new PanelPathFinder(pathStore);
             InitializeComponent();
+            PnlGUI.PathStore = pathStore;
 
             CboFormula.SelectedIndex = 0;
             BtnStartStop.Text = RUN;
@@ -166,6 +169,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 
         private SimPathStore GetPathStore()
         {
+            if (PathStore != null) return PathStore;
             return PnlGUI.PathStore;//.GetSimRegion();
         }
 
@@ -186,12 +190,12 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         {
             if (ChkUseFastPathFinder.Checked)
             {
-                if (!(mPathFinder is PathFinderFast))
+                if (!(mPathFinder is PathFinderFasting))
                 {
                     if (mPathFinder != null)
                         mPathFinder.PathFinderDebug -= new PathFinderDebugHandler(PathFinderDebug);
 
-                    mPathFinder = new PathFinderFast(PnlGUI.PathStore.mMatrix);
+                    mPathFinder = new PathFinderFasting(PnlGUI.PathStore.mMatrix);
                     mPathFinder.PathFinderDebug += new PathFinderDebugHandler(PathFinderDebug);
                 }
             }
