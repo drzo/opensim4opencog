@@ -4,11 +4,11 @@ using ExtensionLoader;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace Simian.Extensions
+namespace Simian
 {
-    public class ParcelManager : IExtension<Simian>, IParcelProvider
+    public class ParcelManager : IExtension<ISceneProvider>, IParcelProvider
     {
-        Simian server;
+        ISceneProvider scene;
         Dictionary<int, Parcel> parcels = new Dictionary<int, Parcel>();
         /// <summary>X,Y ordered 2D array of the parcelIDs for each sq. meter of a simulator</summary>
         int[] parcelOverlay = new int[64 * 64];
@@ -17,9 +17,9 @@ namespace Simian.Extensions
         {
         }
 
-        public void Start(Simian server)
+        public bool Start(ISceneProvider scene)
         {
-            this.server = server;
+            this.scene = scene;
 
             lock (parcels)
                 parcels.Clear();
@@ -48,8 +48,9 @@ namespace Simian.Extensions
             // Add the default parcel to the list
             parcels[parcel.LocalID] = parcel;
 
-            server.UDP.RegisterPacketCallback(PacketType.ParcelPropertiesRequest, ParcelPropertiesRequestHandler);
-            server.UDP.RegisterPacketCallback(PacketType.ParcelPropertiesUpdate, ParcelPropertiesUpdateHandler);
+            scene.UDP.RegisterPacketCallback(PacketType.ParcelPropertiesRequest, ParcelPropertiesRequestHandler);
+            scene.UDP.RegisterPacketCallback(PacketType.ParcelPropertiesUpdate, ParcelPropertiesUpdateHandler);
+            return true;
         }
 
         public void Stop()
@@ -74,11 +75,11 @@ namespace Simian.Extensions
                     if (parcels.TryGetValue(parcelOverlay[y * 64 + x], out parcel))
                     {
                         // Set the ownership/sale flag
-                        if (parcel.OwnerID == agent.Avatar.ID)
+                        if (parcel.OwnerID == agent.ID)
                             tempByte = (byte)ParcelOverlayType.OwnedBySelf;
                         else if (parcel.AuctionID != 0)
                             tempByte = (byte)ParcelOverlayType.Auction;
-                        else if (parcel.SalePrice > 0 && (parcel.AuthBuyerID == UUID.Zero || parcel.AuthBuyerID == agent.Avatar.ID))
+                        else if (parcel.SalePrice > 0 && (parcel.AuthBuyerID == UUID.Zero || parcel.AuthBuyerID == agent.ID))
                             tempByte = (byte)ParcelOverlayType.ForSale;
                         else if (parcel.GroupID != UUID.Zero)
                             tempByte = (byte)ParcelOverlayType.OwnedByGroup;
@@ -108,7 +109,7 @@ namespace Simian.Extensions
                             ParcelOverlayPacket overlay = new ParcelOverlayPacket();
                             overlay.ParcelData.SequenceID = sequenceID;
                             overlay.ParcelData.Data = byteArray;
-                            server.UDP.SendPacket(agent.Avatar.ID, overlay, PacketCategory.State);
+                            scene.UDP.SendPacket(agent.ID, overlay, PacketCategory.State);
 
                             byteArrayCount = 0;
                             ++sequenceID;
@@ -215,9 +216,9 @@ namespace Simian.Extensions
                 properties.ParcelData.UserLookAt = parcel.UserLookAt;
 
                 // HACK: Make everyone think they are the owner of this parcel
-                properties.ParcelData.OwnerID = agent.Avatar.ID;
+                properties.ParcelData.OwnerID = agent.ID;
 
-                server.UDP.SendPacket(agent.Avatar.ID, properties, PacketCategory.Transaction);
+                scene.UDP.SendPacket(agent.ID, properties, PacketCategory.Transaction);
             }
             else
             {

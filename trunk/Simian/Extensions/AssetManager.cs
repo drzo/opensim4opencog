@@ -5,12 +5,10 @@ using ExtensionLoader;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
 
-namespace Simian.Extensions
+namespace Simian
 {
     public class AssetManager : IExtension<Simian>, IAssetProvider
     {
-        public const string UPLOAD_DIR = "uploadedAssets";
-
         Simian server;
         Dictionary<UUID, Asset> AssetStore = new Dictionary<UUID, Asset>();
         string UploadDir;
@@ -19,26 +17,35 @@ namespace Simian.Extensions
         {
         }
 
-        public void Start(Simian server)
+        public bool Start(Simian server)
         {
             this.server = server;
 
-            UploadDir = Path.Combine(Simian.DATA_DIR, UPLOAD_DIR);
+            UploadDir = Simian.ASSET_CACHE_DIR;
 
             // Try to create the data directories if they don't already exist
             if (!Directory.Exists(Simian.DATA_DIR))
             {
                 try { Directory.CreateDirectory(Simian.DATA_DIR); }
-                catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Warning, ex); }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex.Message, Helpers.LogLevel.Error, ex);
+                    return false;
+                }
             }
             if (!Directory.Exists(UploadDir))
             {
                 try { Directory.CreateDirectory(UploadDir); }
-                catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Warning, ex); }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex.Message, Helpers.LogLevel.Error, ex);
+                    return false;
+                }
             }
 
             LoadAssets(Simian.DATA_DIR);
             LoadAssets(UploadDir);
+            return true;
         }
 
         public void Stop()
@@ -84,6 +91,19 @@ namespace Simian.Extensions
         public bool TryGetAsset(UUID id, out Asset asset)
         {
             return AssetStore.TryGetValue(id, out asset);
+        }
+
+        public byte[] EncodePrimAsset(List<SimulationObject> linkset)
+        {
+            // FIXME:
+            return Utils.EmptyBytes;
+        }
+
+        public bool TryDecodePrimAsset(byte[] primAssetData, out List<SimulationObject> linkset)
+        {
+            // FIXME:
+            linkset = null;
+            return false;
         }
 
         void SaveAsset(Asset asset)

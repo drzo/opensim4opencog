@@ -38,7 +38,7 @@ namespace ExtensionLoader
         /// <summary>
         /// Called when the extension is starting
         /// </summary>
-        void Start(TOwner owner);
+        bool Start(TOwner owner);
 
         /// <summary>
         /// Called when the extension is stopping

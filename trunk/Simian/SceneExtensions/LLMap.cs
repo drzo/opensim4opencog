@@ -7,7 +7,7 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 
-namespace Simian.Extensions
+namespace Simian
 {
     class HyperGridLink
     {
@@ -19,22 +19,23 @@ namespace Simian.Extensions
         public int RemotingPort;
     }
 
-    public class MapLocal : IExtension<Simian>
+    public class LLMap : IExtension<ISceneProvider>
     {
-        Simian server;
+        ISceneProvider scene;
 
-        public MapLocal()
+        public LLMap()
         {
         }
 
-        public void Start(Simian server)
+        public bool Start(ISceneProvider scene)
         {
-            this.server = server;
+            this.scene = scene;
 
-            server.UDP.RegisterPacketCallback(PacketType.MapLayerRequest, MapLayerRequestHandler);
-            server.UDP.RegisterPacketCallback(PacketType.MapBlockRequest, MapBlockRequestHandler);
-            server.UDP.RegisterPacketCallback(PacketType.TeleportRequest, TeleportRequestHandler);
-            server.UDP.RegisterPacketCallback(PacketType.TeleportLocationRequest, TeleportLocationRequestHandler);
+            scene.UDP.RegisterPacketCallback(PacketType.MapLayerRequest, MapLayerRequestHandler);
+            scene.UDP.RegisterPacketCallback(PacketType.MapBlockRequest, MapBlockRequestHandler);
+            scene.UDP.RegisterPacketCallback(PacketType.TeleportRequest, TeleportRequestHandler);
+            scene.UDP.RegisterPacketCallback(PacketType.TeleportLocationRequest, TeleportLocationRequestHandler);
+            return true;
         }
 
         public void Stop()
@@ -47,7 +48,7 @@ namespace Simian.Extensions
             GridLayerType type = (GridLayerType)request.AgentData.Flags;
 
             MapLayerReplyPacket reply = new MapLayerReplyPacket();
-            reply.AgentData.AgentID = agent.Avatar.ID;
+            reply.AgentData.AgentID = agent.ID;
             reply.AgentData.Flags = (uint)type;
             reply.LayerData = new MapLayerReplyPacket.LayerDataBlock[1];
             reply.LayerData[0] = new MapLayerReplyPacket.LayerDataBlock();
@@ -57,7 +58,7 @@ namespace Simian.Extensions
             reply.LayerData[0].Right = UInt16.MaxValue;
             reply.LayerData[0].ImageID = new UUID("89556747-24cb-43ed-920b-47caed15465f");
 
-            server.UDP.SendPacket(agent.Avatar.ID, reply, PacketCategory.Transaction);
+            scene.UDP.SendPacket(agent.ID, reply, PacketCategory.Transaction);
         }
 
         void MapBlockRequestHandler(Packet packet, Agent agent)
@@ -66,32 +67,32 @@ namespace Simian.Extensions
             GridLayerType type = (GridLayerType)request.AgentData.Flags;
 
             MapBlockReplyPacket reply = new MapBlockReplyPacket();
-            reply.AgentData.AgentID = agent.Avatar.ID;
+            reply.AgentData.AgentID = agent.ID;
             reply.AgentData.Flags = (uint)type;
 
             reply.Data = new MapBlockReplyPacket.DataBlock[2];
 
             reply.Data[0] = new MapBlockReplyPacket.DataBlock();
             reply.Data[0].Access = (byte)SimAccess.Min;
-            reply.Data[0].Agents = (byte)server.Scene.AgentCount();
+            reply.Data[0].Agents = (byte)scene.AgentCount();
             reply.Data[0].MapImageID = new UUID("89556747-24cb-43ed-920b-47caed15465f");
-            reply.Data[0].Name = Utils.StringToBytes(server.Scene.RegionName);
-            reply.Data[0].RegionFlags = (uint)server.Scene.RegionFlags;
-            reply.Data[0].WaterHeight = (byte)server.Scene.WaterHeight;
-            reply.Data[0].X = (ushort)server.Scene.RegionX;
-            reply.Data[0].Y = (ushort)server.Scene.RegionY;
+            reply.Data[0].Name = Utils.StringToBytes(scene.RegionName);
+            reply.Data[0].RegionFlags = (uint)scene.RegionFlags;
+            reply.Data[0].WaterHeight = (byte)scene.WaterHeight;
+            reply.Data[0].X = (ushort)scene.RegionX;
+            reply.Data[0].Y = (ushort)scene.RegionY;
 
             reply.Data[1] = new MapBlockReplyPacket.DataBlock();
             reply.Data[1].Access = (byte)SimAccess.Min;
             reply.Data[1].Agents = 0;
             reply.Data[1].MapImageID = new UUID("89556747-24cb-43ed-920b-47caed15465f");
             reply.Data[1].Name = Utils.StringToBytes("HyperGrid Portal to OSGrid");
-            reply.Data[1].RegionFlags = (uint)server.Scene.RegionFlags;
-            reply.Data[1].WaterHeight = (byte)server.Scene.WaterHeight;
-            reply.Data[1].X = (ushort)(server.Scene.RegionX + 1);
-            reply.Data[1].Y = (ushort)server.Scene.RegionY;
+            reply.Data[1].RegionFlags = (uint)scene.RegionFlags;
+            reply.Data[1].WaterHeight = (byte)scene.WaterHeight;
+            reply.Data[1].X = (ushort)(scene.RegionX + 1);
+            reply.Data[1].Y = (ushort)scene.RegionY;
 
-            server.UDP.SendPacket(agent.Avatar.ID, reply, PacketCategory.Transaction);
+            scene.UDP.SendPacket(agent.ID, reply, PacketCategory.Transaction);
         }
 
         void TeleportRequestHandler(Packet packet, Agent agent)
@@ -100,29 +101,31 @@ namespace Simian.Extensions
 
             // TODO: Stand the avatar up first
 
-            if (request.Info.RegionID == server.Scene.RegionID)
+            if (request.Info.RegionID == scene.RegionID)
             {
                 // Local teleport
-                agent.Avatar.Position = request.Info.Position;
+                agent.Avatar.Prim.Position = request.Info.Position;
                 agent.CurrentLookAt = request.Info.LookAt;
 
+                // TODO: Actually adjust the agent's LookAt
+
                 TeleportLocalPacket reply = new TeleportLocalPacket();
-                reply.Info.AgentID = agent.Avatar.ID;
+                reply.Info.AgentID = agent.ID;
                 reply.Info.LocationID = 0; // Unused by the client
                 reply.Info.LookAt = agent.CurrentLookAt;
-                reply.Info.Position = agent.Avatar.Position;
+                reply.Info.Position = agent.Avatar.Prim.Position;
                 // TODO: Need a "Flying" boolean for Agent
                 reply.Info.TeleportFlags = (uint)TeleportFlags.ViaRegionID;
 
-                server.UDP.SendPacket(agent.Avatar.ID, reply, PacketCategory.Transaction);
+                scene.UDP.SendPacket(agent.ID, reply, PacketCategory.Transaction);
             }
             else
             {
                 TeleportFailedPacket reply = new TeleportFailedPacket();
-                reply.Info.AgentID = agent.Avatar.ID;
+                reply.Info.AgentID = agent.ID;
                 reply.Info.Reason = Utils.StringToBytes("Unknown region");
 
-                server.UDP.SendPacket(agent.Avatar.ID, reply, PacketCategory.Transaction);
+                scene.UDP.SendPacket(agent.ID, reply, PacketCategory.Transaction);
             }
         }
 
@@ -132,23 +135,23 @@ namespace Simian.Extensions
 
             // TODO: Stand the avatar up first
 
-            if (request.Info.RegionHandle == server.Scene.RegionHandle)
+            if (request.Info.RegionHandle == scene.RegionHandle)
             {
                 // Local teleport
-                agent.Avatar.Position = request.Info.Position;
+                agent.Avatar.Prim.Position = request.Info.Position;
                 agent.CurrentLookAt = request.Info.LookAt;
 
                 TeleportLocalPacket reply = new TeleportLocalPacket();
-                reply.Info.AgentID = agent.Avatar.ID;
+                reply.Info.AgentID = agent.ID;
                 reply.Info.LocationID = 0; // Unused by the client
                 reply.Info.LookAt = agent.CurrentLookAt;
-                reply.Info.Position = agent.Avatar.Position;
+                reply.Info.Position = agent.Avatar.Prim.Position;
                 // TODO: Need a "Flying" boolean for Agent
                 reply.Info.TeleportFlags = (uint)TeleportFlags.ViaLocation;
 
-                server.UDP.SendPacket(agent.Avatar.ID, reply, PacketCategory.Transaction);
+                scene.UDP.SendPacket(agent.ID, reply, PacketCategory.Transaction);
             }
-            else if (request.Info.RegionHandle == Utils.UIntsToLong((server.Scene.RegionX + 1) * 256, server.Scene.RegionY * 256))
+            else if (request.Info.RegionHandle == Utils.UIntsToLong((scene.RegionX + 1) * 256, scene.RegionY * 256))
             {
                 // Special case: adjacent simulator is the HyperGrid portal
                 HyperGridTeleport(agent, new Uri("http://osl2.nac.uci.edu:9006/"), request.Info.Position);
@@ -156,10 +159,10 @@ namespace Simian.Extensions
             else
             {
                 TeleportFailedPacket reply = new TeleportFailedPacket();
-                reply.Info.AgentID = agent.Avatar.ID;
+                reply.Info.AgentID = agent.ID;
                 reply.Info.Reason = Utils.StringToBytes("Unknown region");
 
-                server.UDP.SendPacket(agent.Avatar.ID, reply, PacketCategory.Transaction);
+                scene.UDP.SendPacket(agent.ID, reply, PacketCategory.Transaction);
             }
         }
 
@@ -193,7 +196,7 @@ namespace Simian.Extensions
                         if (CreateChildAgent(agent, destination, destPos, link, seedCapFragment))
                         {
                             // Send the final teleport message to the client
-                            if (server.Scene.HasRunningEventQueue(agent))
+                            if (scene.HasRunningEventQueue(agent))
                             {
                                 uint x, y;
                                 Utils.LongToUInts(link.RegionHandle, out x, out y);
@@ -203,7 +206,7 @@ namespace Simian.Extensions
                                     link.RegionName, x, y, destination), Helpers.LogLevel.Info);
 
                                 OSDMap info = new OSDMap();
-                                info.Add("AgentID", OSD.FromUUID(agent.Avatar.ID));
+                                info.Add("AgentID", OSD.FromUUID(agent.ID));
                                 info.Add("LocationID", OSD.FromInteger(4)); // Unused by the client
                                 info.Add("RegionHandle", OSD.FromULong(link.RegionHandle));
                                 info.Add("SeedCapability", OSD.FromUri(seedCap));
@@ -218,7 +221,7 @@ namespace Simian.Extensions
                                 OSDMap teleport = new OSDMap();
                                 teleport.Add("Info", infoArray);
 
-                                server.Scene.SendEvent(agent, "TeleportFinish", teleport);
+                                scene.SendEvent(agent, "TeleportFinish", teleport);
                             }
                             else
                             {
@@ -226,7 +229,7 @@ namespace Simian.Extensions
                                     Helpers.LogLevel.Warning);
 
                                 TeleportFinishPacket teleport = new TeleportFinishPacket();
-                                teleport.Info.AgentID = agent.Avatar.ID;
+                                teleport.Info.AgentID = agent.ID;
                                 teleport.Info.LocationID = 0; // Unused by the client
                                 teleport.Info.RegionHandle = link.RegionHandle;
                                 teleport.Info.SeedCapability = Utils.StringToBytes(seedCap.ToString());
@@ -235,11 +238,11 @@ namespace Simian.Extensions
                                 teleport.Info.SimPort = (ushort)link.UDPPort;
                                 teleport.Info.TeleportFlags = (uint)TeleportFlags.ViaLocation;
 
-                                server.UDP.SendPacket(agent.Avatar.ID, teleport, PacketCategory.Transaction);
+                                scene.UDP.SendPacket(agent.ID, teleport, PacketCategory.Transaction);
                             }
 
                             // Remove the agent from the local scene (will also tear down the UDP connection)
-                            //server.Scene.ObjectRemove(this, agent.Avatar.ID);
+                            //scene.ObjectRemove(this, agent.ID);
 
                             return true;
                         }
@@ -399,9 +402,9 @@ namespace Simian.Extensions
                         {
                             WriteStringMember(writer, "session_id", agent.SessionID.ToString());
                             WriteStringMember(writer, "secure_session_id", agent.SecureSessionID.ToString());
-                            WriteStringMember(writer, "firstname", agent.FirstName);
-                            WriteStringMember(writer, "lastname", agent.LastName);
-                            WriteStringMember(writer, "agent_id", agent.Avatar.ID.ToString());
+                            WriteStringMember(writer, "firstname", agent.Info.FirstName);
+                            WriteStringMember(writer, "lastname", agent.Info.LastName);
+                            WriteStringMember(writer, "agent_id", agent.ID.ToString());
                             WriteStringMember(writer, "circuit_code", agent.CircuitCode.ToString());
                             WriteStringMember(writer, "startpos_x", destPos.X.ToString(Utils.EnUsCulture));
                             WriteStringMember(writer, "startpos_y", destPos.Y.ToString(Utils.EnUsCulture));
@@ -412,13 +415,15 @@ namespace Simian.Extensions
                             //WriteStringMember(writer, "userserver_id", "");
                             //WriteStringMember(writer, "assetserver_id", "");
                             //WriteStringMember(writer, "inventoryserver_id", "");
-                            WriteStringMember(writer, "root_folder_id", agent.InventoryRoot.ToString());
+                            WriteStringMember(writer, "root_folder_id", agent.Info.InventoryRoot.ToString());
 
-                            WriteStringMember(writer, "internal_port", server.HttpPort.ToString());
-                            WriteStringMember(writer, "regionhandle", server.Scene.RegionHandle.ToString());
+                            string port = scene.Server.HttpUri.Port.ToString();
+
+                            WriteStringMember(writer, "internal_port", port);
+                            WriteStringMember(writer, "regionhandle", scene.RegionHandle.ToString());
                             WriteStringMember(writer, "home_address", IPAddress.Loopback.ToString());
-                            WriteStringMember(writer, "home_port", server.HttpPort.ToString());
-                            WriteStringMember(writer, "home_remoting", server.HttpPort.ToString());
+                            WriteStringMember(writer, "home_port", port);
+                            WriteStringMember(writer, "home_remoting", port);
                         }
                         writer.WriteEndElement();
                         writer.WriteEndElement();
@@ -513,18 +518,18 @@ namespace Simian.Extensions
         {
             try
             {
-                destination = new Uri(destination, "/agent/" + agent.Avatar.ID.ToString() + "/");
+                destination = new Uri(destination, "/agent/" + agent.ID.ToString() + "/");
 
                 OSDMap args = new OSDMap();
-                args["agent_id"] = OSD.FromUUID(agent.Avatar.ID);
+                args["agent_id"] = OSD.FromUUID(agent.ID);
                 args["base_folder"] = OSD.FromUUID(UUID.Zero);
                 args["caps_path"] = OSD.FromString(seedCapFragment);
                 args["children_seeds"] = OSD.FromBoolean(false);
                 args["child"] = OSD.FromBoolean(false);
                 args["circuit_code"] = OSD.FromString(agent.CircuitCode.ToString());
-                args["first_name"] = OSD.FromString(agent.FirstName);
-                args["last_name"] = OSD.FromString(agent.LastName);
-                args["inventory_folder"] = OSD.FromUUID(agent.InventoryRoot);
+                args["first_name"] = OSD.FromString(agent.Info.FirstName);
+                args["last_name"] = OSD.FromString(agent.Info.LastName);
+                args["inventory_folder"] = OSD.FromUUID(agent.Info.InventoryRoot);
                 args["secure_session_id"] = OSD.FromUUID(agent.SecureSessionID);
                 args["session_id"] = OSD.FromUUID(agent.SessionID);
                 args["start_pos"] = OSD.FromString(destPos.ToString());
@@ -565,11 +570,11 @@ namespace Simian.Extensions
         void TeleportProgress(Agent agent, string message, TeleportFlags flags)
         {
             TeleportProgressPacket progress = new TeleportProgressPacket();
-            progress.AgentData.AgentID = agent.Avatar.ID;
+            progress.AgentData.AgentID = agent.ID;
             progress.Info.Message = Utils.StringToBytes(message);
             progress.Info.TeleportFlags = (uint)flags;
 
-            server.UDP.SendPacket(agent.Avatar.ID, progress, PacketCategory.Transaction);
+            scene.UDP.SendPacket(agent.ID, progress, PacketCategory.Transaction);
         }
 
         static void WriteStringMember(XmlWriter writer, string name, string value)

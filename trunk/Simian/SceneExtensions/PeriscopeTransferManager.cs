@@ -6,29 +6,29 @@ using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using OpenMetaverse.Packets;
 
-namespace Simian.Extensions
+namespace Simian
 {
     public class PeriscopeTransferManager
     {
         public const string UPLOAD_DIR = "uploadedAssets";
 
-        Simian server;
+        ISceneProvider scene;
         GridClient client;
         Dictionary<ulong, Asset> CurrentUploads = new Dictionary<ulong, Asset>();
         /// <summary>A map from TransactionIDs to AvatarIDs</summary>
         Dictionary<UUID, KeyValuePair<UUID, UUID>> currentDownloads = new Dictionary<UUID, KeyValuePair<UUID, UUID>>();
 
-        public PeriscopeTransferManager(Simian server, GridClient client)
+        public PeriscopeTransferManager(ISceneProvider scene, GridClient client)
         {
-            this.server = server;
+            this.scene = scene;
             this.client = client;
 
             client.Assets.OnAssetReceived += new OpenMetaverse.AssetManager.AssetReceivedCallback(Assets_OnAssetReceived);
 
-            server.UDP.RegisterPacketCallback(PacketType.AssetUploadRequest, new PacketCallback(AssetUploadRequestHandler));
-            server.UDP.RegisterPacketCallback(PacketType.SendXferPacket, new PacketCallback(SendXferPacketHandler));
-            server.UDP.RegisterPacketCallback(PacketType.AbortXfer, new PacketCallback(AbortXferHandler));
-            server.UDP.RegisterPacketCallback(PacketType.TransferRequest, new PacketCallback(TransferRequestHandler));
+            scene.UDP.RegisterPacketCallback(PacketType.AssetUploadRequest, new PacketCallback(AssetUploadRequestHandler));
+            scene.UDP.RegisterPacketCallback(PacketType.SendXferPacket, new PacketCallback(SendXferPacketHandler));
+            scene.UDP.RegisterPacketCallback(PacketType.AbortXfer, new PacketCallback(AbortXferHandler));
+            scene.UDP.RegisterPacketCallback(PacketType.TransferRequest, new PacketCallback(TransferRequestHandler));
         }
 
         public void Stop()
@@ -58,14 +58,14 @@ namespace Simian.Extensions
                 asset.Temporary = (request.AssetBlock.Tempfile | request.AssetBlock.StoreLocal);
 
                 // Store the asset
-                server.Assets.StoreAsset(asset);
+                scene.Server.Assets.StoreAsset(asset);
 
                 // Send a success response
                 AssetUploadCompletePacket complete = new AssetUploadCompletePacket();
                 complete.AssetBlock.Success = true;
                 complete.AssetBlock.Type = request.AssetBlock.Type;
                 complete.AssetBlock.UUID = assetID;
-                server.UDP.SendPacket(agent.Avatar.ID, complete, PacketCategory.Inventory);
+                scene.UDP.SendPacket(agent.ID, complete, PacketCategory.Inventory);
             }
             else
             {
@@ -84,7 +84,7 @@ namespace Simian.Extensions
                 RequestXferPacket xfer = new RequestXferPacket();
                 xfer.XferID.DeleteOnCompletion = request.AssetBlock.Tempfile;
                 xfer.XferID.FilePath = 0;
-                xfer.XferID.Filename = new byte[0];
+                xfer.XferID.Filename = Utils.EmptyBytes;
                 xfer.XferID.ID = request.AssetBlock.TransactionID.GetULong();
                 xfer.XferID.UseBigPackets = false;
                 xfer.XferID.VFileID = asset.AssetID;
@@ -94,7 +94,7 @@ namespace Simian.Extensions
                 lock (CurrentUploads)
                     CurrentUploads[xfer.XferID.ID] = asset;
 
-                server.UDP.SendPacket(agent.Avatar.ID, xfer, PacketCategory.Inventory);
+                scene.UDP.SendPacket(agent.ID, xfer, PacketCategory.Inventory);
             }
         }
 
@@ -123,7 +123,7 @@ namespace Simian.Extensions
                     ConfirmXferPacketPacket confirm = new ConfirmXferPacketPacket();
                     confirm.XferID.ID = xfer.XferID.ID;
                     confirm.XferID.Packet = xfer.XferID.Packet;
-                    server.UDP.SendPacket(agent.Avatar.ID, confirm, PacketCategory.Asset);
+                    scene.UDP.SendPacket(agent.ID, confirm, PacketCategory.Asset);
                 }
                 else
                 {
@@ -134,7 +134,7 @@ namespace Simian.Extensions
                     ConfirmXferPacketPacket confirm = new ConfirmXferPacketPacket();
                     confirm.XferID.ID = xfer.XferID.ID;
                     confirm.XferID.Packet = xfer.XferID.Packet;
-                    server.UDP.SendPacket(agent.Avatar.ID, confirm, PacketCategory.Asset);
+                    scene.UDP.SendPacket(agent.ID, confirm, PacketCategory.Asset);
 
                     if ((xfer.XferID.Packet & (uint)0x80000000) != 0)
                     {
@@ -144,13 +144,13 @@ namespace Simian.Extensions
                         lock (CurrentUploads)
                             CurrentUploads.Remove(xfer.XferID.ID);
 
-                        server.Assets.StoreAsset(asset);
+                        scene.Server.Assets.StoreAsset(asset);
 
                         AssetUploadCompletePacket complete = new AssetUploadCompletePacket();
                         complete.AssetBlock.Success = true;
                         complete.AssetBlock.Type = (sbyte)asset.AssetType;
                         complete.AssetBlock.UUID = asset.AssetID;
-                        server.UDP.SendPacket(agent.Avatar.ID, complete, PacketCategory.Asset);
+                        scene.UDP.SendPacket(agent.ID, complete, PacketCategory.Asset);
                     }
                 }
             }
@@ -202,7 +202,7 @@ namespace Simian.Extensions
 
                     // Check if we have this asset
                     Asset asset;
-                    if (server.Assets.TryGetAsset(assetID, out asset))
+                    if (scene.Server.Assets.TryGetAsset(assetID, out asset))
                     {
                         if (asset.AssetType == type)
                         {
@@ -221,27 +221,27 @@ namespace Simian.Extensions
                         lock (currentDownloads)
                         {
                             currentDownloads.Add(client.Assets.RequestAsset(assetID, type, false),
-                                new KeyValuePair<UUID, UUID>(agent.Avatar.ID, request.TransferInfo.TransferID));
+                                new KeyValuePair<UUID, UUID>(agent.ID, request.TransferInfo.TransferID));
                         }
                     }
                 }
                 else if (source == SourceType.SimEstate)
                 {
-                    UUID agentID = new UUID(request.TransferInfo.Params, 0);
-                    UUID sessionID = new UUID(request.TransferInfo.Params, 16);
-                    EstateAssetType type = (EstateAssetType)Utils.BytesToInt(request.TransferInfo.Params, 32);
+                    //UUID agentID = new UUID(request.TransferInfo.Params, 0);
+                    //UUID sessionID = new UUID(request.TransferInfo.Params, 16);
+                    //EstateAssetType type = (EstateAssetType)Utils.BytesToInt(request.TransferInfo.Params, 32);
 
                     Logger.Log("Please implement estate asset transfers", Helpers.LogLevel.Warning);
                 }
                 else if (source == SourceType.SimInventoryItem)
                 {
-                    UUID agentID = new UUID(request.TransferInfo.Params, 0);
-                    UUID sessionID = new UUID(request.TransferInfo.Params, 16);
-                    UUID ownerID = new UUID(request.TransferInfo.Params, 32);
+                    //UUID agentID = new UUID(request.TransferInfo.Params, 0);
+                    //UUID sessionID = new UUID(request.TransferInfo.Params, 16);
+                    //UUID ownerID = new UUID(request.TransferInfo.Params, 32);
                     UUID taskID = new UUID(request.TransferInfo.Params, 48);
-                    UUID itemID = new UUID(request.TransferInfo.Params, 64);
-                    UUID assetID = new UUID(request.TransferInfo.Params, 80);
-                    AssetType type = (AssetType)(sbyte)Utils.BytesToInt(request.TransferInfo.Params, 96);
+                    //UUID itemID = new UUID(request.TransferInfo.Params, 64);
+                    //UUID assetID = new UUID(request.TransferInfo.Params, 80);
+                    //AssetType type = (AssetType)(sbyte)Utils.BytesToInt(request.TransferInfo.Params, 96);
 
                     if (taskID != UUID.Zero)
                     {
@@ -286,7 +286,7 @@ namespace Simian.Extensions
             response.TransferInfo.Status = (int)StatusCode.OK;
             response.TransferInfo.TargetType = (int)TargetType.Unknown; // Doesn't seem to be used by the client
 
-            server.UDP.SendPacket(agent.Avatar.ID, response, PacketCategory.Asset);
+            scene.UDP.SendPacket(agent.ID, response, PacketCategory.Asset);
 
             // Transfer system does not wait for ACKs, just sends all of the
             // packets for this transfer out
@@ -310,7 +310,7 @@ namespace Simian.Extensions
                 else
                     transfer.TransferData.Status = (int)StatusCode.OK;
 
-                server.UDP.SendPacket(agent.Avatar.ID, transfer, PacketCategory.Asset);
+                scene.UDP.SendPacket(agent.ID, transfer, PacketCategory.Asset);
             }
         }
 
@@ -324,11 +324,11 @@ namespace Simian.Extensions
             {
                 currentDownloads.Remove(transfer.ID);
 
-                if (server.Scene.TryGetAgent(kvp.Key, out agent))
+                if (scene.TryGetAgent(kvp.Key, out agent))
                 {
                     if (transfer.Success)
                     {
-                        server.Assets.StoreAsset(asset);
+                        scene.Server.Assets.StoreAsset(asset);
                         TransferToClient(asset, agent, kvp.Value);
                     }
                     else
@@ -349,7 +349,7 @@ namespace Simian.Extensions
                         response.TransferInfo.Status = (int)StatusCode.UnknownSource;
                         response.TransferInfo.TargetType = (int)TargetType.Unknown;
 
-                        server.UDP.SendPacket(agent.Avatar.ID, response, PacketCategory.Asset);
+                        scene.UDP.SendPacket(agent.ID, response, PacketCategory.Asset);
                     }
                 }
                 else

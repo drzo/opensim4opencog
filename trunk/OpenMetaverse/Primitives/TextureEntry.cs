@@ -842,7 +842,7 @@ namespace OpenMetaverse
             /// 
             /// </summary>
             /// <returns></returns>
-            public byte[] ToBytes()
+            public byte[] GetBytes()
             {
                 if (DefaultTexture == null)
                     return Utils.EmptyBytes;
@@ -1137,6 +1137,11 @@ namespace OpenMetaverse
             }
 
             #endregion Helpers
+
+            public byte[] ToBytes()
+            {
+                return GetBytes();
+            }
         }
 
         /// <summary>
