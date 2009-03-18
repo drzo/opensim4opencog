@@ -161,9 +161,22 @@ namespace cogbot.TheOpenSims.Navigation
             mMatrix[ARRAY_IDX(RangeCheck(v3.X)), ARRAY_IDX(RangeCheck(v3.Y))] = v;
         }
 
+        /// <summary>
+        /// Will not changed blocked points - if needed use SetPassable
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
         public void SetTraveled(float x, float y)
         {
-            SetPassable(x, y);
+            x = RangeCheck(x); y = RangeCheck(y);
+            int ix = ARRAY_IDX(x);
+            int iy = ARRAY_IDX(y);
+            byte b = mMatrix[ix, iy];
+            if (b > 100 || b < 3)
+            {
+                return;
+            }
+            mMatrix[ix, iy] = STICKY_PASSABLE;
         }
 
         public SimWaypoint SetObjectAt(float x, float y, SimObject simObject, float minZ, float maxZ)
@@ -835,7 +848,8 @@ namespace cogbot.TheOpenSims.Navigation
                 for (int i = 0; i < stepsNeeded; i++)
                 {
                     traveled = traveled + vstep;
-                    Store.SetTraveled(traveled.X, traveled.Y);
+                    if (stepsNeeded>10) Store.SetTraveled(traveled.X, traveled.Y);
+                    else Store.SetPassable(traveled.X, traveled.Y);
                 }
                 LastPosition = nextPosition;
             }
