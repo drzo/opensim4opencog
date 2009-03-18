@@ -476,7 +476,7 @@ namespace cogbot.TheOpenSims
 
 
 
-        public static List<Vector3d> GetPath(Vector3d globalStart, Vector3d globalEnd, out bool OnlyStart)
+        public static List<Vector3d> GetPath(Vector3d globalStart, Vector3d globalEnd, double endFudge, out bool OnlyStart)
         {
             SimPosition posStart = SimWaypoint.CreateGlobal(globalStart);
             SimPosition posEnd = SimWaypoint.CreateGlobal(globalEnd);
@@ -488,23 +488,7 @@ namespace cogbot.TheOpenSims
             // Same region?
             if (regStart == regEnd)
             {
-                Vector3 newEnd = localEnd;
-                route = regStart.GetLocalPath(localStart, newEnd);
-                if (route.Count > 1)
-                {
-                    OnlyStart = false;
-                    return route;
-                }
-                OnlyStart = true;
-                Vector3 diff = localEnd - localStart;
-                while (diff.Length()>10)
-                {
-                    diff = diff * 0.8f;
-                    newEnd = localStart + diff;
-                    route = regStart.GetLocalPath(localStart, newEnd);
-                    if (route.Count > 1) return route;
-                }
-                return route;
+                return regStart.GetAtLeastPartial(localStart, localEnd,(float) endFudge, out OnlyStart);
             }
             OnlyStart = true; // will be only a partial path
             SimRegion nextRegion;
@@ -515,6 +499,52 @@ namespace cogbot.TheOpenSims
             Vector3 enterEdge = EnterEdge(localLast, nextRegion.GetGridLocation() - regStart.GetGridLocation());
             route.Add(nextRegion.LocalToGlobal(enterEdge));
             return route;
+        }
+
+        private List<Vector3d> GetAtLeastPartial(Vector3 localStart, Vector3 localEnd, float endFudge, out bool OnlyStart)
+        {
+            List<Vector3d> route;
+            Vector3 newEnd = localEnd;
+            route = GetLocalPath(localStart, newEnd);
+            if (route.Count > 1)
+            {
+                OnlyStart = false;
+                return route;
+            }
+            OnlyStart = true;
+            Vector3 diff = localEnd - localStart;
+            while (diff.Length() > 10)
+            {
+                diff = diff * 0.8f;
+                newEnd = localStart + diff;
+                route = GetLocalPath(localStart, newEnd);
+                if (route.Count > 1) return route;
+            }
+            OnlyStart = false; // Since this will be the best
+            // try to move to nearby
+            float step = 45 * SimPathStore.RAD2DEG;
+            for (double angle = 0; angle < SimPathStore.PI2; angle += step)
+            {
+                newEnd = localEnd + ZAngleVector(angle) * endFudge;
+                route = GetLocalPath(localStart, newEnd);
+                if (route.Count > 1) return route;
+            }
+            route = new List<Vector3d>();
+            route.Add(LocalToGlobal(localStart));
+            return route;
+        }
+
+        internal Vector3 ZAngleVector(double ZAngle)
+        {
+            while (ZAngle < 0)
+            {
+                ZAngle += SimPathStore.PI2;
+            }
+            while (ZAngle > SimPathStore.PI2)
+            {
+                ZAngle -= SimPathStore.PI2;
+            }
+            return new Vector3((float)Math.Sin(ZAngle), (float)Math.Cos(ZAngle), 0);
         }
 
         internal static Vector3 EnterEdge(Vector3 localLast, Vector2 dir)

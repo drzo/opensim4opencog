@@ -493,7 +493,7 @@ namespace cogbot.TheOpenSims.Navigation
             {
                 PathFinderFasting pff = new PathFinderFasting(mMatrix);
                 if (panel != null) panel.SetStartEnd(S, E);
-                pff.Diagonals = false;
+               // pff.Diagonals = false;
                 //pff.ReopenCloseNodes = true;
                 pff.SearchLimit = 10000000;
                 pff.PunishChangeDirection = PunishChangeDirection;
@@ -651,7 +651,7 @@ namespace cogbot.TheOpenSims.Navigation
                 }
             }
         }
-        bool NeedsUpdate = true;
+        public bool NeedsUpdate = true;
         internal void UpdateMatrix()
         {
             lock (mWaypoints)

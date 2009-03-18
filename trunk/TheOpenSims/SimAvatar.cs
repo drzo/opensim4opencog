@@ -1106,7 +1106,7 @@ namespace cogbot.TheOpenSims
             while (OnlyStart && MadeIt)
             {
                 if (Vector3d.Distance(GetWorldPosition(), globalEnd) < distance) return true;
-                List<Vector3d> route = SimRegion.GetPath(GetWorldPosition(), globalEnd, out OnlyStart);
+                List<Vector3d> route = SimRegion.GetPath(GetWorldPosition(), globalEnd, distance, out OnlyStart);
                 MadeIt = FollowPathTo(route, globalEnd, distance);
             }
             return MadeIt;
