@@ -1013,6 +1013,42 @@ namespace cogbot.TheOpenSims
             Mesh = null;
         }
 
+        private void UpdatePathOccupiedNotWorkingNew(SimPathStore simPathStore)
+        {
+            if (simPathStore.GetSimRegion() != GetSimRegion()) return;
+            PathStore = simPathStore;
+            byte[,] mMatrix = PathStore.mMatrix;
+            PathStore.NeedsUpdate = true;
+            float POINTS_PER_METER = PathStore.POINTS_PER_METER;
+            float StepSize = PathStore.StepSize;
+            float xf = OuterBox.MinX;
+            float yfi = OuterBox.MinY;
+            int xs = (int)Math.Round(OuterBox.MinX * POINTS_PER_METER);
+            int ys = (int)Math.Round(OuterBox.MinY * POINTS_PER_METER);
+            int xe = (int)Math.Round(OuterBox.MaxX * POINTS_PER_METER);
+            int ye = (int)Math.Round(OuterBox.MaxY * POINTS_PER_METER);
+            Vector2 v2 = new Vector2(float.MaxValue, float.MinValue);
+            for (int x = xs; x <= xe; x++)
+            {
+                float yf = yfi;
+                for (int y = ys; y <= ye; y++)
+                {
+                    if (Mesh.MinMaxZ(xf, yf, ref v2))
+                    {
+                        SimWaypoint W = PathStore.Waypoint(x, y);
+                        OccupiedWPs[W.Point] = v2;
+                        W.AddOccupied(this, v2.X, v2.Y);
+                        v2 = new Vector2(float.MaxValue, float.MinValue);
+                        if (mMatrix[x, y] > 9)
+                            if (mMatrix[x, y] < 200)
+                                mMatrix[x, y] = W.GetOccupiedValue();
+                    }
+                    yf += StepSize;
+                }
+                xf += StepSize;
+            }
+            Mesh = null;
+        }
 
         public SimRegion _CurrentRegion;
         public virtual SimRegion GetSimRegion()

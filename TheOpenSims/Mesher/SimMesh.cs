@@ -245,7 +245,7 @@ namespace cogbot.TheOpenSims.Mesher
             }
         }
 
-    
+
         /// <summary>
         /// Convert a PrimMesher.PrimMesh to OpenSim.Region.Physics.Meshing.Mesh
         /// </summary>
@@ -560,6 +560,30 @@ namespace cogbot.TheOpenSims.Mesher
             }
             return newPrim;
         }
+
+        internal bool MinMaxZ(float xf, float yf, ref Vector2 V2)
+        {
+            bool found = false;
+            foreach (Box3Fill B in InnerBoxes)
+            {
+                if (B.MinX > xf
+                    || B.MaxX < xf
+                    || B.MinY > yf
+                    || B.MaxY < yf) continue;
+                if (B.MinZ < V2.X)
+                {
+                    V2.X = B.MinZ;
+                    found = true;
+                }
+                if (B.MaxZ > V2.Y)
+                {
+                    V2.Y = B.MaxZ;
+                    found = true;
+                }
+            }
+            return found;
+        }
+
     }
 
     public class Box3Fill : IComparable<Box3Fill>, IEquatable<Box3Fill>
