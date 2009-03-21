@@ -32,6 +32,8 @@ namespace Simian
 
     public class SceneManager : ISceneProvider
     {
+        const int TARGET_FRAMES_PER_SECOND = 45;
+
         // Interfaces. Although no other classes will access these interfaces directly
         // (getters are used instead), they must be marked public so ExtensionLoader 
         // can automatically assign them
@@ -68,6 +70,7 @@ namespace Simian
         public ITaskInventoryProvider TaskInventory { get { return taskInventory; } }
         public IUDPProvider UDP { get { return udp; } }
 
+        public X509Certificate2 RegionCertificate { get { return regionCert; } }
         public uint RegionX
         {
             get { return regionX; }
@@ -89,15 +92,17 @@ namespace Simian
         public ulong RegionHandle { get { return regionHandle; } }
         public UUID RegionID { get { return regionID; } }
         public string RegionName { get { return regionName; } set { regionName = value; } }
-        public RegionFlags RegionFlags { get { return RegionFlags.None; } }
+        public RegionFlags RegionFlags { get { return regionFlags; } }
         public IPEndPoint IPAndPort { get { return endpoint; } set { endpoint = value; } }
         public Vector3 DefaultPosition { get { return defaultPosition; } }
         public Vector3 DefaultLookAt { get { return defaultLookAt; } }
-        public float WaterHeight { get { return 20f; } }
+        public UUID MapTextureID { get { return mapTextureID; } }
+        public float WaterHeight { get { return waterHeight; } }
         public uint TerrainPatchWidth { get { return 16; } }
         public uint TerrainPatchHeight { get { return 16; } }
         public uint TerrainPatchCountWidth { get { return 16; } }
         public uint TerrainPatchCountHeight { get { return 16; } }
+        public float TimeDilation { get { return TimeDilation; } }
 
         Simian server;
         // Contains all scene objects, including prims and avatars
@@ -107,7 +112,9 @@ namespace Simian
         // Event queues for each avatar in the scene
         Dictionary<UUID, EventQueueServerCap> eventQueues = new Dictionary<UUID, EventQueueServerCap>();
         int currentLocalID = 1;
+        X509Certificate2 regionCert;
         ulong regionHandle;
+        RegionFlags regionFlags;
         UUID regionID = UUID.Random();
         TerrainPatch[,] heightmap = new TerrainPatch[16, 16];
         Vector2[,] windSpeeds = new Vector2[16, 16];
@@ -116,14 +123,18 @@ namespace Simian
         uint regionX;
         uint regionY;
         string regionName;
+        float waterHeight;
+        UUID mapTextureID;
         Vector3 defaultPosition = new Vector3(128f, 128f, 30f);
-        Vector3 defaultLookAt = Vector3.UnitX;
+        Vector3 defaultLookAt = Vector3.UnitZ;
         /// <summary>Track the eight neighboring tiles around us</summary>
         RegionInfo[] neighbors = new RegionInfo[8];
         /// <summary>List of callback URIs for pending client connections. When a new client connection
         /// is established for a client in this dictionary, an enable_client_complete message will be
         /// sent to the associated URI</summary>
         Dictionary<UUID, Uri> enableClientCompleteCallbacks = new Dictionary<UUID, Uri>();
+        float timeDilation;
+        bool running;
 
         public SceneManager()
         {
@@ -131,10 +142,16 @@ namespace Simian
 
         public bool Start(Simian server, RegionInfo regionInfo, X509Certificate2 regionCert, string defaultTerrainFile, int staticObjects, int physicalObjects)
         {
+            running = true;
+
             this.server = server;
             this.regionName = regionInfo.Name;
             this.endpoint = regionInfo.IPAndPort;
             this.regionID = regionInfo.ID;
+            this.regionCert = regionCert;
+            this.regionFlags = regionInfo.Flags;
+            this.mapTextureID = regionInfo.MapTextureID;
+            this.waterHeight = regionInfo.WaterHeight;
 
             // Set the properties because this will automatically update the regionHandle
             RegionX = regionInfo.X;
@@ -183,10 +200,15 @@ namespace Simian
             server.Grid.OnRegionUpdate += Grid_OnRegionUpdate;
             udp.OnAgentConnection += udp_OnAgentConnection;
             udp.RegisterPacketCallback(PacketType.CompleteAgentMovement, CompleteAgentMovementHandler);
-            udp.RegisterPacketCallback(PacketType.ChatFromViewer, ChatHandler);
             
+            // Load the default terrain for this sim
             if (!String.IsNullOrEmpty(defaultTerrainFile))
                 LoadTerrain(Simian.DATA_DIR + defaultTerrainFile);
+
+            // Start the physics thread
+            Thread physicsThread = new Thread(new ThreadStart(PhysicsThread));
+            physicsThread.Name = "Physics";
+            physicsThread.Start();
 
             Logger.Log(String.Format("Region {0} online at ({1},{2}) listening on {3}", regionName, regionX, regionY, endpoint),
                 Helpers.LogLevel.Info);
@@ -198,17 +220,11 @@ namespace Simian
             return true;
         }
 
-        void ChatHandler(Packet packet, Agent agent)
-        {
-            ChatFromViewerPacket chat = (ChatFromViewerPacket)packet;
-            string message = Utils.BytesToString(chat.ChatData.Message);
-            if (message == "lol")
-                SendEvent(agent, "lol", new OSDMap());
-        }
-
         public void Stop()
         {
             Logger.Log("Stopping region " + regionName, Helpers.LogLevel.Info);
+
+            running = false;
 
             // Remove all of the agents from the scene. This will shutdown UDP connections and event queues to
             // each of the agents as well
@@ -737,7 +753,7 @@ namespace Simian
             if (agent.Info.VisualParams != null)
             {
                 // Send the appearance packet to all other clients
-                AvatarAppearancePacket appearance = BuildAppearancePacket(agent);
+                AvatarAppearancePacket appearance = agent.BuildAppearancePacket();
                 ForEachAgent(
                     delegate(Agent recipient)
                     {
@@ -969,6 +985,51 @@ namespace Simian
 
         #endregion Capabilities Interfaces
 
+        public void InformClientOfNeighbors(Agent agent)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                if (!agent.NeighborConnections[i] && neighbors[i].Online)
+                {
+                    Logger.Log("Sending enable_client for " + agent.FullName + " to neighbor " + neighbors[i].Name, Helpers.LogLevel.Info);
+
+                    // Create a callback for enable_client_complete
+                    Uri callbackUri = server.Capabilities.CreateCapability(EnableClientCompleteCapHandler, false, null);
+
+                    OSDMap enableClient = CapsMessages.EnableClient(agent.ID, agent.SessionID, agent.SecureSessionID,
+                        (int)agent.CircuitCode, agent.Info.FirstName, agent.Info.LastName, callbackUri);
+
+                    AutoResetEvent waitEvent = new AutoResetEvent(false);
+
+                    CapsClient request = new CapsClient(neighbors[i].EnableClientCap);
+                    request.OnComplete +=
+                    delegate(CapsClient client, OSD result, Exception error)
+                    {
+                        OSDMap response = result as OSDMap;
+                        if (response != null)
+                        {
+                            bool success = response["success"].AsBoolean();
+                            Logger.Log("enable_client response: " + success, Helpers.LogLevel.Info);
+
+                            if (success)
+                            {
+                                // Send the EnableSimulator capability to clients
+                                RegionInfo neighbor = neighbors[i];
+                                OSDMap enableSimulator = CapsMessages.EnableSimulator(neighbor.Handle, neighbor.IPAndPort.Address, neighbor.IPAndPort.Port);
+
+                                SendEvent(agent, "EnableSimulator", enableSimulator);
+                            }
+                        }
+                        waitEvent.Set();
+                    };
+                    request.StartRequest(enableClient);
+
+                    if (!waitEvent.WaitOne(30 * 1000, false))
+                        Logger.Log("enable_client request timed out", Helpers.LogLevel.Warning);
+                }
+            }
+        }
+
         #region Callback Handlers
 
         public bool SeedCapabilityHandler(IHttpClientContext context, IHttpRequest request, IHttpResponse response, object state)
@@ -1044,7 +1105,7 @@ namespace Simian
                     info.AccessLevel = "M";
                     info.FirstName = firstName;
                     info.Height = 1.9f;
-                    info.HomeLookAt = Vector3.UnitX;
+                    info.HomeLookAt = Vector3.UnitZ;
                     info.HomePosition = new Vector3(128f, 128f, 25f);
                     info.HomeRegionHandle = regionHandle;
                     info.ID = agentID;
@@ -1159,8 +1220,7 @@ namespace Simian
 
                 Logger.Log("Sending enable_client_complete callback to " + callbackUri.ToString(), Helpers.LogLevel.Info);
 
-                OSDMap map = new OSDMap(1);
-                map["agent_id"] = OSD.FromUUID(agent.ID);
+                OSDMap enableClientComplete = CapsMessages.EnableClientComplete(agent.ID);
 
                 AutoResetEvent waitEvent = new AutoResetEvent(false);
 
@@ -1181,7 +1241,7 @@ namespace Simian
                         }
                         waitEvent.Set();
                     };
-                request.StartRequest(map);
+                request.StartRequest(enableClientComplete);
 
                 if (!waitEvent.WaitOne(30 * 1000, false))
                     Logger.Log("enable_client_complete request timed out", Helpers.LogLevel.Warning);
@@ -1197,7 +1257,7 @@ namespace Simian
             AgentMovementCompletePacket complete = new AgentMovementCompletePacket();
             complete.AgentData.AgentID = agent.ID;
             complete.AgentData.SessionID = agent.SessionID;
-            complete.Data.LookAt = Vector3.UnitX; // TODO: Properly implement LookAt someday
+            complete.Data.LookAt = Vector3.UnitZ; // TODO: Properly implement LookAt someday
             complete.Data.Position = agent.Avatar.Prim.Position;
             complete.Data.RegionHandle = regionHandle;
             complete.Data.Timestamp = Utils.DateTimeToUnixTime(DateTime.Now);
@@ -1205,115 +1265,48 @@ namespace Simian
 
             udp.SendPacket(agent.ID, complete, PacketCategory.Transaction);
 
-            // Send updates and appearances for every avatar to this new avatar
-            SynchronizeStateTo(agent);
-
             //HACK: Notify everyone when someone logs on to the simulator
             OnlineNotificationPacket online = new OnlineNotificationPacket();
             online.AgentBlock = new OnlineNotificationPacket.AgentBlockBlock[1];
             online.AgentBlock[0] = new OnlineNotificationPacket.AgentBlockBlock();
             online.AgentBlock[0].AgentID = agent.ID;
             udp.BroadcastPacket(online, PacketCategory.State);
-
-            // Initiate the connection process for this agent to neighboring regions
-            InformClientOfNeighbors(agent);
         }
 
         #endregion Callback Handlers
 
-        void InformClientOfNeighbors(Agent agent)
+        void PhysicsThread()
         {
-            for (int i = 0; i < 8; i++)
+            const float TARGET_FRAME_TIME = 1f / (float)TARGET_FRAMES_PER_SECOND;
+
+            System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+            float elapsedTime = 0f;
+            int sleepMS;
+
+            while (running)
             {
-                if (!agent.NeighborConnections[i] && neighbors[i].Online)
+                stopwatch.Start();
+
+                physics.Update(elapsedTime);
+
+                // Measure the duration of this frame
+                stopwatch.Stop();
+                elapsedTime = (float)stopwatch.Elapsed.TotalSeconds;
+                stopwatch.Reset();
+
+                // Calculate time dilation and decide if we need to sleep to limit FPS
+                if (elapsedTime < TARGET_FRAME_TIME)
                 {
-                    Logger.Log("Sending enable_client for " + agent.FullName + " to neighbor " + neighbors[i].Name, Helpers.LogLevel.Info);
-
-                    // Create a callback for enable_client_complete
-                    Uri callbackUri = server.Capabilities.CreateCapability(EnableClientCompleteCapHandler, false, null);
-
-                    OSDMap map = new OSDMap();
-                    map["agent_id"] = OSD.FromUUID(agent.ID);
-                    map["session_id"] = OSD.FromUUID(agent.SessionID);
-                    map["secure_session_id"] = OSD.FromUUID(agent.SecureSessionID);
-                    map["circuit_code"] = OSD.FromInteger((int)agent.CircuitCode);
-                    map["first_name"] = OSD.FromString(agent.Info.FirstName);
-                    map["last_name"] = OSD.FromString(agent.Info.LastName);
-                    map["callback_uri"] = OSD.FromUri(callbackUri);
-
-                    AutoResetEvent waitEvent = new AutoResetEvent(false);
-
-                    CapsClient request = new CapsClient(neighbors[i].EnableClientCap);
-                    request.OnComplete +=
-                    delegate(CapsClient client, OSD result, Exception error)
-                    {
-                        OSDMap response = result as OSDMap;
-                        if (response != null)
-                        {
-                            bool success = response["success"].AsBoolean();
-                            Logger.Log("enable_client response: " + success, Helpers.LogLevel.Info);
-
-                            if (success)
-                            {
-                                // Send the EnableSimulator capability to clients
-                                OSDMap llsdSimInfo = new OSDMap(3);
-
-                                llsdSimInfo.Add("Handle", OSD.FromULong(neighbors[i].Handle));
-                                llsdSimInfo.Add("IP", OSD.FromBinary(neighbors[i].IPAndPort.Address.GetAddressBytes()));
-                                llsdSimInfo.Add("Port", OSD.FromInteger(neighbors[i].IPAndPort.Port));
-
-                                OSDArray arr = new OSDArray(1);
-                                arr.Add(llsdSimInfo);
-
-                                OSDMap llsdBody = new OSDMap(1);
-                                llsdBody.Add("SimulatorInfo", arr);
-
-                                SendEvent(agent, "EnableSimulator", llsdBody);
-                            }
-                        }
-                        waitEvent.Set();
-                    };
-                    request.StartRequest(map);
-
-                    if (!waitEvent.WaitOne(30 * 1000, false))
-                        Logger.Log("enable_client request timed out", Helpers.LogLevel.Warning);
+                    timeDilation = (1f / elapsedTime) / (float)TARGET_FRAMES_PER_SECOND;
+                    sleepMS = (int)((TARGET_FRAME_TIME - elapsedTime) * 1000f);
+                    Thread.Sleep(sleepMS);
+                    elapsedTime = TARGET_FRAME_TIME;
+                }
+                else
+                {
+                    timeDilation = 1f;
                 }
             }
-        }
-
-        // HACK: The reduction provider will deprecate this at some point
-        void SynchronizeStateTo(Agent agent)
-        {
-            // Send the parcel overlay
-            parcels.SendParcelOverlay(agent);
-
-            // Send object updates for objects and avatars
-            sceneObjects.ForEach(delegate(SimulationObject obj)
-            {
-                ObjectUpdatePacket update = new ObjectUpdatePacket();
-                update.RegionData.RegionHandle = regionHandle;
-                update.RegionData.TimeDilation = (ushort)(physics.TimeDilation * (float)UInt16.MaxValue);
-                update.ObjectData = new ObjectUpdatePacket.ObjectDataBlock[1];
-                update.ObjectData[0] = SimulationObject.BuildUpdateBlock(obj.Prim, obj.Prim.Flags, obj.CRC);
-
-                udp.SendPacket(agent.ID, update, PacketCategory.State);
-            });
-
-            // Send appearances for all avatars
-            ForEachAgent(
-                delegate(Agent otherAgent)
-                {
-                    if (otherAgent != agent)
-                    {
-                        // Send appearances for this avatar
-                        AvatarAppearancePacket appearance = BuildAppearancePacket(otherAgent);
-                        udp.SendPacket(agent.ID, appearance, PacketCategory.State);
-                    }
-                }
-            );
-
-            // Send terrain data
-            SendLayerData(agent);
         }
 
         void LoadTerrain(string mapFile)
@@ -1384,18 +1377,6 @@ namespace Simian
             }
         }
 
-        void SendLayerData(Agent agent)
-        {
-            for (int y = 0; y < 16; y++)
-            {
-                for (int x = 0; x < 16; x++)
-                {
-                    LayerDataPacket layer = TerrainCompressor.CreateLandPacket(heightmap[y, x].Height, x, y);
-                    udp.SendPacket(agent.ID, layer, PacketCategory.Terrain);
-                }
-            }
-        }
-
         void SendObjectPacket(SimulationObject obj, bool canUseCompressed, bool canUseImproved, PrimFlags creatorFlags, UpdateFlags updateFlags)
         {
             if (!canUseImproved && !canUseCompressed)
@@ -1409,7 +1390,7 @@ namespace Simian
                     // Send an update out to the creator
                     ObjectUpdatePacket updateToOwner = new ObjectUpdatePacket();
                     updateToOwner.RegionData.RegionHandle = regionHandle;
-                    updateToOwner.RegionData.TimeDilation = (ushort)(physics.TimeDilation * (float)UInt16.MaxValue);
+                    updateToOwner.RegionData.TimeDilation = (ushort)(timeDilation * (float)UInt16.MaxValue);
                     updateToOwner.ObjectData = new ObjectUpdatePacket.ObjectDataBlock[1];
                     updateToOwner.ObjectData[0] = SimulationObject.BuildUpdateBlock(obj.Prim,
                         obj.Prim.Flags | creatorFlags | PrimFlags.ObjectYouOwner, obj.CRC);
@@ -1672,7 +1653,7 @@ namespace Simian
                     // Send an update out to the creator
                     ObjectUpdateCompressedPacket updateToOwner = new ObjectUpdateCompressedPacket();
                     updateToOwner.RegionData.RegionHandle = regionHandle;
-                    updateToOwner.RegionData.TimeDilation = (ushort)(physics.TimeDilation * (float)UInt16.MaxValue);
+                    updateToOwner.RegionData.TimeDilation = (ushort)(timeDilation * (float)UInt16.MaxValue);
                     updateToOwner.ObjectData = new ObjectUpdateCompressedPacket.ObjectDataBlock[1];
                     updateToOwner.ObjectData[0] = new ObjectUpdateCompressedPacket.ObjectDataBlock();
                     updateToOwner.ObjectData[0].UpdateFlags = (uint)(obj.Prim.Flags | creatorFlags | PrimFlags.ObjectYouOwner);
@@ -1750,7 +1731,7 @@ namespace Simian
 
                 ImprovedTerseObjectUpdatePacket update = new ImprovedTerseObjectUpdatePacket();
                 update.RegionData.RegionHandle = RegionHandle;
-                update.RegionData.TimeDilation = (ushort)(physics.TimeDilation * (float)UInt16.MaxValue);
+                update.RegionData.TimeDilation = (ushort)(timeDilation * (float)UInt16.MaxValue);
                 update.ObjectData = new ImprovedTerseObjectUpdatePacket.ObjectDataBlock[1];
                 update.ObjectData[0] = new ImprovedTerseObjectUpdatePacket.ObjectDataBlock();
                 update.ObjectData[0].Data = data;
@@ -1776,28 +1757,6 @@ namespace Simian
 
                 #endregion ImprovedTerseObjectUpdate
             }
-        }
-
-        static AvatarAppearancePacket BuildAppearancePacket(Agent agent)
-        {
-            AvatarAppearancePacket appearance = new AvatarAppearancePacket();
-            appearance.ObjectData.TextureEntry = agent.Avatar.Prim.Textures.GetBytes();
-            appearance.Sender.ID = agent.ID;
-            appearance.Sender.IsTrial = false;
-
-            int count = agent.Info.VisualParams != null ? agent.Info.VisualParams.Length : 0;
-
-            appearance.VisualParam = new AvatarAppearancePacket.VisualParamBlock[count];
-            for (int i = 0; i < count; i++)
-            {
-                appearance.VisualParam[i] = new AvatarAppearancePacket.VisualParamBlock();
-                appearance.VisualParam[i].ParamValue = agent.Info.VisualParams[i];
-            }
-
-            if (count != 218)
-                Logger.Log("Built an odd appearance packet with VisualParams.Length=" + count, Helpers.LogLevel.Warning);
-
-            return appearance;
         }
     }
 }

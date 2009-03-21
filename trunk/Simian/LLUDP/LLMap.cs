@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Xml;
@@ -21,6 +22,9 @@ namespace Simian
 
     public class LLMap : IExtension<ISceneProvider>
     {
+        static readonly UUID WATER_TEXTURE = new UUID("af588c7c-52b0-4d9e-a888-1fe9d6c35f45");
+        static readonly UUID HYPERGRID_MAP_TEXTURE = new UUID("3f1f56ad-7811-42e6-b3c1-98b79fc5c360");
+
         ISceneProvider scene;
 
         public LLMap()
@@ -33,6 +37,7 @@ namespace Simian
 
             scene.UDP.RegisterPacketCallback(PacketType.MapLayerRequest, MapLayerRequestHandler);
             scene.UDP.RegisterPacketCallback(PacketType.MapBlockRequest, MapBlockRequestHandler);
+            scene.UDP.RegisterPacketCallback(PacketType.MapItemRequest, MapItemRequestHandler);
             scene.UDP.RegisterPacketCallback(PacketType.TeleportRequest, TeleportRequestHandler);
             scene.UDP.RegisterPacketCallback(PacketType.TeleportLocationRequest, TeleportLocationRequestHandler);
             return true;
@@ -47,6 +52,9 @@ namespace Simian
             MapLayerRequestPacket request = (MapLayerRequestPacket)packet;
             GridLayerType type = (GridLayerType)request.AgentData.Flags;
 
+            // FIXME: Do this properly. Use the grid service to get the aggregated map layers
+            // (lots of map tiles in a single texture == layer)
+
             MapLayerReplyPacket reply = new MapLayerReplyPacket();
             reply.AgentData.AgentID = agent.ID;
             reply.AgentData.Flags = (uint)type;
@@ -56,7 +64,7 @@ namespace Simian
             reply.LayerData[0].Left = 0;
             reply.LayerData[0].Top = UInt16.MaxValue;
             reply.LayerData[0].Right = UInt16.MaxValue;
-            reply.LayerData[0].ImageID = new UUID("89556747-24cb-43ed-920b-47caed15465f");
+            reply.LayerData[0].ImageID = WATER_TEXTURE;
 
             scene.UDP.SendPacket(agent.ID, reply, PacketCategory.Transaction);
         }
@@ -64,35 +72,117 @@ namespace Simian
         void MapBlockRequestHandler(Packet packet, Agent agent)
         {
             MapBlockRequestPacket request = (MapBlockRequestPacket)packet;
-            GridLayerType type = (GridLayerType)request.AgentData.Flags;
+            bool returnNonexistent = (request.AgentData.Flags == 0x10000);
+            GridLayerType type = (GridLayerType)(request.AgentData.Flags &~0x10000);
+
+            IList<RegionInfo> regions = scene.Server.Grid.GetRegionsInArea(request.PositionData.MinX, request.PositionData.MinY,
+                request.PositionData.MaxX, request.PositionData.MaxY);
 
             MapBlockReplyPacket reply = new MapBlockReplyPacket();
             reply.AgentData.AgentID = agent.ID;
             reply.AgentData.Flags = (uint)type;
 
-            reply.Data = new MapBlockReplyPacket.DataBlock[2];
+            MapBlockReplyPacket.DataBlock[] blocks;
 
-            reply.Data[0] = new MapBlockReplyPacket.DataBlock();
-            reply.Data[0].Access = (byte)SimAccess.Min;
-            reply.Data[0].Agents = (byte)scene.AgentCount();
-            reply.Data[0].MapImageID = new UUID("89556747-24cb-43ed-920b-47caed15465f");
-            reply.Data[0].Name = Utils.StringToBytes(scene.RegionName);
-            reply.Data[0].RegionFlags = (uint)scene.RegionFlags;
-            reply.Data[0].WaterHeight = (byte)scene.WaterHeight;
-            reply.Data[0].X = (ushort)scene.RegionX;
-            reply.Data[0].Y = (ushort)scene.RegionY;
+            if (returnNonexistent)
+            {
+                int blockCountX = request.PositionData.MaxX + 1 - request.PositionData.MinX;
+                int blockCountY = request.PositionData.MaxY + 1 - request.PositionData.MinY;
+                blocks = new MapBlockReplyPacket.DataBlock[blockCountX * blockCountY];
+                int i = 0;
 
-            reply.Data[1] = new MapBlockReplyPacket.DataBlock();
-            reply.Data[1].Access = (byte)SimAccess.Min;
-            reply.Data[1].Agents = 0;
-            reply.Data[1].MapImageID = new UUID("89556747-24cb-43ed-920b-47caed15465f");
-            reply.Data[1].Name = Utils.StringToBytes("HyperGrid Portal to OSGrid");
-            reply.Data[1].RegionFlags = (uint)scene.RegionFlags;
-            reply.Data[1].WaterHeight = (byte)scene.WaterHeight;
-            reply.Data[1].X = (ushort)(scene.RegionX + 1);
-            reply.Data[1].Y = (ushort)scene.RegionY;
+                for (int y = request.PositionData.MinY; y <= request.PositionData.MaxY; y++)
+                {
+                    for (int x = request.PositionData.MinX; x <= request.PositionData.MaxX; x++)
+                    {
+                        blocks[i] = new MapBlockReplyPacket.DataBlock();
+                        blocks[i].X = (ushort)x;
+                        blocks[i].Y = (ushort)y;
+
+                        // See if we have data for this region
+                        RegionInfo? region = null;
+                        for (int j = 0; j < regions.Count; j++)
+                        {
+                            if (regions[j].X == x && regions[j].Y == y)
+                            {
+                                region = regions[j];
+                                break;
+                            }
+                        }
+
+                        if (region.HasValue)
+                        {
+                            blocks[i].Access = (byte)SimAccess.Min;
+                            blocks[i].Agents = (byte)region.Value.AgentCount;
+                            blocks[i].MapImageID = region.Value.MapTextureID;
+                            blocks[i].Name = Utils.StringToBytes(region.Value.Name);
+                            blocks[i].RegionFlags = (uint)region.Value.Flags;
+                            blocks[i].WaterHeight = (byte)region.Value.WaterHeight;
+                        }
+                        else
+                        {
+                            blocks[i].Name = Utils.EmptyBytes;
+                            blocks[i].MapImageID = WATER_TEXTURE;
+                        }
+
+                        ++i;
+                    }
+                }
+            }
+            else
+            {
+                blocks = new MapBlockReplyPacket.DataBlock[regions.Count];
+
+                for (int i = 0; i < regions.Count; i++)
+                {
+                    RegionInfo region = regions[i];
+
+                    blocks[i] = new MapBlockReplyPacket.DataBlock();
+                    blocks[i].X = (ushort)region.X;
+                    blocks[i].Y = (ushort)region.Y;
+                    blocks[i].Access = (byte)SimAccess.Min;
+                    blocks[i].Agents = (byte)region.AgentCount;
+                    blocks[i].MapImageID = region.MapTextureID;
+                    blocks[i].Name = Utils.StringToBytes(region.Name);
+                    blocks[i].RegionFlags = (uint)region.Flags;
+                    blocks[i].WaterHeight = (byte)region.WaterHeight;
+                }
+            }
+
+            // FIXME: Handle large numbers of blocks by splitting things up
+            reply.Data = blocks;
 
             scene.UDP.SendPacket(agent.ID, reply, PacketCategory.Transaction);
+        }
+
+        void MapItemRequestHandler(Packet packet, Agent agent)
+        {
+            MapItemRequestPacket request = (MapItemRequestPacket)packet;
+
+            GridLayerType layerType = (GridLayerType)request.AgentData.Flags;
+            GridItemType itemType = (GridItemType)request.RequestData.ItemType;
+
+            uint regionX, regionY;
+            Utils.LongToUInts(request.RequestData.RegionHandle, out regionX, out regionY);
+
+            RegionInfo regionInfo;
+            if (scene.Server.Grid.TryGetRegion(regionX, regionY, scene.RegionCertificate, out regionInfo))
+            {
+                Logger.Log("MapItemRequest for " + itemType + " from layer " + layerType + " in " + regionInfo.Name, Helpers.LogLevel.Info);
+
+                MapItemReplyPacket reply = new MapItemReplyPacket();
+                reply.AgentData.AgentID = agent.ID;
+                reply.AgentData.Flags = request.AgentData.Flags;
+                reply.RequestData.ItemType = (uint)itemType;
+                reply.Data = new MapItemReplyPacket.DataBlock[0];
+
+                scene.UDP.SendPacket(agent.ID, reply, PacketCategory.Transaction);
+            }
+            else
+            {
+                Logger.Log("MapItemRequest for " + itemType + " from layer " + layerType + " in unknown region at " + regionX + "," + regionY,
+                    Helpers.LogLevel.Warning);
+            }
         }
 
         void TeleportRequestHandler(Packet packet, Agent agent)
@@ -151,11 +241,12 @@ namespace Simian
 
                 scene.UDP.SendPacket(agent.ID, reply, PacketCategory.Transaction);
             }
-            else if (request.Info.RegionHandle == Utils.UIntsToLong((scene.RegionX + 1) * 256, scene.RegionY * 256))
+            // FIXME: Add .ini config support for HyperGrid destinations
+            /*else if (request.Info.RegionHandle == Utils.UIntsToLong((scene.RegionX + 1) * 256, scene.RegionY * 256))
             {
                 // Special case: adjacent simulator is the HyperGrid portal
                 HyperGridTeleport(agent, new Uri("http://osl2.nac.uci.edu:9006/"), request.Info.Position);
-            }
+            }*/
             else
             {
                 TeleportFailedPacket reply = new TeleportFailedPacket();
@@ -205,21 +296,8 @@ namespace Simian
                                 Logger.Log(String.Format("HyperGrid teleporting to {0} ({1}, {2}) @ {3}",
                                     link.RegionName, x, y, destination), Helpers.LogLevel.Info);
 
-                                OSDMap info = new OSDMap();
-                                info.Add("AgentID", OSD.FromUUID(agent.ID));
-                                info.Add("LocationID", OSD.FromInteger(4)); // Unused by the client
-                                info.Add("RegionHandle", OSD.FromULong(link.RegionHandle));
-                                info.Add("SeedCapability", OSD.FromUri(seedCap));
-                                info.Add("SimAccess", OSD.FromInteger((byte)SimAccess.Min));
-                                info.Add("SimIP", OSD.FromBinary(entry.AddressList[0].GetAddressBytes()));
-                                info.Add("SimPort", OSD.FromInteger(link.UDPPort));
-                                info.Add("TeleportFlags", OSD.FromUInteger((uint)TeleportFlags.ViaLocation));
-
-                                OSDArray infoArray = new OSDArray(1);
-                                infoArray.Add(info);
-
-                                OSDMap teleport = new OSDMap();
-                                teleport.Add("Info", infoArray);
+                                OSDMap teleport = CapsMessages.TeleportFinish(agent.ID, 4, link.RegionHandle, seedCap, SimAccess.Min,
+                                    entry.AddressList[0], link.UDPPort, TeleportFlags.ViaLocation);
 
                                 scene.SendEvent(agent, "TeleportFinish", teleport);
                             }
