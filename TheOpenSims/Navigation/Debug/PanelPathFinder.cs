@@ -49,12 +49,20 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         #endregion
 
         #region Constructors
-        public PanelPathFinder(SimPathStore simPathStore)
+        public PanelPathFinder()
         {
-            PathStore = simPathStore;
+            SetStyle(ControlStyles.ResizeRedraw, true);
+            SetStyle(ControlStyles.AllPaintingInWmPaint, true);
+            SetStyle(ControlStyles.DoubleBuffer, true);
+            SetStyle(ControlStyles.UserPaint, true);
             InitializeComponent();
            // ResetMatrix(mMatrix);
         }
+        public void SetPathStore(SimPathStore simPathStore)
+        {
+            PathStore = simPathStore;
+        }
+
         #endregion
 
         #region Properties
@@ -266,21 +274,6 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             int y = TRANSPOSE(sy);
             if (x >= PathStore.MAPSPACE || x < 0 || y < 0 || y >= PathStore.MAPSPACE) return;
 
-            if (e.Button == MouseButtons.None || mDrawMode == DrawModeSetup.None)
-            {
-                string str;
-                SimWaypoint o = PathStore.Waypoint(x, y);
-                if (o != null)
-                {
-                    str = o.OccupiedString() + " " + PathStore.mMatrix[x, y];
-                }
-                else
-                {
-                    str = "" + PathStore.mMatrix[x, y];
-                }
-                tip.SetToolTip(this, str);
-                return;
-            }
             // For times that tooltips are not working
             if (e.Button == MouseButtons.Right)
             {
@@ -291,6 +284,22 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                 tipForm.SetWaypoint(PathStore.Waypoint(x, y));
                 tipForm.Show();
                 tipForm.Activate();
+                return;
+            }
+
+            if (e.Button == MouseButtons.None || mDrawMode == DrawModeSetup.None)
+            {
+                string str;
+                SimWaypoint o = PathStore.Waypoint(x, y);
+                if (o != null)
+                {
+                    str = o.OccupiedString();
+                }
+                else
+                {
+                    str = "" + PathStore.mMatrix[x, y];
+                }
+                tip.SetToolTip(this, str);
                 return;
             }
 

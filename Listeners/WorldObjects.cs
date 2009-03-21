@@ -27,19 +27,6 @@ namespace cogbot.Listeners
             base.Parcels_OnSimParcelsDownloaded(simulator, simParcels, parcelMap);
         }
 
-
-
-        //public bool Network_OnSimConnectingHook(Simulator simulator)
-        //{
-        //    //if (simulator.Handle != 0)
-        //    //{
-        //    //    SimRegion.GetRegion(simulator).TheSimulator = simulator;
-        //    //}
-        //    /// EnsureSimulator(simulator);
-        //    ///
-        //   // return base.Network_OnSimConnecting(simulator);
-        //}
-
         public void Network_OnConnectedHook(object sender)
         {
             //Network_OnSimConnectedHook( (Simulator)sender);
@@ -79,9 +66,12 @@ namespace cogbot.Listeners
             }
         }
 
-        internal void CheckConnected(Simulator simulator)
+        public void CheckConnected(Simulator simulator)
         {
-            if (!IsConnected) Network_OnSimConnectedHook(simulator);
+            if (!IsConnected)
+            {
+                Network_OnSimConnectedHook(simulator);
+            }
         }
 
         public override void Network_OnEventQueueRunning(Simulator simulator)
@@ -90,11 +80,18 @@ namespace cogbot.Listeners
         }
         public override void Network_OnCurrentSimChanged(Simulator PreviousSimulator)
         {
+            if (TheSimAvatar._CurrentRegion.TheSimulator == PreviousSimulator)
+            {
+                Debug("TheSimAvatar._CurrentRegion.TheSimulator == PreviousSimulator " + PreviousSimulator);
+            }
             base.Network_OnCurrentSimChanged(PreviousSimulator);
         }
         public override void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
         {
-            EnsureSimulator(simulator);
+            if (TheSimAvatar._CurrentRegion.TheSimulator == simulator)
+            {
+                Debug("TheSimAvatar._CurrentRegion.TheSimulator == simulator " + simulator);
+            }
             base.Network_OnSimDisconnected(simulator, reason);
         }
 
@@ -111,22 +108,6 @@ namespace cogbot.Listeners
             base.Grid_OnRegionHandleReply(regionID, regionHandle);
         }
 
-        //public SimAvatar GetSimAvatar(Avatar prim)
-        //{
-        //    lock (SimAvatars) foreach (SimAvatar obj in SimAvatars)
-        //        {
-        //            if (obj.theAvatar.Name == prim.Name)
-        //                return obj;
-        //        }
-        //    SimAvatar obj0 = new SimAvatar(prim, this);
-        //    obj0.SetClient(client);
-        //    uuidTypeObject[prim.LocalID] = obj0;
-        //    lock (SimAvatars) SimAvatars.AddTo(obj0);
-        //    lock (SimObjects) SimObjects.AddTo(obj0);
-        //    return obj0;
-        //}
-
-        //  public volatile static Dictionary<Simulator, GridClient> Master = new Dictionary<Simulator, GridClient>();
 
         public override void RegisterAll()
         {
@@ -165,36 +146,10 @@ namespace cogbot.Listeners
                 if (MasteringRegions.Count > 0 && !isMaster) throw new ArgumentException("Cant unmaster!");
 
                 client.Settings.OBJECT_TRACKING = isMaster;
-                //client.Settings.PARCEL_TRACKING = isMaster;
-                //client.Settings.FETCH_MISSING_INVENTORY = isMaster;
-                //client.Settings.ALWAYS_DECODE_OBJECTS = true;
-                //client.Settings.ALWAYS_REQUEST_OBJECTS = isMaster;
-                //client.Settings.ALWAYS_REQUEST_PARCEL_DWELL = isMaster;
-                //client.Settings.ALWAYS_REQUEST_PARCEL_ACL = isMaster;
-                //client.Settings.ENABLE_CAPS = true;
-                // client.Settings.ENABLE_SIMSTATS = isMaster;
-                //client.Settings.STORE_LAND_PATCHES = isMaster;
-                //client.Settings.USE_TEXTURE_CACHE = false;
                 client.Settings.SEND_PINGS = true;
 
                 if (isMaster) RegisterAll();
-                //if (isMaster)
-                //    lock (SimMaster)
-                //        if (!SimMaster.ContainsKey(isMaster))
-                //        {
-                //            SimMaster[isMaster] = this;
-                //            RegisterAll();
-                //            {
-                //                client.Network.OnLogin += delegate(LoginStatus login, string message)
-                //                        {
-                //                            if (login == LoginStatus.Success)
-                //                                CatchUp(isMaster);
-                //                        };
-
-                //            }
-                //            Debug("-------------------SimMaster {0} {1}", isMaster, client);
-                //        }
-            }
+                }
         }
 
 
@@ -213,10 +168,7 @@ namespace cogbot.Listeners
         public Dictionary<UUID, List<Primitive>> primGroups;
         public Object newLock = new Object();
         public Dictionary<uint, OSDMap> lastOSD = new Dictionary<uint, OSDMap>();
-        //public int ExpectedObjects = 1000;
-
-        static Dictionary<ulong, Dictionary<uint, Primitive>> prims = new Dictionary<ulong, Dictionary<uint, Primitive>>();
-        //DoubleDictionary<uint, UUID, Avatar> prims[simulator.Handle] = new DoubleDictionary<uint, UUID, Avatar>();
+  
         Dictionary<UUID, ObjectUpdate> lastObjectUpdate = new Dictionary<UUID, ObjectUpdate>();
         Dictionary<UUID, ObjectUpdate> lastObjectUpdateDiff = new Dictionary<UUID, ObjectUpdate>();
         Dictionary<Avatar, List<UUID>> avatarAminsSent = new Dictionary<Avatar, List<UUID>>();
@@ -232,13 +184,6 @@ namespace cogbot.Listeners
             {
                 if (Master == null) Master = this;
 
-                //  miniMap = new OpenMetaverse.GUI.MiniMap(client);
-                //	client.Self.OnMeanCollision += new AgentManager.MeanCollisionCallback(Self_OnMeanCollision);
-
-                // primsSelected[simulator] = new List<Primitive>();
-                // prims[simulator.Handle] = new Dictionary<string, Primitive>();
-                //  primsByLocalID = new Dictionary<uint, Primitive>();
-                // pendingPrims = new Dictionary<UUID, Primitive>();
 
                 primGroups = new Dictionary<UUID, List<Primitive>>();
 
@@ -254,45 +199,17 @@ namespace cogbot.Listeners
                 client.Settings.MULTIPLE_SIMS = true;
                 client.Settings.SEND_AGENT_UPDATES = true;
                 client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
-                client.Self.Movement.AutoResetControls = true;
-                client.Self.Movement.UpdateInterval = 50;
-                //client.Settings.SEND_AGENT_THROTTLE = false;
+                client.Self.Movement.AutoResetControls = false;
+                client.Self.Movement.UpdateInterval = 0;
 
-                //client.Network.OnSimConnecting += Network_OnSimConnectingHook;
                 client.Network.OnSimConnected += Network_OnSimConnectedHook;
-                //client.Network.OnConnected += Network_OnConnectedHook;
 
-                /*
-                            client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
-                            client.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
-                            client.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
-                            client.Avatars.OnAvatarProperties += new AvatarManager.AvatarPropertiesCallback(Avatars_OnAvatarProperties);
-                            // botclient.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
-                            client.Objects.OnObjectUpdated += new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
-                            client.Objects.OnObjectPropertiesFamily += new ObjectManager.ObjectPropertiesFamilyCallback(Objects_OnObjectPropertiesFamily);
-                            client.Avatars.OnAvatarAnimation += AvatarAnimationCallback;// new AgentManager.AnimationsChangedCallback();
-                            //replaced bu the above line Self.OnAnimationsChanged += new AgentManager.AnimationsChangedCallback(Self_OnAnimationsChanged);
-                            client.Sound.OnPreloadSound += new SoundManager.PreloadSoundCallback(Sound_OnPreloadSound);
-                            client.Sound.OnSoundTrigger += new SoundManager.SoundTriggerCallback(Sound_OnSoundTrigger);
-                            client.Avatars.OnLookAt += new AvatarManager.LookAtCallback(Avatars_OnLookAt);
-                            client.Avatars.OnPointAt += new AvatarManager.PointAtCallback(Avatars_OnPointAt);
-                           // client.Objects.OnNewFoliage += new ObjectManager.NewFoliageCallback(Objects_OnNewFoliage);
-                            client.Terrain.OnLandPatch += new TerrainManager.LandPatchCallback(Terrain_OnLandPatch);
-                  */
-                // Animation callback
-                //            client.Network.RegisterCallback(PacketType.AvatarAnimation, new NetworkManager.PacketCallback(AvatarAnimationHandler));
 
                 burstStartTime = DateTime.Now;
                 burstInterval = new TimeSpan(0, 0, 0, 0, (int)(burstTime * 1000));
                 searchStep = 1;
-                //avatarCache = new Dictionary<string, Avatar>();
-                numberedAvatars = new List<string>();
 
-                //parent.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
-                //parent.Objects.OnAvatarSitChanged += new ObjectManager.AvatarSitChanged(Objects_OnAvatarSitChanged);
-                // parent.Avatars.OnAvatarAppearance += new AvatarManager.AvatarAppearanceCallback(Avatars_OnAvatarAppearance);
-                //AgentManager.AvatarSitChanged(Objects_OnAvatarSitChanged);
-                // new DebugAllEvents(client);
+                numberedAvatars = new List<string>();
 
 
                 if (RegionMasterTexturePipeline == null)
@@ -338,7 +255,7 @@ namespace cogbot.Listeners
         }
 
         public SimAvatar m_TheSimAvatar;
-        internal void SetSimAvatar(SimAvatar simAvatar)
+        public void SetSimAvatar(SimAvatar simAvatar)
         {
             m_TheSimAvatar = simAvatar;
         }
@@ -385,8 +302,8 @@ namespace cogbot.Listeners
 
                 }
                 int beforeCatchUp = SimObjects.Count;
-                lock (Master.client.Network.Simulators)
-                    foreach (Simulator S in Master.client.Network.Simulators)
+                lock (AllSimulators)
+                    foreach (Simulator S in AllSimulators)
                     {
                         Master.CatchUp(S);
                     }
@@ -450,21 +367,15 @@ namespace cogbot.Listeners
 
         ///  inspector.Show();
 
-        internal void CatchUp(Simulator simulator)
+        public void CatchUp(Simulator simulator)
         {
-            //lock (simulator.ObjectsAvatars.Dictionary)
-            //simulator.ObjectsAvatars.ForEach(delegate(Avatar item)
-            //{
-            //    GetSimObject(item, simulator);
-            //});
             List<Primitive> primsCatchup = new List<Primitive>();
-            //lock (simulator.ObjectsPrimitives.Dictionary)
+            lock (simulator.ObjectsPrimitives.Dictionary)
                 simulator.ObjectsPrimitives.ForEach(delegate(Primitive item)
                 {
                     primsCatchup.Add(item);
                 });           
             foreach (Primitive item in primsCatchup) GetSimObject(item, simulator);
-            //miniMap.UpdateMiniMap(simulator);
         }
 
 
@@ -480,55 +391,53 @@ namespace cogbot.Listeners
                     if (obj0 is SimObject)
                     {
                         SimObject O = (SimObject)obj0;
-                        if (O.thePrim.RegionHandle == prim.RegionHandle)
+                        if (O.Prim.RegionHandle == prim.RegionHandle)
                         {
                             return O;
                         }
                         else
                         {
-                            if (prim is Avatar)
-                            {
-                                Debug("Avatar moved regions? " + O);
-                                O.thePrim = prim;
-                                O._CurrentRegion = null;
-                                return O;
-                            }
+                            //if (prim is Avatar)
+                            //{
+                            //    Debug("Avatar moved regions? " + O);
+                            //    O.ResetRegion(simulator.Handle);
+                            //    O.ResetPrim(prim);
+                            //    return O;
+                            //}
                             Debug("Prim with differnt region handle " + prim);
-                            O.ResetRegion(simulator.Handle);
-                            O.thePrim = prim;
-                            O._CurrentRegion = null;
                             return O;
                         }
                     }
                 }
-
-                // not found
-                if (prim is Avatar)
-                {
-                    CountnumAvatars++;
-                    if (CountnumAvatars > 6)
-                    {
-                        Debug("++++++++" + CountnumAvatars + "+++++++Making AVATAR" + prim);
-                    }
-                    Debug("+++++++++++++++Making AVATAR" + prim);
-                    if (prim.ID == UUID.Zero)
-                    {
-                        Debug("  - - -#$%#$%#$%% - ------- - Wierd Avatar " + prim);
-                        BlockUntilPrimValid(prim, simulator);
-                        Debug("  - - -#$%#$%#$%% - ------- - Unwird Avatar " + prim);
-                    }
-                    obj0 = new SimAvatar((Avatar)prim, this, simulator);
-                    lock (SimAvatars) SimAvatars.Add((SimAvatar)obj0);
-                }
-                else
-                {
-                    obj0 = new SimObject(prim, this, simulator);
-                }
-                RegisterUUID(prim.ID, obj0);
-                lock (SimObjects) SimObjects.AddTo((SimObject)obj0);
-
-                return (SimObject)obj0;
             }
+
+            // not found
+            if (prim is Avatar)
+            {
+                CountnumAvatars++;
+                if (CountnumAvatars > 6)
+                {
+                    Debug("++++++++" + CountnumAvatars + "+++++++Making AVATAR" + prim);
+                }
+                Debug("+++++++++++++++Making AVATAR" + prim);
+                if (prim.ID == UUID.Zero)
+                {
+                    Debug("  - - -#$%#$%#$%% - ------- - Wierd Avatar " + prim);
+                    BlockUntilPrimValid(prim, simulator);
+                    Debug("  - - -#$%#$%#$%% - ------- - Unwird Avatar " + prim);
+                }
+                obj0 = new SimAvatar((Avatar)prim, this, simulator);
+                lock (SimAvatars) SimAvatars.Add((SimAvatar)obj0);
+            }
+            else
+            {
+                obj0 = new SimObject(prim, this, simulator);
+            }
+            RegisterUUID(prim.ID, obj0);
+            lock (SimObjects) SimObjects.AddTo((SimObject)obj0);
+
+            return (SimObject)obj0;
+
         }
 
         public override void Assets_OnXferReceived(XferDownload xfer)
@@ -551,14 +460,12 @@ namespace cogbot.Listeners
         {
             RegisterUUID(image.ID, image);
             RegisterUUID(asset.AssetID, asset);
-            //lock (uuidTextures) uuidTextures[image.ID] = image;
-            //base.Assets_OnImageReceived(image, asset);
-        }       // Dictionary<UUID, Parcel> uuidParcels = new Dictionary<UUID, Parcel>();
+        }
 
-        //Dictionary<UUID, ImageDownload> uuidTextures = new Dictionary<UUID, ImageDownload>();
+  
         static TexturePipeline RegionMasterTexturePipeline;
 
-        internal void StartTextureDownload(UUID id)
+        public void StartTextureDownload(UUID id)
         {
             RegionMasterTexturePipeline.RequestTexture(id, ImageType.Normal);
         }
@@ -582,21 +489,6 @@ namespace cogbot.Listeners
                 //   WriteLine("Texture failed to download: " + id.ToString(), Helpers.LogLevel.Warning);
             }
         }
-        //public override void Parcels_OnSimParcelsDownloaded(Simulator simulator, InternalDictionary<int, Parcel> simParcels, int[,] parcelMap)
-        //{
-        //    lock (totalPrimsLock)
-        //    {
-        //        totalPrims = 0;
-        //        simParcels.ForEach(
-        //            delegate(Parcel parcel)
-        //            { 
-        //                uuidParcels[parcel.LocalID]
-        //              //  totalPrims += parcel.TotalPrims;
-        //            });
-        //    }
-        //    base.Parcels_OnSimParcelsDownloaded(simulator, simParcels, parcelMap);
-        //}
-
 
         public virtual void Debug(string p, params object[] args)
         {
@@ -718,6 +610,7 @@ namespace cogbot.Listeners
         {
             Avatars_OnAvatarAnimation(client.Self.AgentID, agentAnimations);
         }
+
         public override void Grid_OnCoarseLocationUpdate(Simulator simulator)
         {
 
@@ -746,27 +639,44 @@ namespace cogbot.Listeners
 
         public override void Objects_OnObjectKilled(Simulator simulator, uint objectID)
         {
-
-            Primitive p;
-            if (prims[simulator.Handle].TryGetValue(objectID, out p))
+            base.Objects_OnObjectKilled(simulator, objectID);
+            Primitive p = GetPrimitive(objectID, simulator);
+            if (p != null)
             {
                 SimObject O = GetSimObject(p, simulator);
-                if (O != null)
+                Debug("Killing object: " + O);
+                if (!(O is SimAvatar))
                 {
-                    O.IsKilled = true;
-                    lock (SimAvatars)
-                        foreach (SimAvatar A in SimAvatars)
-                        {
-                            A.RemoveObject(O);
-                        }
-                    lock (SimObjects) SimObjects.Remove(O);
+                    if (O != null)
+                    {
+                        O.IsKilled = true;
+                        lock (SimAvatars)
+                            foreach (SimAvatar A in SimAvatars)
+                            {
+                                A.RemoveObject(O);
+                            }
+                        lock (SimObjects) SimObjects.Remove(O);
+
+                    }
+                }
+               // O.Prim = null;
+                lock (simulator.ObjectsPrimitives.Dictionary)
+                {
+                    if (simulator.ObjectsPrimitives.Dictionary.ContainsKey(objectID))
+                    {
+                        simulator.ObjectsPrimitives.Dictionary.Remove(objectID);
+                    }
+
+                }
+                lock (simulator.ObjectsAvatars.Dictionary)
+                {
+                    if (simulator.ObjectsAvatars.Dictionary.ContainsKey(objectID))
+                    {
+                        simulator.ObjectsAvatars.Dictionary.Remove(objectID);
+                    }
 
                 }
                 SendNewEvent("on-prim-killed", p);
-            }
-            else
-            {
-                base.Objects_OnObjectKilled(simulator, objectID);
             }
         }
         /*
@@ -828,8 +738,7 @@ namespace cogbot.Listeners
 
             if (prim.ID != UUID.Zero)
             {
-                lock (prims[simulator.Handle])
-                    prims[simulator.Handle][prim.LocalID] = prim;
+                GetSimObject(prim, simulator).Prim = prim;
                 lastObjectUpdate[prim.ID] = updatFromPrim(prim);
             }
             // Make an intial "ObjectUpdate" for later diffing
@@ -843,19 +752,14 @@ namespace cogbot.Listeners
         /// This is all bot simulaor references: the Count would be Bots*Regions
         /// </summary>
         static List<Simulator> AllSimulators = new List<Simulator>();
-        internal void EnsureSimulator(Simulator simulator)
+        public void EnsureSimulator(Simulator simulator)
         {
+            if (simulator == null) return;
             lock (AllSimulators)
             {
-                if (AllSimulators.Contains(simulator))
+                if (!AllSimulators.Contains(simulator))
                     AllSimulators.Add(simulator);
             }
-
-            lock (prims)
-                if (!prims.ContainsKey(simulator.Handle))
-                {
-                    prims[simulator.Handle] = new Dictionary<uint, Primitive>();
-                }
         }
 
         public override void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)
@@ -870,14 +774,12 @@ namespace cogbot.Listeners
         {
 
             CheckConnected(simulator);
-            // lock (updateQueue)
-            //if (prim != null)
             lock (updateQueue) updateQueue.Enqueue(delegate()
             {
                 Objects_OnObjectProperties1(simulator, props);
             });
         }
-        internal void Objects_OnObjectProperties1(Simulator simulator, Primitive.ObjectProperties props)
+        public void Objects_OnObjectProperties1(Simulator simulator, Primitive.ObjectProperties props)
         {
             Primitive prim = GetPrimitive(props.ObjectID, simulator);
             if (prim != null)
@@ -885,22 +787,7 @@ namespace cogbot.Listeners
                 SimObject updateMe = GetSimObject(prim, simulator);
                 updateMe.UpdateProperties(props);
             }
-            //if (Program.Verbosity > 2)
-            ///output("Received properties for " + props.ObjectID.ToString());               
-            //lock (prim)  prim.Properties = props;
-            //lock (primsKnown)
-            //    if (!primsKnown.Contains(prim))
-            //    {
-            //        primsKnown.Add(prim);
-            //        SendNewEvent("on-new-prim", props.Name, props.ObjectID.ToString(), props.Description, prim.Position);
-            //        CalcStats(prim);
-            //    }
             describePrimToAI(prim, simulator);
-            ///EnsureSimulator(simulator);
-            //if (prims[simulator.Handle].Count > simulator.Stats.Objects - 11)
-            //{
-            //    OnPrimsLoaded();
-            //}
         }
 
         public override void Avatars_OnAvatarAppearance(UUID avatarID, bool isTrial, Primitive.TextureEntryFace defaultTexture, Primitive.TextureEntryFace[] faceTextures, List<byte> visualParams)
@@ -912,151 +799,76 @@ namespace cogbot.Listeners
         public override void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
         {
             //lock (Objects_OnNewAvatarLock)
+            {
+                GetSimObject(avatar, simulator).Prim = avatar;
+            }
             Objects_OnNewAvatar1(simulator, avatar, regionHandle, timeDilation);
         }
-        internal void Objects_OnNewAvatar1(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
+        public void Objects_OnNewAvatar1(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
         {
-            Objects_OnNewPrim(simulator, avatar, regionHandle, timeDilation);
-            lock (updateQueue) updateQueue.Enqueue(delegate()
-            {
-                SimAvatar AV = (SimAvatar)GetSimObject(avatar, simulator);
-                if (avatar.LocalID == client.Self.LocalID)
-                {
-                    if (AV != null)
-                    {
-                        m_TheSimAvatar = AV;
-                        AV.SetClient(client);
-                    }
-                }
-            });
-
-            //lock (prims[simulator.Handle])
-            //GetSimAvatar(avatar);
-            // prims[simulator.Handle].Add(avatar.LocalID, avatar.ID, avatar);
-            //lock (prims[simulator.Handle])  prims[simulator.Handle].Add(avatar.LocalID, avatar.ID, avatar);
             try
             {
-                //lock (avatarCache)
-                //{
-                //    if (avatar != null)
-                //    {
-                //        if (!avatarCache.ContainsKey(avatar.Name))
-                //        {
-                //            avatarCache[avatar.Name] = avatar;
-                //        }
-                //    }
-                //}
-                //  describeAvatarToAI(avatar);
+                Objects_OnNewPrim(simulator, avatar, regionHandle, timeDilation);
+                lock (updateQueue) updateQueue.Enqueue(delegate()
+                {
+                    SimAvatar AV = (SimAvatar)GetSimObject(avatar, simulator);
+                    if (avatar.LocalID == client.Self.LocalID)
+                    {
+                        if (AV != null)
+                        {
+                            m_TheSimAvatar = AV;
+                            AV.SetClient(client);
+                        }
+                    }
+                });
+
             }
             catch (Exception e)
             {
                 output("err :" + e.StackTrace);
             }
         }
-        //void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties properties)
-        //{
-        //    simulator = simulator;
-        //    lock (pendingPrims)
-        //    {
-        //        if (pendingPrims.ContainsKey(properties.ObjectID))
-        //        {
-        //            lock (prims[simulator.Handle])
-        //            {
-        //                Primitive p = pendingPrims[properties.ObjectID];
-        //                prims[simulator.Handle][properties.Name] = p;
-        //                primsByLocalID[p.LocalID] = p;
-        //                p.Properties = properties;
-        //                describePrimToAI(p);
-        //                pendingPrims.Remove(properties.ObjectID);
-
-        //                UUID groupId = properties.GroupID;
-        //                if (groupId != UUID.Zero)
-        //                {
-        //                    lock (primGroups)
-        //                    {
-        //                        if (!primGroups.ContainsKey(groupId))
-        //                            primGroups[groupId] = new List<Primitive>();
-        //                        primGroups[groupId].Add(prims[simulator.Handle][properties.Name]);
-        //                        //output("group count " + groupId + " " + primGroups[groupId].Count);
-        //                    }
-        //                }
-        //            }
-        //            if (maxNameLength == -1 || properties.Name.Length > maxNameLength)
-        //                maxNameLength = properties.Name.Length;
-        //        }
-        //    }
-        //}
-
-        //void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
-        //{
-        //    simulator = simulator;
-        //    try
-        //    {
-        //        lock (newLock)
-        //        {
-        //            primsSelected[simulator].Add(prim);
-        //            CalcStats(prim);
-
-        //            TimeSpan dtime = DateTime.Now - burstStartTime;
-        //            if (primsSelected[simulator].Count >= burstSize && dtime > burstInterval)
-        //            {
-        //                burstStartTime = DateTime.Now;
-
-        //                uint[] ids = new uint[burstSize];
-        //                for (int i = 0; i < burstSize; ++i)
-        //                {
-        //                    ids[i] = primsSelected[simulator][i].LocalID;
-        //                    pendingPrims[primsSelected[simulator][i].ID] = primsSelected[simulator][i];
-        //                }
-
-        //                botclient.Objects.SelectObjects(simulator, ids);
-        //                primsSelected[simulator].RemoveRange(0, burstSize);
-        //                //primsSelected[simulator].Clear();
-        //            }
-        //        }
-        //CalcStats(prim);
-        //        describePrimToAI(prim);
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        output("ERR:" + e.StackTrace);
-        //    }
-        //}
 
         public override void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
         {
-           /// return;
+            /// return;
             if (simulator.Handle != regionHandle)
             {
                 Debug("Strange update" + simulator);
                 base.Objects_OnObjectUpdated(simulator, update, regionHandle, timeDilation);
             }
+           // return;
             CheckConnected(simulator);
             if (update.Avatar)
             {
                 Primitive av = GetPrimitive(update.LocalID, simulator);
                 if (av != null)
                 {
+                    SimAvatar AV = null;
                     lock (uuidTypeObject)
                     {
                         if (uuidTypeObject.ContainsKey(av.ID))
                         {
-                            SimAvatar AV = (SimAvatar)uuidTypeObject[av.ID];
-                            ulong rh  =AV.theAvatar.RegionHandle;
+
+                            AV = (SimAvatar)uuidTypeObject[av.ID];
+                        }
+                    }
+                    if (AV != null)
+                    {
+                        ulong rh = AV.theAvatar.RegionHandle;
+                        if (!OutOfRegion(update.Position))
+                        {
                             if (rh != regionHandle)
                             {
                                 AV.ResetRegion(regionHandle);
                             }
-                            else
-                            {
-                                if (av.ParentID == 0)
-                                {
-                                    SimPathStore PathStore = AV.GetPathSystem();
-                                    PathStore.UpdateTraveled(av.ID, av.Position, av.Rotation);
-                                }
-                            }
-
+                            AV.Prim = (Avatar)av;
                         }
+                    }
+                    if (av.ParentID == 0 && !OutOfRegion(update.Position))
+                    {
+                        SimPathStore PathStore = SimRegion.GetRegion(simulator).PathStore;
+                        PathStore.UpdateTraveled(av.ID, av.Position, av.Rotation);
                     }
                 }
                 return;
@@ -1067,7 +879,17 @@ namespace cogbot.Listeners
               Objects_OnObjectUpdated1(simulator, update, regionHandle, timeDilation);
           });
         }
-        internal void Objects_OnObjectUpdated1(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
+
+        internal bool OutOfRegion(Vector3 v3)
+        {
+            if (v3.X < 0 || v3.X > 255.99f)
+                return true;
+            if (v3.Y <0|| v3.Y > 255.99f)
+                return true;
+            return false;
+        }
+
+        public void Objects_OnObjectUpdated1(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
         {
             Primitive objectUpdated = GetPrimitive(update.LocalID, simulator);
             //Debug("timeDilation " + timeDilation);
@@ -1273,7 +1095,7 @@ namespace cogbot.Listeners
             return diff;
         }
 
-        internal float ChangedBetween(Quaternion quaternion, Quaternion quaternion_2)
+        public float ChangedBetween(Quaternion quaternion, Quaternion quaternion_2)
         {
             Quaternion diff = quaternion - quaternion_2;
             return diff.Length();
@@ -1395,75 +1217,7 @@ namespace cogbot.Listeners
             //            output("TextForm Terrain_OnLandPatch: "+simulator.ToString()+"/"+x.ToString()+"/"+y.ToString()+" w="+width.ToString());
         }
 
-        //void Self_OnAnimationsChanged(InternalDictionary<UUID, int> agentAnimations)
-        //{
-        //    //throw new NotImplementedException();
-        //    SendNewEvent("On-Animations-Changed", agentAnimations);
-        //    //           output("TextForm Self_OnAnimationsChanged: ");
-        //}
-
-        //void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties properties)
-        //{
-        //    SendNewEvent("On-Object-Properties", simulator, properties);
-        //    // Handled by Object Listener
-        //    //throw new NotImplementedException();
-        //    //           output("TextForm Objects_OnObjectProperties: ");
-        //}
-
-        //void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
-        //{
-        //    SendNewEvent("On-Object-Updated", simulator, update, regionHandle, timeDilation);
-        //    //throw new NotImplementedException();
-        //    //            output("TextForm Objects_OnObjectUpdated: ");
-        //}
-
-        //void Objects_OnObjectKilled(Simulator simulator, uint objectID)
-        //{
-        //    //throw new NotImplementedException();
-        //    SendNewEvent("On-Object-Killed", simulator, objectID);
-        //}
-
-        //void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
-        //{
-        //    // Handled by Object Listener
-        //    //throw new NotImplementedException();
-        //    //            output("TextForm Objects_OnNewPrim: "+simulator.ToString()+" "+prim.ToString());
-        //    //Listeners.Objects objects = (Listeners.Objects)ObjectSystem;
-        //    //objects.SetCurrentSimulator(simulator);
-        //    //objects.BlockUntilProperties(prim);
-        //    //if (prim.Properties.Name != null)
-        //    //    SendNewEvent("on-new-prim",prim.Properties.Name,prim.Properties.ObjectID,prim.Properties.Description);
-        //    //else SendNewEvent("On-New-Prim", simulator, prim, regionHandle, timeDilation);
-
-        //}
-
-        //void Objects_OnNewFoliage(Simulator simulator, Primitive foliage, ulong regionHandle, ushort timeDilation)
-        //{
-        //    //throw new NotImplementedException();
-        //    //            output("TextForm Objects_OnNewFoliage: ");
-
-        //    Listeners.Objects objects = (Listeners.Objects)ObjectSystem;
-        //    objects.SetCurrentSimulator(simulator);
-        //    objects.BlockUntilProperties(foliage);
-
-        //    if (foliage.Properties.Name != null)
-        //        SendNewEvent("on-new-foliage",foliage.Properties.Name,foliage.Properties.ObjectID,foliage.Properties.Description);
-        //    else SendNewEvent("On-New-Foliage", simulator, foliage, regionHandle, timeDilation);
-        //}
-
-        //void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
-        //{
-        //    //throw new NotImplementedException();
-        //    SendNewEvent("On-New-Avatar-Hook", simulator, avatar, regionHandle, timeDilation);
-        //    SendNewEvent("on-new-avatar",avatar.Name,avatar.ID);
-        //}
-
-        //void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)
-        //{
-        //    //throw new NotImplementedException();
-        //    output("TextForm Avatars_OnAvatarProperties: ");
-        //}
-
+ 
         public override void Avatars_OnPointAt(UUID sourceID, UUID targetID, Vector3d targetPos, PointAtType lookType, float duration, UUID id)
         {
             // output("TextForm Avatars_OnLookAt: " + sourceID.ToString() + " to " + targetID.ToString() + " at " + targetID.ToString() + " with type " + lookType.ToString() + " duration " + duration.ToString());
@@ -1533,7 +1287,7 @@ namespace cogbot.Listeners
             return cogbot.TheOpenSims.SimAnimation.GetAnimationName(id);
         }
 
-        internal Asset GetAsset(UUID id)
+        public Asset GetAsset(UUID id)
         {
             lock (uuidTypeObject)
             {
@@ -1562,66 +1316,90 @@ namespace cogbot.Listeners
 
         public Primitive GetPrimitive(UUID id, Simulator simulator)
         {
-            if (simulator == null)
-            {
-                lock (client.Network.Simulators)
-                    foreach (Simulator S in client.Network.Simulators)
-                    {
-                        EnsureSimulator(S);
-                        Primitive p = GetPrimitive(id, S);
-                        if (p != null) return p;
-                    }
-                return null;
-            }
-
             lock (uuidTypeObject)
                 if (uuidTypeObject.ContainsKey(id))
                 {
-                    object found = uuidTypeObject[id];
-                    if (found != null && found is SimObject)
-                        return ((SimObject)found).thePrim;
+                    object simobject = uuidTypeObject[id];
+                    if (simobject != null && simobject is SimObject)
+                        return ((SimObject)simobject).Prim;
                 }
-            // lock (GetPrimitiveLock)
+
+            if (simulator == null)
             {
-                //Primitive prim;
-                //Object obj;
-                //if (uuidTypeObject.TryGetValue(id, out obj))
-                //{
-                //    RegisterUUID(id, prim);
-                //    return prim;
-                //}
-                //lock (simulator.ObjectsAvatars)
+                foreach (Simulator sim in client.Network.Simulators)
                 {
-
-                    Primitive found = null;
-
-                    lock (simulator.ObjectsPrimitives.Dictionary)
-                    {
-                        found = simulator.ObjectsPrimitives.Find(delegate(Primitive prim0)
-                        {
-                            EnsureSelected(prim0.LocalID, simulator);
-                            EnsureSelected(prim0.ParentID, simulator);
-                            return (prim0.ID == id);
-                        });
-                    }
-                    if (found == null) found = simulator.ObjectsAvatars.Find(delegate(Avatar prim0)
-                    {
-                        if (prim0.ID == id)
-                        {
-                            return true;
-                        }
-                        return false;
-                    });
-                    if (found != null)
-                    {
-                        ///EnsureSimulator(simulator);
-                        lock (prims[simulator.Handle]) prims[simulator.Handle][found.LocalID] = found;
-                    }
-                    return found;
+                    Primitive p = GetPrimitive(id, sim);
+                    if (p != null) return p;
                 }
+                return null;
             }
-        }
 
+            Primitive found = null;
+            EnsureSimulator(simulator);
+
+            lock (simulator.ObjectsPrimitives.Dictionary)
+            {
+                found = simulator.ObjectsPrimitives.Find(delegate(Primitive prim0)
+                {
+                    EnsureSelected(prim0.LocalID, simulator);
+                    EnsureSelected(prim0.ParentID, simulator);
+                    return (prim0.ID == id);
+                });
+                if (found != null) return found;
+            }
+            lock (simulator.ObjectsAvatars.Dictionary)
+            {
+                found = simulator.ObjectsAvatars.Find(delegate(Avatar prim0)
+                {
+                    if (prim0.ID == id)
+                    {
+                        return true;
+                    }
+                    return false;
+                });
+                if (found != null) return found;
+            }
+
+            ulong handle = simulator.Handle;
+            lock (AllSimulators)
+                foreach (Simulator sim in AllSimulators)
+                {
+                    if (sim.Handle == handle && sim != simulator)
+                    {
+                        lock (sim.ObjectsPrimitives.Dictionary)
+                        {
+                            found = sim.ObjectsPrimitives.Find(delegate(Primitive prim0)
+                            {
+                                EnsureSelected(prim0.LocalID, sim);
+                                EnsureSelected(prim0.ParentID, sim);
+                                return (prim0.ID == id);
+                            });
+                            if (found != null) return found;
+                        }
+                        lock (sim.ObjectsAvatars.Dictionary)
+                        {
+                            found = sim.ObjectsAvatars.Find(delegate(Avatar prim0)
+                            {
+                                if (prim0.ID == id)
+                                {
+                                    return true;
+                                }
+                                return false;
+                            });
+                            if (found != null) return found;
+                        }
+                    }
+                }
+            lock (uuidTypeObject)
+                if (uuidTypeObject.ContainsKey(id))
+                {
+                    object simobject = uuidTypeObject[id];
+                    if (simobject != null && simobject is SimObject)
+                        return ((SimObject)simobject).Prim;
+                }
+            return null;
+        }
+    
         public Primitive GetPrimitive(uint id, Simulator simulator)
         {
             if (simulator == null)
@@ -1633,72 +1411,35 @@ namespace cogbot.Listeners
                 }
                 return null;
             }
-            // lock (GetPrimitiveLock)
-
             EnsureSimulator(simulator);
+            Primitive prim;
+            if (simulator.ObjectsPrimitives.TryGetValue(id, out prim))
             {
-                Primitive prim;
-                if (prims[simulator.Handle].TryGetValue(id, out prim))
-                {
-                }
-                else
-                    if (simulator.ObjectsPrimitives.TryGetValue(id, out prim))
-                    {
-                    }
-                    else
-                    {
-                        Avatar avatar;
-                        if (simulator.ObjectsAvatars.TryGetValue(id, out avatar))
-                        {
-                            prim = avatar;
-                        }
-                        else
-                        {
-                            EnsureSelected(id, simulator);
-                            return null;
-                        }
-                    }
-                EnsureSelected(id, simulator);
-                if (prim.ID == UUID.Zero)
-                {
-                    Debug("  - - -#$%#$%#$%% - ------- - Wierd prim " + prim);
-                    while (prim.ID == UUID.Zero)
-                    {
-                        lock (prims[simulator.Handle])
-                        {
-                            if (prims[simulator.Handle].ContainsKey(prim.LocalID))
-                            {
-                                prim = prims[simulator.Handle][prim.LocalID];
-                            }
-                        }
-                        // TODO maybe add a timer
-                        Thread.Sleep(100);
-                        System.Windows.Forms.Application.DoEvents();
-
-                    }
-                    Debug("  - - -#$%#$%#$%% - ------- - Unwird prim " + prim);
-                }
-                lock (prims[simulator.Handle]) prims[simulator.Handle][prim.LocalID] = prim;
-                lock (simulator.ObjectsPrimitives.Dictionary) simulator.ObjectsPrimitives[prim.LocalID] = prim;
                 return prim;
             }
-
+            Avatar av;
+            if (simulator.ObjectsAvatars.TryGetValue(id, out av))
+            {
+                return av;
+            }
+            ulong handle = simulator.Handle;
+            lock (AllSimulators)
+                foreach (Simulator sim in AllSimulators)
+                {
+                    if (sim.Handle == handle && sim!=simulator)
+                    {
+                        if (sim.ObjectsPrimitives.TryGetValue(id, out prim))
+                        {
+                            return prim;
+                        }
+                        if (sim.ObjectsAvatars.TryGetValue(id, out av))
+                        {
+                            return av;
+                        }
+                    }
+                }
+            return null;
         }
-
-        //internal void AvatarCacheAdd(string p, Avatar prim0)
-        //{
-        //    lock (avatarCache)
-        //    {
-        //        if (!avatarCache.ContainsKey(p))
-        //        avatarCache[p] = prim0;
-        //    }
-        //    RegisterUUID(prim0.ID, prim0);
-        //}
-
-        object GetPrimitiveLock = new Object();
-
-
-
 
         Dictionary<Primitive, Vector3> primVect = new Dictionary<Primitive, Vector3>();
         public void SendNewEvent(string eventName, params object[] args)
@@ -1808,7 +1549,7 @@ namespace cogbot.Listeners
             if (matches.Count == 0) return false;
             if (matches.Count == 1)
             {
-                prim = matches[0].thePrim;
+                prim = matches[0].Prim;
                 return true;
             }
             bool retVal = false;
@@ -1816,7 +1557,7 @@ namespace cogbot.Listeners
             TheSimAvatar.SortByDistance(matches);
             if (pickNum != 0 && pickNum <= matches.Count)
             {
-                prim = matches[(int)pickNum - 1].thePrim;
+                prim = matches[(int)pickNum - 1].Prim;
                 return true;
             }
             output("Found " + matches.Count + " matches: ");
@@ -1827,7 +1568,7 @@ namespace cogbot.Listeners
                 output(" " + num + ": " + obj + " " + TheSimAvatar.DistanceVectorString(obj));
                 if (num == pickNum)
                 {
-                    prim = obj.thePrim;
+                    prim = obj.Prim;
                     retVal = true;
                 }
             }
@@ -1840,7 +1581,7 @@ namespace cogbot.Listeners
 
         public string describePrim(Primitive prim)
         {
-            SimObject simObject = GetSimObject(prim, null);
+            SimObject simObject = GetSimObject(prim);
             string str = simObject.ToString();
             str += " " + TheSimAvatar.DistanceVectorString(simObject);
             if (prim.Properties != null && prim.Properties.SalePrice != 0)
@@ -1901,7 +1642,7 @@ namespace cogbot.Listeners
             List<Primitive> ps = new List<Primitive>();
             foreach (SimObject os in ret)
             {
-                ps.Add(os.thePrim);
+                ps.Add(os.Prim);
             }
             return ps;
         }
@@ -1930,14 +1671,6 @@ namespace cogbot.Listeners
                 return (float)0.01;
         }
 
-        //float nameLengthHeuristic(Primitive prim)
-        //{
-        //    if ((prim != null) && (prim.Properties!=null) && (prim.Properties.Name != null))
-        //    {
-        //        return(float)prim.Properties.Name.Length / (float)maxNameLength;
-        //    } else
-        //        return(float)0.1;
-        //}
 
         float boringNamesHeuristic(SimObject prim)
         {
@@ -2022,7 +1755,7 @@ namespace cogbot.Listeners
 
         public string getObjectName(Primitive prim)
         {
-            SimObject so = GetSimObject(prim, null);
+            SimObject so = GetSimObject(prim);
             if (so != null) return "" + so;
             return "" + prim;
         }
@@ -2168,7 +1901,7 @@ namespace cogbot.Listeners
         }
 
 
-        internal void SetPrimFlags(Primitive UnPhantom, PrimFlags fs)
+        public void SetPrimFlags(Primitive UnPhantom, PrimFlags fs)
         {
             client.Objects.SetFlags(UnPhantom.LocalID, ((fs & PrimFlags.Physics) != 0),//
                 ((fs & PrimFlags.Temporary) != 0),
@@ -2176,19 +1909,19 @@ namespace cogbot.Listeners
                 ((fs & PrimFlags.CastShadows) != 0));
         }
 
-        internal IEnumerable<SimObject> GetAllSimObjects()
+        public IEnumerable<SimObject> GetAllSimObjects()
         {
             return SimObjects.CopyOf();
         }
 
-        internal void DeletePrim(Primitive thePrim)
+        public void DeletePrim(Primitive thePrim)
         {
             if (thePrim is Avatar) return;
-            SimObjects.Remove(GetSimObject(thePrim, null));
+            SimObjects.Remove(GetSimObject(thePrim));
             // client.Inventory.RequestDeRezToInventory(thePrim.LocalID);
         }
 
-        internal Primitive RequestMissingObject(uint localID, Simulator simulator)
+        public Primitive RequestMissingObject(uint localID, Simulator simulator)
         {
             if (localID == 0) return null;
             EnsureSelected(localID, simulator);
@@ -2219,14 +1952,14 @@ namespace cogbot.Listeners
         }
 
 
-        internal void RescanTypes()
+        public void RescanTypes()
         {
             int count = SimObjects.Count;
             output("Rescaning " + count + " simobjects");
             foreach (SimObject obj in SimObjects)
             {
                 //obj._Parent = obj.Parent;
-                obj.UpdateProperties(obj.thePrim.Properties);
+                obj.UpdateProperties(obj.Prim.Properties);
             }
             if (count != SimObjects.Count)
             {
@@ -2246,30 +1979,16 @@ namespace cogbot.Listeners
 
         }
 
-        //Dictionary<int, Parcel> parcelLocalIds = new Dictionary<int, Parcel>();
-        //public override void Parcels_OnParcelProperties(Simulator simulator, Parcel parcel, ParcelResult result, int primsSelected, int sequenceID, bool snapSelection)
-        //{
-        //    base.Parcels_OnParcelProperties(simulator, parcel, result, primsSelected, sequenceID, snapSelection);
-        //    parcelLocalIds[parcel.LocalID] = parcel;
-        //    if (simulator.Stats.Objects != parcel.SimWideTotalPrims)
-        //    {
-        //    }
-        //}
-        //public override void Parcels_OnParcelDwell(UUID parcelID, int localID, float dwell)
-        //{
-        //    base.Parcels_OnParcelDwell(parcelID, localID, dwell);
-        //    Parcel p = parcelLocalIds[localID];
-        //    p.SnapshotID = parcelID;
-        //    RegisterUUID(parcelID, p);
-        //}
-
-        internal UUID GetAnimationUUID(string a)
+        public UUID GetAnimationUUID(string a)
         {
             return cogbot.TheOpenSims.SimAnimation.GetAnimationUUID(a);
         }
 
+        public SimWaypoint GetWaypoint(Vector3d gloabl) {
+            return SimRegion.GetWaypoint(gloabl);
+        }
 
-        internal SimPosition GetVector(string[] args, out int argsUsed)
+        public SimPosition GetVector(string[] args, out int argsUsed)
         {
             argsUsed = 0;
             if (args.Length == 0) return TheSimAvatar;
@@ -2292,12 +2011,12 @@ namespace cogbot.Listeners
 
             int consume = args.Length;
             Primitive prim = GetPrimitive(args, out argsUsed);
-            if (prim != null) return GetSimObject(prim, null);
+            if (prim != null) return GetSimObject(prim);
             return null;
         }
 
 
-        internal Primitive GetPrimitive(string[] args, out int argsUsed)
+        public Primitive GetPrimitive(string[] args, out int argsUsed)
         {
             argsUsed = 0;
             if (args.Length == 0) return TheSimAvatar.theAvatar;
@@ -2310,11 +2029,11 @@ namespace cogbot.Listeners
 
                 if (tryGetPrim(s, out prim))
                 {
-                    SimObject simObject = GetSimObject(prim, null);
+                    SimObject simObject = GetSimObject(prim);
                     //         if (simObject.IsRegionAttached())
                     {
                         argsUsed = consume;
-                        return simObject.thePrim;
+                        return simObject.Prim;
                     }
                 }
                 consume--;
@@ -2322,7 +2041,7 @@ namespace cogbot.Listeners
             return null;
         }
 
-        internal List<SimObject> GetAllSimObjects(string name)
+        public List<SimObject> GetAllSimObjects(string name)
         {
             List<SimObject> matches = new List<SimObject>();
             foreach (SimObject obj in GetAllSimObjects())
@@ -2353,12 +2072,12 @@ namespace cogbot.Listeners
             return nearby;
         }
 
-        internal SimObject GetSimObject(Primitive prim)
+        public SimObject GetSimObject(Primitive prim)
         {
-            return GetSimObject(prim, null);
+            return GetSimObject(prim, SimRegion.GetRegion(prim.RegionHandle).TheSimulator);
         }
 
-        internal byte[] TextureBytesToUUID(UUID uUID)
+        public byte[] TextureBytesToUUID(UUID uUID)
         {
             ImageDownload ID = null;
             lock (uuidTypeObject)
@@ -2379,17 +2098,23 @@ namespace cogbot.Listeners
                 {
                     int tried = 20;
                     RegionMasterTexturePipeline.RequestTexture(uUID, ImageType.Normal);
+                    int giveUpTick = Environment.TickCount + 2*60000;
                     while (ID == null)
                     {
                         ID = RegionMasterTexturePipeline.GetTextureToRender(uUID);
                         if (ID == null)
                         {
+                            if (Environment.TickCount > giveUpTick)
+                            {
+                                Debug("-- ---- ---GIVEUP SculptMesh " + uUID);
+                                return null;
+                            }
                             if (tried-- < 0)
                             {
-                                Debug("---------WAITING SculptMesh " + uUID);
+                                Debug("-- ---- ---WAITING SculptMesh " + uUID);
                                 tried = 20;
                             }
-                            Thread.Sleep(1000);
+                            Thread.Sleep(5000);
                             Application.DoEvents();
                         }
                     }
@@ -2399,7 +2124,7 @@ namespace cogbot.Listeners
                     uuidTypeObject[uUID] = ID;
                 }
             }
-            Debug("---------SUCCEED SculptMesh " + uUID);
+            Debug("-|-|- SUCCEED SculptMesh " + uUID);
 
             return ID.AssetData;
         }

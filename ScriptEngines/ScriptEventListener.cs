@@ -146,7 +146,7 @@ namespace cogbot.ScriptEngines
             }
             if (arg is SimObject)
             {
-                return argString(((SimObject)arg).thePrim);
+                return argString(((SimObject)arg).Prim);
             }
             if (type.IsEnum)
             {

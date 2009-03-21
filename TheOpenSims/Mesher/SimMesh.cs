@@ -50,7 +50,7 @@ namespace cogbot.TheOpenSims.Mesher
 
         public bool IsSculpted
         {
-            get { return RootObject.thePrim.Sculpt != null; }
+            get { return RootObject.Prim.Sculpt != null; }
         }
         public SimMesh(SimObject simObject)
         {
@@ -83,7 +83,7 @@ namespace cogbot.TheOpenSims.Mesher
             //}
 
             // Add High PrimMesh (IdealistViewer code)
-            Mesh mesh = PrimitiveToMesh(simObject.thePrim, LevelOfDetail.High, Scale, Rotation);
+            Mesh mesh = PrimitiveToMesh(simObject.Prim, LevelOfDetail.High, Scale, Rotation);
             MeshList.Add(mesh);
 
 
@@ -287,7 +287,10 @@ namespace cogbot.TheOpenSims.Mesher
                 byte[] bytes = SimRegion.GetRegion(primitive.RegionHandle).TextureBytesToUUID(SD.SculptTexture);
                 SculptMesh SM = ToSculptMesh(bytes, primitive.Sculpt.Type, Scale, rot);
                 if (SM != null)
+                {
+                    SM.DumpRaw(".", primitive.ID.ToString(), "sculptMesh" + primitive.LocalID);
                     return ToMesh(SM.coords, SM.faces, SM.viewerFaces, primitive.Type == PrimType.Sphere);
+                }
             }
 
             bool UseExtremeDetail = Scale.X + Scale.Y + Scale.Z > UseExtremeDetailSize;
