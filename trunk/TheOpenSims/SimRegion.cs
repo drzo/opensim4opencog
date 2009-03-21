@@ -6,6 +6,7 @@ using cogbot.TheOpenSims.Navigation;
 using cogbot.Listeners;
 using cogbot.TheOpenSims.Navigation.Debug;
 using cogbot.TheOpenSims.Mesher;
+using Simian;
 
 namespace cogbot.TheOpenSims
 {
@@ -23,7 +24,7 @@ namespace cogbot.TheOpenSims
     public class SimRegion
     {
 
-        internal static void BakeRegions()
+        public static void BakeRegions()
         {
             lock (_CurrentRegions)
             {
@@ -91,26 +92,38 @@ namespace cogbot.TheOpenSims
             return Utils.UIntsToLong(x, y);
         }
 
-        //public static SimWaypoint GlobalToExistingWaypoint(Vector3d pos)
-        //{
-        //    int x = (int)Math.Floor(pos.X);
-        //    int y = (int)Math.Floor(pos.Y);
-        //    if (x < 0 || y < 0)
-        //    {
-        //        throw new ArgumentException("GlobalToWaypoint? " + pos);
-        //    }
-        //    if (x < 256 || y < 256)
-        //    {
-        //        Console.WriteLine("GlobalToWaypoint? " + pos);
-        //    }
-        //    uint sx = Round256(x);
-        //    uint sy = Round256(y);
-        //    float lx = (float)(pos.X - (sx));
-        //    float ly = (float)(pos.Y - (sy));
-        //    ulong h = Utils.UIntsToLong(sx, sy);
-        //    SimRegion r = GetRegion(h);
-        //    return r.CreateClosestRegionWaypoint(new Vector3(lx, ly, (float)pos.Z), 2);
-        //}
+        public static SimWaypoint GetWaypoint(Vector3d gloabl)
+        {
+            if (gloabl.X == float.NaN) return null;
+            uint x = Round256(gloabl.X);
+            uint y = Round256(gloabl.Y);
+            Vector3 local;
+            local.X = (float)gloabl.X - x;
+            local.Y = (float)gloabl.Y - y;
+            if (local.X >= 256)
+            {
+                local.X -= 256f;
+                x++;
+            }
+            if (local.Y >= 256)
+            {
+                local.Y -= 256f;
+                y++;
+            }
+            SimRegion R = GetRegion(Utils.UIntsToLong(x, y));
+            local.Z = (float)gloabl.Z;
+            try
+            {
+                return R.GetWaypointOf(local);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("" + e);
+                Vector3 l2 = local;
+                l2 *= 0.99f;
+                return R.GetWaypointOf(l2);
+            }
+        }
 
         public static Vector3 GlobalToLocal(Vector3d pos)
         {
@@ -125,7 +138,7 @@ namespace cogbot.TheOpenSims
             return new Vector3((float)pos.X - Round256(pos.X), (float)pos.Y - Round256(pos.Y), (float)pos.Z);
         }
 
-        internal static uint Round256(double global)
+        public static uint Round256(double global)
         {
             return ((uint)global / 256) * 256;
         }
@@ -135,7 +148,10 @@ namespace cogbot.TheOpenSims
 
         static public SimRegion GetRegion(ulong id)
         {
-            if (id == 0) throw new ArgumentException("GetRegion: region handle cant be zero");
+            if (id == 0)
+            {
+                throw new ArgumentException("GetRegion: region handle cant be zero");
+            }
             lock (_CurrentRegions)
             {
                 if (_CurrentRegions.ContainsKey(id))
@@ -147,8 +163,8 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        internal uint regionX = 0, regionY = 0;
-        internal Vector2 GetGridLocation()
+        public uint regionX = 0, regionY = 0;
+        public Vector2 GetGridLocation()
         {
             if (regionX == 0)
                 Utils.LongToUInts(RegionHandle, out regionX, out regionY);
@@ -226,7 +242,7 @@ namespace cogbot.TheOpenSims
             return null;
         }
 
-        internal static ulong HandleOf(Vector2 v2)
+        public static ulong HandleOf(Vector2 v2)
         {
             return Utils.UIntsToLong((uint)v2.X * 256, (uint)v2.Y * 256);
         }
@@ -277,6 +293,7 @@ namespace cogbot.TheOpenSims
                 _RegionName = _GridInfo.Name;
             }
         }
+
 
         List<Simulator> _Simulators = new List<Simulator>();
 
@@ -339,13 +356,18 @@ namespace cogbot.TheOpenSims
         }
 
         readonly public ulong RegionHandle;
-        internal SimRegion(ulong Handle)
+        public SimRegion(ulong Handle)
         {
             RegionHandle = Handle;
             // RegionName = gridRegionName;
             //WorldSystem = worldSystem;
             //Console.WriteLine("++++++++++++++++++++++++++Created region: ");
             PathStore = new SimPathStore("region" + Handle + ".serz", Handle);
+        }
+
+        public float WaterHeight()
+        {
+            return GridInfo.WaterHeight;
         }
 
         public void ShowDebugger()
@@ -366,7 +388,7 @@ namespace cogbot.TheOpenSims
             byte b = PathStore.GetNodeQuality(v3);
             // float useDist = GetSizeDistance();
             if (b > 0) return v3;
-            SimWaypoint swp = SimWaypoint.CreateLocal(v3, this);
+            SimWaypoint swp = GetWaypointOf(v3);
             for (float distance = PathStore.StepSize; distance < useDist * 1.5; distance += PathStore.StepSize)
             {
                 for (int dir = 0; dir < 360; dir += 15)
@@ -400,6 +422,7 @@ namespace cogbot.TheOpenSims
         /// <returns></returns>
         public SimWaypoint GetWaypointOf(Vector3 v3)
         {
+            return SimWaypoint.CreateLocal(v3, this);
             SimWaypoint swp = PathStore.CreateClosestRegionWaypoint(v3, 2);
             float dist = Vector3.Distance(v3, swp.GetSimPosition());
             if (!swp.Passable)
@@ -501,7 +524,7 @@ namespace cogbot.TheOpenSims
             return route;
         }
 
-        private List<Vector3d> GetAtLeastPartial(Vector3 localStart, Vector3 localEnd, float endFudge, out bool OnlyStart)
+        internal List<Vector3d> GetAtLeastPartial(Vector3 localStart, Vector3 localEnd, float endFudge, out bool OnlyStart)
         {
             List<Vector3d> route;
             Vector3 newEnd = localEnd;
@@ -531,10 +554,11 @@ namespace cogbot.TheOpenSims
             }
             route = new List<Vector3d>();
             route.Add(LocalToGlobal(localStart));
+            Console.WriteLine("very bad fake route ");
             return route;
         }
 
-        internal Vector3 ZAngleVector(double ZAngle)
+        public Vector3 ZAngleVector(double ZAngle)
         {
             while (ZAngle < 0)
             {
@@ -547,7 +571,7 @@ namespace cogbot.TheOpenSims
             return new Vector3((float)Math.Sin(ZAngle), (float)Math.Cos(ZAngle), 0);
         }
 
-        internal static Vector3 EnterEdge(Vector3 localLast, Vector2 dir)
+        public static Vector3 EnterEdge(Vector3 localLast, Vector2 dir)
         {
             if (Math.Abs(dir.X) > Math.Abs(dir.Y))
             {
@@ -615,7 +639,7 @@ namespace cogbot.TheOpenSims
         //    return SortObjectByStacked(ObjectsAt1x1(ix, iy),GetGroundLevel((int)ix,(int)iy));
         //}
 
-        private List<SimObject> SortObjectByStacked(List<SimObject> list, float groundLevel)
+        internal List<SimObject> SortObjectByStacked(List<SimObject> list, float groundLevel)
         {
             if (list.Count > 1)
             {
@@ -707,7 +731,7 @@ namespace cogbot.TheOpenSims
             return false;
         }
 
-        internal void SetMaster(BotClient gridClient)
+        public void SetMaster(BotClient gridClient)
         {
             if (Client == gridClient) return;
             Client = gridClient;
@@ -715,7 +739,7 @@ namespace cogbot.TheOpenSims
             EnsureClientEvents(Client);
         }
 
-        internal static void EnsureClientEvents(BotClient client)
+        public static void EnsureClientEvents(BotClient client)
         {
             client.Settings.ALWAYS_DECODE_OBJECTS = true;
             client.Settings.ALWAYS_REQUEST_PARCEL_ACL = true;
@@ -727,14 +751,14 @@ namespace cogbot.TheOpenSims
             client.WorldSystem.WorldMaster(true);           
         }
 
-        internal byte[] TextureBytesToUUID(UUID uUID)
+        public byte[] TextureBytesToUUID(UUID uUID)
         {
             return Client.WorldSystem.TextureBytesToUUID(uUID);
         }
 
         bool TerrainBaked = false;
         object TerrainBakedLock = new object();
-        internal void BakeTerrain()
+        public void BakeTerrain()
         {
             lock (TerrainBakedLock)
             {
@@ -751,7 +775,7 @@ namespace cogbot.TheOpenSims
                         float thisH3 = GetGroundLevel(x+1, y);
                         if (Math.Abs(thisH - LastHieght) > 1 || Math.Abs(thisH - thisH2) > 1 || Math.Abs(thisH - thisH3) > 1)
                         {
-                            BlockRange(x - 0.5f, y - 0.5f, 1f, 1f);
+                            BlockRange(x, y, 1.001f, 1.001f);
                         }
                         LastHieght = thisH;
                     }
@@ -759,7 +783,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        private void BlockRange(float x, float y, float sx, float sy)
+        internal void BlockRange(float x, float y, float sx, float sy)
         {
             float StepSize = PathStore.StepSize;
             sx += x;
@@ -944,6 +968,11 @@ namespace cogbot.TheOpenSims
                     AgentState.None, true);*/
         }
 
+        ISceneProvider SceneProvider = new SceneManager();
 
+        internal static ISceneProvider SceneProviderFromSimulator(Simulator sim)
+        {
+            return GetRegion(sim).SceneProvider;
+        }
     }
 }

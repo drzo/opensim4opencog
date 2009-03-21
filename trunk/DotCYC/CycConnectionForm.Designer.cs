@@ -84,7 +84,7 @@ namespace cogbot.DotCYC
             // 
             this.btnEval.Location = new System.Drawing.Point(189, 219);
             this.btnEval.Name = "btnEval";
-            this.btnEval.Size = new System.Drawing.Size(53, 22);
+            this.btnEval.Size = new System.Drawing.Size(53, 21);
             this.btnEval.TabIndex = 4;
             this.btnEval.Text = "EVAL";
             this.btnEval.UseVisualStyleBackColor = true;
@@ -113,10 +113,6 @@ namespace cogbot.DotCYC
             this.Name = "CycConnectionForm";
             this.Text = "CycConnectionForm";
             this.Load += new System.EventHandler(this.CycConnectionForm_Load);
-#if MICROSOFT
-            this.Paint += new System.Windows.Forms.PaintEventHandler(this.CycConnectionForm_NoClose);
-            this.Resize += new System.EventHandler(this.CycConnectionForm_NoClose);
-#endif
             this.ResumeLayout(false);
             this.PerformLayout();
 

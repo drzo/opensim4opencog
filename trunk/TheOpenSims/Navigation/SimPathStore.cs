@@ -488,7 +488,7 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
         bool PunishChangeDirection;
-        public IList<Vector3d> GetLocalPath(Vector3 start, Vector3 end, PathFinderDemo panel)
+        internal IList<Vector3d> GetLocalPath(Vector3 start, Vector3 end, PathFinderDemo panel)
         {
             if (!IsPassable(start))
             {
@@ -669,11 +669,11 @@ namespace cogbot.TheOpenSims.Navigation
         {
             lock (mWaypoints)
             {
-                if (!NeedsUpdate) return;
                 SimRegion R = GetSimRegion();
+                R.BakeTerrain();
+                if (!NeedsUpdate) return;
                 NeedsUpdate = false;
                 TaintMatrix();
-                R.BakeTerrain();
                 Console.WriteLine("Start UpdateMatrix: " + R);
                 for (int y = 0; y < MAPSPACE; y++)
                 {

@@ -59,5 +59,12 @@ namespace cogbot.Properties {
                 resourceCulture = value;
             }
         }
+        
+        internal static System.Drawing.Bitmap Sauver {
+            get {
+                object obj = ResourceManager.GetObject("Sauver", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

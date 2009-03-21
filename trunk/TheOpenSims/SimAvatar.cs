@@ -24,7 +24,7 @@ namespace cogbot.TheOpenSims
 
         public Avatar theAvatar
         {
-            get { return (Avatar)thePrim; }
+            get { return (Avatar)Prim; }
         }
 
         public SimAvatar InDialogWith = null;
@@ -99,7 +99,7 @@ namespace cogbot.TheOpenSims
             MakeEnterable(this);
         }
 
-        public override bool RestoreEnterable(SimAvatar agent)
+        public override bool RestoreEnterable(SimMover agent)
         {
             return false;// base.RestoreEnterable(this);
         }
@@ -200,16 +200,73 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        public override Simulator GetSimulator()
+        {
+            if (IsLocal()) return Client.Network.CurrentSim;
+            return GetSimRegion().TheSimulator;
+        }
+
         public override Vector3 GetSimPosition()
         {
             if (IsLocal())
             {
                 if (Client.Settings.OBJECT_TRACKING)
                     return Client.Self.SimPosition;
+                if (theAvatar.ParentID == 0) return theAvatar.Position;
             }
-            if (theAvatar.ParentID == 0) return theAvatar.Position;
-            return base.GetSimPosition();
+
+            Vector3 local = base.GetSimPosition();
+            if (WorldSystem.OutOfRegion(local))
+            {
+                Debug(" OutOfRegion " + local);
+            }
+            return local;
         }
+
+        public override Vector3d GetWorldPosition()
+        {
+            //if (IsLocal())
+            //{
+            //    if (Client.Settings.OBJECT_TRACKING)
+            //        return Client.Self.GlobalPosition;
+
+            //}
+            return GetSimRegion().LocalToGlobal(GetSimPosition());
+        }
+
+        public override SimRegion GetSimRegion()
+        {
+            if (Prim == null) return _CurrentRegion;
+            lock (Prim)
+            {
+                if (IsLocal())
+                {
+                    _CurrentRegion = SimRegion.GetRegion(Client.Network.CurrentSim);
+                }
+                if (_CurrentRegion == null)
+                {
+                    _CurrentRegion = SimRegion.GetRegion(Prim.RegionHandle);
+                    Debug("out of date _CurrentRegion ");
+                }
+                if (theAvatar.RegionHandle != _CurrentRegion.RegionHandle)
+                {
+                    Debug("out of date RegionHandle ");
+                    _CurrentRegion = null;
+                }
+
+                if (_CurrentRegion == null)
+                {
+                    _CurrentRegion = SimRegion.GetRegion(Prim.RegionHandle);
+                    Debug("out of date _CurrentRegion ");
+                }
+                                 
+                if (_CurrentRegion != null)
+                    PathStore = _CurrentRegion.PathStore;
+
+                return _CurrentRegion;
+            }
+        }
+
 
         public override Quaternion GetSimRotation()
         {
@@ -218,7 +275,14 @@ namespace cogbot.TheOpenSims
                 if (Client.Settings.OBJECT_TRACKING)
                     return Client.Self.SimRotation;
             }
-            return base.GetSimRotation();
+            lock (Prim)
+            {
+                if (theAvatar.RegionHandle != _CurrentRegion.RegionHandle)
+                {
+                    Debug("out of date RegionHandle ");
+                }
+                return base.GetSimRotation();
+            }
         }
 
         public void Think()
@@ -382,10 +446,10 @@ namespace cogbot.TheOpenSims
             {
                 double closeness = Approach(someObject, 2);
                 AgentManager ClientSelf = Client.Self;
-                ClientSelf.Touch(someObject.thePrim.LocalID);
+                ClientSelf.Touch(someObject.Prim.LocalID);
                 if (closeness < 3)
                 {
-                    ClientSelf.RequestSit(someObject.thePrim.ID, Vector3.Zero);
+                    ClientSelf.RequestSit(someObject.Prim.ID, Vector3.Zero);
                     ClientSelf.Sit();
                 }
                 return;
@@ -474,7 +538,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        private void AddKnowns(List<SimObject> objects)
+        private void AddKnowns(IEnumerable<SimObject> objects)
         {
             lock (objects)
             {
@@ -564,7 +628,7 @@ namespace cogbot.TheOpenSims
             AgentManager ClientSelf = Client.Self;
             return new ThreadStart(delegate()
             {
-                Primitive targetPrim = obj.thePrim;
+                Primitive targetPrim = obj.Prim;
                 //ClientSelf.RequestSit(targetPrim.ID, Vector3.Zero);
                 //ClientSelf.Sit();
                 try
@@ -583,7 +647,7 @@ namespace cogbot.TheOpenSims
             BotClient Client = GetGridClient();
             return new ThreadStart(delegate()
             {
-                Primitive targetPrim = obj.thePrim;
+                Primitive targetPrim = obj.Prim;
                 uint objectLocalID = targetPrim.LocalID;
                 AgentManager ClientSelf = Client.Self;
                 try
@@ -671,26 +735,13 @@ namespace cogbot.TheOpenSims
         BotClient Client;
         public void SetClient(BotClient Client)
         {
-
             lock (Client)
             {
                 this.Client = Client;
                 //  WorldSystem = Client.WorldSystem;
                 if (IsLocal())
                 {
-                    if (ApproachThread == null)
-                    {
-
-                        WorldSystem.SetSimAvatar(this);
-                        ApproachThread = new Thread(TrackerLoop);
-                        ApproachThread.Name = "TrackerLoop for " + Client;
-                        ApproachThread.Start();
-                        //if (ApproachThread != null)
-                        //{
-                        //    if (!ApproachThread.IsAlive)                    
-                        //        ApproachThread.Start();
-                        //}
-                    }
+                    EnsureTrackerRunning();
                 }
             }
             //WorldSystem.AddTracking(this,Client);
@@ -734,6 +785,55 @@ namespace cogbot.TheOpenSims
             }
             return UnPhantom;
         }
+
+
+        public override void UpdateObject(ObjectUpdate objectUpdate, ObjectUpdate objectUpdateDiff)
+        {
+        }
+
+        public void Touch(SimObject simObject)
+        {
+            if (IsLocal())
+            {
+                Client.Self.Touch(simObject.Prim.LocalID);
+            }
+            else
+            {
+                Debug("Cant touch !IsLocal() " + simObject);
+            }
+        }
+
+        public override SimPathStore GetPathSystem()
+        {
+            lock (Prim)
+            {
+                if (_CurrentRegion != null)
+                {
+                    return _CurrentRegion.PathStore;
+                }
+                if (Client == null)
+                    return WorldSystem.SimPaths;
+                return base.GetPathSystem();
+            }
+
+        }
+        internal void RemoveObject(SimObject O)
+        {
+            KnownSimObjects.Remove(O);
+        }
+
+        //public override SimWaypoint GetWaypoint()
+        //{
+        //    Vector3 v3 = GetWorldPosition();
+        //    SimPathStore PathStore = GetPathSystem();
+        //    SimWaypoint swp = PathStore.CreateClosestWaypoint(v3);
+        //    double dist = Vector3.Distance(v3, swp.GetWorldPosition());
+        //    if (!swp.Passable)
+        //    {
+        //        WorldSystem.output("CreateClosestWaypoint: " + v3 + " <- " + dist + " -> " + swp + " " + this);
+        //    }
+        //    return swp;
+        //}
 
         public void StopMoving()
         {
@@ -785,211 +885,6 @@ namespace cogbot.TheOpenSims
         }
 
 
-        object TrackerLoopLock = new object();
-
-        void TrackerLoop()
-        {
-            AgentManager ClientSelf = Client.Self;
-            AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
-            bool StartedFlying = false;// !IsFloating;
-            Boolean justStopped = false;
-            Random somthing = new Random(Environment.TickCount);// We do stuff randomly here
-            while (true)
-            {
-                Vector3d targetPosition;
-                lock (TrackerLoopLock)
-                {
-                    // Debug("TrackerLoop: " + Thread.CurrentThread);
-                    if (ApproachPosition == null)
-                    {
-                        Thread.Sleep(500);
-                        continue;
-                    }
-                    targetPosition = ApproachPosition.GetWorldPosition();
-                }
-                //ApproachDistance = ApproachPosition.GetSizeDistance();
-                try
-                {
-
-                    double UpDown = targetPosition.Z - ClientSelf.SimPosition.Z;
-                    double ZDist = Math.Abs(UpDown);
-                    if (UpDown > 1)
-                    {
-                        targetPosition.Z = GetWorldPosition().Z + 0.2f; // incline upward
-                    }
-                    else
-                    {
-                        targetPosition.Z = GetWorldPosition().Z;
-                    }
-                    // allow flight
-                    if (ZDist > ApproachDistance)
-                    {
-                        if (!ClientMovement.Fly)
-                        {
-                            if (!StartedFlying)
-                            {
-                                if (UpDown > 0) ClientMovement.NudgeUpPos = true;
-                                ClientMovement.SendUpdate(false);
-                                // ClientSelf.Fly(true);                                 
-                                StartedFlying = true;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (StartedFlying)
-                        {
-                            ClientMovement.NudgeUpPos = false;
-                            // ClientSelf.Fly(false);
-                            StartedFlying = false;
-                        }
-                    }
-
-                    if (!StartedFlying)
-                    {
-                        ClientMovement.NudgeUpPos = false;
-                        // targetPosition.Z = ApproachPosition.Z;
-                    }
-                    //  Vector3 Destination = ApproachPosition;
-                    double curDist = Vector3d.Distance(GetWorldPosition(), targetPosition);
-                    TurnToward(targetPosition);
-                    if (curDist > ApproachDistance)
-                    {
-                        //ClientMovement.SendUpdate();
-                        if (curDist < (ApproachDistance * 1.25))
-                        {
-                            //MoveFast(ApproachPosition);
-                            //MoveSlow(ApproachPosition);
-                            //Thread.Sleep(100);
-                            Client.Self.Movement.AtPos = true;
-                            Client.Self.Movement.SendUpdate(true);
-                            Thread.Sleep(125);
-                            Client.Self.Movement.Stop = true;
-                            Client.Self.Movement.AtPos = false;
-                            Client.Self.Movement.NudgeAtPos = true;
-                            Client.Self.Movement.SendUpdate(true);
-                            Thread.Sleep(100);
-                            Client.Self.Movement.NudgeAtPos = false;
-                            Client.Self.Movement.SendUpdate(true);
-                            Thread.Sleep(100);
-                        }
-                        else
-                        {
-                            Client.Self.Movement.AtPos = true;
-                            Client.Self.Movement.UpdateInterval = 0; //100
-                            Client.Self.Movement.SendUpdate(true);
-                            //(int)(25 * (1 + (curDist / followDist)))
-                            Thread.Sleep(somthing.Next(25, 100));
-                            //   MoveFast(ApproachPosition);
-                            //    if (ApproachPosition!=null) MoveSlow(ApproachPosition);
-                        }
-                        justStopped = true;
-                    }
-                    else
-                    {
-                        if (justStopped)
-                        {
-                            TurnToward(targetPosition);
-                            ClientMovement.AtPos = false;
-                            ClientMovement.UpdateInterval = 0;
-                            //ClientMovement.StandUp = true;
-                            //ClientMovement.SendUpdate();
-                            ClientMovement.FinishAnim = true;
-                            ClientMovement.Stop = true;
-                            ClientMovement.SendUpdate(false);
-                            Thread.Sleep(25);
-                            // WorldSystem.TheSimAvatar.StopMoving();
-                            justStopped = false;
-                        }
-                        else
-                        {
-                            Thread.Sleep(100);
-                        }
-
-
-                    }
-
-                }
-                catch (Exception e)
-                {
-                    Debug("" + e);
-                }
-
-            }
-        }
-
-        //public override SimWaypoint GetWaypoint()
-        //{
-        //    Vector3 v3 = GetWorldPosition();
-        //    SimPathStore PathStore = GetPathSystem();
-        //    SimWaypoint swp = PathStore.CreateClosestWaypoint(v3);
-        //    double dist = Vector3.Distance(v3, swp.GetWorldPosition());
-        //    if (!swp.Passable)
-        //    {
-        //        WorldSystem.output("CreateClosestWaypoint: " + v3 + " <- " + dist + " -> " + swp + " " + this);
-        //    }
-        //    return swp;
-        //}
-
-
-        public void TurnToward(SimPosition targetPosition)
-        {
-            TurnToward(targetPosition.GetWorldPosition());
-        }
-
-        public void SetMoveTarget(SimPosition target)
-        {
-            lock (TrackerLoopLock)
-            {
-                if (target != ApproachPosition)
-                {
-                    StopMoving();
-                }
-                ApproachPosition = target;
-                ApproachDistance = target.GetSizeDistance();
-            }
-        }
-
-        double ApproachDistance = 2f;
-        public SimPosition ApproachPosition;
-
-        Thread ApproachThread;//= new Thread(TrackerLoop);
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="finalTarget"></param>
-        /// <param name="maxDistance"></param>
-        /// <param name="maxSeconds"></param>
-        /// <returns></returns>
-        public bool MoveTo(Vector3d finalTarget, double maxDistance, int maxSeconds)
-        {
-            double currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
-            if (currentDist < maxDistance) return true;
-            lock (TrackerLoopLock)
-            {
-                SimWaypoint P = SimWaypoint.CreateGlobal(finalTarget);
-                ApproachDistance = maxDistance;
-                ApproachPosition = P;
-            }
-            for (int i = 0; i < maxSeconds; i++)
-            {
-                Thread.Sleep(1000);
-                Application.DoEvents();
-                currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
-
-                if (currentDist > maxDistance)
-                {
-                    continue;
-                }
-                else
-                {
-                    // StopMoving();
-                    return true;
-                }
-            }
-            StopMoving();
-            return false;
-        }
         /// <summary>
         /// 
         /// </summary>
@@ -1041,39 +936,309 @@ namespace cogbot.TheOpenSims
             return FollowPathTo(pos.GetWorldPosition(), pos.GetSizeDistance());
         }
 
-        public override void UpdateObject(ObjectUpdate objectUpdate, ObjectUpdate objectUpdateDiff)
+        public bool FollowPathTo(Vector3d globalEnd, double distance)
         {
-        }
-
-        public void Touch(SimObject simObject)
-        {
-            if (IsLocal())
+            if (!IsLocal())
             {
-                Client.Self.Touch(simObject.thePrim.LocalID);
+                throw Error("FollowPathTo !IsLocal()");
             }
-            else
-            {
-                Debug("Cant touch !IsLocal() " + simObject);
-            }
+            SimAbstractMover move = new SimAbstractMover(this, globalEnd, distance);
+            return move.FollowPathTo(globalEnd, distance);
         }
 
-        public override SimPathStore GetPathSystem()
+        object TrackerLoopLock = new object();
+
+        void TrackerLoop()
         {
-
-            if (_CurrentRegion != null)
+            Boolean stopNext = false;
+            Random somthing = new Random(Environment.TickCount);// We do stuff randomly here
+            while (true)
             {
-                return _CurrentRegion.PathStore;
+                AgentManager ClientSelf = Client.Self;
+                AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
+                double realSelfZ = ClientSelf.SimPosition.Z;
+                Vector3d worldPosition = GetWorldPosition();
+                Vector3d targetPosition;
+                lock (TrackerLoopLock)
+                {
+                    // Debug("TrackerLoop: " + Thread.CurrentThread);
+                    if (ApproachPosition == null)
+                    {
+                        Thread.Sleep(500);
+                        continue;
+                    }
+
+                    targetPosition = ApproachPosition.GetWorldPosition();
+                    realSelfZ = targetPosition.Z;
+                }
+                //ApproachDistance = ApproachPosition.GetSizeDistance();
+                try
+                {
+                    ClientMovement.UpdateInterval = 0; //100
+                    SimRegion R = GetSimRegion();
+                    float WaterHeight = R.WaterHeight();
+                    float zlevel = ClientSelf.SimPosition.Z;
+                    double UpDown = targetPosition.Z - zlevel;
+                    double curDist = Vector3d.Distance(worldPosition, targetPosition);
+
+                    //if (curDist < ApproachDistance)
+                    //{
+                    //    ClientMovement.Stop = true;
+                    //    TurnToward(targetPosition);
+                    //    ClientMovement.SendUpdate();
+                    //    continue;
+                    //}
+                    double ZDist = Math.Abs(UpDown);
+                    if (UpDown > 1)
+                    {
+                        targetPosition.Z = zlevel + 0.2f; // incline upward
+                    }
+                    else
+                    {
+                        targetPosition.Z = zlevel;
+                    }
+
+                    SimWaypoint WP = WorldSystem.GetWaypoint(worldPosition);
+                    // Like water areas
+                    bool simming = WP.IsUnderWater();
+
+                    // Reset previous Z 
+                    ClientMovement.FastUp = false;
+                    ClientMovement.UpPos = false;
+                    ClientMovement.UpNeg = false;
+                    ClientMovement.NudgeUpPos = false;
+                    ClientMovement.NudgeUpNeg = false;
+
+                    double curXYDist = Vector3d.Distance(worldPosition, new Vector3d(targetPosition.X, targetPosition.Y, zlevel));
+
+                    curDist = Vector3d.Distance(worldPosition, targetPosition);
+
+                    if (simming)
+                    {
+                        // WaterHeight = WaterHeight - 1f;
+                        if (!ClientMovement.Fly)
+                        {
+                            ClientMovement.Fly = false;
+                        }
+
+                        bool nudge = false;
+
+                        if (zlevel > WaterHeight - 0.5)
+                        {
+                            // Bob downward
+                            if (nudge)
+                                ClientMovement.NudgeUpNeg = true;
+                            else
+                                ClientMovement.UpNeg = true;
+                            ClientMovement.SendUpdate(false);
+                            //
+                            //  continue; //to keep going up
+                        }
+                        else
+                        {
+                          //  nudge = !nudge;
+                            if (zlevel < WaterHeight - 2.5)
+                            {
+                                // Bob upward
+                                if (nudge)
+                                    ClientMovement.NudgeUpPos = true;
+                                else
+                                    ClientMovement.UpPos = true;
+                                ClientMovement.SendUpdate(false);
+                                //   continue; //to keep going up
+                            }
+                        }
+                        targetPosition.Z = WaterHeight - 0.25f;
+                    }
+
+                    ClientMovement.Fly = simming || WP.IsFlyZone();
+
+
+                    if (simming)
+                    {
+                        // Reset previous Z 
+                        ClientMovement.FastUp = false;
+                        ClientMovement.UpPos = false;
+                        ClientMovement.UpNeg = false;
+                        ClientMovement.NudgeUpPos = false;
+                        ClientMovement.NudgeUpNeg = false;
+
+                        ClientMovement.SendUpdate(false);
+                    }
+
+                    //// Little Jumps
+                    if (ZDist > ApproachDistance)
+                    {
+                        if (!ClientMovement.Fly)
+                        {
+                            if (UpDown > 0)
+                            {
+                                ClientMovement.NudgeUpPos = true;
+                                ClientMovement.SendUpdate(false);
+                                ClientMovement.NudgeUpPos = false;
+                            }
+                        }
+                    }
+                    //else
+                    //{
+                    //    if (ClientMovement.Fly)
+                    //    {
+                    //        ClientMovement.NudgeUpPos = false;
+                    //        // ClientSelf.Fly(false);
+                    //        ClientMovement.Fly = false;
+                    //    }
+                    //}
+
+
+
+                    // Far away
+                    if (curDist > ApproachDistance)
+                    {
+                        TurnToward(targetPosition);
+                        // getting close though
+                        if (curDist < (ApproachDistance * 1.25))
+                        {
+                            ClientMovement.AtPos = true;
+                            ClientMovement.SendUpdate(true);
+                            Thread.Sleep(125);
+                            ClientMovement.Stop = true;
+                            ClientMovement.AtPos = false;
+                            ClientMovement.NudgeAtPos = true;
+                            ClientMovement.SendUpdate(true);
+                            Thread.Sleep(100);
+                            ClientMovement.NudgeAtPos = false;
+                            ClientMovement.SendUpdate(false);
+                            Thread.Sleep(100);
+                            stopNext = true;
+                            continue;
+                        }
+                        else
+                        {
+                            ClientMovement.AtPos = true;
+                            ClientMovement.UpdateInterval = 0; //100
+                            ClientMovement.SendUpdate(false);
+                            //(int)(25 * (1 + (curDist / followDist)))
+                            Thread.Sleep(somthing.Next(25, 100));
+                            //   MoveFast(ApproachPosition);
+                            //    if (ApproachPosition!=null) MoveSlow(ApproachPosition);
+                            stopNext = true;
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        TurnToward(targetPosition);
+                        if (stopNext)
+                        {
+                            ClientMovement.AtPos = false;
+                            ClientMovement.UpdateInterval = 0;
+                            //ClientMovement.StandUp = true;
+                            //ClientMovement.SendUpdate();
+                            ClientMovement.FinishAnim = true;
+                            ClientMovement.Stop = true;
+                            ClientMovement.SendUpdate(false);
+                            Thread.Sleep(25);
+                            // WorldSystem.TheSimAvatar.StopMoving();
+                            stopNext = false;
+                            continue;
+
+                        }
+                        else
+                        {
+                            Thread.Sleep(100);
+                            continue;
+                        }
+
+
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    Debug("" + e);
+                }
+
             }
-            if (Client == null)
-                return WorldSystem.SimPaths;
-            return base.GetPathSystem();
-
         }
-        internal void RemoveObject(SimObject O)
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="finalTarget"></param>
+        /// <param name="maxDistance"></param>
+        /// <param name="maxSeconds"></param>
+        /// <returns></returns>
+        public bool MoveTo(Vector3d finalTarget, double maxDistance, int maxSeconds)
         {
-            KnownSimObjects.Remove(O);
+            double currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
+            if (currentDist < maxDistance) return true;
+            lock (TrackerLoopLock)
+            {
+                SimWaypoint P = SimWaypoint.CreateGlobal(finalTarget);
+                SetMoveTarget(P);
+                ApproachDistance = maxDistance;
+            }
+            for (int i = 0; i < maxSeconds; i++)
+            {
+                Thread.Sleep(1000);
+                Application.DoEvents();
+                currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
+
+                if (currentDist > maxDistance)
+                {
+                    continue;
+                }
+                else
+                {
+                    // StopMoving();
+                    return true;
+                }
+            }
+            StopMoving();
+            return false;
         }
 
+
+
+        public void TurnToward(SimPosition targetPosition)
+        {
+            TurnToward(targetPosition.GetWorldPosition());
+            Client.Self.Movement.SendUpdate();
+        }
+
+        public void SetMoveTarget(SimPosition target)
+        {
+            lock (TrackerLoopLock)
+            {
+                if (target != ApproachPosition)
+                {
+                    StopMoving();
+                }
+                ApproachPosition = target;
+                ApproachDistance = target.GetSizeDistance();
+                EnsureTrackerRunning();
+            }
+        }
+
+        private void EnsureTrackerRunning()
+        {
+            lock (TrackerLoopLock)
+            {
+                if (ApproachThread == null)
+                {
+
+                    WorldSystem.SetSimAvatar(this);
+                    ApproachThread = new Thread(TrackerLoop);
+                    ApproachThread.Name = "TrackerLoop for " + Client;
+                    ApproachThread.Start();
+                }
+            }
+        }
+
+        double ApproachDistance = 2f;
+        public SimPosition ApproachPosition;
+
+        Thread ApproachThread;//= new Thread(TrackerLoop);
 
 
         #region SimMover Members
@@ -1082,219 +1247,59 @@ namespace cogbot.TheOpenSims
         {
             Vector3d Current = GetWorldPosition();
             Vector3d diff = targetPosition - Current;
-            while (diff.Length() > 10)
+            while (diff.Length() > 2)
             {
-                diff.X /= 2;
-                diff.Y /= 2;
+                diff.X *= 0.75f;
+                diff.Y *= 0.75f;
+                diff.Z *= 0.75f;
             }
             Vector3 LocalPos = new Vector3(GetSimPosition());
             LocalPos.X += (float)diff.X;
             LocalPos.Y += (float)diff.Y;
-            Client.Self.Movement.TurnToward(LocalPos);
+            TurnToward(LocalPos);
         }
-
-
-        public bool FollowPathTo(Vector3d globalEnd, double distance)
-        {
-            bool OnlyStart = true;
-            bool MadeIt = true;
-            if (!IsLocal())
-            {
-                throw Error("FollowPathTo !IsLocal()");
-            }
-
-            while (OnlyStart && MadeIt)
-            {
-                if (Vector3d.Distance(GetWorldPosition(), globalEnd) < distance) return true;
-                List<Vector3d> route = SimRegion.GetPath(GetWorldPosition(), globalEnd, distance, out OnlyStart);
-                MadeIt = FollowPathTo(route, globalEnd, distance);
-            }
-            return MadeIt;
-        }
-
-        double TurnAvoid = 0;
-        bool UseTurnAvoid = false;
-        public Vector3 MoveToPassableArround(Vector3 start)
-        {
-            if (!UseTurnAvoid)
-            {
-                UseTurnAvoid = !UseTurnAvoid;
-                return start;
-            }
-            UseTurnAvoid = !UseTurnAvoid;
-            SimPathStore PathStore = GetSimRegion();
-            double A45 = 45f / SimPathStore.RAD2DEG;
-            for (double angle = A45; angle < SimPathStore.PI2; angle += A45)
-            {
-                Vector3 next = ZAngleVector(angle + TurnAvoid) * 2 + start;
-                if (PathStore.IsPassable(next))
-                {
-                    Vector3d v3d = PathStore.GetSimRegion().LocalToGlobal(start);
-                    if (MoveTo(v3d, 1, 4))
-                    {
-                        TurnAvoid += angle;  // update for next use
-                        if (TurnAvoid > SimPathStore.PI2)
-                            TurnAvoid -= SimPathStore.PI2;
-                        return next;
-                    }
-                }
-            }
-            return start;
-        }
-
-
-        internal void OpenNearbyClosedPassages()
-        {
-            SimObjectType DOOR = SimTypeSystem.DOOR;
-            // look for closed doors
-
-            List<SimObject> UnEnterables = new List<SimObject>();
-            foreach (SimObject O in ((SimAvatar)this).GetNearByObjects(3, false))
-            {
-                if (!O.IsPhantom)
-                {
-                    if (O.IsTypeOf(DOOR) != null)
-                    {
-                        O.MakeEnterable((SimAvatar)this);
-                        UnEnterables.Add(O);
-                    }
-                    if (O.IsSculpted)
-                    {
-                        O.MakeEnterable((SimAvatar)this);
-                        UnEnterables.Add(O);
-                    }
-                }
-            }
-            if (UnEnterables.Count > 0)
-            {
-                new Thread(new ThreadStart(delegate()
-                {
-                    Thread.Sleep(90000); // 90 seconds
-                    foreach(SimObject O in UnEnterables) {
-                        O.RestoreEnterable(this);
-                    }
-                })).Start();
-            }
-        }
-
-
-        
-
-        /// <summary>
-        /// Blocks points -45 to +45 degrees in front of Bot (assumes the bot is heading toward V3)
-        /// </summary>
-        /// <param name="v3"></param>
-        internal void BlockTowardsVector(Vector3 v3)
-        {
-            OpenNearbyClosedPassages();
-            SimPathStore PathStore = GetSimRegion();
-            Point P1 = PathStore.ToPoint(GetSimPosition());
-            Vector3 cp = GetSimPosition();
-            Vector3 offset = v3 - cp;
-            double ZAngle = (double)Math.Atan2(offset.Y, offset.X);
-            Point Last = PathStore.ToPoint(v3);
-            float Dist = 0.3f;
-            Vector3 b1 = v3;
-            float StepSize = GetSimRegion().PathStore.StepSize;
-            while (offset.Length() > StepSize)
-            {
-                offset *= 0.75f;
-                Vector3 blocked = cp + offset;
-                Point P2 = PathStore.ToPoint(blocked);
-                if (P2 != P1)
-                {
-                    Dist = offset.Length();
-                    Last = P2;
-                    b1 = blocked;
-                }
-            }
-            float x = Last.X / PathStore.POINTS_PER_METER;
-            float y = Last.Y / PathStore.POINTS_PER_METER;
-            Vector3 v3o = new Vector3(x, y, v3.Z);
-            BlockPoint(v3o);
-            double A45 = 45f / SimPathStore.RAD2DEG;
-            Debug("BlockTowardsVector {0}", DistanceVectorString(v3o));
-            Vector3 middle = ZAngleVector(ZAngle) * Dist;
-            middle += cp;
-            double mdist = Vector3.Distance(middle, b1);
-            if (mdist > 0.1)
-            {
-                Debug("Wierd mdist = " + mdist);
-            }
-            Dist = 0.4f;
-            BlockPoint(ZAngleVector(ZAngle) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle - A45 * 0.5) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle + A45 * 0.5) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle - A45) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle + A45) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle - A45 * 1.5) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle + A45 * 1.5) * Dist + cp);
-            //Dont Run back
-            //MoveTo(cp + ZAngleVector(ZAngle - Math.PI) * 2, 1f, 2);
-        }
-
-        internal Vector3 ZAngleVector(double ZAngle)
-        {
-            while (ZAngle < 0)
-            {
-                ZAngle += SimPathStore.PI2;
-            }
-            while (ZAngle > SimPathStore.PI2)
-            {
-                ZAngle -= SimPathStore.PI2;
-            }
-            return new Vector3((float)Math.Sin(ZAngle), (float)Math.Cos(ZAngle), 0);
-        }
-
-        /// <summary>
-        /// Blocks a point temporarilly (one minute)
-        /// </summary>
-        /// <param name="vector3"></param>
-        internal void BlockPoint(Vector3 vector3)
-        {
-            SimPathStore PathStore = GetSimRegion();
-            PathStore.SetNodeQualityTimer(vector3, 0, 60);
-        }
-
-        bool UseSkipping = false;
-        public bool FollowPathTo(List<Vector3d> v3s, Vector3d finalTarget, double finalDistance)
-        {
-            SimPathStore PathStore = GetSimRegion();
-            Debug("FollowPath: {0} -> {1} for {2}", v3s.Count, DistanceVectorString(finalTarget),finalDistance);
-            int CanSkip = UseSkipping?0:0;
-            int Skipped = 0;
-            UseSkipping = !UseSkipping;
-
-            foreach (Vector3d v3 in v3s)
-            {
-                //  if (Vector3d.Distance(v3, GetWorldPosition()) < dist) continue;
-                if (!MoveTo(v3, PathStore.StepSize, 6))
-                {
-                    if (Vector3d.Distance(GetWorldPosition(), finalTarget) < finalDistance) return true;
-                    if (!MoveTo(v3, PathStore.LargeScale, 2))
-                    {
-                        if (Skipped++ <= CanSkip)
-                        {
-                            MoveToPassableArround(GetSimPosition());
-                            Skipped++;
-                            continue;
-                        }
-                        Vector3 l3 = SimRegion.GlobalToLocal(v3);
-                        BlockTowardsVector(l3);
-                        Debug("!MoveTo: {0} -> {1} -> {2} ", DistanceVectorString(GetWorldPosition()), DistanceVectorString(v3), DistanceVectorString(finalTarget));
-                        MoveToPassableArround(l3);
-                        return false;
-                    }
-                }
-                else
-                {
-                    Skipped = 0;
-                }
-            }
-            Debug("Complete: {0} -> {1}", DistanceVectorString(GetWorldPosition()), DistanceVectorString(finalTarget));
-            return true;
-        }
-
         #endregion
+
+        public bool TurnToward(Vector3 target)
+        {
+            bool changed = false;
+            AgentManager.AgentMovement ClientMovement = Client.Self.Movement;
+            Quaternion parentRot = Quaternion.Identity;
+
+            if (Client.Self.SittingOn > 0)
+            {
+                if (!Client.Network.CurrentSim.ObjectsPrimitives.ContainsKey(Client.Self.SittingOn))
+                {
+                    Logger.Log("Attempted TurnToward but parent prim is not in dictionary", Helpers.LogLevel.Warning, Client);
+                    return false;
+                }
+                else parentRot = Client.Network.CurrentSim.ObjectsPrimitives[Client.Self.SittingOn].Rotation;
+            }
+
+            Quaternion between = Vector3.RotationBetween(Vector3.UnitX, Vector3.Normalize(target - Client.Self.SimPosition));
+            Quaternion rot = between * (Quaternion.Identity / parentRot);
+
+            Quaternion br = ClientMovement.BodyRotation;
+            Quaternion hr = ClientMovement.HeadRotation;
+            //if (br != rot || hr != rot)
+            {
+                changed = true;
+                ClientMovement.BodyRotation = rot;
+                ClientMovement.HeadRotation = rot;
+                ClientMovement.Camera.LookAt(Client.Self.SimPosition, target);
+
+                bool prev = Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK;
+                try
+                {
+                    Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = false;
+                  //  ClientMovement.SendUpdate();
+                }
+                finally
+                {
+                    Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = prev;
+                }
+            }
+            return changed;
+        }
     }
 }

@@ -65,7 +65,7 @@ namespace cogbot.Actions
                     {
                         foreach (SimObject o in objs)
                         {
-                            WriteLine(Client.WorldSystem.describePrim(o.thePrim));
+                            WriteLine(Client.WorldSystem.describePrim(o.Prim));
                         }
                         return;
                     }

@@ -22,8 +22,8 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
         public byte OccupiedCount;
-        internal float OMinZ = float.MaxValue;
-        internal float OMaxZ = float.MinValue;
+        public float OMinZ = float.MaxValue;
+        public float OMaxZ = float.MinValue;
 
         public void SetMatrix(int v)
         {
@@ -33,6 +33,10 @@ namespace cogbot.TheOpenSims.Navigation
             PathStore.mMatrix[PX, PY] = (byte)v;
         }
 
+        public bool SolidAt(float z)
+        {
+            return SomethingBetween(z,z,OccupiedListObject);
+        }
 
         byte IsSolid = 0;
 
@@ -55,8 +59,20 @@ namespace cogbot.TheOpenSims.Navigation
         {
             return GetZLevel() == GetGroundLevel();
         }
-        public byte GetOccupiedValue() {
-            int b =SimPathStore.INITIALLY + OccupiedCount * 3 + IsSolid * 3;
+
+        public bool IsUnderWater()
+        {
+            return GetZLevel() < GetSimRegion().WaterHeight();
+        }
+
+        public bool IsFlyZone()
+        {
+            return IsUnderWater();
+        }
+
+        public byte GetOccupiedValue()
+        {
+            int b = SimPathStore.INITIALLY + OccupiedCount * 3 + IsSolid * 3;
             if (b > 240) return 240;
             return (byte)b;
         }
@@ -70,24 +86,24 @@ namespace cogbot.TheOpenSims.Navigation
                 if (SurroundingBump(zlevel, 0.4f) || SomethingBetween(zlevel + 0.35f, zlevel + 2, OccupiedListObject))
                     SetMatrix(SimPathStore.BLOCKED);
                 else
-                    if (IsGroundLevel() || SurroundingBump(zlevel, 0.2f))
+                    if (IsGroundLevel() || SurroundingBump(zlevel, 0.2f)||IsUnderWater())
                         PathStore.mMatrix[PX, PY] = SimPathStore.MAYBE_BLOCKED;
             }
         }
 
-        private bool SomethingBetween(float low, float high, IEnumerable OccupiedListObject)
+        internal bool SomethingBetween(float low, float high, IEnumerable OccupiedListObject)
         {
             if (IsSolid == 0) return false;
             lock (OccupiedListObject) foreach (SimObject O in OccupiedListObject)
-            {
-                if (!O.IsPassable)
                 {
-                    Vector2 box = O.GetMinMaxZ(Point);
-                    if (low > box.Y) continue;
-                    if (high < box.X) continue;
-                    return true;
+                    if (!O.IsPassable)
+                    {
+                        Vector2 box = O.GetMinMaxZ(Point);
+                        if (low > box.Y) continue;
+                        if (high < box.X) continue;
+                        return true;
+                    }
                 }
-            }
             return false;
         }
 
@@ -126,7 +142,7 @@ namespace cogbot.TheOpenSims.Navigation
             return false;
         }
 
-        private float WpLevel(int PX, int PY)
+        internal float WpLevel(int PX, int PY)
         {
             SimWaypoint WP = PathStore.mWaypoints[PX, PY];
             if (WP != null) return WP.GetZLevel();
@@ -154,43 +170,43 @@ namespace cogbot.TheOpenSims.Navigation
             OccupiedListObject.Sort(ZOrder);
             OccupiedListObject.Reverse();
             if (IsSolid != 0)
+            {
+                bool ChangeD = false;
+                SimObject Flooring = null;
+                for (byte d = 0; d < IsSolid; d++)
                 {
-                    bool ChangeD = false;
-                    SimObject Flooring = null;
-                    for (byte d = 0; d < IsSolid; d++)
-                    {              
-                        lock (OccupiedListObject)
-                            foreach (SimObject O in OccupiedListObject)
+                    lock (OccupiedListObject)
+                        foreach (SimObject O in OccupiedListObject)
+                        {
+                            if (O.IsPassable) continue;
+                            Vector2 MM = O.GetMinMaxZ(Point);
+                            float MinZ = MM.X;// = O.OuterBox.MinZ;
+                            float MaxZ = MM.Y;// = O.OuterBox.MaxZ;
+                            //bool wpfound = O.GetZLevel(Point, out MinZ, out MaxZ);
                             {
-                                if (O.IsPassable) continue;
-                                Vector2 MM = O.GetMinMaxZ(Point);
-                                float MinZ = MM.X;// = O.OuterBox.MinZ;
-                                float MaxZ = MM.Y;// = O.OuterBox.MaxZ;
-                                //bool wpfound = O.GetZLevel(Point, out MinZ, out MaxZ);
-                                {
-                                    // The object is higher
-                                    if (_ZLevelCache < MaxZ)
-                                        // And the object is below or the bottem of object is less than a meter above or the top of object is less than 1.5 meters
-                                        if (MinZ <= _ZLevelCache || DiffLessThan(MinZ, _ZLevelCache, 1.5f) || DiffLessThan(MaxZ, _ZLevelCache, 2f))
-                                        {
-                                            Flooring = O;
-                                            ChangeD = true;
-                                            _ZLevelCache = MaxZ;
-                                        }
-                                }
-
+                                // The object is higher
+                                if (_ZLevelCache < MaxZ)
+                                    // And the object is below or the bottem of object is less than a meter above or the top of object is less than 1.5 meters
+                                    if (MinZ <= _ZLevelCache || DiffLessThan(MinZ, _ZLevelCache, 1.5f) || DiffLessThan(MaxZ, _ZLevelCache, 2f))
+                                    {
+                                        Flooring = O;
+                                        ChangeD = true;
+                                        _ZLevelCache = MaxZ;
+                                    }
                             }
-                        if (!ChangeD) break;
-                    }
-                    //if (Flooring != null)
-                    //{
-                    //    if (ChangeD) lock (OccupiedListObject)
-                    //    {
-                    //        OccupiedListObject.Remove(Flooring);
-                    //        OccupiedListObject.Insert(0, Flooring);
-                    //    }
-                    //}
+
+                        }
+                    if (!ChangeD) break;
                 }
+                //if (Flooring != null)
+                //{
+                //    if (ChangeD) lock (OccupiedListObject)
+                //    {
+                //        OccupiedListObject.Remove(Flooring);
+                //        OccupiedListObject.Insert(0, Flooring);
+                //    }
+                //}
+            }
             _LocalPos.Z = _ZLevelCache;
             _GlobalPos.Z = _ZLevelCache + 1;
             return _ZLevelCache;
@@ -234,7 +250,7 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
         // public IList ShadowList = new List<SimObject>();
-        readonly internal List<SimObject> OccupiedListObject = new List<SimObject>();
+        readonly public List<SimObject> OccupiedListObject = new List<SimObject>();
         //string OcString = null;
         //public IList<Vector2> OccupiedListMinMaxZ = new List<Vector2>();
 
@@ -248,7 +264,7 @@ namespace cogbot.TheOpenSims.Navigation
                 {
                     foreach (SimObject O in OccupiedListObject)
                     {
-                        S+= O.GetMinMaxZ(Point);
+                        S += O.GetMinMaxZ(Point);
                         S += " ";
 
 
@@ -257,7 +273,17 @@ namespace cogbot.TheOpenSims.Navigation
                     }
                 }
             }
-            return S + this.ToString() + " GLevel=" + GetGroundLevel() + " OMin/MaxZ=" + OMinZ + "/" + OMaxZ + " ZLevel=" + GetZLevel();
+            return S + this.ToString() + " "+ ExtraInfoString();
+        }
+
+        public string ExtraInfoString()
+        {
+            string S = "GLevel=" + GetGroundLevel();
+            if (OMaxZ != float.MinValue)
+                S += " OMinMaxZ=" + OMinZ + "-" + OMaxZ;
+            if (IsUnderWater()) S += " UnderWater=" + GetSimRegion().WaterHeight();
+            return S + " ZLevel=" + GetZLevel()
+             + " Maxtrix=" + GetMatrix();
         }
 
 
@@ -701,6 +727,8 @@ namespace cogbot.TheOpenSims.Navigation
             Point.X = PX;
             Point.Y = PY;
             PathStore.mWaypoints[PX, PY] = this;
+            TaintMatrix();
+            UpdateMatrix();
         }
 
         //protected Vector3d _GlobalPos;
@@ -849,7 +877,7 @@ namespace cogbot.TheOpenSims.Navigation
             return CreateLocal(SimRegion.GlobalToLocal(v3d), R.PathStore);
         }
 
-        internal void RemoveObject(SimObject simObject)
+        public void RemoveObject(SimObject simObject)
         {
             if (OccupiedListObject.Contains(simObject))
             {
@@ -860,7 +888,8 @@ namespace cogbot.TheOpenSims.Navigation
             }
         }
 
-        internal void RemeshWayppointObjects() {
+        public void RemeshWayppointObjects()
+        {
             Box3Fill changed = new Box3Fill(true);
             foreach (SimObject O in new List<SimObject>(OccupiedListObject))
             {
