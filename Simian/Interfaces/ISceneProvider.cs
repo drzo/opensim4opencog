@@ -87,6 +87,8 @@ namespace Simian
 
     #endregion Scene related classes
 
+    #region Scene delegates
+
     public delegate void ObjectAddOrUpdateCallback(object sender, SimulationObject obj, UUID ownerID, int scriptStartParam, PrimFlags creatorFlags, UpdateFlags updateFlags);
     public delegate void ObjectRemoveCallback(object sender, SimulationObject obj);
     public delegate void ObjectSetRotationAxisCallback(object sender, SimulationObject obj, Vector3 rotationAxis);
@@ -104,6 +106,8 @@ namespace Simian
     public delegate void TriggerEffectsCallback(object sender, ViewerEffect[] effects);
     public delegate void TerrainUpdateCallback(object sender, uint x, uint y, float[,] patchData);
     public delegate void WindUpdateCallback(object sender, uint x, uint y, Vector2 windSpeed);
+
+    #endregion Scene delegates
 
     public interface ISceneProvider
     {
@@ -133,22 +137,23 @@ namespace Simian
         ITaskInventoryProvider TaskInventory { get; }
         IUDPProvider UDP { get; }
 
+        X509Certificate2 RegionCertificate { get; }
         uint RegionX { get; set; }
         uint RegionY { get; set; }
         ulong RegionHandle { get; }
         UUID RegionID { get; }
         string RegionName { get; set; }
+        UUID MapTextureID { get; }
         RegionFlags RegionFlags { get; }
         Vector3 DefaultLookAt { get; }
         Vector3 DefaultPosition { get; }
         IPEndPoint IPAndPort { get; set; }
-
         float WaterHeight { get; }
-
         uint TerrainPatchWidth { get; }
         uint TerrainPatchHeight { get; }
         uint TerrainPatchCountWidth { get; }
         uint TerrainPatchCountHeight { get; }
+        float TimeDilation { get; }
 
         bool Start(Simian server, RegionInfo regionInfo, X509Certificate2 regionCert, string defaultTerrainFile, int staticObjects, int physicalObjects);
         void Stop();
@@ -198,5 +203,7 @@ namespace Simian
 
         bool EnableClientCapHandler(IHttpClientContext context, IHttpRequest request, IHttpResponse response, object state);
         bool EnableClientCompleteCapHandler(IHttpClientContext context, IHttpRequest request, IHttpResponse response, object state);
+
+        void InformClientOfNeighbors(Agent agent);
     }
 }
