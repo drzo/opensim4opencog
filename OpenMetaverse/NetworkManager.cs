@@ -415,7 +415,7 @@ namespace OpenMetaverse
             if (simulator == null)
             {
                 // We're not tracking this sim, create a new Simulator object
-                simulator = new Simulator(Client, endPoint, handle);
+                simulator = Simulator.CreateSimulator(Client, endPoint, handle);
 
                 // Immediately add this simulator to the list of current sims. It will be removed if the
                 // connection fails
@@ -484,8 +484,13 @@ namespace OpenMetaverse
                 else
                 {
                     // Connection failed, remove this simulator from our list and destroy it
-                    lock (Simulators) Simulators.Remove(simulator);
-                    return null;
+                    if (!Settings.OPENSIM_WORKARROUND)
+                    {
+                        Console.WriteLine("not removbing this ");
+                        lock (Simulators) Simulators.Remove(simulator);
+                        return null;
+                    }
+                    return simulator;
                 }
             }
             else if (setDefault)
@@ -567,6 +572,7 @@ namespace OpenMetaverse
         /// <param name="sendCloseCircuit"></param>
         public void DisconnectSim(Simulator sim, bool sendCloseCircuit)
         {
+
             if (sim != null)
             {
                 sim.Disconnect(sendCloseCircuit);
@@ -576,6 +582,12 @@ namespace OpenMetaverse
                 {
                     try { OnSimDisconnected(sim, DisconnectType.NetworkTimeout); }
                     catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                }
+
+                if (Settings.OPENSIM_WORKARROUND)
+                {
+                    Console.WriteLine("OPENSIM_WORKARROUND not DisconnectSim " + sim);
+                     //return;
                 }
 
                 lock (Simulators) Simulators.Remove(sim);
@@ -834,6 +846,12 @@ namespace OpenMetaverse
 
         private void DisconnectTimer_Elapsed(object obj)
         {
+            if (Settings.OPENSIM_WORKARROUND)
+            {
+                Console.WriteLine("DisconnectTimer_Elapsed " + this);
+             //   return;
+            }
+
             if (!connected || CurrentSim == null)
             {
                 if (DisconnectTimer != null) DisconnectTimer.Dispose();
