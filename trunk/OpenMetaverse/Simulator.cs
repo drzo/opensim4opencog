@@ -361,7 +361,9 @@ namespace OpenMetaverse
         public IPEndPoint IPEndPoint { get { return remoteEndPoint; } }
         /// <summary>Whether there is a working connection to the simulator or 
         /// not</summary>
-        public bool Connected { get { return connected; } }
+        public bool Connected { get {
+            if (!connected) Console.WriteLine("unconnected sim: " + this);
+            return connected; } }
         /// <summary>Coarse locations of avatars in this simulator</summary>
         public Dictionary<UUID, Vector3> AvatarPositions { get { return avatarPositions; } }
         /// <summary>AvatarPositions index representing your avatar</summary>
@@ -407,13 +409,19 @@ namespace OpenMetaverse
 
         #endregion Internal/Private Members
 
+
+        static public Simulator CreateSimulator(GridClient client, IPEndPoint address, ulong handle)
+        {
+
+            return new Simulator(client, address, handle,true);
+        }
         /// <summary>
         /// 
         /// </summary>
         /// <param name="client">Reference to the GridClient object</param>
         /// <param name="address">IPEndPoint of the simulator</param>
         /// <param name="handle">handle of the simulator</param>
-        public Simulator(GridClient client, IPEndPoint address, ulong handle)
+        private Simulator(GridClient client, IPEndPoint address, ulong handle, bool b)
             : base(address)
         {
             Client = client;

@@ -41,6 +41,7 @@ namespace OpenMetaverse
     {
         #region Login/Networking Settings
 
+        public const bool OPENSIM_WORKARROUND = false;
         /// <summary>Main grid login server</summary>
         public const string AGNI_LOGIN_SERVER = "https://login.agni.lindenlab.com/cgi-bin/login.cgi";
 
