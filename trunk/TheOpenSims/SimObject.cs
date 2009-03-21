@@ -430,23 +430,15 @@ namespace cogbot.TheOpenSims
         {
             bool changed = false;
             PrimFlags tempFlags = Prim.Flags;
-            if (MadePhantom && (tempFlags & PrimFlags.Phantom) != PrimFlags.Phantom)
+            if (MadePhantom)
             {
-                WorldSystem.client.Self.Touch(Prim.LocalID);
-                tempFlags -= PrimFlags.Phantom;
+                actor.Touch(this);
                 changed = true;
-                MadePhantom = false;
+                IsPhantom = false;
             }
-            if (MadeNonPhysical && (tempFlags & PrimFlags.Physics) == 0)
-            {
-                tempFlags |= PrimFlags.Physics;
-                changed = true;
-                MadeNonPhysical = false;
-            }
-            if (changed) WorldSystem.SetPrimFlags(Prim, tempFlags);
             if (!IsRoot())
             {
-                if (Parent.RestoreEnterable(actor)) return true;
+                return Parent.RestoreEnterable(actor);
             }
             return changed;
         }
@@ -462,29 +454,26 @@ namespace cogbot.TheOpenSims
                 }
                 return false;
             }
-            return false;
-            bool changed = false;
-            PrimFlags tempFlags = Prim.Flags;
-            if ((tempFlags & PrimFlags.Phantom) == 0)
-            {
-                WorldSystem.client.Self.Touch(Prim.LocalID);
-                tempFlags |= PrimFlags.Phantom;
-                changed = true;
-                MadePhantom = true;
-            }
-            if ((tempFlags & PrimFlags.Physics) != 0)
-            {
-                tempFlags -= PrimFlags.Physics;
-                changed = true;
-                MadeNonPhysical = true;
-            }
-            if (changed) WorldSystem.SetPrimFlags(Prim, tempFlags);
+
             if (!IsRoot())
             {
-                if (Parent.MakeEnterable(actor)) return true;
+                return Parent.MakeEnterable(actor);
+            }
+
+            bool changed = false;
+            if (!IsPhantom)
+            {
+                IsPhantom = true;
+                actor.Touch(this);
+                changed = true;
+                // reset automatically after 30 seconds
+                new Thread(new ThreadStart(delegate()
+                {
+                    Thread.Sleep(30000);
+                    IsPhantom = false;
+                })).Start();
             }
             return changed;
-
         }
 
         string _TOSRTING;
