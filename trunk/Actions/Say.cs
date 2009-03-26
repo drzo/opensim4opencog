@@ -20,7 +20,7 @@ namespace cogbot.Actions
 
             if (args.str.Length > 0)
             {
-                Client.Talk(args.str);
+                TheBotClient.Talk(args.str);
             }
         }
     }

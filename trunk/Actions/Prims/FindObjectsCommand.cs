@@ -11,10 +11,11 @@ namespace cogbot.Actions
     {
         Dictionary<UUID, Primitive> PrimsWaiting = new Dictionary<UUID, Primitive>();
         AutoResetEvent AllPropertiesReceived = new AutoResetEvent(false);
+        ObjectManager.ObjectPropertiesCallback callback;
 
         public FindObjectsCommand(BotClient testClient)
         {
-            testClient.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
+            callback = new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
 
             Name = "findobjects";
             Description = "Finds all objects, which name contains search-string. " +
@@ -33,30 +34,41 @@ namespace cogbot.Actions
             // *** get current location ***
             Vector3 location = Client.Self.SimPosition;
 
-            // *** find all objects in radius ***
-            List<Primitive> prims = Client.Network.CurrentSim.ObjectsPrimitives.FindAll(
-                delegate(Primitive prim) {
-                    Vector3 pos = prim.Position;
-                    return ((prim.ParentID == 0) && (pos != Vector3.Zero) && (Vector3.Distance(pos, location) < radius));
+            try
+            {
+                Client.Objects.OnObjectProperties += callback;
+                // *** find all objects in radius ***
+                List<Primitive> prims = Client.Network.CurrentSim.ObjectsPrimitives.FindAll(
+                    delegate(Primitive prim)
+                    {
+                        Vector3 pos = prim.Position;
+                        return ((prim.ParentID == 0) && (pos != Vector3.Zero) && (Vector3.Distance(pos, location) < radius));
+                    }
+                );
+
+                // *** request properties of these objects ***
+                bool complete = RequestObjectProperties(prims, 250);
+
+                foreach (Primitive p in prims)
+                {
+                    string name = p.Properties.Name;
+                    if ((name != null) && (name.Contains(searchString)))
+                        WriteLine(String.Format("Object '{0}': {1}", name, p.ID.ToString()));
                 }
-            );
 
-            // *** request properties of these objects ***
-            bool complete = RequestObjectProperties(prims, 250);
+                if (!complete)
+                {
+                    WriteLine("Warning: Unable to retrieve full properties for:");
+                    foreach (UUID uuid in PrimsWaiting.Keys)
+                        WriteLine(uuid.ToString());
+                }
 
-            foreach (Primitive p in prims) {
-                string name = p.Properties.Name;
-                if ((name != null) && (name.Contains(searchString)))
-                    WriteLine(String.Format("Object '{0}': {1}", name, p.ID.ToString()));
+                return "Done searching";
             }
-
-            if (!complete) {
-                WriteLine("Warning: Unable to retrieve full properties for:");
-                foreach (UUID uuid in PrimsWaiting.Keys)
-                    WriteLine(uuid.ToString());
+            finally
+            {
+                Client.Objects.OnObjectProperties -= callback;
             }
-            
-            return "Done searching";
         }
 
         private bool RequestObjectProperties(List<Primitive> objects, int msPerRequest)

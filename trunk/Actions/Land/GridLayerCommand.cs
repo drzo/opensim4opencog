@@ -5,17 +5,21 @@ namespace cogbot.Actions
 {
     public class GridLayerCommand : Command
     {
+        bool registeredCallback = false;
         public GridLayerCommand(BotClient testClient)
         {
             Name = "gridlayer";
             Description = "Downloads all of the layer chunks for the grid object map";
             Category = CommandCategory.Simulator;
-
-            testClient.Grid.OnGridLayer += new GridManager.GridLayerCallback(Grid_OnGridLayer);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
+            if (!registeredCallback)
+            {
+                registeredCallback = true;
+                Client.Grid.OnGridLayer += new GridManager.GridLayerCallback(Grid_OnGridLayer);
+            }
             Client.Grid.RequestMapLayer(GridLayerType.Objects);
 
             return "Sent.";

@@ -18,6 +18,7 @@ namespace cogbot.Actions
         {
             //base.acceptInput(verb, args);
 
+            BotClient Client = TheBotClient;
             if (args.objectPhrase.Length == 0)
             {
                 foreach (string action in Client.Commands.Keys)

@@ -31,7 +31,7 @@ namespace cogbot.Tutorials
                 XMLTutorial = new XmlReader(TutorialPath);
             else { };
             parent = _parent;
-            client = botclient;// parent.CurrentClient;                   
+            client = botclient.gridClient;// parent.CurrentClient;                   
         }
 
         public virtual string makeHelpString()

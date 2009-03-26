@@ -17,6 +17,19 @@ namespace cogbot.Listeners
 
     public class WorldObjects : DebugAllEvents
     {
+        public static implicit operator GridClient(WorldObjects m)
+        {
+            return m.client;
+        }
+        internal static BotClient BotClientFor(GridClient client)
+        {
+            foreach (BotClient bc in TextForm.SingleInstance.Clients.Values)
+            {
+                if (bc.gridClient == client) return bc;
+            }
+            return null;
+        }
+
         public SimGlobalRoutes GlobalRoutes = SimGlobalRoutes.Instance;
         public SimPathStore SimPaths
         {
@@ -44,7 +57,7 @@ namespace cogbot.Listeners
             {
                 EnsureSimulator(simulator);
                 IsConnected = true;
-                if (SimRegion.IsMaster(simulator, client))
+                if (SimRegion.IsMaster(simulator, client.gridClient))
                 {
                     Debug("---SIMMASTER---------" + client + " region: " + simulator);
                     WorldMaster(true);
@@ -145,8 +158,7 @@ namespace cogbot.Listeners
                 if (isMaster) Master = this;
                 if (MasteringRegions.Count > 0 && !isMaster) throw new ArgumentException("Cant unmaster!");
 
-                client.Settings.OBJECT_TRACKING = isMaster;
-                client.Settings.SEND_PINGS = true;
+               // client.Settings.OBJECT_TRACKING = isMaster;
 
                 if (isMaster) RegisterAll();
                 }
@@ -267,14 +279,22 @@ namespace cogbot.Listeners
 
         static void TrackPaths()
         {
-            for (int i = 0; i < 10; i++)
-            {
-                Thread.Sleep(1000);
-                Application.DoEvents();
-            }
+
             int lastCount = 0;
             while (true)
             {
+                for (int i = 0; i < 10; i++)
+                {
+                    Thread.Sleep(1000);
+                    try
+                    {
+                        Application.DoEvents();
+                    }
+                    catch (Exception e)
+                    {
+                        Debug("" + e);
+                    }
+                }
                 ObjectUpdateItem U;
                 int updates = 0;
                 lock (updateQueue)
@@ -370,7 +390,7 @@ namespace cogbot.Listeners
         public void CatchUp(Simulator simulator)
         {
             List<Primitive> primsCatchup = new List<Primitive>();
-            lock (simulator.ObjectsPrimitives.Dictionary)
+           // lock (simulator.ObjectsPrimitives.Dictionary)
                 simulator.ObjectsPrimitives.ForEach(delegate(Primitive item)
                 {
                     primsCatchup.Add(item);
@@ -693,6 +713,7 @@ namespace cogbot.Listeners
             //            SendNewEvent("on-effect",targetPos,id)
             RegisterUUID(id, type);
             base.Avatars_OnEffect(type, sourceID, targetID, targetPos, duration, id);
+            SimRegion.TaintArea(targetPos);
         }
 
         public static void RegisterUUID(UUID id, object type)
@@ -701,6 +722,7 @@ namespace cogbot.Listeners
             {
                 Debug("cant register " + type);
             }
+            if (type is SimObject)
             lock (uuidTypeObject) uuidTypeObject[id] = type;
         }
         /*
@@ -837,7 +859,7 @@ namespace cogbot.Listeners
                 Debug("Strange update" + simulator);
                 base.Objects_OnObjectUpdated(simulator, update, regionHandle, timeDilation);
             }
-           // return;
+            // return;
             CheckConnected(simulator);
             if (update.Avatar)
             {
@@ -855,29 +877,31 @@ namespace cogbot.Listeners
                     }
                     if (AV != null)
                     {
-                        ulong rh = AV.theAvatar.RegionHandle;
-                        if (!OutOfRegion(update.Position))
                         {
-                            if (rh != regionHandle)
+                            ulong rh = AV.theAvatar.RegionHandle;
+                            if (!OutOfRegion(update.Position))
                             {
-                                AV.ResetRegion(regionHandle);
+                                if (rh != regionHandle)
+                                {
+                                    AV.ResetRegion(regionHandle);
+                                }
+                                AV.Prim = (Avatar)av;
                             }
-                            AV.Prim = (Avatar)av;
                         }
-                    }
-                    if (av.ParentID == 0 && !OutOfRegion(update.Position))
-                    {
-                        SimPathStore PathStore = SimRegion.GetRegion(simulator).PathStore;
-                        PathStore.UpdateTraveled(av.ID, av.Position, av.Rotation);
+                        if (av.ParentID == 0 && !OutOfRegion(update.Position))
+                        {
+                            SimPathStore PathStore = SimRegion.GetRegion(simulator).PathStore;
+                            PathStore.UpdateTraveled(av.ID, av.Position, av.Rotation);
+                        }
                     }
                 }
                 return;
             }
-            return;
             lock (updateQueue) updateQueue.Enqueue(delegate()
-          {
-              Objects_OnObjectUpdated1(simulator, update, regionHandle, timeDilation);
-          });
+                {
+                    Objects_OnObjectUpdated1(simulator, update, regionHandle, timeDilation);
+                });
+
         }
 
         internal bool OutOfRegion(Vector3 v3)
@@ -891,6 +915,7 @@ namespace cogbot.Listeners
 
         public void Objects_OnObjectUpdated1(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
         {
+            // base.Objects_OnObjectUpdated(simulator, update, regionHandle, timeDilation);
             Primitive objectUpdated = GetPrimitive(update.LocalID, simulator);
             //Debug("timeDilation " + timeDilation);
 
@@ -973,6 +998,7 @@ namespace cogbot.Listeners
                                     lastObjectUpdateDiff[objectUpdated.ID] = TheDiff;
                                 }
                             }
+                            SendNewEvent("OnObjectUpdated1", simObject, update);
                             simObject.UpdateObject(update, TheDiff);
                         }
                     }
@@ -1003,13 +1029,13 @@ namespace cogbot.Listeners
 
                     //Primitive deep = (Primitive)deepCopy(objectUpdated);
                     //lastDeepCopy[objectUpdated.ID] = deep;
+                    lock (lastObjectUpdate) lastObjectUpdate[objectUpdated.ID] = update;
                 }
             }
             else
             {
                 output("missing Objects_OnObjectUpdated");
             }
-            lock (lastObjectUpdate) lastObjectUpdate[objectUpdated.ID] = update;
         }
 
         delegate object DoWhat(Primitive objectUpdated, string p, Object vector3, Object vector3_4, Object diff);
@@ -1918,7 +1944,9 @@ namespace cogbot.Listeners
         {
             if (thePrim is Avatar) return;
             SimObjects.Remove(GetSimObject(thePrim));
-            // client.Inventory.RequestDeRezToInventory(thePrim.LocalID);
+            uint objectLocalID = thePrim.LocalID;
+            client.Inventory.RequestDeRezToInventory(objectLocalID, DeRezDestination.AgentInventoryTake,
+                    client.Inventory.FindFolderForType(AssetType.TrashFolder), UUID.Random());
         }
 
         public Primitive RequestMissingObject(uint localID, Simulator simulator)
@@ -2127,6 +2155,127 @@ namespace cogbot.Listeners
             Debug("-|-|- SUCCEED SculptMesh " + uUID);
 
             return ID.AssetData;
+        }
+
+        internal void SetObjectPosition(Primitive Prim, Vector3 localPos)
+        {
+            Simulator sim = GetSimulator(Prim.RegionHandle);
+            client.Objects.SetPosition(sim, Prim.LocalID, localPos);
+        }
+
+        internal void SetObjectRotation(Primitive Prim, Quaternion localPos)
+        {
+            Simulator sim = GetSimulator(Prim.RegionHandle);
+            client.Objects.SetRotation(sim, Prim.LocalID, localPos);
+        }
+
+        internal Simulator GetSimulator(ulong handle)
+        {
+            lock (client.Network.Simulators)
+            {
+                foreach (Simulator sim in client.Network.Simulators)
+                {
+                    if (sim.Handle == handle && sim.Connected) return sim;
+                }
+            }
+            lock (AllSimulators)
+            {
+                foreach (Simulator sim in AllSimulators)
+                {
+                    if (sim.Handle == handle && sim.Connected) return sim;
+                }
+            }
+            return SimRegion.GetRegion(handle).TheSimulator;
+        }
+
+        internal static void ResetSelectedObjects()
+        {
+            lock (primsSelected) foreach (List<uint> UInts in primsSelected.Values)
+            {
+                lock (UInts) UInts.Clear();
+            }
+        }
+
+        internal void ReSelectObject(Primitive P)
+        {
+            Simulator sim = GetSimulator(P.RegionHandle);
+            client.Objects.SelectObject(sim, P.LocalID);
+        }
+
+        internal Primitive AddTempPrim(SimRegion R, string name, PrimType primType, Vector3 scale, Vector3 loc)
+        {
+            OpenMetaverse.Primitive.ConstructionData CD = ObjectManager.BuildBasicShape(primType);
+            CD.Material = Material.Light;
+            CD.ProfileHole = HoleType.Triangle;
+            
+            bool success = false;
+
+            Simulator simulator = R.TheSimulator;
+            Primitive newPrim = null;
+            // Register a handler for the creation event
+            AutoResetEvent creationEvent = new AutoResetEvent(false);
+            Quaternion rot = Quaternion.Identity;
+            OpenMetaverse.ObjectManager.NewPrimCallback callback =
+                delegate(Simulator simulator0, Primitive prim, ulong regionHandle, ushort timeDilation) {
+                    if (regionHandle != R.RegionHandle) return;
+                    if ((loc - prim.Position).Length() > 3)
+                    {
+                        Debug("Not the prim " + (loc - prim.Position).Length());
+                        return;
+                    }
+                    if ( prim.PrimData.ProfileHole != HoleType.Triangle)
+                    {
+                        Debug("Not the prim?  prim.PrimData.ProfileHole != HoleType.Triangle: {0}!={1}", prim.PrimData.ProfileHole , HoleType.Triangle);
+                       // return;       //
+                    }
+                    if (Material.Light != prim.PrimData.Material)
+                    {
+                        Debug("Not the prim? Material.Light != prim.PrimData.Material: {0}!={1}", Material.Light, prim.PrimData.Material);
+                       // return;
+                    }
+                    if ((prim.Flags & PrimFlags.CreateSelected) == 0) 
+                    {
+                        Debug("Not the prim? (prim.Flags & PrimFlags.CreateSelected) == 0) was {0}",prim.Flags);
+                        // return;
+                    }
+                    if (primType != prim.Type)
+                    {
+                        Debug("Not the prim? Material.Light != prim.PrimData.Material: {0}!={1}", Material.Light, prim.PrimData.Material);
+                       // return;
+                    }
+                    //if (prim.Scale != scale) return;
+               //     if (prim.Rotation != rot) return;
+
+                  //  if (Material.Light != prim.PrimData.Material) return;
+                    //if (CD != prim.PrimData) return;
+                    newPrim = prim;
+                    creationEvent.Set(); };
+
+            client.Objects.OnNewPrim += callback;
+
+            // Start the creation setting process (with baking enabled or disabled)
+            client.Objects.AddPrim(simulator, CD, UUID.Zero, loc, scale, rot, PrimFlags.CreateSelected | PrimFlags.Phantom | PrimFlags.Temporary);
+
+            // Wait for the process to complete or time out
+            if (creationEvent.WaitOne(1000 * 120, false))
+                success = true;
+
+            // Unregister the handler
+            client.Objects.OnNewPrim -= callback;
+
+            // Return success or failure message
+            if (!success)
+            {
+                Debug("Timeout on new prim " + name);
+                return null;
+            }
+            uint LocalID = newPrim.LocalID;
+            client.Objects.SetName(simulator, LocalID, name);
+            client.Objects.SetPosition(simulator, LocalID, loc);
+            client.Objects.SetScale(simulator, LocalID, scale,true,true);
+            client.Objects.SetRotation(simulator, LocalID, rot);
+            client.Objects.SetFlags(LocalID, false, true, true, false);
+            return newPrim;
         }
     }
 }

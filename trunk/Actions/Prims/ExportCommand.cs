@@ -17,13 +17,22 @@ namespace cogbot.Actions
 
         Dictionary<UUID, Primitive> PrimsWaiting = new Dictionary<UUID, Primitive>();
         AutoResetEvent AllPropertiesReceived = new AutoResetEvent(false);
+        bool registeredCallbacks = false;
+
+        void RegisterCallbacks()
+        {
+            if (!registeredCallbacks)
+            {
+                registeredCallbacks = true;
+                Client.Objects.OnObjectPropertiesFamily += new ObjectManager.ObjectPropertiesFamilyCallback(Objects_OnObjectPropertiesFamily);
+                Client.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
+                Client.Assets.OnImageReceived += new AssetManager.ImageReceivedCallback(Assets_OnImageReceived);
+                Client.Avatars.OnPointAt += new AvatarManager.PointAtCallback(Avatars_OnPointAt);
+            }
+        }
 
         public ExportCommand(BotClient testClient)
         {
-            testClient.Objects.OnObjectPropertiesFamily += new ObjectManager.ObjectPropertiesFamilyCallback(Objects_OnObjectPropertiesFamily);
-            testClient.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
-            testClient.Assets.OnImageReceived += new AssetManager.ImageReceivedCallback(Assets_OnImageReceived);
-            testClient.Avatars.OnPointAt += new AvatarManager.PointAtCallback(Avatars_OnPointAt);
 
             Name = "export";
             Description = "Exports an object to an xml file. Usage: export uuid outputfile.xml";
@@ -64,6 +73,7 @@ namespace cogbot.Actions
                 else
                     localid = exportPrim.LocalID;
 
+                RegisterCallbacks();
                 // Check for export permission first
                 Client.Objects.RequestObjectPropertiesFamily(Client.Network.CurrentSim, id);
                 GotPermissionsEvent.WaitOne(1000 * 10, false);

@@ -28,7 +28,7 @@ namespace cogbot.Actions
 
             if (to.Length > 0) {
                 Avatar avatar;
-                if (!Client.WorldSystem.tryGetAvatar(to, out avatar))
+                if (!WorldSystem.tryGetAvatar(to, out avatar))
                 {
                     WriteLine("I don't know who " + to + "is.");
                     return;

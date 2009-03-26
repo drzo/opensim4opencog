@@ -19,13 +19,14 @@ namespace cogbot.Actions
             Description = "obtain parcel voice info. Usage: voiceparcel";
             Category = CommandCategory.Other;
 
-            Client = testClient;
+            TheBotClient = testClient;
         }
 
         private bool registered = false;
 
         private bool IsVoiceManagerRunning() 
         {
+            BotClient Client = TheBotClient;
             if (null == Client.VoiceManager) return false;
             
             if (!registered)
@@ -39,6 +40,7 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
+            BotClient Client = TheBotClient;
             if (!IsVoiceManagerRunning()) 
                 return String.Format("VoiceManager not running for {0}", fromAgentID);
 

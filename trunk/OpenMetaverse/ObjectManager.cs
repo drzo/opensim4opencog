@@ -218,7 +218,7 @@ namespace OpenMetaverse
         /// <param name="oldSeat"></param>
         /// on. If this is zero the avatar is not sitting on an object</param>
         public delegate void AvatarSitChanged(Simulator simulator, Avatar avatar, uint sittingOn, uint oldSeat);
-		
+
         #endregion Delegates
 
         #region Events
@@ -404,7 +404,7 @@ namespace OpenMetaverse
         /// 100, UUID.Zero, Client.Self.InventoryRootFolderUUID);
         /// </code> 
         ///</example>
-        public void BuyObject(Simulator simulator, uint localID, SaleType saleType, int price, UUID groupID, 
+        public void BuyObject(Simulator simulator, uint localID, SaleType saleType, int price, UUID groupID,
             UUID categoryID)
         {
             ObjectBuyPacket buy = new ObjectBuyPacket();
@@ -617,8 +617,15 @@ namespace OpenMetaverse
         /// follow up by moving the object after it has been created. This
         /// function will not set textures, light and flexible data, or other 
         /// extended primitive properties</remarks>
-        public void AddPrim(Simulator simulator, Primitive.ConstructionData prim, UUID groupID, Vector3 position, 
+        public void AddPrim(Simulator simulator, Primitive.ConstructionData prim, UUID groupID, Vector3 position,
             Vector3 scale, Quaternion rotation)
+        {
+            AddPrim(simulator, prim, groupID, position, scale, rotation, PrimFlags.CreateSelected);
+        }
+
+
+        public void AddPrim(Simulator simulator, Primitive.ConstructionData prim, UUID groupID, Vector3 position,
+            Vector3 scale, Quaternion rotation, PrimFlags addFlags)
         {
             ObjectAddPacket packet = new ObjectAddPacket();
 
@@ -627,7 +634,7 @@ namespace OpenMetaverse
             packet.AgentData.GroupID = groupID;
 
             packet.ObjectData.State = prim.State;
-            packet.ObjectData.AddFlags = (uint)PrimFlags.CreateSelected;
+            packet.ObjectData.AddFlags = (uint)addFlags;// (uint)PrimFlags.CreateSelected;
             packet.ObjectData.PCode = (byte)PCode.Prim;
 
             packet.ObjectData.Material = (byte)prim.Material;
@@ -674,7 +681,7 @@ namespace OpenMetaverse
         /// <param name="groupOwner">The <seealso cref="UUID"/> of the group to set the tree to, 
         /// or UUID.Zero if no group is to be set</param>
         /// <param name="newTree">true to use the "new" Linden trees, false to use the old</param>
-        public void AddTree(Simulator simulator, Vector3 scale, Quaternion rotation, Vector3 position, 
+        public void AddTree(Simulator simulator, Vector3 scale, Quaternion rotation, Vector3 position,
             Tree treeType, UUID groupOwner, bool newTree)
         {
             ObjectAddPacket add = new ObjectAddPacket();
@@ -777,12 +784,12 @@ namespace OpenMetaverse
             extra.ObjectData[0] = new ObjectExtraParamsPacket.ObjectDataBlock();
             extra.ObjectData[0].ObjectLocalID = localID;
             extra.ObjectData[0].ParamType = (byte)ExtraParamType.Light;
-            if (light.Intensity == 0.0f) 
+            if (light.Intensity == 0.0f)
             {
                 // Disables the light if intensity is 0
                 extra.ObjectData[0].ParamInUse = false;
-            } 
-            else 
+            }
+            else
             {
                 extra.ObjectData[0].ParamInUse = true;
             }
@@ -1182,9 +1189,9 @@ namespace OpenMetaverse
 
             objDeedPacket.ObjectData = new ObjectOwnerPacket.ObjectDataBlock[1];
             objDeedPacket.ObjectData[0] = new ObjectOwnerPacket.ObjectDataBlock();
-            
+
             objDeedPacket.ObjectData[0].ObjectLocalID = localID;
-            
+
             Client.Network.SendPacket(objDeedPacket, simulator);
         }
 
@@ -1215,7 +1222,7 @@ namespace OpenMetaverse
             }
             Client.Network.SendPacket(packet, simulator);
         }
-            
+
         /// <summary>
         /// Set the permissions on multiple objects
         /// </summary>
@@ -1224,7 +1231,7 @@ namespace OpenMetaverse
         /// <param name="who">The new Who mask to set</param>
         /// <param name="permissions">The new Permissions mark to set</param>
         /// <param name="set">TODO: What does this do?</param>
-        public void SetPermissions(Simulator simulator, List<uint> localIDs, PermissionWho who, 
+        public void SetPermissions(Simulator simulator, List<uint> localIDs, PermissionWho who,
             PermissionMask permissions, bool set)
         {
             ObjectPermissionsPacket packet = new ObjectPermissionsPacket();
@@ -1282,7 +1289,7 @@ namespace OpenMetaverse
         }
 
         #endregion
-        
+
         #region Packet Handlers
 
         /// <summary>
@@ -1293,7 +1300,7 @@ namespace OpenMetaverse
         protected void UpdateHandler(Packet packet, Simulator simulator)
         {
             ObjectUpdatePacket update = (ObjectUpdatePacket)packet;
-			UpdateDilation(simulator, update.RegionData.TimeDilation);
+            UpdateDilation(simulator, update.RegionData.TimeDilation);
 
             for (int b = 0; b < update.ObjectData.Length; b++)
             {
@@ -1507,12 +1514,12 @@ namespace OpenMetaverse
                     case PCode.Prim:
                         Primitive prim = GetPrimitive(simulator, block.ID, block.FullID);
 
-                        #region Update Prim Info with decoded data                            
+                        #region Update Prim Info with decoded data
                         prim.Flags = (PrimFlags)block.UpdateFlags;
 
                         if ((prim.Flags & PrimFlags.ZlibCompressed) != 0)
                         {
-                            Logger.Log("Got a ZlibCompressed ObjectUpdate, implement me!", 
+                            Logger.Log("Got a ZlibCompressed ObjectUpdate, implement me!",
                                 Helpers.LogLevel.Warning, Client);
                             continue;
                         }
@@ -1527,7 +1534,7 @@ namespace OpenMetaverse
                         prim.LocalID = block.ID;
                         prim.ID = block.FullID;
                         prim.ParentID = block.ParentID;
-					    prim.RegionHandle = update.RegionData.RegionHandle;
+                        prim.RegionHandle = update.RegionData.RegionHandle;
                         prim.Scale = block.Scale;
                         prim.ClickAction = (ClickAction)block.ClickAction;
                         prim.OwnerID = block.OwnerID;
@@ -1545,7 +1552,7 @@ namespace OpenMetaverse
                         prim.Joint = (JointType)block.JointType;
                         prim.JointPivot = block.JointPivot;
                         prim.JointAxisOrAnchor = block.JointAxisOrAnchor;
-                        
+
                         // Object parameters
                         prim.PrimData = data;
 
@@ -1575,7 +1582,7 @@ namespace OpenMetaverse
                                     Buffer.BlockCopy(block.Data, 0, prim.ScratchPad, 0, prim.ScratchPad.Length);
                                 break;
                         }
-                        
+
                         // Packed parameters
                         prim.CollisionPlane = collisionPlane;
                         prim.Position = position;
@@ -1586,10 +1593,10 @@ namespace OpenMetaverse
                         #endregion
 
                         if (attachment)
-                            FireOnNewAttachment(simulator, prim, update.RegionData.RegionHandle, 
+                            FireOnNewAttachment(simulator, prim, update.RegionData.RegionHandle,
                                 update.RegionData.TimeDilation);
                         else
-                            FireOnNewPrim(simulator, prim, update.RegionData.RegionHandle, 
+                            FireOnNewPrim(simulator, prim, update.RegionData.RegionHandle,
                                 update.RegionData.TimeDilation);
 
                         break;
@@ -1600,10 +1607,10 @@ namespace OpenMetaverse
                         if (block.FullID == Client.Self.AgentID)
                         {
                             #region Update Client.Self
-                            
+
                             // We need the local ID to recognize terse updates for our agent
                             Client.Self.localID = block.ID;
-                            
+
                             // Packed parameters
                             Client.Self.collisionPlane = collisionPlane;
                             Client.Self.relativePosition = position;
@@ -1637,12 +1644,12 @@ namespace OpenMetaverse
                         SetAvatarSittingOn(simulator, avatar, block.ParentID, oldSeatID);
 
                         // Textures
-                        avatar.Textures = new Primitive.TextureEntry(block.TextureEntry, 0, 
+                        avatar.Textures = new Primitive.TextureEntry(block.TextureEntry, 0,
                             block.TextureEntry.Length);
 
                         #endregion Create an Avatar from the decoded data
 
-                        FireOnNewAvatar(simulator, avatar, update.RegionData.RegionHandle, 
+                        FireOnNewAvatar(simulator, avatar, update.RegionData.RegionHandle,
                             update.RegionData.TimeDilation);
 
                         break;
@@ -1710,8 +1717,8 @@ namespace OpenMetaverse
         protected void TerseUpdateHandler(Packet packet, Simulator simulator)
         {
             ImprovedTerseObjectUpdatePacket terse = (ImprovedTerseObjectUpdatePacket)packet;
-			UpdateDilation(simulator, terse.RegionData.TimeDilation);
-			
+            UpdateDilation(simulator, terse.RegionData.TimeDilation);
+
             for (int i = 0; i < terse.ObjectData.Length; i++)
             {
                 ImprovedTerseObjectUpdatePacket.ObjectDataBlock block = terse.ObjectData[i];
@@ -1778,7 +1785,7 @@ namespace OpenMetaverse
                     #endregion Decode update data
 
                     Primitive obj = (update.Avatar) ?
-                        (Primitive)GetAvatar(simulator, update.LocalID, UUID.Zero):
+                        (Primitive)GetAvatar(simulator, update.LocalID, UUID.Zero) :
                         (Primitive)GetPrimitive(simulator, update.LocalID, UUID.Zero);
 
                     #region Update Client.Self
@@ -1801,7 +1808,7 @@ namespace OpenMetaverse
                     obj.Velocity = update.Velocity;
                     if (update.Textures != null)
                         obj.Textures = update.Textures;
-                    
+
                     // Fire the callback
                     FireOnObjectUpdated(simulator, update, terse.RegionData.RegionHandle, terse.RegionData.TimeDilation);
                 }
@@ -2380,7 +2387,7 @@ namespace OpenMetaverse
         {
             if (av.LocalID == Client.Self.localID) Client.Self.sittingOn = localid;
             av.ParentID = localid;
-            
+
             if (OnAvatarSitChanged != null && oldSeatID != localid)
             {
                 try { OnAvatarSitChanged(sim, av, localid, oldSeatID); }
@@ -2393,8 +2400,8 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="s"></param>
         /// <param name="dilation"></param>
-		protected void UpdateDilation(Simulator s, uint dilation)
-		{
+        protected void UpdateDilation(Simulator s, uint dilation)
+        {
             s.Stats.Dilation = (float)dilation / 65535.0f;
         }
 

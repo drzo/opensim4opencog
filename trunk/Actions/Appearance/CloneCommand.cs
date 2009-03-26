@@ -39,7 +39,7 @@ namespace cogbot.Actions
                 {
                     #region AvatarAppearance to AgentSetAppearance
 
-                    AvatarAppearancePacket appearance = Client.Appearances[target];
+                    AvatarAppearancePacket appearance = TheBotClient.Appearances[target];
 
                     AgentSetAppearancePacket set = new AgentSetAppearancePacket();
                     set.AgentData.AgentID = Client.Self.AgentID;

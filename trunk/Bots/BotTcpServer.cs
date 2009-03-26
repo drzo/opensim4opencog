@@ -23,7 +23,7 @@ namespace cogbot.Utilities
         public TcpServer(int port, BotClient botclient)
         {
             parent = botclient;
-            client = botclient;
+            client = botclient.gridClient;
             serverPort = port;
             botclient.AddBotMessageSubscriber(this);
 

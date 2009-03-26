@@ -20,7 +20,7 @@ namespace cogbot.Actions
             WriteLine("You stopped flying.");
             Client.Self.Fly(false);
 
-            Client.describeNext = true;
+            TheBotClient.describeNext = true;
         }
     }
 }

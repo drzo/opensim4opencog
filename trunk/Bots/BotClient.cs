@@ -19,8 +19,50 @@ using cogbot.TheOpenSims;
 
 namespace cogbot
 {
-	public class BotClient : GridClient,SimEventSubscriber {
+	public class BotClient :SimEventSubscriber {
 
+        public static implicit operator GridClient(BotClient m)
+        {
+            return m.gridClient;
+        }
+
+        /// <summary>Networking subsystem</summary>
+        public NetworkManager Network { get { return gridClient.Network; } }
+        /// <summary>Settings class including constant values and changeable
+        /// parameters for everything</summary>
+        public Settings Settings { get { return gridClient.Settings; } }
+        /// <summary>Parcel (subdivided simulator lots) subsystem</summary>
+        public ParcelManager Parcels { get { return gridClient.Parcels; } }
+        /// <summary>Our own avatars subsystem</summary>
+        public AgentManager Self { get { return gridClient.Self; } }
+        /// <summary>Other avatars subsystem</summary>
+        public AvatarManager Avatars { get { return gridClient.Avatars; } }
+        /// <summary>Friends list subsystem</summary>
+        public FriendsManager Friends { get { return gridClient.Friends; } }
+        /// <summary>Grid (aka simulator group) subsystem</summary>
+        public GridManager Grid { get { return gridClient.Grid; } }
+        /// <summary>Object subsystem</summary>
+        public ObjectManager Objects { get { return gridClient.Objects; } }
+        /// <summary>Group subsystem</summary>
+        public GroupManager Groups { get { return gridClient.Groups; } }
+        /// <summary>Asset subsystem</summary>
+        public AssetManager Assets { get { return gridClient.Assets; } }
+        /// <summary>Appearance subsystem</summary>
+        public AppearanceManager Appearance { get { return gridClient.Appearance; } }
+        /// <summary>Inventory subsystem</summary>
+        public InventoryManager Inventory { get { return gridClient.Inventory; } }
+        /// <summary>Directory searches including classifieds, people, land 
+        /// sales, etc</summary>
+        public DirectoryManager Directory { get { return gridClient.Directory; } }
+        /// <summary>Handles land, wind, and cloud heightmaps</summary>
+        public TerrainManager Terrain { get { return gridClient.Terrain; } }
+        /// <summary>Handles sound-related networking</summary>
+        public SoundManager Sound { get { return gridClient.Sound; } }
+        /// <summary>Throttling total bandwidth usage, or allocating bandwidth
+        /// for specific data stream types</summary>
+        public AgentThrottle Throttle { get { return gridClient.Throttle; } }
+
+        public GridClient gridClient = new GridClient();
         // TODO's
         // Play Animations
         // private static UUID type_anim_uuid = new UUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
@@ -112,7 +154,7 @@ namespace cogbot
 		/// <summary>
 		/// 
 		/// </summary>
-		public BotClient(TextForm manager)
+		public BotClient(TextForm manager)            
 		{
 			ClientManager = manager;
 			manager.lastBotClient = this;
@@ -147,10 +189,10 @@ namespace cogbot
             Settings.LOGIN_TIMEOUT = 120 * 1000;
             Settings.LOGOUT_TIMEOUT = 16 * 1000;
             Settings.SIMULATOR_TIMEOUT = 5 * 60000;
-            Settings.SEND_PINGS = true;
+            Settings.SEND_PINGS = false;
             ////Settings.MULTIPLE_SIMS = false;
 
-			VoiceManager = new VoiceManager(this);
+			VoiceManager = new VoiceManager(gridClient);
 			//manager.AddBotClientToTextForm(this);
 			SetDefaultLoginDetails(TextForm.SingleInstance.config);
 
@@ -230,7 +272,7 @@ namespace cogbot
             Commands["wear"] = new Actions.Wear(this);
             Commands["stop following"] = follow;
             Commands["stop-following"] = follow;
-
+             
             RegisterAllCommands(Assembly.GetExecutingAssembly());
 
 
@@ -946,6 +988,7 @@ namespace cogbot
 				try {
 					if (t.IsSubclassOf(typeof(Command))) {
                         if (typeof(BotSystemCommand).IsAssignableFrom(t)) continue;
+                        if (typeof(BotGridClientCommand).IsAssignableFrom(t)) continue;
 						ConstructorInfo info = t.GetConstructor(new Type[]{ typeof(BotClient)});
 						try {
 							Command command = (Command)info.Invoke(new object[]{ this});
@@ -973,7 +1016,7 @@ namespace cogbot
 			if (!Commands.ContainsKey(name)) {
 				Commands.Add(name, command);
 				command.Name = name;
-				command.Client = this;
+				command.TheBotClient = this;
 			} else {
 				RegisterCommand("!" + name, command);
 			}

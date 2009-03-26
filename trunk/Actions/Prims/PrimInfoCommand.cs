@@ -49,7 +49,7 @@ namespace cogbot.Actions
         private void decscribePrim(Primitive target)
         {
             WriteLine("PrimInfo: " + target.ToString());
-            WriteLine(" Type: " + Client.WorldSystem.GetPrimTypeName(target));
+            WriteLine(" Type: " + WorldSystem.GetPrimTypeName(target));
             WriteLine(" Light: " + target.Light);
 
             if (target.ParticleSys.CRC != 0)

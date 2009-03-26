@@ -22,7 +22,7 @@ namespace cogbot.Actions
             System.Threading.Thread.Sleep(500);
             Client.Self.Jump(false);
 
-            Client.describeNext = true;
+            TheBotClient.describeNext = true;
         }
     }
 }

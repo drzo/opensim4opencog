@@ -12,6 +12,9 @@ namespace cogbot.Actions
     public interface BotSystemCommand
     {
     }
+    public interface BotGridClientCommand
+    {
+    }
     abstract public class Action
     {
         /// <summary>
@@ -51,7 +54,21 @@ namespace cogbot.Actions
 
 
         public BotClient m_Client = null;
+
         public BotClient Client
+        {
+            get
+            {
+                return TheBotClient;
+            }
+            set
+            {
+                TheBotClient = value;
+            }
+        }
+
+
+        public BotClient TheBotClient
         {
             get
             {
@@ -68,8 +85,8 @@ namespace cogbot.Actions
         {
             get
             {
-                if (m_Client == null) return cogbot.Listeners.WorldObjects.Master;                
-                return Client.WorldSystem;
+                if (m_Client == null) return cogbot.Listeners.WorldObjects.Master;
+                return m_Client.WorldSystem;
             }
         }
 
@@ -95,7 +112,7 @@ namespace cogbot.Actions
         {
             String s = String.Format(format, arg);            
             Console.WriteLine(s);
-            if (Client!=null) Client.output(s);
+            if (TheBotClient != null) TheBotClient.output(s);
         } // method: WriteLine
 
         public void acceptInputWrapper(string verb, string args)

@@ -36,12 +36,12 @@ namespace cogbot.Actions
 
             if (args[0].ToLower() == "on")
             {
-                Client.ClientManager.GetTextures = enabled = true;
+                TheBotClient.ClientManager.GetTextures = enabled = true;
                 return "Texture downloading is on";
             }
             else if (args[0].ToLower() == "off")
             {
-                Client.ClientManager.GetTextures = enabled = false;
+                TheBotClient.ClientManager.GetTextures = enabled = false;
                 return "Texture downloading is off";
             }
             else

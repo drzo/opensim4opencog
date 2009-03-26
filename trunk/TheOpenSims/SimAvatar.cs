@@ -237,7 +237,7 @@ namespace cogbot.TheOpenSims
         public override SimRegion GetSimRegion()
         {
             if (Prim == null) return _CurrentRegion;
-            lock (Prim)
+           // lock (Prim)
             {
                 if (IsLocal())
                 {
@@ -245,7 +245,7 @@ namespace cogbot.TheOpenSims
                 }
                 if (_CurrentRegion == null)
                 {
-                    _CurrentRegion = SimRegion.GetRegion(Prim.RegionHandle);
+                    lock (Prim) _CurrentRegion = SimRegion.GetRegion(Prim.RegionHandle);
                     Debug("out of date _CurrentRegion ");
                 }
                 if (theAvatar.RegionHandle != _CurrentRegion.RegionHandle)
@@ -256,7 +256,7 @@ namespace cogbot.TheOpenSims
 
                 if (_CurrentRegion == null)
                 {
-                    _CurrentRegion = SimRegion.GetRegion(Prim.RegionHandle);
+                    lock (Prim) _CurrentRegion = SimRegion.GetRegion(Prim.RegionHandle);
                     Debug("out of date _CurrentRegion ");
                 }
                                  
@@ -791,7 +791,7 @@ namespace cogbot.TheOpenSims
         {
         }
 
-        public void Touch(SimObject simObject)
+        public override void Touch(SimObject simObject)
         {
             if (IsLocal())
             {
@@ -835,7 +835,7 @@ namespace cogbot.TheOpenSims
         //    return swp;
         //}
 
-        public void StopMoving()
+        public override void StopMoving()
         {
             lock (TrackerLoopLock)
             {
@@ -912,40 +912,6 @@ namespace cogbot.TheOpenSims
             return (double)Distance(obj);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="pos"></param>
-        /// <returns></returns>
-        public bool GotoTarget(SimPosition pos)
-        {
-            if (!IsLocal())
-            {
-                throw Error("GotoTarget !IsLocal()");
-            }
-
-            for (int i = 0; i < 8; i++)
-            {
-                bool result = FollowPathTo(pos.GetWorldPosition(), pos.GetSizeDistance());
-                if (result)
-                {
-                    SetMoveTarget(pos);
-                    return result;
-                }
-            }
-            return FollowPathTo(pos.GetWorldPosition(), pos.GetSizeDistance());
-        }
-
-        public bool FollowPathTo(Vector3d globalEnd, double distance)
-        {
-            if (!IsLocal())
-            {
-                throw Error("FollowPathTo !IsLocal()");
-            }
-            SimAbstractMover move = new SimAbstractMover(this, globalEnd, distance);
-            return move.FollowPathTo(globalEnd, distance);
-        }
-
         object TrackerLoopLock = new object();
 
         void TrackerLoop()
@@ -954,10 +920,6 @@ namespace cogbot.TheOpenSims
             Random somthing = new Random(Environment.TickCount);// We do stuff randomly here
             while (true)
             {
-                AgentManager ClientSelf = Client.Self;
-                AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
-                double realSelfZ = ClientSelf.SimPosition.Z;
-                Vector3d worldPosition = GetWorldPosition();
                 Vector3d targetPosition;
                 lock (TrackerLoopLock)
                 {
@@ -969,16 +931,19 @@ namespace cogbot.TheOpenSims
                     }
 
                     targetPosition = ApproachPosition.GetWorldPosition();
-                    realSelfZ = targetPosition.Z;
                 }
+                double realTargetZ = targetPosition.Z;
+                Vector3d worldPosition = GetWorldPosition();
                 //ApproachDistance = ApproachPosition.GetSizeDistance();
                 try
                 {
+                    AgentManager ClientSelf = Client.Self;
+                    AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
                     ClientMovement.UpdateInterval = 0; //100
                     SimRegion R = GetSimRegion();
                     float WaterHeight = R.WaterHeight();
-                    float zlevel = ClientSelf.SimPosition.Z;
-                    double UpDown = targetPosition.Z - zlevel;
+                    float selfZ = ClientSelf.SimPosition.Z;
+                    double UpDown = realTargetZ - selfZ;
                     double curDist = Vector3d.Distance(worldPosition, targetPosition);
 
                     //if (curDist < ApproachDistance)
@@ -991,11 +956,11 @@ namespace cogbot.TheOpenSims
                     double ZDist = Math.Abs(UpDown);
                     if (UpDown > 1)
                     {
-                        targetPosition.Z = zlevel + 0.2f; // incline upward
+                        targetPosition.Z = selfZ + 0.2f; // incline upward
                     }
                     else
                     {
-                        targetPosition.Z = zlevel;
+                        targetPosition.Z = selfZ;
                     }
 
                     SimWaypoint WP = WorldSystem.GetWaypoint(worldPosition);
@@ -1009,7 +974,7 @@ namespace cogbot.TheOpenSims
                     ClientMovement.NudgeUpPos = false;
                     ClientMovement.NudgeUpNeg = false;
 
-                    double curXYDist = Vector3d.Distance(worldPosition, new Vector3d(targetPosition.X, targetPosition.Y, zlevel));
+                    double curXYDist = Vector3d.Distance(worldPosition, new Vector3d(targetPosition.X, targetPosition.Y, selfZ));
 
                     curDist = Vector3d.Distance(worldPosition, targetPosition);
 
@@ -1023,7 +988,7 @@ namespace cogbot.TheOpenSims
 
                         bool nudge = false;
 
-                        if (zlevel > WaterHeight - 0.5)
+                        if (selfZ > WaterHeight - 0.5)
                         {
                             // Bob downward
                             if (nudge)
@@ -1037,7 +1002,7 @@ namespace cogbot.TheOpenSims
                         else
                         {
                           //  nudge = !nudge;
-                            if (zlevel < WaterHeight - 2.5)
+                            if (selfZ < WaterHeight - 2.5)
                             {
                                 // Bob upward
                                 if (nudge)
@@ -1127,9 +1092,9 @@ namespace cogbot.TheOpenSims
                     }
                     else
                     {
-                        TurnToward(targetPosition);
                         if (stopNext)
                         {
+//                            TurnToward(targetPosition);
                             ClientMovement.AtPos = false;
                             ClientMovement.UpdateInterval = 0;
                             //ClientMovement.StandUp = true;
@@ -1168,7 +1133,7 @@ namespace cogbot.TheOpenSims
         /// <param name="maxDistance"></param>
         /// <param name="maxSeconds"></param>
         /// <returns></returns>
-        public bool MoveTo(Vector3d finalTarget, double maxDistance, int maxSeconds)
+        public override bool MoveTo(Vector3d finalTarget, double maxDistance, int maxSeconds)
         {
             double currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
             if (currentDist < maxDistance) return true;
@@ -1180,12 +1145,11 @@ namespace cogbot.TheOpenSims
             }
             for (int i = 0; i < maxSeconds; i++)
             {
-                Thread.Sleep(1000);
-                Application.DoEvents();
                 currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
-
                 if (currentDist > maxDistance)
                 {
+                    Thread.Sleep(1000);
+                    Application.DoEvents();
                     continue;
                 }
                 else
@@ -1198,15 +1162,21 @@ namespace cogbot.TheOpenSims
             return false;
         }
 
-
-
-        public void TurnToward(SimPosition targetPosition)
+        public override void SendUpdate()
         {
-            TurnToward(targetPosition.GetWorldPosition());
             Client.Self.Movement.SendUpdate();
         }
 
-        public void SetMoveTarget(SimPosition target)
+        public override void TeleportTo(SimRegion R, Vector3 local)
+        {
+            if (!IsLocal())
+            {
+                throw Error("GotoTarget !IsLocal()");
+            }
+            Client.Self.Teleport(R.RegionHandle, local);
+        }
+
+        public override void SetMoveTarget(SimPosition target)
         {
             lock (TrackerLoopLock)
             {
@@ -1240,27 +1210,7 @@ namespace cogbot.TheOpenSims
 
         Thread ApproachThread;//= new Thread(TrackerLoop);
 
-
-        #region SimMover Members
-
-        public void TurnToward(Vector3d targetPosition)
-        {
-            Vector3d Current = GetWorldPosition();
-            Vector3d diff = targetPosition - Current;
-            while (diff.Length() > 2)
-            {
-                diff.X *= 0.75f;
-                diff.Y *= 0.75f;
-                diff.Z *= 0.75f;
-            }
-            Vector3 LocalPos = new Vector3(GetSimPosition());
-            LocalPos.X += (float)diff.X;
-            LocalPos.Y += (float)diff.Y;
-            TurnToward(LocalPos);
-        }
-        #endregion
-
-        public bool TurnToward(Vector3 target)
+        public override bool TurnToward(Vector3 target)
         {
             bool changed = false;
             AgentManager.AgentMovement ClientMovement = Client.Self.Movement;

@@ -9,13 +9,215 @@ using cogbot.TheOpenSims.Navigation.Debug;
 using cogbot.TheOpenSims.Mesher;
 using System.Drawing;
 using Simian;
+using System.Windows.Forms;
 
 namespace cogbot.TheOpenSims
 {
 
     //TheSims-like object
-    public class SimObject : SimPosition, BotMentalAspect
+    public class SimObject : SimPosition, BotMentalAspect,SimMover
     {
+
+        #region SimMover Members
+
+
+        public virtual void StopMoving()
+        {
+           // not really a mover
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="finalTarget"></param>
+        /// <param name="maxDistance"></param>
+        /// <param name="maxSeconds"></param>
+        /// <returns></returns>
+        public virtual bool MoveTo(Vector3d finalTarget, double maxDistance, int maxSeconds)
+        {
+            double currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
+            if (currentDist < maxDistance) return true;
+            {
+                SimWaypoint P = SimWaypoint.CreateGlobal(finalTarget);
+                SetMoveTarget(P);
+            }
+            for (int i = 0; i < maxSeconds; i++)
+            {
+                Application.DoEvents();
+                currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
+                if (currentDist > maxDistance)
+                {
+                    Thread.Sleep(1000);
+                    continue;
+                }
+                else
+                {
+                    // StopMoving();
+                    return true;
+                }
+            }
+            StopMoving();
+            return false;
+        }
+
+        public virtual void Touch(SimObject simObject)
+        {
+            WorldSystem.client.Self.Touch(simObject.Prim.LocalID);
+        }
+
+        #endregion
+
+
+        public virtual void TurnToward(SimPosition targetPosition)
+        {
+            TurnToward(targetPosition.GetWorldPosition());
+            SendUpdate();
+        }
+
+        public virtual void SendUpdate()
+        {         
+        }
+
+        public virtual void SetMoveTarget(SimPosition target)
+        {
+            //SimRegion R = target.GetSimRegion();
+            //if (R != GetSimRegion())
+            //{
+            //    TeleportTo(R,target.GetSimPosition());
+            //}
+            Vector3d finalPos = target.GetWorldPosition();
+            Vector3d start = GetWorldPosition();
+            Vector3d offset = finalPos - start;
+            double points = offset.Length();
+            Vector3d offsetEach = offset / points;
+            while (points > 1)
+            {
+                points -= 1;
+                start += offsetEach;
+                SetObjectPosition(start);
+            }
+            SetObjectPosition(finalPos);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <returns></returns>
+        public virtual bool GotoTarget(SimPosition pos)
+        {
+            if (!IsLocal())
+            {
+                throw Error("GotoTarget !IsLocal()");
+            }
+
+            for (int i = 0; i < 8; i++)
+            {
+                bool result = FollowPathTo(pos.GetWorldPosition(), pos.GetSizeDistance());
+                if (result)
+                {
+                    SetMoveTarget(pos);
+                    return result;
+                }
+            }
+            return FollowPathTo(pos.GetWorldPosition(), pos.GetSizeDistance());
+        }
+
+        public virtual bool IsLocal()
+        {
+            if (!IsRoot()) return false;
+            return WorldSystem.client.Network.CurrentSim == GetSimRegion().TheSimulator;
+        }
+
+        public bool FollowPathTo(Vector3d globalEnd, double distance)
+        {
+            if (!IsLocal())
+            {
+                throw Error("FollowPathTo !IsLocal()");
+            }
+            SimAbstractMover move = new SimAbstractMover(this, globalEnd, distance);
+            return move.FollowPathTo(globalEnd, distance);
+        }
+
+
+        public virtual void TeleportTo(SimRegion R, Vector3 local)
+        {
+            SetObjectPosition(R.LocalToGlobal(local));
+        }
+
+        internal bool SetObjectPosition(Vector3d globalPos)
+        {
+            Vector3d start = GetWorldPosition();
+            Vector3d offset = globalPos - start;
+            Vector3 lPos = GetSimPosition();
+            lPos.X += (float)offset.X;
+            lPos.Y += (float)offset.Y;
+            lPos.Z += (float)offset.Z;
+            return SetObjectPosition(lPos);
+        }
+
+        internal bool SetObjectPosition(Vector3 localPos)
+        {
+            if (!IsRoot())
+            {
+                Vector3 start = GetSimPosition();
+                Vector3 offset = localPos - start;
+                SimObject p = Parent;
+                return p.SetObjectPosition(p.GetSimPosition() + offset);
+            }
+            WorldSystem.SetObjectPosition(Prim, localPos);
+            return true;
+        }
+
+        #region SimMover Members
+
+        public void TurnToward(Vector3d targetPosition)
+        {
+            Vector3d Current = GetWorldPosition();
+            Vector3d diff = targetPosition - Current;
+            while (diff.Length() > 2)
+            {
+                diff.X *= 0.75f;
+                diff.Y *= 0.75f;
+                diff.Z *= 0.75f;
+            }
+            Vector3 LocalPos = new Vector3(GetSimPosition());
+            LocalPos.X += (float)diff.X;
+            LocalPos.Y += (float)diff.Y;
+            TurnToward(LocalPos);
+        }
+        #endregion
+
+
+        public virtual bool TurnToward(Vector3 target)
+        {
+            Quaternion parentRot = Quaternion.Identity;
+
+            if (!IsRoot())
+            {
+                parentRot = Parent.GetSimRotation();
+            }
+
+            Quaternion between = Vector3.RotationBetween(Vector3.UnitX, Vector3.Normalize(target - GetSimPosition()));
+            Quaternion rot = between * (Quaternion.Identity / parentRot);
+
+            SetObjectRotation(rot);
+            return true;
+        }
+
+        internal bool SetObjectRotation(Quaternion localPos)
+        {
+            if (!IsRoot())
+            {
+                Quaternion start = GetSimRotation();
+                Quaternion offset = localPos / start;
+                SimObject p = Parent;
+                return p.SetObjectRotation(p.GetSimRotation() * offset);
+            }
+            WorldSystem.SetObjectRotation(Prim, localPos);
+            return true;
+        }
 
         protected SimPathStore PathStore;
         public Box3Fill OuterBox = new Box3Fill(true);
@@ -411,8 +613,9 @@ namespace cogbot.TheOpenSims
 
         public virtual void UpdateObject(ObjectUpdate objectUpdate, ObjectUpdate objectUpdateDiff)
         {
-            PathStore = GetPathSystem();
+            PathStore = GetPathSystem();            
             UpdateOccupied(PathStore);
+            UpdateProperties(Prim.Properties);
             _TOSRTING = null;
         }
 
@@ -438,7 +641,9 @@ namespace cogbot.TheOpenSims
             }
             if (!IsRoot())
             {
-                return Parent.RestoreEnterable(actor);
+                SimObject P = Parent;
+                if (P.Prim != this.Prim)
+                    return P.RestoreEnterable(actor);
             }
             return changed;
         }
@@ -457,7 +662,9 @@ namespace cogbot.TheOpenSims
 
             if (!IsRoot())
             {
-                return Parent.MakeEnterable(actor);
+                SimObject P = Parent;
+                if (P.Prim != this.Prim)
+                    return P.MakeEnterable(actor);
             }
 
             bool changed = false;
@@ -923,7 +1130,7 @@ namespace cogbot.TheOpenSims
         internal void RemeshObject(Box3Fill changed)
         {
             RemoveFromWaypoints(changed);
-            Mesh = null;
+            Mesh = null;            
             UpdatePathOccupied(PathStore);
         }
 
@@ -1062,10 +1269,11 @@ namespace cogbot.TheOpenSims
         public SimRegion _CurrentRegion;
         public virtual SimRegion GetSimRegion()
         {
-            lock (Prim)
+            //lock (Prim)
             {
                 if (_CurrentRegion == null)
                 {
+                    lock (Prim)
                     _CurrentRegion = SimRegion.GetRegion(Prim.RegionHandle);
                     PathStore = _CurrentRegion.PathStore;
                 }
@@ -1119,6 +1327,11 @@ namespace cogbot.TheOpenSims
                 Debug("two differnt prims {0} {1}", prim, Prim);
             }
            // throw new Exception("The method or operation is not implemented.");
+        }
+
+        internal void RegionTaintedThis()
+        {            
+            WorldSystem.ReSelectObject(Prim);
         }
     }
 }

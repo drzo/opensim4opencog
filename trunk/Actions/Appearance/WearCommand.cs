@@ -7,7 +7,7 @@ namespace cogbot.Actions
     {
         public WearCommand(BotClient testClient)
         {
-            Client = testClient;
+            TheBotClient = testClient;
             Name = "wear";
             Description = "Wear an outfit folder from inventory. Usage: wear [outfit name] [nobake]";
             Category = CommandCategory.Appearance;

@@ -9,7 +9,7 @@ namespace cogbot.Actions
     {
         public AnimCommand(BotClient testClient)
         {
-            Client = testClient;
+            TheBotClient = testClient;
             Name = "anim";
             Description = "Do a amination or gesture.  Usage:  anim [1-10] aminname";
             Category = CommandCategory.Appearance;
@@ -20,7 +20,7 @@ namespace cogbot.Actions
             if (args.Length < 1)
             {
                 ICollection<string> list = cogbot.TheOpenSims.SimAnimation.GetAnimationList();
-               WriteLine(Client.argsListString(list));
+                WriteLine(TheBotClient.argsListString(list));
                return "Usage:  anim [seconds] HOVER [seconds] 23423423423-4234234234-234234234-23423423  +CLAP -JUMP STAND";
            }
             int time = 1300; //should be long enough for most animations

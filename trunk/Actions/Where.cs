@@ -26,7 +26,7 @@ namespace cogbot.Actions
             }
             else
             {
-                if ((Client.WorldSystem).tryGetAvatar(args.prepPhrases["is"], out avatar))
+                if ((WorldSystem).tryGetAvatar(args.prepPhrases["is"], out avatar))
                 {
                     //Client.Self.Movement.Camera.AtAxis
                     Vector3 myPos = Client.Self.SimPosition;
@@ -44,7 +44,7 @@ namespace cogbot.Actions
                     //WriteLine(avatar.Rotation.X + ", " + avatar.Rotation.Y + ", " + avatar.Rotation.Z);
                     //WriteLine(Client.Self.RelativeRotation.X + ", " + Client.Self.RelativeRotation.Y + ", " + Client.Self.RelativeRotation.Z + "\n");
                 }
-                else if ((Client.WorldSystem).tryGetPrim(args.prepPhrases["is"], out prim))
+                else if ((WorldSystem).tryGetPrim(args.prepPhrases["is"], out prim))
                 {
                     Quaternion newRot = Vector3.RotationBetween(prim.Position, Client.Self.RelativePosition);
                     double newDist = Vector3.Distance(prim.Position, Client.Self.RelativePosition);

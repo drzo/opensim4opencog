@@ -58,6 +58,8 @@ namespace cogbot.Actions
         private int TextItemsTransferred;
         private int TextItemErrors;
 
+        AssetManager.AssetReceivedCallback callback;
+
         #region Properties
 
         /// <summary>
@@ -112,14 +114,18 @@ namespace cogbot.Actions
         public BackupCommand(BotClient testClient)
         {
             Name = "backuptext";
-            Description = "Backup inventory to a folder on your hard drive. Usage: " + Name + " [to <directory>] | [abort] | [status]";
-            testClient.Assets.OnAssetReceived += new AssetManager.AssetReceivedCallback(Assets_OnAssetReceived);
+            Description = "Backup inventory to a folder on your hard drive. Usage: " + Name + " [to <directory>] | [abort] | [status]";            
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
             StringBuilder sbResult = new StringBuilder();
 
+            if (callback == null)
+            {
+                callback = new AssetManager.AssetReceivedCallback(Assets_OnAssetReceived);
+                Client.Assets.OnAssetReceived += callback;
+            }
             if (args.Length == 1 && args[0] == "status")
             {
                 return BackgroundBackupStatus;
@@ -221,6 +227,8 @@ namespace cogbot.Actions
         {
             WriteLine(Name + ": Inventory walking thread done.");
             BackupWorker = null;
+            Client.Assets.OnAssetReceived -= callback;
+            callback = null;
         }
 
         private void bwBackup_DoWork(object sender, DoWorkEventArgs e)

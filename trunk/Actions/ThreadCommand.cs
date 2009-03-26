@@ -17,6 +17,7 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
+            BotClient Client = TheBotClient;
             if (args.Length < 1)
             {
                 return "Usage: thread anim 30 crouch";
@@ -43,8 +44,8 @@ namespace cogbot.Actions
                 }
                 catch (ThreadAbortException) { }
                 WriteLine("done with " + cmd);
-                lock (Client.botCommandThreads) 
-                    Client.botCommandThreads.Remove(Thread.CurrentThread);
+                lock (Client.botCommandThreads)
+                    TheBotClient.botCommandThreads.Remove(Thread.CurrentThread);
             }));
             thread.Name = "ThreadCommnand for " + cmd;
             thread.Start();
