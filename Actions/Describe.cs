@@ -15,6 +15,7 @@ namespace cogbot.Actions
 
         public override string makeHelpString()
         {
+            BotClient Client = TheBotClient;
             string str = "Describe ";
             string[] names = new string[Client.describers.Count];
             Client.describers.Keys.CopyTo(names, 0);
@@ -26,6 +27,8 @@ namespace cogbot.Actions
 
         public override string makeUsageString()
         {
+
+            BotClient Client = TheBotClient;
             string str = "\"describe\": describes everything around you \r\n you can also type ";
             string[] names = new string[Client.describers.Count];
             Client.describers.Keys.CopyTo(names, 0);
@@ -40,6 +43,7 @@ namespace cogbot.Actions
         {
             //   base.acceptInput(verb, args);
 
+            BotClient Client = TheBotClient;
             string subject = args.objectPhrase;
             if (subject.Length == 0)
             {
@@ -52,12 +56,12 @@ namespace cogbot.Actions
             if (subject == "inventory")
             {
                 //Client.ListObjectsFolder();
-                Client.PrintInventoryAll();
+                TheBotClient.PrintInventoryAll();
                 return;
             }
             float range;
             if (float.TryParse(subject,out range)) {
-                SimAvatar simAva = Client.WorldSystem.TheSimAvatar;
+                SimAvatar simAva = WorldSystem.TheSimAvatar;
                 if (simAva != null)
                 {
                     List<SimObject> objs = simAva.GetNearByObjects(range, false);
@@ -65,7 +69,7 @@ namespace cogbot.Actions
                     {
                         foreach (SimObject o in objs)
                         {
-                            WriteLine(Client.WorldSystem.describePrim(o.Prim));
+                            WriteLine(WorldSystem.describePrim(o.Prim));
                         }
                         return;
                     }
@@ -73,18 +77,18 @@ namespace cogbot.Actions
             }
             else
             {
-                if (Client.describers.ContainsKey(subject))
-                    Client.describers[subject].Invoke(true);
+                if (TheBotClient.describers.ContainsKey(subject))
+                    TheBotClient.describers[subject].Invoke(true);
                 else
                 {
                     Avatar avatar;
-                    if (Client.WorldSystem.tryGetAvatar(subject, out avatar))
-                        Client.WorldSystem.describeAvatar(avatar);
+                    if (WorldSystem.tryGetAvatar(subject, out avatar))
+                        WorldSystem.describeAvatar(avatar);
                     else
                     {
                         Primitive prim;
-                        if (Client.WorldSystem.tryGetPrim(args.str, out prim))
-                            WriteLine(Client.WorldSystem.describePrim(prim));
+                        if (WorldSystem.tryGetPrim(args.str, out prim))
+                            WriteLine(WorldSystem.describePrim(prim));
                         else
                         {
 

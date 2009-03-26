@@ -9,11 +9,10 @@ namespace cogbot.Actions
     {
         public bool sittingOnGround = false;
 
+        bool registeredCallback = false;
         public Sit(BotClient Client)
             : base(Client)
         {
-            Client.Objects.OnAvatarSitChanged += new ObjectManager.AvatarSitChanged(Objects_OnAvatarSitChanged);
-
             helpString = "Sit on the ground or on an object.";
             usageString = "To sit on ground, type \"sit\" \r\n" +
                           "To sit on an object, type \"sit on <object name>\"" ;
@@ -43,6 +42,12 @@ namespace cogbot.Actions
         {
             //base.acceptInput(verb, args);
 
+            if (!registeredCallback)
+            {
+                registeredCallback = true;
+                Client.Objects.OnAvatarSitChanged += Objects_OnAvatarSitChanged;
+            }
+
             if (Client.Self.SittingOn != 0 || sittingOnGround)
                 WriteLine("You are already sitting.");
             else
@@ -51,7 +56,7 @@ namespace cogbot.Actions
                 {
                     string on = args.prepPhrases["on"];
                     Primitive prim;
-                    if (Client.WorldSystem.tryGetPrim(on, out prim))
+                    if (WorldSystem.tryGetPrim(on, out prim))
                     {
                         WriteLine("Trying to sit on " + prim.Properties.Name + ".");
                         Client.Self.RequestSit(prim.ID, Vector3.Zero);
@@ -71,7 +76,7 @@ namespace cogbot.Actions
                 }
             }
 
-            Client.describeNext = true;
+            TheBotClient.describeNext = true;
         }
     }
 }

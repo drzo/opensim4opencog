@@ -733,7 +733,7 @@ namespace cogbot
                 DoCommandAll(input, UUID.Zero);
             }
 
-            foreach (GridClient client in Clients.Values)
+            foreach (BotClient client in Clients.Values)
             {
                 if (client.Network.Connected)
                     client.Network.Logout();
@@ -744,7 +744,7 @@ namespace cogbot
         {
             int online = 0;
 
-            foreach (GridClient client in Clients.Values)
+            foreach (BotClient client in Clients.Values)
             {
                 if (client.Network.Connected) online++;
             }
@@ -817,7 +817,7 @@ namespace cogbot
                             BotClient testClient = (BotClient)state;
                             if (testClient.Commands.ContainsKey(firstToken))
                                 Logger.Log(testClient.Commands[firstToken].Execute(args, fromAgentID),
-                                    Helpers.LogLevel.Info, testClient);
+                                    Helpers.LogLevel.Info, testClient.gridClient);
                             else
                                 Logger.Log("Unknown command " + firstToken, Helpers.LogLevel.Warning);
 

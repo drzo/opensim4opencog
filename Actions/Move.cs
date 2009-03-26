@@ -13,12 +13,12 @@ namespace cogbot.Actions
         float moveDist=0;
         string moveTo;
         int precision = 2;
+        bool registeredCallback = false;
         public Move(BotClient Client)
             : base(Client)
         {
             helpString = "Move to a person or object, or in a direction: west, east, north or south."; //Client.RM.GetString("smove");
             usageString = "Type \"west/east/north/south\" to move 5 meters in a direction. Or Type \"west distance/east distance/north distance/south distance\" to move a specific distance in that direction.";// Client.RM.GetString("umove");
-            Client.Self.OnAlertMessage += new AgentManager.AlertMessageCallback(Self_OnAlertMessage);
         }
 
         private void Self_OnAlertMessage(string message)
@@ -107,9 +107,14 @@ namespace cogbot.Actions
 
                 moveTo = tokens[0];
 
+                if (!registeredCallback)
+                {
+                    registeredCallback = true;
+                    Client.Self.OnAlertMessage += new AgentManager.AlertMessageCallback(Self_OnAlertMessage);
+                }
                 if (args.prepPhrases["to"].Length > 0)
                 {
-                    if ((Client.WorldSystem).tryGetAvatar(args.prepPhrases["to"], out avatar))
+                    if ((WorldSystem).tryGetAvatar(args.prepPhrases["to"], out avatar))
                     {
                         WriteLine("Moving to person " + avatar.Name + ".");
                         client.Self.AutoPilotLocal((int)avatar.Position.X,
@@ -117,7 +122,7 @@ namespace cogbot.Actions
                         client.Self.Movement.TurnToward(avatar.Position);
                         return;
                     }
-                    else if ((Client.WorldSystem).tryGetPrim(args.prepPhrases["to"], out prim))
+                    else if ((WorldSystem).tryGetPrim(args.prepPhrases["to"], out prim))
                     {
                         WriteLine("Moving to object " + prim.Properties.Name + ".");
                         client.Self.AutoPilotLocal((int)prim.Position.X, (int)prim.Position.Y, prim.Position.Z);

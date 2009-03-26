@@ -982,7 +982,7 @@ namespace OpenMetaverse
 
             simulator.Stats.LastLag = Environment.TickCount - simulator.Stats.LastPingSent;
             simulator.Stats.ReceivedPongs++;
-            //			Client.Log(retval, Helpers.LogLevel.Info);
+           			Logger.Log(retval, Helpers.LogLevel.Info);
         }
 		
 		private void SimStatsHandler(Packet packet, Simulator simulator)

@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Cogbot")]
-[assembly: AssemblyDescription("Cogbot avatar bridge for external AI's")]
+[assembly: AssemblyTitle("cogbot")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("OpenSim 4 OpenCog Project")]
-[assembly: AssemblyProduct("Cogbot")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("cogbot")]
 [assembly: AssemblyCopyright("Copyright ©  2008")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("421cde52-d355-4011-a9d0-4a3b0f93db5f")]
+[assembly: Guid("9b31339a-b5e3-47ad-b6a3-0be444974cf2")]
 
 // Version information for an assembly consists of the following four values:
 //

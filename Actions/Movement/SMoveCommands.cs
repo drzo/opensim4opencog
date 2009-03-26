@@ -8,27 +8,63 @@ using System.Windows.Forms;
 using cogbot.TheOpenSims.Navigation.Debug;
 using System.Drawing;
 using System.Net;
+using cogbot.Listeners;
+using System.Threading;
+//using METAbolt;
 
 namespace cogbot.Actions.Movement
 {
     class SMoveCommands
     {
     }
-    class ideal : cogbot.Actions.Command
-    {
-        public ideal(BotClient client)
-        {
-            Name = GetType().Name;
-            Description = "Starts the waypoint debuger";
-            Category = cogbot.Actions.CommandCategory.Movement;
-        }
+    //class ideal : cogbot.Actions.Command
+    //{
+    //    public ideal(BotClient client)
+    //    {
+    //        Name = GetType().Name;
+    //        Description = "Starts the GUI debugger";
+    //        Category = cogbot.Actions.CommandCategory.Movement;
+    //    }
 
-        public override string Execute(string[] args, UUID fromAgentID)
-        {
-            ///  BaseIdealistViewer.guithread.Start();//.Main(args);
-            return "ran " + Name;
-        }
-    }
+    //    public override string Execute(string[] args, UUID fromAgentID)
+    //    {
+    //        string[] tokens = args;
+    //        if (tokens.Length > 0 && !String.IsNullOrEmpty(tokens[0]))
+    //        {
+    //            Client.BotLoginParams.FirstName = tokens[0];
+    //        }
+    //        if (tokens.Length > 1)
+    //        {
+    //            Client.BotLoginParams.LastName = tokens[1];
+    //        }
+    //        if (tokens.Length > 2)
+    //        {
+    //            Client.BotLoginParams.Password = tokens[2];
+    //        }
+    //        if (tokens.Length > 3)
+    //        {
+    //            Client.BotLoginParams.URI = tokens[3];
+    //        }
+    //        Thread th = new Thread(new ThreadStart(delegate()
+    //        {
+
+    //            try
+    //            {
+    //                tokens = new string[] { Client.BotLoginParams.FirstName, Client.BotLoginParams.LastName, Client.BotLoginParams.Password };
+    //                METAboltInstance instance = new METAboltInstance(Client,true, tokens);              
+    //                Application.Run(instance.MainForm);
+    //            }
+    //            catch (Exception e)
+    //            {
+    //                WriteLine("ideal error: " + e);
+    //            }
+    //        }));
+    //        th.TrySetApartmentState(ApartmentState.STA);
+    //        th.Start();
+    //        ///  BaseIdealistViewer.guithread.Start();//.Main(args);
+    //        return "ran " + Name;
+    //    }
+    //}
     class srdebug : cogbot.Actions.Command, BotSystemCommand
     {
         public srdebug(BotClient client)
@@ -326,7 +362,32 @@ namespace cogbot.Actions.Movement
                 return ("FAILED " + str);
             }
         }
+    }
 
+    class blocktw : cogbot.Actions.Command
+    {
+        public blocktw(BotClient client)
+        {
+            Name = GetType().Name;
+            Description = "Puts one minute temp blocks toward objects";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            int argcount;
+            SimPosition pos = WorldSystem.GetVector(args, out argcount);
+            if (pos == null)
+            {
+                return "Cannot " + Name + " to " + String.Join(" ", args);
+            }
+
+            Vector3d v3d = pos.GetWorldPosition();
+            Vector3 v3 = pos.GetSimPosition();
+            SimAbstractMover sam = new SimAbstractMover(WorldSystem.TheSimAvatar, v3d, pos.GetSizeDistance());
+            sam.BlockTowardsVector(v3);
+            return ("SUCCESS ");
+        }
     }
 
     class gto : cogbot.Actions.Command
@@ -386,6 +447,7 @@ namespace cogbot.Actions.Movement
 
         public void Goto(Vector3 target, float distance)
         {
+            BotClient Client = TheBotClient;
             Approacher.AutoGoto(Client, target, distance, 20000);
             Vector2 v2 = new Vector2(target.X, target.Y);
             float d = Approacher.DistanceTo(Client, v2);
@@ -435,10 +497,10 @@ namespace cogbot.Actions.Movement
             }
             if (true)
             {
-                MovementToVector.MoveTo(Client, target, p);
+                MovementToVector.MoveTo(TheBotClient, target, p);
                 return;
             }
-            GotoVector gvect = new GotoVector(Client, target, 10000, p);
+            GotoVector gvect = new GotoVector(TheBotClient, target, 10000, p);
             gvect.Goto();
         }
     }
@@ -499,6 +561,114 @@ namespace cogbot.Actions.Movement
             WriteLine("ternto {0}", simObject);
             WorldSystem.TheSimAvatar.TurnToward(simObject);
             return WorldSystem.TheSimAvatar.DistanceVectorString(simObject);
+        }
+    }
+
+    class selectobject : cogbot.Actions.Command
+    {
+        public selectobject(BotClient client)
+        {
+            Name = "selectobject";
+            Description = "Re select object [prim]";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            if (args.Length==0) {
+                WorldObjects.ResetSelectedObjects();
+                return "ResetSelectedObjects";
+            }
+            int used;
+            Primitive P = WorldSystem.GetPrimitive(args, out used);
+            WorldSystem.ReSelectObject(P);
+            return "object selected " + P;
+        }
+    }
+
+    class moveprim : cogbot.Actions.Command
+    {
+        public moveprim(BotClient client)
+        {
+            Name = "moveprim";
+            Description = "move prim to the relative specified position. Usage: moveprim prim [x y [z]]";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+
+            if (args.Length < 3)
+                return "Usage: moveprim prim [x y [z]]";
+
+            int used;
+            Primitive P = WorldSystem.GetPrimitive(args, out used);
+            SimObject O = WorldSystem.GetSimObject(P);
+
+            used = 1;
+            Vector3d prev = O.GetWorldPosition();
+            Vector3d local = Vector3d.Zero;
+            if (double.TryParse(args[used++], out local.X) &&
+                double.TryParse(args[used++], out local.Y))
+            {
+
+                if (args.Length > used)
+                {
+                    double.TryParse(args[used++], out local.Z);
+                }
+                else
+                {
+                    local.Z = 0f;// O.GetSimPosition().Z;
+                }
+            }
+            local += prev;
+            O.MoveTo(local,1f,10);
+            return WorldSystem.TheSimAvatar.DistanceVectorString(O);
+        }
+    }
+
+
+    class mvprim : cogbot.Actions.Command
+    {
+        public mvprim(BotClient client)
+        {
+            Name = "mvprim";
+            Description = "mv prim to the relative specified position. Usage: mvprim [rel] prim [[+/-]x y [z]]";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+
+            if (args.Length < 3)
+                return "Usage: mvprim [rel] prim [[+/-]x y [z]]";
+
+            if (args[0] == "rel")
+            {
+            }
+            int used;
+            Primitive P = WorldSystem.GetPrimitive(args, out used);
+            SimObject O = WorldSystem.GetSimObject(P);
+
+            used = 1;
+            Vector3 prev = O.GetSimPosition();
+            Vector3 local = Vector3.Zero;
+            if (float.TryParse(args[used++], out local.X) &&
+                float.TryParse(args[used++], out local.Y))
+            {
+
+                if (args.Length > used)
+                {
+                    Single.TryParse(args[used++], out local.Z);
+                }
+                else
+                {
+                    local.Z = 0f;// O.GetSimPosition().Z;
+                }
+            }
+            local += prev;
+            O.SetObjectPosition(local);
+            return WorldSystem.TheSimAvatar.DistanceVectorString(O);
         }
     }
 

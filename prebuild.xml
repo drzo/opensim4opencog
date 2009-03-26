@@ -359,10 +359,20 @@
      <!-- <Reference name="System.Text" localCopy="false"/> -->
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="System.Web" localCopy="false"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="ABCL.Net.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+        <!--   
+      <Reference name=" Khendys.Controls.ExRichTextBox.dll" localCopy="false"/>
+      <Reference name=" Interop.IWshRuntimeLibrary.dll" localCopy="false"/>
+      <Reference name=" Interop.WMPLib.dll" localCopy="false"/>
+      <Reference name=" AxInterop.WMPLib.dll" localCopy="false"/>
+      <Reference name=" Yedda.Twitter.dll" localCopy="false"/>
+      <Reference name=" SyntaxHighlighter.dll" localCopy="false"/>
+      <Reference name=" WindowsControlLibrary1.dll" localCopy="false"/>
+      -->
       <Files>
           <Match path="Actions" pattern="*.cs" recurse="true"/>
           <Match path="Bots" pattern="*.cs" recurse="true"/>
@@ -384,6 +394,11 @@
               <Exclude name="AssemblyInfo.cs"/>
               <Exclude name="Options.cs"/>
           </Match>
+          <Match path="METABolt" pattern="*.cs" recurse="true">
+              <Exclude name="AssemblyInfo.cs"/>
+          </Match>
+          <Match path="Resources" pattern="*.*"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+<!--          <Match path="Properties" pattern="*.*" recurse="true"/> -->
      <!--     <Match path="MDI" pattern="*.cs" recurse="true"/>
           <Match path="MDI" pattern="*.resx" recurse="true"/> -->
           <Match path="." pattern="*.cs"  recurse="false"  subType="Form"/>

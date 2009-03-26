@@ -7,14 +7,15 @@ using System.Text;
 
 namespace cogbot.Actions
 {
-    public class GroupsCommand : Command
+    public class GroupsCommand : Command , BotGridClientCommand
     {        
         ManualResetEvent GetCurrentGroupsEvent = new ManualResetEvent(false);
         Dictionary<UUID, Group> groups = new Dictionary<UUID, Group>();
 
         public GroupsCommand(BotClient testClient)
         {
-            testClient.Groups.OnCurrentGroups += new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
+            TheBotClient = testClient;
+            Client.Groups.OnCurrentGroups += new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
 
             Name = "groups";
             Description = "List avatar groups. Usage: groups";

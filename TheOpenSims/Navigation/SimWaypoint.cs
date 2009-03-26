@@ -879,7 +879,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public void RemoveObject(SimObject simObject)
         {
-            if (OccupiedListObject.Contains(simObject))
+            lock (OccupiedListObject)  if (OccupiedListObject.Contains(simObject))
             {
                 OccupiedCount--;
                 if (!simObject.IsPassable) IsSolid--;
@@ -891,11 +891,22 @@ namespace cogbot.TheOpenSims.Navigation
         public void RemeshWayppointObjects()
         {
             Box3Fill changed = new Box3Fill(true);
-            foreach (SimObject O in new List<SimObject>(OccupiedListObject))
+            lock (OccupiedListObject) foreach (SimObject O in new List<SimObject>(OccupiedListObject))
             {
                 O.RemeshObject(changed);
             }
             PathStore.Refresh(changed);
+        }
+
+        internal void RegionTaintedThis()
+        {
+            lock (OccupiedListObject) foreach (SimObject O in new List<SimObject>(OccupiedListObject))
+            {
+                O.RegionTaintedThis();
+            }
+            TaintMatrix();
+            RemeshWayppointObjects();
+            UpdateMatrix();
         }
     }
 

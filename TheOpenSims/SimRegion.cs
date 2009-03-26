@@ -44,6 +44,7 @@ namespace cogbot.TheOpenSims
             return m.GetSimRegion();
         }
 
+        readonly float MAXY = 255.9f;
 
         static Vector2 vC = new Vector2(0, 0), // C
                vN = new Vector2(0, 1), // N
@@ -163,12 +164,16 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public uint regionX = 0, regionY = 0;
+        Vector2 GridLoc2;
         public Vector2 GetGridLocation()
         {
-            if (regionX == 0)
+            if (GridLoc2 == Vector2.Zero)
+            {
+                uint regionX = 0, regionY = 0;
                 Utils.LongToUInts(RegionHandle, out regionX, out regionY);
-            return new Vector2((float)(regionX / 256), (float)(regionY / 256));
+                GridLoc2 = new Vector2((float)(regionX / 256), (float)(regionY / 256));
+            }
+            return GridLoc2;
         }
 
         static public SimRegion GetRegion(string simname)
@@ -256,7 +261,7 @@ namespace cogbot.TheOpenSims
         PathFinderDemo PathFinder;
         bool GridInfoKnown = false;
         GridRegion _GridInfo;
-        BotClient Client;
+        GridClient Client;
         public GridRegion GridInfo
         {
             get
@@ -330,8 +335,8 @@ namespace cogbot.TheOpenSims
                     if (!_Simulators.Contains(value))
                         _Simulators.Add(value);
                 Simulator simulator = TheSimulator;
-                if (simulator != value) return;
-                SetMaster((BotClient)value.Client);
+                if (simulator == value) return;
+                SetMaster((GridClient)value.Client);
             }
         }
 
@@ -422,7 +427,36 @@ namespace cogbot.TheOpenSims
         /// <returns></returns>
         public SimWaypoint GetWaypointOf(Vector3 v3)
         {
-            return SimWaypoint.CreateLocal(v3, this);
+            if (v3.X < 0)
+            {
+                Vector3 V = v3;
+                V.X += 256f;
+                return W.GetWaypointOf(V);
+            }
+            else
+                if (v3.X > MAXY)
+                {
+                    Vector3 V = v3;
+                    V.X -= 256f;
+                    return E.GetWaypointOf(V);
+                }
+                else
+                    if (v3.Y < 0)
+                    {
+                        Vector3 V = v3;
+                        V.Y += 256f;
+                        return S.GetWaypointOf(V);
+                    }
+                    else
+                        if (v3.Y > MAXY)
+                        {
+                            Vector3 V = v3;
+                            V.Y -= 256f;
+                            return N.GetWaypointOf(V);
+                        }
+                        else
+                            return SimWaypoint.CreateLocal(v3, this);
+
             SimWaypoint swp = PathStore.CreateClosestRegionWaypoint(v3, 2);
             float dist = Vector3.Distance(v3, swp.GetSimPosition());
             if (!swp.Passable)
@@ -715,7 +749,7 @@ namespace cogbot.TheOpenSims
             return AverageHieght;
         }
 
-        public static bool IsMaster(Simulator simulator, BotClient client)
+        public static bool IsMaster(Simulator simulator, GridClient client)
         {
             SimRegion R = GetRegion(simulator);
             if (R.Client == null)
@@ -731,7 +765,7 @@ namespace cogbot.TheOpenSims
             return false;
         }
 
-        public void SetMaster(BotClient gridClient)
+        public void SetMaster(GridClient gridClient)
         {
             if (Client == gridClient) return;
             Client = gridClient;
@@ -739,7 +773,7 @@ namespace cogbot.TheOpenSims
             EnsureClientEvents(Client);
         }
 
-        public static void EnsureClientEvents(BotClient client)
+        public static void EnsureClientEvents(GridClient client)
         {
             client.Settings.ALWAYS_DECODE_OBJECTS = true;
             client.Settings.ALWAYS_REQUEST_PARCEL_ACL = true;
@@ -748,12 +782,12 @@ namespace cogbot.TheOpenSims
             client.Settings.OBJECT_TRACKING = true;
             client.Settings.PARCEL_TRACKING = true;
             // client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
-            client.WorldSystem.WorldMaster(true);           
+            //WorldObjects.BotClientFor(client).WorldSystem.WorldMaster(true);           
         }
 
         public byte[] TextureBytesToUUID(UUID uUID)
         {
-            return Client.WorldSystem.TextureBytesToUUID(uUID);
+            return WorldObjects.Master.TextureBytesToUUID(uUID);
         }
 
         bool TerrainBaked = false;
@@ -973,6 +1007,20 @@ namespace cogbot.TheOpenSims
         internal static ISceneProvider SceneProviderFromSimulator(Simulator sim)
         {
             return GetRegion(sim).SceneProvider;
+        }
+
+        internal static void TaintArea(Vector3d targetPos)
+        {
+            SimRegion R = GetRegion(targetPos);
+            Vector3 V = GlobalToLocal(targetPos);
+            R.TaintLocal(V);
+        }
+
+        private void TaintLocal(Vector3 V)
+        {
+            SimWaypoint W = GetWaypointOf(V);
+            W.RegionTaintedThis();
+
         }
     }
 }

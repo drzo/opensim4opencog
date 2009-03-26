@@ -28,7 +28,7 @@ namespace cogbot.Actions
 		            treePosition.Z += 3.0f;
 
 		            Client.Objects.AddTree(Client.Network.CurrentSim, new Vector3(0.5f, 0.5f, 0.5f),
-		                Quaternion.Identity, treePosition, tree, Client.GroupID, false);
+		                Quaternion.Identity, treePosition, tree, TheBotClient.GroupID, false);
 
 		            return "Attempted to rez a " + treeName + " tree";
 		        }

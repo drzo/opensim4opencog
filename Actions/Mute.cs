@@ -22,14 +22,14 @@ namespace cogbot.Actions
 
             Avatar avatar;
 
-            BotClient chat = Client;//.WorldSystem;
+            BotClient chat = TheBotClient;//.WorldSystem;
 			
 			if (args.str=="all") {
                 chat.muted = !chat.muted;  // inverse mute
 				if (chat.muted) WriteLine("All conversation muted");
 				else WriteLine("All conversation unmuted");
 			} 
-			else if ((Client.WorldSystem).tryGetAvatar(args.str, out avatar))
+			else if ((WorldSystem).tryGetAvatar(args.str, out avatar))
             {
                // Listeners.Chat chat = (Listeners.Chat)Client.listeners["chat"];
                 if (chat.muteList.Contains(avatar.Name))

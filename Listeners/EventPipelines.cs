@@ -115,7 +115,7 @@ namespace cogbot.Listeners
 
         public void ShuttingDown()
         {
-            foreach (SimEventSubscriber subscriber in subscribers)
+            lock (subscribers) foreach (SimEventSubscriber subscriber in subscribers)
             {
                 subscriber.ShuttingDown();
             }
@@ -133,7 +133,7 @@ namespace cogbot.Listeners
         // this pipelike will fire OnEvent to the subscriber list 
         public void SendEvent(SimEvent simEvent)
         {
-            foreach (SimEventSubscriber subscriber in subscribers)
+            lock (subscribers) foreach (SimEventSubscriber subscriber in subscribers)
             {
                 simEvent.SendTo(subscriber);
             }
@@ -145,7 +145,7 @@ namespace cogbot.Listeners
 
         public void OnEvent(SimEvent simEvent)
         {
-            foreach (SimEventSubscriber subscriber in subscribers)
+            lock (subscribers) foreach (SimEventSubscriber subscriber in subscribers)
             {
                 simEvent.SendTo(subscriber);
             }
@@ -158,7 +158,7 @@ namespace cogbot.Listeners
 
         public void AddSubscriber(SimEventSubscriber sub)
         {
-            if (!subscribers.Contains(sub))
+            lock (subscribers) if (!subscribers.Contains(sub))
                 subscribers.Add(sub);
         }
 

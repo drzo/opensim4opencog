@@ -19,18 +19,18 @@ namespace cogbot.Actions
             Description = "obtain voice account info. Usage: voiceaccount";
             Category = CommandCategory.Voice;
 
-            Client = testClient;
+            TheBotClient = testClient;
         }
 
         private bool registered = false;
 
         private bool IsVoiceManagerRunning()
         {
-            if (null == Client.VoiceManager) return false;
+            if (null == TheBotClient.VoiceManager) return false;
 
             if (!registered)
             {
-                Client.VoiceManager.OnProvisionAccount += Voice_OnProvisionAccount;
+                TheBotClient.VoiceManager.OnProvisionAccount += Voice_OnProvisionAccount;
                 registered = true;
             }
             return true;
@@ -41,7 +41,7 @@ namespace cogbot.Actions
             if (!IsVoiceManagerRunning())
                 return String.Format("VoiceManager not running for {0}", Client.Self.Name);
 
-            if (!Client.VoiceManager.RequestProvisionAccount())
+            if (!TheBotClient.VoiceManager.RequestProvisionAccount())
             {
                 return "RequestProvisionAccount failed. Not available for the current grid?";
             }

@@ -21,6 +21,8 @@ namespace cogbot.Actions
 			if (args.Length < 1)
 				return "Usage: load AssemblyNameWithoutExtension";
 
+            BotClient Client = TheBotClient;
+
 			string filename = AppDomain.CurrentDomain.BaseDirectory + args[0] + ".dll";
 			Client.RegisterAllCommands(Assembly.LoadFile(filename));
             return "Assembly " + filename + " loaded.";

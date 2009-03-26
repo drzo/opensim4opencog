@@ -17,6 +17,8 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
 		{
+            BotClient Client = TheBotClient;
+
             if (args.Length > 0)
             {
                 if (Client.Commands.ContainsKey(args[0]))
@@ -28,7 +30,7 @@ namespace cogbot.Actions
             SortedDictionary<CommandCategory, List<Command>> CommandTree = new SortedDictionary<CommandCategory, List<Command>>();
 
             CommandCategory cc;
-            foreach (Command c in Client.Commands.Values)
+            foreach (Command c in TheBotClient.Commands.Values)
 			{
                 if (c.Category.Equals(null))
                     cc = CommandCategory.Unknown;

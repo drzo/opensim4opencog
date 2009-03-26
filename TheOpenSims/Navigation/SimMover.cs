@@ -36,11 +36,11 @@ namespace cogbot.TheOpenSims.Navigation
 
     public class SimAbstractMover
     {
-        //    public SimMoverState STATE
-        //    {
-        //        get { return _STATE; }
-        //        set { _STATE = value; }
-        //    }
+        public SimMoverState STATE
+        {
+            get { return _STATE; }
+            set { _STATE = value; }
+        }
 
         protected SimMoverState _STATE = SimMoverState.PAUSED;
         protected SimMover Mover;
@@ -48,8 +48,8 @@ namespace cogbot.TheOpenSims.Navigation
         protected readonly double FinalDistance;
         protected double CloseDistance = 1f;// SimPathStore.LargeScale-SimPathStore.StepSize;
         protected SimPathStore PathStore;
-        protected double TurnAvoid = 0f;
-        bool UseTurnAvoid = false;
+        static protected double TurnAvoid = 0f;
+        bool UseTurnAvoid = false;  // this toggles each time
 
         public SimAbstractMover(SimMover mover, Vector3d finalGoal, double finalDistance)
         {
@@ -89,14 +89,14 @@ namespace cogbot.TheOpenSims.Navigation
         {
             SimPathStore PathStore = GetSimRegion();
             Debug("FollowPath: {0} -> {1} for {2}", v3s.Count, DistanceVectorString(finalTarget), finalDistance);
-            int CanSkip = UseSkipping ? 0 : 0;
+            int CanSkip = UseSkipping ? 0 : 0; //never right now
             int Skipped = 0;
             UseSkipping = !UseSkipping;
 
             foreach (Vector3d v3 in v3s)
             {
-                //  if (Vector3d.Distance(v3, GetWorldPosition()) < dist) continue;
-                if (!MoveTo(v3, PathStore.StepSize, 6))
+                // try to get there first w/in StepSize 0.2f 
+                if (!MoveTo(v3, PathStore.StepSize, 5))
                 {
                     if (Vector3d.Distance(GetWorldPosition(), finalTarget) < finalDistance) return true;
                     if (!MoveTo(v3, PathStore.LargeScale, 2))
@@ -158,6 +158,7 @@ namespace cogbot.TheOpenSims.Navigation
                 UseTurnAvoid = !UseTurnAvoid;
                 return start;
             }
+
             UseTurnAvoid = !UseTurnAvoid;
             SimPathStore PathStore = GetSimRegion();
             double A45 = 45f / SimPathStore.RAD2DEG;
@@ -269,15 +270,15 @@ namespace cogbot.TheOpenSims.Navigation
         internal void BlockTowardsVector(Vector3 v3)
         {
             OpenNearbyClosedPassages();
-            SimPathStore PathStore = GetSimRegion();
-            Point P1 = PathStore.ToPoint(GetSimPosition());
             Vector3 cp = GetSimPosition();
+            SimPathStore PathStore = GetSimRegion();
+            Point P1 = PathStore.ToPoint(cp);
             Vector3 offset = v3 - cp;
-            double ZAngle = (double)Math.Atan2(offset.Y, offset.X);
+            double ZAngle = (double)Math.Atan2(offset.X, offset.Y);
             Point Last = PathStore.ToPoint(v3);
             float Dist = 0.3f;
             Vector3 b1 = v3;
-            float StepSize = GetSimRegion().PathStore.StepSize;
+            float StepSize = PathStore.StepSize;
             while (offset.Length() > StepSize)
             {
                 offset *= 0.75f;
@@ -304,12 +305,16 @@ namespace cogbot.TheOpenSims.Navigation
                 Debug("Wierd mdist = " + mdist);
             }
             Dist = 0.4f;
-            BlockPoint(ZAngleVector(ZAngle) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle - A45 * 0.5) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle + A45 * 0.5) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle - A45) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle + A45) * Dist + cp);
+            //ZAngle -= (90 / SimPathStore.RAD2DEG);
+
             BlockPoint(ZAngleVector(ZAngle - A45 * 1.5) * Dist + cp);
+            BlockPoint(ZAngleVector(ZAngle - A45) * Dist + cp);
+            BlockPoint(ZAngleVector(ZAngle - A45 * 0.5) * Dist + cp);
+
+            BlockPoint(ZAngleVector(ZAngle) * Dist + cp);
+
+            BlockPoint(ZAngleVector(ZAngle + A45 * 0.5) * Dist + cp);
+            BlockPoint(ZAngleVector(ZAngle + A45) * Dist + cp);
             BlockPoint(ZAngleVector(ZAngle + A45 * 1.5) * Dist + cp);
             //Dont Run back
             //MoveTo(cp + ZAngleVector(ZAngle - Math.PI) * 2, 1f, 2);

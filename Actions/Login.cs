@@ -22,7 +22,8 @@ namespace cogbot.Actions
 			//base.acceptInput(verb, args);
             string[] tokens = args.objectPhrase.Split(null);
 
-            if ((tokens.Length!=1)&& (tokens.Length != 3))
+            BotClient Client = TheBotClient;
+            if ((tokens.Length != 1) && (tokens.Length != 3))
             {
                 WriteLine("Please enter login FirstName LastName and Password to login to the SL");
                 return;
@@ -47,7 +48,7 @@ namespace cogbot.Actions
                 }
                 if (!Client.Network.Connected && !Client.Network.LoginMessage.StartsWith("Logging"))
                 {
-                    Client.Settings.LOGIN_SERVER = Client.BotLoginParams.URI;// TextForm.SingleInstance.config.simURL; // "http://127.0.0.1:8002/";
+                    Client.Settings.LOGIN_SERVER = TheBotClient.BotLoginParams.URI;// TextForm.SingleInstance.config.simURL; // "http://127.0.0.1:8002/";
 ///                    Client.Network.Login(Client.BotLoginParams.FirstName, Client.BotLoginParams.LastName, Client.BotLoginParams.Password, "OnRez", "UNR");
                     Client.Login();
                 }

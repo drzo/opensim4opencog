@@ -288,7 +288,7 @@ namespace cogbot.TheOpenSims.Mesher
                 SculptMesh SM = ToSculptMesh(bytes, primitive.Sculpt.Type, Scale, rot);
                 if (SM != null)
                 {
-                    SM.DumpRaw(".", primitive.ID.ToString(), "sculptMesh" + primitive.LocalID);
+                   // SM.DumpRaw(".", primitive.ID.ToString(), "sculptMesh" + primitive.LocalID);
                     return ToMesh(SM.coords, SM.faces, SM.viewerFaces, primitive.Type == PrimType.Sphere);
                 }
             }

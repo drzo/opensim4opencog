@@ -6,16 +6,13 @@ namespace cogbot.Actions
     public class ShowEffectsCommand : Command
     {
         bool ShowEffects = false;
+        bool registeredCallback = false;
 
         public ShowEffectsCommand(BotClient testClient)
         {
             Name = "showeffects";
             Description = "Prints out information for every viewer effect that is received. Usage: showeffects [on/off]";
             Category = CommandCategory.Other;
-
-            testClient.Avatars.OnEffect += new AvatarManager.EffectCallback(Avatars_OnEffect);
-            testClient.Avatars.OnLookAt += new AvatarManager.LookAtCallback(Avatars_OnLookAt);
-            testClient.Avatars.OnPointAt += new AvatarManager.PointAtCallback(Avatars_OnPointAt);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
@@ -30,6 +27,13 @@ namespace cogbot.Actions
                 if (args[0] == "on")
                 {
                     ShowEffects = true;
+                    if (!registeredCallback)
+                    {
+                        registeredCallback = true;
+                        Client.Avatars.OnEffect += new AvatarManager.EffectCallback(Avatars_OnEffect);
+                        Client.Avatars.OnLookAt += new AvatarManager.LookAtCallback(Avatars_OnLookAt);
+                        Client.Avatars.OnPointAt += Avatars_OnPointAt;
+                    }
                     return "Viewer effects will be shown on the console";
                 }
                 else

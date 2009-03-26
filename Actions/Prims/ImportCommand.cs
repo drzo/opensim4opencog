@@ -40,14 +40,13 @@ namespace cogbot.Actions
         List<uint> linkQueue;
         uint rootLocalID;
         ImporterState state = ImporterState.Idle;
+        ObjectManager.NewPrimCallback callback;
 
         public ImportCommand(BotClient testClient)
         {
             Name = "import";
             Description = "Import prims from an exported xml file. Usage: import inputfile.xml [usegroup]";
             Category = CommandCategory.Objects;
-
-            testClient.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
@@ -55,131 +54,143 @@ namespace cogbot.Actions
             if (args.Length < 1)
                 return "Usage: import inputfile.xml [usegroup]";
 
-            string filename = args[0];
-            UUID GroupID = (args.Length > 1) ? Client.GroupID : UUID.Zero;
-            string xml;
-            List<Primitive> prims;
-
-            try { xml = File.ReadAllText(filename); }
-            catch (Exception e) { return e.Message; }
-
-            try { prims = Helpers.OSDToPrimList(OSDParser.DeserializeLLSDXml(xml)); }
-            catch (Exception e) { return "Failed to deserialize " + filename + ": " + e.Message; }
-
-            // Build an organized structure from the imported prims
-            Dictionary<uint, Linkset> linksets = new Dictionary<uint, Linkset>();
-            for (int i = 0; i < prims.Count; i++)
+            if (callback == null)
             {
-                Primitive prim = prims[i];
-
-                if (prim.ParentID == 0)
-                {
-                    if (linksets.ContainsKey(prim.LocalID))
-                        linksets[prim.LocalID].RootPrim = prim;
-                    else
-                        linksets[prim.LocalID] = new Linkset(prim);
-                }
-                else
-                {
-                    if (!linksets.ContainsKey(prim.ParentID))
-                        linksets[prim.ParentID] = new Linkset();
-
-                    linksets[prim.ParentID].Children.Add(prim);
-                }
+                callback = new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
+                Client.Objects.OnNewPrim += callback;
             }
-
-            primsCreated = new List<Primitive>();
-            WriteLine("Importing " + linksets.Count + " structures.");
-
-            foreach (Linkset linkset in linksets.Values)
+            try
             {
-                if (linkset.RootPrim.LocalID != 0)
+                string filename = args[0];
+                UUID GroupID = (args.Length > 1) ? TheBotClient.GroupID : UUID.Zero;
+                string xml;
+                List<Primitive> prims;
+
+                try { xml = File.ReadAllText(filename); }
+                catch (Exception e) { return e.Message; }
+
+                try { prims = Helpers.OSDToPrimList(OSDParser.DeserializeLLSDXml(xml)); }
+                catch (Exception e) { return "Failed to deserialize " + filename + ": " + e.Message; }
+
+                // Build an organized structure from the imported prims
+                Dictionary<uint, Linkset> linksets = new Dictionary<uint, Linkset>();
+                for (int i = 0; i < prims.Count; i++)
                 {
-                    state = ImporterState.RezzingParent;
-                    currentPrim = linkset.RootPrim;
-                    // HACK: Import the structure just above our head
-                    // We need a more elaborate solution for importing with relative or absolute offsets
-                    linkset.RootPrim.Position = Client.Self.SimPosition;
-                    linkset.RootPrim.Position.Z += 3.0f;
-                    currentPosition = linkset.RootPrim.Position;
+                    Primitive prim = prims[i];
 
-                    // Rez the root prim with no rotation
-                    Quaternion rootRotation = linkset.RootPrim.Rotation;
-                    linkset.RootPrim.Rotation = Quaternion.Identity;
-
-                    Client.Objects.AddPrim(Client.Network.CurrentSim, linkset.RootPrim.PrimData, GroupID,
-                        linkset.RootPrim.Position, linkset.RootPrim.Scale, linkset.RootPrim.Rotation);
-
-                    if (!primDone.WaitOne(10000, false))
-                        return "Rez failed, timed out while creating the root prim.";
-
-                    Client.Objects.SetPosition(Client.Network.CurrentSim, primsCreated[primsCreated.Count - 1].LocalID, linkset.RootPrim.Position);
-
-                    state = ImporterState.RezzingChildren;
-
-                    // Rez the child prims
-                    foreach (Primitive prim in linkset.Children)
+                    if (prim.ParentID == 0)
                     {
-                        currentPrim = prim;
-                        currentPosition = prim.Position + linkset.RootPrim.Position;
+                        if (linksets.ContainsKey(prim.LocalID))
+                            linksets[prim.LocalID].RootPrim = prim;
+                        else
+                            linksets[prim.LocalID] = new Linkset(prim);
+                    }
+                    else
+                    {
+                        if (!linksets.ContainsKey(prim.ParentID))
+                            linksets[prim.ParentID] = new Linkset();
 
-                        Client.Objects.AddPrim(Client.Network.CurrentSim, prim.PrimData, GroupID, currentPosition,
-                            prim.Scale, prim.Rotation);
+                        linksets[prim.ParentID].Children.Add(prim);
+                    }
+                }
+
+                primsCreated = new List<Primitive>();
+                WriteLine("Importing " + linksets.Count + " structures.");
+
+                foreach (Linkset linkset in linksets.Values)
+                {
+                    if (linkset.RootPrim.LocalID != 0)
+                    {
+                        state = ImporterState.RezzingParent;
+                        currentPrim = linkset.RootPrim;
+                        // HACK: Import the structure just above our head
+                        // We need a more elaborate solution for importing with relative or absolute offsets
+                        linkset.RootPrim.Position = Client.Self.SimPosition;
+                        linkset.RootPrim.Position.Z += 3.0f;
+                        currentPosition = linkset.RootPrim.Position;
+
+                        // Rez the root prim with no rotation
+                        Quaternion rootRotation = linkset.RootPrim.Rotation;
+                        linkset.RootPrim.Rotation = Quaternion.Identity;
+
+                        Client.Objects.AddPrim(Client.Network.CurrentSim, linkset.RootPrim.PrimData, GroupID,
+                            linkset.RootPrim.Position, linkset.RootPrim.Scale, linkset.RootPrim.Rotation);
 
                         if (!primDone.WaitOne(10000, false))
-                            return "Rez failed, timed out while creating child prim.";
-                        Client.Objects.SetPosition(Client.Network.CurrentSim, primsCreated[primsCreated.Count - 1].LocalID, currentPosition);
+                            return "Rez failed, timed out while creating the root prim.";
 
-                    }
+                        Client.Objects.SetPosition(Client.Network.CurrentSim, primsCreated[primsCreated.Count - 1].LocalID, linkset.RootPrim.Position);
 
-                    // Create a list of the local IDs of the newly created prims
-                    List<uint> primIDs = new List<uint>(primsCreated.Count);
-                    primIDs.Add(rootLocalID); // Root prim is first in list.
-                    
-                    if (linkset.Children.Count != 0)
-                    {
-                        // Add the rest of the prims to the list of local IDs
-                        foreach (Primitive prim in primsCreated)
+                        state = ImporterState.RezzingChildren;
+
+                        // Rez the child prims
+                        foreach (Primitive prim in linkset.Children)
                         {
-                            if (prim.LocalID != rootLocalID)
-                                primIDs.Add(prim.LocalID);
+                            currentPrim = prim;
+                            currentPosition = prim.Position + linkset.RootPrim.Position;
+
+                            Client.Objects.AddPrim(Client.Network.CurrentSim, prim.PrimData, GroupID, currentPosition,
+                                prim.Scale, prim.Rotation);
+
+                            if (!primDone.WaitOne(10000, false))
+                                return "Rez failed, timed out while creating child prim.";
+                            Client.Objects.SetPosition(Client.Network.CurrentSim, primsCreated[primsCreated.Count - 1].LocalID, currentPosition);
+
                         }
-                        linkQueue = new List<uint>(primIDs.Count);
-                        linkQueue.AddRange(primIDs);
 
-                        // Link and set the permissions + rotation
-                        state = ImporterState.Linking;
-                        Client.Objects.LinkPrims(Client.Network.CurrentSim, linkQueue);
+                        // Create a list of the local IDs of the newly created prims
+                        List<uint> primIDs = new List<uint>(primsCreated.Count);
+                        primIDs.Add(rootLocalID); // Root prim is first in list.
 
-                        if (primDone.WaitOne(1000 * linkset.Children.Count, false))
-                            Client.Objects.SetRotation(Client.Network.CurrentSim, rootLocalID, rootRotation);
+                        if (linkset.Children.Count != 0)
+                        {
+                            // Add the rest of the prims to the list of local IDs
+                            foreach (Primitive prim in primsCreated)
+                            {
+                                if (prim.LocalID != rootLocalID)
+                                    primIDs.Add(prim.LocalID);
+                            }
+                            linkQueue = new List<uint>(primIDs.Count);
+                            linkQueue.AddRange(primIDs);
+
+                            // Link and set the permissions + rotation
+                            state = ImporterState.Linking;
+                            Client.Objects.LinkPrims(Client.Network.CurrentSim, linkQueue);
+
+                            if (primDone.WaitOne(1000 * linkset.Children.Count, false))
+                                Client.Objects.SetRotation(Client.Network.CurrentSim, rootLocalID, rootRotation);
+                            else
+                                WriteLine("Warning: Failed to link {0} prims", linkQueue.Count);
+
+                        }
                         else
-                            WriteLine("Warning: Failed to link {0} prims", linkQueue.Count);
+                        {
+                            Client.Objects.SetRotation(Client.Network.CurrentSim, rootLocalID, rootRotation);
+                        }
 
+                        // Set permissions on newly created prims
+                        Client.Objects.SetPermissions(Client.Network.CurrentSim, primIDs,
+                            PermissionWho.Everyone | PermissionWho.Group | PermissionWho.NextOwner,
+                            PermissionMask.All, true);
+
+                        state = ImporterState.Idle;
                     }
                     else
                     {
-                        Client.Objects.SetRotation(Client.Network.CurrentSim, rootLocalID, rootRotation);
+                        // Skip linksets with a missing root prim
+                        WriteLine("WARNING: Skipping a linkset with a missing root prim");
                     }
-                    
-                    // Set permissions on newly created prims
-                    Client.Objects.SetPermissions(Client.Network.CurrentSim, primIDs,
-                        PermissionWho.Everyone | PermissionWho.Group | PermissionWho.NextOwner,
-                        PermissionMask.All, true);
-                    
-                    state = ImporterState.Idle;
-                }
-                else
-                {
-                    // Skip linksets with a missing root prim
-                    WriteLine("WARNING: Skipping a linkset with a missing root prim");
-                }
 
-                // Reset everything for the next linkset
-                primsCreated.Clear();
+                    // Reset everything for the next linkset
+                    primsCreated.Clear();
+                }
+                return "Import complete.";
             }
-
-            return "Import complete.";
+            finally
+            {
+                Client.Objects.OnNewPrim -= callback;
+                callback = null;
+            }
         }
 
         void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)

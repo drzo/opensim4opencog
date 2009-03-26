@@ -8,7 +8,7 @@ namespace cogbot.Actions
     {
         public AttachmentsCommand(BotClient testClient)
         {
-            Client = testClient;
+            TheBotClient = testClient;
             Name = "attachments";
             Description = "Prints a list of the currently known agent attachments";
             Category = CommandCategory.Appearance;

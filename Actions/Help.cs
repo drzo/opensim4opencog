@@ -17,15 +17,17 @@ namespace cogbot.Actions
         {
             // base.acceptInput(verb, args);
 
+            BotClient Client = TheBotClient;
+
             if (args.objectPhrase.Length == 0)
             {
-                foreach (string action in Client.Commands.Keys)
+                foreach (string action in TheBotClient.Commands.Keys)
                 {
-                    WriteLine(action + ": " + Client.Commands[action].makeHelpString());
+                    WriteLine(action + ": " + TheBotClient.Commands[action].makeHelpString());
                 }
-                foreach (string tutorial in Client.tutorials.Keys)
+                foreach (string tutorial in TheBotClient.tutorials.Keys)
                 {
-                    WriteLine(tutorial + ": " + Client.tutorials[tutorial].makeHelpString());
+                    WriteLine(tutorial + ": " + TheBotClient.tutorials[tutorial].makeHelpString());
                 }
             }
             else

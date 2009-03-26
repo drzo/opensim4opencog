@@ -29,7 +29,7 @@ namespace cogbot.Actions
                 string name = args.objectPhrase;
                 if (String.IsNullOrEmpty(name.Trim())) name = "avatar";
                 Primitive avatar;
-                if (Client.WorldSystem.tryGetPrim(name, out avatar))
+                if (WorldSystem.tryGetPrim(name, out avatar))
                 {
                     SimObject followAvatar = WorldSystem.GetSimObject(avatar);
                     String str = "" + Client + " start to follow " + followAvatar + ".";
@@ -46,7 +46,7 @@ namespace cogbot.Actions
             {
 
 
-                WriteLine("You stop following " + Client.WorldSystem.TheSimAvatar.ApproachPosition + ".");
+                WriteLine("You stop following " + WorldSystem.TheSimAvatar.ApproachPosition + ".");
 
                 WorldSystem.TheSimAvatar.StopMoving();
             }
@@ -55,7 +55,7 @@ namespace cogbot.Actions
                 WriteLine("You aren't following anyone.");
             }
 
-            Client.describeNext = true;
+            TheBotClient.describeNext = true;
         }
 
     }

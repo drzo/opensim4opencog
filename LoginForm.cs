@@ -45,9 +45,9 @@ namespace cogbot
 
 
 
-        public LoginForm(GridClient _client, TextForm _parent)
+        public LoginForm(BotClient _client, TextForm _parent)
         {
-            client = _client;
+            client = _client.gridClient;
             parent = _parent;
             client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
             client.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);

@@ -687,7 +687,6 @@ namespace cogbot.TheOpenSims.Navigation
                 }
                 foreach (SimObject O in WorldObjects.SimObjects) O.Mesh = null;
                 Console.WriteLine("End UpdateMatrix: " + R);
-                System.GC.Collect();
             }
         }
 
@@ -745,10 +744,13 @@ namespace cogbot.TheOpenSims.Navigation
             if (oldValue == value) // aready blocked
                 return;
             PathStore.SetNodeQuality(vector3, 0);
+            Primitive PRIM = WorldObjects.Master.AddTempPrim(GetSimRegion(), "pathdebug", PrimType.Tube, new Vector3(StepSize, StepSize, StepSize), vector3);
             new Thread(new ThreadStart(delegate()
             {
                 Thread.Sleep(60000);
                 byte newValue = PathStore.GetNodeQuality(vector3);
+
+                if (PRIM!=null) WorldObjects.Master.DeletePrim(PRIM);
                 if (newValue != value)
                 {
                     // its been changed by something else since we set to Zero
@@ -783,6 +785,7 @@ namespace cogbot.TheOpenSims.Navigation
             int ys = (int)changed.MaxX;
             int xe = (int)changed.MinY;
             int ye = (int)changed.MaxY;
+            if (ye < 0 || xe < 0) return;
             if (xs > 0) xs--;
             if (ys > 0) ys--;
             int MAX = MAPSPACE - 1;

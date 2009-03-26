@@ -10,14 +10,13 @@ namespace cogbot.Actions
     {
         const float DISTANCE_BUFFER = 3.0f;
         uint targetLocalID = 0;
+        bool regsiteredCallback = false;
 
 		public FollowCommand(BotClient testClient)
 		{
 			Name = "follow";
 			Description = "Follow another avatar. Usage: follow [FirstName LastName]/off.";
-            Category = CommandCategory.Movement;
-
-            testClient.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(AlertMessageHandler));
+            Category = CommandCategory.Movement;            
 		}
 
         public override string Execute(string[] args, UUID fromAgentID)
@@ -28,6 +27,11 @@ namespace cogbot.Actions
 				target = target + args[ct] + " ";
 			target = target.TrimEnd();
 
+            if (!regsiteredCallback)
+            {
+                regsiteredCallback = true;
+                Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(AlertMessageHandler));
+            }
             if (target.Length == 0 || target == "off")
             {
                 Active = false;

@@ -12,13 +12,13 @@ namespace cogbot.Actions
         AutoResetEvent DownloadHandle = new AutoResetEvent(false);
         bool Success;
 
+        AssetManager.AssetReceivedCallback callback;
         public DownloadCommand(BotClient testClient)
         {
             Name = "download";
             Description = "Downloads the specified asset. Usage: download [uuid] [assetType]";
             Category = CommandCategory.Inventory;
-
-            testClient.Assets.OnAssetReceived += new AssetManager.AssetReceivedCallback(Assets_OnAssetReceived);
+            callback = new AssetManager.AssetReceivedCallback(Assets_OnAssetReceived);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
@@ -26,6 +26,7 @@ namespace cogbot.Actions
             if (args.Length != 2)
                 return "Usage: download [uuid] [assetType]";
 
+            Client.Assets.OnAssetReceived += callback;
             Success = false;
             AssetID = UUID.Zero;
             assetType = AssetType.Unknown;
@@ -82,7 +83,7 @@ namespace cogbot.Actions
                         Logger.Log(ex.Message, Helpers.LogLevel.Error, ex);
                     }
                 }
-
+                Client.Assets.OnAssetReceived -= callback;
                 DownloadHandle.Set();
             }
         }

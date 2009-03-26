@@ -13,14 +13,17 @@ namespace cogbot.Actions.Movement
         float diff, olddiff, saveolddiff;
         int startTime = 0;
         int duration = 10000;
+        ObjectManager.ObjectUpdatedCallback callback; 
 
-        public FlyToCommand(BotClient client)
+        public FlyToCommand(BotClient testClient)
         {
+            TheBotClient = testClient;
+
             Name = "FlyTo";
             Description = "Fly the avatar toward the specified position for a maximum of seconds. Usage: FlyTo x y z [seconds]";
             Category = CommandCategory.Movement;
 
-            client.Objects.OnObjectUpdated += new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
+            callback = new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
@@ -40,6 +43,7 @@ namespace cogbot.Actions.Movement
             if (args.Length == 4 && Int32.TryParse(args[3], out duration))
                 duration *= 1000;
 
+            Client.Objects.OnObjectUpdated += callback;
             startTime = Environment.TickCount;
             Client.Self.Movement.Fly = true;
             Client.Self.Movement.AtPos = true;
@@ -150,6 +154,7 @@ namespace cogbot.Actions.Movement
             Client.Self.Movement.UpPos = false;
             Client.Self.Movement.UpNeg = false;
             Client.Self.Movement.SendUpdate(false);
+            Client.Objects.OnObjectUpdated -= callback;
         }
 
         private void Debug(string x)

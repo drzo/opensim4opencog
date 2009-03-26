@@ -35,7 +35,7 @@ namespace cogbot.Actions
                WriteLine("I don't know what to do with "+objname); return; 
            }
            WriteLine("Trying to (" + to_op + ") with (" + objname + ")");
-           Client.UseInventoryItem(to_op, objname);
+           TheBotClient.UseInventoryItem(to_op, objname);
            
        }
     }
