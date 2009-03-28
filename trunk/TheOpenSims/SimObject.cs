@@ -224,9 +224,9 @@ namespace cogbot.TheOpenSims
 
         internal void ResetRegion(ulong regionHandle)
         {
-            lock (Prim)
+            //lock (Prim)
             {
-                _CurrentRegion = null;
+                _CurrentRegion = SimRegion.GetRegion(regionHandle);
                 //  Prim.RegionHandle = regionHandle;
                 Debug("Changing regions " + this);
                 // PathStore = GetPathSystem();
@@ -1324,6 +1324,8 @@ namespace cogbot.TheOpenSims
         {
             if (prim != Prim)
             {
+                Prim = prim;
+                ResetRegion(prim.RegionHandle);
                 Debug("two differnt prims {0} {1}", prim, Prim);
             }
            // throw new Exception("The method or operation is not implemented.");

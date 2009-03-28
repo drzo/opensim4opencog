@@ -445,7 +445,18 @@ namespace cogbot.Listeners
                             //    O.ResetPrim(prim);
                             //    return O;
                             //}
-                            Debug("Prim with differnt region handle " + prim);
+                            if (prim.ParentID == 0)
+                            {
+                                if (!OutOfRegion(prim.Position))
+                                {
+                                    O.ResetPrim(prim);
+                                }
+                                Debug("Prim with differnt region handle " + prim);
+                            }
+                            else
+                            {
+                                Debug("Child with differnt region handle " + prim);
+                            }
                             return O;
                         }
                     }
