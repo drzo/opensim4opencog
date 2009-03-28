@@ -558,26 +558,26 @@ namespace cogbot.TheOpenSims.Navigation
             return String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
         }
 
-        /// <summary>
-        /// Object.Equals override.
-        /// Tells if two nodes are equal by comparing positions.
-        /// </summary>
-        /// <exception cref="ArgumentException">A Node cannot be compared with another type.</exception>
-        /// <param name="O">The node to compare with.</param>
-        /// <returns>'true' if both nodes are equal.</returns>
-        public override bool Equals(object O)
-        {
-            if (O is SimPosition)
-            {
-                return _GlobalPos == ((SimPosition)O).GetWorldPosition();
-            }
-            //if (O is Vector3d)
-            //{
-            //    return Create((Vector3d)O).Equals(this);
-            //}
+        ///// <summary>
+        ///// Object.Equals override.
+        ///// Tells if two nodes are equal by comparing positions.
+        ///// </summary>
+        ///// <exception cref="ArgumentException">A Node cannot be compared with another type.</exception>
+        ///// <param name="O">The node to compare with.</param>
+        ///// <returns>'true' if both nodes are equal.</returns>
+        //public override bool Equals(object O)
+        //{
+        //    if (O is SimPosition)
+        //    {
+        //        return _GlobalPos == ((SimPosition)O).GetWorldPosition();
+        //    }
+        //    //if (O is Vector3d)
+        //    //{
+        //    //    return Create((Vector3d)O).Equals(this);
+        //    //}
 
-            throw new ArgumentException("Type " + O.GetType() + " cannot be compared with type " + GetType() + " !");
-        }
+        //    throw new ArgumentException("Type " + O.GetType() + " cannot be compared with type " + GetType() + " !");
+        //}
 
 
         /// <summary>

@@ -76,6 +76,10 @@ namespace cogbot.TheOpenSims
         public BotAction CurrentAction = null;
 
 
+        public override bool MakeEnterable(SimMover actor)
+        {
+            return false;
+        }
 
         string AspectName;
         public SimAvatar(Avatar slAvatar, WorldObjects objectSystem, Simulator reg)
@@ -95,6 +99,7 @@ namespace cogbot.TheOpenSims
             }
             avatarHeartbeatThread = new Thread(new ThreadStart(Aging));
             avatarHeartbeatThread.Name = "AvatarHeartbeatThread for " + AspectName;
+            avatarHeartbeatThread.Priority = ThreadPriority.Lowest;
             avatarHeartbeatThread.Start();
             MakeEnterable(this);
         }
@@ -174,6 +179,7 @@ namespace cogbot.TheOpenSims
                 if (IsLocal())
                 {
                     // only think for ourselves
+                    avatarThinkerThread.Priority = ThreadPriority.Normal;
                     avatarThinkerThread.Start();
                 }
             }
@@ -302,9 +308,10 @@ namespace cogbot.TheOpenSims
         }
         public void Aging()
         {
+            BotNeeds OneMinute = SimTypeSystem.GetObjectType("OnMinuteTimer").GetUsageActual("OnMinuteTimer");
             while (true)
             {
-                CurrentNeeds.AddFrom(SimTypeSystem.GetObjectType("OnMinuteTimer").GetUsageActual("OnMinuteTimer"));
+                CurrentNeeds.AddFrom(OneMinute);
                 CurrentNeeds.SetRange(0.0F, 100.0F);
                 Thread.Sleep(60000); // one minute
                 // Debug(CurrentNeeds.ToString());
@@ -741,7 +748,7 @@ namespace cogbot.TheOpenSims
                 //  WorldSystem = Client.WorldSystem;
                 if (IsLocal())
                 {
-                    EnsureTrackerRunning();
+ //                   EnsureTrackerRunning();
                 }
             }
             //WorldSystem.AddTracking(this,Client);
@@ -799,7 +806,7 @@ namespace cogbot.TheOpenSims
             }
             else
             {
-                Debug("Cant touch !IsLocal() " + simObject);
+             //   Debug("Cant touch !IsLocal() " + simObject);
             }
         }
 
@@ -917,7 +924,7 @@ namespace cogbot.TheOpenSims
         void TrackerLoop()
         {
             Boolean stopNext = false;
-            Random somthing = new Random(Environment.TickCount);// We do stuff randomly here
+            Random MyRandom = new Random(Environment.TickCount);// We do stuff randomly here
             while (true)
             {
                 Vector3d targetPosition;
@@ -965,7 +972,7 @@ namespace cogbot.TheOpenSims
 
                     SimWaypoint WP = WorldSystem.GetWaypoint(worldPosition);
                     // Like water areas
-                    bool simming = WP.IsUnderWater();
+                    bool swimming = WP.IsUnderWater();
 
                     // Reset previous Z 
                     ClientMovement.FastUp = false;
@@ -978,7 +985,7 @@ namespace cogbot.TheOpenSims
 
                     curDist = Vector3d.Distance(worldPosition, targetPosition);
 
-                    if (simming)
+                    if (swimming)
                     {
                         // WaterHeight = WaterHeight - 1f;
                         if (!ClientMovement.Fly)
@@ -1016,10 +1023,10 @@ namespace cogbot.TheOpenSims
                         targetPosition.Z = WaterHeight - 0.25f;
                     }
 
-                    ClientMovement.Fly = simming || WP.IsFlyZone();
+                    ClientMovement.Fly = swimming || WP.IsFlyZone();
 
 
-                    if (simming)
+                    if (swimming)
                     {
                         // Reset previous Z 
                         ClientMovement.FastUp = false;
@@ -1083,7 +1090,7 @@ namespace cogbot.TheOpenSims
                             ClientMovement.UpdateInterval = 0; //100
                             ClientMovement.SendUpdate(false);
                             //(int)(25 * (1 + (curDist / followDist)))
-                            Thread.Sleep(somthing.Next(25, 100));
+                            Thread.Sleep(MyRandom.Next(25, 100));
                             //   MoveFast(ApproachPosition);
                             //    if (ApproachPosition!=null) MoveSlow(ApproachPosition);
                             stopNext = true;
@@ -1149,7 +1156,7 @@ namespace cogbot.TheOpenSims
                 if (currentDist > maxDistance)
                 {
                     Thread.Sleep(1000);
-                    Application.DoEvents();
+                    //Application.DoEvents();
                     continue;
                 }
                 else
@@ -1200,6 +1207,7 @@ namespace cogbot.TheOpenSims
                     WorldSystem.SetSimAvatar(this);
                     ApproachThread = new Thread(TrackerLoop);
                     ApproachThread.Name = "TrackerLoop for " + Client;
+                    ApproachThread.Priority = ThreadPriority.Normal;
                     ApproachThread.Start();
                 }
             }

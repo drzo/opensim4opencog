@@ -7,6 +7,7 @@ using cogbot.Listeners;
 using cogbot.TheOpenSims.Navigation.Debug;
 using cogbot.TheOpenSims.Mesher;
 using Simian;
+using System.Threading;
 
 namespace cogbot.TheOpenSims
 {
@@ -18,20 +19,35 @@ namespace cogbot.TheOpenSims
     }
 
 
+
     /// <summary>
     /// Denotes a Simulator region and can help with bot navigation
     /// </summary>
     public class SimRegion
     {
 
+        public static List<SimRegion> CurrentRegions
+        {
+            get
+            {
+                List<SimRegion> sims = new List<SimRegion>();
+                lock (_CurrentRegions)
+                {
+                    foreach (SimRegion R in _CurrentRegions.Values)
+                    {
+                        sims.Add(R);
+                    }
+                }
+                return sims;
+            }
+        }
+    
+
         public static void BakeRegions()
         {
-            lock (_CurrentRegions)
+            foreach (SimRegion R in CurrentRegions)
             {
-                foreach (SimRegion R in _CurrentRegions.Values)
-                {
-                    R.PathStore.UpdateMatrix();
-                }
+                R.PathStore.UpdateMatrix();
             }
         }
 
@@ -153,15 +169,13 @@ namespace cogbot.TheOpenSims
             {
                 throw new ArgumentException("GetRegion: region handle cant be zero");
             }
-            lock (_CurrentRegions)
-            {
-                if (_CurrentRegions.ContainsKey(id))
-                    return _CurrentRegions[id];
-
-                SimRegion R = new SimRegion(id);
-                _CurrentRegions[id] = R;
+            SimRegion R;
+            if (_CurrentRegions.TryGetValue(id, out R))
                 return R;
-            }
+            R = new SimRegion(id);
+            lock (_CurrentRegions) _CurrentRegions[id] = R;
+            return R;
+
         }
 
         Vector2 GridLoc2;
@@ -178,7 +192,7 @@ namespace cogbot.TheOpenSims
 
         static public SimRegion GetRegion(string simname)
         {
-            foreach (SimRegion R in _CurrentRegions.Values)
+            foreach (SimRegion R in CurrentRegions)
                 if (R.RegionName.Contains(simname)) return R;
             return null;
         }
@@ -240,11 +254,7 @@ namespace cogbot.TheOpenSims
         static SimRegion GetRegion(Vector2 v2)
         {
             ulong h = HandleOf(v2);
-            if (_CurrentRegions.ContainsKey(h))
-            {
-                return _CurrentRegions[h];
-            }
-            return null;
+            return GetRegion(h);
         }
 
         public static ulong HandleOf(Vector2 v2)
@@ -259,6 +269,7 @@ namespace cogbot.TheOpenSims
         }
 
         PathFinderDemo PathFinder;
+        AutoResetEvent regionEvent = new AutoResetEvent(false);
         bool GridInfoKnown = false;
         GridRegion _GridInfo;
         GridClient Client;
@@ -269,36 +280,189 @@ namespace cogbot.TheOpenSims
                 if (GridInfoKnown) return _GridInfo;
                 if (!String.IsNullOrEmpty(_RegionName))
                 {
-                    GridRegion r;
-                    if (Client.Grid.GetGridRegion(_RegionName, GridLayerType.Objects, out r))
-                    {
-                        _GridInfo = r;
-                        GridInfoKnown = true;
-                    }
-                    else
-                        if (Client.Grid.GetGridRegion(_RegionName, GridLayerType.Terrain, out r))
+                    regionEvent.Reset();
+                    OpenMetaverse.GridManager.GridRegionCallback callback =
+                        delegate(GridRegion gridRegion)
                         {
-                            _GridInfo = r;
-                            GridInfoKnown = true;
-                        }
-                        else
-                            if (Client.Grid.GetGridRegion(_RegionName, GridLayerType.LandForSale, out r))
-                            {
-                                _GridInfo = r;
-                                GridInfoKnown = true;
-                            }
+                            if (gridRegion.RegionHandle == RegionHandle)
+                                regionEvent.Set();
+                        };
+                    Client.Grid.OnGridRegion += callback;
+                    Client.Grid.RequestMapRegion(_RegionName, GridLayerType.Objects);
+                    regionEvent.WaitOne(Client.Settings.MAP_REQUEST_TIMEOUT, false);
+                    Client.Grid.OnGridRegion -= callback;
 
                 }
                 return _GridInfo;
             }
             set
-            {
-                _GridInfo = value;
+            {           
                 GridInfoKnown = true;
+                _GridInfo = value; 
                 _RegionName = _GridInfo.Name;
+                regionEvent.Set();
+                //Client.Grid.RequestMapRegion(_RegionName, GridLayerType.Terrain);
             }
         }
 
+        public float[] ResizeTerrain512Interpolation(float[] heightMap,int m_regionWidth,int m_regionHeight)
+        {
+            float[] returnarr = new float[262144];
+            float[,] resultarr = new float[m_regionWidth, m_regionHeight];
+
+            // Filling out the array into it's multi-dimentional components
+            for (int y = 0; y < m_regionHeight; y++)
+            {
+                for (int x = 0; x < m_regionWidth; x++)
+                {
+                    resultarr[y, x] = heightMap[y * m_regionWidth + x];
+                }
+            }
+
+            // Resize using interpolation
+
+            // This particular way is quick but it only works on a multiple of the original
+
+            // The idea behind this method can be described with the following diagrams
+            // second pass and third pass happen in the same loop really..  just separated
+            // them to show what this does.
+
+            // First Pass
+            // ResultArr:
+            // 1,1,1,1,1,1
+            // 1,1,1,1,1,1
+            // 1,1,1,1,1,1
+            // 1,1,1,1,1,1
+            // 1,1,1,1,1,1
+            // 1,1,1,1,1,1
+
+            // Second Pass
+            // ResultArr2:
+            // 1,,1,,1,,1,,1,,1,
+            // ,,,,,,,,,,
+            // 1,,1,,1,,1,,1,,1,
+            // ,,,,,,,,,,
+            // 1,,1,,1,,1,,1,,1,
+            // ,,,,,,,,,,
+            // 1,,1,,1,,1,,1,,1,
+            // ,,,,,,,,,,
+            // 1,,1,,1,,1,,1,,1,
+            // ,,,,,,,,,,
+            // 1,,1,,1,,1,,1,,1,
+
+            // Third pass fills in the blanks
+            // ResultArr2:
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+
+            // X,Y = .
+            // X+1,y = ^
+            // X,Y+1 = *
+            // X+1,Y+1 = #
+
+            // Filling in like this;
+            // .*
+            // ^#
+            // 1st .
+            // 2nd *
+            // 3rd ^
+            // 4th #
+            // on single loop.
+
+            float[,] resultarr2 = new float[512, 512];
+            for (int y = 0; y < m_regionHeight; y++)
+            {
+                for (int x = 0; x < m_regionWidth; x++)
+                {
+                    resultarr2[y * 2, x * 2] = resultarr[y, x];
+
+                    if (y < m_regionHeight)
+                    {
+                        if (y + 1 < m_regionHeight)
+                        {
+                            if (x + 1 < m_regionWidth)
+                            {
+                                resultarr2[(y * 2) + 1, x * 2] = ((resultarr[y, x] + resultarr[y + 1, x] +
+                                                               resultarr[y, x + 1] + resultarr[y + 1, x + 1]) / 4);
+                            }
+                            else
+                            {
+                                resultarr2[(y * 2) + 1, x * 2] = ((resultarr[y, x] + resultarr[y + 1, x]) / 2);
+                            }
+                        }
+                        else
+                        {
+                            resultarr2[(y * 2) + 1, x * 2] = resultarr[y, x];
+                        }
+                    }
+                    if (x < m_regionWidth)
+                    {
+                        if (x + 1 < m_regionWidth)
+                        {
+                            if (y + 1 < m_regionHeight)
+                            {
+                                resultarr2[y * 2, (x * 2) + 1] = ((resultarr[y, x] + resultarr[y + 1, x] +
+                                                               resultarr[y, x + 1] + resultarr[y + 1, x + 1]) / 4);
+                            }
+                            else
+                            {
+                                resultarr2[y * 2, (x * 2) + 1] = ((resultarr[y, x] + resultarr[y, x + 1]) / 2);
+                            }
+                        }
+                        else
+                        {
+                            resultarr2[y * 2, (x * 2) + 1] = resultarr[y, x];
+                        }
+                    }
+                    if (x < m_regionWidth && y < m_regionHeight)
+                    {
+                        if ((x + 1 < m_regionWidth) && (y + 1 < m_regionHeight))
+                        {
+                            resultarr2[(y * 2) + 1, (x * 2) + 1] = ((resultarr[y, x] + resultarr[y + 1, x] +
+                                                                 resultarr[y, x + 1] + resultarr[y + 1, x + 1]) / 4);
+                        }
+                        else
+                        {
+                            resultarr2[(y * 2) + 1, (x * 2) + 1] = resultarr[y, x];
+                        }
+                    }
+                }
+            }
+            //Flatten out the array
+            int i = 0;
+            for (int y = 0; y < 512; y++)
+            {
+                for (int x = 0; x < 512; x++)
+                {
+                    if (Single.IsNaN(resultarr2[y, x]) || Single.IsInfinity(resultarr2[y, x]))
+                    {
+                        Logger.Log("[PHYSICS]: Non finite heightfield element detected.  Setting it to 0",Helpers.LogLevel.Warning);
+                        resultarr2[y, x] = 0;
+                    }
+
+                    if (resultarr2[y, x] <= 0)
+                    {
+                        returnarr[i] = 0.0000001f;
+
+                    }
+                    else
+                        returnarr[i] = resultarr2[y, x];
+
+                    i++;
+                }
+            }
+
+            return returnarr;
+        }
 
         List<Simulator> _Simulators = new List<Simulator>();
 
@@ -347,17 +511,18 @@ namespace cogbot.TheOpenSims
             {
                 if (_RegionName == null)
                 {
-                    if (TheSimulator != null && !String.IsNullOrEmpty(TheSimulator.Name))
-                        _RegionName = TheSimulator.Name;
+                    Simulator sim = TheSimulator;
+                    if (sim != null && !String.IsNullOrEmpty(sim.Name))
+                        _RegionName = sim.Name;
                 }
-                if (!String.IsNullOrEmpty(GridInfo.Name))
+                if (!String.IsNullOrEmpty(_GridInfo.Name))
                 {
                     _RegionName = _GridInfo.Name;
                 }
                 if (_RegionName != null) return _RegionName;
                 return "region" + RegionHandle;
             }
-            set { _GridInfo.Name = value; }
+            set { _GridInfo.Name = value; _RegionName = value; }
         }
 
         readonly public ulong RegionHandle;
@@ -737,15 +902,38 @@ namespace cogbot.TheOpenSims
             return PathStore.SimLevel(vx,vy);          
         }
 
+        int GetGroundLevelTried = 0;
         public float GetGroundLevel(float x, float y)
         {
-            float height;
-            if (Client!=null && Client.Terrain.TerrainHeightAtPoint(RegionHandle, (int)x, (int)y, out height))
+            if (Client != null && x >= 0 && x < 256 && y >= 0 && y < 256)
             {
+                float height;
+                while(!Client.Terrain.TerrainHeightAtPoint(RegionHandle, (int)x, (int)y, out height))
+                {
+                    if (GetGroundLevelTried > 20)
+                    {
+                        return AverageHieght;
+                    }
+                    GetGroundLevelTried++;
+                    if (GetGroundLevelTried == 1)
+                    {
+                        Client.Grid.RequestMapRegion(RegionName, GridLayerType.Terrain);
+                    }
+                    if (GetGroundLevelTried > 20)
+                    {
+                        return AverageHieght;
+                    }
+                    Thread.Sleep(4000);
+                    if (GetGroundLevelTried > 10)
+                    {
+                        Console.WriteLine("BADDDDD Height " + x + " " + y + " waiting " + AverageHieght + " sim " + RegionName);
+                        return AverageHieght;
+                    }
+                }
                 AverageHieght = height;
                 return height;
+                //Client.Grid.RequestMapRegion(
             }
-            // Console.WriteLine("BADDDDD Height " + x + " " + y + " returning " + AverageHieght + " sim " + RegionName);
             return AverageHieght;
         }
 
