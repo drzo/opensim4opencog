@@ -38,9 +38,9 @@ namespace cogbot.ScriptEngines
                     while (taskQueue.Count > 0)
                     {
                         taskTick();
-                        Thread.Sleep(1);
+                        Thread.Sleep(5);
                     }
-                    Thread.Sleep(50);
+                    Thread.Sleep(500);
                 }
             }
             catch (Exception e)

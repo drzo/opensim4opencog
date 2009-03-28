@@ -685,7 +685,7 @@ namespace cogbot.TheOpenSims.Navigation
                             W.UpdateMatrix();
                     }
                 }
-                foreach (SimObject O in WorldObjects.SimObjects) O.Mesh = null;
+                //foreach (SimObject O in WorldObjects.SimObjects) O.Mesh = null;
                 Console.WriteLine("End UpdateMatrix: " + R);
             }
         }

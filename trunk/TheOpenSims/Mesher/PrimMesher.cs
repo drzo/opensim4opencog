@@ -1,4 +1,4 @@
-﻿/*
+﻿﻿/*
  * Copyright (c) Contributors
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -385,7 +385,7 @@ namespace THIRDPARTY.PrimMesher
     {
         private float iX, iY; // intersection point
 
-        private Angle[] angles3 =
+        private static Angle[] angles3 =
         {
             new Angle(0.0f, 1.0f, 0.0f),
             new Angle(0.33333333333333333f, -0.5f, 0.86602540378443871f),
@@ -393,7 +393,7 @@ namespace THIRDPARTY.PrimMesher
             new Angle(1.0f, 1.0f, 0.0f)
         };
 
-        private Coord[] normals3 =
+        private static Coord[] normals3 =
         {
             new Coord(0.25f, 0.4330127019f, 0.0f).Normalize(),
             new Coord(-0.5f, 0.0f, 0.0f).Normalize(),
@@ -401,7 +401,7 @@ namespace THIRDPARTY.PrimMesher
             new Coord(0.25f, 0.4330127019f, 0.0f).Normalize()
         };
 
-        private Angle[] angles4 =
+        private static Angle[] angles4 =
         {
             new Angle(0.0f, 1.0f, 0.0f),
             new Angle(0.25f, 0.0f, 1.0f),
@@ -410,7 +410,7 @@ namespace THIRDPARTY.PrimMesher
             new Angle(1.0f, 1.0f, 0.0f)
         };
 
-        private Coord[] normals4 = 
+        private static Coord[] normals4 = 
         {
             new Coord(0.5f, 0.5f, 0.0f).Normalize(),
             new Coord(-0.5f, 0.5f, 0.0f).Normalize(),
@@ -419,7 +419,7 @@ namespace THIRDPARTY.PrimMesher
             new Coord(0.5f, 0.5f, 0.0f).Normalize()
         };
 
-        private Angle[] angles24 =
+        private static Angle[] angles24 =
         {
             new Angle(0.0f, 1.0f, 0.0f),
             new Angle(0.041666666666666664f, 0.96592582628906831f, 0.25881904510252074f),
@@ -579,6 +579,8 @@ namespace THIRDPARTY.PrimMesher
     {
         private const float twoPi = 2.0f * (float)Math.PI;
 
+        internal string errorMessage = null;
+
         internal List<Coord> coords;
         internal List<Face> faces;
         internal List<Coord> vertexNormals;
@@ -644,8 +646,10 @@ namespace THIRDPARTY.PrimMesher
             try { angles.makeAngles(sides, startAngle, stopAngle); }
             catch (Exception ex)
             {
-                Console.WriteLine("makeAngles failed: Exception: " + ex.ToString());
-                Console.WriteLine("sides: " + sides.ToString() + " startAngle: " + startAngle.ToString() + " stopAngle: " + stopAngle.ToString());
+
+                errorMessage = "makeAngles failed: Exception: " + ex.ToString()
+                + "\nsides: " + sides.ToString() + " startAngle: " + startAngle.ToString() + " stopAngle: " + stopAngle.ToString();
+
                 return;
             }
 
@@ -664,8 +668,9 @@ namespace THIRDPARTY.PrimMesher
                     try { hollowAngles.makeAngles(hollowSides, startAngle, stopAngle); }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("makeAngles failed: Exception: " + ex.ToString());
-                        Console.WriteLine("sides: " + sides.ToString() + " startAngle: " + startAngle.ToString() + " stopAngle: " + stopAngle.ToString());
+                        errorMessage = "makeAngles failed: Exception: " + ex.ToString()
+                        + "\nsides: " + sides.ToString() + " startAngle: " + startAngle.ToString() + " stopAngle: " + stopAngle.ToString();
+
                         return;
                     }
                 }
@@ -1125,6 +1130,7 @@ namespace THIRDPARTY.PrimMesher
 
     public class PrimMesh
     {
+        public string errorMessage = "";
         private const float twoPi = 2.0f * (float)Math.PI;
 
         public List<Coord> coords;
@@ -1312,6 +1318,8 @@ namespace THIRDPARTY.PrimMesher
                 hollow *= 1.414f;
 
             Profile profile = new Profile(this.sides, this.profileStart, this.profileEnd, hollow, this.hollowSides, true, calcVertexNormals);
+            this.errorMessage = profile.errorMessage;
+
             this.numPrimFaces = profile.numPrimFaces;
 
             int cut1Vert = -1;
@@ -1692,6 +1700,8 @@ namespace THIRDPARTY.PrimMesher
                 needEndFaces = true;
 
             Profile profile = new Profile(this.sides, this.profileStart, this.profileEnd, hollow, this.hollowSides, needEndFaces, calcVertexNormals);
+            this.errorMessage = profile.errorMessage;
+
             this.numPrimFaces = profile.numPrimFaces;
 
             int cut1Vert = -1;
@@ -2175,4 +2185,3 @@ namespace THIRDPARTY.PrimMesher
         }
     }
 }
-
