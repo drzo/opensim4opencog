@@ -1117,9 +1117,9 @@ namespace cogbot.TheOpenSims
             return (Mesh.IsInside(L.X, L.Y, L.Z));
         }
 
-        internal Vector2 GetMinMaxZ(Point WP)
+        internal Vector2 GetMinMaxZ(SimWaypoint WP)
         {
-            try { return OccupiedWPs[WP]; }
+            try { return OccupiedWPs[WP.Point]; }
             catch (Exception)
             {
                 return new Vector2(OuterBox.MinZ, OuterBox.MaxZ);
@@ -1334,6 +1334,11 @@ namespace cogbot.TheOpenSims
         internal void RegionTaintedThis()
         {            
             WorldSystem.ReSelectObject(Prim);
+        }
+
+        internal bool SomethingBetween(Vector3 vector3, float low, float high)
+        {
+            return Mesh.SomethingBetween(vector3.X,vector3.Y, low, high);
         }
     }
 }

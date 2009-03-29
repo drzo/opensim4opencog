@@ -366,7 +366,7 @@ namespace cogbot
             try
             {
                 str = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
-                if (str.ToLower().Contains("look")) return;
+                //if (str.ToLower().Contains("look")) return;
                 if (IsDisposed) return; // for (un)clean exits
                 this.Invoke(outputDelegate, str);
             }
@@ -384,7 +384,7 @@ namespace cogbot
         {
             try
             {
-                lock (consoleText)
+               // lock (consoleText)
                 {
                     if (consoleText.IsDisposed) return; // for (un)clean exits
                     consoleText.AppendText(str + "\r\n");

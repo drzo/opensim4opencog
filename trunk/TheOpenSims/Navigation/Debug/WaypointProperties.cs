@@ -40,7 +40,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                 B.Name = "o"+i;
                 B.Size = new System.Drawing.Size(715, 23);
                 B.TabIndex = i;
-                B.Text = O.GetMinMaxZ(WP.Point) + " " + O.ToString();
+                B.Text = O.GetMinMaxZ(WP) + " " + O.ToString();
                 B.TextAlign = ContentAlignment.MiddleLeft;
                 B.UseVisualStyleBackColor = true;
                 B.Click += new System.EventHandler(this.object_click);
