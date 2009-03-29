@@ -394,10 +394,10 @@
               <Exclude name="AssemblyInfo.cs"/>
               <Exclude name="Options.cs"/>
           </Match>
-          <Match path="METABolt" pattern="*.cs" recurse="true">
+          <Match path="METAbolt" pattern="*.cs" recurse="true">
               <Exclude name="AssemblyInfo.cs"/>
           </Match>
-          <Match path="Resources" pattern="*.*"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+          <Match path="METAbolt/icons" pattern="*.*"  recurse="true"  buildAction="EmbeddedResource"/>
 <!--          <Match path="Properties" pattern="*.*" recurse="true"/> -->
      <!--     <Match path="MDI" pattern="*.cs" recurse="true"/>
           <Match path="MDI" pattern="*.resx" recurse="true"/> -->
