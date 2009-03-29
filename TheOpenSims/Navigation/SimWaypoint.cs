@@ -48,8 +48,8 @@ namespace cogbot.TheOpenSims.Navigation
 
         int ZOrder(SimObject O1, SimObject O2)
         {
-            Vector2 V1 = O1.GetMinMaxZ(Point);
-            Vector2 V2 = O2.GetMinMaxZ(Point);
+            Vector2 V1 = O1.GetMinMaxZ(this);
+            Vector2 V2 = O2.GetMinMaxZ(this);
             //if (V1.Y != V2.Y) return (int)((V2.Y - V1.Y) * 10);
             //if (V1.X != V2.X) return (int)((V2.X - V1.X) * 10);
             return V1.CompareTo(V2);
@@ -79,16 +79,21 @@ namespace cogbot.TheOpenSims.Navigation
         public void UpdateMatrix()
         {
             PathStore.mMatrix[PX, PY] = GetOccupiedValue();
-            if (IsSolid != 0)
+            float zlevel = GetZLevel();
+            if (SurroundingBump(zlevel, 0.4f))
+                SetMatrix(SimPathStore.BLOCKED);
+            else if (IsSolid != 0)
             {
-                _ZLevelCache = float.MinValue;
-                float zlevel = GetZLevel();
-                if (SurroundingBump(zlevel, 0.4f) || SomethingBetween(zlevel + 0.35f, zlevel + 2, OccupiedListObject))
+
+                if (SomethingBetween(zlevel + 0.35f, zlevel + 2, OccupiedListObject))
                     SetMatrix(SimPathStore.BLOCKED);
-                else
-                    if (IsGroundLevel() || SurroundingBump(zlevel, 0.2f)||IsUnderWater())
-                        PathStore.mMatrix[PX, PY] = SimPathStore.MAYBE_BLOCKED;
+                else if (SomethingBetween(zlevel+0.1f, zlevel + 0.3f, OccupiedListObject))
+                    PathStore.mMatrix[PX, PY] = SimPathStore.MAYBE_BLOCKED;
+                else if (SurroundingBump(zlevel, 0.2f))
+                    PathStore.mMatrix[PX, PY] = SimPathStore.MAYBE_BLOCKED;
             }
+            else if (IsUnderWater())
+                PathStore.mMatrix[PX, PY] = SimPathStore.MAYBE_BLOCKED;
         }
 
         internal bool SomethingBetween(float low, float high, IEnumerable OccupiedListObject)
@@ -98,10 +103,7 @@ namespace cogbot.TheOpenSims.Navigation
                 {
                     if (!O.IsPassable)
                     {
-                        Vector2 box = O.GetMinMaxZ(Point);
-                        if (low > box.Y) continue;
-                        if (high < box.X) continue;
-                        return true;
+                        if (O.SomethingBetween(_LocalPos, low, high)) return true;
                     }
                 }
             return false;
@@ -179,7 +181,7 @@ namespace cogbot.TheOpenSims.Navigation
                         foreach (SimObject O in OccupiedListObject)
                         {
                             if (O.IsPassable) continue;
-                            Vector2 MM = O.GetMinMaxZ(Point);
+                            Vector2 MM = O.GetMinMaxZ(this);
                             float MinZ = MM.X;// = O.OuterBox.MinZ;
                             float MaxZ = MM.Y;// = O.OuterBox.MaxZ;
                             //bool wpfound = O.GetZLevel(Point, out MinZ, out MaxZ);
@@ -264,7 +266,7 @@ namespace cogbot.TheOpenSims.Navigation
                 {
                     foreach (SimObject O in OccupiedListObject)
                     {
-                        S += O.GetMinMaxZ(Point);
+                        S += O.GetMinMaxZ(this);
                         S += " ";
 
 
@@ -907,6 +909,55 @@ namespace cogbot.TheOpenSims.Navigation
             TaintMatrix();
             RemeshWayppointObjects();
             UpdateMatrix();
+        }
+
+        internal void PassTwo()
+        {
+            byte b = GetMatrix();
+            if (b > 2 && b < 200)
+                if (SurroundingBlocked())
+                {
+                    SetMatrix(SimPathStore.MAYBE_BLOCKED);
+                }
+        }
+
+        private bool SurroundingBlocked()
+        {
+            if (PX < 1 || PY < 1 || _LocalPos.X > 254 || _LocalPos.Y > 254)
+                return false;
+
+            byte O;
+
+            O = MLevel(PX, PY + 1);
+            if (O==SimPathStore.BLOCKED) return true;
+
+            O = MLevel(PX + 1, PY + 1);
+            if (O==SimPathStore.BLOCKED) return true;
+
+            O = MLevel(PX + 1, PY);
+            if (O==SimPathStore.BLOCKED) return true;
+
+            O = MLevel(PX + 1, PY - 1);
+            if (O==SimPathStore.BLOCKED) return true;
+
+            O = MLevel(PX, PY - 1);
+            if (O==SimPathStore.BLOCKED) return true;
+
+            O = MLevel(PX - 1, PY - 1);
+            if (O==SimPathStore.BLOCKED) return true;
+
+            O = MLevel(PX - 1, PY);
+            if (O==SimPathStore.BLOCKED) return true;
+
+            O = MLevel(PX - 1, PY + 1);
+            if (O==SimPathStore.BLOCKED) return true;
+
+            return false;
+        }
+
+        private byte MLevel(int x, int y)
+        {
+            return PathStore.mMatrix[x, y];
         }
     }
 

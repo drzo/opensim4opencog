@@ -677,12 +677,20 @@ namespace cogbot.TheOpenSims.Navigation
                 Console.WriteLine("Start UpdateMatrix: " + R);
                 for (int y = 0; y < MAPSPACE; y++)
                 {
-                    System.Windows.Forms.Application.DoEvents();
                     for (int x = 0; x < MAPSPACE; x++)
                     {
                         SimWaypoint W = mWaypoints[x, y];
                         if (W != null)
                             W.UpdateMatrix();
+                    }
+                }
+                if (false) for (int y = 0; y < MAPSPACE; y++)
+                {
+                    for (int x = 0; x < MAPSPACE; x++)
+                    {
+                        SimWaypoint W = mWaypoints[x, y];
+                        if (W != null)
+                            W.PassTwo();
                     }
                 }
                 //foreach (SimObject O in WorldObjects.SimObjects) O.Mesh = null;

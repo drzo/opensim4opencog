@@ -288,7 +288,7 @@ namespace cogbot.TheOpenSims.Mesher
                 SculptMesh SM = ToSculptMesh(bytes, primitive.Sculpt.Type, Scale, rot);
                 if (SM != null)
                 {
-                   // SM.DumpRaw(".", primitive.ID.ToString(), "sculptMesh" + primitive.LocalID);
+                    // SM.DumpRaw(".", primitive.ID.ToString(), "sculptMesh" + primitive.LocalID);
                     return ToMesh(SM.coords, SM.faces, SM.viewerFaces, primitive.Type == PrimType.Sphere);
                 }
             }
@@ -587,6 +587,19 @@ namespace cogbot.TheOpenSims.Mesher
             return found;
         }
 
+        internal bool SomethingBetween(float xf, float yf, float low, float high)
+        {
+            bool found = false;
+            foreach (Box3Fill B in InnerBoxes)
+            {
+                if (B.MinX > xf
+                    || B.MaxX < xf
+                    || B.MinY > yf
+                    || B.MaxY < yf) continue;
+                if (B.IsZInside(low, high)) return true;
+            }
+            return found;
+        }
     }
 
     public class Box3Fill : IComparable<Box3Fill>, IEquatable<Box3Fill>
@@ -932,5 +945,11 @@ namespace cogbot.TheOpenSims.Mesher
             return f1 < f2 ? -1 : 1;
         }
 
+
+        internal bool IsZInside(float low, float high)
+        {
+            if (low > MaxZ || high < MinZ) return false;
+            return true;
+        }
     }
 }
