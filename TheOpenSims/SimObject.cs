@@ -1226,7 +1226,7 @@ namespace cogbot.TheOpenSims
             PathStore = simPathStore;
             Vector3 Position = GetSimPosition();
             Mesh.SetOccupied(SetLocated, 10, 60, simPathStore.StepSize);
-            Mesh = null;
+           // Mesh = null;
         }
 
         private void UpdatePathOccupiedNotWorkingNew(SimPathStore simPathStore)
@@ -1263,7 +1263,7 @@ namespace cogbot.TheOpenSims
                 }
                 xf += StepSize;
             }
-            Mesh = null;
+           // Mesh = null;
         }
 
         public SimRegion _CurrentRegion;
@@ -1338,7 +1338,11 @@ namespace cogbot.TheOpenSims
 
         internal bool SomethingBetween(Vector3 vector3, float low, float high)
         {
-            return Mesh.SomethingBetween(vector3.X,vector3.Y, low, high);
+            return Mesh.SomethingBetween(vector3.X, vector3.Y, low, high);
+        }
+        internal bool SomethingMaxZ(Vector3 vector3, float low, float high, out float maxZ)
+        {
+            return Mesh.SomethingMaxZ(vector3.X, vector3.Y, low, high, out maxZ);
         }
     }
 }

@@ -80,7 +80,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             PathStore.mMatrix[PX, PY] = GetOccupiedValue();
             float zlevel = GetZLevel();
-            if (SurroundingBump(zlevel, 0.4f))
+            if (SurroundingBump(zlevel, 0.55f))
                 SetMatrix(SimPathStore.BLOCKED);
             else if (IsSolid != 0)
             {
@@ -175,26 +175,81 @@ namespace cogbot.TheOpenSims.Navigation
             {
                 bool ChangeD = false;
                 SimObject Flooring = null;
+                for (byte d = 0; d < IsSolid+1; d++)
+                {
+                    lock (OccupiedListObject)
+                        foreach (SimObject O in OccupiedListObject)
+                        {
+                            if (O.IsPassable) continue;
+                            float MaxZ;
+                            if (O.SomethingMaxZ(_LocalPos, _ZLevelCache, _ZLevelCache + 1.5f, out MaxZ))
+                            {
+                                //bool wpfound = O.GetZLevel(Point, out MinZ, out MaxZ);
+
+                                // The object is higher
+                                if (_ZLevelCache < MaxZ)
+                                // And the object is below or the bottem of object is less than a meter above or the top of object is less than 1.5 meters
+                                //if (MinZ <= _ZLevelCache || DiffLessThan(MinZ, _ZLevelCache, 1.5f) || DiffLessThan(MaxZ, _ZLevelCache, 2f))
+                                {
+                                    Flooring = O;
+                                    ChangeD = true;
+                                    _ZLevelCache = MaxZ;
+                                }
+
+                            }
+
+                        }
+                    if (!ChangeD) break;
+                }
+                //if (Flooring != null)
+                //{
+                //    if (ChangeD) lock (OccupiedListObject)
+                //    {
+                //        OccupiedListObject.Remove(Flooring);
+                //        OccupiedListObject.Insert(0, Flooring);
+                //    }
+                //}
+            }
+            _LocalPos.Z = _ZLevelCache;
+            _GlobalPos.Z = _ZLevelCache + 1;
+            return _ZLevelCache;
+        }
+
+
+        public float GetZLevelOLD()
+        {
+            // when the Two Zs are differnt that means global Pos has been computed
+            if (_ZLevelCache > 0) return _ZLevelCache;
+            _ZLevelCache = GetGroundLevel();
+            OccupiedListObject.Sort(ZOrder);
+            OccupiedListObject.Reverse();
+            if (IsSolid != 0)
+            {
+                bool ChangeD = false;
+                SimObject Flooring = null;
                 for (byte d = 0; d < IsSolid; d++)
                 {
                     lock (OccupiedListObject)
                         foreach (SimObject O in OccupiedListObject)
                         {
                             if (O.IsPassable) continue;
-                            Vector2 MM = O.GetMinMaxZ(this);
-                            float MinZ = MM.X;// = O.OuterBox.MinZ;
-                            float MaxZ = MM.Y;// = O.OuterBox.MaxZ;
-                            //bool wpfound = O.GetZLevel(Point, out MinZ, out MaxZ);
+                            if (O.SomethingBetween(_LocalPos, _ZLevelCache, _ZLevelCache + 1.5f))
                             {
-                                // The object is higher
-                                if (_ZLevelCache < MaxZ)
-                                    // And the object is below or the bottem of object is less than a meter above or the top of object is less than 1.5 meters
-                                    if (MinZ <= _ZLevelCache || DiffLessThan(MinZ, _ZLevelCache, 1.5f) || DiffLessThan(MaxZ, _ZLevelCache, 2f))
-                                    {
-                                        Flooring = O;
-                                        ChangeD = true;
-                                        _ZLevelCache = MaxZ;
-                                    }
+                                Vector2 MM = O.GetMinMaxZ(this);
+                                float MinZ = MM.X;// = O.OuterBox.MinZ;
+                                float MaxZ = MM.Y;// = O.OuterBox.MaxZ;
+                                //bool wpfound = O.GetZLevel(Point, out MinZ, out MaxZ);
+                                {
+                                    // The object is higher
+                                    if (_ZLevelCache < MaxZ)
+                                        // And the object is below or the bottem of object is less than a meter above or the top of object is less than 1.5 meters
+                                        if (MinZ <= _ZLevelCache || DiffLessThan(MinZ, _ZLevelCache, 1.5f) || DiffLessThan(MaxZ, _ZLevelCache, 2f))
+                                        {
+                                            Flooring = O;
+                                            ChangeD = true;
+                                            _ZLevelCache = MaxZ;
+                                        }
+                                }
                             }
 
                         }

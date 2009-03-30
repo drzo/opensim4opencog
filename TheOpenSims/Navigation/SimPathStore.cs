@@ -172,6 +172,11 @@ namespace cogbot.TheOpenSims.Navigation
             int ix = ARRAY_IDX(x);
             int iy = ARRAY_IDX(y);
             byte b = mMatrix[ix, iy];
+            if (b == 0)
+            {
+                mMatrix[ix, iy] = MAYBE_BLOCKED;
+                return;
+            }
             if (b > 100 || b < 3)
             {
                 return;
