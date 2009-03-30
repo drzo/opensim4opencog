@@ -660,7 +660,7 @@ namespace cogbot.Listeners
             Avatars_OnAvatarAnimation(client.Self.AgentID, agentAnimations);
         }
 
-        public override void Grid_OnCoarseLocationUpdate(Simulator simulator)
+        public override void  Grid_OnCoarseLocationUpdate(Simulator sim, List<UUID> newEntries, List<UUID> removedEntries)
         {
 
             //for (int i = 0; i < coarse.Location.Length; i++)
