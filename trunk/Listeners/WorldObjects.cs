@@ -19,7 +19,7 @@ namespace cogbot.Listeners
     {
         public static implicit operator GridClient(WorldObjects m)
         {
-            return m.client;
+            return m.client.gridClient;
         }
         internal static BotClient BotClientFor(GridClient client)
         {
