@@ -361,15 +361,11 @@ namespace OpenMetaverse
         public IPEndPoint IPEndPoint { get { return remoteEndPoint; } }
         /// <summary>Whether there is a working connection to the simulator or 
         /// not</summary>
-        public bool Connected { get {
-            if (!connected) Console.WriteLine("unconnected sim: " + this);
-            return connected; } }
+        public bool Connected { get { return connected; } }
         /// <summary>Coarse locations of avatars in this simulator</summary>
-        public Dictionary<UUID, Vector3> AvatarPositions { get { return avatarPositions; } }
-        /// <summary>AvatarPositions index representing your avatar</summary>
-        public int PositionIndexYou { get { return positionIndexYou; } }
-        /// <summary>AvatarPositions index representing TrackAgent target</summary>
-        public int PositionIndexPrey { get { return positionIndexPrey; } }
+        public InternalDictionary<UUID, Vector3> AvatarPositions { get { return avatarPositions; } }
+        /// <summary>AvatarPositions key representing TrackAgent target</summary>
+        public UUID PreyID { get { return preyID; } }
 
         #endregion Properties
 
@@ -383,11 +379,9 @@ namespace OpenMetaverse
         /// to the property Connected</summary>
         internal bool connected;
         /// <summary>Coarse locations of avatars in this simulator</summary>
-        internal Dictionary<UUID, Vector3> avatarPositions = new Dictionary<UUID, Vector3>();
-        /// <summary>AvatarPositions index representing your avatar</summary>
-        internal int positionIndexYou = -1;
-        /// <summary>AvatarPositions index representing TrackAgent target</summary>
-        internal int positionIndexPrey = -1;
+        internal InternalDictionary<UUID, Vector3> avatarPositions = new InternalDictionary<UUID, Vector3>();
+        /// <summary>AvatarPositions key representing TrackAgent target</summary>
+        internal UUID preyID = UUID.Zero;
         /// <summary>Sequence numbers of packets we've received
         /// (for duplicate checking)</summary>
         internal Queue<uint> PacketArchive;
@@ -409,19 +403,13 @@ namespace OpenMetaverse
 
         #endregion Internal/Private Members
 
-
-        static public Simulator CreateSimulator(GridClient client, IPEndPoint address, ulong handle)
-        {
-
-            return new Simulator(client, address, handle,true);
-        }
         /// <summary>
         /// 
         /// </summary>
         /// <param name="client">Reference to the GridClient object</param>
         /// <param name="address">IPEndPoint of the simulator</param>
         /// <param name="handle">handle of the simulator</param>
-        private Simulator(GridClient client, IPEndPoint address, ulong handle, bool b)
+        public Simulator(GridClient client, IPEndPoint address, ulong handle)
             : base(address)
         {
             Client = client;

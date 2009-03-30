@@ -130,10 +130,10 @@ namespace OpenMetaverse.Http
 
                 if (code == HttpStatusCode.NotFound || code == HttpStatusCode.Gone)
                 {
-                    Logger.Log.InfoFormat("Not Closing event queue at {0} even due to missing caps URI", _Client.Location);
+                    Logger.Log.InfoFormat("Closing event queue at {0} due to missing caps URI", _Client.Location);
 
-                  //  _Running = false;
-                    //_Dead = true;
+                    _Running = false;
+                    _Dead = true;
                 }
                 else if (code == HttpStatusCode.BadGateway)
                 {

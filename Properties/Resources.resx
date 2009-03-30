@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="cogbotAuthor" xml:space="preserve">
-    <value>Legolas Luke</value>
+    <value>Daxtron Labs</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="arrow_up_16" type="System.Resources.ResXFileRef, System.Windows.Forms">

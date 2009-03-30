@@ -235,7 +235,6 @@ namespace OpenMetaverse.Http
             {
                 object[] args = (object[])state;
                 byte[] data2;
-                string OM = method;
 
                 try
                 {

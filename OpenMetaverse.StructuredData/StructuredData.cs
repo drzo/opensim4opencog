@@ -85,7 +85,7 @@ namespace OpenMetaverse.StructuredData
         public virtual string AsString() { return String.Empty; }
         public virtual UUID AsUUID() { return UUID.Zero; }
         public virtual DateTime AsDate() { return Utils.Epoch; }
-        public virtual Uri AsUri() { return new Uri(String.Empty); }
+        public virtual Uri AsUri() { return new Uri("http://null/"); }
         public virtual byte[] AsBinary() { return Utils.EmptyBytes; }
         public virtual Vector2 AsVector2() { return Vector2.Zero; }
         public virtual Vector3 AsVector3() { return Vector3.Zero; }
@@ -391,7 +391,7 @@ namespace OpenMetaverse.StructuredData
         public override ulong AsULong() { return (ulong)value; }
         public override double AsReal() { return (double)value; }
         public override string AsString() { return value.ToString(); }
-        public override byte[] AsBinary() { return Utils.IntToBytes(value); }
+        public override byte[] AsBinary() { return Utils.IntToBytesBig(value); }
 
         public override string ToString() { return AsString(); }
     }
@@ -457,8 +457,9 @@ namespace OpenMetaverse.StructuredData
         }
 
         public override double AsReal() { return value; }
-        public override string AsString() { return value.ToString(Utils.EnUsCulture); }
-        public override byte[] AsBinary() { return Utils.DoubleToBytes(value); }
+        // "r" ensures the value will correctly round-trip back through Double.TryParse
+        public override string AsString() { return value.ToString("r", Utils.EnUsCulture); }
+        public override byte[] AsBinary() { return Utils.DoubleToBytesBig(value); }
         public override string ToString() { return AsString(); }
     }
 
@@ -627,7 +628,7 @@ namespace OpenMetaverse.StructuredData
         public override byte[] AsBinary()
         {
             TimeSpan ts = value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            return Utils.DoubleToBytes(ts.TotalSeconds);
+            return Utils.DoubleToBytesBig(ts.TotalSeconds);
         }
 
         public override DateTime AsDate() { return value; }
