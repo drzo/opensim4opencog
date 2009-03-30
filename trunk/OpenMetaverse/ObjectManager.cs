@@ -601,6 +601,7 @@ namespace OpenMetaverse
             Client.Network.SendPacket(degrab, simulator);
         }
 
+
         /// <summary>
         /// Create, or "rez" a new prim object in a simulator
         /// </summary>
@@ -623,9 +624,25 @@ namespace OpenMetaverse
             AddPrim(simulator, prim, groupID, position, scale, rotation, PrimFlags.CreateSelected);
         }
 
-
+        /// <summary>
+        /// Create, or "rez" a new prim object in a simulator
+        /// </summary>
+        /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object to place the object in</param>
+        /// <param name="prim">Data describing the prim object to rez</param>
+        /// <param name="groupID">Group ID that this prim will be set to, or UUID.Zero if you
+        /// do not want the object to be associated with a specific group</param>
+        /// <param name="position">An approximation of the position at which to rez the prim</param>
+        /// <param name="scale">Scale vector to size this prim</param>
+        /// <param name="rotation">Rotation quaternion to rotate this prim</param>
+        /// <param name="createFlags">PrimFlags used in creation such as PrimFlags.CreateSelected</param>
+        /// <remarks>Due to the way client prim rezzing is done on the server,
+        /// the requested position for an object is only close to where the prim
+        /// actually ends up. If you desire exact placement you'll need to 
+        /// follow up by moving the object after it has been created. This
+        /// function will not set textures, light and flexible data, or other 
+        /// extended primitive properties</remarks>
         public void AddPrim(Simulator simulator, Primitive.ConstructionData prim, UUID groupID, Vector3 position,
-            Vector3 scale, Quaternion rotation, PrimFlags addFlags)
+            Vector3 scale, Quaternion rotation, PrimFlags createFlags)
         {
             ObjectAddPacket packet = new ObjectAddPacket();
 
@@ -634,7 +651,7 @@ namespace OpenMetaverse
             packet.AgentData.GroupID = groupID;
 
             packet.ObjectData.State = prim.State;
-            packet.ObjectData.AddFlags = (uint)addFlags;// (uint)PrimFlags.CreateSelected;
+            packet.ObjectData.AddFlags = (uint)createFlags;
             packet.ObjectData.PCode = (byte)PCode.Prim;
 
             packet.ObjectData.Material = (byte)prim.Material;
@@ -2404,6 +2421,71 @@ namespace OpenMetaverse
         {
             s.Stats.Dilation = (float)dilation / 65535.0f;
         }
+
+
+        /// <summary>
+        /// Set the Shape data of an object
+        /// </summary>
+        /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the object resides</param>
+        /// <param name="localID">The objects ID which is local to the simulator the object is in</param>
+        /// <param name="prim">Data describing the prim shape</param>
+        public void SetShape(Simulator simulator, uint localID, Primitive.ConstructionData prim)
+        {
+            ObjectShapePacket shape = new ObjectShapePacket();
+
+            shape.AgentData.AgentID = Client.Self.AgentID;
+            shape.AgentData.SessionID = Client.Self.SessionID;
+
+            shape.ObjectData = new OpenMetaverse.Packets.ObjectShapePacket.ObjectDataBlock[1];
+            shape.ObjectData[0] = new OpenMetaverse.Packets.ObjectShapePacket.ObjectDataBlock();
+
+            shape.ObjectData[0].ObjectLocalID = localID;
+
+            shape.ObjectData[0].PathCurve = (byte)prim.PathCurve;
+            shape.ObjectData[0].PathBegin = Primitive.PackBeginCut(prim.PathBegin);
+            shape.ObjectData[0].PathEnd = Primitive.PackEndCut(prim.PathEnd);
+            shape.ObjectData[0].PathScaleX = Primitive.PackPathScale(prim.PathScaleX);
+            shape.ObjectData[0].PathScaleY = Primitive.PackPathScale(prim.PathScaleY);
+            shape.ObjectData[0].PathShearX = (byte)Primitive.PackPathShear(prim.PathShearX);
+            shape.ObjectData[0].PathShearY = (byte)Primitive.PackPathShear(prim.PathShearY);
+            shape.ObjectData[0].PathTwist = Primitive.PackPathTwist(prim.PathTwist);
+            shape.ObjectData[0].PathTwistBegin = Primitive.PackPathTwist(prim.PathTwistBegin);
+            shape.ObjectData[0].PathRadiusOffset = Primitive.PackPathTwist(prim.PathRadiusOffset);
+            shape.ObjectData[0].PathTaperX = Primitive.PackPathTaper(prim.PathTaperX);
+            shape.ObjectData[0].PathTaperY = Primitive.PackPathTaper(prim.PathTaperY);
+            shape.ObjectData[0].PathRevolutions = Primitive.PackPathRevolutions(prim.PathRevolutions);
+            shape.ObjectData[0].PathSkew = Primitive.PackPathTwist(prim.PathSkew);
+
+            shape.ObjectData[0].ProfileCurve = prim.profileCurve;
+            shape.ObjectData[0].ProfileBegin = Primitive.PackBeginCut(prim.ProfileBegin);
+            shape.ObjectData[0].ProfileEnd = Primitive.PackEndCut(prim.ProfileEnd);
+            shape.ObjectData[0].ProfileHollow = Primitive.PackProfileHollow(prim.ProfileHollow);
+
+            Client.Network.SendPacket(shape, simulator);
+        }
+
+        /// <summary>
+        /// Set the Material data of an object
+        /// </summary>
+        /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the object resides</param>
+        /// <param name="localID">The objects ID which is local to the simulator the object is in</param>
+        /// <param name="material">The new material of the object</param>
+        public void SetMaterial(Simulator simulator, uint localID, Material material)
+        {
+            ObjectMaterialPacket matPacket = new ObjectMaterialPacket();
+
+            matPacket.AgentData.AgentID = Client.Self.AgentID;
+            matPacket.AgentData.SessionID = Client.Self.SessionID;
+
+            matPacket.ObjectData = new ObjectMaterialPacket.ObjectDataBlock[1];
+            matPacket.ObjectData[0] = new ObjectMaterialPacket.ObjectDataBlock();
+
+            matPacket.ObjectData[0].ObjectLocalID = localID;
+            matPacket.ObjectData[0].Material = (byte)material;
+
+            Client.Network.SendPacket(matPacket, simulator);
+        }
+
 
         #endregion Utility Functions
 

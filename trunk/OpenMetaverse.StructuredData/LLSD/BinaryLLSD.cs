@@ -112,6 +112,7 @@ namespace OpenMetaverse.StructuredData
         {
             MemoryStream stream = SerializeLLSDBinaryStream(osd);
             byte[] binaryData = stream.ToArray();
+
             stream.Close();
 
             return binaryData;

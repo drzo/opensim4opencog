@@ -321,10 +321,10 @@ namespace cogbot.Listeners
 
         public virtual void Friends_OnFriendFound(UUID agentID, ulong regionHandle, Vector3 location) { OnEvent("On-Friend-Found", paramNamesOnFriendFound, paramTypesOnFriendFound, agentID, regionHandle, location); }
 
-        static readonly string[] paramNamesOnCoarseLocationUpdate = new string[] { "sim" };
-        static readonly Type[] paramTypesOnCoarseLocationUpdate = new Type[] { typeof(Simulator) };
+        static readonly string[] paramNamesOnCoarseLocationUpdate = new string[] { "sim", "newEntries", "removedEntries" };
+        static readonly Type[] paramTypesOnCoarseLocationUpdate = new Type[] { typeof(Simulator), typeof(List<UUID>), typeof(List<UUID>) };
 
-        public virtual void Grid_OnCoarseLocationUpdate(Simulator sim) { OnEvent("On-Coarse-Location-Update", paramNamesOnCoarseLocationUpdate, paramTypesOnCoarseLocationUpdate, sim); }
+        public virtual void Grid_OnCoarseLocationUpdate(Simulator sim, List<UUID> newEntries, List<UUID> removedEntries) { OnEvent("On-Coarse-Location-Update", paramNamesOnCoarseLocationUpdate, paramTypesOnCoarseLocationUpdate, sim, newEntries,  removedEntries); }
 
         static readonly string[] paramNamesOnGridRegion = new string[] { "region" };
         static readonly Type[] paramTypesOnGridRegion = new Type[] { typeof(GridRegion) };

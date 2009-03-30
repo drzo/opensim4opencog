@@ -1231,7 +1231,12 @@ namespace cogbot.TheOpenSims
                     Logger.Log("Attempted TurnToward but parent prim is not in dictionary", Helpers.LogLevel.Warning, Client);
                     return false;
                 }
-                else parentRot = Client.Network.CurrentSim.ObjectsPrimitives[Client.Self.SittingOn].Rotation;
+
+                else
+                {
+                    Primitive parent = WorldSystem.GetPrimitive(Prim.ParentID,Client.Network.CurrentSim);
+                    parentRot = parent.Rotation;
+                }
             }
 
             Quaternion between = Vector3.RotationBetween(Vector3.UnitX, Vector3.Normalize(target - Client.Self.SimPosition));

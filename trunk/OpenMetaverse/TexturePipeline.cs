@@ -178,7 +178,7 @@ namespace OpenMetaverse
                 }
                 else
                 {
-                   // Logger.Log("Requested texture data for texture that does not exist in dictionary", Helpers.LogLevel.Warning);
+                    Logger.Log("Requested texture data for texture that does not exist in dictionary", Helpers.LogLevel.Warning);
                     return null;
                 }
             }
