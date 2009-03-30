@@ -288,7 +288,7 @@ namespace cogbot.TheOpenSims.Mesher
                 SculptMesh SM = ToSculptMesh(bytes, primitive.Sculpt.Type, Scale, rot);
                 if (SM != null)
                 {
-                    // SM.DumpRaw(".", primitive.ID.ToString(), "sculptMesh" + primitive.LocalID);
+                  //  SM.DumpRaw(".", primitive.ID.ToString(), "sculptMesh" + primitive.LocalID);
                     return ToMesh(SM.coords, SM.faces, SM.viewerFaces, primitive.Type == PrimType.Sphere);
                 }
             }
@@ -597,6 +597,25 @@ namespace cogbot.TheOpenSims.Mesher
                     || B.MinY > yf
                     || B.MaxY < yf) continue;
                 if (B.IsZInside(low, high)) return true;
+            }
+            return found;
+        }
+
+        internal bool SomethingMaxZ(float xf, float yf, float low, float high, out float maxZ)
+        {                  
+            bool found = false;
+            maxZ = OuterBox.MinZ;
+            foreach (Box3Fill B in InnerBoxes)
+            {
+                if (B.MinX > xf
+                    || B.MaxX < xf
+                    || B.MinY > yf
+                    || B.MaxY < yf) continue;
+                if (B.IsZInside(low, high))
+                {
+                    found = true;
+                    if (B.MaxZ > maxZ) maxZ = B.MaxZ;
+                }
             }
             return found;
         }
