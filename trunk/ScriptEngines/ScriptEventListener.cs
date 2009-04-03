@@ -99,7 +99,7 @@ namespace cogbot.ScriptEngines
         }
 
 
-        public string argsListString(IEnumerable args)        
+        static public string argsListString(IEnumerable args)        
         {
             if (args == null) return "NiL";
             IEnumerator enumer = args.GetEnumerator();
@@ -115,7 +115,7 @@ namespace cogbot.ScriptEngines
 
         }
 
-        public string argString(object arg)
+        static public string argString(object arg)
         {
             if (arg == null) return "NIL";
             Type type = arg.GetType();
@@ -214,7 +214,7 @@ namespace cogbot.ScriptEngines
             if (arg is UUID)
             {
             //   if (true) return argString(arg.ToString());
-                object found = WorldSystem.GetObject((UUID)arg);
+                object found = WorldObjects.Master.GetObject((UUID)arg);
                 if (found == null || found == arg)
                 {
                     return argString(arg.ToString());

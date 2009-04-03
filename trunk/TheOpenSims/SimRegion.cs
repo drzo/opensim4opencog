@@ -8,6 +8,7 @@ using cogbot.TheOpenSims.Navigation.Debug;
 using cogbot.TheOpenSims.Mesher;
 using Simian;
 using System.Threading;
+using cogbot.ScriptEngines;
 
 namespace cogbot.TheOpenSims
 {
@@ -60,7 +61,7 @@ namespace cogbot.TheOpenSims
             return m.GetSimRegion();
         }
 
-        readonly float MAXY = 255.9f;
+        readonly float MAXY = 256f;
 
         static Vector2 vC = new Vector2(0, 0), // C
                vN = new Vector2(0, 1), // N
@@ -169,12 +170,15 @@ namespace cogbot.TheOpenSims
             {
                 throw new ArgumentException("GetRegion: region handle cant be zero");
             }
-            SimRegion R;
-            if (_CurrentRegions.TryGetValue(id, out R))
+            lock (_CurrentRegions)
+            {
+                SimRegion R;
+                if (_CurrentRegions.TryGetValue(id, out R))
+                    return R;
+                R = new SimRegion(id);
+                _CurrentRegions[id] = R;
                 return R;
-            R = new SimRegion(id);
-            lock (_CurrentRegions) _CurrentRegions[id] = R;
-            return R;
+            }
 
         }
 
@@ -298,7 +302,8 @@ namespace cogbot.TheOpenSims
             set
             {           
                 GridInfoKnown = true;
-                _GridInfo = value; 
+                _GridInfo = value;
+                if (value.WaterHeight == 0) _GridInfo.WaterHeight = 20;
                 _RegionName = _GridInfo.Name;
                 regionEvent.Set();
                 //Client.Grid.RequestMapRegion(_RegionName, GridLayerType.Terrain);
@@ -599,7 +604,7 @@ namespace cogbot.TheOpenSims
                 return W.GetWaypointOf(V);
             }
             else
-                if (v3.X > MAXY)
+                if (v3.X >= MAXY)
                 {
                     Vector3 V = v3;
                     V.X -= 256f;
@@ -613,7 +618,7 @@ namespace cogbot.TheOpenSims
                         return S.GetWaypointOf(V);
                     }
                     else
-                        if (v3.Y > MAXY)
+                        if (v3.Y >= MAXY)
                         {
                             Vector3 V = v3;
                             V.Y -= 256f;
@@ -1199,9 +1204,18 @@ namespace cogbot.TheOpenSims
 
         internal static void TaintArea(Vector3d targetPos)
         {
+            // if <0,0,0> return;
+            if (!InWorld(targetPos)) return;
             SimRegion R = GetRegion(targetPos);
             Vector3 V = GlobalToLocal(targetPos);
             R.TaintLocal(V);
+        }
+
+        internal static bool InWorld(Vector3d targetPos)
+        {
+            if (targetPos.X < 255) return false;
+            if (targetPos.Y < 255) return false;
+            return true;
         }
 
         private void TaintLocal(Vector3 V)
@@ -1209,6 +1223,21 @@ namespace cogbot.TheOpenSims
             SimWaypoint W = GetWaypointOf(V);
             W.RegionTaintedThis();
 
+        }
+
+        internal string ConnectionInfo()
+        {
+            Simulator master = TheSimulator;
+            string sdebug = "ConnectionInfo: " + RegionName + "\n " + ScriptEventListener.argString(GridInfo);
+            lock (_Simulators) foreach (Simulator S in _Simulators)
+                {
+                    sdebug += "\n  " + ((S == master) ? "*" : " ");
+                    sdebug += "" + S;
+                    if (!S.Connected) sdebug += " DISCONNECTED ";
+                    else sdebug += " CONNECTED ";
+                    sdebug += S.Client;
+                }
+            return sdebug;
         }
     }
 }

@@ -34,6 +34,13 @@ namespace cogbot.TheOpenSims.Navigation
     [Serializable]
     public class SimPathStore
     {
+
+
+        public override string ToString()
+        {
+            return GetType().Name + ": " + GetSimRegion() + " Level=" + SimZAverage;
+        }
+
         public float _TheSimZ = -1f;
         public float SimZAverage
         {
@@ -651,7 +658,7 @@ namespace cogbot.TheOpenSims.Navigation
             }
             return NewBitmap;
         }
-        public static void Debug(string format, params object[] arg)
+        public void Debug(string format, params object[] arg)
         {
             Console.WriteLine("[SimPathStore] " + format, arg);
         }
@@ -659,7 +666,8 @@ namespace cogbot.TheOpenSims.Navigation
 
         internal void TaintMatrix()
         {
-            lock (mWaypoints) for (int x = 0; x < MAPSPACE; x++)
+            //lock (mWaypoints)
+                for (int x = 0; x < MAPSPACE; x++)
             {
                 for (int y = 0; y < MAPSPACE; y++)
                 {
@@ -672,7 +680,7 @@ namespace cogbot.TheOpenSims.Navigation
         public bool NeedsUpdate = true;
         internal void UpdateMatrix()
         {
-            lock (mWaypoints)
+          //  lock (mWaypoints)
             {
                 SimRegion R = GetSimRegion();
                 R.BakeTerrain();
@@ -752,30 +760,8 @@ namespace cogbot.TheOpenSims.Navigation
         {
             SimPathStore PathStore = this;
             Point P = PathStore.ToPoint(vector3);
-            Debug("SetNodeQualityTimer {0},{1} to {2}", P.X / PathStore.POINTS_PER_METER, P.Y / PathStore.POINTS_PER_METER,value);
-            byte oldValue = PathStore.GetNodeQuality(vector3);
-            if (oldValue == value) // aready blocked
-                return;
-            PathStore.SetNodeQuality(vector3, 0);
-            Primitive PRIM = WorldObjects.Master.AddTempPrim(GetSimRegion(), "pathdebug", PrimType.Tube, new Vector3(StepSize, StepSize, StepSize), vector3);
-            new Thread(new ThreadStart(delegate()
-            {
-                Thread.Sleep(60000);
-                byte newValue = PathStore.GetNodeQuality(vector3);
-
-                if (PRIM!=null) WorldObjects.Master.DeletePrim(PRIM);
-                if (newValue != value)
-                {
-                    // its been changed by something else since we set to Zero
-                    Debug("SetNodeQualityTimer Thread out of date {0} value changed to {1}", vector3, newValue);
-                }
-                else
-                {
-                    PathStore.SetNodeQuality(vector3, oldValue);
-                    Debug("ResetNodeQualityTimer {0} value reset to {1}", vector3, oldValue);
-                }
-            })).Start();
-
+            SimWaypoint WP = Waypoint(P.X, P.Y);
+            WP.SetNodeQualityTimer(value, seconds);
         }
 
         Dictionary<UUID, MoverTracking> LaskKnownPos = new Dictionary<UUID, MoverTracking>();
@@ -804,7 +790,7 @@ namespace cogbot.TheOpenSims.Navigation
             int MAX = MAPSPACE - 1;
             if (xe < MAX) xe++;
             if (ys < MAX) ye++;
-            lock (mWaypoints)
+          //  lock (mWaypoints)
             {
                 for (int x = xs; x <= xe; x++)
                     for (int y = ys; y <= ye; y++)
@@ -857,7 +843,7 @@ namespace cogbot.TheOpenSims.Navigation
             {
                 Vector3 dif = LastPosition - nextPosition;
                 int stepsNeeded = (int)(dist * Store.POINTS_PER_METER)+1;
-                Console.WriteLine("MakeMovement " + LastPosition + " -> " + stepsNeeded + " -> " + nextPosition);
+                Console.WriteLine("MakeMovement " + LastPosition + " -> " + stepsNeeded + " -> " + nextPosition + " " + Store);
                 Vector3 vstep = dif / stepsNeeded;
                 Vector3 traveled = nextPosition;
                 Store.SetTraveled(nextPosition.X, nextPosition.Y);

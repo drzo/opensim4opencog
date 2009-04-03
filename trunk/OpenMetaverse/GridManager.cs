@@ -616,6 +616,8 @@ namespace OpenMetaverse
 
         private void CoarseLocationHandler(Packet packet, Simulator simulator)
         {
+            // dmiles 
+            return;
             CoarseLocationUpdatePacket coarse = (CoarseLocationUpdatePacket)packet;
 
             // populate a dictionary from the packet, for local use

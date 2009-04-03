@@ -665,10 +665,11 @@ namespace cogbot
 		{
 			try {
                 string toprint = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
-                toprint = toprint.Replace("$bot", Self.Name);
-                toprint = toprint.Replace("You", Self.Name);
-                toprint = toprint.Replace("you", Self.Name);
-                ClientManager.output(Self.Name + ": " + toprint);
+                string SelfName = Self.Name;
+                toprint = toprint.Replace("$bot", SelfName);
+                toprint = toprint.Replace("You", SelfName);
+                toprint = toprint.Replace("you", SelfName);
+                ClientManager.output(SelfName + ": " + toprint);
 			} catch (Exception) {
 			}
 		}
@@ -1079,13 +1080,13 @@ namespace cogbot
         internal string argsListString(IEnumerable list)
         {
             if (scriptEventListener == null) return "" + list;
-            return scriptEventListener.argsListString(list);
+            return ScriptEventListener.argsListString(list);
         }
 
         internal string argString(object p)
         {
             if (scriptEventListener == null) return "" + p;
-            return scriptEventListener.argString(p);
+            return ScriptEventListener.argString(p);
         }
 
         public bool ExecuteCommand(string text)

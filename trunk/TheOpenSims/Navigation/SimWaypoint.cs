@@ -6,6 +6,8 @@ using System.Collections;
 using cogbot.TheOpenSims.Navigation.Debug;
 using System.Drawing;
 using cogbot.TheOpenSims.Mesher;
+using cogbot.Listeners;
+using System.Threading;
 
 namespace cogbot.TheOpenSims.Navigation
 {
@@ -44,15 +46,6 @@ namespace cogbot.TheOpenSims.Navigation
         {
             _ZLevelCache = float.MinValue;
             _GroundLevelCache = float.MinValue;
-        }
-
-        int ZOrder(SimObject O1, SimObject O2)
-        {
-            Vector2 V1 = O1.GetMinMaxZ(this);
-            Vector2 V2 = O2.GetMinMaxZ(this);
-            //if (V1.Y != V2.Y) return (int)((V2.Y - V1.Y) * 10);
-            //if (V1.X != V2.X) return (int)((V2.X - V1.X) * 10);
-            return V1.CompareTo(V2);
         }
 
         public bool IsGroundLevel()
@@ -169,13 +162,13 @@ namespace cogbot.TheOpenSims.Navigation
             // when the Two Zs are differnt that means global Pos has been computed
             if (_ZLevelCache > 0) return _ZLevelCache;
             _ZLevelCache = GetGroundLevel();
-            OccupiedListObject.Sort(ZOrder);
-            OccupiedListObject.Reverse();
+          ///  OccupiedListObject.Sort(ZOrder);
+           /// OccupiedListObject.Reverse();
             if (IsSolid != 0)
             {
                 bool ChangeD = false;
                 SimObject Flooring = null;
-                for (byte d = 0; d < IsSolid+1; d++)
+                for (int d = IsSolid; d > 0; d--)
                 {
                     lock (OccupiedListObject)
                         foreach (SimObject O in OccupiedListObject)
@@ -196,60 +189,6 @@ namespace cogbot.TheOpenSims.Navigation
                                     _ZLevelCache = MaxZ;
                                 }
 
-                            }
-
-                        }
-                    if (!ChangeD) break;
-                }
-                //if (Flooring != null)
-                //{
-                //    if (ChangeD) lock (OccupiedListObject)
-                //    {
-                //        OccupiedListObject.Remove(Flooring);
-                //        OccupiedListObject.Insert(0, Flooring);
-                //    }
-                //}
-            }
-            _LocalPos.Z = _ZLevelCache;
-            _GlobalPos.Z = _ZLevelCache + 1;
-            return _ZLevelCache;
-        }
-
-
-        public float GetZLevelOLD()
-        {
-            // when the Two Zs are differnt that means global Pos has been computed
-            if (_ZLevelCache > 0) return _ZLevelCache;
-            _ZLevelCache = GetGroundLevel();
-            OccupiedListObject.Sort(ZOrder);
-            OccupiedListObject.Reverse();
-            if (IsSolid != 0)
-            {
-                bool ChangeD = false;
-                SimObject Flooring = null;
-                for (byte d = 0; d < IsSolid; d++)
-                {
-                    lock (OccupiedListObject)
-                        foreach (SimObject O in OccupiedListObject)
-                        {
-                            if (O.IsPassable) continue;
-                            if (O.SomethingBetween(_LocalPos, _ZLevelCache, _ZLevelCache + 1.5f))
-                            {
-                                Vector2 MM = O.GetMinMaxZ(this);
-                                float MinZ = MM.X;// = O.OuterBox.MinZ;
-                                float MaxZ = MM.Y;// = O.OuterBox.MaxZ;
-                                //bool wpfound = O.GetZLevel(Point, out MinZ, out MaxZ);
-                                {
-                                    // The object is higher
-                                    if (_ZLevelCache < MaxZ)
-                                        // And the object is below or the bottem of object is less than a meter above or the top of object is less than 1.5 meters
-                                        if (MinZ <= _ZLevelCache || DiffLessThan(MinZ, _ZLevelCache, 1.5f) || DiffLessThan(MaxZ, _ZLevelCache, 2f))
-                                        {
-                                            Flooring = O;
-                                            ChangeD = true;
-                                            _ZLevelCache = MaxZ;
-                                        }
-                                }
                             }
 
                         }
@@ -321,7 +260,7 @@ namespace cogbot.TheOpenSims.Navigation
                 {
                     foreach (SimObject O in OccupiedListObject)
                     {
-                        S += O.GetMinMaxZ(this);
+                        S += O.OuterBox;
                         S += " ";
 
 
@@ -1013,6 +952,45 @@ namespace cogbot.TheOpenSims.Navigation
         private byte MLevel(int x, int y)
         {
             return PathStore.mMatrix[x, y];
+        }
+
+        bool IsTicking = false;
+        internal void SetNodeQualityTimer(int value, int seconds)
+        {
+            byte oldValue = GetMatrix();
+            if (oldValue == value) // already set
+                return;
+            Debug("SetNodeQualityTimer of {0} form {1} to {2}", this, oldValue, value);
+            PathStore.mMatrix[PX, PY] =(byte) value;
+            if (IsTicking) return;
+            IsTicking = true;
+
+            WorldObjects Master = WorldObjects.Master;
+            float StepSize = PathStore.StepSize;
+            Primitive PRIM = null;// Master.AddTempPrim(GetSimRegion(), "pathdebug", PrimType.Tube, new Vector3(StepSize, StepSize, StepSize), _LocalPos);
+            new Thread(new ThreadStart(delegate()
+            {
+                Thread.Sleep(seconds * 1000);
+                byte newValue = GetMatrix();
+
+                if (PRIM != null) Master.DeletePrim(PRIM);
+                if (newValue != value)
+                {
+                    // its been changed by something else since we set to Zero
+                    Debug("SetNodeQualityTimer Thread out of date {0} value changed to {1}", this, newValue);
+                }
+                else
+                {
+                     SetMatrix(oldValue);
+                    Debug("ResetNodeQualityTimer {0} value reset to {1}", this, oldValue);
+                }
+                IsTicking = false;
+            })).Start();
+        }
+
+        private void Debug(string format, params object[] objs)
+        {
+            PathStore.Debug(format, objs);
         }
     }
 
