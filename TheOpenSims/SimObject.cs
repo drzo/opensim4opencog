@@ -1110,22 +1110,12 @@ namespace cogbot.TheOpenSims
             };
         }
 
-        Dictionary<Point, Vector2> OccupiedWPs = new Dictionary<Point, Vector2>();
+        List<Point> OccupiedWPs = new List<Point>();
 
         internal bool IsInside(Vector3 L)
         {
             return (Mesh.IsInside(L.X, L.Y, L.Z));
         }
-
-        internal Vector2 GetMinMaxZ(SimWaypoint WP)
-        {
-            try { return OccupiedWPs[WP.Point]; }
-            catch (Exception)
-            {
-                return new Vector2(OuterBox.MinZ, OuterBox.MaxZ);
-            }
-        }
-
 
         internal void RemeshObject(Box3Fill changed)
         {
@@ -1148,7 +1138,7 @@ namespace cogbot.TheOpenSims
             lock (OccupiedWPs)
             {
                 SimPathStore S = GetPathSystem();
-                foreach (Point P in OccupiedWPs.Keys)
+                foreach (Point P in OccupiedWPs)
                 {
                     changed.AddPoint(P.X, P.Y, 0, 0f);
                     SimWaypoint W = S.mWaypoints[P.X, P.Y];
@@ -1161,30 +1151,12 @@ namespace cogbot.TheOpenSims
 
         internal void SetLocated(float x, float y, float minZ, float maxZ)
         {
-            Point WP = PathStore.SetObjectAt(x, y, this, minZ, maxZ).Point;
-
-            Vector2 V2;
-            if (OccupiedWPs.TryGetValue(WP, out V2))
+            Point P = PathStore.SetObjectAt(x, y, this, minZ, maxZ).Point;
+            lock (OccupiedWPs)
             {
-                bool b = false;
-                if (minZ < V2.X)
-                {
-                    V2.X = minZ;
-                    b = true;
-                }
-                if (maxZ > V2.Y)
-                {
-                    V2.Y = maxZ;
-                    b = true;
-                }
-                if (!b) return;
+                if (OccupiedWPs.Contains(P)) return;
+                OccupiedWPs.Add(P);
             }
-            else
-            {
-                V2.X = minZ;
-                V2.Y = maxZ;
-            }
-            OccupiedWPs[WP] = V2;
         }
 
         static void AllTerrainMinMaxLevel(float x, float y, out double minLevel, out double maxLevel)
@@ -1198,7 +1170,7 @@ namespace cogbot.TheOpenSims
             if (!IsRegionAttached()) return;
             if (simPathStore.GetSimRegion() != GetSimRegion()) return;
             PathStore = simPathStore;
-            if (!IsSculpted)
+           // if (!IsSculpted)
             {
                 UpdatePathOccupied(simPathStore);
                 return;
@@ -1226,43 +1198,6 @@ namespace cogbot.TheOpenSims
             PathStore = simPathStore;
             Vector3 Position = GetSimPosition();
             Mesh.SetOccupied(SetLocated, 10, 60, simPathStore.StepSize);
-           // Mesh = null;
-        }
-
-        private void UpdatePathOccupiedNotWorkingNew(SimPathStore simPathStore)
-        {
-            if (simPathStore.GetSimRegion() != GetSimRegion()) return;
-            PathStore = simPathStore;
-            byte[,] mMatrix = PathStore.mMatrix;
-            PathStore.NeedsUpdate = true;
-            float POINTS_PER_METER = PathStore.POINTS_PER_METER;
-            float StepSize = PathStore.StepSize;
-            float xf = OuterBox.MinX;
-            float yfi = OuterBox.MinY;
-            int xs = (int)Math.Round(OuterBox.MinX * POINTS_PER_METER);
-            int ys = (int)Math.Round(OuterBox.MinY * POINTS_PER_METER);
-            int xe = (int)Math.Round(OuterBox.MaxX * POINTS_PER_METER);
-            int ye = (int)Math.Round(OuterBox.MaxY * POINTS_PER_METER);
-            Vector2 v2 = new Vector2(float.MaxValue, float.MinValue);
-            for (int x = xs; x <= xe; x++)
-            {
-                float yf = yfi;
-                for (int y = ys; y <= ye; y++)
-                {
-                    if (Mesh.MinMaxZ(xf, yf, ref v2))
-                    {
-                        SimWaypoint W = PathStore.Waypoint(x, y);
-                        OccupiedWPs[W.Point] = v2;
-                        W.AddOccupied(this, v2.X, v2.Y);
-                        v2 = new Vector2(float.MaxValue, float.MinValue);
-                        if (mMatrix[x, y] > 9)
-                            if (mMatrix[x, y] < 200)
-                                mMatrix[x, y] = W.GetOccupiedValue();
-                    }
-                    yf += StepSize;
-                }
-                xf += StepSize;
-            }
            // Mesh = null;
         }
 

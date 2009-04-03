@@ -746,7 +746,7 @@ namespace cogbot.TheOpenSims
             {
                 this.Client = Client;
                 //  WorldSystem = Client.WorldSystem;
-                if (IsLocal())
+                //if (IsLocal())
                 {
  //                   EnsureTrackerRunning();
                 }

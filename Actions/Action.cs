@@ -110,7 +110,11 @@ namespace cogbot.Actions
         /// <param name="arg"></param>
         public void WriteLine(string format, params object[] arg)
         {
-            String s = String.Format(format, arg);            
+
+            String s;
+            if (arg == null || arg.Length == 0) s = format;
+            else s
+                = String.Format(format, arg);
             Console.WriteLine(s);
             if (TheBotClient != null) TheBotClient.output(s);
         } // method: WriteLine

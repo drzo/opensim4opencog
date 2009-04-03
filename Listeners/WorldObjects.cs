@@ -231,7 +231,9 @@ namespace cogbot.Listeners
                 client.Settings.AVATAR_TRACKING = true;
                 client.Settings.THROTTLE_OUTGOING_PACKETS = false;
                 client.Settings.MULTIPLE_SIMS = true;
+                client.Settings.SIMULATOR_TIMEOUT = 30 * 60000;
                 client.Settings.SEND_AGENT_UPDATES = true;
+
                 client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
                 client.Self.Movement.AutoResetControls = false;
                 client.Self.Movement.UpdateInterval = 0;
@@ -411,12 +413,21 @@ namespace cogbot.Listeners
 
         static int CountnumAvatars;
 
+        static Dictionary<ulong, object> GetSimObjectLock = new Dictionary<ulong, object>();
         public SimObject GetSimObject(Primitive prim, Simulator simulator)
         {
-            Object obj0;
-            lock (uuidTypeObject)
+
+            lock (GetSimObjectLock)
             {
-                if (prim.ID != UUID.Zero && uuidTypeObject.TryGetValue(prim.ID, out obj0))
+                if (!GetSimObjectLock.ContainsKey(simulator.Handle))
+                    GetSimObjectLock[simulator.Handle] = new object();
+            }
+
+            Object obj0;
+            lock (GetSimObjectLock[simulator.Handle])
+            {
+                lock (uuidTypeObject) 
+                    if (prim.ID != UUID.Zero && uuidTypeObject.TryGetValue(prim.ID, out obj0))
                 {
                     if (obj0 is SimObject)
                     {
@@ -794,7 +805,7 @@ namespace cogbot.Listeners
         /// </summary>
         static List<Simulator> _AllSimulators = new List<Simulator>();
 
-        static List<Simulator> AllSimulators
+        internal static List<Simulator> AllSimulators
         {
             get
             {
@@ -843,6 +854,12 @@ namespace cogbot.Listeners
                 updateMe.UpdateProperties(props);
             }
             describePrimToAI(prim, simulator);
+        }
+
+        public override void Objects_OnNewAttachment(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
+        {
+            base.Objects_OnNewAttachment(simulator, prim, regionHandle, timeDilation);
+            Objects_OnNewPrim(simulator, prim, regionHandle, timeDilation);
         }
 
         public override void Avatars_OnAvatarAppearance(UUID avatarID, bool isTrial, Primitive.TextureEntryFace defaultTexture, Primitive.TextureEntryFace[] faceTextures, List<byte> visualParams)
@@ -2383,5 +2400,6 @@ namespace cogbot.Listeners
             client.Objects.SetFlags(LocalID, false, true, true, false);
             return newPrim;
         }
+
     }
 }

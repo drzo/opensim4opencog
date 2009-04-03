@@ -441,8 +441,19 @@ namespace OpenMetaverse
             RefreshDownloadsTimer.Start();
         }
 
+        object RefreshDownloadsTimer_ElapsedOverlapLock = new Object();
+        bool InRefreshDownloadsTimer_Elapsed = false;
         private void RefreshDownloadsTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+            lock (RefreshDownloadsTimer_ElapsedOverlapLock)
+            {
+                if (InRefreshDownloadsTimer_Elapsed)
+                {
+                    Logger.DebugLog("InRefreshDownloadsTimer_Elapsed");
+                    return;
+                }
+                InRefreshDownloadsTimer_Elapsed = true;
+            }
             lock (Transfers)
             {
                 foreach (Transfer transfer in Transfers.Values)
@@ -495,6 +506,10 @@ namespace OpenMetaverse
                         }
                     }
                 }
+            }
+            lock (RefreshDownloadsTimer_ElapsedOverlapLock)
+            {
+                InRefreshDownloadsTimer_Elapsed = false;
             }
         }
 
@@ -724,8 +739,8 @@ namespace OpenMetaverse
                     if (Single.IsNaN(percentComplete))
                         percentComplete = 0f;
 
-                    Logger.DebugLog(String.Format("Updating priority on image transfer {0}, {1}% complete",
-                        imageID, Math.Round(percentComplete, 2)));
+                    //Logger.DebugLog(String.Format("Updating priority on image transfer {0}, {1}% complete",
+                      //  imageID, Math.Round(percentComplete, 2)));
                 }
 
                 // Build and send the request packet

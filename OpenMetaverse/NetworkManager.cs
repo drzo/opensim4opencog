@@ -861,22 +861,23 @@ namespace OpenMetaverse
                 List<Simulator> disconnectedSims = null;
 
                 // Check all of the connected sims for disconnects
-                lock (Simulators)
+                List<Simulator> TheSimulators;
+                lock (Simulators) TheSimulators = new List<Simulator>(Simulators);
                 {
-                    for (int i = 0; i < Simulators.Count; i++)
+                    for (int i = 0; i < TheSimulators.Count; i++)
                     {
-                        if (Simulators[i].DisconnectCandidate)
+                        if (TheSimulators[i].DisconnectCandidate)
                         {
                             // Avoid initializing a new List<> every time the timer
                             // fires with this piece of code
                             if (disconnectedSims == null)
                                 disconnectedSims = new List<Simulator>();
 
-                            disconnectedSims.Add(Simulators[i]);
+                            disconnectedSims.Add(TheSimulators[i]);
                         }
                         else
                         {
-                            Simulators[i].DisconnectCandidate = true;
+                            TheSimulators[i].DisconnectCandidate = true;
                         }
                     }
                 }

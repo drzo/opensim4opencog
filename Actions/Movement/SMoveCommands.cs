@@ -65,6 +65,37 @@ namespace cogbot.Actions.Movement
     //        return "ran " + Name;
     //    }
     //}
+
+    class connections : cogbot.Actions.Command, BotSystemCommand
+    {
+        public connections(BotClient client)
+        {
+            Name = GetType().Name;
+            Description = "Starts the waypoint debuger";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            if (args.Length == 0)
+            {
+                foreach (SimRegion R in SimRegion.CurrentRegions)
+                {
+                    WriteLine(R.ConnectionInfo());
+                }
+            }
+            else
+            {
+                foreach (SimRegion R in SimRegion.CurrentRegions)
+                {
+                    if (R.RegionName.Contains(String.Join(" ", args)))
+                        WriteLine(R.ConnectionInfo());
+                }
+            }
+            return "ran " + Name;
+        }
+    }
+
     class srdebug : cogbot.Actions.Command, BotSystemCommand
     {
         public srdebug(BotClient client)
@@ -92,22 +123,20 @@ namespace cogbot.Actions.Movement
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            //WorldSystem.TheSimAvatar.CurrentRegion.ShowDebugger();
             if (args.Length == 0)
             {
-                lock (Client.Network.Simulators)
+                foreach (SimRegion R in SimRegion.CurrentRegions)
                 {
-                    foreach (Simulator S in Client.Network.Simulators)
-                    {
-                        SimRegion.GetRegion(S).ShowDebugger();
-                    }
+                    R.ShowDebugger();
                 }
             }
             else
             {
-                SimRegion R = SimRegion.GetRegion(args[0]);
-                if (R != null) R.ShowDebugger();
-                else return "cant find region " + args[0];
+                foreach (SimRegion R in SimRegion.CurrentRegions)
+                {
+                    if (R.RegionName.Contains(String.Join(" ", args)))
+                        R.ShowDebugger();
+                }
             }
             return "ran " + Name;
         }
