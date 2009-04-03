@@ -156,9 +156,9 @@ namespace cogbot.TheOpenSims.Mesher
                 }
             }
             int b = InnerBoxes.Count;
-            Console.Write("Simplyfy mesh {0} -> ",b);
+           // Console.Write("Simplfy mesh {0} -> ",b);
             InnerBoxes = Box3Fill.Simplify(InnerBoxes);
-            Console.WriteLine(InnerBoxes.Count);
+           // Console.WriteLine(InnerBoxes.Count);
         }
 
         internal string DebugString()

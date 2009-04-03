@@ -784,77 +784,79 @@ namespace cogbot.TheOpenSims
         {
             if (true) return Prim.Scale; // the scale is all in the prim w/o parents?
             if (!IsRegionAttached()) throw Error("GetSimScale !IsRegionAttached: " + this);
-            Primitive theLPrim = Prim;
-            Vector3 theLPos = theLPrim.Scale;
-            while (theLPrim.ParentID != 0)
+            Primitive outerPrim = Prim;
+            Vector3 transValue = outerPrim.Scale;
+            while (outerPrim.ParentID != 0)
             {
-                uint theLPrimParentID = theLPrim.ParentID;
+                uint theLPrimParentID = outerPrim.ParentID;
                 Simulator simu = GetSimulator();
-                theLPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
-                while (theLPrim == null)
+                outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
+                while (outerPrim == null)
                 {
                     Thread.Sleep(100);
-                    theLPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
+                    outerPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
                 }
                 // maybe plus?
-                theLPos = theLPos + theLPrim.Scale;
+                transValue = transValue + outerPrim.Scale;
             }
-            return theLPos;
+            return transValue;
         }
 
 
         public virtual OpenMetaverse.Quaternion GetSimRotation()
         {
             if (!IsRegionAttached()) throw Error("GetSimRotation !IsRegionAttached: " + this);
-            Primitive theLPrim = Prim;
-            Quaternion theLPos = theLPrim.Rotation;
-            while (theLPrim.ParentID != 0)
+            Primitive outerPrim = Prim;
+            Quaternion transValue = outerPrim.Rotation;
+            while (outerPrim.ParentID != 0)
             {
-                uint theLPrimParentID = theLPrim.ParentID;
+                uint theLPrimParentID = outerPrim.ParentID;
                 Simulator simu = GetSimulator();
-                theLPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
-                while (theLPrim == null)
+                outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
+                while (outerPrim == null)
                 {
                     Thread.Sleep(100);
-                    theLPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
+                    outerPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
                 }
-                theLPos = theLPos * theLPrim.Rotation;
-                theLPos.Normalize();
+                transValue = transValue * outerPrim.Rotation;
+                transValue.Normalize();
             }
-            return theLPos;
+            return transValue;
         }
         public virtual Vector3 GetSimPosition()
         {
             if (!IsRegionAttached()) throw Error("GetWorldPosition !IsRegionAttached: " + this);
-            Primitive theLPrim = Prim;
-            Vector3 theLPos = theLPrim.Position;
-            while (theLPrim.ParentID != 0)
+            Primitive outerPrim = Prim;
+            Primitive thisPrim = Prim;
+            Vector3 transValue = outerPrim.Position;
+            while (outerPrim.ParentID != 0)
             {
-                uint theLPrimParentID = theLPrim.ParentID;
+                uint theLPrimParentID = thisPrim.ParentID;
                 Simulator simu = GetSimulator();
-                theLPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
-                while (theLPrim == null)
+                outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
+                while (outerPrim == null)
                 {
                     Thread.Sleep(100);
-                    theLPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
+                    outerPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
                 }
-                theLPos = theLPrim.Position + Vector3.Transform(theLPos, Matrix4.CreateFromQuaternion(theLPrim.Rotation));
+                transValue = outerPrim.Position + Vector3.Transform(transValue, Matrix4.CreateFromQuaternion(thisPrim.Rotation));
+                thisPrim = outerPrim;
             }
-            if (false && BadLocation(theLPos))
+            if (false && BadLocation(transValue))
             {
-                Debug("-------------------------" + this + " shouldnt be at " + theLPos);
+                Debug("-------------------------" + this + " shouldnt be at " + transValue);
                 //   WorldSystem.DeletePrim(thePrim);
             }
-            return theLPos;
+            return transValue;
         }
 
-        public bool BadLocation(Vector3 theLPos)
+        public bool BadLocation(Vector3 transValue)
         {
-            if (theLPos.Z < -2.0f) return true;
-            if (theLPos.X < 0.0f) return true;
-            if (theLPos.X > 255.0f) return true;
-            if (theLPos.Y < 0.0f) return true;
-            if (theLPos.Y > 255.0f) return true;
+            if (transValue.Z < -2.0f) return true;
+            if (transValue.X < 0.0f) return true;
+            if (transValue.X > 255.0f) return true;
+            if (transValue.Y < 0.0f) return true;
+            if (transValue.Y > 255.0f) return true;
             return false;
         }
 
@@ -1152,6 +1154,7 @@ namespace cogbot.TheOpenSims
         internal void SetLocated(float x, float y, float minZ, float maxZ)
         {
             Point P = PathStore.SetObjectAt(x, y, this, minZ, maxZ).Point;
+            return;
             lock (OccupiedWPs)
             {
                 if (OccupiedWPs.Contains(P)) return;

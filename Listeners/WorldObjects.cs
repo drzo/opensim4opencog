@@ -320,7 +320,7 @@ namespace cogbot.Listeners
                 {
                     int did = 0;
                     Debug("Start Processing Updates: " + updates);
-                    Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
+                    HeapShot();
 
                     while (updates > 0)
                     {
@@ -333,7 +333,7 @@ namespace cogbot.Listeners
                         did++;
                     }
                     Debug("Done processing Updates: " + did);
-                    Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
+                    HeapShot();
 
                 }
                 int beforeCatchUp = SimObjects.Count;
@@ -346,17 +346,17 @@ namespace cogbot.Listeners
                 if (beforeCatchUp != thisCount)
                 {
                     Debug("Simulator catchup found: " + beforeCatchUp + " -> " + thisCount);
-                    Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
+                    HeapShot();
                 }
                 if (thisCount == lastCount)
                 {
                     Thread.Sleep(20000);
-                    Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
+                    HeapShot();
                     continue;
                 }
 
                 Debug("TrackPaths Started: " + lastCount + "->" + thisCount);
-                Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
+                HeapShot();
                 lastCount = thisCount;
                 int occUpdate = 0;
                 foreach (SimObject O in SimObjects.CopyOf())
@@ -375,16 +375,17 @@ namespace cogbot.Listeners
                     //if (occUpdate
                 }
                 Debug("TrackPaths Completed: " + thisCount);
-                Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
+                HeapShot();
                 SimRegion.BakeRegions();
-                Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
+                HeapShot();
             }
         }
 
         private static void HeapShot()
         {
+            if (true) return;
             System.GC.Collect();
-            Console.WriteLine("kill -PROF ");
+            Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
             //System.Runtime.InteropServices.SEHException
             /// Console.WriteLine(Console.ReadLine());
         }
