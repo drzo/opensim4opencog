@@ -385,7 +385,7 @@ namespace cogbot.Listeners
         {
             //if (true) return;
             //System.GC.Collect();
-            Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
+            //Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
             //System.Runtime.InteropServices.SEHException
             /// Console.WriteLine(Console.ReadLine());
         }
