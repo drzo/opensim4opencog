@@ -299,7 +299,7 @@ namespace cogbot.TheOpenSims
             list.Remove(this);
             SimObjectType pt = list.Find(delegate(SimObjectType sc)
             {
-                    String tn = sc.GetTouchName();
+                    String tn = sc.TouchName;
                     return (!String.IsNullOrEmpty(tn));
             });
             return pt == null ? TouchName : pt.GetTouchName();
@@ -313,7 +313,7 @@ namespace cogbot.TheOpenSims
             list.Remove(this);
             SimObjectType pt = list.Find(delegate(SimObjectType sc)
             {
-                    String tn = sc.GetSitName();
+                    String tn = sc.SitName;
                     return (!String.IsNullOrEmpty(tn));
             });
             return pt == null ? SitName : pt.GetSitName();
