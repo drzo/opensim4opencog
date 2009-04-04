@@ -383,8 +383,8 @@ namespace cogbot.Listeners
 
         private static void HeapShot()
         {
-            if (true) return;
-            System.GC.Collect();
+            //if (true) return;
+            //System.GC.Collect();
             Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
             //System.Runtime.InteropServices.SEHException
             /// Console.WriteLine(Console.ReadLine());
@@ -1398,6 +1398,7 @@ namespace cogbot.Listeners
         public Primitive GetPrimitive(UUID id, Simulator simulator)
         {
             lock (uuidTypeObject)
+            {
                 if (uuidTypeObject.ContainsKey(id))
                 {
                     object simobject = uuidTypeObject[id];
@@ -1405,17 +1406,23 @@ namespace cogbot.Listeners
                         return ((SimObject)simobject).Prim;
                 }
 
+            }
             if (simulator == null)
             {
-                List<Simulator> sims = null;
-                lock (client.Network.Simulators) sims = new List<Simulator>(client.Network.Simulators);
-
-                foreach (Simulator sim in sims)
+                List<Simulator> sims = new List<Simulator>();
                 {
-                    Primitive p = GetPrimitive(id, sim);
-                    if (p != null) return p;
+                    lock (client.Network.Simulators)
+                    {
+                        sims.AddRange(client.Network.Simulators);
+                    }
+
+                    foreach (Simulator sim in sims)
+                    {
+                        Primitive p = GetPrimitive(id, sim);
+                        if (p != null) return p;
+                    }
+                    return null;
                 }
-                return null;
             }
 
             Primitive found = null;
@@ -1488,8 +1495,11 @@ namespace cogbot.Listeners
         {
             if (simulator == null)
             {
-                List<Simulator> sims = null;
-                lock (client.Network.Simulators) sims = new List<Simulator>(client.Network.Simulators);
+                List<Simulator> sims = new List<Simulator>();
+                lock (client.Network.Simulators)
+                {
+                    sims.AddRange(client.Network.Simulators);
+                }
 
                 foreach (Simulator sim in sims)
                 {
@@ -1511,20 +1521,20 @@ namespace cogbot.Listeners
             }
             ulong handle = simulator.Handle;
             //lock (AllSimulators)
-                foreach (Simulator sim in AllSimulators)
+            foreach (Simulator sim in AllSimulators)
+            {
+                if (sim.Handle == handle && sim != simulator)
                 {
-                    if (sim.Handle == handle && sim != simulator)
+                    if (sim.ObjectsPrimitives.TryGetValue(id, out prim))
                     {
-                        if (sim.ObjectsPrimitives.TryGetValue(id, out prim))
-                        {
-                            return prim;
-                        }
-                        if (sim.ObjectsAvatars.TryGetValue(id, out av))
-                        {
-                            return av;
-                        }
+                        return prim;
+                    }
+                    if (sim.ObjectsAvatars.TryGetValue(id, out av))
+                    {
+                        return av;
                     }
                 }
+            }
             return null;
         }
 

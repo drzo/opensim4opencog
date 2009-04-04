@@ -806,9 +806,9 @@ namespace cogbot.TheOpenSims
         public virtual OpenMetaverse.Quaternion GetSimRotation()
         {
             if (!IsRegionAttached()) throw Error("GetSimRotation !IsRegionAttached: " + this);
+            Quaternion transValue = Prim.Rotation;
             Primitive outerPrim = Prim;
-            Quaternion transValue = outerPrim.Rotation;
-            while (outerPrim.ParentID != 0)
+            if (false) while (outerPrim.ParentID != 0)
             {
                 uint theLPrimParentID = outerPrim.ParentID;
                 Simulator simu = GetSimulator();
@@ -819,7 +819,7 @@ namespace cogbot.TheOpenSims
                     outerPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
                 }
                 transValue = transValue * outerPrim.Rotation;
-                transValue.Normalize();
+              //  transValue.Normalize();
             }
             return transValue;
         }
@@ -829,7 +829,7 @@ namespace cogbot.TheOpenSims
             Primitive outerPrim = Prim;
             Primitive thisPrim = Prim;
             Vector3 transValue = outerPrim.Position;
-            while (outerPrim.ParentID != 0)
+            while (thisPrim.ParentID != 0)
             {
                 uint theLPrimParentID = thisPrim.ParentID;
                 Simulator simu = GetSimulator();
