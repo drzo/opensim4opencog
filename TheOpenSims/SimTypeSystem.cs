@@ -162,6 +162,10 @@ namespace cogbot.TheOpenSims
             return use.ChangeActual;
         }
 
+        public override string ToString()
+        {
+            return GetType().Name + "::" + GetTypeName();
+        }
 
         public string GetTypeName()
         {
@@ -277,13 +281,26 @@ namespace cogbot.TheOpenSims
         }
 
 
+        internal void AddAllTypes(List<SimObjectType> list)
+        {
+            if (list.Contains(this)) return;
+            list.Add(this);
+            foreach (SimObjectType T in SuperType.ToArray())
+            {
+                T.AddAllTypes(list);
+            }
+        }
+
         public string GetTouchName()
         {
             if (!String.IsNullOrEmpty(TouchName)) return TouchName;
-            SimObjectType pt = SuperType.Find(delegate(SimObjectType sc)
+            List<SimObjectType> list = new List<SimObjectType>();
+            AddAllTypes(list);
+            list.Remove(this);
+            SimObjectType pt = list.Find(delegate(SimObjectType sc)
             {
-                String tn = sc.GetTouchName();
-                return (!String.IsNullOrEmpty(tn));
+                    String tn = sc.GetTouchName();
+                    return (!String.IsNullOrEmpty(tn));
             });
             return pt == null ? TouchName : pt.GetTouchName();
         }
@@ -291,10 +308,13 @@ namespace cogbot.TheOpenSims
         public string GetSitName()
         {
             if (!String.IsNullOrEmpty(SitName)) return SitName;
-            SimObjectType pt = SuperType.Find(delegate(SimObjectType sc)
+            List<SimObjectType> list = new List<SimObjectType>();
+            AddAllTypes(list);
+            list.Remove(this);
+            SimObjectType pt = list.Find(delegate(SimObjectType sc)
             {
-                String tn = sc.GetSitName();
-                return (!String.IsNullOrEmpty(tn));
+                    String tn = sc.GetSitName();
+                    return (!String.IsNullOrEmpty(tn));
             });
             return pt == null ? SitName : pt.GetSitName();
         }

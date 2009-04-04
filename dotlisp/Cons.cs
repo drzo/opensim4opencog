@@ -174,9 +174,10 @@ public class Cons : IEnumerable
     // MEH: Avoid ToString throwing a null reference exception if first is nil.
 	internal String firstToString()
 		{
-		if (first == null)
-			return "nil"; // Should be (str nil) so that the user can override.
-		else
+            if (first == null)
+                return "nil"; // Should be (str nil) so that the user can override.
+            else
+                if (first is string) return "\"" + ((string)first).Replace("\"","\\\"") + "\"";
 			return first.ToString();
 		}
 
