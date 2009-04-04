@@ -461,10 +461,14 @@ namespace cogbot.TheOpenSims
                 }
                 return;
             }
-            UseAspect(new BotObjectAction(this, new SimObjectUsage(use, someObject)));
+            Do(use, someObject);
             return;
         }
 
+        public void Do(SimTypeUsage use, SimObject someObject)
+        {
+            UseAspect(new BotObjectAction(this, new SimObjectUsage(use, someObject)));
+        }
 
         public void UseAspect(BotMentalAspect someAspect)
         {

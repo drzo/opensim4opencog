@@ -9,12 +9,38 @@ using cogbot.Listeners; //using libsecondlife;
 namespace cogbot.Actions
 {
 
-    class SimType : Command, BotSystemCommand
+    class DoCommand : Command
     {
-        //BotRegionModel BRM;
-        public SimType(BotClient Client)
+        public DoCommand(BotClient Client)
         {
-            Name = GetType().Name.ToLower();
+            Name = GetType().Name.ToLower().Replace("Command", "");
+            helpString = "Tell a bot to do an action on an object";
+            usageString = "Usage: " + Name + " [UseTypeName] [object]";
+        }
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            if (args.Length < 2) return usageString;
+            SimTypeUsage use = SimTypeSystem.FindObjectUse(args[0]);
+            if (use == null) return "Unnkown use: " + args[0];
+            args = Parsing.SplitOff(args,1);
+            int argsUsed;
+            Primitive p = WorldSystem.GetPrimitive(args, out argsUsed);
+            if (argsUsed == 0) argsUsed = args.Length;
+            string objname = String.Join("", args,0, argsUsed);
+            if (p == null) return "cant find primitive " + objname;
+            SimObject O = WorldSystem.GetSimObject(p, null);
+            if (O == null) return "cant find simobject " + objname + " for " + p;
+            WriteLine("Doing " + use + " for " + O);
+            WorldSystem.TheSimAvatar.Do(use, O);
+            return "Did " + use + " for " + O;
+        }
+    }
+
+    class SimTypeCommand : Command, BotSystemCommand
+    {
+        public SimTypeCommand(BotClient Client)
+        {
+            Name = GetType().Name.ToLower().Replace("Command","");
             helpString = "Manipulates the SimType typesystem";
             usageString = "Usage: " + Name + " [ini|list|load]";
         }
