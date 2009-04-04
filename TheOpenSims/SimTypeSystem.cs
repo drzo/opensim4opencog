@@ -302,7 +302,7 @@ namespace cogbot.TheOpenSims
                     String tn = sc.TouchName;
                     return (!String.IsNullOrEmpty(tn));
             });
-            return pt == null ? TouchName : pt.GetTouchName();
+            return pt == null ? TouchName : pt.TouchName;
         }
 
         public string GetSitName()
@@ -316,7 +316,7 @@ namespace cogbot.TheOpenSims
                     String tn = sc.SitName;
                     return (!String.IsNullOrEmpty(tn));
             });
-            return pt == null ? SitName : pt.GetSitName();
+            return pt == null ? SitName : pt.SitName;
         }
 
         internal bool IsComplete()
@@ -611,6 +611,15 @@ namespace cogbot.TheOpenSims
             return null;
         }
 
+        internal static SimTypeUsage FindObjectUse(string aspectName)
+        {
+            lock (objectTypes) foreach (SimObjectType type in objectTypes)
+                {
+                    if (type.AspectName == aspectName) return type.FindObjectUsage(aspectName);
+                }
+            return null;
+        }
+
         static public SimObjectType GetObjectType(string name)
         {
             SimObjectType type = FindObjectType(name);
@@ -704,5 +713,7 @@ namespace cogbot.TheOpenSims
             }
             return arg.ToLower();
         }
+
+
     }
 }
