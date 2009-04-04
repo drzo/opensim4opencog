@@ -13,7 +13,7 @@ namespace cogbot.Actions
     {
         public DoCommand(BotClient Client)
         {
-            Name = GetType().Name.ToLower().Replace("Command", "");
+            Name = GetType().Name.ToLower().Replace("command", "");
             helpString = "Tell a bot to do an action on an object";
             usageString = "Usage: " + Name + " [UseTypeName] [object]";
         }
@@ -21,7 +21,7 @@ namespace cogbot.Actions
         {
             if (args.Length < 2) return usageString;
             SimTypeUsage use = SimTypeSystem.FindObjectUse(args[0]);
-            if (use == null) return "Unnkown use: " + args[0];
+            if (use == null) return "Unknown use: " + args[0];
             args = Parsing.SplitOff(args,1);
             int argsUsed;
             Primitive p = WorldSystem.GetPrimitive(args, out argsUsed);
@@ -40,7 +40,7 @@ namespace cogbot.Actions
     {
         public SimTypeCommand(BotClient Client)
         {
-            Name = GetType().Name.ToLower().Replace("Command","");
+            Name = GetType().Name.ToLower().Replace("command","");
             helpString = "Manipulates the SimType typesystem";
             usageString = "Usage: " + Name + " [ini|list|load]";
         }
