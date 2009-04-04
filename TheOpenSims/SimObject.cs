@@ -808,7 +808,7 @@ namespace cogbot.TheOpenSims
             if (!IsRegionAttached()) throw Error("GetSimRotation !IsRegionAttached: " + this);
             Quaternion transValue = Prim.Rotation;
             Primitive outerPrim = Prim;
-            if (false) while (outerPrim.ParentID != 0)
+            while (outerPrim.ParentID != 0)
             {
                 uint theLPrimParentID = outerPrim.ParentID;
                 Simulator simu = GetSimulator();
@@ -839,7 +839,7 @@ namespace cogbot.TheOpenSims
                     Thread.Sleep(100);
                     outerPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
                 }
-                transValue = outerPrim.Position + Vector3.Transform(transValue, Matrix4.CreateFromQuaternion(thisPrim.Rotation));
+                transValue = outerPrim.Position + Vector3.Transform(transValue, Matrix4.CreateFromQuaternion(thisPrim.Rotation*outerPrim.Rotation));
                 thisPrim = outerPrim;
             }
             if (false && BadLocation(transValue))
