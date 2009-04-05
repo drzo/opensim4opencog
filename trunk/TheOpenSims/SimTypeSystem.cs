@@ -37,6 +37,18 @@ namespace cogbot.TheOpenSims
         // Superclasses
         readonly public List<SimObjectType> SuperType = new List<SimObjectType>();
 
+        internal bool IsUseType;
+        internal bool IsInstanceType;
+
+        internal bool IsObjectType
+        {
+            get
+            {
+                if (IsUseType || IsInstanceType) return false;
+                return true;
+            }
+        }
+
         public string AspectName;
         public SimObjectType(string name)
             //: base(name)
@@ -319,9 +331,12 @@ namespace cogbot.TheOpenSims
             return pt == null ? SitName : pt.SitName;
         }
 
-        internal bool IsComplete()
+        internal bool IsComplete
         {
-            return SuperType.Count > 0;
+            get
+            {
+                return SuperType.Count > 0;
+            }
         }
     }
 
@@ -585,10 +600,18 @@ namespace cogbot.TheOpenSims
             return o;
         }
 
+        internal static SimObjectType CreateInstanceType(string name)
+        {
+            SimObjectType type = GetObjectType(name);
+            type.IsInstanceType = true;
+            return type;
+        }
+
         static public SimObjectType CreateObjectUse(string classname, params object[] defs)
         {
             SimObjectType type = GetObjectType(classname);
             type.AddSuperType(USEABLE);
+            type.IsUseType = true;
             SimTypeUsage usage = type.CreateObjectUsage(classname);
             type.ParseAffect(usage, defs);
             return type;
@@ -615,6 +638,7 @@ namespace cogbot.TheOpenSims
         {
             lock (objectTypes) foreach (SimObjectType type in objectTypes)
                 {
+                    if (!type.IsUseType) continue;
                     if (type.AspectName == aspectName) return type.FindObjectUsage(aspectName);
                 }
             return null;
@@ -631,15 +655,18 @@ namespace cogbot.TheOpenSims
             return type;
         }
 
-        internal static string ListTypes()
+        internal static string ListTypes(bool includeIncomplete, bool includeUsageTypes, bool includeObjectTypes, bool includeInstanceTypes)
         {
             string str = "";
             lock (objectTypes) foreach (SimObjectType type in objectTypes)
                 {
-                    if (!type.IsComplete()) continue;
+                    if (!includeIncomplete && !type.IsComplete) continue;
+                    if (!includeInstanceTypes && type.IsInstanceType) continue;
+                    if (!includeUsageTypes && type.IsUseType) continue;
+                    if (!includeObjectTypes && type.IsObjectType) continue;
                     str += "\n";
                     str += "\t" + type.ToDebugString() + "\n";
-                    foreach (String key in type.UsageAffect.Keys)
+                    lock (type.UsageAffect) foreach (String key in type.UsageAffect.Keys)
                     {
                         str += "\t\t;;" + type.FindObjectUsage(key).ToDebugString()+"\n";
                     }
@@ -713,7 +740,5 @@ namespace cogbot.TheOpenSims
             }
             return arg.ToLower();
         }
-
-
     }
 }

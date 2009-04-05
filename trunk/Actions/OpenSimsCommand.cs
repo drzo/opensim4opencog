@@ -42,7 +42,7 @@ namespace cogbot.Actions
         {
             Name = GetType().Name.ToLower().Replace("command","");
             helpString = "Manipulates the SimType typesystem";
-            usageString = "Usage: " + Name + " [ini|list|load]";
+            usageString = "Usage: " + Name + " [ini|list|objects|uses|instances|load]";
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
@@ -57,13 +57,28 @@ namespace cogbot.Actions
                 }
                 if (args[0] == "list")
                 {
-                    return SimTypeSystem.ListTypes();
+                    return SimTypeSystem.ListTypes(false, true, true, false);
                 }
                 if (args[0] == "load")
                 {
-                    SimTypeSystem.LoadConfig(args[1]);
+                    if (args.Length > 1)
+                    {
+                        SimTypeSystem.LoadConfig(args[1]);
+                    }
                     WorldSystem.RescanTypes();
                     return "(Re)Loaded " + args[1];
+                }
+                if (args[0] == "uses")
+                {
+                    return SimTypeSystem.ListTypes(true, true, false, false);
+                }
+                if (args[0] == "objects")
+                {
+                    return SimTypeSystem.ListTypes(true, false, true, false);
+                }
+                if (args[0] == "instances")
+                {
+                    return SimTypeSystem.ListTypes(true, false, false, true);
                 }
             }
             return usageString;
