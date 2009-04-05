@@ -818,36 +818,36 @@ namespace cogbot.TheOpenSims
                     Thread.Sleep(100);
                     outerPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
                 }
-                transValue = transValue * outerPrim.Rotation;
+                transValue = outerPrim.Rotation * transValue;
               //  transValue.Normalize();
             }
             return transValue;
         }
+
         public virtual Vector3 GetSimPosition()
         {
             if (!IsRegionAttached()) throw Error("GetWorldPosition !IsRegionAttached: " + this);
-            Primitive outerPrim = Prim;
             Primitive thisPrim = Prim;
-            Vector3 transValue = outerPrim.Position;
+            Vector3 thisPos = thisPrim.Position;
             while (thisPrim.ParentID != 0)
             {
                 uint theLPrimParentID = thisPrim.ParentID;
                 Simulator simu = GetSimulator();
-                outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
+                Primitive outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
                 while (outerPrim == null)
                 {
                     Thread.Sleep(100);
                     outerPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
                 }
-                transValue = outerPrim.Position + Vector3.Transform(transValue, Matrix4.CreateFromQuaternion(thisPrim.Rotation*outerPrim.Rotation));
+                thisPos = outerPrim.Position + Vector3.Transform(thisPos, Matrix4.CreateFromQuaternion(outerPrim.Rotation));
                 thisPrim = outerPrim;
             }
-            if (false && BadLocation(transValue))
+            if (false && BadLocation(thisPos))
             {
-                Debug("-------------------------" + this + " shouldnt be at " + transValue);
+                Debug("-------------------------" + this + " shouldnt be at " + thisPos);
                 //   WorldSystem.DeletePrim(thePrim);
             }
-            return transValue;
+            return thisPos;
         }
 
         public bool BadLocation(Vector3 transValue)
@@ -1078,6 +1078,10 @@ namespace cogbot.TheOpenSims
 
         internal float BottemArea()
         {
+            if (OuterBox.MaxX == float.MinValue)
+            {
+                return Prim.Scale.X * Prim.Scale.Y;
+            }
             float bottemX = OuterBox.MaxX - OuterBox.MinX;
             float bottemY = OuterBox.MaxY - OuterBox.MinY;
             return bottemX * bottemY;
