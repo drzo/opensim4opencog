@@ -444,7 +444,7 @@ namespace cogbot.TheOpenSims
 
             Prim = prim;
             WorldSystem = objectSystem;
-            ObjectType = SimTypeSystem.GetObjectType(prim.ID.ToString());
+            ObjectType = SimTypeSystem.CreateInstanceType(prim.ID.ToString());
             UpdateProperties(Prim.Properties);
             _CurrentRegion = SimRegion.GetRegion(sim);
             PathStore = GetPathSystem();
@@ -507,7 +507,7 @@ namespace cogbot.TheOpenSims
         public bool IsTyped()
         {
             if (WasKilled) return false;
-            return ObjectType.IsComplete();
+            return ObjectType.IsComplete;
         }
 
         public virtual bool IsRoot()
