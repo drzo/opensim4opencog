@@ -40,19 +40,19 @@ namespace cogbot.TheOpenSims.Navigation
         /// Heuristic based on the euclidian distance : Sqrt(Dx²+Dy²+Dz²)
         /// </summary>
         public static Heuristic EuclidianHeuristic
-        { get { return new Heuristic(SimWaypoint.EuclidianDistance); } }
+        { get { return new Heuristic(SimWaypointImpl.EuclidianDistance); } }
 
         /// <summary>
         /// Heuristic based on the maximum distance : Max(|Dx|, |Dy|, |Dz|)
         /// </summary>
         public static Heuristic MaxAlongAxisHeuristic
-        { get { return new Heuristic(SimWaypoint.MaxDistanceAlongAxis); } }
+        { get { return new Heuristic(SimWaypointImpl.MaxDistanceAlongAxis); } }
 
         /// <summary>
         /// Heuristic based on the manhattan distance : |Dx|+|Dy|+|Dz|
         /// </summary>
         public static Heuristic ManhattanHeuristic
-        { get { return new Heuristic(SimWaypoint.ManhattanDistance); } }
+        { get { return new Heuristic(SimWaypointImpl.ManhattanDistance); } }
 
         /// <summary>
         /// Gets/Sets the heuristic that AStar will use.

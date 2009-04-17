@@ -190,6 +190,7 @@ namespace cogbot
             Settings.LOGOUT_TIMEOUT = 16 * 1000;
             Settings.SIMULATOR_TIMEOUT = 5 * 60000;
             Settings.SEND_PINGS = false;
+            Settings.USE_LLSD_LOGIN = true;
             ////Settings.MULTIPLE_SIMS = false;
 
 			VoiceManager = new VoiceManager(gridClient);
@@ -931,18 +932,13 @@ namespace cogbot
             try
             {
                 if (lispCode == null || lispCode.Length == 0) return null;
-                if (lispTaskInterperter == null)
-                {
-                    initTaskInterperter();
-                }
-                //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
-                output("Eval> " + lispCode);
                 Object r = null;
+                //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
                 StringReader stringCodeReader = new StringReader(lispCode);
                 r = lispTaskInterperter.Read("evalLispString", stringCodeReader);
                 if (lispTaskInterperter.Eof(r))
                     return r.ToString();
-                return lispTaskInterperter.Str(lispTaskInterperter.Eval(r));
+                return lispTaskInterperter.Str(evalLispCode(r));
             }
             catch (Exception e)
             {
@@ -951,6 +947,34 @@ namespace cogbot
                 output("        Stack: " + e.StackTrace.ToString());
                 throw e;
             }
+        }
+
+        public Object evalLispCode(Object lispCode)
+        {
+            try
+            {
+                if (lispCode == null) return null;
+                if (lispTaskInterperter == null)
+                {
+                    initTaskInterperter();
+                }
+                output("Eval> " + lispCode);
+                if (lispTaskInterperter.Eof(lispCode))
+                    return lispCode.ToString();
+                return lispTaskInterperter.Eval(lispCode);
+            }
+            catch (Exception e)
+            {
+                output("!Exception: " + e.GetBaseException().Message);
+                output("error occured: " + e.Message);
+                output("        Stack: " + e.StackTrace.ToString());
+                throw e;
+            }
+        }
+
+        public override string ToString()
+        {
+            return "'(thisClient " + gridClient.ToString() + ")";
         }
 
 		/// <summary>
@@ -1091,8 +1115,16 @@ namespace cogbot
 
         public bool ExecuteCommand(string text)
         {
+            if (text == null) return true;
+            text = text.TrimStart();
+            if (text.Length == 0) return true;
             try
             {
+                if (text.StartsWith("("))
+                {
+                    output(evalLispString(text));
+                    return true;
+                }
                 //            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
                 //text = text.Replace("\"", "");
                 string verb = text.Split(null)[0];

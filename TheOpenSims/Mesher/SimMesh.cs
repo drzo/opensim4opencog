@@ -13,6 +13,8 @@ using cogbot.TheOpenSims.Navigation;
 //using THIRDPARTY.OpenSim.Framework;
 //using THIRDPARTY.OpenSim.Region.Physics.Manager;
 using THIRDPARTY.OpenSim.Region.Physics.Meshing;
+using System.Threading;
+using cogbot.Listeners;
 
 namespace cogbot.TheOpenSims.Mesher
 {
@@ -29,19 +31,237 @@ namespace cogbot.TheOpenSims.Mesher
 
 
     public class SimMesh
-    {
+    {                
+        public void RegionTaintedThis()
+        {
+            //((SimObjectImpl)RootObject).WorldSystem.ReSelectObject(RootObject.Prim);
+        }
+
+        public bool SomethingBetween(Vector3 vector3, float low, float high)
+        {
+            return this.SomethingBetween(vector3.X, vector3.Y, low, high);
+        }
+        public bool SomethingMaxZ(Vector3 vector3, float low, float high, out float maxZ)
+        {
+            return this.SomethingMaxZ(vector3.X, vector3.Y, low, high, out maxZ);
+        }
+
+        List<SimPathStore> SimPathStoresOccupied = new List<SimPathStore>();
+
+        public virtual void UpdateOccupied(SimPathStore PathStore)
+        {
+            if (PathStore == null)
+            {
+                Console.WriteLine("Cant UpdateOccupied for " + RootObject + " pos " + RootObject.GetWorldPosition());
+                return;
+            }
+            if (!IsRegionAttached())
+            {
+                //Debug("!IsRegionAttached");
+                return;
+            }
+            // if (IsPassable) return;
+            if (PathStore.GetSimRegion() != GetSimRegion()) return;
+            lock (SimPathStoresOccupied)
+            {
+                if (SimPathStoresOccupied.Contains(PathStore)) return;
+                SimPathStoresOccupied.Add(PathStore);
+            }
+            try
+            {
+                ForceUpdateOccupied(PathStore);
+            }
+            catch (Exception e)
+            {
+                lock (SimPathStoresOccupied)
+                {
+                    SimPathStoresOccupied.Remove(PathStore);
+                }
+            };
+        }
+
+        private SimRegion GetSimRegion()
+        {
+            return RootObject.GetSimRegion();
+        }
+
+        private bool IsRegionAttached()
+        {
+            return RootObject.IsRegionAttached();
+        }
+
+        List<CollisionIndex> OccupiedWPs = new List<CollisionIndex>();
+
+        public bool IsInside(Vector3 L)
+        {
+            return (this.IsInside(L.X, L.Y, L.Z));
+        }
+
+        public void RemeshObject(Box3dFill changed)
+        {
+            RemoveFromWaypoints(changed);
+            Update(RootObject);
+            UpdatePathOccupied(GetPathSystem());
+        }
+
+        public void RemeshObject()
+        {
+            Box3dFill changed = new Box3dFill(true);
+            RemeshObject(changed);
+            GetSimRegion().Refresh(changed);
+        }
+
+        public void RemoveFromWaypoints(Box3dFill changed)
+        {
+            lock (OccupiedWPs)
+            {
+                SimPathStore S = GetPathSystem();
+                foreach (CollisionIndex P in OccupiedWPs)
+                {
+                    Vector3d Pos = P.GetWorldPosition();
+                    changed.AddPoint(Pos.X, Pos.Y, Pos.Z, 0);
+                    P.RemoveObject(this);
+                }
+                OccupiedWPs.Clear();
+            }
+        }
+
+        public void ForceUpdateOccupied(SimPathStore PathStore)
+        {
+            if (!IsRegionAttached()) return;
+            if (PathStore.GetSimRegion() != GetSimRegion()) return;
+            // if (!IsSculpted)
+            {
+                UpdatePathOccupied(PathStore);
+                return;
+            }
+            new Thread(new ThreadStart(delegate()
+            {
+                try
+                {
+                    UpdatePathOccupied(PathStore);
+                }
+                catch (Exception)
+                {
+                    lock (SimPathStoresOccupied)
+                    {
+                        SimPathStoresOccupied.Remove(PathStore);
+                    }
+                }
+            })).Start();
+        }
+
+        public static bool UpdateMeshPaths = true;
+
+        public static bool tryFastVersion = true;
+        private void UpdatePathOccupied(SimPathStore PathStore)
+        {
+            if (!UpdateMeshPaths) return;
+            if (PathStore.GetSimRegion() != GetSimRegion()) return;
+            int t1;
+            if (tryFastVersion)
+            {
+//                UpdateOccupiedFast(PathStore);
+                int tc = Environment.TickCount;
+                UpdateOccupiedFast(PathStore);
+                t1 = Environment.TickCount - tc;
+              //  Console.WriteLine("t1 vs t2 = " + t1 );
+                return;
+            }
+            int t2;
+            {
+              //  SetOccupied(SetLocated, float.MinValue, float.MaxValue, PathStore.StepSize);
+                int tc = Environment.TickCount;
+                // 10 60
+                SetOccupied(SetLocated, float.MinValue, float.MaxValue, PathStore.StepSize);
+                t2 = Environment.TickCount - tc;
+            }
+           // Console.WriteLine("t1 vs t2 = " + t1 + " vs " + t2);
+            // Mesh = null;
+        }
+
+        private void UpdateOccupiedFast(SimPathStore PathStore)
+        {
+            float detail = PathStore.StepSize;
+            float MinX = OuterBox.MinX;
+            float MaxX = OuterBox.MaxX;
+            float MinY = OuterBox.MinY;
+            float MaxY = OuterBox.MaxY;
+
+            float MinZ = OuterBox.MinZ;
+            float MaxZ = OuterBox.MaxZ;
+
+            for (float x = MinX; x <= MaxX; x += detail)
+            {
+                for (float y = MinY; y <= MaxY; y += detail)
+                {
+                    if (xyInside(x,y)) 
+                        SetLocated(x, y,  MinZ, MaxZ);
+                }
+            }
+            SetLocated(MaxX, MaxY, MinZ, MaxZ);
+        }
+
+        private bool xyInside(float x, float y)
+        {
+            foreach (Box3Fill B in InnerBoxes)
+            {
+                if (B.IsInside(x, y, B.MinZ)) return true;
+            }
+            return false;
+        }
+
+        private Vector3 GetSimPosition()
+        {
+            return RootObject.GetSimPosition();
+        }
+
+        public bool IsPassable
+        {
+            get { return RootObject.IsPassable; }
+        }
+
+        public void SetLocated(float x, float y, float minZ, float maxZ)
+        {
+            SimPathStore PathStore = GetPathSystem();
+            CollisionIndex P = PathStore.SetObjectAt(x, y, this, minZ, maxZ);
+            return;
+            lock (OccupiedWPs)
+            {
+                if (OccupiedWPs.Contains(P)) return;
+                OccupiedWPs.Add(P);
+            }
+        }
+
+        private SimPathStore GetPathSystem()
+        {
+            return GetSimRegion().GetPathStore(GetSimPosition());
+        }
+
+        static void AllTerrainMinMaxLevel(float x, float y, out double minLevel, out double maxLevel)
+        {
+            minLevel = double.MinValue;
+            maxLevel = double.MaxValue;
+        }
+
+        public virtual void UpdateOccupied()
+        {
+            UpdateOccupied(GetPathSystem());
+        }
+
+        static bool FastAndImpercise = false;
         /// <summary>
         /// UseExtremeDetailSize is compared to Scale X/Y/Z added together and if greater will try to
         ///   generate more faces
         /// </summary>
-        static float UseExtremeDetailSize = 3f;
+        static float UseExtremeDetailSize = 4f;//3f;
         static bool UseViewerMode = false;
         public static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         readonly SimObject RootObject;
 
-        float PADXY = 0.2f;
+        public static float PADXY = 0.2f;
 
-        Box3Fill OuterBox
+        public Box3Fill OuterBox
         {
             get { return RootObject.OuterBox; }
         }
@@ -67,8 +287,11 @@ namespace cogbot.TheOpenSims.Mesher
 
         public bool Update(SimObject simObject)
         {
+            if (!IsRegionAttached()) return false;
             Quaternion Rotation = simObject.GetSimRotation();
             Vector3 Scale = simObject.GetSimScale();
+            Vector3 Position = simObject.GetSimPosition();
+
             List<Mesh> MeshList = new List<Mesh>();
 
             //PrimMesh primMesh;
@@ -108,7 +331,7 @@ namespace cogbot.TheOpenSims.Mesher
             CalcBoxesFromMeshes(MeshList);
             MeshList.Clear();
             MeshList = null;
-            AddPos(simObject.GetSimPosition());
+            AddPos(Position);
             return true;
         }
 
@@ -157,7 +380,7 @@ namespace cogbot.TheOpenSims.Mesher
             }
             int b = InnerBoxes.Count;
            // Console.Write("Simplfy mesh {0} -> ",b);
-            InnerBoxes = Box3Fill.Simplify(InnerBoxes);
+           if (!FastAndImpercise)InnerBoxes = Box3Fill.Simplify(InnerBoxes);
            // Console.WriteLine(InnerBoxes.Count);
         }
 
@@ -287,7 +510,7 @@ namespace cogbot.TheOpenSims.Mesher
             if (primitive.Sculpt != null)
             {
                 Primitive.SculptData SD = primitive.Sculpt;
-                byte[] bytes = SimRegion.GetRegion(primitive.RegionHandle).TextureBytesToUUID(SD.SculptTexture);
+                byte[] bytes = WorldObjects.Master.TextureBytesToUUID(SD.SculptTexture);
                 SculptMesh SM = ToSculptMesh(bytes, primitive.Sculpt.Type, Scale, rot);
                 if (SM != null)
                 {
@@ -593,6 +816,8 @@ namespace cogbot.TheOpenSims.Mesher
         internal bool SomethingBetween(float xf, float yf, float low, float high)
         {
             bool found = false;
+            if (OuterBox.MaxZ < low) return false;
+            if (OuterBox.MinZ > high) return false;
             foreach (Box3Fill B in InnerBoxes)
             {
                 if (B.MinX > xf
@@ -708,7 +933,7 @@ namespace cogbot.TheOpenSims.Mesher
         }
 
         //const float PADXY = 0.33f;// SimPathStore.StepSize*0.75f;
-        const float PADZ = 0.20f;// SimPathStore.StepSize*0.75f;
+        public const float PADZ = 0.20f;// SimPathStore.StepSize*0.75f;
 
         public override int GetHashCode()
         {
@@ -969,6 +1194,371 @@ namespace cogbot.TheOpenSims.Mesher
 
 
         internal bool IsZInside(float low, float high)
+        {
+            if (low > MaxZ || high < MinZ) return false;
+            return true;
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    public class Box3dFill : IComparable<Box3dFill>, IEquatable<Box3dFill>
+    {
+
+        #region IEquatable<Box3dFill> Members
+
+        public bool Equals(Box3dFill other)
+        {
+            if (other.MaxX == MaxX &&
+                other.MaxY == MaxY &&
+                other.MaxZ == MaxZ &&
+                other.MinX == MinX &&
+                other.MinY == MinY &&
+                other.MinZ == MinZ) return true;
+            return false;
+        }
+
+        #endregion
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Box3dFill)
+            {
+                return Equals((Box3dFill)obj);
+            }
+            return false;
+        }
+
+        public void AddPos(Vector3d offset)
+        {
+            MinX += offset.X;
+            MaxX += offset.X;
+            MinY += offset.Y;
+            MaxY += offset.Y;
+            MinZ += offset.Z;
+            MaxZ += offset.Z;
+        }
+
+        public static bool operator ==(Box3dFill o1, Box3dFill o2)
+        {
+            if (Object.ReferenceEquals(o1, null)) return Object.ReferenceEquals(o2, null);
+            if (Object.ReferenceEquals(o2, null)) return false;
+            return o1.Equals(o2);
+        }
+
+        public static bool operator !=(Box3dFill o1, Box3dFill o2)
+        {
+            return !o1.Equals(o2);
+        }
+
+
+        public double MinX;// = double.MaxValue;
+        public double MaxX;// = double.MinValue;
+        public double MinY;// = double.MaxValue;
+        public double MaxY;// = double.MinValue;
+        public double MinZ;// = double.MaxValue;
+        public double MaxZ;// = double.MinValue;
+        /// <summary>
+        /// Construct an infinately small box
+        /// </summary>
+        //public Box3dFill(bool b) { Reset(); }
+        /// <summary>
+        ///  Make the box infinatly small
+        /// </summary>
+        public Box3dFill(bool b)
+        {
+            MinX = double.MaxValue;
+            MaxX = double.MinValue;
+            MinY = double.MaxValue;
+            MaxY = double.MinValue;
+            MinZ = double.MaxValue;
+            MaxZ = double.MinValue;
+        }
+
+        public void Reset()
+        {
+            MinX = double.MaxValue;
+            MaxX = double.MinValue;
+            MinY = double.MaxValue;
+            MaxY = double.MinValue;
+            MinZ = double.MaxValue;
+            MaxZ = double.MinValue;
+        }
+
+        //const double PADXY = 0.33f;// SimPathStore.StepSize*0.75f;
+        public const double PADZ = 0.20f;// SimPathStore.StepSize*0.75f;
+
+        public override int GetHashCode()
+        {
+            return MinEdge.GetHashCode() ^ MaxEdge.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return "(" + MinEdge + " - " + MaxEdge + ")";
+        }
+
+        //internal void SetOccupied(CallbackXY p, SimZMinMaxLevel MinMaxZ, double detail)
+        //{
+        //    // detail /= 2f;
+        //    //double MinX = this.MinX + offset.X;
+        //    //double MaxX = this.MaxX + offset.X;
+        //    //double MinY = this.MinY + offset.Y;
+        //    //double MaxY = this.MaxY + offset.Y;
+        //    //double MinZ = this.MinZ + offset.Z;
+        //    //double MaxZ = this.MaxZ + offset.Z;
+
+        //    double SimZMinLevel, SimZMaxLevel;
+
+        //    // = SimPathStore.StepSize;
+        //    for (double x = MinX; x <= MaxX; x += detail)
+        //    {
+        //        for (double y = MinY; y <= MaxY; y += detail)
+        //        {
+        //            MinMaxZ(x, y, out SimZMinLevel, out SimZMaxLevel);
+        //            if (SimZMinLevel > MaxZ || SimZMaxLevel < MinZ)
+        //            {
+        //                // this box is not between the Z levels
+        //                continue;
+        //            }
+        //            p(x, y, MinZ, MaxZ);
+        //        }
+        //    }
+        //    /// the for/next loop probably missed this last point
+        //    MinMaxZ(MaxX, MaxY, out SimZMinLevel, out SimZMaxLevel);
+        //    if (SimZMinLevel > MaxZ || SimZMaxLevel < MinZ)
+        //    {
+        //        // this box is not between the Z levels
+        //        return;
+        //    }
+        //    p(MaxX, MaxY, MinZ, MaxZ);
+        //}
+
+        //internal void SetOccupied(CallbackXY p, double SimZMinLevel, double SimZMaxLevel, double detail)
+        //{
+        //    //double MinX = this.MinX + offset.X;
+        //    //double MaxX = this.MaxX + offset.X;
+        //    //double MinY = this.MinY + offset.Y;
+        //    //double MaxY = this.MaxY + offset.Y;
+        //    //double MinZ = this.MinZ + offset.Z;
+        //    //double MaxZ = this.MaxZ + offset.Z;
+
+
+        //    if (SimZMinLevel > MaxZ || SimZMaxLevel < MinZ)
+        //    {
+        //        // this box is not between the Z levels
+        //        return;
+        //    }
+
+        //    // = SimPathStore.StepSize;
+        //    for (double x = MinX; x <= MaxX; x += detail)
+        //    {
+        //        for (double y = MinY; y <= MaxY; y += detail)
+        //        {
+        //            p(x, y, MinZ, MaxZ);
+        //        }
+        //    }
+        //    /// the for/next loop probably missed this last point
+        //    p(MaxX, MaxY, MinZ, MaxZ);
+        //}
+
+
+        public string ToString(Vector3d offset)
+        {
+            string s = "(" + (Vector3d)(MinEdge + offset) + " - " + (Vector3d)(MaxEdge + offset) + " mass= " + Mass() + ")";
+            return s;
+        }
+
+        /// <summary>
+        /// Make sure box is big enough for this vertex
+        /// </summary>
+        /// <param name="v"></param>
+        /// <returns>true if the box has grown</returns>
+        internal bool AddVertex(Vertex v, double PADXY)
+        {
+            return AddPoint(v.X, v.Y, v.Z, PADXY);
+        }
+
+        internal bool AddPoint(double x, double y, double z, double PADXY)
+        {
+            bool changed = false;
+            if (x < MinX)
+            {
+                MinX = x - PADXY;
+                changed = true;
+            }
+            if (y < MinY)
+            {
+                MinY = y - PADXY;
+                changed = true;
+            }
+            if (z < MinZ)
+            {
+                MinZ = z;// -PADZ;
+                changed = true;
+            }
+
+            if (x > MaxX)
+            {
+                MaxX = x + PADXY;
+                changed = true;
+            }
+            if (y > MaxY)
+            {
+                MaxY = y + PADXY;
+                changed = true;
+            }
+            if (z > MaxZ)
+            {
+                MaxZ = z + PADZ;
+                changed = true;
+            }
+            return changed;
+        }
+
+        /// <summary>
+        /// Add Triangle (this just pushes the size of the box outward if needed)
+        /// </summary>
+        /// <param name="t"></param>
+        /// <returns>true if the boxsize was increased</returns>
+        public bool AddTriange(Triangle t, double PADXY)
+        {
+            return AddVertex(t.v1, PADXY) ||
+             AddVertex(t.v2, PADXY) ||
+             AddVertex(t.v3, PADXY);
+        }
+
+        public Vector3d MinEdge
+        {
+            get
+            {
+                return new Vector3d(MinX, MinY, MinZ);
+            }
+        }
+        public Vector3d MaxEdge
+        {
+            get
+            {
+                return new Vector3d(MaxX, MaxY, MaxZ);
+            }
+        }
+
+        public bool IsInside(double x, double y, double z)
+        {
+            if (
+             (x < MinX) ||
+             (y < MinY) ||
+             (z < MinZ) ||
+             (x > MaxX) ||
+             (y > MaxY) ||
+             (z > MaxZ)) return false;
+            return true;
+        }
+
+        public double Mass()
+        {
+            return (MaxX - MinX) * (MaxY - MinY) * (MaxZ - MinZ);
+        }
+
+        public bool IsCompletelyInside(Box3dFill inner)
+        {
+            if ((inner.MaxX > MaxX) ||
+             (inner.MinX < MinX) ||
+             (inner.MaxY > MaxY) ||
+             (inner.MinY < MinY) ||
+             (inner.MaxZ > MaxZ) ||
+             (inner.MinZ < MinZ)) return false;
+            return true;
+        }
+
+        public static List<Box3dFill> Simplify(List<Box3dFill> simpl)
+        {
+            simpl.Sort(Bigger);
+            List<Box3dFill> retval = new List<Box3dFill>();
+            int len = simpl.Count;
+            int len1 = len - 1;
+            for (int i = 0; i < len; i++)
+            {
+                Box3dFill bi = simpl[i];
+                bool foundInside = false;
+                for (int ii = len1; ii > i; ii--)
+                {
+                    if (simpl[ii].IsCompletelyInside(bi))
+                    {
+                        foundInside = true;
+                        break;
+                    }
+                }
+                if (!foundInside)
+                {
+                    retval.Add(bi);
+                }
+            }
+            return retval;
+        }
+
+        #region IComparable<Box3dFill> Members
+
+        public int CompareTo(Box3dFill other)
+        {
+            return Bigger(this, other);
+        }
+
+        #endregion
+
+        static int Bigger(Box3dFill b1, Box3dFill b2)
+        {
+            if (b1 == b2) return 0;
+
+            if (b1.MinX > b2.MinX)
+            {
+                return -1;
+            }
+            if (b1.MinY > b2.MinY)
+            {
+                return -1;
+            }
+            if (b1.MinZ > b2.MinZ)
+            {
+                return -1;
+            }
+
+            if (b1.MaxX < b2.MaxX)
+            {
+                return -1;
+            }
+            if (b1.MaxY < b2.MaxY)
+            {
+                return -1;
+            }
+            if (b1.MaxZ < b2.MaxZ)
+            {
+                return -1;
+            }
+
+            double f1 = b1.Mass();
+            double f2 = b2.Mass();
+            if (f1 == f2)
+            {
+                return 1;
+            }
+            return f1 < f2 ? -1 : 1;
+        }
+
+
+        internal bool IsZInside(double low, double high)
         {
             if (low > MaxZ || high < MinZ) return false;
             return true;

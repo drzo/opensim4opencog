@@ -538,13 +538,13 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         static Rectangle RectangleCentres(params SimWaypoint[] NoeudsAEnglober)
         {
             double[] Min, Max;
-            SimWaypoint.BoundingBox(NoeudsAEnglober, out Min, out Max);
+            SimWaypointImpl.BoundingBox(NoeudsAEnglober, out Min, out Max);
             return Rectangle.FromLTRB((int)(Min[0] * DSCALE), (int)(Min[1] * DSCALE), (int)(Max[0] * DSCALE), (int)(Max[1] * DSCALE));
         }
 
         static bool Collision(SimWaypoint N1, SimWaypoint N2)
         {
-            return SimWaypoint.SquareEuclidianDistance(N1, N2) <= Rayon * Rayon;
+            return SimWaypointImpl.SquareEuclidianDistance(N1, N2) <= Rayon * Rayon;
         }
 
         bool NoeudSelonPosition(int X, int Y, ref SimWaypoint N)
@@ -557,7 +557,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             }
             else
             {
-                if (N == null) N = SimWaypoint.CreateGlobal(X / DSCALE + StartX, Y / DSCALE + StartY, 0);
+                if (N == null) N = SimWaypointImpl.CreateGlobal(X / DSCALE + StartX, Y / DSCALE + StartY, 0);
                 else N.ChangeXYZDebug(X / DSCALE + StartX, Y / DSCALE + StartY, 0);
                 return true;
             }
@@ -606,7 +606,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                 case Action.Dessiner:
                     {
                         AjouterN1 = NoeudSelonPosition(e.X, e.Y, ref TempN1);
-                        TempN2 = SimWaypoint.CreateGlobal((double)((TempN1.DX) / DSCALE) + StartX, (double)((TempN1.DY) / DSCALE) + StartY, (double)0);
+                        TempN2 = SimWaypointImpl.CreateGlobal((double)((TempN1.DX) / DSCALE) + StartX, (double)((TempN1.DY) / DSCALE) + StartY, (double)0);
                         GraphPanel.Invalidate(Boite(TempN1, TempN2));
                         break;
                     }
@@ -627,7 +627,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             string Fleche = DoubleSens ? " <-> " : " -> ";
             SimWaypoint N = NoeudSousJacent(X, Y);
             string Cible = N != null ? SB_Noeud((int)N.DX, (int)N.DY) : SB_Point((int)TempN2.DX, (int)TempN2.DY);
-            return SB_Point((int)TempN1.DX, (int)TempN1.DY) + Fleche + Cible + " : Length = " + (int)SimWaypoint.EuclidianDistance(TempN1, TempN2);
+            return SB_Point((int)TempN1.DX, (int)TempN1.DY) + Fleche + Cible + " : Length = " + (int)SimWaypointImpl.EuclidianDistance(TempN1, TempN2);
         }
         string SB_TempRectangle()
         {

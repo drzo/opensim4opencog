@@ -68,7 +68,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         #region Properties
         public byte[,] Matrix
         {
-            get { return PathStore.mMatrix; }
+            get { return PathStore.GetByteMatrix(ZLevel); }
         }
 
         public int GridSize
@@ -211,6 +211,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             Graphics g = e.Graphics;
             if (PathStore != null)
             {
+                byte[,] matrix = PathStore.GetByteMatrix(ZLevel);
                 for (int y = (e.ClipRectangle.Y / mGridSize) * mGridSize; y <= e.ClipRectangle.Bottom; y += mGridSize)
                     for (int x = (e.ClipRectangle.X / mGridSize) * mGridSize; x <= e.ClipRectangle.Right; x += mGridSize)
                     {
@@ -220,7 +221,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                         // Lets render the obstacules
                         Color color = Color.Empty;
                         if (sx < PathStore.MAPSPACE && sy < PathStore.MAPSPACE)
-                            using (SolidBrush brush = ColourForByte(sx, TRANSPOSE(sy)))
+                            using (SolidBrush brush = ColourForByte(sx, TRANSPOSE(sy),matrix))
                             g.FillRectangle(brush, x, y, mGridSize, mGridSize);
 
                         ////Lets render start and end
@@ -257,9 +258,9 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 
        // SolidBrush lastsb;
        // byte lastColorByte;
-        private SolidBrush ColourForByte(int x,int y)
+        private SolidBrush ColourForByte(int x,int y, byte[,] matrix)
         {
-            Color sb = PathStore.GetColor(x,y);
+            Color sb = PathStore.GetColor(x,y,matrix);
             SolidBrush lastsb = new SolidBrush(sb);
            // lastColorByte= p;
             return lastsb;
@@ -281,7 +282,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                 {
                     tipForm = new WaypointProperties();
                 }
-                tipForm.SetWaypoint(PathStore.Waypoint(x, y));
+                tipForm.SetWaypoint(PathStore.GetCollisionIndex(x, y),CurrentPlane);
                 tipForm.Show();
                 tipForm.Activate();
                 return;
@@ -290,32 +291,32 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             if (e.Button == MouseButtons.None || mDrawMode == DrawModeSetup.None)
             {
                 string str;
-                SimWaypoint o = PathStore.Waypoint(x, y);
+                CollisionIndex o = PathStore.GetCollisionIndex(x, y);
                 if (o != null)
                 {
                     str = o.OccupiedString();
                 }
                 else
                 {
-                    str = "" + PathStore.mMatrix[x, y];
+                    str = "" + Matrix[x, y];
                 }
                 tip.SetToolTip(this, str);
                 return;
             }
 
 
-            byte[,] mMatrix = PathStore.mMatrix;
+            byte[,] mMatrix = Matrix;
             switch (mDrawMode)
             {
                 case DrawModeSetup.Start:
                     this.Invalidate(new Rectangle(mStart.X * mGridSize, mStart.Y * mGridSize, mGridSize, mGridSize));
                     mStart          = new Point(x,y);
-                    PathStore.SetPassable(x / PathStore.POINTS_PER_METER, y / PathStore.POINTS_PER_METER);// mMatrix[x, y] = 1;
+                    PathStore.SetPassable(x / PathStore.POINTS_PER_METER, y / PathStore.POINTS_PER_METER,ZLevel);// mMatrix[x, y] = 1;
                     break;
                 case DrawModeSetup.End:
                     this.Invalidate(new Rectangle(mEnd.X * mGridSize, mEnd.Y * mGridSize, mGridSize, mGridSize));
                     mEnd            = new Point(x,y);
-                    PathStore.SetPassable(x / PathStore.POINTS_PER_METER, y / PathStore.POINTS_PER_METER);// mMatrix[x, y] = 1;
+                    PathStore.SetPassable(x / PathStore.POINTS_PER_METER, y / PathStore.POINTS_PER_METER, ZLevel);// mMatrix[x, y] = 1;
                     break;
                 case DrawModeSetup.Block:
                     if (e.Button == (MouseButtons.Left | MouseButtons.Right))
@@ -331,6 +332,14 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             base.OnMouseMove(e);
         }
 
+
+        public CollisionPlane CurrentPlane;
+        public float ZLevel
+        {
+            get { if (CurrentPlane == null) return 0;
+                return CurrentPlane.ZLevel; }
+            set { CurrentPlane = PathStore.GetCollisionPlane(value); }
+        }
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
@@ -392,7 +401,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             {
                 y = PathStore.MAPSPACE - 1;
             }
-            PathStore.mMatrix[x, y] = (byte)p;
+            Matrix[x, y] = (byte)p;
             this.Invalidate(new Rectangle(x * mGridSize, TRANSPOSE(y) * mGridSize, mGridSize, mGridSize));
         }
 

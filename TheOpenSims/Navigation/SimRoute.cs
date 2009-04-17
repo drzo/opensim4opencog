@@ -174,7 +174,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <returns></returns>
         virtual protected double CalculateLength()
         {
-            return SimWaypoint.Distance(_StartNode, _EndNode);
+            return _StartNode.Distance( _EndNode);
         }
 
         /// <summary>
@@ -403,7 +403,7 @@ namespace cogbot.TheOpenSims.Navigation
             double X = (dir.X / len) * p;
             double Y = (dir.Y / len) * p;
             double Z = (dir.Z / len) * p;
-            return SimWaypoint.CreateGlobal(new Vector3d(X, Y, Z));
+            return SimWaypointImpl.CreateGlobal(new Vector3d(X, Y, Z));
         }
 
         public virtual IList<SimRoute> GetSegments()
@@ -454,7 +454,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public virtual SimRoute AppendPoint(SimWaypoint vector3, double fudge)
         {
-            if (SimWaypoint.Distance(EndNode, vector3) < fudge)
+            if (EndNode.Distance(vector3) < fudge)
             {
                 return new SimRoute(StartNode, vector3);
             }
@@ -486,8 +486,8 @@ namespace cogbot.TheOpenSims.Navigation
 
         public virtual bool NearPoint(SimWaypoint e, double maxDist)
         {
-            if (SimWaypoint.Distance(StartNode, e) < maxDist) return true;
-            if (SimWaypoint.Distance(EndNode, e) < maxDist) return true;
+            if (StartNode.Distance(e) < maxDist) return true;
+            if (EndNode.Distance( e) < maxDist) return true;
             return false;
         }
 
@@ -733,8 +733,8 @@ namespace cogbot.TheOpenSims.Navigation
 
         public override bool NearPoint(SimWaypoint e, double maxDist)
         {
-            if (SimWaypoint.Distance(StartNode, e) < maxDist) return true;
-            if (SimWaypoint.Distance(EndNode, e) < maxDist) return true;
+            if (StartNode.Distance(e) < maxDist) return true;
+            if (EndNode.Distance(e) < maxDist) return true;
             foreach (SimRoute move in MoveList)
             {
                 if (move.NearPoint(e, maxDist)) return true;
@@ -796,7 +796,7 @@ namespace cogbot.TheOpenSims.Navigation
             bool filled = false;
             foreach (SimRoute move in GetSegments())
             {
-                if (SimWaypoint.Distance(at, move.StartNode) > maxDist)
+                if (at.Distance(move.StartNode) > maxDist)
                 {
                     moves.Add(new SimRoute(at, move.StartNode));
                     filled = true;

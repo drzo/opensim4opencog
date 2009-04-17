@@ -16,7 +16,6 @@ namespace cogbot.TheOpenSims.Navigation
         bool MoveTo(Vector3d end, double maxDistance, int maxSeconds);
         // Quaternion GetSimRotation();
         void Debug(string format, params object[] args);
-        SimPathStore GetPathSystem();
         //double Distance(SimPosition v3);
         List<SimObject> GetNearByObjects(double maxDistance, bool rootOnly);
 
@@ -47,7 +46,11 @@ namespace cogbot.TheOpenSims.Navigation
         protected readonly Vector3d FinalLocation;
         protected readonly double FinalDistance;
         protected double CloseDistance = 1f;// SimPathStore.LargeScale-SimPathStore.StepSize;
-        protected SimPathStore PathStore;
+
+        protected SimPathStore PathStore
+        {
+            get { return GetSimRegion().GetPathStore(GetSimPosition()); }
+        }
         static protected double TurnAvoid = 0f;
         bool UseTurnAvoid = false;  // this toggles each time
 
@@ -56,7 +59,6 @@ namespace cogbot.TheOpenSims.Navigation
             Mover = (SimAvatar)mover;
             FinalDistance = finalDistance;
             FinalLocation = finalGoal;
-            PathStore = mover.GetPathSystem();
         }
 
 
@@ -87,24 +89,39 @@ namespace cogbot.TheOpenSims.Navigation
         bool UseSkipping = false;
         public bool FollowPathTo(List<Vector3d> v3s, Vector3d finalTarget, double finalDistance)
         {
-            SimPathStore PathStore = GetSimRegion();
-            Debug("FollowPath: {0} -> {1} for {2}", v3s.Count, DistanceVectorString(finalTarget), finalDistance);
-            int CanSkip = UseSkipping ? 0 : 0; //never right now
-            int Skipped = 0;
-            UseSkipping = !UseSkipping;
+            Vector3d vstart = v3s[0];
+            Vector3 vv3 = SimRegion.GlobalToLocal(vstart);
+            SimPathStore PathStore = GetSimRegion().GetPathStore(vv3);
 
-            foreach (Vector3d v3 in v3s)
+            v3s = SimPathStore.GetSimplifedRoute(vstart, v3s, 45, 6);
+
+            Debug("FollowPath: {0} -> {1} for {2}", v3s.Count, DistanceVectorString(finalTarget), finalDistance);
+            int CanSkip = UseSkipping ? 1 : 0; //never right now
+            int Skipped = 0;
+            UseSkipping =  !UseSkipping;
+            int v3sLength = v3s.Count;
+            int at = 0;
+            while (at < v3sLength)
             {
+                Vector3d v3 = v3s[at];
                 // try to get there first w/in StepSize 0.2f 
                 if (!MoveTo(v3, PathStore.StepSize, 5))
                 {
                     if (Vector3d.Distance(GetWorldPosition(), finalTarget) < finalDistance) return true;
-                    if (!MoveTo(v3, PathStore.LargeScale, 2))
+                    int nbest = ClosestAt(v3s);
+                    if (nbest > at)
+                    {
+                        Debug("Fast-forward {0} -> {1} ", at, nbest);
+                        at = nbest + 1;
+                        continue;
+                    }
+                    if (!MoveTo(v3, PathStore.StepSize*3, 2))
                     {
                         if (Skipped++ <= CanSkip)
                         {
                             MoveToPassableArround(GetSimPosition());
                             Skipped++;
+                            at++;
                             continue;
                         }
                         Vector3 l3 = SimRegion.GlobalToLocal(v3);
@@ -118,9 +135,39 @@ namespace cogbot.TheOpenSims.Navigation
                 {
                     Skipped = 0;
                 }
+                if (Vector3d.Distance(GetWorldPosition(), finalTarget) < finalDistance) return true;
+                int best = ClosestAt(v3s);
+                if (best > at)
+                {
+                    Debug("Fastforward {0} -> {1} ", at, best);
+                }
+                else if (best < at)
+                {
+                    Debug("Reverse {0} -> {1} ", at, best);
+                }
+                at = best+1;
+
             }
             Debug("Complete: {0} -> {1}", DistanceVectorString(GetWorldPosition()), DistanceVectorString(finalTarget));
             return true;
+        }
+
+        private int ClosestAt(List<Vector3d> v3s)
+        {
+            Vector3d newPos = GetWorldPosition();
+            int v3sLength = v3s.Count-1;
+            double bestDist = Vector3d.Distance(newPos, v3s[v3sLength]);
+            int best = v3sLength;
+            while (v3sLength-->0)
+            {
+                double lenNat = Vector3d.Distance(newPos, v3s[v3sLength]);
+                if (lenNat < bestDist)
+                {
+                    best = v3sLength;
+                    bestDist = lenNat;
+                }
+            }
+            return best;
         }
 
         public string DistanceVectorString(Vector3d loc3d)
@@ -160,12 +207,12 @@ namespace cogbot.TheOpenSims.Navigation
             }
 
             UseTurnAvoid = !UseTurnAvoid;
-            SimPathStore PathStore = GetSimRegion();
+            SimPathStore PathStore = GetSimRegion().GetPathStore(start);
             double A45 = 45f / SimPathStore.RAD2DEG;
             for (double angle = A45; angle < SimPathStore.PI2; angle += A45)
             {
                 Vector3 next = ZAngleVector(angle + TurnAvoid) * 2 + start;
-                if (PathStore.IsPassable(next))
+                if (PathStore.GetSimRegion().IsPassable(next))
                 {
                     Vector3d v3d = PathStore.GetSimRegion().LocalToGlobal(start);
                     if (MoveTo(v3d, 1, 4))
@@ -188,12 +235,12 @@ namespace cogbot.TheOpenSims.Navigation
         //            Debug("!MadeIt " + endVect);
         //            return MadeIt;
         //            Vector3d vectMover = Mover.GetWorldPosition();
-        //            List<SimObject> nears = ((SimObject)Mover).GetNearByObjects(CloseDistance / 2, false);
+        //            List<ISimObject> nears = ((ISimObject)Mover).GetNearByObjects(CloseDistance / 2, false);
         //            while (!MadeIt && nears.Count == 0)
         //            {
         //                MadeIt = Mover.MoveTo(endVect, CloseDistance, 6);
         //                vectMover = Mover.GetWorldPosition();
-        //                nears = ((SimObject)Mover).GetNearByObjects(2f, false);
+        //                nears = ((ISimObject)Mover).GetNearByObjects(2f, false);
         //            }
         //        }
         //        if (!MadeIt)
@@ -271,7 +318,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             OpenNearbyClosedPassages();
             Vector3 cp = GetSimPosition();
-            SimPathStore PathStore = GetSimRegion();
+            SimPathStore PathStore = GetSimRegion().GetPathStore(v3);
             Point P1 = PathStore.ToPoint(cp);
             Vector3 offset = v3 - cp;
             double ZAngle = (double)Math.Atan2(offset.X, offset.Y);
@@ -291,8 +338,8 @@ namespace cogbot.TheOpenSims.Navigation
                     b1 = blocked;
                 }
             }
-            float x = Last.X / PathStore.POINTS_PER_METER;
-            float y = Last.Y / PathStore.POINTS_PER_METER;
+            float x = PathStore.UNARRAY_X(Last.X);
+            float y = PathStore.UNARRAY_Y(Last.Y);
             Vector3 v3o = new Vector3(x, y, v3.Z);
             BlockPoint(v3o);
             double A45 = 45f / SimPathStore.RAD2DEG;
@@ -374,8 +421,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="vector3"></param>
         internal void BlockPoint(Vector3 vector3)
         {
-            SimPathStore PathStore = GetSimRegion();
-            PathStore.SetNodeQualityTimer(vector3, 0, 60);
+            GetSimRegion().SetNodeQualityTimer(vector3, 0, 60);
         }
 
 
@@ -543,7 +589,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         //    public override SimMoverState Goto()
         //    {
-        //        GotoSimRoute(SimWaypoint.CreateGlobal(FinalLocation));
+        //        GotoSimRoute(SimWaypointImpl.CreateGlobal(FinalLocation));
         //        return STATE;
         //    }
         //}
@@ -648,7 +694,7 @@ namespace cogbot.TheOpenSims.Navigation
         //            return STATE;
         //        }
         //        OuterRoute.ReWeight(0.7f); // Reward
-        //        Mover.GetPathSystem().AddArc(OuterRoute);
+        //        Mover.GetSimRegion().AddArc(OuterRoute);
         //        STATE = SimMoverState.COMPLETE;
         //        return STATE;
         //    }

@@ -113,7 +113,7 @@ namespace cogbot.TheOpenSims.Navigation
             int iy = IndexY(y);
             if (saved[ix, iy] == null)
             {
-                saved[ix, iy] = SimWaypoint.CreateGlobal(x, y, SimZ);
+                saved[ix, iy] = SimWaypointImpl.CreateGlobal(x, y, SimZ);
             }
             SimWaypoint wp = saved[ix, iy];
             AddNode(wp);
@@ -259,7 +259,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <returns>The reference of the new node / null if the node is already in the graph.</returns>
         public SimWaypoint AddNode(double x, double y, double z)
         {
-            SimWaypoint NewNode = SimWaypoint.CreateGlobal(x, y, z);
+            SimWaypoint NewNode = SimWaypointImpl.CreateGlobal(x, y, z);
             return AddNode(NewNode) ? NewNode : null;
         }
 
@@ -375,7 +375,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             try
             {
-                SimWaypoint.BoundingBox(Nodes, out MinPoint, out MaxPoint);
+                SimWaypointImpl.BoundingBox(Nodes, out MinPoint, out MaxPoint);
             }
             catch (ArgumentException e)
             { throw new InvalidOperationException("Impossible to determine the bounding box for this graph.\n", e); }
@@ -423,7 +423,7 @@ namespace cogbot.TheOpenSims.Navigation
             lock (SimWaypoints) foreach (SimWaypoint N in SimWaypoints)
                 {
                     if (IgnorePassableProperty && N.Passable == false) continue;
-                    double Distance = SimWaypoint.Distance(N, P);
+                    double Distance = N.Distance(P);
                     if (Distance < DistanceMin || DistanceMax < Distance) continue;
                     waypoints.Add(N);
                 }
@@ -543,7 +543,7 @@ namespace cogbot.TheOpenSims.Navigation
         //    // return;
         //    if (!TrackedAgents.ContainsKey(agentID))
         //    {
-        //        TrackedAgents[agentID] = new PrimTracker(SimWaypoint.CreateGlobal(point), rotation, this);
+        //        TrackedAgents[agentID] = new PrimTracker(SimWaypointImpl.CreateGlobal(point), rotation, this);
         //    }
         //    else
         //    {
@@ -732,7 +732,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             double Dist;
             SimWaypoint Closest = ClosestNode(v3.X, v3.Y, v3.Z, out Dist, false);
-            SimWaypoint V3Waypoint = SimWaypoint.CreateGlobal(v3);
+            SimWaypoint V3Waypoint = SimWaypointImpl.CreateGlobal(v3);
             if (Closest != V3Waypoint)
             {
                 IList<SimWaypoint> more = ClosestNodes(V3Waypoint, Dist, Dist * 2, false);
@@ -755,7 +755,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <returns></returns>
         public SimWaypoint CreateClosestWaypointBox(Vector3d v3, double radius, int numPoints, double Weight)
         {
-            SimWaypoint node = SimWaypoint.CreateGlobal(v3);
+            SimWaypoint node = SimWaypointImpl.CreateGlobal(v3);
             double radiansStep = Math.PI * 2 / numPoints;
             SimWaypoint Last = node;
             Dictionary<SimWaypoint, List<SimWaypoint>> newWaypoints = new Dictionary<SimWaypoint, List<SimWaypoint>>();
@@ -763,7 +763,7 @@ namespace cogbot.TheOpenSims.Navigation
             {
                 double ThisAngle = Step * radiansStep;
                 Vector3d vectNew = (new Vector3d((double)Math.Cos(ThisAngle), (double)Math.Sin(ThisAngle), 0) * radius) + v3;
-                SimWaypoint nodeNew = SimWaypoint.CreateGlobal(v3);
+                SimWaypoint nodeNew = SimWaypointImpl.CreateGlobal(v3);
                 List<SimWaypoint> closeNodes = new List<SimWaypoint>();
                 newWaypoints[nodeNew] = closeNodes;
                 double Dist;

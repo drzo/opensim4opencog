@@ -6,7 +6,7 @@ using System.Text;
 
 namespace DotLisp{
 
-public class Cons : IEnumerable
+    public class Cons : IEnumerable, ICollection
 	{
 	public Cons(Object first,Cons rest)
 		{
@@ -177,13 +177,41 @@ public class Cons : IEnumerable
             if (first == null)
                 return "nil"; // Should be (str nil) so that the user can override.
             else
-                if (first is string) return "\"" + ((string)first).Replace("\"","\\\"") + "\"";
+                if (first is string) return "\"" + ((string)first).Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
 			return first.ToString();
 		}
 
 	internal Object first;
 	internal Cons rest;
-	}
+
+    #region ICollection Members
+
+    public void CopyTo(Array array, int index)
+    {
+        IEnumerator ie = GetEnumerator();
+        while (ie.MoveNext())
+        {
+            array.SetValue(ie.Current, index++);
+        }
+    }
+
+    public int Count
+    {
+        get { return Length(this); }
+    }
+
+    public bool IsSynchronized
+    {
+        get { return true; }
+    }
+
+    public object SyncRoot
+    {
+        get { return first; }
+    }
+
+    #endregion
+}
 
 public class ConsEnumerator: IEnumerator
 	{

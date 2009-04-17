@@ -31,6 +31,8 @@ namespace cogbot.TheOpenSims.Navigation.Debug {
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal PathFinderDemo() {
         }
+
+        private System.Windows.Forms.TextBox MinZevel;
         
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.

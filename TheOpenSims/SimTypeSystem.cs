@@ -252,6 +252,11 @@ namespace cogbot.TheOpenSims
                     continue;
                 }
 
+                if (usage == null)
+                {
+                    if (type.IsUseType)
+                        usage = type.CreateObjectUsage(type.GetTypeName());
+                }
                 fi = usage.GetType().GetField(s);
                 if (fi != null)
                 {
@@ -552,13 +557,13 @@ namespace cogbot.TheOpenSims
             if (first.ToString().ToLower() == "createobjectuse")
             {
                 Object second = Cons.First(cons);
-                return CreateObjectUse(second.ToString(), ConsParams(Cons.Rest(cons)));
+                return CreateObjectUse(second.ToString(), ConsParams((Cons)Cons.Rest(cons)));
             }
             else
                 if (first.ToString().ToLower() == "createobjecttype")
                 {
                     Object second = Cons.First(cons);
-                    return CreateObjectType(second.ToString(), ConsParams(Cons.Rest(cons)));
+                    return CreateObjectType(second.ToString(), ConsParams((Cons)Cons.Rest(cons)));
                 }
                 else
                 {
@@ -566,9 +571,8 @@ namespace cogbot.TheOpenSims
                 }
         }
 
-        private static object[] ConsParams(object ocons)
+        private static object[] ConsParams(Cons cons)
         {
-            Cons cons = (Cons)ocons;
             object[] consV = Cons.ToVector(cons);
             object[] o = new object[consV.Length];
             for (int i = 0; i < consV.Length; i++)
@@ -576,7 +580,7 @@ namespace cogbot.TheOpenSims
                 object v = consV[i];
                 if (v is Cons)
                 {
-                    v = Cons.First((Cons)v).ToString().Substring(1);
+                   // v = Cons.First((Cons)v).ToString().Substring(1);
                 }
 
                 String s = v.ToString();
@@ -607,18 +611,41 @@ namespace cogbot.TheOpenSims
             return type;
         }
 
-        static public SimObjectType CreateObjectUse(string classname, params object[] defs)
+        static public SimObjectType CreateObjectUse(string classname, Cons parseStr)
         {
+            return CreateObjectUse(classname, ConsParams(parseStr));
+        }
+
+        static public SimObjectType CreateObjectUse(string classname, params object[] parseStr)
+        {
+            if (parseStr.Length == 1 && parseStr[0] is object[]) parseStr = (object[])parseStr[0];
             SimObjectType type = GetObjectType(classname);
             type.AddSuperType(USEABLE);
             type.IsUseType = true;
             SimTypeUsage usage = type.CreateObjectUsage(classname);
-            type.ParseAffect(usage, defs);
+            type.ParseAffect(usage, parseStr);
+            return type;
+        }
+
+        static public SimObjectType CreateObjectType(string aspectName, Cons parseStr)
+        {
+            return CreateObjectType(aspectName, ConsParams(parseStr));
+        }
+
+        static public SimObjectType SetSimType(string aspectName, Cons cons)
+        {
+            object[] parseStr = ConsParams(cons);
+            SimObjectType type = GetObjectType(aspectName);
+            SimTypeUsage usage = null;
+            if (type.IsUseType)
+                usage = type.CreateObjectUsage(aspectName);
+            type.ParseAffect(usage, parseStr);
             return type;
         }
 
         static public SimObjectType CreateObjectType(string aspectName, params object[] parseStr)
         {
+            if (parseStr.Length == 1 && parseStr[0] is object[]) parseStr = (object[])parseStr[0];
             SimObjectType type = GetObjectType(aspectName);
             type.ParseAffect(null, parseStr);
             type.ParseAffect(null, new object[] { "Match", "* " + aspectName + " *" });
