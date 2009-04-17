@@ -663,6 +663,7 @@ namespace OpenMetaverse
         public InstantMessageOnline Offline;
         /// <summary>Context specific packed data</summary>
         public byte[] BinaryBucket;
+
         //Print the contents of a message
         public override string ToString()
         {
@@ -1522,8 +1523,6 @@ namespace OpenMetaverse
                 req.Add("session-id", OSD.FromUUID(tmp_session_id));
 
                 byte[] postData = StructuredData.OSDParser.SerializeLLSDXmlBytes(req);
-
-                Console.WriteLine(req.ToString());
 
                 CapsClient request = new CapsClient(url);
                 request.StartRequest(postData);

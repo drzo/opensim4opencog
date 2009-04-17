@@ -124,7 +124,7 @@ namespace OpenMetaverse
         /// </example>
         public bool TryGetValue(TKey key, out TValue value)
         {
-            //lock (Dictionary)
+            lock (Dictionary)
             {
                 return Dictionary.TryGetValue(key, out value);
             }
@@ -146,15 +146,13 @@ namespace OpenMetaverse
         /// </example>
         public TValue Find(Predicate<TValue> match)
         {
-
-            List<TValue> DictionaryValues;
             lock (Dictionary)
-                DictionaryValues = new List<TValue>(Dictionary.Values);
-
-            foreach (TValue value in DictionaryValues)
             {
-                if (match(value))
-                    return value;
+                foreach (TValue value in Dictionary.Values)
+                {
+                    if (match(value))
+                        return value;
+                }
             }
             return default(TValue);
         }
@@ -233,12 +231,12 @@ namespace OpenMetaverse
         ///</example>
         public void ForEach(Action<TValue> action)
         {
-            List<TValue> DictionaryValues;
             lock (Dictionary)
-                DictionaryValues = new List<TValue>(Dictionary.Values);
-            foreach (TValue value in DictionaryValues)
             {
-                action(value);
+                foreach (TValue value in Dictionary.Values)
+                {
+                    action(value);
+                }
             }
         }
 

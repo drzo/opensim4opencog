@@ -329,8 +329,8 @@ namespace OpenMetaverse
 
             // If the callbacks aren't registered there's not point in doing client-side path prediction,
             // so we set it up here
-           // InterpolationTimer = new Timer(new TimerCallback(InterpolationTimer_Elapsed), null, Settings.INTERPOLATION_INTERVAL,
-            //    Settings.INTERPOLATION_INTERVAL);
+            //InterpolationTimer = new Timer(new TimerCallback(InterpolationTimer_Elapsed), null, Settings.INTERPOLATION_INTERVAL,
+              //  Settings.INTERPOLATION_INTERVAL);
         }
 
         #region Action Methods
@@ -601,8 +601,7 @@ namespace OpenMetaverse
             Client.Network.SendPacket(degrab, simulator);
         }
 
-
-        /// <summary>
+                /// <summary>
         /// Create, or "rez" a new prim object in a simulator
         /// </summary>
         /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object to place the object in</param>
@@ -634,7 +633,7 @@ namespace OpenMetaverse
         /// <param name="position">An approximation of the position at which to rez the prim</param>
         /// <param name="scale">Scale vector to size this prim</param>
         /// <param name="rotation">Rotation quaternion to rotate this prim</param>
-        /// <param name="createFlags">PrimFlags used in creation such as PrimFlags.CreateSelected</param>
+        /// <param name="createFlags">Specify the <seealso cref="PrimFlags"/></param>
         /// <remarks>Due to the way client prim rezzing is done on the server,
         /// the requested position for an object is only close to where the prim
         /// actually ends up. If you desire exact placement you'll need to 
@@ -2569,8 +2568,7 @@ namespace OpenMetaverse
         protected Primitive GetPrimitive(Simulator simulator, uint localID, UUID fullID)
         {
             if (Client.Settings.OBJECT_TRACKING)
-                lock (simulator.ObjectsPrimitives.Dictionary)
-                {
+            {
                 Primitive prim;
 
                 if (simulator.ObjectsPrimitives.TryGetValue(localID, out prim))
@@ -2582,7 +2580,7 @@ namespace OpenMetaverse
                     prim = new Primitive();
                     prim.LocalID = localID;
                     prim.ID = fullID;
-         //           lock (simulator.ObjectsPrimitives.Dictionary)
+                    lock (simulator.ObjectsPrimitives.Dictionary)
                         simulator.ObjectsPrimitives.Dictionary[localID] = prim;
 
                     return prim;
@@ -2604,8 +2602,7 @@ namespace OpenMetaverse
         protected Avatar GetAvatar(Simulator simulator, uint localID, UUID fullID)
         {
             if (Client.Settings.AVATAR_TRACKING)
-                lock (simulator.ObjectsAvatars.Dictionary)
-                {
+            {
                 Avatar avatar;
 
                 if (simulator.ObjectsAvatars.TryGetValue(localID, out avatar))
@@ -2617,7 +2614,7 @@ namespace OpenMetaverse
                     avatar = new Avatar();
                     avatar.LocalID = localID;
                     avatar.ID = fullID;
-                 //   lock (simulator.ObjectsAvatars.Dictionary)
+                    lock (simulator.ObjectsAvatars.Dictionary)
                         simulator.ObjectsAvatars.Dictionary[localID] = avatar;
 
                     return avatar;
@@ -2631,38 +2628,22 @@ namespace OpenMetaverse
 
         #endregion Object Tracking Link
 
-        bool inTimer = false;
-        object interpolationTimerLock = new object();
         protected void InterpolationTimer_Elapsed(object obj)
         {
-            lock (interpolationTimerLock)
-            {
-                if (inTimer)
-                {
-                    Logger.DebugLog("InterpolationTimer getting behind");
-                    return;
-                }
-                inTimer = true;
-            }
-
             if (Client.Network.Connected)
             {
                 int interval = Environment.TickCount - Client.Self.lastInterpolation;
                 float seconds = (float)interval / 1000f;
 
-                List<Simulator> ClientNetworkSimulators = null;
                 // Iterate through all of the simulators
                 lock (Client.Network.Simulators)
                 {
-                    ClientNetworkSimulators = new List<Simulator>(Client.Network.Simulators);
-                }
-                {
-                    for (int i = 0; i < ClientNetworkSimulators.Count; i++)
+                    for (int i = 0; i < Client.Network.Simulators.Count; i++)
                     {
-                        float adjSeconds = seconds * ClientNetworkSimulators[i].Stats.Dilation;
+                        float adjSeconds = seconds * Client.Network.Simulators[i].Stats.Dilation;
 
                         // Iterate through all of this sims avatars
-                        ClientNetworkSimulators[i].ObjectsAvatars.ForEach(
+                        Client.Network.Simulators[i].ObjectsAvatars.ForEach(
                             delegate(Avatar avatar)
                             {
                                 #region Linear Motion
@@ -2679,7 +2660,7 @@ namespace OpenMetaverse
                         );
 
                         // Iterate through all of this sims primitives
-                        ClientNetworkSimulators[i].ObjectsPrimitives.ForEach(
+                        Client.Network.Simulators[i].ObjectsPrimitives.ForEach(
                             delegate(Primitive prim)
                             {
                                 if (prim.Joint == JointType.Invalid)
@@ -2729,8 +2710,6 @@ namespace OpenMetaverse
 
                 // Make sure the last interpolated time is always updated
                 Client.Self.lastInterpolation = Environment.TickCount;
-                lock(interpolationTimerLock)
-                inTimer = false;
             }
         }
     }
