@@ -37,79 +37,6 @@ using OpenMetaverse.Packets;
 namespace OpenMetaverse
 {
     #region Enums
-    /// <summary>
-    /// Inventory Item Types, eg Script, Notecard, Folder, etc
-    /// </summary>
-    public enum InventoryType : sbyte
-    {
-        /// <summary>Unknown</summary>
-        Unknown = -1,
-        /// <summary>Texture</summary>
-        Texture = 0,
-        /// <summary>Sound</summary>
-        Sound = 1,
-        /// <summary>Calling Card</summary>
-        CallingCard = 2,
-        /// <summary>Landmark</summary>
-        Landmark = 3,
-        /*
-        /// <summary>Script</summary>
-        //[Obsolete("See LSL")] Script = 4,
-        /// <summary>Clothing</summary>
-        //[Obsolete("See Wearable")] Clothing = 5,
-        /// <summary>Object, both single and coalesced</summary>
-         */
-        Object = 6,
-        /// <summary>Notecard</summary>
-        Notecard = 7,
-        /// <summary></summary>
-        Category = 8,
-        /// <summary>Folder</summary>
-        Folder = 8,
-        /// <summary></summary>
-        RootCategory = 9,
-        /// <summary>an LSL Script</summary>
-        LSL = 10,
-        /*
-        /// <summary></summary>
-        //[Obsolete("See LSL")] LSLBytecode = 11,
-        /// <summary></summary>
-        //[Obsolete("See Texture")] TextureTGA = 12,
-        /// <summary></summary>
-        //[Obsolete] Bodypart = 13,
-        /// <summary></summary>
-        //[Obsolete] Trash = 14,
-         */
-        /// <summary></summary>
-        Snapshot = 15,
-        /*
-        /// <summary></summary>
-        //[Obsolete] LostAndFound = 16,
-         */
-        /// <summary></summary>
-        Attachment = 17,
-        /// <summary></summary>
-        Wearable = 18,
-        /// <summary></summary>
-        Animation = 19,
-        /// <summary></summary>
-        Gesture = 20
-    }
-
-    /// <summary>
-    /// Item Sale Status
-    /// </summary>
-    public enum SaleType : byte
-    {
-        /// <summary>Not for sale</summary>
-        Not = 0,
-        /// <summary>The original is for sale</summary>
-        Original = 1,
-        /// <summary>Copies are for sale</summary>
-        Copy = 2,
-        /// <summary>The contents of the object are for sale</summary>
-        Contents = 3
-    }
 
     [Flags]
     public enum InventorySortOrder : int
@@ -190,6 +117,7 @@ namespace OpenMetaverse
     #endregion Enums
 
     #region Inventory Object Classes
+
     /// <summary>
     /// Base Class for Inventory Items
     /// </summary>
@@ -1017,15 +945,6 @@ namespace OpenMetaverse
 
         #endregion Events
 
-        private GridClient _Client;
-        private Inventory _Store;
-        //private Random _RandNumbers = new Random();
-        private object _CallbacksLock = new object();
-        private uint _CallbackPos;
-        private Dictionary<uint, ItemCreatedCallback> _ItemCreatedCallbacks = new Dictionary<uint, ItemCreatedCallback>();
-        private Dictionary<uint, ItemCopiedCallback> _ItemCopiedCallbacks = new Dictionary<uint,ItemCopiedCallback>();
-        private List<InventorySearch> _Searches = new List<InventorySearch>();
-
         #region String Arrays
 
         /// <summary>Partial mapping of AssetTypes to folder names</summary>
@@ -1055,67 +974,16 @@ namespace OpenMetaverse
             "Gestures"
         };
 
-        private static readonly string[] _AssetTypeNames = new string[]
-        {
-            "texture",
-	        "sound",
-	        "callcard",
-	        "landmark",
-	        "script",
-	        "clothing",
-	        "object",
-	        "notecard",
-	        "category",
-	        "root",
-	        "lsltext",
-	        "lslbyte",
-	        "txtr_tga",
-	        "bodypart",
-	        "trash",
-	        "snapshot",
-	        "lstndfnd",
-	        "snd_wav",
-	        "img_tga",
-	        "jpeg",
-	        "animatn",
-	        "gesture",
-	        "simstate"
-        };
-
-        private static readonly string[] _InventoryTypeNames = new string[]
-        {
-            "texture",
-	        "sound",
-	        "callcard",
-	        "landmark",
-	        String.Empty,
-	        String.Empty,
-	        "object",
-	        "notecard",
-	        "category",
-	        "root",
-	        "script",
-	        String.Empty,
-	        String.Empty,
-	        String.Empty,
-	        String.Empty,
-	        "snapshot",
-	        String.Empty,
-	        "attach",
-	        "wearable",
-	        "animation",
-	        "gesture",
-        };
-
-        private static readonly string[] _SaleTypeNames = new string[]
-        {
-            "not",
-            "orig",
-            "copy",
-            "cntn"
-        };
-
         #endregion String Arrays
+
+        private GridClient _Client;
+        private Inventory _Store;
+        //private Random _RandNumbers = new Random();
+        private object _CallbacksLock = new object();
+        private uint _CallbackPos;
+        private Dictionary<uint, ItemCreatedCallback> _ItemCreatedCallbacks = new Dictionary<uint, ItemCreatedCallback>();
+        private Dictionary<uint, ItemCopiedCallback> _ItemCopiedCallbacks = new Dictionary<uint,ItemCopiedCallback>();
+        private List<InventorySearch> _Searches = new List<InventorySearch>();
 
         #region Properties
 
@@ -1965,8 +1833,8 @@ namespace OpenMetaverse
             {
                 OSDMap query = new OSDMap();
                 query.Add("folder_id", OSD.FromUUID(folderID));
-                query.Add("asset_type", OSD.FromString(AssetTypeToString(assetType)));
-                query.Add("inventory_type", OSD.FromString(InventoryTypeToString(invType)));
+                query.Add("asset_type", OSD.FromString(Utils.AssetTypeToString(assetType)));
+                query.Add("inventory_type", OSD.FromString(Utils.InventoryTypeToString(invType)));
                 query.Add("name", OSD.FromString(name));
                 query.Add("description", OSD.FromString(description));
 
@@ -2597,77 +2465,63 @@ namespace OpenMetaverse
             _Client.Network.SendPacket(remove, simulator);
         }
 
+        /// <summary>
+        /// Copy an InventoryScript item from the Agents Inventory into a primitives task inventory
+        /// </summary>
+        /// <param name="objectLocalID">An unsigned integer representing a primitive being simulated</param>
+        /// <param name="item">An <seealso cref="InventoryItem"/> which represents a script object from the agents inventory</param>
+        /// <returns>A Unique Transaction ID</returns>
+        /// <remarks>
+        /// <code>
+        ///    uint Prim = 95899503; // Fake prim ID
+        ///    UUID Script = UUID.Parse("92a7fe8a-e949-dd39-a8d8-1681d8673232"); // Fake Script UUID in Inventory
+        ///
+        ///    Client.Inventory.FolderContents(Client.Inventory.FindFolderForType(AssetType.LSLText), Client.Self.AgentID, 
+        ///        false, true, InventorySortOrder.ByName, 10000);
+        ///
+        ///    UUID Transaction = Client.Inventory.RezScript(Prim, (InventoryItem)Client.Inventory.Store[Script]);
+        /// </code>
+        /// </remarks>
+        public UUID CopyScriptToTask(uint objectLocalID, InventoryItem item)
+        {
+            UUID transactionID = UUID.Random();
+
+            RezScriptPacket ScriptPacket = new RezScriptPacket();
+            ScriptPacket.AgentData.AgentID = _Client.Self.AgentID;
+            ScriptPacket.AgentData.SessionID = _Client.Self.SessionID;
+
+            ScriptPacket.UpdateBlock.ObjectLocalID = objectLocalID;
+
+            ScriptPacket.InventoryBlock.ItemID = item.UUID;
+            ScriptPacket.InventoryBlock.FolderID = item.ParentUUID;
+            ScriptPacket.InventoryBlock.CreatorID = item.CreatorID;
+            ScriptPacket.InventoryBlock.OwnerID = item.OwnerID;
+            ScriptPacket.InventoryBlock.GroupID = item.GroupID;
+            ScriptPacket.InventoryBlock.BaseMask = (uint)item.Permissions.BaseMask;
+            ScriptPacket.InventoryBlock.OwnerMask = (uint)item.Permissions.OwnerMask;
+            ScriptPacket.InventoryBlock.GroupMask = (uint)item.Permissions.GroupMask;
+            ScriptPacket.InventoryBlock.EveryoneMask = (uint)item.Permissions.EveryoneMask;
+            ScriptPacket.InventoryBlock.NextOwnerMask = (uint)item.Permissions.NextOwnerMask;
+            ScriptPacket.InventoryBlock.GroupOwned = item.GroupOwned;
+            ScriptPacket.InventoryBlock.TransactionID = transactionID;
+            ScriptPacket.InventoryBlock.Type = (sbyte)item.AssetType;
+            ScriptPacket.InventoryBlock.InvType = (sbyte)item.InventoryType;
+            ScriptPacket.InventoryBlock.Flags = (uint)item.Flags;
+            ScriptPacket.InventoryBlock.SaleType = (byte)item.SaleType;
+            ScriptPacket.InventoryBlock.SalePrice = item.SalePrice;
+            ScriptPacket.InventoryBlock.Name = Utils.StringToBytes(item.Name);
+            ScriptPacket.InventoryBlock.Description = Utils.StringToBytes(item.Description);
+            ScriptPacket.InventoryBlock.CreationDate = (int)Utils.DateTimeToUnixTime(item.CreationDate);
+            ScriptPacket.InventoryBlock.CRC = ItemCRC(item);
+
+            _Client.Network.SendPacket(ScriptPacket);
+
+            return transactionID;
+        }
+
         #endregion Task
 
         #region Helper Functions
-
-        /// <summary>
-        /// Takes an AssetType and returns the string representation
-        /// </summary>
-        /// <param name="type">The source <seealso cref="AssetType"/></param>
-        /// <returns>The string version of the AssetType</returns>
-        public static string AssetTypeToString(AssetType type)
-        {
-            return _AssetTypeNames[(int)type];
-        }
-
-        /// <summary>
-        /// Translate a string name of an AssetType into the proper Type
-        /// </summary>
-        /// <param name="type">A string containing the AssetType name</param>
-        /// <returns>The AssetType which matches the string name, or AssetType.Unknown if no match was found</returns>
-        public static AssetType StringToAssetType(string type)
-        {
-            for (int i = 0; i < _AssetTypeNames.Length; i++)
-            {
-                if (_AssetTypeNames[i] == type)
-                    return (AssetType)i;
-            }
-
-            return AssetType.Unknown;
-        }
-
-        /// <summary>
-        /// Convert an InventoryType to a string
-        /// </summary>
-        /// <param name="type">The <seealso cref="T:InventoryType"/> to convert</param>
-        /// <returns>A string representation of the source </returns>
-        public static string InventoryTypeToString(InventoryType type)
-        {
-            return _InventoryTypeNames[(int)type];
-        }
-
-        /// <summary>
-        /// Convert a string into a valid InventoryType
-        /// </summary>
-        /// <param name="type">A string representation of the InventoryType to convert</param>
-        /// <returns>A InventoryType object which matched the type</returns>
-        public static InventoryType StringToInventoryType(string type)
-        {
-            for (int i = 0; i < _InventoryTypeNames.Length; i++)
-            {
-                if (_InventoryTypeNames[i] == type)
-                    return (InventoryType)i;
-            }
-
-            return InventoryType.Unknown;
-        }
-
-        public static string SaleTypeToString(SaleType type)
-        {
-            return _SaleTypeNames[(int)type];
-        }
-
-        public static SaleType StringToSaleType(string value)
-        {
-            for (int i = 0; i < _SaleTypeNames.Length; i++)
-            {
-                if (value == _SaleTypeNames[i])
-                    return (SaleType)i;
-            }
-
-            return SaleType.Not;
-        }
 
         private uint RegisterItemCreatedCallback(ItemCreatedCallback callback)
         {
@@ -2862,7 +2716,7 @@ namespace OpenMetaverse
                                 }
                                 else if (key == "type")
                                 {
-                                    assetType = StringToAssetType(value);
+                                    assetType = Utils.StringToAssetType(value);
                                 }
                                 else if (key == "name")
                                 {
@@ -3033,7 +2887,7 @@ namespace OpenMetaverse
                                             }
                                             else if (key == "sale_type")
                                             {
-                                                saleType = StringToSaleType(value);
+                                                saleType = Utils.StringToSaleType(value);
                                             }
                                             else if (key == "sale_price")
                                             {
@@ -3054,11 +2908,11 @@ namespace OpenMetaverse
                                 }
                                 else if (key == "type")
                                 {
-                                    assetType = StringToAssetType(value);
+                                    assetType = Utils.StringToAssetType(value);
                                 }
                                 else if (key == "inv_type")
                                 {
-                                    inventoryType = StringToInventoryType(value);
+                                    inventoryType = Utils.StringToInventoryType(value);
                                 }
                                 else if (key == "flags")
                                 {

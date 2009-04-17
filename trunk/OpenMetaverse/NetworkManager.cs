@@ -733,6 +733,14 @@ namespace OpenMetaverse
 
                     if (packet != null)
                     {
+                        // skip blacklisted packets
+                        if (UDPBlacklist.Contains(packet.Type.ToString()))
+                        {
+                            Logger.Log(String.Format("Discarding Blacklisted packet {0} from {1}", 
+                                packet.Type, simulator.IPEndPoint), Helpers.LogLevel.Warning);
+                            return;
+                        }
+
                         // Skip the ACK handling on packets synthesized from CAPS messages
                         if (packet.Header.Sequence != 0)
                         {
@@ -861,23 +869,22 @@ namespace OpenMetaverse
                 List<Simulator> disconnectedSims = null;
 
                 // Check all of the connected sims for disconnects
-                List<Simulator> TheSimulators;
-                lock (Simulators) TheSimulators = new List<Simulator>(Simulators);
+                lock (Simulators)
                 {
-                    for (int i = 0; i < TheSimulators.Count; i++)
+                    for (int i = 0; i < Simulators.Count; i++)
                     {
-                        if (TheSimulators[i].DisconnectCandidate)
+                        if (Simulators[i].DisconnectCandidate)
                         {
                             // Avoid initializing a new List<> every time the timer
                             // fires with this piece of code
                             if (disconnectedSims == null)
                                 disconnectedSims = new List<Simulator>();
 
-                            disconnectedSims.Add(TheSimulators[i]);
+                            disconnectedSims.Add(Simulators[i]);
                         }
                         else
                         {
-                            TheSimulators[i].DisconnectCandidate = true;
+                            Simulators[i].DisconnectCandidate = true;
                         }
                     }
                 }

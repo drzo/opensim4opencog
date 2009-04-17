@@ -161,6 +161,9 @@ namespace OpenMetaverse
         {
             string s = string.Format("{0:.00}", val);
 
+            if (val == 0)
+                return ".00";
+
             // Trim trailing zeroes
             while (s[s.Length - 1] == '0')
                 s = s.Remove(s.Length - 1, 1);
@@ -565,7 +568,7 @@ namespace OpenMetaverse
                 object packetDataObject = packetField.GetValue(packet);
 
                 result.AppendFormat("-- {0} --" + System.Environment.NewLine, packetField.Name);
-
+                result.AppendFormat("-- {0} --" + System.Environment.NewLine, packet.Type);
                 foreach(FieldInfo packetValueField in packetField.GetValue(packet).GetType().GetFields())
                 {
                     result.AppendFormat("{0}: {1}" + System.Environment.NewLine, 
