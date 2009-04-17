@@ -146,7 +146,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                 //if (this.WindowState == FormWindowState.Minimized)              
                 base.WindowState = FormWindowState.Normal;
                 SimPathStore S = GetPathStore();
-                String name = S.GetSimRegion().RegionName + " Level " + S.SimLevel(128, 128);
+                String name = S.GetSimRegion().RegionName;// +" Level " + S.AverageLevel;
                 this.Text = name;
                 if (!base.Visible) base.Visible = true;
                 base.Activate();
@@ -197,7 +197,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                     if (mPathFinder != null)
                         mPathFinder.PathFinderDebug -= new PathFinderDebugHandler(PathFinderDebug);
 
-                    mPathFinder = new PathFinderFasting(PnlGUI.PathStore.mMatrix);
+                    mPathFinder = new PathFinderFasting(PnlGUI.Matrix);
                     mPathFinder.PathFinderDebug += new PathFinderDebugHandler(PathFinderDebug);
                 }
             }
@@ -515,6 +515,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             this.TBarY = new System.Windows.Forms.TrackBar();
             this.LblCompletedTimeValue = new System.Windows.Forms.Label();
             this.LblCompletedTime = new System.Windows.Forms.Label();
+            this.MinZevel = new System.Windows.Forms.TextBox();
             this.ToolStrp.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.TBarSpeed)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.NumUpDownHeuristic)).BeginInit();
@@ -958,6 +959,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             // PnlSettings
             // 
             this.PnlSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.PnlSettings.Controls.Add(this.MinZevel);
             this.PnlSettings.Controls.Add(this.BtnRecomputeMatrix);
             this.PnlSettings.Controls.Add(this.BtnRebakeTerrain);
             this.PnlSettings.Controls.Add(this.ChkReopenCloseNodes);
@@ -1155,6 +1157,14 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             this.LblCompletedTime.TabIndex = 27;
             this.LblCompletedTime.Text = "Completed Time               sec.";
             // 
+            // MinZevel
+            // 
+            this.MinZevel.Location = new System.Drawing.Point(15, 416);
+            this.MinZevel.Name = "MinZevel";
+            this.MinZevel.Size = new System.Drawing.Size(100, 20);
+            this.MinZevel.TabIndex = 26;
+            this.MinZevel.TextChanged += new System.EventHandler(this.MinZevel_TextChanged);
+            // 
             // PathFinderDemo
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1250,13 +1260,24 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         private void BtnRecomputeMatrix_Click(object sender, EventArgs e)
         {
             PathStore.NeedsUpdate = true;
-            PathStore.UpdateMatrix();
+            float tryFloat;
+            if (float.TryParse(MinZevel.Text, out tryFloat))
+            {
+                PnlGUI.ZLevel = tryFloat;
+            }
+            PathStore.UpdateMatrix(PnlGUI.CurrentPlane);
+            PnlGUI.Invalidate();
         }
 
         private void BtnRebakeTerrain_Click(object sender, EventArgs e)
         {
             PathStore.NeedsUpdate = true;
             PathStore.GetSimRegion().BakeTerrain();
+            PnlGUI.Invalidate();
+        }
+
+        private void MinZevel_TextChanged(object sender, EventArgs e)
+        {
         }
     }
 }

@@ -81,7 +81,7 @@ namespace cogbot.Actions.Movement
             {
                 foreach (SimRegion R in SimRegion.CurrentRegions)
                 {
-                    WriteLine(R.ConnectionInfo());
+                    WriteLine(R.NetworkInfo());
                 }
             }
             else
@@ -89,7 +89,7 @@ namespace cogbot.Actions.Movement
                 foreach (SimRegion R in SimRegion.CurrentRegions)
                 {
                     if (R.RegionName.Contains(String.Join(" ", args)))
-                        WriteLine(R.ConnectionInfo());
+                        WriteLine(R.NetworkInfo());
                 }
             }
             return "ran " + Name;
@@ -205,7 +205,7 @@ namespace cogbot.Actions.Movement
             foreach (SimObject o in objs)
             {
                 WriteLine("MeshInfo: " + o);
-                WriteLine(o.GetMeshInfo());
+                WriteLine(o.Mesh.DebugString());
             }
             return "ran " + Name;
         }
@@ -297,7 +297,7 @@ namespace cogbot.Actions.Movement
     //    {
     //        int argsused;
     //        SimPosition v3 = WorldSystem.GetVector(args, out argsused);
-    //        SimWaypoint wp = v3.GetWaypoint();
+    //        CollisionIndex wp = v3.GetWaypoint();
     //        bool IsFake;
     //        IList<SimRoute> route = WorldSystem.TheSimAvatar.GetRouteList(wp, out IsFake);
     //        String s = "v3=" + WorldSystem.TheSimAvatar.DistanceVectorString(v3) + " wp=" + wp.ToString();
@@ -442,7 +442,7 @@ namespace cogbot.Actions.Movement
             {
                 local.Z = Client.Self.SimPosition.Z;
                 Vector3d target = WorldSystem.TheSimAvatar.GetSimRegion().LocalToGlobal(local);
-                simObject = SimWaypoint.CreateGlobal(target);
+                simObject = SimWaypointImpl.CreateGlobal(target);
                 if (args.Length == 3) Single.TryParse(args[2], out distance);
 
             }
@@ -564,7 +564,7 @@ namespace cogbot.Actions.Movement
                     local.Z = Client.Self.SimPosition.Z;
                 }
                 Vector3d target = WorldSystem.TheSimAvatar.GetSimRegion().LocalToGlobal(local);
-                simObject = SimWaypoint.CreateGlobal(target);
+                simObject = SimWaypointImpl.CreateGlobal(target);
             }
             else
             {

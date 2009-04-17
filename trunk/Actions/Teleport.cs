@@ -39,27 +39,38 @@ namespace cogbot.Actions
             }
         }
 
-        public override void acceptInput(string verb, Parser args)
+        public override void acceptInput(string verb, Parser parser)
         {
-           // base.acceptInput(verb, args);            
-            string[] tokens = args.prepPhrases["to"].Split(null);
+            String[] args = parser.tokens;
+            string ToS = parser.prepPhrases["to"];
+            if (String.IsNullOrEmpty(ToS))
+            {
+                ToS = parser.str;
+            }
+            char[] splitchar = null;
+            if (ToS.Contains("/"))
+            {
+                splitchar = new char[] { '/' };
+            }           
+            string[] tokens = ToS.Split(splitchar);
             if (tokens.Length == 0)
             {
                 WriteLine("Provide somewhere to teleport to.");
             }
             else
             {
-                string to = "";
-                int X = 128, Y = 128, Z = 0;
+                Vector3 coords = new Vector3(128, 128, 40);
+                string simName = "";//Client.Network.CurrentSim.Name;
+
                 bool ifCoordinates = false;
 
-                if (tokens.Length > 3)
+                if (tokens.Length >= 3)
                 {
                     try
                     {
-                        X = int.Parse(tokens[tokens.Length - 3]);
-                        Y = int.Parse(tokens[tokens.Length - 2]);
-                        Z = int.Parse(tokens[tokens.Length - 1]);
+                        coords.X = float.Parse(tokens[tokens.Length - 3]);
+                        coords.Y = float.Parse(tokens[tokens.Length - 2]);
+                        coords.Z = float.Parse(tokens[tokens.Length - 1]);
                         ifCoordinates = true;
                     }
                     catch (Exception e) { }
@@ -68,21 +79,27 @@ namespace cogbot.Actions
                 if (!ifCoordinates)
                 {
                     for (int i = 0; i < tokens.Length; i++)
-                        to += tokens[i] + " ";
-                    to = to.Trim();
+                        simName += tokens[i] + " ";
+                    simName = simName.Trim();
                 }
                 else
                 {
                     for (int i = 0; i < tokens.Length - 3; i++)
-                        to += tokens[i] + " ";
-                    to = to.Trim();
+                        simName += tokens[i] + " ";
+                    simName = simName.Trim();
                 }
                 {
+                    if (String.IsNullOrEmpty(simName)) simName = Client.Network.CurrentSim.Name;
                     TeleportFinished.Reset();
                     Client.Self.OnTeleport += On_Teleport;
-                    WriteLine("Trying to teleport to " + to + ".");
-                    Client.Self.Teleport(to, new Vector3(128, 128, 40));
-                    TeleportFinished.WaitOne();
+                    WriteLine("Trying to teleport to " + simName + " " + coords);
+                    Client.Self.Teleport(simName, coords);
+                    // wait 30 seconds
+                    if (!TeleportFinished.WaitOne(30000, false))
+                    {
+                        Client.Self.OnTeleport -= On_Teleport;
+                        WriteLine("Timeout on teleport to " + simName + " " + coords);
+                    }
                 }
             }
 

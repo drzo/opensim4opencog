@@ -20,6 +20,7 @@ using System.Threading;
 using cogbot.TheOpenSims.Navigation.Debug;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Drawing;
+using cogbot.TheOpenSims.Mesher;
 
 namespace cogbot.TheOpenSims.Navigation
 {
@@ -32,123 +33,215 @@ namespace cogbot.TheOpenSims.Navigation
     /// It is defined with both a list of nodes and a list of arcs.
     /// </summary>
     [Serializable]
-    public class SimPathStore
+    public class SimPathStore //: cogbot.TheOpenSims.Navigation.IPathStore
     {
+        private /*i*/ float _XY256;
 
+        public float XY256
+        {
+            get { return _XY256; }
+        }
+        private /*i*/ float _Max256;
+
+        public float Max256
+        {
+            get { return _Max256; }
+        }
+        private /*i*/ Box3Fill _OuterBounds;
+
+        public Box3Fill OuterBounds
+        {
+            get { return _OuterBounds; }
+        }
 
         public override string ToString()
         {
-            return GetType().Name + ": " + GetSimRegion() + " Level=" + SimZAverage;
+            return GetType().Name + ": " + GetSimRegion();// +" Level=" + SimZAverage;
         }
 
-        public float _TheSimZ = -1f;
-        public float SimZAverage
-        {
-            get
-            {
-                if (_TheSimZ == -1f)
-                {
-                    _TheSimZ = SimLevel(127f, 127f);
-                }
-                return _TheSimZ;
-            }
-        }
+        private float _TheSimZ = -1f;
 
-        public float TheSimZMinLevel
-        {
-            get { return SimZAverage + 1f; }
-        }
-        public float TheSimZMaxLevel
-        {
-            get { return SimZAverage + 2f; }
-        }
-        public void MinMaxLevel(float x, float y, out float minLevel, out float maxLevel)
-        {
-            minLevel = SimLevel(x, y) + 1f;
-            maxLevel = minLevel + 1f;
-        }
+        //private float SimZAverage
+        //{
+        //    get
+        //    {
+        //        if (_TheSimZ == -1f)
+        //        {
+        //            _TheSimZ = SimLevel(127f, 127f);
+        //        }
+        //        return _TheSimZ;
+        //    }
+        //}
+
+        //private float TheSimZMinLevel
+        //{
+        //    get { return SimZAverage + 1f; }
+        //}
+        //private float TheSimZMaxLevel
+        //{
+        //    get { return SimZAverage + 2f; }
+        //}
+
+        //private void MinMaxLevel(float x, float y, out float minLevel, out float maxLevel)
+        //{
+        //    minLevel = SimLevel(x, y) + 1f;
+        //    maxLevel = minLevel + 1f;
+        //}
 
         public const byte BLOCKED = 0;
         public const byte PASSABLE = 1;
         public const byte STICKY_PASSABLE = 2;
         public const byte INITIALLY = 20;
         public const byte MAYBE_BLOCKED = 255;
-        public float POINTS_PER_METER = 5f;
-        public float LargeScale = 1f;//StepSize;//0.2f;
+        readonly public float POINTS_PER_METER = 5f;
+        readonly private float LargeScale = 1f;//StepSize;//0.2f;
 
-        public float SimLevel(float vx, float vy)
-        {
-            int ix = ARRAY_IDX(RangeCheck(vx));
-            int iy = ARRAY_IDX(RangeCheck(vy));
-            SimWaypoint WP = mWaypoints[ix, iy];
-            if (WP == null) return GetSimRegion().GetGroundLevel(vx, vy);
-            return WP.GetZLevel();
-        }
+        //public float SimLevel(float vx, float vy)
+        //{
+        //    int ix = ARRAY_X((vx));
+        //    int iy = ARRAY_Y((vy));
+        //    CollisionIndex WP = MeshIndex[ix, iy];
+        //    if (WP == null) return GetSimRegion().GetGroundLevel(vx, vy);
+        //    return WP.GetZLevel(CurrentPlane);
+        //}
 
-        public SimZMinMaxLevel TheSimZMinMaxLevel;
+       // private SimZMinMaxLevel TheSimZMinMaxLevel;
         public static float PI2 = (float)(Math.PI * 2f);
         public static float RAD2DEG = 360f / PI2;
 
-        public float StepSize;// = 1f / POINTS_PER_METER;
-        public int MAPSPACE;// = 256 * ((int)POINTS_PER_METER);
-        public readonly bool LargeScaleRound;// = LargeScale == (float)Math.Round(LargeScale, 0);
-        public readonly byte[,] mMatrix;// = new byte[MAPSPACE, MAPSPACE];
-        public readonly SimWaypoint[,] mWaypoints;// = new SimWaypoint[MAPSPACE, MAPSPACE];
+        readonly public float StepSize;// = 1f / POINTS_PER_METER;
+        readonly public int MAPSPACE;// = XY256 * ((int)POINTS_PER_METER);
+        private readonly bool LargeScaleRound;// = LargeScale == (float)Math.Round(LargeScale, 0);
+        //private /*readonly*/ byte[,] _ZMatrix;// = new byte[MAPSPACE, MAPSPACE];
+
+        //CollisionPlane _GL;
+        //public CollisionPlane CurrentPlane
+        //{
+        //    get
+        //    {
+        //        return _GL;
+        //    }
+        //    set
+        //    {
+        //        _GL = value;
+        //    }
+        //}
+
+        internal CollisionPlane GetCollisionPlane(float Z)
+        {
+            if (Z < 1) Z = 1;
+            else if (Z > 1999) Z = 1998;
+            int index = (int)Z;
+            if (Matrixes[index] != null)
+            {
+                Matrixes[index].ZLevel = Z;
+                return Matrixes[index];
+            }
+            if (Z > 1)
+            {
+                if (Matrixes[index - 1] != null)
+                {
+                    Matrixes[index] = Matrixes[index - 1];
+                    Matrixes[index].ZLevel = Z;
+                    return Matrixes[index];
+                }
+                else
+                    if (Matrixes[index + 1] != null)
+                    {
+                        Matrixes[index] = Matrixes[index + 1];
+                        Matrixes[index].ZLevel = Z;
+                        return Matrixes[index];
+                    }
+            }
+            Debug("creating matrix @ " + Z);
+            CollisionPlane ZMatrix = new CollisionPlane(MAPSPACE, MAPSPACE, Z);
+            Matrixes[index] = ZMatrix;
+            return ZMatrix;
+        }
+
+        readonly CollisionPlane[] Matrixes = new CollisionPlane[2000];
+        public byte[,] GetByteMatrix(float Z)
+        {
+            return GetCollisionPlane(Z).ByteMatrix;
+        }
+
+        readonly public CollisionIndex[,] MeshIndex;
 
         readonly string RegionFileName;
         //readonly byte[,] paths = PathFinding.PathFinderDemo.Instance
 
 
-        public float UNARRAY_IDX(int p)
+        public float UNARRAY_X(int p)
         {
-            return p / POINTS_PER_METER;
+            return p / POINTS_PER_METER + Start.X;
+        }
+        public float UNARRAY_Y(int p)
+        {
+            return p / POINTS_PER_METER + Start.Y;
         }
 
-        public int ARRAY_IDX(double x)
+        public int ARRAY_X(float x)
         {
-            if (x == 0.0) return 0;
+            x -= Start.X;
+            if (x < StepSize) return 0;
             double i = Math.Round(x * POINTS_PER_METER, 1);
             int ii = (int)i;
             if ((double)i != ii)
             {
-                throw new ArgumentException("ARRAY_IDX " + i + "!=" + ii);
+                //throw new ArgumentException("ARRAY_IDX " + i + "!=" + ii);
             }
             if (ii < 0) return 0;
+            if (ii >= MAPSPACE) ii = MAPSPACE - 1;
             return ii;
         }
 
-        Color[] lastColour = new Color[256];//(Color.Black);
-
-        internal Color GetColor(int x, int y)
+        public int ARRAY_Y(float x)
         {
-            byte p = mMatrix[x, y];
+            x -= Start.Y;
+            if (x < StepSize) return 0;
+            double i = Math.Round(x * POINTS_PER_METER, 1);
+            int ii = (int)i;
+            if ((double)i != ii)
+            {
+                //throw new ArgumentException("ARRAY_IDX " + i + "!=" + ii);
+            }
+            if (ii < 0) return 0;
+            if (ii >= MAPSPACE) ii = MAPSPACE - 1;
+            return ii;
+        }
+
+        readonly Color[] lastColour = new Color[256];//(Color.Black);
+
+        public Color GetColor(int x, int y , byte[,] matrix)
+        {
+            byte p = matrix[x, y];
             switch (p)
             {
                 case BLOCKED:
-                    return OccupiedColor(Color.Olive, mWaypoints[x, y]);
+                    return OccupiedColor(Color.Olive, MeshIndex[x, y]);
                 case MAYBE_BLOCKED:
-                    return OccupiedColor(Color.Pink, mWaypoints[x, y]);
+                    return OccupiedColor(Color.Pink, MeshIndex[x, y]);
                 case PASSABLE:
-                    return OccupiedColor(Color.Blue, mWaypoints[x, y]);
+                    return OccupiedColor(Color.Blue, MeshIndex[x, y]);
                 case STICKY_PASSABLE:
-                    return OccupiedColor(Color.Green, mWaypoints[x, y]);
+                    return OccupiedColor(Color.Green, MeshIndex[x, y]);
             }
             Color sb = lastColour[p];
             if (sb == Color.Empty)
             {
                 int colorIndex = 240 - ((int)(Math.Log10(p) * 127));
-                colorIndex = colorIndex < 0 ? 0 : colorIndex > 255 ? 255 : colorIndex;
-                sb = Color.FromArgb(255, colorIndex, colorIndex, colorIndex);
+                colorIndex = colorIndex < byte.MinValue ? byte.MinValue : colorIndex > byte.MaxValue ? byte.MaxValue : colorIndex;
+                sb = Color.FromArgb(byte.MaxValue, colorIndex, colorIndex, colorIndex);
                 lastColour[p] = sb;
             }
             return sb;
         }
 
-        private Color OccupiedColor(Color c, SimWaypoint simWaypoint)
+        private Color OccupiedColor(Color c, CollisionIndex cIndex)
         {
-            if (simWaypoint != null)
+            if (cIndex != null)
             {
-                int dense = simWaypoint.OccupiedCount;
+                int dense = cIndex.OccupiedCount;
                 int A = 240 - 10 * dense;
                 if (A < 0) A = 20;
 
@@ -160,12 +253,12 @@ namespace cogbot.TheOpenSims.Navigation
 
         public byte GetNodeQuality(Vector3 v3)
         {
-            return mMatrix[ARRAY_IDX(RangeCheck(v3.X)), ARRAY_IDX(RangeCheck(v3.Y))];
+            return GetByteMatrix(v3.Z)[ARRAY_X((v3.X)), ARRAY_Y((v3.Y))];
         }
 
         public void SetNodeQuality(Vector3 v3, byte v)
         {
-            mMatrix[ARRAY_IDX(RangeCheck(v3.X)), ARRAY_IDX(RangeCheck(v3.Y))] = v;
+            GetByteMatrix(v3.Z)[ARRAY_X((v3.X)), ARRAY_Y((v3.Y))] = v;
         }
 
         /// <summary>
@@ -173,16 +266,25 @@ namespace cogbot.TheOpenSims.Navigation
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        public void SetTraveled(float x, float y)
+        public void SetTraveled(float x, float y, float z)
         {
-            x = RangeCheck(x); y = RangeCheck(y);
-            int ix = ARRAY_IDX(x);
-            int iy = ARRAY_IDX(y);
+            int ix = ARRAY_X(x);
+            int iy = ARRAY_Y(y);
+            byte[,] mMatrix = GetByteMatrix(z);
             byte b = mMatrix[ix, iy];
-            if (b == 0)
+            switch (b)
             {
-                mMatrix[ix, iy] = MAYBE_BLOCKED;
-                return;
+                case BLOCKED:
+                    {
+                        mMatrix[ix, iy] = MAYBE_BLOCKED;
+                        return;
+                    }
+                case MAYBE_BLOCKED:
+                    return;
+                case STICKY_PASSABLE:
+                    return;
+                case PASSABLE:
+                    return;
             }
             if (b > 100 || b < 3)
             {
@@ -191,43 +293,39 @@ namespace cogbot.TheOpenSims.Navigation
             mMatrix[ix, iy] = STICKY_PASSABLE;
         }
 
-        public SimWaypoint SetObjectAt(float x, float y, SimObject simObject, float minZ, float maxZ)
+        public CollisionIndex SetObjectAt(float x, float y, SimMesh simObject, float minZ, float maxZ)
         {
-            int ix = ARRAY_IDX(RangeCheck(x));
-            int iy = ARRAY_IDX(RangeCheck(y));
+            int ix = ARRAY_X((x));
+            int iy = ARRAY_Y((y));
 
-            SimWaypoint W = Waypoint(ix, iy);
-            if (W.AddOccupied(simObject, minZ, maxZ))
+            CollisionIndex W = GetCollisionIndex(ix, iy);
+            if (W.AddOccupied(simObject,minZ, maxZ))
             {
                 NeedsUpdate = true;
-                if (mMatrix[ix, iy] > 9)
-                    if (mMatrix[ix, iy] < 200)
-                        mMatrix[ix, iy] = W.GetOccupiedValue();
             }
             return W;
         }
 
-        public void SetPassable(float x, float y)
+        public void SetPassable(float x, float y, float z)
         {
-            x = RangeCheck(x); y = RangeCheck(y);
             ///Debug("SetBlocked: {0} {1}", x, y);
-            int ix = ARRAY_IDX(x);
-            int iy = ARRAY_IDX(y);
-            if (mMatrix[ix, iy] > 100)
+            int ix = ARRAY_X(x);
+            int iy = ARRAY_Y(y);
+            if (GetByteMatrix(z)[ix, iy] > 100)
             {
                 return;
             }
-            mMatrix[ix, iy] = STICKY_PASSABLE;
+            GetByteMatrix(z)[ix, iy] = STICKY_PASSABLE;
         }
 
-        //static List<SimObject> NOOBJECTS = new List<SimObject>();
-        //internal IEnumerable<SimObject> ObjectsAt(float x, float y)
+        //static List<ISimObject> NOOBJECTS = new List<ISimObject>();
+        //private IEnumerable<ISimObject> ObjectsAt(float x, float y)
         //{
         //    x = RangeCheck(x); y = RangeCheck(y);
         //    ///Debug("SetBlocked: {0} {1}", x, y);
         //    int ix = ARRAY_IDX(x);
         //    int iy = ARRAY_IDX(y);
-        //    SimWaypoint P = mWaypoints[ix, iy];
+        //    CollisionIndex P = mWaypoints[ix, iy];
         //    if (P == null)
         //    {
         //        return NOOBJECTS;
@@ -237,24 +335,22 @@ namespace cogbot.TheOpenSims.Navigation
 
 
 
-        public void SetBlocked(float x, float y, SimObject blocker)
+        public void SetBlocked(float x, float y, float z, SimMesh blocker)
         {
-            x = RangeCheck(x); y = RangeCheck(y);
-            if (blocker != null) SetObjectAt(x, y, blocker,SimZAverage,SimZAverage+1f);
-
-            int ix = ARRAY_IDX(x);
-            int iy = ARRAY_IDX(y);
+            if (blocker != null) SetObjectAt(x, y, blocker,z,z);
+            int ix = ARRAY_X(x);
+            int iy = ARRAY_Y(y);
             ///Debug("SetBlocked: {0} {1}", x, y);
             // if was set Passable dont re-block
-            if (mMatrix[ix, iy] == STICKY_PASSABLE)
+            if (GetByteMatrix(z)[ix, iy] == STICKY_PASSABLE)
             {
                 //  return;
             }
-            mMatrix[ix, iy] = 0;
-         //   SetBubbleBlock(ix, iy, blocker);
+            GetByteMatrix(z)[ix, iy] = BLOCKED;
+            //   SetBubbleBlock(ix, iy, blocker);
         }
 
-        //private void SetBubbleBlock(int ix, int iy, SimObject blocker)
+        //private void SetBubbleBlock(int ix, int iy, ISimObject blocker)
         //{
         //    int TWO = 2;// (int)Math.Round(POINTS_PER_METER / 2);
         //    int ONE = 1;// (int)Math.Round(POINTS_PER_METER / 2);
@@ -266,20 +362,20 @@ namespace cogbot.TheOpenSims.Navigation
         //            {
         //                if (x != ix || y != iy)
         //                {
-        //                    if (mMatrix[x, y] != 0)
+        //                    if (ZMatrix(Z)[x, y] != 0)
         //                    {
         //                        if (blocker != null)
         //                        {
-        //                            SimWaypoint W = Waypoint(x, y);
+        //                            CollisionIndex W = Waypoint(x, y);
         //                            if (W.AddShadow(blocker) > 1)
         //                            {
-        //                                mMatrix[x, y] = 0;
+        //                                ZMatrix(Z)[x, y] = 0;
         //                            }
         //                            else
         //                            {
-        //                                int newV = mMatrix[x, y] * 2;
+        //                                int newV = ZMatrix(Z)[x, y] * 2;
         //                                if (newV > 200) newV = 200;
-        //                                mMatrix[x, y] = (byte)newV;
+        //                                ZMatrix(Z)[x, y] = (byte)newV;
         //                            }
         //                        }
         //                    }
@@ -288,9 +384,9 @@ namespace cogbot.TheOpenSims.Navigation
         //        }
         //    }
         //}
-    
+
         SimRegion TheSimRegion;
-        internal SimRegion GetSimRegion()
+        public SimRegion GetSimRegion()
         {
             if (TheSimRegion == null)
             {
@@ -299,80 +395,104 @@ namespace cogbot.TheOpenSims.Navigation
             return TheSimRegion;
         }
 
-        ulong Handle;
+        readonly ulong Handle;
+        readonly Vector3d GlobalStart;
+        readonly Vector3d GlobalEnd;
+        readonly Vector3 Start;
+        readonly Vector3 Size;
         /// <summary>
         /// Constructor.
         /// </summary>
-        internal SimPathStore(String simName, ulong regionHandle)           
+        public SimPathStore(String simName, SimRegion region, Vector3 startBottem, Vector3 endTop)
         {
-            Handle = regionHandle;
-            TheSimZMinMaxLevel = new SimZMinMaxLevel(MinMaxLevel);
-            StepSize = 1f / POINTS_PER_METER;
-            MAPSPACE = 256 * ((int)POINTS_PER_METER);
-            LargeScaleRound = LargeScale == (float)Math.Round(LargeScale, 0);
-            mMatrix = new byte[MAPSPACE, MAPSPACE];
-            mWaypoints = new SimWaypoint[MAPSPACE, MAPSPACE];
-
             RegionFileName = simName;
+            TheSimRegion = region;
+            Handle = region.RegionHandle;
+            Start = startBottem;
+            GlobalStart = region.LocalToGlobal(startBottem);
+            GlobalEnd = region.LocalToGlobal(endTop);
+            Size = endTop - startBottem;
+            _XY256 = Size.X;
+            _OuterBounds = new Box3Fill(true);
+            OuterBounds.AddPoint(Start.X, Start.Y, Start.Z, 0);
+            OuterBounds.AddPoint(endTop.X, endTop.Y, endTop.Z, 0);
+            //TheSimZMinMaxLevel = new SimZMinMaxLevel(MinMaxLevel);
+            StepSize = 1f / POINTS_PER_METER;
+            _Max256 = XY256 - StepSize;
+            MAPSPACE = (int)XY256 * ((int)POINTS_PER_METER);
+            LargeScaleRound = LargeScale == (float)Math.Round(LargeScale, 0);
+            TheSimRegion.SetMapSpace(MAPSPACE);
+            MeshIndex = TheSimRegion._mWaypoints;
+            if (Size.X != Size.Y) throw new Exception("X and Y must be the same for " + this);
             //CreateDefaultRoutes();
-            for (int y = 0; y < mMatrix.GetUpperBound(1); y++)
-                for (int x = 0; x < mMatrix.GetUpperBound(0); x++)
-                {
-                    mMatrix[x, y] = INITIALLY;
-                    //  mWaypoints[x, y] = SimWaypoint.Create(x / POINTS_PER_METER, y / POINTS_PER_METER, SimZLevel, this);
-                }
+          //  CurrentPlane = new CollisionPlane(MAPSPACE,MAPSPACE,0);
         }
 
-        public float RangeCheck(double PtY)
+        //private float RangeCheckX(float PtY)
+        //{
+        //    PtY -= Start.X;
+        //    if (PtY > Max256)
+        //    {
+        //        return Max256;
+        //    }
+        //    else if (PtY < 0)
+        //    {
+        //        return 0f;
+        //    }
+        //    else
+        //    {
+        //        return (float)(Math.Round(PtY * POINTS_PER_METER, 0) / POINTS_PER_METER);
+        //    }
+        //}
+        //private float RangeCheckY(float PtY)
+        //{
+        //    PtY -= Start.Y;
+        //    if (PtY > Max256)
+        //    {
+        //        return Max256;
+        //    }
+        //    else if (PtY < 0)
+        //    {
+        //        return 0f;
+        //    }
+        //    else
+        //    {
+        //        return (float)(Math.Round(PtY * POINTS_PER_METER, 0) / POINTS_PER_METER);
+        //    }
+        //}
+
+        public CollisionIndex FindNode(float x, float y)
         {
-            if (PtY > 255)
-            {
-                return 255f;
-            }
-            else if (PtY < 0)
-            {
-                return 0f;
-            }
-            else
-            {
-                return (float)(Math.Round(PtY * POINTS_PER_METER, 0) / POINTS_PER_METER);
-            }
+            return MeshIndex[ARRAY_X((x)), ARRAY_Y((y))];
         }
 
-        private SimWaypoint FindNode(float x, float y)
+        public CollisionIndex CreateFirstNode(float x, float y)
         {
-            return mWaypoints[ARRAY_IDX(RangeCheck(x)), ARRAY_IDX(RangeCheck(y))];
+            int ix = ARRAY_X(x);
+            int iy = ARRAY_Y(y);
+            return GetCollisionIndex(ix, iy);
         }
 
-        public SimWaypoint CreateFirstNode(float x, float y)
+        public CollisionIndex GetCollisionIndex(int ix, int iy)
         {
-            x = RangeCheck(x);
-            y = RangeCheck(y);
-            int ix = ARRAY_IDX(x);
-            int iy = ARRAY_IDX(y);
-            return Waypoint(ix, iy);
-        }
-
-        internal SimWaypoint Waypoint(int ix, int iy)
-        {
-            lock (mWaypoints)
+            lock (MeshIndex)
             {
-                SimWaypoint wp = mWaypoints[ix, iy];
+                CollisionIndex wp = MeshIndex[ix, iy];
                 if (wp == null)
                 {
-                    float x = ix / POINTS_PER_METER;
-                    float y = iy / POINTS_PER_METER;
-                    wp = SimWaypoint.CreateLocal(x, y, SimLevel(x, y), this);
-                    if (mWaypoints[ix, iy] != wp)
-                    {
-                        Debug("diff wapoints in same space {0} != {1}", mWaypoints[ix, iy], wp);
-                    }
+                    float x = UNARRAY_X(ix);
+                    float y = UNARRAY_Y(iy);
+                    wp = CollisionIndexXY.CreateCollisionIndex(x, y, this);
+                    //if (mWaypoints[ix, iy] != wp)
+                    //{
+                    //    Debug("diff wapoints in same space {0} != {1}", mWaypoints[ix, iy], wp);
+                    //}
                 }
                 return wp;
             }
         }
+         
 
- 
         public IList<SimRoute> GetSimplifedRoute(IList<SimRoute> v3s)
         {
             IList<SimRoute> vectors = new List<SimRoute>();
@@ -422,7 +542,7 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
 
-        public List<Vector3d> GetSimplifedRoute(Vector3d currentV3In, List<Vector3d> v3s, int MaxTurnDegrees, float MaxDist)
+        static public List<Vector3d> GetSimplifedRoute(Vector3d currentV3In, List<Vector3d> v3s, int MaxTurnDegrees, float MaxDist)
         {
             if (v3s.Count < 3) return v3s;
             Vector3d currentV3 = currentV3In;
@@ -441,7 +561,7 @@ namespace cogbot.TheOpenSims.Navigation
                 {
                     ZAngleValid = true;
                     ZAngle = NewZAngle;
-                   // UsePoint = true;
+                    // UsePoint = true;
                 }
                 else
                 {
@@ -500,8 +620,9 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
         bool PunishChangeDirection;
-        internal IList<Vector3d> GetLocalPath(Vector3 start, Vector3 end, PathFinderDemo panel)
+        public IList<Vector3d> GetLocalPath(Vector3 start, Vector3 end)
         {
+            PathFinderDemo panel = PathFinder;
             if (!IsPassable(start))
             {
                 throw new ArgumentException("start is not passable: " + start);
@@ -514,11 +635,14 @@ namespace cogbot.TheOpenSims.Navigation
             Point S = ToPoint(start);
             Point E = ToPoint(end);
             List<PathFinderNode> pfn = null;
+            
+            float Z = start.Z;
+
             try
             {
-                PathFinderFasting pff = new PathFinderFasting(mMatrix);
+                PathFinderFasting pff = new PathFinderFasting(GetByteMatrix(Z));
                 if (panel != null) panel.SetStartEnd(S, E);
-               // pff.Diagonals = false;
+                // pff.Diagonals = false;
                 //pff.ReopenCloseNodes = true;
                 pff.SearchLimit = 10000000;
                 pff.PunishChangeDirection = PunishChangeDirection;
@@ -526,7 +650,7 @@ namespace cogbot.TheOpenSims.Navigation
             }
             catch (Exception e)
             {
-                Debug("Cant do route! " +e);
+                Debug("Cant do route! " + e);
             }
             if (pfn == null || pfn.Count == 0)
             {
@@ -536,7 +660,7 @@ namespace cogbot.TheOpenSims.Navigation
                 return temp;
             }
             if (panel != null) panel.ShowPath(pfn);
-            List<Vector3d> r = PathfinderNodesToV3s(pfn);
+            List<Vector3d> r = PathfinderNodesToV3s(pfn,Z);
             r.Reverse();
             return r;
         }
@@ -552,18 +676,18 @@ namespace cogbot.TheOpenSims.Navigation
 
 
 
-        private List<Vector3d> PathfinderNodesToV3s(List<PathFinderNode> pfn)
+        private List<Vector3d> PathfinderNodesToV3s(List<PathFinderNode> pfn, float Z)
         {
             Vector3d V = GetGlobalCorner();
             List<Vector3d> v3s = new List<Vector3d>();
             foreach (PathFinderNode P in pfn)
             {
-                float x = UNARRAY_IDX(P.X);
-                float y = UNARRAY_IDX(P.Y);
-                Vector3d v3 = new Vector3d(x + V.X, y+V.Y, SimLevel(x, y));
+                float x = UNARRAY_X(P.X);
+                float y = UNARRAY_Y(P.Y);
+                Vector3d v3 = new Vector3d(x + V.X, y + V.Y, Z);
                 v3s.Add(v3);
             }
-            return GetSimplifedRoute(v3s[0],v3s,10,8f);
+            return GetSimplifedRoute(v3s[0], v3s, 10, 8f);
         }
 
         private Vector3d GetGlobalCorner()
@@ -573,7 +697,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public Point ToPoint(Vector3 start)
         {
-            return new Point(ARRAY_IDX(RangeCheck(start.X)), ARRAY_IDX(RangeCheck(start.Y)));
+            return new Point(ARRAY_X((start.X)), ARRAY_Y((start.Y)));
         }
 
         /// <summary>
@@ -582,13 +706,13 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="agentID"></param>
         /// <param name="point"></param>
         /// <param name="rotation"></param>
-        public void Update(UUID agentID, Vector3 point, Quaternion rotation)
+        private void Update(UUID agentID, Vector3 point, Quaternion rotation)
         {
-            SetTraveled(point.X, point.Y);
+            SetTraveled(point.X, point.Y, point.Z);
         }
 
 
-        public void UpdateFromImage(Image image)
+        internal void UpdateFromImage(Image image)
         {
             if (image == null) return;
             Bitmap edges = new Bitmap((Image)image.Clone());
@@ -597,16 +721,16 @@ namespace cogbot.TheOpenSims.Navigation
             Bitmap e = EdgeDetection(edges, 34f, delegate(int x, int y)
             {
                 edges.SetPixel(x, y, Color.Yellow);
-                SetBlocked((float)x, (float)y, null);
+                SetBlocked((float)x, (float)y, 0f, null);
             });
             Debug("END Edge detection");
             new DisplayImage("Clone", e).Activate();
         }
 
 
-        public delegate void EdgeAction(int x, int y);
+        private delegate void EdgeAction(int x, int y);
 
-        public static Bitmap EdgeDetection(Bitmap Image, double Threshold, EdgeAction EdgeColor)
+        private static Bitmap EdgeDetection(Bitmap Image, double Threshold, EdgeAction EdgeColor)
         {
             System.Drawing.Bitmap TempBitmap = Image;
             System.Drawing.Bitmap NewBitmap = new System.Drawing.Bitmap(TempBitmap.Width, TempBitmap.Height);
@@ -664,27 +788,27 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
 
-        internal void TaintMatrix()
+        private void TaintMatrix()
         {
             //lock (mWaypoints)
-                for (int x = 0; x < MAPSPACE; x++)
+            for (int x = 0; x < MAPSPACE; x++)
             {
                 for (int y = 0; y < MAPSPACE; y++)
                 {
-                    SimWaypoint W = mWaypoints[x, y];
+                    CollisionIndex W = MeshIndex[x, y];
                     if (W != null)
                         W.TaintMatrix();
                 }
             }
         }
         public bool NeedsUpdate = true;
-        internal void UpdateMatrix()
+        public void UpdateMatrix(CollisionPlane GL)
         {
-          //  lock (mWaypoints)
+            //  lock (mWaypoints)
             {
+                if (!NeedsUpdate) return;
                 SimRegion R = GetSimRegion();
                 R.BakeTerrain();
-                if (!NeedsUpdate) return;
                 NeedsUpdate = false;
                 TaintMatrix();
                 Console.WriteLine("Start UpdateMatrix: " + R);
@@ -692,81 +816,119 @@ namespace cogbot.TheOpenSims.Navigation
                 {
                     for (int x = 0; x < MAPSPACE; x++)
                     {
-                        SimWaypoint W = mWaypoints[x, y];
+                        CollisionIndex W = MeshIndex[x, y];
                         if (W != null)
-                            W.UpdateMatrix();
+                            W.UpdateMatrix(GL);
                     }
                 }
-                if (false) for (int y = 0; y < MAPSPACE; y++)
+                byte[,] mMatrix = GL.ByteMatrix;
+                int MAPSPACE2 = MAPSPACE - 2;
+                for (int y = MAPSPACE2; y > 0; y--)
                 {
-                    for (int x = 0; x < MAPSPACE; x++)
+                    for (int x = MAPSPACE2; x > 0; x--)
                     {
-                        SimWaypoint W = mWaypoints[x, y];
-                        if (W != null)
-                            W.PassTwo();
+                        byte b = mMatrix[x, y];
+                        if (b > 2 && b < 200)
+                            if (SurroundingBlocked0(x, y, mMatrix))
+                                mMatrix[x, y] = SimPathStore.MAYBE_BLOCKED;
                     }
                 }
-                //foreach (SimObject O in WorldObjects.SimObjects) O.Mesh = null;
+                //foreach (ISimObject O in WorldObjects.SimObjects) O.Mesh = null;
                 Console.WriteLine("End UpdateMatrix: " + R);
             }
         }
 
-        internal SimRoute InternArc(SimWaypoint StartNode, SimWaypoint EndNode, double Weight)
+        private bool SurroundingBlocked(int PX, int PY, byte[,] ZMatrix)
         {
-            return SimGlobalRoutes.Instance.InternArc(StartNode,EndNode,Weight);
+            int MAPSPACE2 = MAPSPACE - 2;
+            if (PX < 1 || PY < 1 || PX > MAPSPACE2 || PY > MAPSPACE2) return false;
+            return SurroundingBlocked0(PX, PY, ZMatrix);
         }
 
-        internal SimWaypoint CreateClosestRegionWaypoint(Vector3 v3, double maxDist)
+        /// <summary>
+        ///  Private due to unchecked index
+        /// </summary>
+        /// <param name="PX"></param>
+        /// <param name="PY"></param>
+        /// <returns></returns>
+        private bool SurroundingBlocked0(int PX, int PY, byte[,] ZMatrix)
+        {
+            byte O;
+
+            O = ZMatrix[PX, PY + 1];
+            if (O == SimPathStore.BLOCKED) return true;
+
+            O = ZMatrix[PX + 1, PY + 1];
+            if (O == SimPathStore.BLOCKED) return true;
+
+            O = ZMatrix[PX + 1, PY];
+            if (O == SimPathStore.BLOCKED) return true;
+
+            O = ZMatrix[PX + 1, PY - 1];
+            if (O == SimPathStore.BLOCKED) return true;
+
+            O = ZMatrix[PX, PY - 1];
+            if (O == SimPathStore.BLOCKED) return true;
+
+            O = ZMatrix[PX - 1, PY - 1];
+            if (O == SimPathStore.BLOCKED) return true;
+
+            O = ZMatrix[PX - 1, PY];
+            if (O == SimPathStore.BLOCKED) return true;
+
+            O = ZMatrix[PX - 1, PY + 1];
+            if (O == SimPathStore.BLOCKED) return true;
+
+            return false;
+        }
+
+        public SimRoute InternArc(SimWaypoint StartNode, SimWaypoint EndNode, double Weight)
+        {
+            return SimGlobalRoutes.Instance.InternArc(StartNode, EndNode, Weight);
+        }
+
+        public SimWaypoint CreateClosestRegionWaypoint(Vector3 v3, double maxDist)
         {
             Vector3d v3d = GetSimRegion().LocalToGlobal(v3);
             double Dist;
             SimWaypoint W = SimGlobalRoutes.Instance.ClosestNode(v3d.X, v3d.Y, v3d.Z, out Dist, true);
             if (Dist > maxDist)
             {
-              SimWaypoint V3 = SimGlobalRoutes.Instance.CreateClosestWaypoint(v3d);
-              return V3;
+                SimWaypoint V3 = SimGlobalRoutes.Instance.CreateClosestWaypoint(v3d);
+                return V3;
             }
             return W;
         }
 
-        internal SimRoute Intern2Arc(SimWaypoint StartNode, SimWaypoint EndNode, double Weight)
+        public SimRoute Intern2Arc(SimWaypoint StartNode, SimWaypoint EndNode, double Weight)
         {
             return SimGlobalRoutes.Instance.Intern2Arc(StartNode, EndNode, Weight);
         }
 
-        internal SimWaypoint ClosestRegionNode(float x, float y, float z, out double Dist, bool IgnorePassable)
+        private SimWaypoint ClosestRegionNode(float x, float y, float z, out double Dist, bool IgnorePassable)
         {
             Vector3d v3d = GetSimRegion().LocalToGlobal(new Vector3(x, y, z));
             return SimGlobalRoutes.Instance.ClosestNode(v3d.X, v3d.Y, v3d.Z, out Dist, IgnorePassable);
         }
 
-        internal void Clear()
+        public void Clear()
         {
             SimGlobalRoutes.Instance.Clear();
         }
 
-        internal IList<SimRoute> GetRoute(SimWaypoint from, SimWaypoint to, out bool IsFake)
+        private IList<SimRoute> GetRoute(CollisionIndex from, CollisionIndex to, out bool IsFake)
         {
             throw new Exception("The method or operation is not implemented.");
         }
 
-        internal void AddArc(SimRoute R)
+        private void AddArc(SimRoute R)
         {
             SimGlobalRoutes.Instance.AddArc(R);
         }
 
-
-        internal void SetNodeQualityTimer(Vector3 vector3, int value, int seconds)
-        {
-            SimPathStore PathStore = this;
-            Point P = PathStore.ToPoint(vector3);
-            SimWaypoint WP = Waypoint(P.X, P.Y);
-            WP.SetNodeQualityTimer(value, seconds);
-        }
-
         Dictionary<UUID, MoverTracking> LaskKnownPos = new Dictionary<UUID, MoverTracking>();
 
-        internal void UpdateTraveled(UUID uUID, Vector3 after, Quaternion rot)
+        public void UpdateTraveled(UUID uUID, Vector3 after, Quaternion rot)
         {
             if (!LaskKnownPos.ContainsKey(uUID))
             {
@@ -778,7 +940,7 @@ namespace cogbot.TheOpenSims.Navigation
             }
         }
 
-        internal void Refresh(cogbot.TheOpenSims.Mesher.Box3Fill changed)
+        private void Refresh(cogbot.TheOpenSims.Mesher.Box3Fill changed, CollisionPlane CurrentPlane)
         {
             int xs = (int)changed.MinX;
             int ys = (int)changed.MaxX;
@@ -790,21 +952,39 @@ namespace cogbot.TheOpenSims.Navigation
             int MAX = MAPSPACE - 1;
             if (xe < MAX) xe++;
             if (ys < MAX) ye++;
-          //  lock (mWaypoints)
+
+
+            //  lock (mWaypoints)
             {
                 for (int x = xs; x <= xe; x++)
                     for (int y = ys; y <= ye; y++)
                     {
-                        SimWaypoint WP = mWaypoints[x, y];
+                        CollisionIndex WP = MeshIndex[x, y];
                         if (WP != null) WP.TaintMatrix();
                     }
                 for (int x = xs; x <= xe; x++)
                     for (int y = ys; y <= ye; y++)
                     {
-                        SimWaypoint WP = mWaypoints[x, y];
-                        if (WP != null) WP.UpdateMatrix();
+                        CollisionIndex WP = MeshIndex[x, y];
+                        if (WP != null) WP.UpdateMatrix(CurrentPlane);
                     }
             }
+        }
+
+        internal void Refresh(Box3dFill changed)
+        {
+            throw new NotImplementedException();
+        }
+
+        PathFinderDemo PathFinder;
+
+        public void ShowDebugger()
+        {
+            if (PathFinder == null)
+            {
+                PathFinder = new PathFinderDemo(this);
+            }
+            PathFinder.Show();
         }
     }
 
@@ -842,16 +1022,19 @@ namespace cogbot.TheOpenSims.Navigation
             if (dist > Store.StepSize)
             {
                 Vector3 dif = LastPosition - nextPosition;
-                int stepsNeeded = (int)(dist * Store.POINTS_PER_METER)+1;
-                Console.WriteLine("MakeMovement " + LastPosition + " -> " + stepsNeeded + " -> " + nextPosition + " " + Store);
-                Vector3 vstep = dif / stepsNeeded;
-                Vector3 traveled = nextPosition;
-                Store.SetTraveled(nextPosition.X, nextPosition.Y);
-                for (int i = 0; i < stepsNeeded; i++)
+                if (!(dif.X == 0 && dif.Y == 0))
                 {
-                    traveled = traveled + vstep;
-                    if (stepsNeeded>10) Store.SetTraveled(traveled.X, traveled.Y);
-                    else Store.SetPassable(traveled.X, traveled.Y);
+                    int stepsNeeded = (int)(dist * Store.POINTS_PER_METER) + 1;
+                    if (Settings.LOG_LEVEL == Helpers.LogLevel.Debug) Console.WriteLine("MakeMovement " + LastPosition + " -> " + stepsNeeded + " -> " + nextPosition + " " + Store);
+                    Vector3 vstep = dif / stepsNeeded;
+                    Vector3 traveled = nextPosition;
+                    Store.SetTraveled(nextPosition.X, nextPosition.Y, nextPosition.Z);
+                    for (int i = 0; i < stepsNeeded; i++)
+                    {
+                        traveled = traveled + vstep;
+                        if (stepsNeeded > 10) Store.SetTraveled(traveled.X, traveled.Y, traveled.Z);
+                        else Store.SetPassable(traveled.X, traveled.Y, traveled.Z);
+                    }
                 }
                 LastPosition = nextPosition;
             }

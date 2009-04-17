@@ -805,7 +805,7 @@ namespace cogbot.TheOpenSims.Navigation
             if (mtv.GetDistance() > dist) return false;
             return true;
         }
-        // SimAvatar theAvatar;
+        // ISimAvatar theAvatar;
         Vector3 Destination;
         Vector3 LastPosition;
         BotClient Client;

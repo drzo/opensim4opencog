@@ -5,24 +5,27 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using cogbot.TheOpenSims.Mesher;
 
 namespace cogbot.TheOpenSims.Navigation.Debug
 {
     internal partial class WaypointProperties : Form
     {
  
-        SimWaypoint Current;
+        CollisionIndex Current;
+        CollisionPlane LastPlane;
         List<Button> CurrentButtons = new List<Button>();
 
-        internal void SetWaypoint(SimWaypoint WP)
+        internal void SetWaypoint(CollisionIndex WP,CollisionPlane p)
         {
+            LastPlane = p;
             if (this.button1 == null)
             {
                 InitializeComponent();
             }
             Current = WP;
-            this.Text = WP.ToString() + " matrix=" + WP.GetMatrix();
-            this.button1.Text = WP.ExtraInfoString();
+            this.Text = WP.ToString();// +" matrix=" + WP.GetMatrix((float)WP.Position.Z);
+            this.button1.Text = WP.ExtraInfoString(LastPlane);
             int i = 0;
 
             foreach (Button B in CurrentButtons)
@@ -32,7 +35,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 
             CurrentButtons.Clear();
 
-            foreach (SimObject O in WP.OccupiedListObject)
+            foreach (SimMesh O in WP.GetOccupied(LastPlane))
             {
                 i++;
                 Button B = new Button();
@@ -57,6 +60,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 
         private void object_click(object sender, EventArgs e)
         {
+            IList<SimMesh> occs = Current.GetOccupied(LastPlane);
             try
             {
                 if (sender is Button)
@@ -64,7 +68,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                     Button B = (Button)sender;
                     string name = B.Name.Substring(1);
                     int i = int.Parse(name) - 1;
-                    SimObject O = Current.OccupiedListObject[i];
+                    SimMesh O = occs[i];
                     O.RemeshObject();
                 }
             }
@@ -76,8 +80,8 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 
         private void button1_Click_1(object sender, EventArgs e)
         {
-            Current.RemeshWayppointObjects();
-            SetWaypoint(Current);
+            Current.RemeshObjects();
+            SetWaypoint(Current,LastPlane);
         }
 
         private void textBox1_TextChanged(object sender, EventArgs e)

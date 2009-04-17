@@ -236,7 +236,7 @@ namespace cogbot.TheOpenSims
         // if "KICK" or another Anim the avatar will play this anim
         public String UseAnim = null;
         // if set the client will attempt to run
-        public String LispScript = null; // the lisp code that does the animation effects
+        public Object LispScript = null; // the lisp code that does the animation effects
 
         public string ToDebugString()
         {

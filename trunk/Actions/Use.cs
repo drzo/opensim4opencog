@@ -28,7 +28,7 @@ namespace cogbot.Actions
                Primitive prim;
                if (WorldSystem.tryGetPrim(objname, out prim))
                {
-                   SimObject objToUse = WorldSystem.GetSimObject(prim);
+                   BotMentalAspect objToUse = WorldSystem.GetSimObject(prim);
                    WorldSystem.TheSimAvatar.UseAspect(objToUse);
                    return;
                }
