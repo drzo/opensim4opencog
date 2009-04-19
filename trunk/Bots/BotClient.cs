@@ -492,7 +492,7 @@ namespace cogbot
 		{
 			try {
 
-				System.Threading.Thread.Sleep(3000);
+				//System.Threading.Thread.Sleep(3000);
 
 				//  describeAll();
 				//  describeSituation();
@@ -666,10 +666,10 @@ namespace cogbot
 		{
 			try {
                 string toprint = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
-                string SelfName = Self.Name;
+                string SelfName = String.Format("{0} ", Self.Name);
                 toprint = toprint.Replace("$bot", SelfName);
-                toprint = toprint.Replace("You", SelfName);
-                toprint = toprint.Replace("you", SelfName);
+                toprint = toprint.Replace("You ", SelfName);
+                toprint = toprint.Replace("you ", SelfName);
                 ClientManager.output(SelfName + ": " + toprint);
 			} catch (Exception) {
 			}

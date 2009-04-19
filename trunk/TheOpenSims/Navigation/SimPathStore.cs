@@ -11,16 +11,10 @@
 //-----------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using System.Text;
-using OpenMetaverse;
-using cogbot.Listeners;
-using System.Collections;
-using System.IO;
-using System.Threading;
-using cogbot.TheOpenSims.Navigation.Debug;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Drawing;
 using cogbot.TheOpenSims.Mesher;
+using cogbot.TheOpenSims.Navigation.Debug;
+using OpenMetaverse;
 
 namespace cogbot.TheOpenSims.Navigation
 {
@@ -30,7 +24,8 @@ namespace cogbot.TheOpenSims.Navigation
     public delegate void SimZMinMaxLevel(float x, float y, out float minLevel, out float maxLevel);
     /// <summary>
     /// Graph structure. It is defined with :
-    /// It is defined with both a list of nodes and a list of arcs.
+    /// It is defined by a 2D matrix of CollisionIndex 
+    /// It is used to perform operations on CollisionPlanes
     /// </summary>
     [Serializable]
     public class SimPathStore //: cogbot.TheOpenSims.Navigation.IPathStore
@@ -56,107 +51,73 @@ namespace cogbot.TheOpenSims.Navigation
 
         public override string ToString()
         {
-            return GetType().Name + ": " + GetSimRegion();// +" Level=" + SimZAverage;
+            return String.Format("{0}: {1}", GetType().Name, GetSimRegion());// +" Level=" + SimZAverage;
         }
 
-        private float _TheSimZ = -1f;
-
-        //private float SimZAverage
-        //{
-        //    get
-        //    {
-        //        if (_TheSimZ == -1f)
-        //        {
-        //            _TheSimZ = SimLevel(127f, 127f);
-        //        }
-        //        return _TheSimZ;
-        //    }
-        //}
-
-        //private float TheSimZMinLevel
-        //{
-        //    get { return SimZAverage + 1f; }
-        //}
-        //private float TheSimZMaxLevel
-        //{
-        //    get { return SimZAverage + 2f; }
-        //}
-
-        //private void MinMaxLevel(float x, float y, out float minLevel, out float maxLevel)
-        //{
-        //    minLevel = SimLevel(x, y) + 1f;
-        //    maxLevel = minLevel + 1f;
-        //}
-
-        public const byte BLOCKED = 0;
-        public const byte PASSABLE = 1;
-        public const byte STICKY_PASSABLE = 2;
+        public const byte BLOCKED = 255;
+        public const byte MAYBE_BLOCKED = 254;
         public const byte INITIALLY = 20;
-        public const byte MAYBE_BLOCKED = 255;
+        public const byte PASSABLE = 1;
+        public const byte STICKY_PASSABLE = 0;
         readonly public float POINTS_PER_METER = 5f;
         readonly private float LargeScale = 1f;//StepSize;//0.2f;
 
-        //public float SimLevel(float vx, float vy)
-        //{
-        //    int ix = ARRAY_X((vx));
-        //    int iy = ARRAY_Y((vy));
-        //    CollisionIndex WP = MeshIndex[ix, iy];
-        //    if (WP == null) return GetSimRegion().GetGroundLevel(vx, vy);
-        //    return WP.GetZLevel(CurrentPlane);
-        //}
-
-       // private SimZMinMaxLevel TheSimZMinMaxLevel;
         public static float PI2 = (float)(Math.PI * 2f);
         public static float RAD2DEG = 360f / PI2;
 
         readonly public float StepSize;// = 1f / POINTS_PER_METER;
         readonly public int MAPSPACE;// = XY256 * ((int)POINTS_PER_METER);
-        private readonly bool LargeScaleRound;// = LargeScale == (float)Math.Round(LargeScale, 0);
-        //private /*readonly*/ byte[,] _ZMatrix;// = new byte[MAPSPACE, MAPSPACE];
-
-        //CollisionPlane _GL;
-        //public CollisionPlane CurrentPlane
-        //{
-        //    get
-        //    {
-        //        return _GL;
-        //    }
-        //    set
-        //    {
-        //        _GL = value;
-        //    }
-        //}
 
         internal CollisionPlane GetCollisionPlane(float Z)
         {
-            if (Z < 1) Z = 1;
+            if (Z < 1) Z = 0;
             else if (Z > 1999) Z = 1998;
             int index = (int)Z;
-            if (Matrixes[index] != null)
+            CollisionPlane found = Matrixes[index];
+            if (index == 5)
             {
-                Matrixes[index].ZLevel = Z;
-                return Matrixes[index];
             }
-            if (Z > 1)
+            if (found != null)
             {
-                if (Matrixes[index - 1] != null)
+                found.ZLevel = Z;
+                return found;
+            }
+            lock (Matrixes)
+            {
+                found = Matrixes[index];
+                if (found != null)
                 {
-                    Matrixes[index] = Matrixes[index - 1];
-                    Matrixes[index].ZLevel = Z;
-                    return Matrixes[index];
+                    found.ZLevel = Z;
+                    return found;
                 }
-                else
-                    if (Matrixes[index + 1] != null)
+
+                if (Z > 1)
+                {
+                    found = Matrixes[index - 1];
+                    if (found != null)
                     {
-                        Matrixes[index] = Matrixes[index + 1];
-                        Matrixes[index].ZLevel = Z;
-                        return Matrixes[index];
+                        if (found.Accepts(Z))
+                        {
+                            found.ZLevel = Z;
+                            Matrixes[index] = found;
+                            return found;
+                        }
+                        //Matrixes[index].ZLevel = Z;
+                        //return Matrixes[index];
                     }
+                    else
+                        if (false && Matrixes[index + 1] != null)
+                        {
+                            Matrixes[index] = Matrixes[index + 1];
+                            Matrixes[index].ZLevel = Z;
+                            return Matrixes[index];
+                        }
+                }
+                found = new CollisionPlane(MAPSPACE, MAPSPACE, Z, this);
+                Debug("Created matrix[{0}] {1} for {2}", index, found, this);
+                Matrixes[index] = found;
+                return found;
             }
-            Debug("creating matrix @ " + Z);
-            CollisionPlane ZMatrix = new CollisionPlane(MAPSPACE, MAPSPACE, Z);
-            Matrixes[index] = ZMatrix;
-            return ZMatrix;
         }
 
         readonly CollisionPlane[] Matrixes = new CollisionPlane[2000];
@@ -237,7 +198,7 @@ namespace cogbot.TheOpenSims.Navigation
             return sb;
         }
 
-        private Color OccupiedColor(Color c, CollisionIndex cIndex)
+        private static Color OccupiedColor(Color c, CollisionIndex cIndex)
         {
             if (cIndex != null)
             {
@@ -301,7 +262,7 @@ namespace cogbot.TheOpenSims.Navigation
             CollisionIndex W = GetCollisionIndex(ix, iy);
             if (W.AddOccupied(simObject,minZ, maxZ))
             {
-                NeedsUpdate = true;
+               // NeedsUpdate = true;
             }
             return W;
         }
@@ -420,7 +381,6 @@ namespace cogbot.TheOpenSims.Navigation
             StepSize = 1f / POINTS_PER_METER;
             _Max256 = XY256 - StepSize;
             MAPSPACE = (int)XY256 * ((int)POINTS_PER_METER);
-            LargeScaleRound = LargeScale == (float)Math.Round(LargeScale, 0);
             TheSimRegion.SetMapSpace(MAPSPACE);
             MeshIndex = TheSimRegion._mWaypoints;
             if (Size.X != Size.Y) throw new Exception("X and Y must be the same for " + this);
@@ -482,7 +442,7 @@ namespace cogbot.TheOpenSims.Navigation
                 {
                     float x = UNARRAY_X(ix);
                     float y = UNARRAY_Y(iy);
-                    wp = CollisionIndexXY.CreateCollisionIndex(x, y, this);
+                    wp = CollisionIndex.CreateCollisionIndex(x, y, this);
                     //if (mWaypoints[ix, iy] != wp)
                     //{
                     //    Debug("diff wapoints in same space {0} != {1}", mWaypoints[ix, iy], wp);
@@ -625,11 +585,11 @@ namespace cogbot.TheOpenSims.Navigation
             PathFinderDemo panel = PathFinder;
             if (!IsPassable(start))
             {
-                throw new ArgumentException("start is not passable: " + start);
+                Debug("start is not passable: " + start);
             }
             if (!IsPassable(end))
             {
-                throw new ArgumentException("end is not passable: " + start);
+                Debug("end is not passable: " + start);
             }
             PunishChangeDirection = !PunishChangeDirection;    //toggle each time
             Point S = ToPoint(start);
@@ -638,9 +598,11 @@ namespace cogbot.TheOpenSims.Navigation
             
             float Z = start.Z;
 
+            CollisionPlane CP = GetCollisionPlane(Z);
+            CP.EnsureUpToDate();
             try
             {
-                PathFinderFasting pff = new PathFinderFasting(GetByteMatrix(Z));
+                PathFinderFasting pff = new PathFinderFasting(CP.ByteMatrix);
                 if (panel != null) panel.SetStartEnd(S, E);
                 // pff.Diagonals = false;
                 //pff.ReopenCloseNodes = true;
@@ -782,13 +744,13 @@ namespace cogbot.TheOpenSims.Navigation
             }
             return NewBitmap;
         }
-        public void Debug(string format, params object[] arg)
+        public static void Debug(string format, params object[] arg)
         {
-            Console.WriteLine("[SimPathStore] " + format, arg);
+            Console.WriteLine(String.Format("[SimPathStore] {0}", format), arg);
         }
 
 
-        private void TaintMatrix()
+        public void TaintMatrix()
         {
             //lock (mWaypoints)
             for (int x = 0; x < MAPSPACE; x++)
@@ -800,86 +762,6 @@ namespace cogbot.TheOpenSims.Navigation
                         W.TaintMatrix();
                 }
             }
-        }
-        public bool NeedsUpdate = true;
-        public void UpdateMatrix(CollisionPlane GL)
-        {
-            //  lock (mWaypoints)
-            {
-                if (!NeedsUpdate) return;
-                SimRegion R = GetSimRegion();
-                R.BakeTerrain();
-                NeedsUpdate = false;
-                TaintMatrix();
-                Console.WriteLine("Start UpdateMatrix: " + R);
-                for (int y = 0; y < MAPSPACE; y++)
-                {
-                    for (int x = 0; x < MAPSPACE; x++)
-                    {
-                        CollisionIndex W = MeshIndex[x, y];
-                        if (W != null)
-                            W.UpdateMatrix(GL);
-                    }
-                }
-                byte[,] mMatrix = GL.ByteMatrix;
-                int MAPSPACE2 = MAPSPACE - 2;
-                for (int y = MAPSPACE2; y > 0; y--)
-                {
-                    for (int x = MAPSPACE2; x > 0; x--)
-                    {
-                        byte b = mMatrix[x, y];
-                        if (b > 2 && b < 200)
-                            if (SurroundingBlocked0(x, y, mMatrix))
-                                mMatrix[x, y] = SimPathStore.MAYBE_BLOCKED;
-                    }
-                }
-                //foreach (ISimObject O in WorldObjects.SimObjects) O.Mesh = null;
-                Console.WriteLine("End UpdateMatrix: " + R);
-            }
-        }
-
-        private bool SurroundingBlocked(int PX, int PY, byte[,] ZMatrix)
-        {
-            int MAPSPACE2 = MAPSPACE - 2;
-            if (PX < 1 || PY < 1 || PX > MAPSPACE2 || PY > MAPSPACE2) return false;
-            return SurroundingBlocked0(PX, PY, ZMatrix);
-        }
-
-        /// <summary>
-        ///  Private due to unchecked index
-        /// </summary>
-        /// <param name="PX"></param>
-        /// <param name="PY"></param>
-        /// <returns></returns>
-        private bool SurroundingBlocked0(int PX, int PY, byte[,] ZMatrix)
-        {
-            byte O;
-
-            O = ZMatrix[PX, PY + 1];
-            if (O == SimPathStore.BLOCKED) return true;
-
-            O = ZMatrix[PX + 1, PY + 1];
-            if (O == SimPathStore.BLOCKED) return true;
-
-            O = ZMatrix[PX + 1, PY];
-            if (O == SimPathStore.BLOCKED) return true;
-
-            O = ZMatrix[PX + 1, PY - 1];
-            if (O == SimPathStore.BLOCKED) return true;
-
-            O = ZMatrix[PX, PY - 1];
-            if (O == SimPathStore.BLOCKED) return true;
-
-            O = ZMatrix[PX - 1, PY - 1];
-            if (O == SimPathStore.BLOCKED) return true;
-
-            O = ZMatrix[PX - 1, PY];
-            if (O == SimPathStore.BLOCKED) return true;
-
-            O = ZMatrix[PX - 1, PY + 1];
-            if (O == SimPathStore.BLOCKED) return true;
-
-            return false;
         }
 
         public SimRoute InternArc(SimWaypoint StartNode, SimWaypoint EndNode, double Weight)
@@ -916,11 +798,6 @@ namespace cogbot.TheOpenSims.Navigation
             SimGlobalRoutes.Instance.Clear();
         }
 
-        private IList<SimRoute> GetRoute(CollisionIndex from, CollisionIndex to, out bool IsFake)
-        {
-            throw new Exception("The method or operation is not implemented.");
-        }
-
         private void AddArc(SimRoute R)
         {
             SimGlobalRoutes.Instance.AddArc(R);
@@ -930,7 +807,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public void UpdateTraveled(UUID uUID, Vector3 after, Quaternion rot)
         {
-            if (!LaskKnownPos.ContainsKey(uUID))
+            lock (LaskKnownPos) if (!LaskKnownPos.ContainsKey(uUID))
             {
                 LaskKnownPos[uUID] = new MoverTracking(after, rot, this);
             }

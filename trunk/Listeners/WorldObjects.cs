@@ -397,7 +397,7 @@ namespace cogbot.Listeners
                     }
                     if (occUpdate % 100 == 0)
                     {
-                        Console.Write(".");
+                        Console.Write("." + occUpdate);
                         Console.Out.Flush();
                     }
                     //if (occUpdate
@@ -451,6 +451,8 @@ namespace cogbot.Listeners
         static Dictionary<ulong, object> GetSimObjectLock = new Dictionary<ulong, object>();
         public SimObject GetSimObject(Primitive prim, Simulator simulator)
         {
+            SimObject obj0 = TryGetSimObjectFromUUID(prim);
+            if (obj0 != null) return obj0;
 
             if (simulator == null)
             {
@@ -462,11 +464,42 @@ namespace cogbot.Listeners
                     GetSimObjectLock[simulator.Handle] = new object();
             }
 
-            Object obj0;
             lock (GetSimObjectLock[simulator.Handle])
             {
-                lock (uuidTypeObject) 
-                    if (prim.ID != UUID.Zero && uuidTypeObject.TryGetValue(prim.ID, out obj0))
+                obj0 = TryGetSimObjectFromUUID(prim);
+                if (obj0 != null) return obj0;
+                // not found
+                if (prim is Avatar)
+                {
+                    CountnumAvatars++;
+                    Debug("+++++++++++++++Making AVATAR" + prim);
+                    if (prim.ID == UUID.Zero)
+                    {
+                        Debug("  - - -#$%#$%#$%% - ------- - Wierd Avatar " + prim);
+                        BlockUntilPrimValid(prim, simulator);
+                        Debug("  - - -#$%#$%#$%% - ------- - Unwird Avatar " + prim);
+                    }
+                    obj0 = new SimAvatarImpl((Avatar)prim, this, simulator);
+                    lock (SimAvatars) SimAvatars.Add((SimAvatar)obj0);
+                }
+                else
+                {
+                    obj0 = new SimObjectImpl(prim, this, simulator);
+                }
+                RegisterUUID(prim.ID, obj0);
+                lock (SimObjects) SimObjects.AddTo((SimObject)obj0);
+
+            }
+            return (SimObject)obj0;
+
+        }
+
+        private static SimObject TryGetSimObjectFromUUID(Primitive prim)
+        {
+            if (prim.ID == UUID.Zero) return null;
+            Object obj0;
+            //lock (uuidTypeObject)
+                if (uuidTypeObject.TryGetValue(prim.ID, out obj0))
                 {
                     if (obj0 is SimObject)
                     {
@@ -500,32 +533,7 @@ namespace cogbot.Listeners
                         }
                     }
                 }
-
-
-                // not found
-                if (prim is Avatar)
-                {
-                    CountnumAvatars++;
-                    Debug("+++++++++++++++Making AVATAR" + prim);
-                    if (prim.ID == UUID.Zero)
-                    {
-                        Debug("  - - -#$%#$%#$%% - ------- - Wierd Avatar " + prim);
-                        BlockUntilPrimValid(prim, simulator);
-                        Debug("  - - -#$%#$%#$%% - ------- - Unwird Avatar " + prim);
-                    }
-                    obj0 = new SimAvatarImpl((Avatar)prim, this, simulator);
-                    lock (SimAvatars) SimAvatars.Add((SimAvatar)obj0);
-                }
-                else
-                {
-                    obj0 = new SimObjectImpl(prim, this, simulator);
-                }
-                RegisterUUID(prim.ID, obj0);
-                lock (SimObjects) SimObjects.AddTo((SimObject)obj0);
-
-            }
-            return (SimObject)obj0;
-
+            return null;
         }
 
         public override void Assets_OnXferReceived(XferDownload xfer)
@@ -633,7 +641,8 @@ namespace cogbot.Listeners
         public override void Sound_OnAttachSoundGainChange(UUID objectID, float gain)
         {
              //base.Sound_OnAttachSoundGainChange(objectID, gain);
-        } 
+        }
+ 
 
         public Primitive BlockUntilProperties(Primitive prim, Simulator simulator)
         {
@@ -683,9 +692,9 @@ namespace cogbot.Listeners
             lock (avatarAminCurrent)
             {
                 String newName = GetAnimationName(mostCurrentAnim);
-                if (avatarAminCurrent.ContainsKey(avatar))
+                UUID oldAnim;
+                if (avatarAminCurrent.TryGetValue(avatar,out oldAnim))
                 {
-                    UUID oldAnim = avatarAminCurrent[avatar];
                     if (oldAnim != mostCurrentAnim)
                     {
                         String oldName = GetAnimationName(oldAnim);
@@ -994,7 +1003,7 @@ namespace cogbot.Listeners
                 });
         }
 
-        public bool OutOfRegion(Vector3 v3)
+        public static bool OutOfRegion(Vector3 v3)
         {
             if (v3.X < 0 || v3.X > 255.99f)
                 return true;

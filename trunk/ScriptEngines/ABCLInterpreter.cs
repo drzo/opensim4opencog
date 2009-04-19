@@ -293,7 +293,7 @@ namespace cogbot.ScriptEngines
                 if (sv.javaInstance() == globalcogbotTextForm) return s;
             }
             Symbol fun = pkg.findAccessibleSymbol("SYMBOL-JOBJECT");
-            String mask = p + " " + ic.getName();
+            String mask = String.Format("{0} {1}", p, ic.getName());
             if (fun != null && !allExceptFor.Contains(mask))
             {
                 allExceptFor.Add(mask);
@@ -639,7 +639,7 @@ namespace cogbot.ScriptEngines
         /// <summary>
         /// 
         /// </summary>
-        public virtual void Close() {
+        public override void Close() {
             this.csTextReader.Close();
         } // method: Close
 
@@ -663,7 +663,8 @@ namespace cogbot.ScriptEngines
         /// 
         /// </summary>
         /// <returns></returns>
-        public virtual int Peek() {
+        public override int Peek()
+        {
             WaitOnSuspened();
             return this.csTextReader.Peek();
         } // method: Peek
@@ -687,7 +688,8 @@ namespace cogbot.ScriptEngines
         /// 
         /// </summary>
         /// <returns></returns>
-        public virtual int Read() {
+        public override int Read()
+        {
             WaitOnSuspened();
             return this.csTextReader.Read();
         } // method: Read
@@ -738,7 +740,8 @@ namespace cogbot.ScriptEngines
         /// <param name="index"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        public virtual int Read(char[] buffer, int index, int count) {
+        public override int Read(char[] buffer, int index, int count)
+        {
             WaitOnSuspened();
             return this.csTextReader.Read(buffer, index, count);
         } // method: Read
@@ -786,7 +789,8 @@ namespace cogbot.ScriptEngines
         /// <param name="index"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        public virtual int ReadBlock(char[] buffer, int index, int count) {
+        public override int ReadBlock(char[] buffer, int index, int count)
+        {
             WaitOnSuspened();
             return this.csTextReader.ReadBlock(buffer,index,count);
         } // method: ReadBlock
@@ -816,7 +820,8 @@ namespace cogbot.ScriptEngines
         /// 
         /// </summary>
         /// <returns></returns>
-        public virtual string ReadLine() {
+        public override string ReadLine()
+        {
             WaitOnSuspened();
             return this.csTextReader.ReadLine();
         } // method: ReadLine
@@ -846,7 +851,8 @@ namespace cogbot.ScriptEngines
         /// 
         /// </summary>
         /// <returns></returns>
-        public virtual string ReadToEnd() {
+        public override string ReadToEnd()
+        {
             WaitOnSuspened();
             return this.csTextReader.ReadToEnd();
         }
@@ -988,7 +994,7 @@ namespace cogbot.ScriptEngines
         //
         //   System.ObjectDisposedException:
         //     The System.IO.TextReader is closed.
-        public virtual int Peek()
+        public override int Peek()
         {
             int av = myBuffer.Length;
             if (av < 1) return -1;
@@ -1011,7 +1017,7 @@ namespace cogbot.ScriptEngines
         //
         //   System.ObjectDisposedException:
         //     The System.IO.TextReader is closed.
-        public virtual int Read()
+        public override int Read()
         {
             needsChars = true;
             int av = myBuffer.Length;
@@ -1077,7 +1083,7 @@ namespace cogbot.ScriptEngines
         //
         //   System.ObjectDisposedException:
         //     The System.IO.TextReader is closed.
-        public virtual int Read(char[] buffer, int index, int count)
+        public override int Read(char[] buffer, int index, int count)
         {
             needsChars = true;
             int av = myBuffer.Length;
@@ -1134,7 +1140,7 @@ namespace cogbot.ScriptEngines
         //
         //   System.ObjectDisposedException:
         //     The System.IO.TextReader is closed.
-        public virtual int ReadBlock(char[] buffer, int index, int count)
+        public override int ReadBlock(char[] buffer, int index, int count)
         {
             needsChars = true;
             int av = myBuffer.Length;
@@ -1181,7 +1187,7 @@ namespace cogbot.ScriptEngines
         //
         //   System.ObjectDisposedException:
         //     The System.IO.TextReader is closed.
-        public virtual string ReadLine()
+        public override string ReadLine()
         {
             needsChars = true;
             int pos = myBuffer.IndexOf('\n');

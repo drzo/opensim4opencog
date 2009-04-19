@@ -87,6 +87,7 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
         bool UseSkipping = false;
+        bool UseReverse = false;
         public bool FollowPathTo(List<Vector3d> v3s, Vector3d finalTarget, double finalDistance)
         {
             Vector3d vstart = v3s[0];
@@ -144,6 +145,11 @@ namespace cogbot.TheOpenSims.Navigation
                 else if (best < at)
                 {
                     Debug("Reverse {0} -> {1} ", at, best);
+                    if (UseReverse)
+                    {
+                        best = at;
+                    }
+                    UseReverse = !UseReverse;
                 }
                 at = best+1;
 
@@ -421,7 +427,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <param name="vector3"></param>
         internal void BlockPoint(Vector3 vector3)
         {
-            GetSimRegion().SetNodeQualityTimer(vector3, 0, 60);
+            GetSimRegion().SetNodeQualityTimer(vector3, SimPathStore.BLOCKED, 60);
         }
 
 

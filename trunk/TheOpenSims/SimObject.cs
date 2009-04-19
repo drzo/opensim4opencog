@@ -218,9 +218,8 @@ namespace cogbot.TheOpenSims
         }
 
        // protected SimRegion PathStore;
-        Box3Fill _OuterBox = new Box3Fill(true);
         public Box3Fill OuterBox {
-            get { return _OuterBox; }
+            get { return Mesh.OuterBox; }
         }
 
         public void ResetRegion(ulong regionHandle)
@@ -625,10 +624,18 @@ namespace cogbot.TheOpenSims
             _TOSRTING = null;
         }
 
-        public void UpdateOccupied()
+        public virtual void UpdateOccupied()
         {
             if (!IsRegionAttached()) return;
-            GetSimRegion().AddCollisions(this);
+            if (!IsRoot())
+            {
+                // dont mesh armor
+                if (Parent is SimAvatar)
+                {
+                    return;
+                }
+            }
+            GetSimRegion().AddCollisions(Mesh);
             //throw new NotImplementedException();
         }
 
