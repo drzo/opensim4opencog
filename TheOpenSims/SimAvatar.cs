@@ -1,15 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using OpenMetaverse;
-using DotLisp;
-using System.Reflection;
 using cogbot.Listeners;
 using System.Threading;
-using System.Windows.Forms;
 using cogbot.TheOpenSims.Navigation;
 using System.Collections;
-using System.Drawing;
 //Complex outcomes may be a result of simple causes, or they may just be complex by nature. 
 //Those complexities that turn out to have simple causes can be simulated and studied, 
 //thus increasing our knowledge without needing direct observation.
@@ -19,21 +14,15 @@ namespace cogbot.TheOpenSims
     public class SimAvatarImpl : SimObjectImpl, SimMover, cogbot.TheOpenSims.SimAvatar
     {
 
-        public Thread avatarThinkerThread = null;
-        public Thread avatarHeartbeatThread = null;
+        public Thread avatarThinkerThread;
+        public Thread avatarHeartbeatThread;
 
         public Avatar theAvatar
         {
             get { return (Avatar)Prim; }
         }
 
-        private SimAvatar _InDialogWith = null;
-
-        public SimAvatar InDialogWith
-        {
-            get { return _InDialogWith; }
-            set { _InDialogWith = value; }
-        }
+        public SimAvatar InDialogWith { get; set; }
 
         readonly BotNeeds _CurrentNeeds;
         public BotNeeds CurrentNeeds
@@ -97,7 +86,7 @@ namespace cogbot.TheOpenSims
         public Dictionary<SimObjectType, BotNeeds> Assumptions = new Dictionary<SimObjectType, BotNeeds>();
 
         // Current action 
-        public BotAction CurrentAction = null;
+        public BotAction CurrentAction;
 
 
         public override bool MakeEnterable(SimMover actor)
@@ -117,16 +106,17 @@ namespace cogbot.TheOpenSims
 
                 AspectName = slAvatar.Name;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 AspectName += objectSystem.client + "_Avatar_" + slAvatar.LocalID;
             }
-            avatarHeartbeatThread = new Thread(new ThreadStart(Aging));
-            avatarHeartbeatThread.Name = "AvatarHeartbeatThread for " + AspectName;
+            avatarHeartbeatThread = new Thread(Aging);
+            avatarHeartbeatThread.Name = String.Format("AvatarHeartbeatThread for {0}", AspectName);
             avatarHeartbeatThread.Priority = ThreadPriority.Lowest;
             avatarHeartbeatThread.Start();
             MakeEnterable(this);
         }
+         
 
         public override bool RestoreEnterable(SimMover agent)
         {
@@ -184,7 +174,7 @@ namespace cogbot.TheOpenSims
                 //if (item is ISimAvatar) continue;
                 s += "\n   " + item + " " + item.RateIt(CurrentNeeds);
             }
-            return "\n" + s;
+            return String.Format("\n{0}", s);
         }
 
         public void StartThinking()
@@ -239,7 +229,7 @@ namespace cogbot.TheOpenSims
             }
 
             Vector3 local = base.GetSimPosition();
-            if (WorldSystem.OutOfRegion(local))
+            if (WorldObjects.OutOfRegion(local))
             {
                 Debug(" OutOfRegion " + local);
             }
@@ -275,8 +265,8 @@ namespace cogbot.TheOpenSims
             }
             if (theAvatar.RegionHandle != _CurrentRegion.RegionHandle)
             {
-                Debug("out of date RegionHandle ");
-                _CurrentRegion = null;
+                //Debug("out of date RegionHandle ");
+                //_CurrentRegion = null;
             }
             return _CurrentRegion;
         }
@@ -664,7 +654,7 @@ namespace cogbot.TheOpenSims
         public ThreadStart WithGrabAt(SimObject obj, ThreadStart closure)
         {
             BotClient Client = GetGridClient();
-            return new ThreadStart(delegate()
+            return () =>
             {
                 Primitive targetPrim = obj.Prim;
                 uint objectLocalID = targetPrim.LocalID;
@@ -678,7 +668,7 @@ namespace cogbot.TheOpenSims
                 {
                     ClientSelf.DeGrab(objectLocalID);
                 }
-            });
+            };
         }
 
         public ThreadStart WithAnim(UUID anim, ThreadStart closure)
@@ -1065,10 +1055,10 @@ namespace cogbot.TheOpenSims
                         continue;
                     }
 
+                    TurnToward(targetPosition);
                     // Far away
                     if (curXYDist > ApproachDistance)
                     {
-                        TurnToward(targetPosition);
                         ClientMovement.Stop = false;
                         ClientMovement.FinishAnim = false;
                         TurnToward(targetPosition);
@@ -1091,11 +1081,12 @@ namespace cogbot.TheOpenSims
                             ClientMovement.AtPos = true;
                             ClientMovement.UpdateInterval = 0;
                             SendUpdate(MyRandom.Next(25, 100));
+                           // TurnToward(targetPosition);
                             //(int)(25 * (1 + (curDist / followDist)))
                             //   MoveFast(ApproachPosition);
                             //    if (ApproachPosition!=null) MoveSlow(ApproachPosition);
                            stopNext = true;
-                            continue;
+                           continue;
                         }
                     }
                     else
@@ -1233,13 +1224,8 @@ namespace cogbot.TheOpenSims
         }
 
         double ApproachDistance = 2f;
-        private SimPosition _ApproachPosition;
 
-        public SimPosition ApproachPosition
-        {
-            get { return _ApproachPosition; }
-            set { _ApproachPosition = value; }
-        }
+        public SimPosition ApproachPosition { get; set; }
 
         Thread ApproachThread;//= new Thread(TrackerLoop);
 
@@ -1289,10 +1275,12 @@ namespace cogbot.TheOpenSims
             }
             return changed;
         }
-
-        internal void SetMoveTarget(SimObject followAvatar)
+        public override void UpdateOccupied()
         {
-            throw new NotImplementedException();
+            // avatars do not occlude the path system
+            Vector3 pos = GetSimPosition();
+            if (WorldObjects.OutOfRegion(pos)) return;
+            GetSimRegion().SetPassable(pos.X, pos.Y, pos.Z);
         }
     }
 

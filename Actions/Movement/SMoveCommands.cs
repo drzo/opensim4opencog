@@ -371,7 +371,7 @@ namespace cogbot.Actions.Movement
             SimPosition pos = WorldSystem.GetVector(args, out argcount);
             if (pos == null)
             {
-                return "Cannot " + Name + " to " + String.Join(" ", args);
+                return String.Format("Cannot {0} to {1}", Name, String.Join(" ", args));
             }
             int maxSeconds = 6;
             float maxDistance = 1f;
@@ -383,7 +383,7 @@ namespace cogbot.Actions.Movement
             bool MadIt = WorldSystem.TheSimAvatar.GotoTarget(pos);
             if (MadIt)
             {
-                return ("SUCCESS " + str);
+                return String.Format("SUCCESS {0}", str);
 
             }
             else

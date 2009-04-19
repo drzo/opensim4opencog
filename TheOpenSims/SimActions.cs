@@ -155,6 +155,10 @@ namespace cogbot.TheOpenSims
                 }
                 Target.MakeEnterable(TheBot);
                 closure.Invoke();
+                if (Target == TheBot.ApproachPosition)
+                {
+                    TheBot.ApproachPosition = null;
+                }
             }
             finally
             {

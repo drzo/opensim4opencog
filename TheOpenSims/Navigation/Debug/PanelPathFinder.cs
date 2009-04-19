@@ -294,7 +294,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                 CollisionIndex o = PathStore.GetCollisionIndex(x, y);
                 if (o != null)
                 {
-                    str = o.OccupiedString();
+                    str = o.OccupiedString() + " matrix=" + Matrix[x, y];
                 }
                 else
                 {
@@ -337,7 +337,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         public float ZLevel
         {
             get { if (CurrentPlane == null) return 0;
-                return CurrentPlane.ZLevel; }
+                return CurrentPlane.MinZ; }
             set { CurrentPlane = PathStore.GetCollisionPlane(value); }
         }
 

@@ -595,20 +595,20 @@ namespace cogbot.TheOpenSims
                 {
                     v3 = SimRegion.GetLocalLeftPos(swp, dir, distance);
                     b = PathStore.GetNodeQuality(v3);
-                    if (b > 0) return v3;
+                    if (b <SimPathStore.BLOCKED) return v3;
                 }
             }
             Console.WriteLine("Clearing area " + swp);
-            SetNodeQualityTimer(v3, 200,30);
+            SetNodeQualityTimer(v3, SimPathStore.MAYBE_BLOCKED,30);
             for (float distance = PathStore.StepSize; distance < useDist * 1.5; distance += PathStore.StepSize)
             {
                 for (int dir = 0; dir < 360; dir += 15)
                 {
                     v3 = SimRegion.GetLocalLeftPos(swp, dir, distance);
                     b = PathStore.GetNodeQuality(v3);
-                    if (b == 0)
+                    if (b == SimPathStore.BLOCKED)
                     {
-                        SetNodeQualityTimer(v3, 200,30);
+                        SetNodeQualityTimer(v3, SimPathStore.MAYBE_BLOCKED,30);
                     }
                 }
             }
@@ -1023,10 +1023,12 @@ namespace cogbot.TheOpenSims
             lock (TerrainBakedLock)
             {
                // if (TerrainBaked) return;
-                float LastHieght = GetGroundLevel(0, 0);
+                TerrainBaked = true;
 
-                Console.WriteLine("ScanTerrainBlockages: " + RegionName);
+                Console.WriteLine("ScanTerrainBlockages: {0}", RegionName);
                 float WH = GridInfo.WaterHeight;
+                float LastHieght = GetGroundLevel(0, 0);
+                return;
                 for (int y = 0; y < 256; y++)
                     for (int x = 0; x < 256; x++)
                     {
@@ -1039,7 +1041,6 @@ namespace cogbot.TheOpenSims
                         }
                         LastHieght = thisH;
                     }
-                TerrainBaked = true;
             }
         }
 
@@ -1305,6 +1306,7 @@ namespace cogbot.TheOpenSims
 
         public bool IsPassable(Vector3 next)
         {
+            if (OutOfRegion(next)) return false;
             return GetPathStore(next).IsPassable(next);
         }
 
@@ -1318,9 +1320,8 @@ namespace cogbot.TheOpenSims
            // throw new NotImplementedException();
         }
       
-        internal void AddCollisions(SimObject O)
+        internal void AddCollisions(SimMesh C)
         {
-            SimMesh C = O.Mesh;
             C.UpdateOccupied();
         }
 

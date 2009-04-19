@@ -197,7 +197,10 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                     if (mPathFinder != null)
                         mPathFinder.PathFinderDebug -= new PathFinderDebugHandler(PathFinderDebug);
 
-                    mPathFinder = new PathFinderFasting(PnlGUI.Matrix);
+                    CollisionPlane CP = PnlGUI.CurrentPlane;
+                    CP.EnsureUpToDate();
+
+                    mPathFinder = new PathFinderFasting(CP.ByteMatrix);
                     mPathFinder.PathFinderDebug += new PathFinderDebugHandler(PathFinderDebug);
                 }
             }
@@ -208,7 +211,10 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                     if (mPathFinder != null)
                         mPathFinder.PathFinderDebug -= new PathFinderDebugHandler(PathFinderDebug);
 
-                    mPathFinder = new PathFinder(PnlGUI.Matrix);
+
+                    CollisionPlane CP = PnlGUI.CurrentPlane;
+                    CP.EnsureUpToDate();
+                    mPathFinder = new PathFinder(CP.ByteMatrix);
                     mPathFinder.PathFinderDebug += new PathFinderDebugHandler(PathFinderDebug);
                 }
             }
@@ -1259,19 +1265,21 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 
         private void BtnRecomputeMatrix_Click(object sender, EventArgs e)
         {
-            PathStore.NeedsUpdate = true;
             float tryFloat;
             if (float.TryParse(MinZevel.Text, out tryFloat))
             {
                 PnlGUI.ZLevel = tryFloat;
             }
-            PathStore.UpdateMatrix(PnlGUI.CurrentPlane);
+            CollisionPlane CP = PnlGUI.CurrentPlane;
+            if (CP == null) return;
+            CP.NeedsUpdate = true;
+            CP.EnsureUpToDate();
             PnlGUI.Invalidate();
         }
 
         private void BtnRebakeTerrain_Click(object sender, EventArgs e)
         {
-            PathStore.NeedsUpdate = true;
+            PnlGUI.CurrentPlane.NeedsUpdate = true;
             PathStore.GetSimRegion().BakeTerrain();
             PnlGUI.Invalidate();
         }

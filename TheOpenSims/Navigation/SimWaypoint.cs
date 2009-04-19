@@ -94,11 +94,11 @@ namespace cogbot.TheOpenSims.Navigation
             return CIndex.GetZLevel(LastGL);
         }
 
-        CollisionPlane Plane;
+        public CollisionPlane Plane { get; set; }
 
         public float GetGroundLevel()
         {
-            return CIndex.GetGroundLevel();
+            return CIndex.GetGroundLevel(Plane);
         }
 
 
@@ -548,7 +548,7 @@ namespace cogbot.TheOpenSims.Navigation
             int PX = PathStore.ARRAY_X(from.X);
             int PY = PathStore.ARRAY_Y(from.Y);
             SimWaypoint WP;
-            CollisionIndex CI = CollisionIndexXY.CreateCollisionIndex(from, PathStore);
+            CollisionIndex CI = CollisionIndex.CreateCollisionIndex(from, PathStore);
             lock (CI)
             {
                 WP = CI.FindWayPoint(from.Z);
@@ -643,26 +643,18 @@ namespace cogbot.TheOpenSims.Navigation
         {
             return Quaternion.Identity;
         }
-
-        #endregion
-
-        #region SimPosition Members
-
+   
 
         public Vector3d GetWorldPosition()
         {
             return _GlobalPos;
         }
 
-        #endregion
-
-        #region SimPosition Members
-
-
         public SimRegion GetSimRegion()
         {
             return PathStore.GetSimRegion();
         }
+
 
         #endregion
 
@@ -681,7 +673,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         private void Debug(string format, params object[] objs)
         {
-            PathStore.Debug(format, objs);
+            SimPathStore.Debug(format, objs);
         }
     }
 
@@ -721,6 +713,7 @@ namespace cogbot.TheOpenSims.Navigation
         SimWaypoint[] Molecule { get; }
         System.Collections.IList OutgoingArcs { get; }
         bool Passable { get; set; }
+        CollisionPlane Plane { get; set; }
         void SetGlobalPos(OpenMetaverse.Vector3d v3d);
         string ToString();
         void UntieIncomingArcs();

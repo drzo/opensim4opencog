@@ -206,7 +206,7 @@ namespace cogbot.TheOpenSims.Mesher
         {
             foreach (Box3Fill B in InnerBoxes)
             {
-                if (B.IsInside(x, y, B.MinZ)) return true;
+                if (B.IsInsideXY(x, y)) return true;
             }
             return false;
         }
@@ -246,7 +246,10 @@ namespace cogbot.TheOpenSims.Mesher
 
         public virtual void UpdateOccupied()
         {
-            UpdateOccupied(GetPathSystem());
+            if (RootObject.IsRegionAttached())
+            {
+                UpdateOccupied(GetPathSystem());
+            }
         }
 
         static bool FastAndImpercise = false;
@@ -255,16 +258,14 @@ namespace cogbot.TheOpenSims.Mesher
         ///   generate more faces
         /// </summary>
         static float UseExtremeDetailSize = 4f;//3f;
+        static float UseLowDetailSize = 1f;//3f;
         static bool UseViewerMode = false;
         public static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         readonly SimObject RootObject;
 
         public static float PADXY = 0.2f;
 
-        public Box3Fill OuterBox
-        {
-            get { return RootObject.OuterBox; }
-        }
+        public Box3Fill OuterBox { get; set; }
 
         List<Box3Fill> InnerBoxes = new List<Box3Fill>();
 
@@ -274,6 +275,7 @@ namespace cogbot.TheOpenSims.Mesher
         }
         public SimMesh(SimObject simObject)
         {
+            OuterBox = new Box3Fill(true);
             RootObject = simObject;
             Update(simObject);
         }
@@ -292,7 +294,7 @@ namespace cogbot.TheOpenSims.Mesher
             Vector3 Scale = simObject.GetSimScale();
             Vector3 Position = simObject.GetSimPosition();
 
-            List<Mesh> MeshList = new List<Mesh>();
+            //List<Mesh> MeshList = new List<Mesh>();
 
             //PrimMesh primMesh;
 
@@ -306,8 +308,8 @@ namespace cogbot.TheOpenSims.Mesher
             //}
 
             // Add High PrimMesh (IdealistViewer code)
-            Mesh mesh = PrimitiveToMesh(simObject.Prim, LevelOfDetail.High, Scale, Rotation);
-            MeshList.Add(mesh);
+            Mesh mesh = PrimitiveToMesh(simObject.Prim, Scale, Rotation);
+            //MeshList.Add(mesh);
 
 
             //if (false)
@@ -328,9 +330,10 @@ namespace cogbot.TheOpenSims.Mesher
 
             InnerBoxes.Clear();
             OuterBox.Reset();
-            CalcBoxesFromMeshes(MeshList);
-            MeshList.Clear();
-            MeshList = null;
+            CalcBoxesFromMeshes(mesh);
+           // int b = InnerBoxes.Count;
+            if (!FastAndImpercise) InnerBoxes = Box3Fill.Simplify(InnerBoxes);
+           // Console.Write("Simplfy mesh {0} -> {1} ", b, InnerBoxes.Count);
             AddPos(Position);
             return true;
         }
@@ -338,50 +341,91 @@ namespace cogbot.TheOpenSims.Mesher
         /// <summary>
         /// Build the Boxes
         /// </summary>
-        void CalcBoxesFromMeshes(List<Mesh> MeshList)
+        void CalcBoxesFromMeshes(Mesh M)
         {
-            foreach (Mesh M in MeshList)
-            {
-                foreach (Vertex v in M.vertices)
+            if (false) foreach (Vertex v in M.vertices)
                 {
                     if (v != null)
                     {
                         OuterBox.AddVertex(v, PADXY);
                     }
                 }
-                Triangle[] ts = M.triangles.ToArray();
-                int len = ts.Length - 1;
-                for (int i = 0; i < ts.Length; i++)
+
+            List<Triangle> tl = M.triangles;
+
+            int tc = tl.Count;
+            if ( tc < 16)
+            {
+                AddTrianglesV1(tl, tc);
+            }
+            else
+            {
+                AddTrianglesV2(tl, tc);
+            }
+            // Console.WriteLine(InnerBoxes.Count);
+        }
+
+        private void AddTrianglesV1(List<Triangle> triangles, int len)
+        {
+            Triangle[] ts = triangles.ToArray();
+            int len1 = len-1;
+            for (int i = 0; i < len1; i++)
+            {
+                Triangle t1 = ts[i];
+                bool used = false;
+                OuterBox.AddTriangle(t1, PADXY);
+                for (int ii = i + 1; ii < len; ii++)
                 {
-                    Triangle t1 = ts[i];
-                    bool used = false;
-                    OuterBox.AddTriange(t1, PADXY);
-                    for (int ii = i + 1; ii < ts.Length; ii++)
+                    Triangle t2 = ts[ii];
+                    int shared = SharedVertexs(t1, t2);
+                    if (shared == 3) continue;
+                    if (shared == 2)
                     {
-                        Triangle t2 = ts[ii];
-                        int shared = SharedVertexs(t1, t2);
-                        if (shared == 3) continue;
-                        if (shared == 2)
-                        {
-                            Box3Fill B = new Box3Fill(true);
-                            B.AddTriange(t1, PADXY);
-                            B.AddTriange(t2, PADXY);
-                            InnerBoxes.Add(B);
-                            used = true;
-                        }
-                    }
-                    if (!used)
-                    {
-                        Box3Fill B = new Box3Fill(true);
-                        B.AddTriange(t1, PADXY);
+                        Box3Fill B = new Box3Fill(t1, t2, PADXY);
                         InnerBoxes.Add(B);
+                        used = true;
                     }
                 }
+                if (!used)
+                {
+                    Box3Fill B = new Box3Fill(true);
+                    B.AddTriangle(t1, PADXY);
+                    InnerBoxes.Add(B);
+                }
+            }     
+        }
+
+        private void AddTrianglesV2(List<Triangle> ts, int len)
+        {
+            int len1 = len - 2;
+            for (int i = 0; i < len1; i+=2)
+            {
+                Triangle t1 = ts[i];
+                Triangle t2 = ts[i+1];
+                OuterBox.AddTriangle(t1, PADXY);
+                OuterBox.AddTriangle(t2, PADXY);
+                Box3Fill B = new Box3Fill(t1, t2, PADXY);
+                InnerBoxes.Add(B);
+                bool used = false;
+                for (int ii = i + 2; ii < len; ii++)
+                {
+                    t2 = ts[ii];
+                    int shared = SharedVertexs(t1, t2);
+                    if (shared == 3) continue;
+                    if (shared == 2)
+                    {
+                        B = new Box3Fill(t1, t2, PADXY);
+                        InnerBoxes.Add(B);
+                        used = true;
+                    }
+                }
+                if (!used)
+                {
+                    B = new Box3Fill(true);
+                    B.AddTriangle(t1, PADXY);
+                    InnerBoxes.Add(B);
+                }
             }
-            int b = InnerBoxes.Count;
-           // Console.Write("Simplfy mesh {0} -> ",b);
-           if (!FastAndImpercise)InnerBoxes = Box3Fill.Simplify(InnerBoxes);
-           // Console.WriteLine(InnerBoxes.Count);
         }
 
         internal string DebugString()
@@ -406,18 +450,20 @@ namespace cogbot.TheOpenSims.Mesher
             }
         }
 
-        private int SharedVertexs(Triangle t1, Triangle t2)
+        private static int SharedVertexs(Triangle t1, Triangle t2)
         {
             int sharedV = 0;
             if (t1.v1 == t2.v1) sharedV++;
-            if (t1.v1 == t2.v2) sharedV++;
-            if (t1.v1 == t2.v3) sharedV++;
+            else
+                if (t1.v1 == t2.v2) sharedV++;
+                else
+                    if (t1.v1 == t2.v3) sharedV++;
             if (t1.v2 == t2.v1) sharedV++;
-            if (t1.v2 == t2.v2) sharedV++;
-            if (t1.v2 == t2.v3) sharedV++;
-            if (t1.v3 == t2.v1) sharedV++;
-            if (t1.v3 == t2.v2) sharedV++;
-            if (t1.v3 == t2.v3) sharedV++;
+            else
+                if (t1.v2 == t2.v2) sharedV++;
+                else
+                    if (t1.v2 == t2.v3) sharedV++;
+            if (t1.v3 == t2.v1 || t1.v3 == t2.v2 || t1.v3 == t2.v3) return sharedV + 1;
             return sharedV;
         }
 
@@ -504,7 +550,7 @@ namespace cogbot.TheOpenSims.Mesher
         }
 
 
-        public static Mesh PrimitiveToMesh(Primitive primitive, LevelOfDetail detail, Vector3 Scale, Quaternion rot)
+        public static Mesh PrimitiveToMesh(Primitive primitive, Vector3 Scale, Quaternion rot)
         {
 
             if (primitive.Sculpt != null)
@@ -519,9 +565,24 @@ namespace cogbot.TheOpenSims.Mesher
                 }
             }
 
-            bool UseExtremeDetail = Scale.X + Scale.Y + Scale.Z > UseExtremeDetailSize;
+            float scaleSize = Scale.X + Scale.Y + Scale.Z;
+            bool UseExtremeDetail = scaleSize > UseExtremeDetailSize;
+            LevelOfDetail detail;
+            if (scaleSize < UseLowDetailSize)
+                detail = LevelOfDetail.Low;
+            else
+                detail = LevelOfDetail.High;
+            //else if (!UseExtremeDetail)
+            //{
+            //    if (primitive.Type == PrimType.Box)
+            //    {
+            //        detail = LevelOfDetail.Medium;
+            //    }
+            //}
 
-            PrimMesh primMesh = ConstructionDataToPrimMesh(primitive.PrimData, detail, UseExtremeDetail);
+            float DetailMult = UseExtremeDetail ? 2 : 1;
+
+            PrimMesh primMesh = ConstructionDataToPrimMesh(primitive.PrimData, detail, DetailMult);
             primMesh.Scale(Scale.X, Scale.Y, Scale.Z);
             primMesh.AddRot(QuaternionToQuat(rot));
             return PrimMeshToMesh(primMesh);
@@ -638,7 +699,7 @@ namespace cogbot.TheOpenSims.Mesher
         public static PrimMesh PrimitiveToPrimMesh(Primitive thePrim, LevelOfDetail detail, Vector3 Scale, Quaternion rot)
         {
             bool UseExtremeDetail = Scale.X + Scale.Y + Scale.Z > UseExtremeDetailSize;
-            PrimMesh mesh = ConstructionDataToPrimMesh(thePrim.PrimData, detail, UseExtremeDetail);
+            PrimMesh mesh = ConstructionDataToPrimMesh(thePrim.PrimData, detail, UseExtremeDetail?2:1);
             mesh.Scale(Scale.X, Scale.Y, Scale.Z);
             // if (rot != Quaternion.Identity)                
             mesh.AddRot(QuaternionToQuat(rot));
@@ -652,7 +713,7 @@ namespace cogbot.TheOpenSims.Mesher
 
 
         // from IdealistViewer.PrimMesherG.cs
-        public static PrimMesh ConstructionDataToPrimMesh(Primitive.ConstructionData primData, LevelOfDetail detail, bool UseExtremeDetail)
+        public static PrimMesh ConstructionDataToPrimMesh(Primitive.ConstructionData primData, LevelOfDetail detail, float detailMult)
         {
 
             int sides = 4;
@@ -719,65 +780,65 @@ namespace cogbot.TheOpenSims.Mesher
             else if ((HoleType)primData.ProfileHole == HoleType.Triangle)
                 hollowsides = 3;
 
-            if (UseExtremeDetail)
+          //  if (UseExtremeDetail)
             {
-                sides *= 2;
-                hollowsides *= 2;
+                sides = (int)(sides * detailMult);
+                hollowsides = (int)(hollowsides * detailMult);
             }
-            PrimMesh newPrim = new PrimMesh(sides, profileBegin, profileEnd, (float)primData.ProfileHollow, hollowsides);
-            newPrim.viewerMode = UseViewerMode;
-            newPrim.holeSizeX = primData.PathScaleX;
-            newPrim.holeSizeY = primData.PathScaleY;
-            newPrim.pathCutBegin = primData.PathBegin;
-            newPrim.pathCutEnd = primData.PathEnd;
-            newPrim.topShearX = primData.PathShearX;
-            newPrim.topShearY = primData.PathShearY;
-            newPrim.radius = primData.PathRadiusOffset;
-            newPrim.revolutions = primData.PathRevolutions;
-            newPrim.skew = primData.PathSkew;
+            PrimMesh primMesh = new PrimMesh(sides, profileBegin, profileEnd, (float)primData.ProfileHollow, hollowsides);
+            primMesh.viewerMode = UseViewerMode;
+            primMesh.holeSizeX = primData.PathScaleX;
+            primMesh.holeSizeY = primData.PathScaleY;
+            primMesh.pathCutBegin = primData.PathBegin;
+            primMesh.pathCutEnd = primData.PathEnd;
+            primMesh.topShearX = primData.PathShearX;
+            primMesh.topShearY = primData.PathShearY;
+            primMesh.radius = primData.PathRadiusOffset;
+            primMesh.revolutions = primData.PathRevolutions;
+            primMesh.skew = primData.PathSkew;
             switch (detail)
             {
                 case LevelOfDetail.Low:
-                    newPrim.stepsPerRevolution = 6;
+                    primMesh.stepsPerRevolution = 6;
                     break;
                 case LevelOfDetail.Medium:
-                    newPrim.stepsPerRevolution = 12;
+                    primMesh.stepsPerRevolution = 12;
                     break;
                 default:
-                    newPrim.stepsPerRevolution = 24;
+                    primMesh.stepsPerRevolution = 24;
                     break;
             }
 
-            if (UseExtremeDetail)
+            //if (UseExtremeDetail)
             {
-                newPrim.stepsPerRevolution *= 2;
+                primMesh.stepsPerRevolution = (int)(primMesh.stepsPerRevolution*detailMult);
             }
 
 
             if (primData.PathCurve == PathCurve.Line)
             {
-                newPrim.taperX = 1.0f - primData.PathScaleX;
-                newPrim.taperY = 1.0f - primData.PathScaleY;
-                newPrim.twistBegin = (int)(180 * primData.PathTwistBegin);
-                newPrim.twistEnd = (int)(180 * primData.PathTwist);
-                newPrim.ExtrudeLinear();
+                primMesh.taperX = 1.0f - primData.PathScaleX;
+                primMesh.taperY = 1.0f - primData.PathScaleY;
+                primMesh.twistBegin = (int)(180 * primData.PathTwistBegin);
+                primMesh.twistEnd = (int)(180 * primData.PathTwist);
+                primMesh.ExtrudeLinear();
             }
             else
             {
-                newPrim.taperX = primData.PathTaperX;
-                newPrim.taperY = primData.PathTaperY;
-                newPrim.twistBegin = (int)(360 * primData.PathTwistBegin);
-                newPrim.twistEnd = (int)(360 * primData.PathTwist);
-                newPrim.ExtrudeCircular();
+                primMesh.taperX = primData.PathTaperX;
+                primMesh.taperY = primData.PathTaperY;
+                primMesh.twistBegin = (int)(360 * primData.PathTwistBegin);
+                primMesh.twistEnd = (int)(360 * primData.PathTwist);
+                primMesh.ExtrudeCircular();
             }
 
 
             if (UseViewerMode)
             {
-                int numViewerFaces = newPrim.viewerFaces.Count;
+                int numViewerFaces = primMesh.viewerFaces.Count;
                 for (uint i = 0; i < numViewerFaces; i++)
                 {
-                    ViewerFace vf = newPrim.viewerFaces[(int)i];
+                    ViewerFace vf = primMesh.viewerFaces[(int)i];
 
                     if (isSphere)
                     {
@@ -787,7 +848,7 @@ namespace cogbot.TheOpenSims.Mesher
                     }
                 }
             }
-            return newPrim;
+            return primMesh;
         }
 
         internal bool MinMaxZ(float xf, float yf, ref Vector2 V2)
@@ -905,13 +966,27 @@ namespace cogbot.TheOpenSims.Mesher
         public float MaxY;// = float.MinValue;
         public float MinZ;// = float.MaxValue;
         public float MaxZ;// = float.MinValue;
+
+        public Box3Fill(Triangle t1, Triangle t2, float PADXY)
+        {
+            MinX = t1.v1.X;
+            MaxX = t1.v1.X;
+            MinY = t1.v1.Y;
+            MaxY = t1.v1.Y;
+            MinZ = t1.v1.Z;
+            MaxZ = t1.v1.Z;
+            AddVertex(t1.v2, PADXY);
+            AddVertex(t1.v3, PADXY);
+            AddTriangle(t2,PADXY);
+        }
+
         /// <summary>
         /// Construct an infinately small box
         /// </summary>
         //public Box3Fill(bool b) { Reset(); }
         /// <summary>
         ///  Make the box infinatly small
-        /// </summary>
+        /// </summary>        
         public Box3Fill(bool b)
         {
             MinX = float.MaxValue;
@@ -937,6 +1012,7 @@ namespace cogbot.TheOpenSims.Mesher
 
         public override int GetHashCode()
         {
+
             return MinEdge.GetHashCode() ^ MaxEdge.GetHashCode();
         }
 
@@ -1021,46 +1097,46 @@ namespace cogbot.TheOpenSims.Mesher
         /// </summary>
         /// <param name="v"></param>
         /// <returns>true if the box has grown</returns>
-        internal bool AddVertex(Vertex v, float PADXY)
+        internal void AddVertex(Vertex v, float PADXY)
         {
-            return AddPoint(v.X, v.Y, v.Z, PADXY);
+            AddPoint(v.X, v.Y, v.Z, PADXY);
         }
 
-        internal bool AddPoint(float x, float y, float z, float PADXY)
+        internal void AddPoint(float x, float y, float z, float PADXY)
         {
-            bool changed = false;
+           // bool changed = false;
             if (x < MinX)
             {
                 MinX = x - PADXY;
-                changed = true;
+              //  changed = true;
             }
             if (y < MinY)
             {
                 MinY = y - PADXY;
-                changed = true;
+               // changed = true;
             }
             if (z < MinZ)
             {
                 MinZ = z;// -PADZ;
-                changed = true;
+                //changed = true;
             }
 
             if (x > MaxX)
             {
                 MaxX = x + PADXY;
-                changed = true;
+               // changed = true;
             }
             if (y > MaxY)
             {
                 MaxY = y + PADXY;
-                changed = true;
+               // changed = true;
             }
             if (z > MaxZ)
             {
                 MaxZ = z + PADZ;
-                changed = true;
+                //changed = true;
             }
-            return changed;
+            //return changed;
         }
 
         /// <summary>
@@ -1068,11 +1144,11 @@ namespace cogbot.TheOpenSims.Mesher
         /// </summary>
         /// <param name="t"></param>
         /// <returns>true if the boxsize was increased</returns>
-        public bool AddTriange(Triangle t, float PADXY)
+        public void AddTriangle(Triangle t, float PADXY)
         {
-            return AddVertex(t.v1, PADXY) ||
-             AddVertex(t.v2, PADXY) ||
-             AddVertex(t.v3, PADXY);
+            AddVertex(t.v1, PADXY);
+            AddVertex(t.v2, PADXY);
+            AddVertex(t.v3, PADXY);
         }
 
         public Vector3 MinEdge
@@ -1088,6 +1164,16 @@ namespace cogbot.TheOpenSims.Mesher
             {
                 return new Vector3(MaxX, MaxY, MaxZ);
             }
+        }
+
+        public bool IsInsideXY(float x, float y)
+        {
+            if (
+             (x < MinX) ||
+             (y < MinY) ||
+             (x > MaxX) ||
+             (y > MaxY)) return false;
+            return true;
         }
 
         public bool IsInside(float x, float y, float z)

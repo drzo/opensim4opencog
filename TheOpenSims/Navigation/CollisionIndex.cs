@@ -1,69 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using cogbot.TheOpenSims.Mesher;
-using OpenMetaverse;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 using cogbot.Listeners;
+using cogbot.TheOpenSims.Mesher;
+using OpenMetaverse;
 
 namespace cogbot.TheOpenSims.Navigation
 {
-    public class CollisionPlane
-    {
-        int xsize, ysize;
-        public CollisionPlane(int xsize0, int ysize0, float z)
-        {
-            xsize = xsize0;
-            ysize = ysize0;
-            _ZLevelMin = z;
-            _ZLevelMax = z;
-        }
-        public float ZLevel
-        {
-            get { return _ZLevelMin; }
-            set
-            {
-                if (value > _ZLevelMax) _ZLevelMax = value;
-                else if (value < _ZLevelMin) _ZLevelMin = value;
-            }
-        }
-        public override string ToString()
-        {
-            return GetType().Name + "=" + _ZLevelMin + "-" + _ZLevelMax;
-        }
-        byte[,] _BM;
-        float _ZLevelMax;
-        float _ZLevelMin;
-        public byte[,] ByteMatrix
-        {
-            get
-            {
-                if (_BM == null)
-                {
-                    _BM = new byte[xsize, ysize];
-                    for (int y = ysize - 1; y >= 0; y--)
-                        for (int x = xsize - 1; x >= 0; x--)
-                            _BM[x, y] = SimPathStore.INITIALLY;
-                }
-                return _BM;
-            }
-
-        }
-        public byte this[int x, int y]
-        {
-            get { return ByteMatrix[x, y]; }
-            set { ByteMatrix[x, y] = value; }
-        }
-
-    }
-
     /// <summary>
     /// An x/y postion in a region that indexes the objects that can collide at this x/y
     ///  Also indexes waypoints for fast lookup
     /// </summary>
     [Serializable]
-    public class CollisionIndexXY : CollisionIndex
+    public class CollisionIndex
     {
         //public Point Point;
 
@@ -114,7 +64,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         private CollisionPlane CollisionPlaneAt(float z)
         {
-            throw new NotImplementedException();
+            return PathStore.GetCollisionPlane(z);
         }
 
         byte IsSolid = 0;
@@ -125,17 +75,18 @@ namespace cogbot.TheOpenSims.Navigation
         //    return GetZLevel(LastPlane) == GetGroundLevel();
         //}
 
-        public bool IsUnderWater()
+        public bool IsUnderWater(CollisionPlane CP)
         {
-            return GetGroundLevel() < GetSimRegion().WaterHeight();
+            if (CP == null) return GetGroundLevel() < GetSimRegion().WaterHeight();
+            return CP.MinZ < GetSimRegion().WaterHeight();
         }
 
-        public bool IsFlyZone()
+        public bool IsFlyZone(CollisionPlane CP)
         {
-            return IsUnderWater();
+            return IsUnderWater(CP);
         }
 
-        public byte GetOccupiedValue(CollisionPlane cp)
+        public byte GetOccupiedValue(CollisionPlane CP)
         {
             int b = SimPathStore.INITIALLY + OccupiedCount * 3 + IsSolid * 3;
             if (b > 240) return 240;
@@ -157,7 +108,7 @@ namespace cogbot.TheOpenSims.Navigation
                 else if (NeighborBump(CP, zlevel, 0.2f))
                     SetMatrix(CP, SimPathStore.MAYBE_BLOCKED);
             }
-            else if (IsUnderWater())
+            else if (IsUnderWater(CP))
                 SetMatrix(CP, SimPathStore.MAYBE_BLOCKED);
         }
 
@@ -223,7 +174,9 @@ namespace cogbot.TheOpenSims.Navigation
             if (WP != null) return WP.GetZLevel(CP);
             float x = PX / PathStore.POINTS_PER_METER;
             float y = PY / PathStore.POINTS_PER_METER;
-            return GetSimRegion().GetGroundLevel(x, y);
+            float GL = GetSimRegion().GetGroundLevel(x, y);
+            float CPL = CP.MinZ;
+            return (GL > CPL) ? GL : CPL;
         }
 
 
@@ -258,8 +211,8 @@ namespace cogbot.TheOpenSims.Navigation
             {
                 LastPlane = CP;
                 List<SimMesh> OccupiedCP = GetOccupied(CP);
-                float above = CP.ZLevel;
-                float GL = GetGroundLevel();
+                float above = CP.MinZ;
+                float GL = GetGroundLevel(CP);
                 if (above < GL) above = GL;
                 // when the Two Zs are differnt that means global Pos has been computed
                 if (_ZLevelCache > above) return _ZLevelCache;
@@ -312,6 +265,14 @@ namespace cogbot.TheOpenSims.Navigation
             return _ZLevelCache;
         }
 
+        public float GetGroundLevel(CollisionPlane CP)
+        {
+            float GL = GetGroundLevel();
+            if (CP == null) return GL;
+            float CPL = CP.MinZ;
+            return (CPL > GL) ? CPL : GL;
+        }
+
         static bool DiffLessThan(float A, float B, float D)
         {
             return Math.Abs(A - B) <= D;
@@ -362,8 +323,8 @@ namespace cogbot.TheOpenSims.Navigation
 
         public string ExtraInfoString(CollisionPlane LastPlane)
         {
-            string S = "GLevel=" + GetGroundLevel();
-            if (IsUnderWater()) S += " UnderWater=" + GetSimRegion().WaterHeight();
+            string S = "GLevel=" + GetGroundLevel(LastPlane);
+            if (IsUnderWater(LastPlane)) S += " UnderWater=" + GetSimRegion().WaterHeight();
             S += " LastGL=" + LastPlane;
             if (LastPlane != null)
                 S += " ZLevel=" + GetZLevel(LastPlane)
@@ -382,7 +343,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             SimRegion R = GetSimRegion();
             Vector3 loc = GetSimPosition();
-            return String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, GetGroundLevel());
+            return String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, GetGroundLevel(LastPlane));
         }
 
         ///// <summary>
@@ -414,7 +375,7 @@ namespace cogbot.TheOpenSims.Navigation
         public SimPathStore PathStore;
         Vector3 _LocalPos;
         Vector3d _GlobalPos;
-        private CollisionIndexXY(Vector3 local, Vector3d global, int PX0, int PY0, SimPathStore pathStore)
+        private CollisionIndex(Vector3 local, Vector3d global, int PX0, int PY0, SimPathStore pathStore)
         {
             PathStore = pathStore;
             _GlobalPos = global;
@@ -423,7 +384,7 @@ namespace cogbot.TheOpenSims.Navigation
             PY = PY0;
             PathStore.MeshIndex[PX, PY] = this;
             TaintMatrix();
-            pathStore.NeedsUpdate = true;
+            //pathStore.NeedsUpdate = true;
             //  UpdateMatrix(pathStore.CurrentPlane);
         }
 
@@ -449,7 +410,7 @@ namespace cogbot.TheOpenSims.Navigation
                 from.X = PX / POINTS_PER_METER;
                 from.Y = PY / POINTS_PER_METER;
                 Vector3d GlobalPos = PathStore.GetSimRegion().LocalToGlobal(from);
-                WP = new CollisionIndexXY(from, GlobalPos, PX, PY, PathStore);
+                WP = new CollisionIndex(from, GlobalPos, PX, PY, PathStore);
             }
             return WP;
         }
@@ -548,7 +509,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         private void Debug(string format, params object[] objs)
         {
-            PathStore.Debug(format, objs);
+            SimPathStore.Debug(format, objs);
         }
 
         internal static CollisionIndex CreateCollisionIndex(float x, float y, SimPathStore simPathStore)
@@ -556,11 +517,12 @@ namespace cogbot.TheOpenSims.Navigation
             return CreateCollisionIndex(new Vector3(x, y, 0), simPathStore);
         }
 
-        Dictionary<int, SimWaypoint> WaypointsHash = new Dictionary<int, SimWaypoint>();
+        Dictionary<CollisionPlane, SimWaypoint> WaypointsHash = new Dictionary<CollisionPlane, SimWaypoint>();
         public SimWaypoint FindWayPoint(float z)
         {
+            CollisionPlane CP = CollisionPlaneAt(z);
             SimWaypoint v;
-            if (WaypointsHash.TryGetValue((int)z, out v))
+            if (WaypointsHash.TryGetValue(CP, out v))
             {
                 return v;
             }
@@ -569,49 +531,21 @@ namespace cogbot.TheOpenSims.Navigation
 
         public SimWaypoint GetWayPoint(float z)
         {
+            CollisionPlane CP = CollisionPlaneAt(z);
             SimWaypoint v;
-            if (WaypointsHash.TryGetValue((int)z, out v))
+            if (!WaypointsHash.TryGetValue(CP, out v))
             {
-                return v;
+                v = SimWaypointImpl.CreateLocal(_LocalPos.X, _LocalPos.Y, z, PathStore);
+                v.Plane = CP;
             }
-            return SimWaypointImpl.CreateLocal(_LocalPos.X, _LocalPos.Y, z, PathStore);
+            return v;
         }
+
         public void SetWayPoint(float z, SimWaypoint v)
         {
-            WaypointsHash[(int)z] = v;
+            CollisionPlane CP = CollisionPlaneAt(z);
+            WaypointsHash[CP] = v;
         }
     }
 
-    public interface CollisionIndex
-    {
-        float GetGroundLevel();
-        string ExtraInfoString(CollisionPlane plane);
-        string OccupiedString();
-
-        void RemeshObjects();
-        void RemoveObject(SimMesh simObject);
-
-        bool NeighborBump(CollisionPlane CP, float original, float mostDiff);
-        void UpdateMatrix(CollisionPlane CP);
-        void RegionTaintedThis();
-        void SetMatrix(CollisionPlane CP, int v);
-        void TaintMatrix();
-        List<SimMesh> GetOccupied(CollisionPlane cp);
-        bool AddOccupied(SimMesh simObject, float minZ, float maxZ);
-        bool SolidAt(float z);
-        byte GetMatrix(CollisionPlane CP);
-        byte GetOccupiedValue(CollisionPlane CP);
-        float GetZLevel(CollisionPlane CP);
-        int OccupiedCount { get; }
-        void SetNodeQualityTimer(CollisionPlane CP, int value, int seconds);
-        SimWaypoint GetWayPoint(float z);
-        SimWaypoint FindWayPoint(float z);
-        void SetWayPoint(float z, SimWaypoint v);
-
-        //OpenMetaverse.Vector3d GetWorldPosition();
-
-        //svoid SetNodeQualityTimer(CollisionPlane plane, int value, int seconds);
-
-        Vector3d GetWorldPosition();
-    }
 }
