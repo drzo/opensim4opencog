@@ -31,7 +31,7 @@ namespace cogbot.TheOpenSims.Navigation
                 }
             }
         }
-        private bool _AdjacentBlocking = false;
+        private bool _AdjacentBlocking = true;
 
         public bool AdjacentBlocking
         {
@@ -46,14 +46,14 @@ namespace cogbot.TheOpenSims.Navigation
             }
         }
 
-        public CollisionPlane(int xsize0, int ysize0, float z, SimPathStore pathStore)
+        public CollisionPlane(int xsize0, int ysize0, float minZ, float maxZ, SimPathStore pathStore)
         {
             TotalCollisionPlanes++;
             PathStore = pathStore;
             MaxXPt = xsize0 - 1;
             MaxYPt = ysize0 - 1;
-            MinZ = z;
-            MaxZ = z;
+            MinZ = minZ;
+            MaxZ = maxZ;
         }
 
         public float MinZ { get; private set; }
@@ -130,17 +130,16 @@ namespace cogbot.TheOpenSims.Navigation
         public void EnsureUpToDate()
         {
             if (!NeedsUpdate) return;
-            NeedsUpdate = false;
             UpdateCollisionPlane(this, UsePotentialFields, AdjacentBlocking);
         }
 
 
         internal void UpdateCollisionPlane(CollisionPlane CP, bool usePotentialFieleds, bool cutNarrows)
         {
-            float StepSize = PathStore.StepSize;
-            CollisionIndex[,] MeshIndex = PathStore.MeshIndex;
             lock (CP)
             {
+                float StepSize = PathStore.StepSize;
+                CollisionIndex[,] MeshIndex = PathStore.MeshIndex;
                 NeedsUpdate = false;
                 byte[,] ToMatrix = ByteMatrix;
                 byte[,] FromMatrix = CP.ByteMatrix;
@@ -187,8 +186,8 @@ namespace cogbot.TheOpenSims.Navigation
                         }
                     }
                 }
-                if (usePotentialFieleds) AddFieldEffects(ToMatrix,ByteMatrix, SimPathStore.BLOCKED, 6);
-                if (cutNarrows) AddAdjacentBlocking(ToMatrix, ByteMatrix);
+                if (usePotentialFieleds) AddFieldEffects(FromMatrix,ToMatrix, SimPathStore.BLOCKED, 6);
+                if (cutNarrows) AddAdjacentBlocking(ToMatrix);
                 Console.WriteLine("\nEnd UpdateMatrix: {0} for {1}", R, CP);
             }
         }
@@ -218,17 +217,18 @@ namespace cogbot.TheOpenSims.Navigation
             }
         }
 
-        private void AddAdjacentBlocking(byte[,] from,byte[,] to)
+        private void AddAdjacentBlocking(byte[,] to)
         {
+            byte[,] from =(byte[,]) to.Clone();
             int xsizem1 = MaxXPt - 1;
-            for (int y = MaxYPt; y > 0; y--)
+            for (int y = MaxYPt - 1; y > 0; y--)
             {
                 for (int x = xsizem1; x > 0; x--)
                 {
                     byte b = from[x, y];
                     if (b == SimPathStore.MAYBE_BLOCKED)
                         if (SurroundingBlocked0(x, y, SimPathStore.BLOCKED, from) > 1)
-                            to[x, y] = SimPathStore.BLOCKED;
+                            to[x, y] = SimPathStore.BLOCKED;                        
                 }
             }
         }

@@ -68,59 +68,37 @@ namespace cogbot.TheOpenSims.Navigation
         readonly public float StepSize;// = 1f / POINTS_PER_METER;
         readonly public int MAPSPACE;// = XY256 * ((int)POINTS_PER_METER);
 
+        /// <summary>
+        ///  Todo needs a smarter way to grab the right layers.. 
+        ///    The CollisionPlane[] is pretty much a hack
+        /// </summary>
+        /// <param name="Z"></param>
+        /// <returns></returns>
         internal CollisionPlane GetCollisionPlane(float Z)
         {
-            if (Z < 1) Z = 0;
-            else if (Z > 1999) Z = 1998;
-            int index = (int)Z;
-            CollisionPlane found = Matrixes[index];
-            if (index == 5)
-            {
-            }
-            if (found != null)
-            {
-                found.ZLevel = Z;
-                return found;
-            }
-            lock (Matrixes)
-            {
-                found = Matrixes[index];
-                if (found != null)
+            lock (Matrixes) return GetCollisionPlane0(Z);
+        }
+        internal CollisionPlane GetCollisionPlane0(float Z)
+        {
+            if (Matrixes.Count > 0)
+            {                
+                foreach (CollisionPlane P in Matrixes)
                 {
-                    found.ZLevel = Z;
-                    return found;
-                }
-
-                if (Z > 1)
-                {
-                    found = Matrixes[index - 1];
-                    if (found != null)
+                    if (P.Accepts(Z))
                     {
-                        if (found.Accepts(Z))
-                        {
-                            found.ZLevel = Z;
-                            Matrixes[index] = found;
-                            return found;
-                        }
-                        //Matrixes[index].ZLevel = Z;
-                        //return Matrixes[index];
+                        return P;
                     }
-                    else
-                        if (false && Matrixes[index + 1] != null)
-                        {
-                            Matrixes[index] = Matrixes[index + 1];
-                            Matrixes[index].ZLevel = Z;
-                            return Matrixes[index];
-                        }
                 }
-                found = new CollisionPlane(MAPSPACE, MAPSPACE, Z, this);
-                Debug("Created matrix[{0}] {1} for {2}", index, found, this);
-                Matrixes[index] = found;
-                return found;
             }
+            CollisionPlane found = new CollisionPlane(MAPSPACE, MAPSPACE, Z - 0.5f, Z + 1.7f, this);
+            if (PathFinder != null) PathFinder.OnNewCollisionPlane(found);
+            Debug("Created matrix[{0}] {1} for {2}", Z, found, this);
+            Matrixes.Add(found);
+            return found;
         }
 
-        readonly CollisionPlane[] Matrixes = new CollisionPlane[2000];
+        float CollisionPlaneHeights = 3.0f;
+        internal IList<CollisionPlane> Matrixes = new List<CollisionPlane>();
         public byte[,] GetByteMatrix(float Z)
         {
             return GetCollisionPlane(Z).ByteMatrix;
@@ -212,14 +190,14 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
 
-        public byte GetNodeQuality(Vector3 v3)
+        public byte GetNodeQuality(Vector3 v3, CollisionPlane CP)
         {
-            return GetByteMatrix(v3.Z)[ARRAY_X((v3.X)), ARRAY_Y((v3.Y))];
+            return CP[ARRAY_X((v3.X)), ARRAY_Y((v3.Y))];
         }
 
-        public void SetNodeQuality(Vector3 v3, byte v)
+        public void SetNodeQuality(Vector3 v3, byte v, CollisionPlane CP)
         {
-            GetByteMatrix(v3.Z)[ARRAY_X((v3.X)), ARRAY_Y((v3.Y))] = v;
+            CP[ARRAY_X((v3.X)), ARRAY_Y((v3.Y))] = v;
         }
 
         /// <summary>
@@ -582,23 +560,26 @@ namespace cogbot.TheOpenSims.Navigation
         bool PunishChangeDirection;
         public IList<Vector3d> GetLocalPath(Vector3 start, Vector3 end)
         {
-            PathFinderDemo panel = PathFinder;
-            if (!IsPassable(start))
+            float Z = start.Z;
+            CollisionPlane CP = GetCollisionPlane(Z);
+            if (!IsPassable(start,CP))
             {
                 Debug("start is not passable: " + start);
             }
-            if (!IsPassable(end))
+            if (!IsPassable(end,CP))
             {
-                Debug("end is not passable: " + start);
+                Debug("end is not passable: " + end);
             }
+            return GetLocalPath0(start, end, CP, Z);
+        }
+        public IList<Vector3d> GetLocalPath0(Vector3 start, Vector3 end, CollisionPlane CP, float Z)
+        {
+            PathFinderDemo panel = PathFinder;
             PunishChangeDirection = !PunishChangeDirection;    //toggle each time
             Point S = ToPoint(start);
             Point E = ToPoint(end);
             List<PathFinderNode> pfn = null;
             
-            float Z = start.Z;
-
-            CollisionPlane CP = GetCollisionPlane(Z);
             CP.EnsureUpToDate();
             try
             {
@@ -606,17 +587,17 @@ namespace cogbot.TheOpenSims.Navigation
                 if (panel != null) panel.SetStartEnd(S, E);
                 // pff.Diagonals = false;
                 //pff.ReopenCloseNodes = true;
-                pff.SearchLimit = 10000000;
+                pff.SearchLimit = 100000000;
                 pff.PunishChangeDirection = PunishChangeDirection;
                 pfn = pff.FindPath(S, E);
             }
             catch (Exception e)
             {
-                Debug("Cant do route! " + e);
+                Debug("Cant do route! " + e + " on " + CP);
             }
             if (pfn == null || pfn.Count == 0)
             {
-                Debug("Cant do pfn!");
+                Debug("Cant do pfn on " + CP);
                 List<Vector3d> temp = new List<Vector3d>();
                 temp.Add(GetSimRegion().LocalToGlobal(end));
                 return temp;
@@ -627,10 +608,10 @@ namespace cogbot.TheOpenSims.Navigation
             return r;
         }
 
-        public bool IsPassable(Vector3 end)
+        public bool IsPassable(Vector3 end, CollisionPlane CP)
         {
             double Dist;
-            if (GetNodeQuality(end) == BLOCKED) return false;
+            if (GetNodeQuality(end,CP) == BLOCKED) return false;
             // if (true) return true;
             SimWaypoint W = ClosestRegionNode(end.X, end.Y, end.Z, out Dist, true);
             return W.Passable;

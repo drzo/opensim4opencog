@@ -229,7 +229,7 @@ namespace cogbot.TheOpenSims
             }
 
             Vector3 local = base.GetSimPosition();
-            if (WorldObjects.OutOfRegion(local))
+            if (SimRegion.OutOfRegion(local))
             {
                 Debug(" OutOfRegion " + local);
             }
@@ -1279,7 +1279,7 @@ namespace cogbot.TheOpenSims
         {
             // avatars do not occlude the path system
             Vector3 pos = GetSimPosition();
-            if (WorldObjects.OutOfRegion(pos)) return;
+            if (SimRegion.OutOfRegion(pos)) return;
             GetSimRegion().SetPassable(pos.X, pos.Y, pos.Z);
         }
     }

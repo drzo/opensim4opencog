@@ -33,6 +33,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug {
         }
 
         private System.Windows.Forms.TextBox MinZevel;
+        private System.Windows.Forms.ComboBox CollisionPlaneList;
         
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.

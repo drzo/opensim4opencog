@@ -52,7 +52,7 @@ namespace cogbot.TheOpenSims.Mesher
         {
             if (PathStore == null)
             {
-                Console.WriteLine("Cant UpdateOccupied for " + RootObject + " pos " + RootObject.GetWorldPosition());
+                Console.WriteLine("Cant UpdateOccupied for " + RootObject + " pos " + RootObject.DistanceVectorString(RootObject));
                 return;
             }
             if (!IsRegionAttached())

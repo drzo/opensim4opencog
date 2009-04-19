@@ -57,8 +57,6 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             //this.PnlGUI = new PanelPathFinder(pathStore);
             InitializeComponent();
             PnlGUI.SetPathStore(pathStore);
-            PnlGUI.PathStore = pathStore;
-
             CboFormula.SelectedIndex = 0;
             BtnStartStop.Text = RUN;
             BtnPause.Text = PAUSE;
@@ -507,6 +505,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             this.ChkTieBraker = new System.Windows.Forms.CheckBox();
             this.BtnStartStop = new System.Windows.Forms.Button();
             this.PnlSettings = new System.Windows.Forms.Panel();
+            this.MinZevel = new System.Windows.Forms.TextBox();
             this.BtnRecomputeMatrix = new System.Windows.Forms.Button();
             this.BtnRebakeTerrain = new System.Windows.Forms.Button();
             this.ChkReopenCloseNodes = new System.Windows.Forms.CheckBox();
@@ -521,7 +520,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             this.TBarY = new System.Windows.Forms.TrackBar();
             this.LblCompletedTimeValue = new System.Windows.Forms.Label();
             this.LblCompletedTime = new System.Windows.Forms.Label();
-            this.MinZevel = new System.Windows.Forms.TextBox();
+            this.CollisionPlaneList = new System.Windows.Forms.ComboBox();
             this.ToolStrp.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.TBarSpeed)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.NumUpDownHeuristic)).BeginInit();
@@ -549,6 +548,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             this.PnlGUI.Size = new System.Drawing.Size(664, 611);
             this.PnlGUI.Start = new System.Drawing.Point(1, 1);
             this.PnlGUI.TabIndex = 1;
+            // this.PnlGUI.ZLevel = 0F;
             // 
             // ToolStrp
             // 
@@ -965,6 +965,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             // PnlSettings
             // 
             this.PnlSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.PnlSettings.Controls.Add(this.CollisionPlaneList);
             this.PnlSettings.Controls.Add(this.MinZevel);
             this.PnlSettings.Controls.Add(this.BtnRecomputeMatrix);
             this.PnlSettings.Controls.Add(this.BtnRebakeTerrain);
@@ -989,6 +990,14 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             this.PnlSettings.Name = "PnlSettings";
             this.PnlSettings.Size = new System.Drawing.Size(155, 534);
             this.PnlSettings.TabIndex = 17;
+            // 
+            // MinZevel
+            // 
+            this.MinZevel.Location = new System.Drawing.Point(15, 416);
+            this.MinZevel.Name = "MinZevel";
+            this.MinZevel.Size = new System.Drawing.Size(59, 20);
+            this.MinZevel.TabIndex = 26;
+            this.MinZevel.TextChanged += new System.EventHandler(this.MinZevel_TextChanged);
             // 
             // BtnRecomputeMatrix
             // 
@@ -1163,13 +1172,14 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             this.LblCompletedTime.TabIndex = 27;
             this.LblCompletedTime.Text = "Completed Time               sec.";
             // 
-            // MinZevel
+            // CollisionPlaneList
             // 
-            this.MinZevel.Location = new System.Drawing.Point(15, 416);
-            this.MinZevel.Name = "MinZevel";
-            this.MinZevel.Size = new System.Drawing.Size(100, 20);
-            this.MinZevel.TabIndex = 26;
-            this.MinZevel.TextChanged += new System.EventHandler(this.MinZevel_TextChanged);
+            this.CollisionPlaneList.FormattingEnabled = true;
+            this.CollisionPlaneList.Location = new System.Drawing.Point(81, 416);
+            this.CollisionPlaneList.Name = "CollisionPlaneList";
+            this.CollisionPlaneList.Size = new System.Drawing.Size(61, 21);
+            this.CollisionPlaneList.TabIndex = 27;
+            this.CollisionPlaneList.SelectedIndexChanged += new System.EventHandler(this.CollisionPlaneList_SelectedIndexChanged);
             // 
             // PathFinderDemo
             // 
@@ -1286,6 +1296,44 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 
         private void MinZevel_TextChanged(object sender, EventArgs e)
         {
+        }
+
+        private delegate void CollisionPlaneListDelegate();
+        public new void CollisionPlaneListUpdate()
+        {
+            if (this.InvokeRequired)
+            {
+                Invoke(new CollisionPlaneListDelegate(CollisionPlaneListUpdate), new object[] { });
+                return;
+            }
+           // lock (PathStore.Matrixes)
+            try
+            {
+                foreach (CollisionPlane P in PathStore.Matrixes)
+                {
+                    if (!CollisionPlaneList.Items.Contains(P))
+                    {
+                        CollisionPlaneList.Items.Add(P);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("CollisionPlaneListUpdate {0}", e);
+            }
+        }
+
+        internal void OnNewCollisionPlane(CollisionPlane found)
+        {
+            PnlGUI.OnNewCollisionPlane(found);
+            CollisionPlaneListUpdate();
+        }
+
+        private void CollisionPlaneList_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            CollisionPlane o = (CollisionPlane)CollisionPlaneList.SelectedItem;
+            PnlGUI.CurrentPlane = o;
+
         }
     }
 }
