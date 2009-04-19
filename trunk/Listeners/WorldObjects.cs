@@ -519,7 +519,7 @@ namespace cogbot.Listeners
                             //}
                             if (prim.ParentID == 0)
                             {
-                                if (!OutOfRegion(prim.Position))
+                                if (!SimRegion.OutOfRegion(prim.Position))
                                 {
                                     O.ResetPrim(prim);
                                 }
@@ -912,8 +912,9 @@ namespace cogbot.Listeners
 
         public override void Objects_OnNewAttachment(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
         {
-            GetSimObject(prim, simulator);
-           // Objects_OnNewPrim(simulator, prim, regionHandle, timeDilation);
+           //
+            Objects_OnNewPrim(simulator, prim, regionHandle, timeDilation);
+           // GetSimObject(prim, simulator).IsAttachment = true;
            // base.Objects_OnNewAttachment(simulator, prim, regionHandle, timeDilation);
         }
 
@@ -978,7 +979,7 @@ namespace cogbot.Listeners
                 } 
             if (AV == null) return; // still too early
             ulong rh = AV.Prim.RegionHandle;
-            if (!OutOfRegion(update.Position))
+            if (!SimRegion.OutOfRegion(update.Position))
             {
                 if (rh != regionHandle)
                 {
@@ -987,7 +988,7 @@ namespace cogbot.Listeners
                 AV.ResetPrim( av);
             }
 
-            if (av.ParentID == 0 && !OutOfRegion(update.Position))
+            if (av.ParentID == 0 && !SimRegion.OutOfRegion(update.Position))
             {
                 if (update.Avatar)
                 {
@@ -997,19 +998,7 @@ namespace cogbot.Listeners
             }
 
             if (!maintainUpdates) return;
-            lock (updateQueue) updateQueue.Enqueue(delegate()
-                {
-                    Objects_OnObjectUpdated1(simulator, update, regionHandle, timeDilation);
-                });
-        }
-
-        public static bool OutOfRegion(Vector3 v3)
-        {
-            if (v3.X < 0 || v3.X > 255.99f)
-                return true;
-            if (v3.Y < 0 || v3.Y > 255.99f)
-                return true;
-            return false;
+            lock (updateQueue) updateQueue.Enqueue(() => Objects_OnObjectUpdated1(simulator, update, regionHandle, timeDilation));
         }
 
         public void Objects_OnObjectUpdated1(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)

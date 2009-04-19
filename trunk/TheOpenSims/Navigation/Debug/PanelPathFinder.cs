@@ -61,6 +61,9 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         public void SetPathStore(SimPathStore simPathStore)
         {
             PathStore = simPathStore;
+            IList<CollisionPlane> CPs = simPathStore.Matrixes;
+            if (CPs.Count>0)
+                OnNewCollisionPlane(CPs[0]);
         }
 
         #endregion
@@ -333,10 +336,23 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         }
 
 
-        public CollisionPlane CurrentPlane;
+        private CollisionPlane _CurrentPlane;
+
+        public CollisionPlane CurrentPlane
+        {
+            get { return _CurrentPlane; }
+            set
+            {
+                if (value!=null && _CurrentPlane != value)
+                {
+                    _CurrentPlane = value;
+                    Invalidate();
+                }
+            }
+        }
         public float ZLevel
         {
-            get { if (CurrentPlane == null) return 0;
+            get { if (CurrentPlane == null) return 22;
                 return CurrentPlane.MinZ; }
             set { CurrentPlane = PathStore.GetCollisionPlane(value); }
         }
@@ -382,6 +398,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             this.BackColor = System.Drawing.Color.White;
             this.Name = "PanelPathFinder";
             this.Size = new System.Drawing.Size(642, 516);
+            this.Load += new System.EventHandler(this.PanelPathFinder_Load);
             this.ResumeLayout(false);
 
         }
@@ -427,6 +444,19 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                 using (SolidBrush brush = new SolidBrush(Color.Red))
                     g.FillRectangle(brush, N.X * mGridSize, TRANSPOSE(N.Y) * mGridSize, mGridSize + 1, mGridSize + 1);
             }
+        }
+
+        internal void OnNewCollisionPlane(CollisionPlane found)
+        {
+            if (CurrentPlane == null)
+            {
+                CurrentPlane = found;
+            }            
+        }
+
+        private void PanelPathFinder_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }

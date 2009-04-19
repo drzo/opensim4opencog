@@ -1020,7 +1020,8 @@ namespace cogbot.TheOpenSims
         {
             if (!obj.IsRegionAttached())
             {
-                Vector3 loc = obj.GetSimPosition();
+                Vector3 loc;
+                loc = obj.GetSimPosition();
                 SimRegion R = obj.GetSimRegion();
                 return String.Format("unknown relative {0}/{1:0.00}/{2:0.00}/{3:0.00}",
                     R.RegionName, loc.X, loc.Y, loc.Z);

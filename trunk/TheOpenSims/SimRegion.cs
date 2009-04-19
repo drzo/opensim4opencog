@@ -585,27 +585,29 @@ namespace cogbot.TheOpenSims
         public Vector3 GetUsableLocalPositionOf(Vector3 v3, float useDist)
         {
             SimPathStore PathStore = GetPathStore(v3);
-            byte b = PathStore.GetNodeQuality(v3);
+            CollisionPlane CP = PathStore.GetCollisionPlane(v3.Z);
+
+            byte b = PathStore.GetNodeQuality(v3,CP);
             // float useDist = GetSizeDistance();
-            if (b > 0) return v3;
+            if (b != SimPathStore.BLOCKED) return v3;
             SimWaypoint swp = GetWaypointOf(v3);
             for (float distance = PathStore.StepSize; distance < useDist * 1.5; distance += PathStore.StepSize)
             {
                 for (int dir = 0; dir < 360; dir += 15)
                 {
                     v3 = SimRegion.GetLocalLeftPos(swp, dir, distance);
-                    b = PathStore.GetNodeQuality(v3);
+                    b = PathStore.GetNodeQuality(v3,CP);
                     if (b <SimPathStore.BLOCKED) return v3;
                 }
             }
             Console.WriteLine("Clearing area " + swp);
-            SetNodeQualityTimer(v3, SimPathStore.MAYBE_BLOCKED,30);
+            SetNodeQualityTimer(v3, SimPathStore.MAYBE_BLOCKED, 30);
             for (float distance = PathStore.StepSize; distance < useDist * 1.5; distance += PathStore.StepSize)
             {
                 for (int dir = 0; dir < 360; dir += 15)
                 {
                     v3 = SimRegion.GetLocalLeftPos(swp, dir, distance);
-                    b = PathStore.GetNodeQuality(v3);
+                    b = PathStore.GetNodeQuality(v3,CP);
                     if (b == SimPathStore.BLOCKED)
                     {
                         SetNodeQualityTimer(v3, SimPathStore.MAYBE_BLOCKED,30);
@@ -787,7 +789,10 @@ namespace cogbot.TheOpenSims
             }
             route = new List<Vector3d>();
             route.Add(LocalToGlobal(localStart));
-            Console.WriteLine("very bad fake route ");
+            SimPathStore PathStore = GetPathStore(localStart);
+            CollisionPlane CP = PathStore.GetCollisionPlane(localStart.Z);
+
+            Console.WriteLine("very bad fake route for " + CP);
             return route;
         }
 
@@ -1295,19 +1300,22 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        internal bool OutOfRegion(Vector3 v3)
+        public static bool OutOfRegion(Vector3 v3)
         {
-            if (v3.X < 0 || v3.X > 255.99f)
+            if (v3.X < 0 || v3.X >= 256f)
                 return true;
-            if (v3.Y < 0 || v3.Y > 255.99f)
+            if (v3.Y < 0 || v3.Y >= 256f)
                 return true;
+            if (v3 == Vector3.Zero) return true;
             return false;
         }
 
         public bool IsPassable(Vector3 next)
         {
             if (OutOfRegion(next)) return false;
-            return GetPathStore(next).IsPassable(next);
+            SimPathStore PathStore = GetPathStore(next);
+            CollisionPlane CP = PathStore.GetCollisionPlane(next.Z);
+            return PathStore.IsPassable(next,CP);
         }
 
         public void UpdateTraveled(UUID uUID, Vector3 vector3, Quaternion quaternion)
