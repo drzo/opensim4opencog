@@ -394,9 +394,9 @@
           <Match path="DotCYC" pattern="CycConnectionForm.cs" recurse="false" subType="Form"/>
           <Match path="DotCYC" pattern="CycConnectionForm.Designer.cs" recurse="false"  subType="Form"/>
           <Match path="ScriptEngines" pattern="*.cs" recurse="true"/>
-          <Match path="TheOpenSims/Navigation/Debug" pattern="*.cs" recurse="false" subType="Form"/>
-          <Match path="TheOpenSims/Navigation" pattern="*.cs" recurse="false" subType="Code"/>
-          <Match path="TheOpenSims/Mesher" pattern="*.cs" recurse="false" subType="Code"/>
+          <Match path="PathSystem3D/Navigation/Debug" pattern="*.cs" recurse="false" subType="Form"/>
+          <Match path="PathSystem3D/Navigation" pattern="*.cs" recurse="false" subType="Code"/>
+          <Match path="PathSystem3D/Mesher" pattern="*.cs" recurse="false" subType="Code"/>
           <Match path="TheOpenSims" pattern="*.cs" recurse="false"/>
          <!-- <Match path="Simian" pattern="*.cs" recurse="true">
               <Exclude name="AssemblyInfo.cs"/>
