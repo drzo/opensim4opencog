@@ -5,9 +5,10 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
-using cogbot.TheOpenSims.Mesher;
+using PathSystem3D.Mesher;
 
-namespace cogbot.TheOpenSims.Navigation.Debug
+
+namespace PathSystem3D.Navigation.Debug
 {
     internal partial class WaypointProperties : Form
     {
@@ -35,7 +36,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 
             CurrentButtons.Clear();
 
-            foreach (SimMesh O in WP.GetOccupied(LastPlane))
+            foreach (IMeshedObject O in WP.GetOccupied(LastPlane))
             {
                 i++;
                 Button B = new Button();
@@ -43,7 +44,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                 B.Name = "o"+i;
                 B.Size = new System.Drawing.Size(715, 23);
                 B.TabIndex = i;
-                B.Text = O.OuterBox + " " + O.ToString();
+                B.Text = O.DebugString();
                 B.TextAlign = ContentAlignment.MiddleLeft;
                 B.UseVisualStyleBackColor = true;
                 B.Click += new System.EventHandler(this.object_click);
@@ -60,7 +61,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
 
         private void object_click(object sender, EventArgs e)
         {
-            IList<SimMesh> occs = Current.GetOccupied(LastPlane);
+            IList<IMeshedObject> occs = Current.GetOccupied(LastPlane);
             try
             {
                 if (sender is Button)
@@ -68,7 +69,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                     Button B = (Button)sender;
                     string name = B.Name.Substring(1);
                     int i = int.Parse(name) - 1;
-                    SimMesh O = occs[i];
+                    IMeshedObject O = occs[i];
                     O.RemeshObject();
                 }
             }

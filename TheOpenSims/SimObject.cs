@@ -4,16 +4,17 @@ using System.Text;
 using OpenMetaverse;
 using cogbot.Listeners;
 using System.Threading;
-using cogbot.TheOpenSims.Navigation;
-using cogbot.TheOpenSims.Navigation.Debug;
-using cogbot.TheOpenSims.Mesher;
+using PathSystem3D.Navigation;
+using PathSystem3D.Navigation.Debug;
+using PathSystem3D.Mesher;
 using System.Drawing;
 using System.Windows.Forms;
+using PathSystem3D;
 
 namespace cogbot.TheOpenSims
 {
     //TheSims-like object
-    public class SimObjectImpl : SimPosition, BotMentalAspect,SimMover, cogbot.TheOpenSims.SimObject
+    public class SimObjectImpl : SimPosition, BotMentalAspect, SimMover, cogbot.TheOpenSims.SimObject
     {
 
         #region SimMover Members
@@ -65,6 +66,11 @@ namespace cogbot.TheOpenSims
 
         #endregion
 
+
+        public SimPathStore GetPathStore()
+        {
+            return GetSimRegion().GetPathStore(GetSimPosition());
+        }
 
         public virtual void TurnToward(SimPosition targetPosition)
         {
@@ -293,6 +299,10 @@ namespace cogbot.TheOpenSims
             set {
                 _PassableKnown = true;
                 _Passable = value;
+                if (_Mesh != null && _Mesh.IsPassable!=value)
+                {
+                    _Mesh.IsPassable = value;
+                }
             }
         }
         public bool IsPhantom
@@ -420,7 +430,15 @@ namespace cogbot.TheOpenSims
                         {
                             C.IsKilled = true;
                         }
+                    RemoveCollisions();
                 }
+            }
+        }
+
+        private void RemoveCollisions()
+        {
+            if (_Mesh != null) {
+                _Mesh.RemoveCollisions();
             }
         }
 
@@ -655,7 +673,7 @@ namespace cogbot.TheOpenSims
             PrimFlags tempFlags = Prim.Flags;
             if (MadePhantom)
             {
-                actor.Touch(this);
+                ((SimObject) actor).Touch(this);
                 changed = true;
                 IsPhantom = false;
             }
@@ -674,7 +692,7 @@ namespace cogbot.TheOpenSims
             {
                 if (!IsPhantom)
                 {
-                    actor.Touch(this);
+                    ((SimObject) actor).Touch(this);
                     return true;
                 }
                 return false;
@@ -691,7 +709,7 @@ namespace cogbot.TheOpenSims
             if (!IsPhantom)
             {
                 IsPhantom = true;
-                actor.Touch(this);
+                ((SimObject) actor).Touch(this);
                 changed = true;
                 // reset automatically after 30 seconds
                 new Thread(new ThreadStart(delegate()
@@ -708,20 +726,46 @@ namespace cogbot.TheOpenSims
         {
             if (_TOSRTING == null)
             {
-                String str = Prim.ToString() + " ";
+                UUID ID = Prim.ID;
+                OpenMetaverse.Primitive.ConstructionData PrimData = Prim.PrimData;
+                PrimType Type = Prim.Type;
+                _TOSRTING = " ";
+
+                if (PrimData.PCode == PCode.Prim)
+                {
+                    try
+                    {
+                        _TOSRTING += "" + Type;
+                    }
+                    catch (Exception e)
+                    {
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        _TOSRTING += "" + PrimData.PCode;
+                        ;
+                    }
+                    catch (Exception e)
+                    {
+                    }
+                }
+                _TOSRTING += "" + ID;
                 if (Prim.Properties != null)
                 {
                     if (!String.IsNullOrEmpty(Prim.Properties.Name))
-                        str += Prim.Properties.Name + " ";
+                        _TOSRTING += Prim.Properties.Name + " ";
                     if (!String.IsNullOrEmpty(Prim.Properties.Description))
-                        str += " | " + Prim.Properties.Description + " ";
+                        _TOSRTING += " | " + Prim.Properties.Description + " ";
                 }
                 if (!String.IsNullOrEmpty(Prim.Text))
-                    str += " | " + Prim.Text + " ";
+                    _TOSRTING += " | " + Prim.Text + " ";
                 uint ParentId = Prim.ParentID;
                 if (ParentId != 0)
                 {
-                    str += "(parent ";
+                    _TOSRTING += "(parent ";
 
                     Primitive pp = null;
                     if (_Parent != null)
@@ -735,32 +779,33 @@ namespace cogbot.TheOpenSims
                     }
                     if (pp != null)
                     {
-                        str += WorldSystem.GetPrimTypeName(pp) + " " + pp.ID.ToString().Substring(0, 8);
+                        _TOSRTING += WorldSystem.GetPrimTypeName(pp) + " " + pp.ID.ToString().Substring(0, 8);
                     }
                     else
                     {
-                        str += ParentId;
+                        _TOSRTING += ParentId;
                     }
-                    str += ")";
+                    _TOSRTING += ")";
                 }
                 if (AttachedChildren.Count > 0)
                 {
-                    str += "(childs " + AttachedChildren.Count + ")";
+                    _TOSRTING += "(childs " + AttachedChildren.Count + ")";
                 }
                 else
                 {
-                    str += "(ch0)";
+                    _TOSRTING += "(ch0)";
                 }
-                str += " (size " + GetSizeDistance() + ") ";
-                str += SuperTypeString();
+                if (_Mesh!=null)
+                _TOSRTING += " (size " + GetSizeDistance() + ") ";
+                _TOSRTING += SuperTypeString();
                 if (Prim.Sound != UUID.Zero)
-                    str += "(Audible)";
+                    _TOSRTING += "(Audible)";
                 if (!IsPassable)
-                    str += "(!IsPassable)";
+                    _TOSRTING += "(!IsPassable)";
                 if (Prim.PrimData.ProfileHollow > 0f)
-                    str += String.Format("(hollow {0:0.00})", Prim.PrimData.ProfileHollow);
-                if (WasKilled) str += "(IsKilled)";
-                _TOSRTING = str.Replace("  ", " ").Replace(") (", ")(");
+                    _TOSRTING += String.Format("(hollow {0:0.00})", Prim.PrimData.ProfileHollow);
+                if (WasKilled) _TOSRTING += "(IsKilled)";
+                _TOSRTING = _TOSRTING.Replace("  ", " ").Replace(") (", ")(");
             }
             return _TOSRTING;
         }
@@ -846,7 +891,8 @@ namespace cogbot.TheOpenSims
 
         public virtual Vector3 GetSimPosition()
         {
-            if (!IsRegionAttached()) throw Error("GetWorldPosition !IsRegionAttached: " + this);
+            //if (!IsRegionAttached()) return Prim.Position; 
+            //throw Error("GetWorldPosition !IsRegionAttached: " + this);
             Primitive thisPrim = Prim;
             Vector3 thisPos = thisPrim.Position;
             while (thisPrim.ParentID != 0)
@@ -1022,7 +1068,7 @@ namespace cogbot.TheOpenSims
             {
                 Vector3 loc;
                 loc = obj.GetSimPosition();
-                SimRegion R = obj.GetSimRegion();
+                SimPathStore R = obj.GetPathStore();
                 return String.Format("unknown relative {0}/{1:0.00}/{2:0.00}/{3:0.00}",
                     R.RegionName, loc.X, loc.Y, loc.Z);
             }
@@ -1031,8 +1077,8 @@ namespace cogbot.TheOpenSims
 
         public string DistanceVectorString(Vector3d loc3d)
         {
-            Vector3 loc = SimRegion.GlobalToLocal(loc3d);
-            SimRegion R = SimRegion.GetRegion(loc3d);
+            Vector3 loc = SimPathStore.GlobalToLocal(loc3d);
+            SimPathStore R = SimPathStore.GetPathStore(loc3d);
             return String.Format("{0:0.00}m ", Vector3d.Distance(GetWorldPosition(), loc3d))
                + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
         }
@@ -1064,7 +1110,7 @@ namespace cogbot.TheOpenSims
             {
                 if (_Mesh == null)
                 {
-                    _Mesh = new SimMesh(this);
+                    _Mesh = new SimMesh(this,Prim,GetPathStore());
                 }
                 return _Mesh;
             }
@@ -1155,6 +1201,52 @@ namespace cogbot.TheOpenSims
         }
 
         #endregion
+
+        #region SimPosition Members
+
+
+        #endregion
+
+        #region SimMover Members
+
+
+
+        public void OpenNearbyClosedPassages()
+        {
+            SimObjectType DOOR = SimTypeSystem.DOOR;
+            // look for closed doors
+
+            List<SimObject> UnEnterables = new List<SimObject>();
+            foreach (SimObject O in (this).GetNearByObjects(3, false))
+            {
+                if (!O.IsPhantom)
+                {
+                    if (O.IsTypeOf(DOOR) != null)
+                    {
+                        O.MakeEnterable(this);
+                        UnEnterables.Add(O);
+                    }
+                    if (O.IsSculpted)
+                    {
+                        O.MakeEnterable(this);
+                        UnEnterables.Add(O);
+                    }
+                }
+            }
+            if (UnEnterables.Count > 0)
+            {
+                new Thread(new ThreadStart(delegate()
+                {
+                    Thread.Sleep(90000); // 90 seconds
+                    foreach (SimObject O in UnEnterables)
+                    {
+                        O.RestoreEnterable(this);
+                    }
+                })).Start();
+            }
+        }        
+
+        #endregion
     }
     public interface SimObject : SimPosition, SimMover, BotMentalAspect
     {
@@ -1198,14 +1290,14 @@ namespace cogbot.TheOpenSims
         Box3Fill OuterBox { get; }
         bool IsTyped();
         SimObjectType IsTypeOf(SimObjectType superType);
-        bool MakeEnterable(cogbot.TheOpenSims.Navigation.SimMover actor);
+        bool MakeEnterable(PathSystem3D.Navigation.SimMover actor);
         bool Matches(string name);
-        cogbot.TheOpenSims.Mesher.SimMesh Mesh { get; set; }
+        PathSystem3D.Mesher.SimMesh Mesh { get; set; }
         SimObject Parent { get; }
         double RateIt(BotNeeds needs);
         void ResetPrim(OpenMetaverse.Primitive prim);
         void ResetRegion(ulong regionHandle);
-        bool RestoreEnterable(cogbot.TheOpenSims.Navigation.SimMover actor);
+        bool RestoreEnterable(PathSystem3D.Navigation.SimMover actor);
         void SendUpdate(int ms);
         void SetMoveTarget(SimPosition target);
         bool SetObjectPosition(OpenMetaverse.Vector3 localPos);
@@ -1222,5 +1314,7 @@ namespace cogbot.TheOpenSims
         void UpdateProperties(Primitive.ObjectProperties props);
 
         void UpdateOccupied();
+
+        void Touch(SimObject simObjectImpl);
     }
 }

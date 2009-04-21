@@ -1,6 +1,7 @@
-namespace cogbot.TheOpenSims.Navigation.Debug
+using System.Windows.Forms;
+namespace PathSystem3D.Navigation.Debug
 {
-    partial class DisplayImage
+    partial class DisplayImage : Form
     {
         /// <summary>
         /// Required designer variable.

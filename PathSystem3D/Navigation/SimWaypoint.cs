@@ -3,21 +3,28 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using System.Collections;
-using cogbot.TheOpenSims.Navigation.Debug;
+using PathSystem3D.Navigation.Debug;
 using System.Drawing;
-using cogbot.TheOpenSims.Mesher;
-using cogbot.Listeners;
+using PathSystem3D.Mesher;
 using System.Threading;
 
-namespace cogbot.TheOpenSims.Navigation
+namespace PathSystem3D.Navigation
 {
     /// <summary>
     /// Basically a node is defined with a geographical position in space.
     /// It is also characterized with both collections of outgoing arcs and incoming arcs.
     /// </summary>
     [Serializable]
-    public class SimWaypointImpl : cogbot.TheOpenSims.Navigation.SimWaypoint
+    public class SimWaypointImpl : PathSystem3D.Navigation.SimWaypoint,SimPosition
     {
+   
+        public string DistanceVectorString(SimPosition pos)
+        {
+            Vector3 loc = pos.GetSimPosition();
+            SimPathStore R = pos.GetPathStore();
+            return String.Format("{0:0.00}m ", Vector3d.Distance(GetWorldPosition(), pos.GetWorldPosition()))
+               + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
+        }
 
         public double Distance(SimPosition other)
         {
@@ -31,7 +38,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public bool IsUnderWater()
         {
-            return GetZLevel(Plane) < GetSimRegion().WaterHeight();
+            return GetZLevel(Plane) < GetPathStore().WaterHeight;
         }
 
         private float _MinZ;
@@ -56,11 +63,11 @@ namespace cogbot.TheOpenSims.Navigation
 
         public string OccupiedString()
         {
-            IList<SimMesh> OccupiedListObject = GetOccupied();
+            IList<IMeshedObject> OccupiedListObject = GetOccupied();
             string S = "";
             lock (OccupiedListObject)
             {
-                foreach (SimMesh O in OccupiedListObject)
+                foreach (IMeshedObject O in OccupiedListObject)
                 {
                     S += O.ToString();
                     S += "\r\n";
@@ -69,7 +76,7 @@ namespace cogbot.TheOpenSims.Navigation
             return S + this.ToString() + " " + ExtraInfoString();
         }
 
-        private IList<SimMesh> GetOccupied()
+        private IList<IMeshedObject> GetOccupied()
         {
             return CIndex.GetOccupied(Plane);
         }
@@ -160,7 +167,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// Gets/Sets the functional state of the node.
         /// 'true' means that the node is in its normal state.
         /// 'false' means that the node will not be taken into account (as if it did not exist).
-        public bool Passable
+        public bool IsPassable
         {
             set
             {
@@ -206,9 +213,9 @@ namespace cogbot.TheOpenSims.Navigation
 
         public void SetGlobalPos(Vector3d v3d)
         {
-            SimRegion R = SimRegion.GetRegion(v3d);
-            _LocalPos = SimRegion.GlobalToLocal(v3d);
-            PathStore = R.GetPathStore(_LocalPos);
+            SimPathStore R = SimPathStore.GetPathStore(v3d);
+            _LocalPos = SimPathStore.GlobalToLocal(v3d);
+            PathStore = R.GetPathStore3D(_LocalPos);
             _GlobalPos = R.LocalToGlobal(_LocalPos);
             //PX = (int)Math.Round(_LocalPos.X * PathStore.POINTS_PER_METER);
             //PY = (int)Math.Round(_LocalPos.Y * PathStore.POINTS_PER_METER);
@@ -352,7 +359,7 @@ namespace cogbot.TheOpenSims.Navigation
         public override string ToString()
         {
             //    return "(" + _GlobalPos.ToRawString() + ")"; 
-            SimRegion R = GetSimRegion();
+            SimPathStore R = GetPathStore();
             Vector3 loc = GetSimPosition();
             return String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
         }
@@ -366,9 +373,9 @@ namespace cogbot.TheOpenSims.Navigation
         ///// <returns>'true' if both nodes are equal.</returns>
         //public override bool Equals(object O)
         //{
-        //    if (O is SimPosition)
+        //    if (O is MeshableObject)
         //    {
-        //        return _GlobalPos == ((SimPosition)O).GetWorldPosition();
+        //        return _GlobalPos == ((MeshableObject)O).GetWorldPosition();
         //    }
         //    //if (O is Vector3d)
         //    //{
@@ -555,9 +562,13 @@ namespace cogbot.TheOpenSims.Navigation
                 if (WP != null) return WP;
                 from.X = PX / POINTS_PER_METER;
                 from.Y = PY / POINTS_PER_METER;
-                Vector3d GlobalPos = PathStore.GetSimRegion().LocalToGlobal(from);
+                Vector3d GlobalPos = PathStore.LocalToGlobal(from);
+                if (GlobalPos.X < 256 || GlobalPos.Y<256)
+                {
+                    Console.WriteLine("bad global " + GlobalPos);
+                }
                 WP = new SimWaypointImpl(from, GlobalPos, CI, PathStore.GetCollisionPlane(from.Z), PathStore);
-                WP.Passable = true;
+                WP.IsPassable = true;
             }
             // wp._IncomingArcs = new ArrayList();
             // wp._OutgoingArcs = new ArrayList();
@@ -570,7 +581,7 @@ namespace cogbot.TheOpenSims.Navigation
             return _LocalPos;
         }
 
-        #region SimPosition Members
+        #region MeshableObject Members
 
         //public Vector3 GetUsePosition()
         //{
@@ -614,7 +625,7 @@ namespace cogbot.TheOpenSims.Navigation
                 }
             if (needIt)
             {
-                Passable = true;
+                IsPassable = true;
             }
             return needIt;
         }
@@ -636,7 +647,7 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
 
-        #region SimPosition Members
+        #region MeshableObject Members
 
 
         public Quaternion GetSimRotation()
@@ -650,11 +661,6 @@ namespace cogbot.TheOpenSims.Navigation
             return _GlobalPos;
         }
 
-        public SimRegion GetSimRegion()
-        {
-            return PathStore.GetSimRegion();
-        }
-
 
         #endregion
 
@@ -665,16 +671,25 @@ namespace cogbot.TheOpenSims.Navigation
 
         public static SimWaypoint CreateGlobal(Vector3d v3d)
         {
-            SimRegion R = SimRegion.GetRegion(v3d);
-            Vector3 v3 = SimRegion.GlobalToLocal(v3d);
-            SimPathStore PathStore = R.GetPathStore(v3);
-            return CreateLocal(SimRegion.GlobalToLocal(v3d), PathStore);
+            Vector3 v3 = SimPathStore.GlobalToLocal(v3d);
+            SimPathStore PathStore = SimPathStore.GetPathStore(v3d);
+            return CreateLocal(v3, PathStore);
         }
 
         private void Debug(string format, params object[] objs)
         {
             SimPathStore.Debug(format, objs);
         }
+
+        #region MeshableObject Members
+
+
+        public SimPathStore GetPathStore()
+        {
+            return PathStore;
+        }
+
+        #endregion
     }
 
     //public class SimMovementPoints : SimMovement
@@ -712,7 +727,7 @@ namespace cogbot.TheOpenSims.Navigation
         System.Collections.IList IncomingArcs { get; }
         SimWaypoint[] Molecule { get; }
         System.Collections.IList OutgoingArcs { get; }
-        bool Passable { get; set; }
+        bool IsPassable { get; set; }
         CollisionPlane Plane { get; set; }
         void SetGlobalPos(OpenMetaverse.Vector3d v3d);
         string ToString();
@@ -727,5 +742,6 @@ namespace cogbot.TheOpenSims.Navigation
         void Isolate();
         bool IsUnderWater();
         string OccupiedString();
+       // SimPathStore GetSimRegion();
     }
 }

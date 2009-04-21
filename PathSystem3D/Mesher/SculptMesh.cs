@@ -46,6 +46,19 @@ namespace THIRDPARTY.PrimMesher
         public enum SculptType { sphere = 1, torus = 2, plane = 3, cylinder = 4 };
         private const float pixScale = 0.00390625f; // 1.0 / 256
 
+        public SculptMesh Copy()
+        {
+            return new SculptMesh(this);
+        }
+        public SculptMesh(SculptMesh param1)
+        {
+            coords = new List<Coord>(param1.coords);
+            faces = new List<Face>(param1.faces);
+            viewerFaces = new List<ViewerFace>(param1.viewerFaces);
+            normals = new List<Coord>(param1.normals);
+            uvs = new List<UVCoord>(param1.uvs);
+        }
+
         private Bitmap ScaleImage(Bitmap srcImage, float scale)
         {
             int sourceWidth = srcImage.Width;
@@ -82,6 +95,7 @@ namespace THIRDPARTY.PrimMesher
             grPhoto.Dispose();
             return scaledImage;
         }
+
 
         public SculptMesh SculptMeshFromFile(string fileName, SculptType sculptType, int lod, bool viewerMode)
         {

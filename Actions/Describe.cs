@@ -64,7 +64,7 @@ namespace cogbot.Actions
                 SimAvatar simAva = WorldSystem.TheSimAvatar;
                 if (simAva != null)
                 {
-                    List<SimObject> objs = simAva.GetNearByObjects(range, false);
+                    List<SimObject> objs = ((SimObjectImpl)simAva).GetNearByObjects((double)range, false);
                     if (objs.Count > 0)
                     {
                         foreach (SimObject o in objs)

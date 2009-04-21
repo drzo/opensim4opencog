@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace cogbot.TheOpenSims.Navigation.Debug {
+namespace PathSystem3D.Navigation.Debug {
     using System;
     
     
@@ -42,7 +42,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("cogbot.TheOpenSims.Navigation.Debug.PathFinderDemo", typeof(PathFinderDemo).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("PathSystem3D.Navigation.Debug.PathFinderDemo", typeof(PathFinderDemo).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

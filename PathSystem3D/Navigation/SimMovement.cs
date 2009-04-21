@@ -16,7 +16,7 @@ using OpenMetaverse;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace cogbot.TheOpenSims.Navigation
+namespace PathSystem3D.Navigation
 {
 
     /// <summary>
@@ -190,7 +190,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             foreach (SimRoute A in TrackToPropagate.EndNode.OutgoingArcs)
             {
-                if (A.Passable && A.EndNode.Passable)
+                if (A.Passable && A.EndNode.IsPassable)
                 {
                     Track Successor = new Track(TrackToPropagate, A);
                     int PosNF = _Closed.IndexOf(Successor, SameNodesReached);
@@ -331,7 +331,7 @@ namespace cogbot.TheOpenSims.Navigation
     {
         private static SimWaypoint _Target = null;
         private static double _Coeff = 0.5f;
-        private static cogbot.TheOpenSims.Navigation.SimMovement.Heuristic _ChoosenHeuristic = SimMovement.EuclidianHeuristic;
+        private static PathSystem3D.Navigation.SimMovement.Heuristic _ChoosenHeuristic = SimMovement.EuclidianHeuristic;
 
         public static SimWaypoint Target { set { _Target = value; } get { return _Target; } }
 
@@ -352,7 +352,7 @@ namespace cogbot.TheOpenSims.Navigation
             }
         }
 
-        public static cogbot.TheOpenSims.Navigation.SimMovement.Heuristic ChoosenHeuristic
+        public static PathSystem3D.Navigation.SimMovement.Heuristic ChoosenHeuristic
         {
             set { _ChoosenHeuristic = value; }
             get { return _ChoosenHeuristic; }

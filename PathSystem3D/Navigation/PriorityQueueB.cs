@@ -14,7 +14,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace cogbot.TheOpenSims.Navigation
+namespace PathSystem3D.Navigation
 {
     #region Interfaces
     [Author("Franco, Gustavo")]

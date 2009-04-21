@@ -2,14 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
-using cogbot.TheOpenSims.Navigation;
+using PathSystem3D.Navigation;
 using cogbot.TheOpenSims;
 using System.Windows.Forms;
-using cogbot.TheOpenSims.Navigation.Debug;
+using PathSystem3D.Navigation.Debug;
 using System.Drawing;
 using System.Net;
 using cogbot.Listeners;
 using System.Threading;
+using PathSystem3D;
 //using METAbolt;
 
 namespace cogbot.Actions.Movement
@@ -107,7 +108,7 @@ namespace cogbot.Actions.Movement
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            GraphFormer gf = new GraphFormer(WorldSystem.GlobalRoutes);
+            GraphFormer gf = new GraphFormer(SimGlobalRoutes.Instance);
             gf.Show();
             return "ran " + Name;
         }
@@ -224,7 +225,7 @@ namespace cogbot.Actions.Movement
         {
             int argcount;
             SimPosition pos = WorldSystem.GetVector(args, out argcount);
-            SimRegion R = pos.GetSimRegion();
+            SimPathStore R = pos.GetPathStore();
             Vector3 v3 = pos.GetSimPosition();
             WriteLine("SimZInfo: " + pos + " " + R.GetGroundLevel(v3.X, v3.Y));
             SimWaypoint WP = R.GetWaypointOf(v3);
@@ -441,7 +442,7 @@ namespace cogbot.Actions.Movement
                 float.TryParse(args[1], out local.Y))
             {
                 local.Z = Client.Self.SimPosition.Z;
-                Vector3d target = WorldSystem.TheSimAvatar.GetSimRegion().LocalToGlobal(local);
+                Vector3d target = WorldSystem.TheSimAvatar.GetPathStore().LocalToGlobal(local);
                 simObject = SimWaypointImpl.CreateGlobal(target);
                 if (args.Length == 3) Single.TryParse(args[2], out distance);
 
@@ -474,15 +475,7 @@ namespace cogbot.Actions.Movement
             return WorldSystem.TheSimAvatar.DistanceVectorString(simObject);
         }
 
-        public void Goto(Vector3 target, float distance)
-        {
-            BotClient Client = TheBotClient;
-            Approacher.AutoGoto(Client, target, distance, 20000);
-            Vector2 v2 = new Vector2(target.X, target.Y);
-            float d = Approacher.DistanceTo(Client, v2);
-            if (d < distance) return;
-        }
-        private void Goto1(Vector3 target, float p)
+        private void Goto(Vector3 target, float p)
         {
 
             if (true)
@@ -524,13 +517,6 @@ namespace cogbot.Actions.Movement
                 Client.Self.AutoPilotCancel();
                 return;
             }
-            if (true)
-            {
-                MovementToVector.MoveTo(TheBotClient, target, p);
-                return;
-            }
-            GotoVector gvect = new GotoVector(TheBotClient, target, 10000, p);
-            gvect.Goto();
         }
     }
 
@@ -563,7 +549,7 @@ namespace cogbot.Actions.Movement
                 {
                     local.Z = Client.Self.SimPosition.Z;
                 }
-                Vector3d target = WorldSystem.TheSimAvatar.GetSimRegion().LocalToGlobal(local);
+                Vector3d target = WorldSystem.TheSimAvatar.GetPathStore().LocalToGlobal(local);
                 simObject = SimWaypointImpl.CreateGlobal(target);
             }
             else

@@ -15,7 +15,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 
 
-namespace cogbot.TheOpenSims.Navigation.Debug
+namespace PathSystem3D.Navigation.Debug
 {
     public partial class APropos : System.Windows.Forms.Form
 	{

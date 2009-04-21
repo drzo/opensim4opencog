@@ -8,8 +8,9 @@ using OpenMetaverse.Packets;
 using cogbot.TheOpenSims;
 using System.Threading;
 using cogbot.Actions;
-using cogbot.TheOpenSims.Navigation;
-using System.Windows.Forms; //using libsecondlife;
+using PathSystem3D.Navigation;
+using System.Windows.Forms;
+using PathSystem3D; //using libsecondlife;
 
 namespace cogbot.Listeners
 {
@@ -30,11 +31,8 @@ namespace cogbot.Listeners
             return null;
         }
 
-        public SimGlobalRoutes GlobalRoutes = SimGlobalRoutes.Instance;
-        public SimPathStore SimPaths
-        {
-            get { return TheSimAvatar.GetSimRegion().GetPathStore(TheSimAvatar.GetSimPosition()); }
-        }
+        public WorldPathSystem SimPaths {get; private set;}
+
         public override void Parcels_OnSimParcelsDownloaded(Simulator simulator, InternalDictionary<int, Parcel> simParcels, int[,] parcelMap)
         {
             base.Parcels_OnSimParcelsDownloaded(simulator, simParcels, parcelMap);
@@ -84,11 +82,12 @@ namespace cogbot.Listeners
                 {
                     Debug("---SIMMASTER---------" + client + " region: " + simulator);
                     WorldMaster(true);
-                    client.Grid.RequestMapRegion(simulator.Name, GridLayerType.Objects);
-                    //client.Grid.RequestMapRegion(simulator.Name, GridLayerType.Terrain);
+                    //client.Grid.RequestMapRegion(simulator.Name, GridLayerType.Objects);
+                    client.Grid.RequestMapRegion(simulator.Name, GridLayerType.Terrain);
                     //client.Grid.RequestMapRegion(simulator.Name, GridLayerType.LandForSale);
                     //client.Grid.RequestMapItems(simulator.Handle,OpenMetaverse.GridItemType.Classified,GridLayerType.Terrain);
 
+                    client.Objects.OnPrimitiveProperties += Objects_OnPrimitiveProperties;
                     RegisterAll();
                     MasteringRegions.Add(simulator.Handle);
                     RequestGridInfos(simulator.Handle);
@@ -242,6 +241,11 @@ namespace cogbot.Listeners
         public WorldObjects(BotClient client)
             : base(client)
         {
+            if (Utils.GetRunningRuntime()==Utils.Runtime.Mono)
+            {
+                client.Settings.USE_LLSD_LOGIN = true;
+            } else
+                client.Settings.USE_LLSD_LOGIN = false;
             lock (WorldObjectsMasterLock)
             {
                 if (Master == null) Master = this;
@@ -292,15 +296,17 @@ namespace cogbot.Listeners
                     SimTypeSystem.LoadDefaultTypes();
 
                 }
-                if (TrackPathsThread == null)
+                if (TrackUpdatesThread == null)
                 {
-                    TrackPathsThread = new Thread(new ThreadStart(TrackPaths));
-                    TrackPathsThread.Name = "TrackPathsThread";
+                    TrackUpdatesThread = new Thread(TrackUpdates);
+                    TrackUpdatesThread.Name = "Track updates";
                     //TrackPathsThread.Priority = ThreadPriority.Lowest;
-                    TrackPathsThread.Start();
+                    TrackUpdatesThread.Start();
                 }
+                InterpolationTimer = new System.Threading.Timer(ReallyEnsureSelected_Thread, null, 1000, 1000);
                 //WorldMaster(false);
                 //RegisterAll();
+                SimPaths = new WorldPathSystem(this);
             }
         }
 
@@ -327,12 +333,12 @@ namespace cogbot.Listeners
         static public ListAsSet<SimAvatar> SimAvatars = new ListAsSet<SimAvatar>();
         //public SimPathStore SimPaths = SimPathStore.Instance;
 
-        static Thread TrackPathsThread;
+        static Thread TrackUpdatesThread;
 
+        static bool DoCatchUp = false;
         static System.Threading.Timer InterpolationTimer; 
-        static void TrackPaths()
+        static void TrackUpdates()
         {
-            InterpolationTimer = new System.Threading.Timer(new TimerCallback(ReallyEnsureSelected_Thread), null, 1000, 1000);
             Thread.Sleep(30000);
             int lastCount = 0;
             while (true)
@@ -348,7 +354,6 @@ namespace cogbot.Listeners
                 {
                     int did = 0;
                     Debug("Start Processing Updates: " + updates);
-                    HeapShot();
 
                     while (updates > 0)
                     {
@@ -361,62 +366,31 @@ namespace cogbot.Listeners
                         did++;
                     }
                     Debug("Done processing Updates: " + did);
-                    HeapShot();
 
                 }
-                int beforeCatchUp = SimObjects.Count;
-               // lock (AllSimulators)
+                else
+                {
+                    if (!DoCatchUp)continue;
+                    int beforeCatchUp = SimObjects.Count;
+                    // lock (AllSimulators)
                     foreach (Simulator S in AllSimulators)
                     {
                         Master.CatchUp(S);
                     }
-                int thisCount = SimObjects.Count;
-                if (beforeCatchUp != thisCount)
-                {
-                    Debug("Simulator catchup found: " + beforeCatchUp + " -> " + thisCount);
-                    HeapShot();
-                }
-                if (thisCount == lastCount)
-                {
-                    Thread.Sleep(20000);
-                    HeapShot();
-                    continue;
-                }
-
-                Debug("TrackPaths Started: " + lastCount + "->" + thisCount);
-                HeapShot();
-                lastCount = thisCount;
-                int occUpdate = 0;
-                foreach (SimObject O in SimObjects.CopyOf())
-                {
-                    //   DoEvents();
-                    if (O.IsRegionAttached())
+                    int thisCount = SimObjects.Count;
+                    if (beforeCatchUp != thisCount)
                     {
-                        O.UpdateOccupied();
-                        occUpdate++;
+                        Debug("Simulator catchup found: " + beforeCatchUp + " -> " + thisCount);
                     }
-                    if (occUpdate % 100 == 0)
+                    if (thisCount == lastCount)
                     {
-                        Console.Write("." + occUpdate);
-                        Console.Out.Flush();
+                        Thread.Sleep(20000);
+                        continue;
                     }
-                    //if (occUpdate
                 }
-                Debug("TrackPaths Completed: " + thisCount);
-                HeapShot();
-                SimRegion.BakeRegions();
-                HeapShot();
             }
         }
 
-        private static void HeapShot()
-        {
-            //if (true) return;
-            //System.GC.Collect();
-            //Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
-            //System.Runtime.InteropServices.SEHException
-            /// Console.WriteLine(Console.ReadLine());
-        }
 
         static void Debug(string p)
         {
@@ -889,19 +863,31 @@ namespace cogbot.Listeners
 
         static Queue<ObjectUpdateItem> updateQueue = new Queue<ObjectUpdateItem>();
 
-        delegate void ObjectUpdateItem();
+        delegate void ObjectUpdateItem();        
+        public void Objects_OnPrimitiveProperties(Simulator simulator,Primitive prim, Primitive.ObjectProperties props)
+        {
+
+            CheckConnected(simulator);
+            NeverSelect(prim.LocalID, simulator);
+
+            lock (updateQueue) updateQueue.Enqueue(delegate()
+            {
+                Objects_OnObjectProperties1(simulator,prim,props);
+            });
+        }
         public override void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties props)
         {
 
             CheckConnected(simulator);
+            //NeverSelect(props.LocalID, simulator);
             lock (updateQueue) updateQueue.Enqueue(delegate()
             {
-                Objects_OnObjectProperties1(simulator, props);
+                Objects_OnObjectProperties1(simulator,null, props);
             });
         }
-        public void Objects_OnObjectProperties1(Simulator simulator, Primitive.ObjectProperties props)
+        public void Objects_OnObjectProperties1(Simulator simulator, Primitive prim, Primitive.ObjectProperties props)
         {
-            Primitive prim = GetPrimitive(props.ObjectID, simulator);
+            //Primitive prim = GetPrimitive(props.ObjectID, simulator);
             if (prim != null)
             {
                 SimObject updateMe = GetSimObject(prim, simulator);
@@ -912,9 +898,10 @@ namespace cogbot.Listeners
 
         public override void Objects_OnNewAttachment(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
         {
+            return;
            //
-            Objects_OnNewPrim(simulator, prim, regionHandle, timeDilation);
-           // GetSimObject(prim, simulator).IsAttachment = true;
+            //Objects_OnNewPrim(simulator, prim, regionHandle, timeDilation);
+           GetSimObject(prim, simulator);//.IsAttachment = true;
            // base.Objects_OnNewAttachment(simulator, prim, regionHandle, timeDilation);
         }
 
@@ -1239,6 +1226,7 @@ namespace cogbot.Listeners
             Object before;
             Object after;
             String named;
+
             SomeChange(String _named, Object _before, Object _after)
             {
                 named = _named;
@@ -1249,8 +1237,8 @@ namespace cogbot.Listeners
             {
                 return "SomeChange " + named + " from " + before + " to " + after;
             }
-
         }
+
         public Vector3 QuatToRotation(Quaternion quat)
         {
 
@@ -2073,6 +2061,12 @@ namespace cogbot.Listeners
 
         public void EnsureSelected(uint LocalID, Simulator simulator)
         {
+            if (NeverSelect(LocalID,simulator))
+                ReallyEnsureSelected(simulator, LocalID);
+        }
+
+        public bool NeverSelect(uint LocalID, Simulator simulator)
+        {
             if (LocalID != 0)
                 lock (primsSelected)
                 {
@@ -2085,11 +2079,11 @@ namespace cogbot.Listeners
                         if (!primsSelected[simulator].Contains(LocalID))
                         {
                             primsSelected[simulator].Add(LocalID);
-                            lock (primsSelectedOutbox)
-                                ReallyEnsureSelected(simulator, LocalID);
+                            return true;
                         }
                     }
                 }
+            return false;
         }
 
         private void ReallyEnsureSelected(Simulator simulator, uint LocalID)
@@ -2197,7 +2191,7 @@ namespace cogbot.Listeners
                         Single.TryParse(args[2], out target.Z);
                         argsUsed = 3;
                     }
-                    return SimWaypointImpl.CreateLocal(target,(SimPathStore) SimPaths);
+                    return SimWaypointImpl.CreateLocal(target, TheSimAvatar.GetPathStore());
                 }
             }
 
@@ -2271,7 +2265,7 @@ namespace cogbot.Listeners
 
         static List<UUID> TexturesSkipped = new List<UUID>();
 
-        public byte[] TextureBytesToUUID(UUID uUID)
+        public byte[] TextureBytesFormUUID(UUID uUID)
         {
             ImageDownload ID = null;
             lock (uuidTypeObject)

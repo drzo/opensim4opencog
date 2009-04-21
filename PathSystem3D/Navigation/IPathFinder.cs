@@ -14,7 +14,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Drawing;
 
-namespace cogbot.TheOpenSims.Navigation
+namespace PathSystem3D.Navigation
 //namespace Algorithms
 {
     [Author("Franco, Gustavo")]

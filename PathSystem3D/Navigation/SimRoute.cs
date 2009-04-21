@@ -14,7 +14,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 
-namespace cogbot.TheOpenSims.Navigation
+namespace PathSystem3D.Navigation
 {
     /// <summary>
     /// An arc is defined with its two extremity nodes StartNode and EndNode therefore it is oriented.
@@ -28,7 +28,7 @@ namespace cogbot.TheOpenSims.Navigation
         protected bool _Passable;
         double _Length;
         bool _LengthUpdated;
-        double StepSize;
+        static double StepSize = 0.2;
 
         internal SimWaypoint _StartNode, _EndNode;
 
@@ -241,7 +241,7 @@ namespace cogbot.TheOpenSims.Navigation
         {
             get
             {
-                return StartNode.GetSimRegion() != EndNode.GetSimRegion();
+                return StartNode.GetPathStore() != EndNode.GetPathStore();
             }
         }
 
@@ -617,7 +617,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <summary>
         /// When something is changed the Dependant Routes that must be updated
         /// </summary>
-        protected ICollection<SimRoute> Dependants = new HashSet<SimRoute>();
+        protected ICollection<SimRoute> Dependants = new List<SimRoute>();
 
         /// <summary>
         ///  When something is changed the simRouteMovement that must be updated

@@ -338,6 +338,38 @@
       </Files>
     </Project>
 
+
+
+    <Project name="PathSystem3D" path="PathSystem3D" type="Library">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+            <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
+          <OutputPath>../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../bin/</ReferencePath>
+      <Reference name="OpenMetaverseTypes" localCopy="false"/>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Drawing" localCopy="false"/>
+      <Reference name="System.Windows.Forms" localCopy="false"/>
+     <!-- <Reference name="System.Text" localCopy="false"/> -->
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="System.Web" localCopy="false"/>
+      <Files>
+          <Match path="Navigation/Debug" pattern="*.cs" recurse="false" subType="Form"/>
+          <Match path="." pattern="*.cs" recurse="true" subType="Code"/>
+          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+      </Files>
+  </Project>
+
+
    <Project name="cogbot" path="." type="Exe">
       <Configuration name="Debug">
         <Options>
@@ -353,6 +385,7 @@
 
       <ReferencePath>bin/</ReferencePath>
       <Reference name="log4net.dll" localCopy="true"/>
+      <Reference name="PathSystem3D" localCopy="false"/>
       <Reference name="Mono.Security.dll" localCopy="true"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
       <Reference name="OpenMetaverseTypes" localCopy="false"/>
@@ -394,10 +427,7 @@
           <Match path="DotCYC" pattern="CycConnectionForm.cs" recurse="false" subType="Form"/>
           <Match path="DotCYC" pattern="CycConnectionForm.Designer.cs" recurse="false"  subType="Form"/>
           <Match path="ScriptEngines" pattern="*.cs" recurse="true"/>
-          <Match path="PathSystem3D/Navigation/Debug" pattern="*.cs" recurse="false" subType="Form"/>
-          <Match path="PathSystem3D/Navigation" pattern="*.cs" recurse="false" subType="Code"/>
-          <Match path="PathSystem3D/Mesher" pattern="*.cs" recurse="false" subType="Code"/>
-          <Match path="TheOpenSims" pattern="*.cs" recurse="false"/>
+          <Match path="TheOpenSims" pattern="*.cs" recurse="true"/>
          <!-- <Match path="Simian" pattern="*.cs" recurse="true">
               <Exclude name="AssemblyInfo.cs"/>
               <Exclude name="Options.cs"/>
@@ -411,7 +441,7 @@
      <!--     <Match path="MDI" pattern="*.cs" recurse="true"/>
           <Match path="MDI" pattern="*.resx" recurse="true"/> -->
           <Match path="." pattern="*.cs"  recurse="false"  subType="Form"/>
-          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+          <Match path="." pattern="*.resx"  recurse="false" subType="Settings"  buildAction="EmbeddedResource"/>
       </Files>
   </Project>
 

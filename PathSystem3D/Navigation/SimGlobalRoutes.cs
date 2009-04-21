@@ -10,17 +10,13 @@
 // LIABILITY FOR ANY DATA DAMAGE/LOSS THAT THIS PRODUCT MAY CAUSE.
 //-----------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Text;
-using OpenMetaverse;
-using cogbot.Listeners;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
-using System.Threading;
-using cogbot.TheOpenSims.Navigation.Debug;
 using System.Runtime.Serialization.Formatters.Binary;
+using OpenMetaverse;
 
-namespace cogbot.TheOpenSims.Navigation
+namespace PathSystem3D.Navigation
 {
 /// <summary>
 	/// Graph structure. It is defined with :
@@ -397,7 +393,7 @@ namespace cogbot.TheOpenSims.Navigation
             Vector3d P = new Vector3d(PtX, PtY, PtZ);
             lock (SimWaypoints) foreach (SimWaypoint N in SimWaypoints)
                 {
-                    if (IgnorePassableProperty && N.Passable == false) continue;
+                    if (IgnorePassableProperty && N.IsPassable == false) continue;
                     double DistanceTemp = Vector3d.Distance(N.GetWorldPosition(), P);
                     if (DistanceMin == -1 || DistanceMin > DistanceTemp)
                     {
@@ -422,7 +418,7 @@ namespace cogbot.TheOpenSims.Navigation
             List<SimWaypoint> waypoints = new List<SimWaypoint>();
             lock (SimWaypoints) foreach (SimWaypoint N in SimWaypoints)
                 {
-                    if (IgnorePassableProperty && N.Passable == false) continue;
+                    if (IgnorePassableProperty && N.IsPassable == false) continue;
                     double Distance = N.Distance(P);
                     if (Distance < DistanceMin || DistanceMax < Distance) continue;
                     waypoints.Add(N);
@@ -655,7 +651,7 @@ namespace cogbot.TheOpenSims.Navigation
             FileInfo read = new FileInfo(RegionFileName);
             if (!read.Exists)
             {
-                Logger.Log("Not loading file " + RegionFileName, OpenMetaverse.Helpers.LogLevel.Info);
+              //  Logger.Log("Not loading file " + RegionFileName, OpenMetaverse.Helpers.LogLevel.Info);
                 return;
             }
             //FileStream stream = read.Open(FileMode.Open, FileAccess.Read);
@@ -694,10 +690,10 @@ namespace cogbot.TheOpenSims.Navigation
                 BinaryFormatter BinaryWrite = new BinaryFormatter();
                 BinaryWrite.Serialize(StreamWrite, this);
                 StreamWrite.Close();
-                Logger.Log("Success saving file " + RegionFileName, OpenMetaverse.Helpers.LogLevel.Info);
+                //Logger.Log("Success saving file " + RegionFileName, OpenMetaverse.Helpers.LogLevel.Info);
                 return true;
             }
-            Logger.Log("Error saving file " + RegionFileName, OpenMetaverse.Helpers.LogLevel.Error);
+            //Logger.Log("Error saving file " + RegionFileName, OpenMetaverse.Helpers.LogLevel.Error);
             return false;
         }
         /// <summary>
@@ -717,10 +713,10 @@ namespace cogbot.TheOpenSims.Navigation
                 //   RegionFileName = pathName;
                 SimRoutes = G.SimRoutes;
                 SimWaypoints = G.SimWaypoints;
-                Logger.Log("Loaded file " + RegionFileName, OpenMetaverse.Helpers.LogLevel.Info);
+              //  Logger.Log("Loaded file " + RegionFileName, OpenMetaverse.Helpers.LogLevel.Info);
                 return true;
             }
-            Logger.Log("Error loading file " + RegionFileName, OpenMetaverse.Helpers.LogLevel.Error);
+           // Logger.Log("Error loading file " + RegionFileName, OpenMetaverse.Helpers.LogLevel.Error);
             return false;
         }
         /// <summary>
@@ -793,7 +789,7 @@ namespace cogbot.TheOpenSims.Navigation
     //    Vector3d WayPoint;
     //    Quaternion Orientation;
     //    SimGlobalRoutes Store;
-    //    public PrimTracker(SimPosition firstP, Quaternion firtsR, SimGlobalRoutes store)
+    //    public PrimTracker(MeshableObject firstP, Quaternion firtsR, SimGlobalRoutes store)
     //    {
     //        WayPoint = firstP.GetSimPosition();
     //        Store = store;

@@ -6,7 +6,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 
-namespace cogbot.TheOpenSims.Navigation.Debug
+namespace PathSystem3D.Navigation.Debug
 {
     public partial class DisplayImage : Form
     {

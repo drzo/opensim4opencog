@@ -1,25 +1,19 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using OpenMetaverse;
-using cogbot.TheOpenSims.Navigation;
-using System.Threading;
+using PathSystem3D.Navigation;
 
-namespace cogbot.TheOpenSims
+
+namespace PathSystem3D.Navigation
 {
     public interface SimPosition
     {
+        bool IsPassable { get; set; }
+        string DistanceVectorString(SimPosition RootObject);
         Vector3 GetSimPosition();
-      //  Vector3 GetUsePosition();
         float GetSizeDistance();
-       // SimWaypoint GetWaypoint();
         bool IsRegionAttached();
         Quaternion GetSimRotation();
-        SimRegion GetSimRegion();
         Vector3d GetWorldPosition();
+        SimPathStore GetPathStore();
     }
-
-
 }
-
-
