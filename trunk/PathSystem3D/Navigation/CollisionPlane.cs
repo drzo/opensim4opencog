@@ -1,12 +1,7 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading;
-using cogbot.Listeners;
-using cogbot.TheOpenSims.Mesher;
-using OpenMetaverse;
 
-namespace cogbot.TheOpenSims.Navigation
+
+namespace PathSystem3D.Navigation
 {
     /// <summary>
     /// this is the 2D object for pathfinders like A*
@@ -150,7 +145,7 @@ namespace cogbot.TheOpenSims.Navigation
                     CopyFromMatrix(FromMatrix);
                 }
 
-                SimRegion R = PathStore.GetSimRegion();
+                SimPathStore R = PathStore;
                 R.BakeTerrain();
                 float MinZLevel = CP.MinZ + StepSize;
                 float MaxZLevel = CP.MaxZ + StepSize;
@@ -180,13 +175,13 @@ namespace cogbot.TheOpenSims.Navigation
                                 }
                                 else if (MinZLevel < gl)
                                     ToMatrix[x, y] = SimPathStore.MAYBE_BLOCKED;
-                                else if (b > 127) // needs passable
+                                else if (b > 64) // needs passable
                                     ToMatrix[x, y] = SimPathStore.INITIALLY;
                             }
                         }
                     }
                 }
-                if (usePotentialFieleds) AddFieldEffects(FromMatrix,ToMatrix, SimPathStore.BLOCKED, 6);
+                if (usePotentialFieleds) AddFieldEffects(FromMatrix,ToMatrix, SimPathStore.BLOCKED, 10);
                 if (cutNarrows) AddAdjacentBlocking(ToMatrix);
                 Console.WriteLine("\nEnd UpdateMatrix: {0} for {1}", R, CP);
             }

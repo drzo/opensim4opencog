@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using OpenMetaverse;
 using cogbot.Listeners;
 using System.Threading;
-using cogbot.TheOpenSims.Navigation;
+using PathSystem3D.Navigation;
 using System.Collections;
+using PathSystem3D;
 //Complex outcomes may be a result of simple causes, or they may just be complex by nature. 
 //Those complexities that turn out to have simple causes can be simulated and studied, 
 //thus increasing our knowledge without needing direct observation.
@@ -229,7 +230,7 @@ namespace cogbot.TheOpenSims
             }
 
             Vector3 local = base.GetSimPosition();
-            if (SimRegion.OutOfRegion(local))
+            if (SimPathStore.OutOfRegion(local))
             {
                 Debug(" OutOfRegion " + local);
             }
@@ -1184,7 +1185,7 @@ namespace cogbot.TheOpenSims
             {
                 throw Error("GotoTarget !IsLocal()");
             }
-            Client.Self.Teleport(R.RegionHandle, local);
+            Client.Self.Teleport(R.RegionName, local);
         }
 
         public override void SetMoveTarget(SimPosition target)
@@ -1279,8 +1280,8 @@ namespace cogbot.TheOpenSims
         {
             // avatars do not occlude the path system
             Vector3 pos = GetSimPosition();
-            if (SimRegion.OutOfRegion(pos)) return;
-            GetSimRegion().SetPassable(pos.X, pos.Y, pos.Z);
+            if (SimPathStore.OutOfRegion(pos)) return;
+            GetPathStore().SetPassable(pos.X, pos.Y, pos.Z);
         }
     }
 
@@ -1325,5 +1326,7 @@ namespace cogbot.TheOpenSims
         System.Threading.ThreadStart WithAnim(OpenMetaverse.UUID anim, System.Threading.ThreadStart closure);
         System.Threading.ThreadStart WithGrabAt(SimObject obj, System.Threading.ThreadStart closure);
         System.Threading.ThreadStart WithSitOn(SimObject obj, System.Threading.ThreadStart closure);
+
+        //List<SimObject> GetNearByObjects(double p, bool p_2);
     }
 }

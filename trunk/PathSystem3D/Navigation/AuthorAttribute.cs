@@ -11,7 +11,7 @@
 //
 using System;
 
-namespace cogbot.TheOpenSims.Navigation
+namespace PathSystem3D.Navigation
 {
 	internal class AuthorAttribute : Attribute
 	{

@@ -21,8 +21,8 @@ using System.ComponentModel;
 using System.Collections.Generic;
 
 using System.Globalization;
-using cogbot.TheOpenSims.Navigation;
-namespace cogbot.TheOpenSims.Navigation.Debug
+using PathSystem3D.Navigation;
+namespace PathSystem3D.Navigation.Debug
 {
     [Author("Franco, Gustavo")]
     internal partial class PathFinderDemo : Form
@@ -144,8 +144,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                 //if (this.WindowState == FormWindowState.Minimized)              
                 base.WindowState = FormWindowState.Normal;
                 SimPathStore S = GetPathStore();
-                String name = S.GetSimRegion().RegionName;// +" Level " + S.AverageLevel;
-                this.Text = name;
+                this.Text = ""+S;
                 if (!base.Visible) base.Visible = true;
                 base.Activate();
             }
@@ -430,7 +429,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             PnlGUI.SetStartEnd(S, E);
         }
 
-        internal void ShowPath(List<PathFinderNode> pfn)
+        internal void ShowPath(IList<PathFinderNode> pfn)
         {
             PnlGUI.DrawPath(pfn);
         }
@@ -462,7 +461,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PathFinderDemo));
-            this.PnlGUI = new cogbot.TheOpenSims.Navigation.Debug.PanelPathFinder();
+            this.PnlGUI = new PathSystem3D.Navigation.Debug.PanelPathFinder();
             this.ToolStrp = new System.Windows.Forms.ToolStrip();
             this.BtnNew = new System.Windows.Forms.ToolStripButton();
             this.BtnLoad = new System.Windows.Forms.ToolStripButton();
@@ -538,9 +537,9 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.PnlGUI.BackColor = System.Drawing.Color.White;
             this.PnlGUI.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.PnlGUI.DrawModeSetup = cogbot.TheOpenSims.Navigation.Debug.DrawModeSetup.None;
+            this.PnlGUI.DrawModeSetup = PathSystem3D.Navigation.Debug.DrawModeSetup.None;
             this.PnlGUI.End = new System.Drawing.Point(0, 0);
-            this.PnlGUI.Formula = cogbot.TheOpenSims.Navigation.HeuristicFormula.Manhattan;
+            this.PnlGUI.Formula = PathSystem3D.Navigation.HeuristicFormula.Manhattan;
             this.PnlGUI.GridSize = 1;
             this.PnlGUI.Location = new System.Drawing.Point(-1, -1);
             this.PnlGUI.Name = "PnlGUI";
@@ -612,7 +611,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             // BtnSave
             // 
             this.BtnSave.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.BtnSave.Image = global::cogbot.Properties.Resources.Sauver;
+          //  this.BtnSave.Image = global::cogbot.Properties.Resources.Sauver;
             this.BtnSave.ImageTransparentColor = System.Drawing.Color.Black;
             this.BtnSave.Name = "BtnSave";
             this.BtnSave.Size = new System.Drawing.Size(23, 22);
@@ -1290,7 +1289,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         private void BtnRebakeTerrain_Click(object sender, EventArgs e)
         {
             PnlGUI.CurrentPlane.NeedsUpdate = true;
-            PathStore.GetSimRegion().BakeTerrain();
+            PathStore.BakeTerrain();
             PnlGUI.Invalidate();
         }
 
@@ -1299,7 +1298,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         }
 
         private delegate void CollisionPlaneListDelegate();
-        public new void CollisionPlaneListUpdate()
+        public void CollisionPlaneListUpdate()
         {
             if (this.InvokeRequired)
             {

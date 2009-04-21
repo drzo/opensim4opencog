@@ -18,10 +18,10 @@ using System.Data;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using cogbot.TheOpenSims.Navigation;
+using PathSystem3D.Navigation;
 
 
-namespace cogbot.TheOpenSims.Navigation.Debug
+namespace PathSystem3D.Navigation.Debug
 {
     /// <summary>
     /// Summary description for Form1.
@@ -142,7 +142,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GraphFormer));
-            this.GraphPanel = new cogbot.TheOpenSims.Navigation.Debug.FlickerFreePanel();
+            this.GraphPanel = new PathSystem3D.Navigation.Debug.FlickerFreePanel();
             this.EditionToolBar = new System.Windows.Forms.ToolBar();
             this.BoutonDessiner = new System.Windows.Forms.ToolBarButton();
             this.BoutonEffacer = new System.Windows.Forms.ToolBarButton();
@@ -848,7 +848,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                         Region Invalide = null;
                         if (N != null)
                         {
-                            N.Passable = !N.Passable;
+                            N.IsPassable = !N.IsPassable;
                             Invalide = new Region(Boite(N.Molecule));
                         }
                         else
@@ -1187,7 +1187,7 @@ with the respective left and right mouse buttons.", "Impossible action", Message
 
             SuspendLayout();
             // Dessin du graphe
-            lock (G.Nodes) foreach (SimWaypoint N in G.Nodes) DessinerNoeud(Grfx, N.Passable ? CrayonNoeuds : CrayonNoeudsInactifs, N);
+            lock (G.Nodes) foreach (SimWaypoint N in G.Nodes) DessinerNoeud(Grfx, N.IsPassable ? CrayonNoeuds : CrayonNoeudsInactifs, N);
             lock (G.Arcs) foreach (SimRoute A in G.Arcs) DessinerArc(Grfx, A.Passable ? CrayonArcs : CrayonArcsInactifs, A);
 
             // Dessin du tracé temporaire courant

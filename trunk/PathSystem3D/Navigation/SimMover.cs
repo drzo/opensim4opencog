@@ -6,20 +6,22 @@ using System.Threading;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace cogbot.TheOpenSims.Navigation
+namespace PathSystem3D.Navigation
 {
-    public interface SimMover : SimPosition
+    public interface SimMover : PathSystem3D.Navigation.SimPosition
     {
         void TurnToward(Vector3d targetPosition);
-        //void SetMoveTarget(SimPosition v3);
+        //void SetMoveTarget(MeshableObject v3);
         void StopMoving();
         bool MoveTo(Vector3d end, double maxDistance, int maxSeconds);
         // Quaternion GetSimRotation();
         void Debug(string format, params object[] args);
-        //double Distance(SimPosition v3);
-        List<SimObject> GetNearByObjects(double maxDistance, bool rootOnly);
+        //double Distance(MeshableObject v3);
+       // List<SimObject> GetNearByObjects(double maxDistance, bool rootOnly);
 
-        void Touch(SimObject simObject);
+        ///oid Touch(MeshableObject simObject);
+
+        void OpenNearbyClosedPassages();
     }
 
     public enum SimMoverState : byte
@@ -49,14 +51,14 @@ namespace cogbot.TheOpenSims.Navigation
 
         protected SimPathStore PathStore
         {
-            get { return GetSimRegion().GetPathStore(GetSimPosition()); }
+            get { return Mover.GetPathStore(); }
         }
         static protected double TurnAvoid = 0f;
         bool UseTurnAvoid = false;  // this toggles each time
 
         public SimAbstractMover(SimMover mover, Vector3d finalGoal, double finalDistance)
         {
-            Mover = (SimAvatar)mover;
+            Mover = mover;
             FinalDistance = finalDistance;
             FinalLocation = finalGoal;
         }
@@ -67,11 +69,6 @@ namespace cogbot.TheOpenSims.Navigation
             return Mover.GetSimPosition();
         }
 
-        private SimRegion GetSimRegion()
-        {
-            return Mover.GetSimRegion();
-        }
-
         public bool FollowPathTo(Vector3d globalEnd, double distance)
         {
             bool OnlyStart = true;
@@ -80,7 +77,7 @@ namespace cogbot.TheOpenSims.Navigation
             while (OnlyStart && MadeIt)
             {
                 if (Vector3d.Distance(GetWorldPosition(), globalEnd) < distance) return true;
-                List<Vector3d> route = SimRegion.GetPath(GetWorldPosition(), globalEnd, distance, out OnlyStart);
+                IList<Vector3d> route = SimPathStore.GetPath(GetWorldPosition(), globalEnd, distance, out OnlyStart);
                 MadeIt = FollowPathTo(route, globalEnd, distance);
             }
             return MadeIt;
@@ -88,13 +85,12 @@ namespace cogbot.TheOpenSims.Navigation
 
         bool UseSkipping = false;
         bool UseReverse = false;
-        public bool FollowPathTo(List<Vector3d> v3s, Vector3d finalTarget, double finalDistance)
+        public bool FollowPathTo(IList<Vector3d> v3s, Vector3d finalTarget, double finalDistance)
         {
             Vector3d vstart = v3s[0];
-            Vector3 vv3 = SimRegion.GlobalToLocal(vstart);
-            SimPathStore PathStore = GetSimRegion().GetPathStore(vv3);
+            Vector3 vv3 = SimPathStore.GlobalToLocal(vstart);
 
-            v3s = SimPathStore.GetSimplifedRoute(vstart, v3s, 45, 6);
+            v3s = SimPathStore.GetSimplifedRoute(vstart, v3s, 45, 4f);
 
             Debug("FollowPath: {0} -> {1} for {2}", v3s.Count, DistanceVectorString(finalTarget), finalDistance);
             int CanSkip = UseSkipping ? 1 : 0; //never right now
@@ -106,7 +102,7 @@ namespace cogbot.TheOpenSims.Navigation
             {
                 Vector3d v3 = v3s[at];
                 // try to get there first w/in StepSize 0.2f 
-                if (!MoveTo(v3, PathStore.StepSize, 5))
+                if (!MoveTo(v3, PathStore.StepSize, 3))
                 {
                     if (Vector3d.Distance(GetWorldPosition(), finalTarget) < finalDistance) return true;
                     int nbest = ClosestAt(v3s);
@@ -125,7 +121,7 @@ namespace cogbot.TheOpenSims.Navigation
                             at++;
                             continue;
                         }
-                        Vector3 l3 = SimRegion.GlobalToLocal(v3);
+                        Vector3 l3 = SimPathStore.GlobalToLocal(v3);
                         BlockTowardsVector(l3);
                         Debug("!MoveTo: {0} -> {1} -> {2} ", DistanceVectorString(GetWorldPosition()), DistanceVectorString(v3), DistanceVectorString(finalTarget));
                         MoveToPassableArround(l3);
@@ -158,7 +154,9 @@ namespace cogbot.TheOpenSims.Navigation
             return true;
         }
 
-        private int ClosestAt(List<Vector3d> v3s)
+
+
+        private int ClosestAt(IList<Vector3d> v3s)
         {
             Vector3d newPos = GetWorldPosition();
             int v3sLength = v3s.Count-1;
@@ -178,17 +176,16 @@ namespace cogbot.TheOpenSims.Navigation
 
         public string DistanceVectorString(Vector3d loc3d)
         {
-            Vector3 loc = SimRegion.GlobalToLocal(loc3d);
-            SimRegion R = SimRegion.GetRegion(loc3d);
+            Vector3 loc = SimPathStore.GlobalToLocal(loc3d);
+            SimPathStore R = SimPathStore.GetPathStore(loc3d);
             return String.Format("{0:0.00}m ", Vector3d.Distance(GetWorldPosition(), loc3d))
                + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
         }
 
         public string DistanceVectorString(Vector3 loc)
-        {
-            SimRegion R = GetSimRegion();
+        {    
             return String.Format("{0:0.00}m ", Vector3.Distance(GetSimPosition(), loc))
-               + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
+               + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", PathStore.RegionName, loc.X, loc.Y, loc.Z);
         }
 
         public bool MoveTo(Vector3d finalTarget, double maxDistance, int maxSeconds)
@@ -213,14 +210,13 @@ namespace cogbot.TheOpenSims.Navigation
             }
 
             UseTurnAvoid = !UseTurnAvoid;
-            SimPathStore PathStore = GetSimRegion().GetPathStore(start);
             double A45 = 45f / SimPathStore.RAD2DEG;
             for (double angle = A45; angle < SimPathStore.PI2; angle += A45)
             {
                 Vector3 next = ZAngleVector(angle + TurnAvoid) * 2 + start;
-                if (PathStore.GetSimRegion().IsPassable(next))
+                if (PathStore.IsPassable(next))
                 {
-                    Vector3d v3d = PathStore.GetSimRegion().LocalToGlobal(start);
+                    Vector3d v3d = PathStore.LocalToGlobal(start);
                     if (MoveTo(v3d, 1, 4))
                     {
                         TurnAvoid += angle;  // update for next use
@@ -320,92 +316,15 @@ namespace cogbot.TheOpenSims.Navigation
         /// Blocks points -45 to +45 degrees in front of Bot (assumes the bot is heading toward V3)
         /// </summary>
         /// <param name="v3"></param>
-        internal void BlockTowardsVector(Vector3 v3)
+        public void BlockTowardsVector(Vector3 l3)
         {
             OpenNearbyClosedPassages();
-            Vector3 cp = GetSimPosition();
-            SimPathStore PathStore = GetSimRegion().GetPathStore(v3);
-            Point P1 = PathStore.ToPoint(cp);
-            Vector3 offset = v3 - cp;
-            double ZAngle = (double)Math.Atan2(offset.X, offset.Y);
-            Point Last = PathStore.ToPoint(v3);
-            float Dist = 0.3f;
-            Vector3 b1 = v3;
-            float StepSize = PathStore.StepSize;
-            while (offset.Length() > StepSize)
-            {
-                offset *= 0.75f;
-                Vector3 blocked = cp + offset;
-                Point P2 = PathStore.ToPoint(blocked);
-                if (P2 != P1)
-                {
-                    Dist = offset.Length();
-                    Last = P2;
-                    b1 = blocked;
-                }
-            }
-            float x = PathStore.UNARRAY_X(Last.X);
-            float y = PathStore.UNARRAY_Y(Last.Y);
-            Vector3 v3o = new Vector3(x, y, v3.Z);
-            BlockPoint(v3o);
-            double A45 = 45f / SimPathStore.RAD2DEG;
-            Debug("BlockTowardsVector {0}", DistanceVectorString(v3o));
-            Vector3 middle = ZAngleVector(ZAngle) * Dist;
-            middle += cp;
-            double mdist = Vector3.Distance(middle, b1);
-            if (mdist > 0.1)
-            {
-                Debug("Wierd mdist = " + mdist);
-            }
-            Dist = 0.4f;
-            //ZAngle -= (90 / SimPathStore.RAD2DEG);
-
-            BlockPoint(ZAngleVector(ZAngle - A45 * 1.5) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle - A45) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle - A45 * 0.5) * Dist + cp);
-
-            BlockPoint(ZAngleVector(ZAngle) * Dist + cp);
-
-            BlockPoint(ZAngleVector(ZAngle + A45 * 0.5) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle + A45) * Dist + cp);
-            BlockPoint(ZAngleVector(ZAngle + A45 * 1.5) * Dist + cp);
-            //Dont Run back
-            //MoveTo(cp + ZAngleVector(ZAngle - Math.PI) * 2, 1f, 2);
+            PathStore.SetBlockedTemp(GetSimPosition(), l3);
         }
 
         internal void OpenNearbyClosedPassages()
         {
-            SimObjectType DOOR = SimTypeSystem.DOOR;
-            // look for closed doors
-
-            List<SimObject> UnEnterables = new List<SimObject>();
-            foreach (SimObject O in (Mover).GetNearByObjects(3, false))
-            {
-                if (!O.IsPhantom)
-                {
-                    if (O.IsTypeOf(DOOR) != null)
-                    {
-                        O.MakeEnterable(Mover);
-                        UnEnterables.Add(O);
-                    }
-                    if (O.IsSculpted)
-                    {
-                        O.MakeEnterable(Mover);
-                        UnEnterables.Add(O);
-                    }
-                }
-            }
-            if (UnEnterables.Count > 0)
-            {
-                new Thread(new ThreadStart(delegate()
-                {
-                    Thread.Sleep(90000); // 90 seconds
-                    foreach (SimObject O in UnEnterables)
-                    {
-                        O.RestoreEnterable(Mover);
-                    }
-                })).Start();
-            }
+            Mover.OpenNearbyClosedPassages();
         }
 
         internal Vector3 ZAngleVector(double ZAngle)
@@ -421,14 +340,6 @@ namespace cogbot.TheOpenSims.Navigation
             return new Vector3((float)Math.Sin(ZAngle), (float)Math.Cos(ZAngle), 0);
         }
 
-        /// <summary>
-        /// Blocks a point temporarilly (one minute)
-        /// </summary>
-        /// <param name="vector3"></param>
-        internal void BlockPoint(Vector3 vector3)
-        {
-            GetSimRegion().SetNodeQualityTimer(vector3, SimPathStore.BLOCKED, 60);
-        }
 
 
         //    //internal void BlockForwardPos()
@@ -498,7 +409,7 @@ namespace cogbot.TheOpenSims.Navigation
         //}
         //public class SimReRouteMover : SimAbstractMover
         //{
-        //    public SimReRouteMover(SimMover mover, SimPosition finalGoal, double finalDistance)
+        //    public SimReRouteMover(SimMover mover, MeshableObject finalGoal, double finalDistance)
         //        : base(mover, finalGoal.GetWorldPosition(), finalDistance)
         //    {
 
@@ -537,7 +448,7 @@ namespace cogbot.TheOpenSims.Navigation
         //    /// <param name="pos"></param>
         //    /// <param name="IsFake"></param>
         //    /// <returns></returns>
-        //    public bool TryGotoTarget(SimPosition pos, out bool IsFake)
+        //    public bool TryGotoTarget(MeshableObject pos, out bool IsFake)
         //    {
         //        IsFake = false;
         //        SimMoverState state = SimMoverState.TRYAGAIN;
@@ -555,7 +466,7 @@ namespace cogbot.TheOpenSims.Navigation
         //        //== SimMoverState.COMPLETE;
         //    }
 
-        //    private bool GotoSimRoute(SimPosition pos)
+        //    private bool GotoSimRoute(MeshableObject pos)
         //    {
         //        bool IsFake;
         //        for (int i = 0; i < 19; i++)

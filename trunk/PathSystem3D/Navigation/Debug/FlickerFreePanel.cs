@@ -2,7 +2,7 @@ using System;
 using System.Windows.Forms;
 
 
-namespace cogbot.TheOpenSims.Navigation.Debug
+namespace PathSystem3D.Navigation.Debug
 {
 	/// <summary>
 	/// Summary description for FlickerFreePanel.

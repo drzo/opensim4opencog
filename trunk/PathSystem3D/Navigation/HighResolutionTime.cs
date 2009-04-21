@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace cogbot.TheOpenSims.Navigation
+namespace PathSystem3D.Navigation
 //namespace Algorithms
 {
     public static class HighResolutionTime

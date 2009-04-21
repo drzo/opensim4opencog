@@ -12,12 +12,14 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using cogbot.TheOpenSims.Mesher;
-using cogbot.TheOpenSims.Navigation.Debug;
+using PathSystem3D.Mesher;
+using PathSystem3D.Navigation.Debug;
 using OpenMetaverse;
+using THIRDPARTY.OpenSim.Region.Physics.Meshing;
 
-namespace cogbot.TheOpenSims.Navigation
+namespace PathSystem3D.Navigation
 {
+
     public delegate void CallbackXY(float x, float y, float minZ, float maxZ);
 
     public delegate float SimZLevel(float x, float y);
@@ -28,8 +30,676 @@ namespace cogbot.TheOpenSims.Navigation
     /// It is used to perform operations on CollisionPlanes
     /// </summary>
     [Serializable]
-    public class SimPathStore //: cogbot.TheOpenSims.Navigation.IPathStore
+    public class SimPathStore //: PathSystem3D.Navigation.IPathStore
     {
+        public string RegionName { get; set; }
+        // util
+        static public void TrianglesToBoxes(IList<Triangle> tl, Box3Fill OuterBox, float PADXY, IList<Box3Fill> InnerBoxes)
+        {
+
+
+            int tc = tl.Count;
+            if (tc < 16)
+            {
+                AddTrianglesV1(tl, tc, OuterBox, PADXY, InnerBoxes);
+            }
+            else
+            {
+                AddTrianglesV2(tl, tc, OuterBox, PADXY, InnerBoxes);
+            }
+            // Console.WriteLine(InnerBoxes.Count);
+        }
+
+        private static void AddTrianglesV1(IList<Triangle> ts, int len, Box3Fill OuterBox, float PADXY, IList<Box3Fill> InnerBoxes)
+        {
+            int len1 = len - 1;
+            for (int i = 0; i < len1; i++)
+            {
+                Triangle t1 = ts[i];
+                bool used = false;
+                OuterBox.AddTriangle(t1, PADXY);
+                for (int ii = i + 1; ii < len; ii++)
+                {
+                    Triangle t2 = ts[ii];
+                    int shared = SharedVertexs(t1, t2);
+                    if (shared == 3) continue;
+                    if (shared == 2)
+                    {
+                        Box3Fill B = new Box3Fill(t1, t2, PADXY);
+                        InnerBoxes.Add(B);
+                        used = true;
+                    }
+                }
+                if (!used)
+                {
+                    Box3Fill B = new Box3Fill(true);
+                    B.AddTriangle(t1, PADXY);
+                    InnerBoxes.Add(B);
+                }
+            }
+        }
+
+        private static int SharedVertexs(Triangle t1, Triangle t2)
+        {
+            int sharedV = 0;
+            if (t1.v1 == t2.v1) sharedV++;
+            else
+                if (t1.v1 == t2.v2) sharedV++;
+                else
+                    if (t1.v1 == t2.v3) sharedV++;
+            if (t1.v2 == t2.v1) sharedV++;
+            else
+                if (t1.v2 == t2.v2) sharedV++;
+                else
+                    if (t1.v2 == t2.v3) sharedV++;
+            if (t1.v3 == t2.v1 || t1.v3 == t2.v2 || t1.v3 == t2.v3) return sharedV + 1;
+            return sharedV;
+        }
+
+        private static void AddTrianglesV2(IList<Triangle> ts, int len, Box3Fill OuterBox, float PADXY, IList<Box3Fill> InnerBoxes)
+        {
+            int len1 = len - 2;
+            for (int i = 0; i < len1; i += 2)
+            {
+                Triangle t1 = ts[i];
+                Triangle t2 = ts[i + 1];
+                OuterBox.AddTriangle(t1, PADXY);
+                OuterBox.AddTriangle(t2, PADXY);
+                Box3Fill B = new Box3Fill(t1, t2, PADXY);
+                InnerBoxes.Add(B);
+                bool used = false;
+                for (int ii = i + 2; ii < len; ii++)
+                {
+                    t2 = ts[ii];
+                    int shared = SharedVertexs(t1, t2);
+                    if (shared == 3) continue;
+                    if (shared == 2)
+                    {
+                        B = new Box3Fill(t1, t2, PADXY);
+                        InnerBoxes.Add(B);
+                        used = true;
+                    }
+                }
+                if (!used)
+                {
+                    B = new Box3Fill(true);
+                    B.AddTriangle(t1, PADXY);
+                    InnerBoxes.Add(B);
+                }
+            }
+        }
+
+
+        Dictionary<IComparable, IMeshedObject> meshedObjects = new Dictionary<IComparable, IMeshedObject>();
+        /// <summary>
+        /// By default no boxes are passable
+        /// </summary>
+        public Predicate<IComparable> IsPassablePredicate = delegate(IComparable id) { return false; };
+        /// <summary>
+        /// The Pathstore can implment this
+        /// </summary>
+        public SimZLevel GroundLevel = delegate(float x, float y) { return 10; };
+
+        // setup
+        void AddBoxes(IComparable id, IList<Box3Fill> boxes)
+        {
+            Box3Fill Outer = new Box3Fill(true);
+
+            foreach (Box3Fill B in boxes)
+            {
+                Outer.Expand(B);
+
+            }
+            IMeshedObject MO = new RuntimeMesh(id, Outer, boxes, this);
+            //MeshedObject simMesh = new MeshedObject(boxes);
+            meshedObjects.Add(id, MO);
+            AddCollisions(MO);
+        }
+
+        public void AddCollisions(IMeshedObject MO)
+        {           
+            throw new NotImplementedException();
+        }
+        public void RemoveBoxes(IComparable id)
+        {
+            IMeshedObject MO = meshedObjects[id];//.Remove(id);
+
+            Box3Fill changed = new Box3Fill(true);
+            MO.RemoveFromWaypoints(changed);
+            UpdateMatrixes();
+            meshedObjects.Remove(id);
+
+        }
+
+        private void UpdateMatrixes()
+        {
+            throw new NotImplementedException();
+        }
+
+
+        public void SetPhysicalPredicate(Predicate<IComparable> callback)
+        {
+            IsPassablePredicate = callback;
+        }
+        public void SetGroundLevel(SimZLevel callback)
+        {
+            GroundLevel = callback;
+        }
+
+        // Updates
+        public void SetTraveled(Vector3 LastPosition, Vector3 nextPosition)
+        {
+            Vector3 dif = LastPosition - nextPosition;
+            if (!(dif.X == 0 && dif.Y == 0))
+            {
+                float dist = Vector3.Distance(LastPosition, nextPosition);
+                int stepsNeeded = (int)(dist * POINTS_PER_METER) + 1;
+                //if (Settings.LOG_LEVEL == Helpers.LogLevel.Debug) Console.WriteLine("MakeMovement " + LastPosition + " -> " + stepsNeeded + " -> " + nextPosition + " " + Store);
+                Vector3 vstep = dif / stepsNeeded;
+                Vector3 traveled = nextPosition;
+                SetTraveled(nextPosition.X, nextPosition.Y, nextPosition.Z);
+                for (int i = 0; i < stepsNeeded; i++)
+                {
+                    traveled = traveled + vstep;
+                    if (stepsNeeded > 10) SetTraveled(traveled.X, traveled.Y, traveled.Z);
+                    else SetPassable(traveled.X, traveled.Y, traveled.Z);
+                }
+            }
+        }
+
+        public void SetBlockedTemp(Vector3 cp, Vector3 v3)
+        {
+            Point P1 = ToPoint(cp);
+            Vector3 offset = v3 - cp;
+            double ZAngle = (double)Math.Atan2(offset.X, offset.Y);
+            Point Last = ToPoint(v3);
+            float Dist = 0.3f;
+            Vector3 b1 = v3;
+            while (offset.Length() > StepSize)
+            {
+                offset *= 0.75f;
+                Vector3 blocked = cp + offset;
+                Point P2 = ToPoint(blocked);
+                if (P2 != P1)
+                {
+                    Dist = offset.Length();
+                    Last = P2;
+                    b1 = blocked;
+                }
+            }
+            float x = UNARRAY_X(Last.X);
+            float y = UNARRAY_Y(Last.Y);
+            Vector3 v3o = new Vector3(x, y, v3.Z);
+            BlockPointTemp(v3o);
+            double A45 = 45f / SimPathStore.RAD2DEG;
+            Debug("BlockTowardsVector {0}", Vector3.Distance(cp,v3o));
+            Vector3 middle = ZAngleVector(ZAngle) * Dist;
+            middle += cp;
+            double mdist = Vector3.Distance(middle, b1);
+            if (mdist > 0.1)
+            {
+                Debug("Wierd mdist = " + mdist);
+            }
+            Dist = 0.4f;
+            //ZAngle -= (90 / SimPathStore.RAD2DEG);
+
+            BlockPointTemp(ZAngleVector(ZAngle - A45 * 1.5) * Dist + cp);
+            BlockPointTemp(ZAngleVector(ZAngle - A45) * Dist + cp);
+            BlockPointTemp(ZAngleVector(ZAngle - A45 * 0.5) * Dist + cp);
+
+            BlockPointTemp(ZAngleVector(ZAngle) * Dist + cp);
+
+            BlockPointTemp(ZAngleVector(ZAngle + A45 * 0.5) * Dist + cp);
+            BlockPointTemp(ZAngleVector(ZAngle + A45) * Dist + cp);
+            BlockPointTemp(ZAngleVector(ZAngle + A45 * 1.5) * Dist + cp);
+            //Dont Run back
+            //MoveTo(cp + ZAngleVector(ZAngle - Math.PI) * 2, 1f, 2);
+        }
+
+        /// <summary>
+        /// Blocks a point temporarilly (one minute)
+        /// </summary>
+        /// <param name="vector3"></param>
+        internal void BlockPointTemp(Vector3 vector3)
+        {
+            SetNodeQualityTimer(vector3, SimPathStore.BLOCKED, 60);
+        }
+
+
+        internal static byte[] TextureBytesToUUID(UUID uUID)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        private float _WaterHeight=float.MaxValue;
+
+        public float WaterHeight
+        {
+            get { return _WaterHeight; }
+            set { _WaterHeight = value; }
+        }
+
+
+        public static IList<Vector3d> GetPath(Vector3d globalStart, Vector3d globalEnd, double endFudge, out bool OnlyStart)
+        {
+            SimPosition posStart = SimWaypointImpl.CreateGlobal(globalStart);
+            SimPosition posEnd = SimWaypointImpl.CreateGlobal(globalEnd);
+            SimPathStore regStart = posStart.GetPathStore();
+            SimPathStore regEnd = posEnd.GetPathStore();
+            Vector3 localStart = posStart.GetSimPosition();
+            Vector3 localEnd = posEnd.GetSimPosition();
+            IList<Vector3d> route;
+            // Same region?
+            if (regStart == regEnd)
+            {
+                return regStart.GetAtLeastPartial(localStart, localEnd, (float)endFudge, out OnlyStart);
+            }
+            OnlyStart = true; // will be only a partial path
+            SimPathStore nextRegion;
+            Vector3 localLast = regStart.LocalOuterEdge(localStart, posEnd, out nextRegion);
+            // needs to go to edge
+            route = regStart.GetLocalPath(localStart, localLast);
+            // at egde so make a crossing
+            Vector3 enterEdge = EnterEdge(localLast, nextRegion.GetGridLocation() - regStart.GetGridLocation());
+            route.Add(nextRegion.LocalToGlobal(enterEdge));
+            return route;
+        }
+
+
+        internal IList<Vector3d> GetAtLeastPartial(Vector3 localStart, Vector3 localEnd, float endFudge, out bool OnlyStart)
+        {
+            IList<Vector3d> route;
+            Vector3 newEnd = localEnd;
+            route = GetLocalPath(localStart, newEnd);
+            if (route.Count > 1)
+            {
+                OnlyStart = false;
+                return route;
+            }
+            OnlyStart = true;
+            Vector3 diff = localEnd - localStart;
+            while (diff.Length() > 10)
+            {
+                diff = diff * 0.8f;
+                newEnd = localStart + diff;
+                route = GetLocalPath(localStart, newEnd);
+                if (route.Count > 1) return route;
+            }
+            OnlyStart = false; // Since this will be the best
+            // try to move to nearby
+            float step = 45 * SimPathStore.RAD2DEG;
+            for (double angle = 0; angle < SimPathStore.PI2; angle += step)
+            {
+                newEnd = localEnd + ZAngleVector(angle) * endFudge;
+                route = GetLocalPath(localStart, newEnd);
+                if (route.Count > 1) return route;
+            }
+            route = new List<Vector3d>();
+            route.Add(LocalToGlobal(localStart));
+            SimPathStore PathStore = GetPathStore3D(localStart);
+            CollisionPlane CP = PathStore.GetCollisionPlane(localStart.Z);
+
+            Console.WriteLine("very bad fake route for " + CP);
+            return route;
+        }
+
+        public Vector3d LocalToGlobal(Vector3 objectLoc)
+        {
+            Vector2 V2 = GetGridLocation();
+            return new Vector3d(V2.X * 256 + objectLoc.X, V2.Y * 256 + objectLoc.Y, objectLoc.Z);
+        }
+
+        /// <summary>
+        ///  The closet usable space to the v3 TODO
+        /// </summary>
+        /// <param name="v3"></param>
+        /// <returns></returns>
+        public Vector3 GetUsableLocalPositionOf(Vector3 v3, float useDist)
+        {
+            SimPathStore PathStore = GetPathStore3D(v3);
+            CollisionPlane CP = PathStore.GetCollisionPlane(v3.Z);
+
+            byte b = PathStore.GetNodeQuality(v3, CP);
+            // float useDist = GetSizeDistance();
+            if (b != SimPathStore.BLOCKED) return v3;
+            SimWaypoint swp = GetWaypointOf(v3);
+            for (float distance = PathStore.StepSize; distance < useDist * 1.5; distance += PathStore.StepSize)
+            {
+                for (int dir = 0; dir < 360; dir += 15)
+                {
+                    v3 = SimPathStore.GetLocalLeftPos(swp, dir, distance);
+                    b = PathStore.GetNodeQuality(v3, CP);
+                    if (b < SimPathStore.BLOCKED) return v3;
+                }
+            }
+            Console.WriteLine("Clearing area " + swp);
+            SetNodeQualityTimer(v3, SimPathStore.MAYBE_BLOCKED, 30);
+            for (float distance = PathStore.StepSize; distance < useDist * 1.5; distance += PathStore.StepSize)
+            {
+                for (int dir = 0; dir < 360; dir += 15)
+                {
+                    v3 = SimPathStore.GetLocalLeftPos(swp, dir, distance);
+                    b = PathStore.GetNodeQuality(v3, CP);
+                    if (b == SimPathStore.BLOCKED)
+                    {
+                        SetNodeQualityTimer(v3, SimPathStore.MAYBE_BLOCKED, 30);
+                    }
+                }
+            }
+            return GetWaypointOf(v3).GetSimPosition();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="zAngleFromFace"></param>
+        /// <param name="distance"></param>
+        /// <returns></returns>
+        static public Vector3 GetLocalLeftPos(SimPosition pos, int zAngleFromFace, double distance)
+        {
+            double RAD_TO_DEG = 57.29577951f;
+            double Pi2 = (double)(Math.PI * 2.0);
+
+            while (zAngleFromFace > 360)
+            {
+                zAngleFromFace -= 360;
+            }
+            while (zAngleFromFace < 0)
+            {
+                zAngleFromFace += 360;
+            }
+
+            double radAngle = zAngleFromFace / RAD_TO_DEG;
+
+
+            Quaternion rot = pos.GetSimRotation();
+            rot.Normalize();
+            float rx, ry, rz;
+            rot.GetEulerAngles(out rx, out rz, out ry);
+            //if (rx != 0f || ry != 0f)
+            //{
+            //    Debug("180 Eulers:  {0} {1} {2}", rx * RAD_TO_DEG, ry * RAD_TO_DEG, rz * RAD_TO_DEG);
+            //}
+            //else
+            //{
+            //    Debug("Current Eulers:  {0} {1} {2}", rx * RAD_TO_DEG, ry * RAD_TO_DEG, rz * RAD_TO_DEG);
+            //}
+            double az = rz + radAngle;
+
+
+            while (az < 0)
+            {
+                az += Pi2;
+            }
+            while (az > Pi2)
+            {
+                az -= Pi2;
+            }
+
+            float xmul = (float)Math.Cos(az);
+            float ymul = (float)Math.Sin(az);
+            Vector3 diff = new Vector3(xmul, ymul, 0) * (float)distance;
+
+            Vector3 result = pos.GetSimPosition() + diff;
+
+            if (result.X > 254f)
+            {
+                result.X = 254;
+            }
+            else if (result.X < 1f)
+            {
+                result.X = 1;
+            }
+            if (result.Y > 254f)
+            {
+                result.Y = 254;
+            }
+            else if (result.Y < 1f)
+            {
+                result.Y = 1;
+            }
+            return result;
+            /*
+             * Client.Self.Movement.SendManualUpdate(AgentManager.ControlFlags.AGENT_CONTROL_AT_POS, Client.Self.Movement.Camera.Position,
+                    Client.Self.Movement.Camera.AtAxis, Client.Self.Movement.Camera.LeftAxis, Client.Self.Movement.Camera.UpAxis,
+                    Client.Self.Movement.BodyRotation, Client.Self.Movement.HeadRotation, Client.Self.Movement.Camera.Far, AgentFlags.None,
+                    AgentState.None, true);*/
+        }
+
+        public void SetNodeQualityTimer(Vector3 vector3, int value, int seconds)
+        {
+            SimPathStore PathStore = GetPathStore3D(vector3);
+            Point P = PathStore.ToPoint(vector3);
+            CollisionIndex WP = PathStore.GetCollisionIndex(P.X, P.Y);
+            WP.SetNodeQualityTimer(PathStore.GetCollisionPlane(vector3.Z), value, seconds);
+        }
+
+
+
+        static Dictionary<Vector2, SimPathStore> _PathStores = new Dictionary<Vector2, SimPathStore>();
+
+        readonly float MAXY = 256f;
+
+        static Vector2 vC = new Vector2(0, 0), // C
+               vN = new Vector2(0, 1), // N
+               vNE = new Vector2(1, 1), // NE
+               vE = new Vector2(1, 0),  // E
+               vSE = new Vector2(1, -1), // SE
+               vS = new Vector2(0, -1), // S
+               vSW = new Vector2(-1, -1), // SW
+               vW = new Vector2(-1, 0), // W
+               vNW = new Vector2(-1, 1); // NW
+
+        public static Vector2[] XYOf = { vC, vN, vNE, vE, vSE, vS, vSW, vW, vNW };
+
+        public void SetPathStoreAtOffset(Vector2 v2, SimPathStore value)
+        {
+            RegisterPathStore((GetGridLocation() + v2), value);
+        }
+
+        public SimPathStore GetOffsetPathStore(Vector2 v2)
+        {
+            return GetPathStore(GetGridLocation() + v2);
+        }
+
+        private Vector2 GetGridLocation()
+        {
+            return RegionLocation;
+        }
+
+        static void RegisterPathStore(Vector2 h, SimPathStore value)
+        {
+            lock (_PathStores) if (_PathStores.ContainsKey(h))
+            {
+                SimPathStore OLD = _PathStores[h];
+                if (OLD == null || OLD == value) return;
+                throw new ArgumentException("Bad region change " + OLD + " -> " + value);
+            }
+            _PathStores[h] = value;
+        }
+
+        public SimPathStore N
+        {
+            get { return GetOffsetPathStore(vN); }
+            set { SetPathStoreAtOffset(vN, value); }
+        }
+        public SimPathStore E
+        {
+            get { return GetOffsetPathStore(vE); }
+            set { SetPathStoreAtOffset(vE, value); }
+        }
+        public SimPathStore S
+        {
+            get { return GetOffsetPathStore(vS); }
+            set { SetPathStoreAtOffset(vS, value); }
+        }
+        public SimPathStore W
+        {
+            get { return GetOffsetPathStore(vW); }
+            set { SetPathStoreAtOffset(vW, value); }
+        }
+
+
+        /// <summary>
+        ///  The closet usable waypoint to the v3 TODO
+        /// </summary>
+        /// <param name="v3"></param>
+        /// <returns></returns>
+        public SimWaypoint GetWaypointOf(Vector3 v3)
+        {
+            if (v3.X < 0)
+            {
+                Vector3 V = v3;
+                V.X += 256f;
+                return W.GetWaypointOf(V);
+            }
+            else
+                if (v3.X >= MAXY)
+                {
+                    Vector3 V = v3;
+                    V.X -= 256f;
+                    return E.GetWaypointOf(V);
+                }
+                else
+                    if (v3.Y < 0)
+                    {
+                        Vector3 V = v3;
+                        V.Y += 256f;
+                        return S.GetWaypointOf(V);
+                    }
+                    else
+                        if (v3.Y >= MAXY)
+                        {
+                            Vector3 V = v3;
+                            V.Y -= 256f;
+                            return N.GetWaypointOf(V);
+                        }
+                        else
+                        {
+                            SimPathStore PathStore0 = GetPathStore3D(v3);
+                            return SimWaypointImpl.CreateLocal(v3, PathStore0);
+                        }
+
+            SimPathStore PathStore = GetPathStore3D(v3);
+            SimWaypoint swp = PathStore.CreateClosestRegionWaypoint(v3, 2);
+            float dist = Vector3.Distance(v3, swp.GetSimPosition());
+            if (!swp.IsPassable)
+            {
+                Console.WriteLine("CreateClosestWaypoint: " + v3 + " <- " + dist + " -> " + swp + " " + this);
+            }
+            return swp;
+        }
+
+
+
+        public IList<Vector3d> GetLocalPath(Vector3 start, Vector3 end)
+        {
+            if (!TerrainBaked) BakeTerrain();
+            float Z = start.Z;
+            CollisionPlane CP = GetCollisionPlane(Z);
+            if (!IsPassable(start, CP))
+            {
+                Debug("start is not passable: " + start);
+            }
+            if (!IsPassable(end, CP))
+            {
+                Debug("end is not passable: " + end);
+            }
+            return (IList<Vector3d>)GetLocalPath0(GetUsableLocalPositionOf(start, 4), GetUsableLocalPositionOf(end, 4),CP,Z);
+        }
+
+        bool TerrainBaked = false;
+        object TerrainBakedLock = new object();
+        public void BakeTerrain()
+        {
+            lock (TerrainBakedLock)
+            {
+                // if (TerrainBaked) return;
+                TerrainBaked = true;
+
+                Console.WriteLine("ScanTerrainBlockages: {0}", RegionName);
+                float WH = WaterHeight;
+                float LastHieght = GetGroundLevel(0, 0);
+                return;
+                for (int y = 0; y < 256; y++)
+                    for (int x = 0; x < 256; x++)
+                    {
+                        float thisH = GetGroundLevel(x, y);
+                        float thisH2 = GetGroundLevel(x, y + 1);
+                        float thisH3 = GetGroundLevel(x + 1, y);
+                        if (Math.Abs(thisH - LastHieght) > 1 || Math.Abs(thisH - thisH2) > 1 || Math.Abs(thisH - thisH3) > 1)
+                        {
+                            BlockRange(x, y, 1.001f, 1.001f, thisH);
+                        }
+                        LastHieght = thisH;
+                    }
+            }
+        }
+
+        public float GetGroundLevel(float x, float y)
+        {
+            return GroundLevel(x,y);
+        }
+
+        public void BlockRange(float x, float y, float sx, float sy, float z)
+        {
+            SimPathStore PathStore = GetPathStore3D(new Vector3(x, y, z));
+            if (PathStore == null) return;
+            float StepSize = PathStore.StepSize;
+            sx += x;
+            sy += y;
+            float loopY = sy;
+            while (sx >= x)
+            {
+                while (sy >= y)
+                {
+                    PathStore.SetBlocked(sx, sy, z, null);
+                    sy -= StepSize;
+                }
+                sy = loopY;
+                sx -= StepSize;
+            }
+        }
+
+
+        public Vector3 ZAngleVector(double ZAngle)
+        {
+            while (ZAngle < 0)
+            {
+                ZAngle += SimPathStore.PI2;
+            }
+            while (ZAngle > SimPathStore.PI2)
+            {
+                ZAngle -= SimPathStore.PI2;
+            }
+            return new Vector3((float)Math.Sin(ZAngle), (float)Math.Cos(ZAngle), 0);
+        }
+
+        public static Vector3 EnterEdge(Vector3 localLast, Vector2 dir)
+        {
+            if (Math.Abs(dir.X) > Math.Abs(dir.Y))
+            {
+                dir.Y = 0;
+            }
+            else  // avoid diagonals
+            {
+                dir.X = 0;
+            }
+
+            Vector3 exitEdge = new Vector3(localLast);
+            if (dir.X != 0)
+            {
+                exitEdge.X = 256f - exitEdge.X;
+            }
+            if (dir.Y != 0)
+            {
+                exitEdge.Y = 256f - exitEdge.Y;
+            }
+            return exitEdge;
+        }
+
+
         private /*i*/ float _XY256;
 
         public float XY256
@@ -51,7 +721,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public override string ToString()
         {
-            return String.Format("{0}: {1}", GetType().Name, GetSimRegion());// +" Level=" + SimZAverage;
+            return String.Format("{0}: {1}", GetType().Name,RegionName);// +" Level=" + SimZAverage;
         }
 
         public const byte BLOCKED = 255;
@@ -74,7 +744,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// </summary>
         /// <param name="Z"></param>
         /// <returns></returns>
-        internal CollisionPlane GetCollisionPlane(float Z)
+        public CollisionPlane GetCollisionPlane(float Z)
         {
             lock (Matrixes) return GetCollisionPlane0(Z);
         }
@@ -104,9 +774,9 @@ namespace cogbot.TheOpenSims.Navigation
             return GetCollisionPlane(Z).ByteMatrix;
         }
 
-        readonly public CollisionIndex[,] MeshIndex;
+        public CollisionIndex[,] MeshIndex;
 
-        readonly string RegionFileName;
+        //readonly string RegionName;
         //readonly byte[,] paths = PathFinding.PathFinderDemo.Instance
 
 
@@ -225,14 +895,14 @@ namespace cogbot.TheOpenSims.Navigation
                 case PASSABLE:
                     return;
             }
-            if (b > 100 || b < 3)
+            if (b < 3)
             {
                 return;
             }
-            mMatrix[ix, iy] = STICKY_PASSABLE;
+            mMatrix[ix, iy] = (byte)(b / 2);
         }
 
-        public CollisionIndex SetObjectAt(float x, float y, SimMesh simObject, float minZ, float maxZ)
+        public CollisionIndex SetObjectAt(float x, float y, IMeshedObject simObject, float minZ, float maxZ)
         {
             int ix = ARRAY_X((x));
             int iy = ARRAY_Y((y));
@@ -257,7 +927,7 @@ namespace cogbot.TheOpenSims.Navigation
             GetByteMatrix(z)[ix, iy] = STICKY_PASSABLE;
         }
 
-        //static List<ISimObject> NOOBJECTS = new List<ISimObject>();
+        //static IList<ISimObject> NOOBJECTS = new List<ISimObject>();
         //private IEnumerable<ISimObject> ObjectsAt(float x, float y)
         //{
         //    x = RangeCheck(x); y = RangeCheck(y);
@@ -274,7 +944,7 @@ namespace cogbot.TheOpenSims.Navigation
 
 
 
-        public void SetBlocked(float x, float y, float z, SimMesh blocker)
+        public void SetBlocked(float x, float y, float z, IMeshedObject blocker)
         {
             if (blocker != null) SetObjectAt(x, y, blocker,z,z);
             int ix = ARRAY_X(x);
@@ -324,17 +994,12 @@ namespace cogbot.TheOpenSims.Navigation
         //    }
         //}
 
-        SimRegion TheSimRegion;
-        public SimRegion GetSimRegion()
+        public SimPathStore GetPathStore()
         {
-            if (TheSimRegion == null)
-            {
-                TheSimRegion = SimRegion.GetRegion(Handle);
-            }
-            return TheSimRegion;
+            return this;
         }
 
-        readonly ulong Handle;
+        public readonly Vector2 RegionLocation;
         readonly Vector3d GlobalStart;
         readonly Vector3d GlobalEnd;
         readonly Vector3 Start;
@@ -342,15 +1007,15 @@ namespace cogbot.TheOpenSims.Navigation
         /// <summary>
         /// Constructor.
         /// </summary>
-        public SimPathStore(String simName, SimRegion region, Vector3 startBottem, Vector3 endTop)
+        public SimPathStore(String simName, Vector2 pos, Vector3d globalPos, Vector3 endTop)
         {
-            RegionFileName = simName;
-            TheSimRegion = region;
-            Handle = region.RegionHandle;
-            Start = startBottem;
-            GlobalStart = region.LocalToGlobal(startBottem);
-            GlobalEnd = region.LocalToGlobal(endTop);
-            Size = endTop - startBottem;
+            RegisterPathStore(pos, this);
+            RegionName = simName;
+            RegionLocation = pos;
+            Start = Vector3.Zero;
+            GlobalStart = globalPos;
+            GlobalEnd = globalPos;
+            Size = endTop;
             _XY256 = Size.X;
             _OuterBounds = new Box3Fill(true);
             OuterBounds.AddPoint(Start.X, Start.Y, Start.Z, 0);
@@ -359,11 +1024,17 @@ namespace cogbot.TheOpenSims.Navigation
             StepSize = 1f / POINTS_PER_METER;
             _Max256 = XY256 - StepSize;
             MAPSPACE = (int)XY256 * ((int)POINTS_PER_METER);
-            TheSimRegion.SetMapSpace(MAPSPACE);
-            MeshIndex = TheSimRegion._mWaypoints;
+            SetMapSpace(MAPSPACE);
             if (Size.X != Size.Y) throw new Exception("X and Y must be the same for " + this);
             //CreateDefaultRoutes();
           //  CurrentPlane = new CollisionPlane(MAPSPACE,MAPSPACE,0);
+        }
+
+
+        internal void SetMapSpace(int MAPSPACE)
+        {
+            if (MeshIndex == null)
+                MeshIndex = new CollisionIndex[MAPSPACE, MAPSPACE];
         }
 
         //private float RangeCheckX(float PtY)
@@ -433,7 +1104,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public IList<SimRoute> GetSimplifedRoute(IList<SimRoute> v3s)
         {
-            IList<SimRoute> vectors = new List<SimRoute>();
+            List<SimRoute> vectors = new List<SimRoute>();
             List<SimRoute> skipped = new List<SimRoute>();
             float ZAngle = float.NaN;
             bool ZAngleValid = false;
@@ -480,11 +1151,11 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
 
-        static public List<Vector3d> GetSimplifedRoute(Vector3d currentV3In, List<Vector3d> v3s, int MaxTurnDegrees, float MaxDist)
+        static public IList<Vector3d> GetSimplifedRoute(Vector3d currentV3In, IList<Vector3d> v3s, int MaxTurnDegrees, float MaxDist)
         {
             if (v3s.Count < 3) return v3s;
             Vector3d currentV3 = currentV3In;
-            List<Vector3d> vectors = new List<Vector3d>();
+            IList<Vector3d> vectors = new List<Vector3d>();
             float MaxTurnRadians = MaxTurnDegrees / RAD2DEG;
             float ZAngle = float.NaN;
             bool ZAngleValid = false;
@@ -558,27 +1229,13 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
         bool PunishChangeDirection;
-        public IList<Vector3d> GetLocalPath(Vector3 start, Vector3 end)
-        {
-            float Z = start.Z;
-            CollisionPlane CP = GetCollisionPlane(Z);
-            if (!IsPassable(start,CP))
-            {
-                Debug("start is not passable: " + start);
-            }
-            if (!IsPassable(end,CP))
-            {
-                Debug("end is not passable: " + end);
-            }
-            return GetLocalPath0(start, end, CP, Z);
-        }
         public IList<Vector3d> GetLocalPath0(Vector3 start, Vector3 end, CollisionPlane CP, float Z)
         {
             PathFinderDemo panel = PathFinder;
             PunishChangeDirection = !PunishChangeDirection;    //toggle each time
             Point S = ToPoint(start);
             Point E = ToPoint(end);
-            List<PathFinderNode> pfn = null;
+            IList<PathFinderNode> pfn = null;
             
             CP.EnsureUpToDate();
             try
@@ -598,12 +1255,12 @@ namespace cogbot.TheOpenSims.Navigation
             if (pfn == null || pfn.Count == 0)
             {
                 Debug("Cant do pfn on " + CP);
-                List<Vector3d> temp = new List<Vector3d>();
-                temp.Add(GetSimRegion().LocalToGlobal(end));
+                IList<Vector3d> temp = new List<Vector3d>();
+                temp.Add(GetPathStore().LocalToGlobal(end));
                 return temp;
             }
             if (panel != null) panel.ShowPath(pfn);
-            List<Vector3d> r = PathfinderNodesToV3s(pfn,Z);
+            List<Vector3d> r = (List<Vector3d>)PathfinderNodesToV3s(pfn, Z);
             r.Reverse();
             return r;
         }
@@ -614,15 +1271,15 @@ namespace cogbot.TheOpenSims.Navigation
             if (GetNodeQuality(end,CP) == BLOCKED) return false;
             // if (true) return true;
             SimWaypoint W = ClosestRegionNode(end.X, end.Y, end.Z, out Dist, true);
-            return W.Passable;
+            return W.IsPassable;
         }
 
 
 
-        private List<Vector3d> PathfinderNodesToV3s(List<PathFinderNode> pfn, float Z)
+        private IList<Vector3d> PathfinderNodesToV3s(IList<PathFinderNode> pfn, float Z)
         {
             Vector3d V = GetGlobalCorner();
-            List<Vector3d> v3s = new List<Vector3d>();
+            IList<Vector3d> v3s = new List<Vector3d>();
             foreach (PathFinderNode P in pfn)
             {
                 float x = UNARRAY_X(P.X);
@@ -630,12 +1287,12 @@ namespace cogbot.TheOpenSims.Navigation
                 Vector3d v3 = new Vector3d(x + V.X, y + V.Y, Z);
                 v3s.Add(v3);
             }
-            return GetSimplifedRoute(v3s[0], v3s, 10, 8f);
+            return GetSimplifedRoute(v3s[0], v3s, 5, 4f);
         }
 
         private Vector3d GetGlobalCorner()
         {
-            return new Vector3d(GetSimRegion().LocalToGlobal(new Vector3(0, 0, 0)));
+            return new Vector3d(GetPathStore().LocalToGlobal(new Vector3(0, 0, 0)));
         }
 
         public Point ToPoint(Vector3 start)
@@ -752,7 +1409,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public SimWaypoint CreateClosestRegionWaypoint(Vector3 v3, double maxDist)
         {
-            Vector3d v3d = GetSimRegion().LocalToGlobal(v3);
+            Vector3d v3d = GetPathStore().LocalToGlobal(v3);
             double Dist;
             SimWaypoint W = SimGlobalRoutes.Instance.ClosestNode(v3d.X, v3d.Y, v3d.Z, out Dist, true);
             if (Dist > maxDist)
@@ -770,7 +1427,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         private SimWaypoint ClosestRegionNode(float x, float y, float z, out double Dist, bool IgnorePassable)
         {
-            Vector3d v3d = GetSimRegion().LocalToGlobal(new Vector3(x, y, z));
+            Vector3d v3d = GetPathStore().LocalToGlobal(new Vector3(x, y, z));
             return SimGlobalRoutes.Instance.ClosestNode(v3d.X, v3d.Y, v3d.Z, out Dist, IgnorePassable);
         }
 
@@ -788,6 +1445,7 @@ namespace cogbot.TheOpenSims.Navigation
 
         public void UpdateTraveled(UUID uUID, Vector3 after, Quaternion rot)
         {
+            return;
             lock (LaskKnownPos) if (!LaskKnownPos.ContainsKey(uUID))
             {
                 LaskKnownPos[uUID] = new MoverTracking(after, rot, this);
@@ -798,7 +1456,7 @@ namespace cogbot.TheOpenSims.Navigation
             }
         }
 
-        private void Refresh(cogbot.TheOpenSims.Mesher.Box3Fill changed, CollisionPlane CurrentPlane)
+        private void Refresh(PathSystem3D.Mesher.Box3Fill changed, CollisionPlane CurrentPlane)
         {
             int xs = (int)changed.MinX;
             int ys = (int)changed.MaxX;
@@ -820,18 +1478,22 @@ namespace cogbot.TheOpenSims.Navigation
                         CollisionIndex WP = MeshIndex[x, y];
                         if (WP != null) WP.TaintMatrix();
                     }
-                for (int x = xs; x <= xe; x++)
-                    for (int y = ys; y <= ye; y++)
-                    {
-                        CollisionIndex WP = MeshIndex[x, y];
-                        if (WP != null) WP.UpdateMatrix(CurrentPlane);
-                    }
+                if (CurrentPlane != null)
+                    for (int x = xs; x <= xe; x++)
+                        for (int y = ys; y <= ye; y++)
+                        {
+                            CollisionIndex WP = MeshIndex[x, y];
+                            if (WP != null)
+                            {
+                                WP.UpdateMatrix(CurrentPlane);
+                            }
+                        }
             }
         }
 
-        internal void Refresh(Box3dFill changed)
+        public void Refresh(Box3Fill changed)
         {
-            throw new NotImplementedException();
+            Refresh(changed, null);
         }
 
         PathFinderDemo PathFinder;
@@ -843,6 +1505,107 @@ namespace cogbot.TheOpenSims.Navigation
                 PathFinder = new PathFinderDemo(this);
             }
             PathFinder.Show();
+        }
+
+
+        public Vector3 LocalOuterEdge(Vector3 startLocal, SimPosition endPosOther, out SimPathStore nextRegion)
+        {
+            SimPathStore rother = endPosOther.GetPathStore();
+            Vector3 vother = endPosOther.GetSimPosition();
+            if (rother == this)
+            {
+                nextRegion = this;
+                return vother;
+            }
+
+            Vector2 VD = rother.GetGridLocation() - GetGridLocation();
+
+            Vector2 SD = new Vector2(Math.Sign(VD.X), Math.Sign(VD.Y));
+            float x = 128 + SD.X * 127;
+            if (x == 128)
+            {
+                x = (startLocal.X + vother.X) / 2;
+            }
+            float y = 128 + SD.Y * 127;
+            if (y == 128)
+            {
+                y = (startLocal.Y + vother.Y) / 2;
+            }
+            nextRegion = GetPathStore(GetGridLocation() + SD);
+            return new Vector3(x, y, vother.Z);
+        }
+
+
+        public static SimPathStore GetPathStore(Vector3d pos)
+        {
+            if (pos.X < 0 || pos.Y < 0)
+            {
+                throw new ArgumentException("GlobalToWaypoint? " + pos);
+            }
+            if (pos.X < 256 || pos.Y < 256)
+            {
+                Console.WriteLine("GlobalToWaypoint? " + pos);
+            }
+            return GetPathStore(new Vector2(Round256(pos.X)/256, Round256(pos.Y)/256));
+        }
+
+        public static SimPathStore GetPathStore(Vector2 loc)
+        {
+            lock (_PathStores)
+            {
+                SimPathStore PS;
+                if (_PathStores.TryGetValue(loc,out PS)) {
+                    return PS;
+                }
+                return new SimPathStore(null, loc, new Vector3d(loc.X * 256, loc.Y * 256, 0), new Vector3(256, 256, float.MaxValue));
+            }
+        }
+
+        public static Vector3 GlobalToLocal(Vector3d pos)
+        {
+            if (pos.X < 0 || pos.Y < 0)
+            {
+                throw new ArgumentException("GlobalToWaypoint? " + pos);
+            }
+            if (pos.X < 256 || pos.Y < 256)
+            {
+                Console.WriteLine("GlobalToWaypoint? " + pos);
+            }
+            return new Vector3((float)pos.X - Round256(pos.X), (float)pos.Y - Round256(pos.Y), (float)pos.Z);
+        }
+
+        public static uint Round256(double global)
+        {
+            return ((uint)global / 256) * 256;
+        }
+
+        public SimPathStore GetPathStore3D(Vector3 vv3)
+        {
+            return this;
+        }
+
+        public static bool OutOfRegion(Vector3 v3)
+        {
+            if (v3.X < 0 || v3.X >= 256f)
+                return true;
+            if (v3.Y < 0 || v3.Y >= 256f)
+                return true;
+            if (v3 == Vector3.Zero) return true;
+            return false;
+        }
+
+        public bool IsPassable(Vector3 next)
+        {
+            if (OutOfRegion(next)) return false;
+            SimPathStore PathStore = GetPathStore3D(next);
+            CollisionPlane CP = PathStore.GetCollisionPlane(next.Z);
+            return PathStore.IsPassable(next, CP);
+        }
+
+
+        public CollisionIndex GetCollisionIndexAt(Vector3 V)
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -879,21 +1642,7 @@ namespace cogbot.TheOpenSims.Navigation
             float dist = Vector3.Distance(LastPosition, nextPosition);
             if (dist > Store.StepSize)
             {
-                Vector3 dif = LastPosition - nextPosition;
-                if (!(dif.X == 0 && dif.Y == 0))
-                {
-                    int stepsNeeded = (int)(dist * Store.POINTS_PER_METER) + 1;
-                    if (Settings.LOG_LEVEL == Helpers.LogLevel.Debug) Console.WriteLine("MakeMovement " + LastPosition + " -> " + stepsNeeded + " -> " + nextPosition + " " + Store);
-                    Vector3 vstep = dif / stepsNeeded;
-                    Vector3 traveled = nextPosition;
-                    Store.SetTraveled(nextPosition.X, nextPosition.Y, nextPosition.Z);
-                    for (int i = 0; i < stepsNeeded; i++)
-                    {
-                        traveled = traveled + vstep;
-                        if (stepsNeeded > 10) Store.SetTraveled(traveled.X, traveled.Y, traveled.Z);
-                        else Store.SetPassable(traveled.X, traveled.Y, traveled.Z);
-                    }
-                }
+                Store.SetTraveled(LastPosition, nextPosition);
                 LastPosition = nextPosition;
             }
         }

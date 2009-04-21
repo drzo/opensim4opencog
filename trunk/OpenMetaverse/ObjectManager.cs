@@ -168,6 +168,9 @@ namespace OpenMetaverse
         /// <param name="simulator"></param>
         /// <param name="props"></param>
         public delegate void ObjectPropertiesCallback(Simulator simulator, Primitive.ObjectProperties props);
+
+        public delegate void PrimitivePropertiesCallback(Simulator simulator, Primitive prim, Primitive.ObjectProperties props);
+
         /// <summary>
         /// 
         /// </summary>
@@ -275,6 +278,10 @@ namespace OpenMetaverse
         /// from the simulator
         /// </summary>
         public event ObjectPropertiesCallback OnObjectProperties;
+
+
+        public event PrimitivePropertiesCallback OnPrimitiveProperties;
+
         /// <summary>
         /// Thie event will be raised when an objects properties family 
         /// information is recieved from the simulator. ObjectPropertiesFamily
@@ -2248,11 +2255,22 @@ namespace OpenMetaverse
 
                     if (findPrim != null)
                     {
-                        lock (sim.ObjectsPrimitives.Dictionary)
+                        if (OnPrimitiveProperties != null)
                         {
-                            if (sim.ObjectsPrimitives.Dictionary.ContainsKey(findPrim.LocalID))
-                                sim.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties = props;
+                            OnPrimitiveProperties(sim, findPrim, props);
                         }
+                        findPrim.Properties = props;
+                        //lock (sim.ObjectsPrimitives.Dictionary)
+                        //{
+                        //    if (sim.ObjectsPrimitives.Dictionary.ContainsKey(findPrim.LocalID))
+                        //    {
+                        //        if (OnPrimitiveProperties != null)
+                        //        {
+
+                        //        }
+                        //        sim.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties = props;
+                        //    }
+                        //}
                     }
                 }
 

@@ -2,11 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
-using cogbot.Listeners;
-using cogbot.TheOpenSims.Mesher;
+using PathSystem3D.Mesher;
 using OpenMetaverse;
 
-namespace cogbot.TheOpenSims.Navigation
+namespace PathSystem3D.Navigation
 {
     /// <summary>
     /// An x/y postion in a region that indexes the objects that can collide at this x/y
@@ -77,8 +76,8 @@ namespace cogbot.TheOpenSims.Navigation
 
         public bool IsUnderWater(CollisionPlane CP)
         {
-            if (CP == null) return GetGroundLevel() < GetSimRegion().WaterHeight();
-            return CP.MinZ < GetSimRegion().WaterHeight();
+            if (CP == null) return GetGroundLevel() < GetSimRegion().WaterHeight;
+            return CP.MinZ < GetSimRegion().WaterHeight;
         }
 
         public bool IsFlyZone(CollisionPlane CP)
@@ -100,7 +99,7 @@ namespace cogbot.TheOpenSims.Navigation
                 SetMatrix(CP, SimPathStore.BLOCKED);
             else if (IsSolid != 0)
             {
-                List<SimMesh> OccupiedCP = GetOccupied(CP);
+                List<IMeshedObject> OccupiedCP = GetOccupied(CP);
                 if (SomethingBetween(zlevel + 0.35f, zlevel + 1.7f, OccupiedCP))
                     SetMatrix(CP, SimPathStore.BLOCKED);
                 else if (SomethingBetween(zlevel + 0.1f, zlevel + 0.3f, OccupiedCP))
@@ -117,7 +116,7 @@ namespace cogbot.TheOpenSims.Navigation
             return SomethingBetween(low, high, GetOccupied(low,high));
         }
 
-        private List<SimMesh> GetOccupied(float low, float high)
+        private List<IMeshedObject> GetOccupied(float low, float high)
         {
             return ShadowList;
         }
@@ -125,7 +124,7 @@ namespace cogbot.TheOpenSims.Navigation
         internal bool SomethingBetween(float low, float high, IEnumerable OccupiedListObject)
         {
             if (IsSolid == 0) return false;
-            lock (OccupiedListObject) foreach (SimMesh O in OccupiedListObject)
+            lock (OccupiedListObject) foreach (IMeshedObject O in OccupiedListObject)
                 {
                     if (!O.IsPassable)
                     {
@@ -188,9 +187,9 @@ namespace cogbot.TheOpenSims.Navigation
             return _GroundLevelCache;
         }
 
-        public SimRegion GetSimRegion()
+        public SimPathStore GetSimRegion()
         {
-            return PathStore.GetSimRegion();
+            return PathStore.GetPathStore();
         }
 
 
@@ -210,7 +209,7 @@ namespace cogbot.TheOpenSims.Navigation
             if (LastPlane != CP)
             {
                 LastPlane = CP;
-                List<SimMesh> OccupiedCP = GetOccupied(CP);
+                List<IMeshedObject> OccupiedCP = GetOccupied(CP);
                 float above = CP.MinZ;
                 float GL = GetGroundLevel(CP);
                 if (above < GL) above = GL;
@@ -222,11 +221,11 @@ namespace cogbot.TheOpenSims.Navigation
                 if (IsSolid != 0)
                 {
                     bool ChangeD = false;
-                    SimMesh Flooring = null;
+                    IMeshedObject Flooring = null;
                     for (int d = IsSolid; d > 0; d--)
                     {
                         lock (OccupiedCP)
-                            foreach (SimMesh O in OccupiedCP)
+                            foreach (IMeshedObject O in OccupiedCP)
                             {
                                 if (O.IsPassable) continue;
                                 float MaxZ;
@@ -279,9 +278,9 @@ namespace cogbot.TheOpenSims.Navigation
         }
 
 
-        public bool AddOccupied(SimMesh simObject, float minZ, float maxZ)
+        public bool AddOccupied(IMeshedObject simObject, float minZ, float maxZ)
         {
-            List<SimMesh> meshes = GetOccupied(minZ, maxZ);
+            List<IMeshedObject> meshes = GetOccupied(minZ, maxZ);
             lock (meshes)
                 if (!meshes.Contains(simObject))
                 {
@@ -295,8 +294,8 @@ namespace cogbot.TheOpenSims.Navigation
             return false;
         }
 
-        public List<SimMesh> ShadowList = new List<SimMesh>();
-        public List<SimMesh> GetOccupied(CollisionPlane CP)
+        public List<IMeshedObject> ShadowList = new List<IMeshedObject>();
+        public List<IMeshedObject> GetOccupied(CollisionPlane CP)
         {
             return ShadowList;
         }
@@ -311,7 +310,7 @@ namespace cogbot.TheOpenSims.Navigation
             {
                 lock (GetOccupied(LastPlane))
                 {
-                    foreach (SimMesh O in GetOccupied(LastPlane))
+                    foreach (IMeshedObject O in GetOccupied(LastPlane))
                     {
                         S += O.ToString();
                         S += "\r\n";
@@ -324,7 +323,7 @@ namespace cogbot.TheOpenSims.Navigation
         public string ExtraInfoString(CollisionPlane LastPlane)
         {
             string S = "GLevel=" + GetGroundLevel(LastPlane);
-            if (IsUnderWater(LastPlane)) S += " UnderWater=" + GetSimRegion().WaterHeight();
+            if (IsUnderWater(LastPlane)) S += " UnderWater=" + GetSimRegion().WaterHeight;
             S += " LastGL=" + LastPlane;
             if (LastPlane != null)
                 S += " ZLevel=" + GetZLevel(LastPlane)
@@ -341,7 +340,7 @@ namespace cogbot.TheOpenSims.Navigation
         /// <returns>String describing this node.</returns>
         public override string ToString()
         {
-            SimRegion R = GetSimRegion();
+            SimPathStore R = GetSimRegion();
             Vector3 loc = GetSimPosition();
             return String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, GetGroundLevel(LastPlane));
         }
@@ -355,9 +354,9 @@ namespace cogbot.TheOpenSims.Navigation
         ///// <returns>'true' if both nodes are equal.</returns>
         //public override bool Equals(object O)
         //{
-        //    if (O is SimPosition)
+        //    if (O is MeshableObject)
         //    {
-        //        return _GlobalPos == ((SimPosition)O).GetWorldPosition();
+        //        return _GlobalPos == ((MeshableObject)O).GetWorldPosition();
         //    }
         //    //if (O is Vector3d)
         //    //{
@@ -409,7 +408,7 @@ namespace cogbot.TheOpenSims.Navigation
                 if (WP != null) return WP;
                 from.X = PX / POINTS_PER_METER;
                 from.Y = PY / POINTS_PER_METER;
-                Vector3d GlobalPos = PathStore.GetSimRegion().LocalToGlobal(from);
+                Vector3d GlobalPos = PathStore.GetPathStore().LocalToGlobal(from);
                 WP = new CollisionIndex(from, GlobalPos, PX, PY, PathStore);
             }
             return WP;
@@ -420,9 +419,9 @@ namespace cogbot.TheOpenSims.Navigation
             return _LocalPos;
         }
 
-        public void RemoveObject(SimMesh simObject)
+        public void RemoveObject(IMeshedObject simObject)
         {
-            foreach (List<SimMesh> MOL in MeshedObjectIndexes())
+            foreach (List<IMeshedObject> MOL in MeshedObjectIndexes())
             {
                 lock (MOL) if (MOL.Contains(simObject))
                     {
@@ -436,10 +435,10 @@ namespace cogbot.TheOpenSims.Navigation
 
         public void RemeshObjects()
         {
-            Box3dFill changed = new Box3dFill(true);
-            foreach (List<SimMesh> MOL in MeshedObjectIndexes())
+            Box3Fill changed = new Box3Fill(true);
+            foreach (List<IMeshedObject> MOL in MeshedObjectIndexes())
             {
-                lock (MOL) foreach (SimMesh O in new List<SimMesh>(MOL))
+                lock (MOL) foreach (IMeshedObject O in new List<IMeshedObject>(MOL))
                     {
                         O.RemeshObject(changed);
                     }
@@ -450,9 +449,9 @@ namespace cogbot.TheOpenSims.Navigation
 
         public void RegionTaintedThis()
         {
-            foreach (List<SimMesh> MOL in MeshedObjectIndexes())
+            foreach (List<IMeshedObject> MOL in MeshedObjectIndexes())
             {
-                lock (MOL) foreach (SimMesh O in new List<SimMesh>(MOL))
+                lock (MOL) foreach (IMeshedObject O in new List<IMeshedObject>(MOL))
                     {
                         O.RegionTaintedThis();
                     }
@@ -461,13 +460,13 @@ namespace cogbot.TheOpenSims.Navigation
             //RemeshObjects();
             //UpdateMatrix(CP);
         }
-        List<List<SimMesh>> _MeshedObjectIndexs = null;
-        private IEnumerable<List<SimMesh>> MeshedObjectIndexes()
+        List<List<IMeshedObject>> _MeshedObjectIndexs = null;
+        private IEnumerable<List<IMeshedObject>> MeshedObjectIndexes()
         {
 
             if (_MeshedObjectIndexs == null)
             {
-                _MeshedObjectIndexs = new List<List<SimMesh>>();
+                _MeshedObjectIndexs = new List<List<IMeshedObject>>();
                 _MeshedObjectIndexs.Add(ShadowList);
             }
             return _MeshedObjectIndexs;
@@ -484,15 +483,12 @@ namespace cogbot.TheOpenSims.Navigation
             if (IsTimerTicking) return;
             IsTimerTicking = true;
 
-            WorldObjects Master = WorldObjects.Master;
             float StepSize = PathStore.StepSize;
-            Primitive PRIM = null;// Master.AddTempPrim(GetSimRegion(), "pathdebug", PrimType.Tube, new Vector3(StepSize, StepSize, StepSize), _LocalPos);
             new Thread(new ThreadStart(delegate()
             {
                 Thread.Sleep(seconds * 1000);
                 byte newValue = GetMatrix(CP);
 
-                if (PRIM != null) Master.DeletePrim(PRIM);
                 if (newValue != value)
                 {
                     // its been changed by something else since we set to Zero

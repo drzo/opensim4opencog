@@ -17,9 +17,9 @@ using System.Windows.Forms;
 using System.ComponentModel;
 using System.Collections.Generic;
 
-using cogbot.TheOpenSims.Navigation;
+using PathSystem3D.Navigation;
 
-namespace cogbot.TheOpenSims.Navigation.Debug
+namespace PathSystem3D.Navigation.Debug
 {
 
     #region Enums
@@ -71,8 +71,11 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         #region Properties
         public byte[,] Matrix
         {
-            get { return PathStore.GetByteMatrix(ZLevel); }
+            get {
+                if (_Matrix == null) _Matrix = PathStore.GetByteMatrix(ZLevel);
+                return _Matrix; }
         }
+        byte[,] _Matrix;
 
         public int GridSize
         {
@@ -214,7 +217,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
             Graphics g = e.Graphics;
             if (PathStore != null)
             {
-                byte[,] matrix = PathStore.GetByteMatrix(ZLevel);
+                byte[,] matrix = Matrix;
                 for (int y = (e.ClipRectangle.Y / mGridSize) * mGridSize; y <= e.ClipRectangle.Bottom; y += mGridSize)
                     for (int x = (e.ClipRectangle.X / mGridSize) * mGridSize; x <= e.ClipRectangle.Right; x += mGridSize)
                     {
@@ -348,13 +351,15 @@ namespace cogbot.TheOpenSims.Navigation.Debug
                     _CurrentPlane = value;
                     Invalidate();
                 }
+                if (_CurrentPlane!=null) _Matrix = _CurrentPlane.ByteMatrix;
             }
         }
         public float ZLevel
         {
             get { if (CurrentPlane == null) return 22;
                 return CurrentPlane.MinZ; }
-            set { CurrentPlane = PathStore.GetCollisionPlane(value); }
+            set {                
+                CurrentPlane = PathStore.GetCollisionPlane(value); }
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -429,7 +434,7 @@ namespace cogbot.TheOpenSims.Navigation.Debug
         }
 
         private delegate void DrawPathDelegate(List<PathFinderNode> path);
-        internal void DrawPath(List<PathFinderNode> path)
+        internal void DrawPath(IList<PathFinderNode> path)
         {
             if (path == null) return;
             if (this.InvokeRequired)

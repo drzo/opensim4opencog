@@ -660,7 +660,7 @@ namespace cogbot.Listeners
             client.Objects.OnObjectUpdated += Objects_OnObjectUpdated;
             client.Objects.OnAvatarSitChanged += Objects_OnAvatarSitChanged;
             client.Objects.OnObjectKilled += Objects_OnObjectKilled;
-            client.Objects.OnObjectProperties += Objects_OnObjectProperties;
+           // client.Objects.OnObjectProperties += Objects_OnObjectProperties;
             client.Objects.OnObjectPropertiesFamily += Objects_OnObjectPropertiesFamily;
             client.Groups.OnCurrentGroups += Groups_OnCurrentGroups;
             client.Groups.OnGroupNames += Groups_OnGroupNames;
