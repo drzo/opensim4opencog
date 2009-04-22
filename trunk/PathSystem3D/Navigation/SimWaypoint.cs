@@ -98,7 +98,7 @@ namespace PathSystem3D.Navigation
 
         private float GetZLevel(CollisionPlane LastGL)
         {
-            return CIndex.GetZLevel(LastGL);
+            return CIndex.GetZLevel(LastGL,LastGL.Range);
         }
 
         public CollisionPlane Plane { get; set; }

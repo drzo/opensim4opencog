@@ -30,11 +30,13 @@ namespace PathSystem3D.Mesher
 
     public interface IMeshedObject
     {
+        IList<Box3Fill> InnerBoxes {get;}
+        Box3Fill OuterBox {get;}
         bool IsPassable { get; }
         void RegionTaintedThis();
         void RemeshObject(Box3Fill changed);
-        bool SomethingBetween(Vector3 localPos, float low, float high);
-        bool SomethingMaxZ(Vector3 localPos, float low, float high, out float maxZ);
+        bool SomethingBetween(float x, float y, float low, float high);
+        bool SomethingMaxZ(float x, float y, float low, float high, out float maxZ);
         void RemoveFromWaypoints(Box3Fill changed);
         void RemeshObject();
         string DebugString();
@@ -77,14 +79,14 @@ namespace PathSystem3D.Mesher
             //((SimObjectImpl)RootObject).WorldSystem.ReSelectObject(RootObject.Prim);
         }
 
-        public bool SomethingBetween(Vector3 vector3, float low, float high)
-        {
-            return this.SomethingBetween(vector3.X, vector3.Y, low, high);
-        }
-        public bool SomethingMaxZ(Vector3 vector3, float low, float high, out float maxZ)
-        {
-            return SomethingMaxZ(vector3.X, vector3.Y, low, high, out maxZ);
-        }
+        //public bool SomethingBetween(Vector3 vector3, float low, float high)
+        //{
+        //    return this.SomethingBetween(vector3.X, vector3.Y, low, high);
+        //}
+        //public bool SomethingMaxZ(Vector3 vector3, float low, float high, out float maxZ)
+        //{
+        //    return SomethingMaxZ(vector3.X, vector3.Y, low, high, out maxZ);
+        //}
 
         List<SimPathStore> SimPathStoresOccupied = new List<SimPathStore>();
         public static bool DoNotMeshPassable = true;
@@ -181,7 +183,7 @@ namespace PathSystem3D.Mesher
 
         public static bool UpdateMeshPaths = true;
 
-        public static bool tryFastVersion = true;
+        public static bool tryFastVersion = false;
 
         public void UpdatePathOccupied(SimPathStore pathStore)
         {
@@ -203,7 +205,7 @@ namespace PathSystem3D.Mesher
                 //  SetOccupied(SetLocated, float.MinValue, float.MaxValue, PathStore.StepSize);
                 int tc = Environment.TickCount;
                 // 10 60
-                SetOccupied(SetLocated, float.MinValue, float.MaxValue, pathStore.StepSize);
+                SetOccupied(SetLocatedOld, float.MinValue, float.MaxValue, pathStore.StepSize);
                 t2 = Environment.TickCount - tc;
             }
             this.PathStore = pathStore;
@@ -227,10 +229,10 @@ namespace PathSystem3D.Mesher
                 for (float y = MinY; y <= MaxY; y += detail)
                 {
                     if (xyInside(x, y))
-                        SetLocated(x, y, MinZ, MaxZ);
+                        SetLocatedOld(x, y, MinZ, MaxZ);
                 }
             }
-            SetLocated(MaxX, MaxY, MinZ, MaxZ);
+            SetLocatedOld(MaxX, MaxY, MinZ, MaxZ);
         }
 
         private bool xyInside(float x, float y)
@@ -243,7 +245,7 @@ namespace PathSystem3D.Mesher
         }
 
 
-        public void SetLocated(float x, float y, float minZ, float maxZ)
+        public void SetLocatedOld(float x, float y, float minZ, float maxZ)
         {
             //SimPathStore PathStore = GetPathStore();
             CollisionIndex P = PathStore.SetObjectAt(x, y, this, minZ, maxZ);
@@ -376,7 +378,7 @@ namespace PathSystem3D.Mesher
             return found;
         }
 
-        internal bool SomethingBetween(float xf, float yf, float low, float high)
+        public bool SomethingBetween(float xf, float yf, float low, float high)
         {
             if (OuterBox.MaxZ < low) return false;
             if (OuterBox.MinZ > high) return false;
@@ -391,7 +393,7 @@ namespace PathSystem3D.Mesher
             return false;
         }
 
-        internal bool SomethingMaxZ(float xf, float yf, float low, float high, out float maxZ)
+        public bool SomethingMaxZ(float xf, float yf, float low, float high, out float maxZ)
         {
             bool found = false;
             maxZ = OuterBox.MinZ;
@@ -409,7 +411,6 @@ namespace PathSystem3D.Mesher
             }
             return found;
         }
-
     }
 
 }

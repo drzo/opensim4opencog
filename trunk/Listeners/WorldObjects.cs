@@ -54,6 +54,7 @@ namespace cogbot.Listeners
         {
             if (!RequestedGridInfos)
             {
+                int Range = 0;
                 RequestedGridInfos = true;
                 uint X;
                 uint Y;
@@ -63,7 +64,7 @@ namespace cogbot.Listeners
                 Y /= 256;
                 if (X < 2) X = 2; else if (X > 65533) X = 65533;
                 if (Y < 2) Y = 2; else if (Y > 65533) Y = 65533;
-                client.Grid.RequestMapBlocks(GridLayerType.Objects, (ushort)(X - 2), (ushort)(Y - 2), (ushort)(X + 2), (ushort)(Y + 2), false);
+                client.Grid.RequestMapBlocks(GridLayerType.Objects, (ushort)(X - Range), (ushort)(Y - Range), (ushort)(X + Range), (ushort)(Y + Range), false);
                 //client.Grid.RequestMainlandSims(GridLayerType.Objects);
                 //  client.Grid.RequestMainlandSims(GridLayerType.Terrain);
                 //   client.Grid.RequestMapLayer(GridLayerType.Objects);
@@ -244,8 +245,8 @@ namespace cogbot.Listeners
             if (Utils.GetRunningRuntime()==Utils.Runtime.Mono)
             {
                 client.Settings.USE_LLSD_LOGIN = true;
-            } else
-                client.Settings.USE_LLSD_LOGIN = false;
+            } //else
+             //   client.Settings.USE_LLSD_LOGIN = false;
             lock (WorldObjectsMasterLock)
             {
                 if (Master == null) Master = this;
@@ -1659,7 +1660,7 @@ namespace cogbot.Listeners
                     TheSimAvatar.ScanNewObjects(5, 100);
                     set = TheSimAvatar.GetKnownObjects();
                 }
-                foreach (SimObject obj in set)
+                lock (set) foreach (SimObject obj in set)
                 {
                     if (obj.Matches(name))
                     {

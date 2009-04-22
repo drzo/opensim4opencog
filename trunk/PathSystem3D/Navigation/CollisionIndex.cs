@@ -7,6 +7,28 @@ using OpenMetaverse;
 
 namespace PathSystem3D.Navigation
 {
+    public class FloatRange
+    {
+        static public FloatRange ALL = new FloatRange(float.MinValue, float.MaxValue);
+        public float Min;
+        readonly public float Max;
+        //IMeshedObject obj;
+
+        public override string ToString()
+        {
+            return String.Format("{0}-{1}", Min, Max);
+        }
+        internal FloatRange(float low, float high)
+        {
+            Min = low;
+            Max = high;
+        }
+
+        internal bool Touches(float low, float high)
+        {
+            return (!(low > Max || high > Min));
+        }
+    }
     /// <summary>
     /// An x/y postion in a region that indexes the objects that can collide at this x/y
     ///  Also indexes waypoints for fast lookup
@@ -14,6 +36,9 @@ namespace PathSystem3D.Navigation
     [Serializable]
     public class CollisionIndex
     {
+        const float CapsuleZ = 1.66f;
+        public const float MaxBump = 0.60f;
+
         //public Point Point;
 
         /// <summary>
@@ -48,17 +73,17 @@ namespace PathSystem3D.Navigation
             CP[PX, PY] = (byte)v;
         }
 
-        private byte _OccupiedCount;
+        public int OccupiedCount;
 
-        public int OccupiedCount
-        {
-            get { return _OccupiedCount; }
-            set { _OccupiedCount = (byte)value; }
-        }
 
         public bool SolidAt(float z)
         {
-            return SomethingBetween(z, z, GetOccupied(z,z));
+            float maxZ;
+            if (SomethingBetween(z, z, GetOccupied(z, z), out maxZ))
+            {
+                return true;
+            }
+            return false;
         }
 
         private CollisionPlane CollisionPlaneAt(float z)
@@ -66,12 +91,12 @@ namespace PathSystem3D.Navigation
             return PathStore.GetCollisionPlane(z);
         }
 
-        byte IsSolid = 0;
+        int IsSolid = 0;
 
 
         //public bool IsGroundLevel()
         //{
-        //    return GetZLevel(LastPlane) == GetGroundLevel();
+        //    return GetZLevelFree(LastPlane) == GetGroundLevel();
         //}
 
         public bool IsUnderWater(CollisionPlane CP)
@@ -80,9 +105,9 @@ namespace PathSystem3D.Navigation
             return CP.MinZ < GetSimRegion().WaterHeight;
         }
 
-        public bool IsFlyZone(CollisionPlane CP)
+        public bool IsFlyZone(CollisionPlane CP, FloatRange minZ)
         {
-            return IsUnderWater(CP);
+            return IsUnderWater(CP) || IsMidAir(CP, minZ);
         }
 
         public byte GetOccupiedValue(CollisionPlane CP)
@@ -91,29 +116,42 @@ namespace PathSystem3D.Navigation
             if (b > 240) return 240;
             return (byte)b;
         }
-        public void UpdateMatrix(CollisionPlane CP)
+        public void UpdateMatrix(CollisionPlane CP, float ConsiderOnlyAboveZ)
         {
-            SetMatrix(CP, GetOccupiedValue(CP));
-            float zlevel = GetZLevel(CP);
-            if (NeighborBump(CP, zlevel, 0.55f))
+            byte OV = GetOccupiedValue(CP);
+            SetMatrix(CP, OV);
+            float maxZ = CP.MaxZ;
+            CP.Range.Min = ConsiderOnlyAboveZ;
+            float cpin = CP.MinZ;
+            float zlevel = GetZLevel(CP, CP.Range);
+            float min = zlevel - 1;
+            if (min > cpin) min = cpin;
+            FloatRange ConsiderNeighbourZ = new FloatRange(min,maxZ) ;
+            if (NeighborBump(CP, zlevel, MaxBump, ConsiderNeighbourZ) > 1)
                 SetMatrix(CP, SimPathStore.BLOCKED);
-            else if (IsSolid != 0)
+            else if (false && IsSolid != 0)
             {
                 List<IMeshedObject> OccupiedCP = GetOccupied(CP);
-                if (SomethingBetween(zlevel + 0.35f, zlevel + 1.7f, OccupiedCP))
-                    SetMatrix(CP, SimPathStore.BLOCKED);
-                else if (SomethingBetween(zlevel + 0.1f, zlevel + 0.3f, OccupiedCP))
+                if (SomethingBetween(zlevel + 0.35f, zlevel + CapsuleZ, OccupiedCP, out maxZ))
                     SetMatrix(CP, SimPathStore.MAYBE_BLOCKED);
-                else if (NeighborBump(CP, zlevel, 0.2f))
+                else if (SomethingBetween(zlevel + 0.1f, zlevel + 0.3f, OccupiedCP, out maxZ))
+                    SetMatrix(CP, SimPathStore.MAYBE_BLOCKED);
+                else if (NeighborBump(CP, zlevel, 0.2f, ConsiderNeighbourZ) > 1)
+                    SetMatrix(CP, SimPathStore.MAYBE_BLOCKED);
+                else if (IsMidAir(CP,ConsiderNeighbourZ))
                     SetMatrix(CP, SimPathStore.MAYBE_BLOCKED);
             }
             else if (IsUnderWater(CP))
                 SetMatrix(CP, SimPathStore.MAYBE_BLOCKED);
+            else if (IsMidAir(CP, ConsiderNeighbourZ))
+                SetMatrix(CP, SimPathStore.MAYBE_BLOCKED);
+            else CP.DefaultCollisionValue(_GroundLevelCache, OV);
         }
 
-        internal bool SomethingBetween(float low, float high, bool onlySolids)
+        private bool IsMidAir(CollisionPlane CP, FloatRange minZ)
         {
-            return SomethingBetween(low, high, GetOccupied(low,high));
+            float zlevel = GetZLevel(CP, minZ);
+            return CP.MinZ > zlevel;
         }
 
         private List<IMeshedObject> GetOccupied(float low, float high)
@@ -121,56 +159,62 @@ namespace PathSystem3D.Navigation
             return ShadowList;
         }
 
-        internal bool SomethingBetween(float low, float high, IEnumerable OccupiedListObject)
+        internal bool SomethingBetween(float low, float high, IEnumerable OccupiedListObject, out float maxZ)
         {
-            if (IsSolid == 0) return false;
+            if (IsSolid == 0)
+            {
+                maxZ = GetGroundLevel(LastPlane);
+                return (high<maxZ);
+            }
             lock (OccupiedListObject) foreach (IMeshedObject O in OccupiedListObject)
                 {
                     if (!O.IsPassable)
                     {
-                        if (O.SomethingBetween(_LocalPos, low, high)) return true;
+                        if (O.SomethingMaxZ(_LocalPos.X,_LocalPos.Y, low, high,out maxZ)) return true;
                     }
                 }
+            maxZ = GetGroundLevel(LastPlane);
             return false;
         }
 
-        public bool NeighborBump(CollisionPlane CP, float original, float mostDiff)
+        public byte NeighborBump(CollisionPlane CP, float original, float mostDiff, FloatRange minZ)
         {
             if (PX < 1 || PY < 1 || _LocalPos.X > 254 || _LocalPos.Y > 254)
-                return false;
+                return 0;
             float O;
 
-            O = NeighborLevel(CP, PX, PY + 1);
-            if (!DiffLessThan(O, original, mostDiff)) return true;
+            byte found = 0;
+            O = NeighborLevel(CP, PX, PY + 1,minZ);
+            if (!DiffLessThan(O, original, mostDiff)) found++;
 
-            O = NeighborLevel(CP, PX + 1, PY + 1);
-            if (!DiffLessThan(O, original, mostDiff)) return true;
+            O = NeighborLevel(CP, PX + 1, PY + 1,minZ);
+            if (!DiffLessThan(O, original, mostDiff)) found++;
 
-            O = NeighborLevel(CP, PX + 1, PY);
-            if (!DiffLessThan(O, original, mostDiff)) return true;
+            O = NeighborLevel(CP, PX + 1, PY,minZ);
+            if (!DiffLessThan(O, original, mostDiff)) found++;
 
-            O = NeighborLevel(CP, PX + 1, PY - 1);
-            if (!DiffLessThan(O, original, mostDiff)) return true;
+            O = NeighborLevel(CP, PX + 1, PY - 1,minZ);
+            if (!DiffLessThan(O, original, mostDiff)) found++;
 
-            O = NeighborLevel(CP, PX, PY - 1);
-            if (!DiffLessThan(O, original, mostDiff)) return true;
+            O = NeighborLevel(CP, PX, PY - 1,minZ);
+            if (!DiffLessThan(O, original, mostDiff)) found++;
 
-            O = NeighborLevel(CP, PX - 1, PY - 1);
-            if (!DiffLessThan(O, original, mostDiff)) return true;
+            O = NeighborLevel(CP, PX - 1, PY - 1,minZ);
+            if (!DiffLessThan(O, original, mostDiff)) found++;
 
-            O = NeighborLevel(CP, PX - 1, PY);
-            if (!DiffLessThan(O, original, mostDiff)) return true;
+            O = NeighborLevel(CP, PX - 1, PY,minZ);
+            if (!DiffLessThan(O, original, mostDiff)) found++;
 
-            O = NeighborLevel(CP, PX - 1, PY + 1);
-            if (!DiffLessThan(O, original, mostDiff)) return true;
+            O = NeighborLevel(CP, PX - 1, PY + 1,minZ);
+            if (!DiffLessThan(O, original, mostDiff)) found++;
 
-            return false;
+            return found;
         }
 
-        internal float NeighborLevel(CollisionPlane CP, int PX, int PY)
+        internal float NeighborLevel(CollisionPlane CP, int PX, int PY, FloatRange minZ)
         {
             CollisionIndex WP = PathStore.MeshIndex[PX, PY];
-            if (WP != null) return WP.GetZLevel(CP);
+            if (WP != null) return WP.GetZLevel(CP,minZ);
             float x = PX / PathStore.POINTS_PER_METER;
             float y = PY / PathStore.POINTS_PER_METER;
             float GL = GetSimRegion().GetGroundLevel(x, y);
@@ -203,60 +247,40 @@ namespace PathSystem3D.Navigation
         float _ZLevelCache_ = float.MinValue;
         CollisionPlane LastPlane;
 
-        public float GetZLevel(CollisionPlane CP)
+        public float GetZLevel(CollisionPlane CP, FloatRange range)
         {
+           // return GetZLevel(CP);
             float _ZLevelCache = _ZLevelCache_;
             if (LastPlane != CP)
             {
-                LastPlane = CP;
-                List<IMeshedObject> OccupiedCP = GetOccupied(CP);
-                float above = CP.MinZ;
-                float GL = GetGroundLevel(CP);
-                if (above < GL) above = GL;
-                // when the Two Zs are differnt that means global Pos has been computed
-                if (_ZLevelCache > above) return _ZLevelCache;
-                _ZLevelCache = above;
-                ///  OccupiedListObject.Sort(ZOrder);
-                /// OccupiedListObject.Reverse();
-                if (IsSolid != 0)
+                if (//(PX == 566 && PY == 759) || (PX == 373 && PY == 1097) || 
+                    (PX == 615 && PY == 594))
                 {
-                    bool ChangeD = false;
-                    IMeshedObject Flooring = null;
-                    for (int d = IsSolid; d > 0; d--)
-                    {
-                        lock (OccupiedCP)
-                            foreach (IMeshedObject O in OccupiedCP)
-                            {
-                                if (O.IsPassable) continue;
-                                float MaxZ;
-                                if (O.SomethingMaxZ(_LocalPos, _ZLevelCache, _ZLevelCache + 1.5f, out MaxZ))
-                                {
-                                    //bool wpfound = O.GetZLevel(Point, out MinZ, out MaxZ);
-
-                                    // The object is higher
-                                    if (_ZLevelCache < MaxZ)
-                                    // And the object is below or the bottem of object is less than a meter above or the top of object is less than 1.5 meters
-                                    //if (MinZ <= _ZLevelCache || DiffLessThan(MinZ, _ZLevelCache, 1.5f) || DiffLessThan(MaxZ, _ZLevelCache, 2f))
-                                    {
-                                        Flooring = O;
-                                        ChangeD = true;
-                                        _ZLevelCache = MaxZ;
-                                    }
-
-                                }
-
-                            }
-                        if (!ChangeD) break;
-                    }
-                    //if (Flooring != null)
-                    //{
-                    //    if (ChangeD) lock (OccupiedListObject)
-                    //    {
-                    //        OccupiedListObject.Remove(Flooring);
-                    //        OccupiedListObject.Insert(0, Flooring);
-                    //    }
-                    //}
                 }
+                float newMaxZ;
+                LastPlane = CP;               
+               // float above = CP.MinZ;
+                float GL = GetGroundLevel(CP);
+                float above = range.Min;
+                if (above < GL) above = GL;                               
+                float MaxZ = CP.MaxZ;
+                ICollection<IMeshedObject> objs = GetOccupied(above, MaxZ);
+                while (above<MaxZ)
+                {
+                    if (SomethingBetween(above, above + CapsuleZ, objs, out newMaxZ))
+                    {
+                        if (newMaxZ > above)
+                        {
+                            above = newMaxZ;
+                        }
+                        else
+                        {
+                            above += 0.1f;
+                        }
+                    }
+                    else break;
+                }
+                _ZLevelCache = above;
                 _LocalPos.Z = _ZLevelCache;
                 _GlobalPos.Z = _ZLevelCache + 1;
                 _ZLevelCache_ = _ZLevelCache;
@@ -322,11 +346,12 @@ namespace PathSystem3D.Navigation
 
         public string ExtraInfoString(CollisionPlane LastPlane)
         {
-            string S = "GLevel=" + GetGroundLevel(LastPlane);
+            string S = "" + PX + "/" + PY + " GLevel=" + GetGroundLevel(LastPlane);
             if (IsUnderWater(LastPlane)) S += " UnderWater=" + GetSimRegion().WaterHeight;
+            if (LastPlane != null && IsFlyZone(LastPlane, LastPlane.Range)) S += " FlyZone=" + LastPlane.Range;
             S += " LastGL=" + LastPlane;
             if (LastPlane != null)
-                S += " ZLevel=" + GetZLevel(LastPlane)
+                S += " ZLevel=" + GetZLevel(LastPlane, LastPlane.Range)
                  + " Maxtrix=" + GetMatrix(LastPlane);
             return S;
         }
