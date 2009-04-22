@@ -36,7 +36,10 @@ namespace PathSystem3D.Navigation
     [Serializable]
     public class CollisionIndex
     {
-        const float CapsuleZ = 1.66f;
+
+
+
+        const float CapsuleZ = 1.99f;
         public const float MaxBump = 0.60f;
 
         //public Point Point;
@@ -99,72 +102,65 @@ namespace PathSystem3D.Navigation
         //    return GetZLevelFree(LastPlane) == GetGroundLevel();
         //}
 
-        public bool IsUnderWater(CollisionPlane CP)
+        public bool IsUnderWater(float low,float high)
         {
-            if (CP == null) return GetGroundLevel() < GetSimRegion().WaterHeight;
-            return CP.MinZ < GetSimRegion().WaterHeight;
+            return high < GetSimRegion().WaterHeight;
         }
 
-        public bool IsFlyZone(CollisionPlane CP, FloatRange minZ)
+        public bool IsFlyZone(float low,float high)
         {
-            return IsUnderWater(CP) || IsMidAir(CP, minZ);
+            return IsUnderWater(low,high) || IsMidAir(low,high);
         }
 
-        public byte GetOccupiedValue(CollisionPlane CP)
+        public byte GetOccupiedValue(float low,float high)
         {
             int b = SimPathStore.INITIALLY + OccupiedCount * 3 + IsSolid * 3;
             if (b > 240) return 240;
             return (byte)b;
         }
-        public void UpdateMatrix(CollisionPlane CP, float ConsiderOnlyAboveZ)
+        public float UpdateMatrix(CollisionPlane CP,float zlevel, float low,float high, float[,] GroundPlane)
         {
-            byte OV = GetOccupiedValue(CP);
+            byte OV = GetOccupiedValue(low,high);
             SetMatrix(CP, OV);
-            float maxZ = CP.MaxZ;
-            CP.Range.Min = ConsiderOnlyAboveZ;
             float cpin = CP.MinZ;
-            float zlevel = GetZLevel(CP, CP.Range);
+           // float zlevel = GetZLevel(low,high);
             float min = zlevel - 1;
+            float maxZ;
             if (min > cpin) min = cpin;
-            FloatRange ConsiderNeighbourZ = new FloatRange(min,maxZ) ;
-            if (NeighborBump(CP, zlevel, MaxBump, ConsiderNeighbourZ) > 1)
+            if (NeighborBump(zlevel-0.5f, zlevel+CapsuleZ, zlevel, MaxBump, GroundPlane) > 1)
                 SetMatrix(CP, SimPathStore.BLOCKED);
             else if (false && IsSolid != 0)
             {
-                List<IMeshedObject> OccupiedCP = GetOccupied(CP);
+                List<IMeshedObject> OccupiedCP = GetOccupied(low,high);
                 if (SomethingBetween(zlevel + 0.35f, zlevel + CapsuleZ, OccupiedCP, out maxZ))
                     SetMatrix(CP, SimPathStore.MAYBE_BLOCKED);
                 else if (SomethingBetween(zlevel + 0.1f, zlevel + 0.3f, OccupiedCP, out maxZ))
                     SetMatrix(CP, SimPathStore.MAYBE_BLOCKED);
-                else if (NeighborBump(CP, zlevel, 0.2f, ConsiderNeighbourZ) > 1)
+                else if (NeighborBump(low, high, zlevel, 0.2f, GroundPlane) > 1)
                     SetMatrix(CP, SimPathStore.MAYBE_BLOCKED);
-                else if (IsMidAir(CP,ConsiderNeighbourZ))
+                else if (IsMidAir(low,high))
                     SetMatrix(CP, SimPathStore.MAYBE_BLOCKED);
             }
-            else if (IsUnderWater(CP))
+            else if (IsUnderWater(low,high))
                 SetMatrix(CP, SimPathStore.MAYBE_BLOCKED);
-            else if (IsMidAir(CP, ConsiderNeighbourZ))
+            else if (IsMidAir(low,high))
                 SetMatrix(CP, SimPathStore.MAYBE_BLOCKED);
-            else CP.DefaultCollisionValue(_GroundLevelCache, OV);
+            return zlevel;
+            //else low,high.DefaultCollisionValue(_GroundLevelCache, OV);
         }
 
-        private bool IsMidAir(CollisionPlane CP, FloatRange minZ)
+        private bool IsMidAir(float low,float high)
         {
-            float zlevel = GetZLevel(CP, minZ);
-            return CP.MinZ > zlevel;
-        }
-
-        private List<IMeshedObject> GetOccupied(float low, float high)
-        {
-            return ShadowList;
+            float zlevel = GetZLevel(low,high);
+            return low > zlevel;
         }
 
         internal bool SomethingBetween(float low, float high, IEnumerable OccupiedListObject, out float maxZ)
         {
             if (IsSolid == 0)
             {
-                maxZ = GetGroundLevel(LastPlane);
-                return (high<maxZ);
+                maxZ = GetGroundLevel(low, high);
+                return (high < maxZ);
             }
             lock (OccupiedListObject) foreach (IMeshedObject O in OccupiedListObject)
                 {
@@ -173,52 +169,53 @@ namespace PathSystem3D.Navigation
                         if (O.SomethingMaxZ(_LocalPos.X,_LocalPos.Y, low, high,out maxZ)) return true;
                     }
                 }
-            maxZ = GetGroundLevel(LastPlane);
+            maxZ = GetGroundLevel(low, high);
             return false;
         }
 
-        public byte NeighborBump(CollisionPlane CP, float original, float mostDiff, FloatRange minZ)
+        public byte NeighborBump(float low, float high, float original, float mostDiff, float[,] GP)
         {
             if (PX < 1 || PY < 1 || _LocalPos.X > 254 || _LocalPos.Y > 254)
                 return 0;
             float O;
 
             byte found = 0;
-            O = NeighborLevel(CP, PX, PY + 1,minZ);
+            O = NeighborLevel(low, high, PX, PY + 1, GP);
             if (!DiffLessThan(O, original, mostDiff)) found++;
 
-            O = NeighborLevel(CP, PX + 1, PY + 1,minZ);
+            O = NeighborLevel(low, high, PX + 1, PY + 1, GP);
             if (!DiffLessThan(O, original, mostDiff)) found++;
 
-            O = NeighborLevel(CP, PX + 1, PY,minZ);
+            O = NeighborLevel(low, high, PX + 1, PY, GP);
             if (!DiffLessThan(O, original, mostDiff)) found++;
 
-            O = NeighborLevel(CP, PX + 1, PY - 1,minZ);
+            O = NeighborLevel(low, high, PX + 1, PY - 1, GP);
             if (!DiffLessThan(O, original, mostDiff)) found++;
 
-            O = NeighborLevel(CP, PX, PY - 1,minZ);
+            O = NeighborLevel(low, high, PX, PY - 1, GP);
             if (!DiffLessThan(O, original, mostDiff)) found++;
 
-            O = NeighborLevel(CP, PX - 1, PY - 1,minZ);
+            O = NeighborLevel(low, high, PX - 1, PY - 1, GP);
             if (!DiffLessThan(O, original, mostDiff)) found++;
 
-            O = NeighborLevel(CP, PX - 1, PY,minZ);
+            O = NeighborLevel(low, high, PX - 1, PY, GP);
             if (!DiffLessThan(O, original, mostDiff)) found++;
 
-            O = NeighborLevel(CP, PX - 1, PY + 1,minZ);
+            O = NeighborLevel(low, high, PX - 1, PY + 1, GP);
             if (!DiffLessThan(O, original, mostDiff)) found++;
 
             return found;
         }
 
-        internal float NeighborLevel(CollisionPlane CP, int PX, int PY, FloatRange minZ)
+        internal float NeighborLevel(float low,float high, int PX, int PY, float[,] GP)
         {
+            return GP[PX, PY];
             CollisionIndex WP = PathStore.MeshIndex[PX, PY];
-            if (WP != null) return WP.GetZLevel(CP,minZ);
+            if (WP != null) return WP.GetZLevel(low,high);
             float x = PX / PathStore.POINTS_PER_METER;
             float y = PY / PathStore.POINTS_PER_METER;
             float GL = GetSimRegion().GetGroundLevel(x, y);
-            float CPL = CP.MinZ;
+            float CPL = low;
             return (GL > CPL) ? GL : CPL;
         }
 
@@ -238,34 +235,25 @@ namespace PathSystem3D.Navigation
 
 
         public void TaintMatrix()
-        {
-            LastPlane = null;
+        {            
             _GroundLevelCache = float.MinValue;
-            _ZLevelCache_ = float.MinValue;
         }
 
-        float _ZLevelCache_ = float.MinValue;
-        CollisionPlane LastPlane;
 
-        public float GetZLevel(CollisionPlane CP, FloatRange range)
+        public float GetZLevel(float low,float high)
         {
-           // return GetZLevel(CP);
-            float _ZLevelCache = _ZLevelCache_;
-            if (LastPlane != CP)
+            float above = low;
             {
                 if (//(PX == 566 && PY == 759) || (PX == 373 && PY == 1097) || 
                     (PX == 615 && PY == 594))
                 {
                 }
-                float newMaxZ;
-                LastPlane = CP;               
-               // float above = CP.MinZ;
-                float GL = GetGroundLevel(CP);
-                float above = range.Min;
-                if (above < GL) above = GL;                               
-                float MaxZ = CP.MaxZ;
-                ICollection<IMeshedObject> objs = GetOccupied(above, MaxZ);
-                while (above<MaxZ)
+                float newMaxZ;         
+               // float above = low;
+                float GL = GetGroundLevel(low,high);
+                if (above < GL) above = GL;
+                ICollection<IMeshedObject> objs = GetOccupied(above, high);
+                while (above<high)
                 {
                     if (SomethingBetween(above, above + CapsuleZ, objs, out newMaxZ))
                     {
@@ -280,19 +268,16 @@ namespace PathSystem3D.Navigation
                     }
                     else break;
                 }
-                _ZLevelCache = above;
-                _LocalPos.Z = _ZLevelCache;
-                _GlobalPos.Z = _ZLevelCache + 1;
-                _ZLevelCache_ = _ZLevelCache;
+                _LocalPos.Z = low;
+                _GlobalPos.Z = above;
             }
-            return _ZLevelCache;
+            return above;
         }
 
-        public float GetGroundLevel(CollisionPlane CP)
+        public float GetGroundLevel(float low,float high)
         {
             float GL = GetGroundLevel();
-            if (CP == null) return GL;
-            float CPL = CP.MinZ;
+            float CPL = low;
             return (CPL > GL) ? CPL : GL;
         }
 
@@ -319,40 +304,40 @@ namespace PathSystem3D.Navigation
         }
 
         public List<IMeshedObject> ShadowList = new List<IMeshedObject>();
-        public List<IMeshedObject> GetOccupied(CollisionPlane CP)
+        public List<IMeshedObject> GetOccupied(float low,float high)
         {
             return ShadowList;
         }
         //string OcString = null;
         //public IList<Vector2> OccupiedListMinMaxZ = new List<Vector2>();
 
-        public string OccupiedString()
+        public string OccupiedString(float low,float high)
         {
             string S = "";
 
+
             if (OccupiedCount > 0)
             {
-                lock (GetOccupied(LastPlane))
+                List<IMeshedObject> objs = GetOccupied(low, high);
+                lock (objs)
                 {
-                    foreach (IMeshedObject O in GetOccupied(LastPlane))
+                    foreach (IMeshedObject O in objs)
                     {
                         S += O.ToString();
                         S += "\r\n";
                     }
                 }
             }
-            return S + this.ToString() + " " + ExtraInfoString(LastPlane);
+            return S + this.ToString() + " " + ExtraInfoString(low,high);
         }
 
-        public string ExtraInfoString(CollisionPlane LastPlane)
+        public string ExtraInfoString(float low,float high)
         {
-            string S = "" + PX + "/" + PY + " GLevel=" + GetGroundLevel(LastPlane);
-            if (IsUnderWater(LastPlane)) S += " UnderWater=" + GetSimRegion().WaterHeight;
-            if (LastPlane != null && IsFlyZone(LastPlane, LastPlane.Range)) S += " FlyZone=" + LastPlane.Range;
-            S += " LastGL=" + LastPlane;
-            if (LastPlane != null)
-                S += " ZLevel=" + GetZLevel(LastPlane, LastPlane.Range)
-                 + " Maxtrix=" + GetMatrix(LastPlane);
+            string S = "" + PX + "/" + PY + " GLevel=" + GetGroundLevel(low,high);
+            if (IsUnderWater(low,high)) S += " UnderWater=" + GetSimRegion().WaterHeight;
+            if (IsFlyZone(low,high)) S += " FlyZone=" + low;
+            S += " LastGL=" + low +"-" + high;
+            S += " ZLevel=" + GetZLevel(low, high);
             return S;
         }
 
@@ -367,7 +352,7 @@ namespace PathSystem3D.Navigation
         {
             SimPathStore R = GetSimRegion();
             Vector3 loc = GetSimPosition();
-            return String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, GetGroundLevel(LastPlane));
+            return String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, GetGroundLevel());
         }
 
         ///// <summary>
@@ -483,7 +468,7 @@ namespace PathSystem3D.Navigation
             }
             TaintMatrix();
             //RemeshObjects();
-            //UpdateMatrix(CP);
+            //UpdateMatrix(low,high);
         }
         List<List<IMeshedObject>> _MeshedObjectIndexs = null;
         private IEnumerable<List<IMeshedObject>> MeshedObjectIndexes()

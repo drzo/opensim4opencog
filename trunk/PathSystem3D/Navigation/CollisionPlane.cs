@@ -128,6 +128,25 @@ namespace PathSystem3D.Navigation
             }
 
         }
+
+                
+        float[,] _GroundPlane;
+        public float[,] GroundPlane
+        {
+            get
+            {
+                if (_GroundPlane == null)
+                {
+                    NeedsUpdate = true;
+                    _GroundPlane = new float[MaxXPt + 1, MaxYPt + 1];
+                    for (int y = MaxYPt; y >= 0; y--)
+                        for (int x = MaxXPt; x >= 0; x--)
+                            _GroundPlane[x, y] = MinZ - 0.5f;
+                }
+                return _GroundPlane;
+            }
+        }
+
         public byte this[int x, int y]
         {
             get { return ByteMatrix[x, y]; }
@@ -162,6 +181,7 @@ namespace PathSystem3D.Navigation
 
         internal void UpdateCollisionPlane(CollisionPlane CP, bool usePotentialFieleds, bool cutNarrows)
         {
+            RenderPlane();
             lock (CP)
             {
                 float StepSize = PathStore.StepSize;
@@ -176,9 +196,10 @@ namespace PathSystem3D.Navigation
                     CopyFromMatrix(FromMatrix);
                 }
 
+                float[,] GP = GroundPlane;
                 PathStore.BakeTerrain();
-                float MinZLevel = CP.MinZ - 1;
-                float MaxZLevel = CP.MaxZ + StepSize;
+               // float MinZLevel = CP.MinZ - 1;
+                //float MaxZLevel = CP.MaxZ + StepSize;
                 
                 PathStore.TaintMatrix();
                 Console.WriteLine("\nStart UpdateMatrix: {0} for {1}", PathStore, CP);
@@ -189,16 +210,23 @@ namespace PathSystem3D.Navigation
                     float fx = 256f;
                     for (int x = MaxXPt; x >= 0; x--)
                     {
+                        float ZLevel = GP[x, y];
                         fx = fx - StepSize;
                         byte b = ToMatrix[x, y];
                         if (b != SimPathStore.STICKY_PASSABLE)
                         {
+
                             CollisionIndex W = MeshIndex[x, y];
                             if (W != null)
-                                W.UpdateMatrix(this, MinZLevel);
+                            {
+                                ZLevel = W.UpdateMatrix(this,ZLevel,ZLevel - 0.5f, ZLevel + 1.7f, GP);
+                                GP[x, y] = ZLevel;
+                            }
                             else
                             {
-                                ToMatrix[x, y] = CP.DefaultCollisionValue(PathStore.GetGroundLevel(fx, fy), b);
+                                ZLevel = PathStore.GetGroundLevel(fx, fy);
+                                ToMatrix[x, y] = CP.DefaultCollisionValue(ZLevel, b);
+                                GP[x, y] = ZLevel;
                             }
                         }
                     }
@@ -209,6 +237,53 @@ namespace PathSystem3D.Navigation
                 Console.WriteLine("\nEnd UpdateMatrix: {0} for {1}", PathStore, CP);
             }
         }
+
+        internal void RenderPlane()
+        {
+            CollisionPlane CP = this;
+            lock (CP)
+            {
+                float StepSize = PathStore.StepSize;
+                CollisionIndex[,] MeshIndex = PathStore.MeshIndex;
+                NeedsUpdate = false;
+                byte[,] ToMatrix = ByteMatrix;
+                byte[,] FromMatrix = CP.ByteMatrix;
+                float[,] GP = GroundPlane;
+
+                PathStore.TaintMatrix();
+                Console.WriteLine("\nStart RenderPlane: {0} for {1}", PathStore, CP);
+                float fy = 256f;
+                for (int y = MaxYPt; y >= 0; y--)
+                {
+                    fy = fy - StepSize;
+                    float fx = 256f;
+                    for (int x = MaxXPt; x >= 0; x--)
+                    {
+                        float ZLevel = GP[x, y];
+                        fx = fx - StepSize;
+                        byte b = ToMatrix[x, y];
+                        if (b != SimPathStore.STICKY_PASSABLE)
+                        {
+
+                            CollisionIndex W = MeshIndex[x, y];
+                            if (W != null)
+                            {
+                                ZLevel = W.GetZLevel(ZLevel - 0.5f, ZLevel + 1.7f);
+                                GP[x, y] = ZLevel;
+                            }
+                            else
+                            {
+                                ZLevel = PathStore.GetGroundLevel(fx, fy);
+                                ToMatrix[x, y] = CP.DefaultCollisionValue(ZLevel, b);
+                                GP[x, y] = ZLevel;
+                            }
+                        }
+                    }
+                }
+                Console.WriteLine("\nEnd RenderPlane: {0} for {1}", PathStore, CP);
+            }
+        }
+
 
         private void CopyFromMatrix(byte[,] FromMatrix)
         {
@@ -294,5 +369,167 @@ namespace PathSystem3D.Navigation
 
             return found;
         }
+
+        public float[,] ResizeTerrain512Interpolation(float[,] heightMap, int m_regionWidth, int m_regionHeight)
+        {
+            int THE512 = m_regionWidth * 5;
+            int THE2 = 5;
+            float[,] returnarr = new float[MaxXPt+1,MaxYPt+1];
+            float[,] resultarr = new float[m_regionWidth, m_regionHeight];
+
+            // Filling out the array into it's multi-dimentional components
+            for (int y = 0; y < m_regionHeight; y++)
+            {
+                for (int x = 0; x < m_regionWidth; x++)
+                {
+                    resultarr[y, x] = heightMap[m_regionWidth, m_regionHeight];
+                }
+            }
+
+            // Resize using interpolation
+
+            // This particular way is quick but it only works on a multiple of the original
+
+            // The idea behind this method can be described with the following diagrams
+            // second pass and third pass happen in the same loop really..  just separated
+            // them to show what this does.
+
+            // First Pass
+            // ResultArr:
+            // 1,1,1,1,1,1
+            // 1,1,1,1,1,1
+            // 1,1,1,1,1,1
+            // 1,1,1,1,1,1
+            // 1,1,1,1,1,1
+            // 1,1,1,1,1,1
+
+            // Second Pass
+            // ResultArr2:
+            // 1,,1,,1,,1,,1,,1,
+            // ,,,,,,,,,,
+            // 1,,1,,1,,1,,1,,1,
+            // ,,,,,,,,,,
+            // 1,,1,,1,,1,,1,,1,
+            // ,,,,,,,,,,
+            // 1,,1,,1,,1,,1,,1,
+            // ,,,,,,,,,,
+            // 1,,1,,1,,1,,1,,1,
+            // ,,,,,,,,,,
+            // 1,,1,,1,,1,,1,,1,
+
+            // Third pass fills in the blanks
+            // ResultArr2:
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+            // 1,1,1,1,1,1,1,1,1,1,1,1
+
+            // X,Y = .
+            // X+1,y = ^
+            // X,Y+1 = *
+            // X+1,Y+1 = #
+
+            // Filling in like this;
+            // .*
+            // ^#
+            // 1st .
+            // 2nd *
+            // 3rd ^
+            // 4th #
+            // on single loop.
+
+            float[,] resultarr2 = new float[THE512, THE512];
+            for (int y = 0; y < m_regionHeight; y++)
+            {
+                for (int x = 0; x < m_regionWidth; x++)
+                {
+                    resultarr2[y * THE2, x * THE2] = resultarr[y, x];
+
+                    if (y < m_regionHeight)
+                    {
+                        if (y + 1 < m_regionHeight)
+                        {
+                            if (x + 1 < m_regionWidth)
+                            {
+                                resultarr2[(y * THE2) + 1, x * THE2] = ((resultarr[y, x] + resultarr[y + 1, x] +
+                                                               resultarr[y, x + 1] + resultarr[y + 1, x + 1]) / 4);
+                            }
+                            else
+                            {
+                                resultarr2[(y * THE2) + 1, x * THE2] = ((resultarr[y, x] + resultarr[y + 1, x]) / THE2);
+                            }
+                        }
+                        else
+                        {
+                            resultarr2[(y * THE2) + 1, x * THE2] = resultarr[y, x];
+                        }
+                    }
+                    if (x < m_regionWidth)
+                    {
+                        if (x + 1 < m_regionWidth)
+                        {
+                            if (y + 1 < m_regionHeight)
+                            {
+                                resultarr2[y * THE2, (x * THE2) + 1] = ((resultarr[y, x] + resultarr[y + 1, x] +
+                                                               resultarr[y, x + 1] + resultarr[y + 1, x + 1]) / 4);
+                            }
+                            else
+                            {
+                                resultarr2[y * THE2, (x * THE2) + 1] = ((resultarr[y, x] + resultarr[y, x + 1]) / THE2);
+                            }
+                        }
+                        else
+                        {
+                            resultarr2[y * THE2, (x * THE2) + 1] = resultarr[y, x];
+                        }
+                    }
+                    if (x < m_regionWidth && y < m_regionHeight)
+                    {
+                        if ((x + 1 < m_regionWidth) && (y + 1 < m_regionHeight))
+                        {
+                            resultarr2[(y * THE2) + 1, (x * THE2) + 1] = ((resultarr[y, x] + resultarr[y + 1, x] +
+                                                                 resultarr[y, x + 1] + resultarr[y + 1, x + 1]) / 4);
+                        }
+                        else
+                        {
+                            resultarr2[(y * THE2) + 1, (x * THE2) + 1] = resultarr[y, x];
+                        }
+                    }
+                }
+            }
+            //Flatten out the array
+            int i = 0;
+            for (int y = 0; y < THE512; y++)
+            {
+                for (int x = 0; x < THE512; x++)
+                {
+                    if (Single.IsNaN(resultarr2[y, x]) || Single.IsInfinity(resultarr2[y, x]))
+                    {
+                      //  Logger.Log("[PHYSICS]: Non finite heightfield element detected.  Setting it to 0", Helpers.LogLevel.Warning);
+                        resultarr2[y, x] = 0;
+                    }
+
+                    if (resultarr2[y, x] <= 0)
+                    {
+                        returnarr[y,x] = 0.0000001f;
+
+                    }
+                    else
+                        returnarr[y,x] = resultarr2[y, x];
+
+                    i++;
+                }
+            }
+
+            return returnarr;
+        }
     }
+
 }

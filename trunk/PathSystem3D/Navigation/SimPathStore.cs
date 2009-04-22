@@ -1477,6 +1477,7 @@ namespace PathSystem3D.Navigation
             if (ys < MAX) ye++;
 
 
+            float[,] GP = CurrentPlane.GroundPlane;
             //  lock (mWaypoints)
             {
                 for (int x = xs; x <= xe; x++)
@@ -1492,7 +1493,7 @@ namespace PathSystem3D.Navigation
                             CollisionIndex WP = MeshIndex[x, y];
                             if (WP != null)
                             {
-                                WP.UpdateMatrix(CurrentPlane, ConsiderOnlyAboveZ);
+                                WP.UpdateMatrix(CurrentPlane,GP[x,y],CurrentPlane.MinZ, CurrentPlane.MaxZ,GP);
                             }
                         }
             }
@@ -1614,6 +1615,15 @@ namespace PathSystem3D.Navigation
         public CollisionIndex GetCollisionIndexAt(Vector3 V)
         {
             throw new NotImplementedException();
+        }
+
+        internal CollisionPlane CreateMoverPlane(float Z)
+        {
+            CollisionPlane found = new CollisionPlane(MAPSPACE, MAPSPACE, Z - 0.5f, Z + 1.7f, this);
+            Debug("Created matrix[{0}] {1} for {2}", Z, found, this);
+            Matrixes.Add(found);
+            if (PathFinder != null) PathFinder.OnNewCollisionPlane(found);
+            return found;
         }
     }
 

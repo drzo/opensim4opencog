@@ -78,34 +78,34 @@ namespace PathSystem3D.Navigation
 
         private IList<IMeshedObject> GetOccupied()
         {
-            return CIndex.GetOccupied(Plane);
+            return CIndex.GetOccupied(MinZ, MaxZ);
         }
 
         public string ExtraInfoString()
         {
-            return CIndex.ExtraInfoString(Plane);
+            return CIndex.ExtraInfoString(MinZ, MaxZ);
         }
 
-        private float GetMatrix(CollisionPlane LastGL)
+        private float GetMatrix(CollisionPlane CP)
         {
-            return CIndex.GetMatrix(LastGL);
+            return CIndex.GetMatrix(CP);
         }
 
-        private void SetMatrix(CollisionPlane LastGL, int v)
+        private void SetMatrix(CollisionPlane CP, int v)
         {
-            CIndex.SetMatrix(LastGL, v);
+            CIndex.SetMatrix(CP, v);
         }
 
-        private float GetZLevel(CollisionPlane LastGL)
+        private float GetZLevel(CollisionPlane CP)
         {
-            return CIndex.GetZLevel(LastGL,LastGL.Range);
+            return CIndex.GetZLevel(MinZ, MaxZ);
         }
 
         public CollisionPlane Plane { get; set; }
 
         public float GetGroundLevel()
         {
-            return CIndex.GetGroundLevel(Plane);
+            return CIndex.GetGroundLevel(float.MinValue,float.MaxValue);
         }
 
 

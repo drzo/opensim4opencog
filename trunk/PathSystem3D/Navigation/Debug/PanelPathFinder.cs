@@ -300,7 +300,9 @@ namespace PathSystem3D.Navigation.Debug
                 CollisionIndex o = PathStore.GetCollisionIndex(x, y);
                 if (o != null)
                 {
-                    str = o.OccupiedString() + " matrix=" + Matrix[x, y];
+                    float low = CurrentPlane == null ? 0 : CurrentPlane.MinZ;
+                    float high = CurrentPlane == null ? float.MaxValue : CurrentPlane.MaxZ;
+                    str = o.OccupiedString(low, high) + " matrix=" + Matrix[x, y];
                 }
                 else
                 {

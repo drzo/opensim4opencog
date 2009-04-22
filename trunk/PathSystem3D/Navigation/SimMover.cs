@@ -37,6 +37,10 @@ namespace PathSystem3D.Navigation
 
     public class SimAbstractMover
     {
+
+        static Dictionary<SimMover, CollisionPlane> MoverPlanes = new Dictionary<SimMover, CollisionPlane>();
+            
+            
         public SimMoverState STATE
         {
             get { return _STATE; }
@@ -53,6 +57,7 @@ namespace PathSystem3D.Navigation
         {
             get { return Mover.GetPathStore(); }
         }
+        CollisionPlane MoverPlane = null;
         static protected double TurnAvoid = 0f;
         bool UseTurnAvoid = false;  // this toggles each time
 
@@ -61,6 +66,14 @@ namespace PathSystem3D.Navigation
             Mover = mover;
             FinalDistance = finalDistance;
             FinalLocation = finalGoal;
+            lock (MoverPlanes)
+            {
+                if (!MoverPlanes.ContainsKey(mover))
+                {
+                    MoverPlanes[mover] = PathStore.CreateMoverPlane(mover.GetSimPosition().Z);
+                }
+                MoverPlane = MoverPlanes[mover];
+            }
         }
 
 

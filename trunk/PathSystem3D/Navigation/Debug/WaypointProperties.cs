@@ -26,7 +26,7 @@ namespace PathSystem3D.Navigation.Debug
             }
             Current = WP;
             this.Text = WP.ToString();// +" matrix=" + WP.GetMatrix((float)WP.Position.Z);
-            this.button1.Text = WP.ExtraInfoString(LastPlane);
+            this.button1.Text = WP.ExtraInfoString(p.MinZ, p.MaxZ);
             int i = 0;
 
             foreach (Button B in CurrentButtons)
@@ -36,7 +36,7 @@ namespace PathSystem3D.Navigation.Debug
 
             CurrentButtons.Clear();
 
-            foreach (IMeshedObject O in WP.GetOccupied(LastPlane))
+            foreach (IMeshedObject O in WP.GetOccupied(p.MinZ, p.MaxZ))
             {
                 i++;
                 Button B = new Button();
@@ -61,7 +61,7 @@ namespace PathSystem3D.Navigation.Debug
 
         private void object_click(object sender, EventArgs e)
         {
-            IList<IMeshedObject> occs = Current.GetOccupied(LastPlane);
+            IList<IMeshedObject> occs = Current.GetOccupied(LastPlane.MinZ, LastPlane.MaxZ);
             try
             {
                 if (sender is Button)
