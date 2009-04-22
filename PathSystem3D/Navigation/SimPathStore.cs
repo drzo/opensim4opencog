@@ -21,6 +21,7 @@ namespace PathSystem3D.Navigation
 {
 
     public delegate void CallbackXY(float x, float y, float minZ, float maxZ);
+    public delegate void CallbackXYBox(float x, float y, Box3Fill box);
 
     public delegate float SimZLevel(float x, float y);
     public delegate void SimZMinMaxLevel(float x, float y, out float minLevel, out float maxLevel);
@@ -194,7 +195,8 @@ namespace PathSystem3D.Navigation
             {
                 float dist = Vector3.Distance(LastPosition, nextPosition);
                 int stepsNeeded = (int)(dist * POINTS_PER_METER) + 1;
-                //if (Settings.LOG_LEVEL == Helpers.LogLevel.Debug) Console.WriteLine("MakeMovement " + LastPosition + " -> " + stepsNeeded + " -> " + nextPosition + " " + Store);
+              // if (OpenMetaverse.Settings.LOG_LEVEL == OpenMetaverse.Helpers.LogLevel.Debug) 
+                Console.WriteLine("MakeMovement " + LastPosition + " -> " + stepsNeeded + " -> " + nextPosition + " " + this);
                 Vector3 vstep = dif / stepsNeeded;
                 Vector3 traveled = nextPosition;
                 SetTraveled(nextPosition.X, nextPosition.Y, nextPosition.Z);
@@ -761,9 +763,9 @@ namespace PathSystem3D.Navigation
                 }
             }
             CollisionPlane found = new CollisionPlane(MAPSPACE, MAPSPACE, Z - 0.5f, Z + 1.7f, this);
-            if (PathFinder != null) PathFinder.OnNewCollisionPlane(found);
             Debug("Created matrix[{0}] {1} for {2}", Z, found, this);
             Matrixes.Add(found);
+            if (PathFinder != null) PathFinder.OnNewCollisionPlane(found);
             return found;
         }
 
@@ -1233,6 +1235,10 @@ namespace PathSystem3D.Navigation
         {
             PathFinderDemo panel = PathFinder;
             PunishChangeDirection = !PunishChangeDirection;    //toggle each time
+            if (!PunishChangeDirection)
+            {
+
+            }
             Point S = ToPoint(start);
             Point E = ToPoint(end);
             IList<PathFinderNode> pfn = null;
@@ -1445,15 +1451,13 @@ namespace PathSystem3D.Navigation
 
         public void UpdateTraveled(UUID uUID, Vector3 after, Quaternion rot)
         {
-            return;
+            //return;
             lock (LaskKnownPos) if (!LaskKnownPos.ContainsKey(uUID))
-            {
-                LaskKnownPos[uUID] = new MoverTracking(after, rot, this);
-            }
-            else
-            {
-                LaskKnownPos[uUID].Update(after, rot);
-            }
+                {
+                    LaskKnownPos[uUID] = new MoverTracking(after, rot, this);
+                    return;
+                }
+            LaskKnownPos[uUID].Update(after, rot);
         }
 
         private void Refresh(PathSystem3D.Mesher.Box3Fill changed, CollisionPlane CurrentPlane)
@@ -1462,6 +1466,9 @@ namespace PathSystem3D.Navigation
             int ys = (int)changed.MaxX;
             int xe = (int)changed.MinY;
             int ye = (int)changed.MaxY;
+            float ConsiderOnlyAboveZ = changed.MinZ;
+            if (CurrentPlane!=null)
+                ConsiderOnlyAboveZ = CurrentPlane.MinZ - 1f;
             if (ye < 0 || xe < 0) return;
             if (xs > 0) xs--;
             if (ys > 0) ys--;
@@ -1485,7 +1492,7 @@ namespace PathSystem3D.Navigation
                             CollisionIndex WP = MeshIndex[x, y];
                             if (WP != null)
                             {
-                                WP.UpdateMatrix(CurrentPlane);
+                                WP.UpdateMatrix(CurrentPlane, ConsiderOnlyAboveZ);
                             }
                         }
             }
@@ -1496,7 +1503,7 @@ namespace PathSystem3D.Navigation
             Refresh(changed, null);
         }
 
-        PathFinderDemo PathFinder;
+        internal PathFinderDemo PathFinder;
 
         public void ShowDebugger()
         {
@@ -1504,6 +1511,7 @@ namespace PathSystem3D.Navigation
             {
                 PathFinder = new PathFinderDemo(this);
             }
+            PathFinder.CollisionPlaneListUpdate();
             PathFinder.Show();
         }
 

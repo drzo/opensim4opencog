@@ -1315,6 +1315,7 @@ namespace PathSystem3D.Navigation.Debug
                         CollisionPlaneList.Items.Add(P);
                     }
                 }
+                CollisionPlaneList.Invalidate();
             }
             catch (Exception e)
             {
@@ -1333,6 +1334,21 @@ namespace PathSystem3D.Navigation.Debug
             CollisionPlane o = (CollisionPlane)CollisionPlaneList.SelectedItem;
             PnlGUI.CurrentPlane = o;
 
+        }
+
+                
+        private delegate void SetPlaneDelegate(CollisionPlane cp);
+        internal void SetPlane(CollisionPlane _CurrentPlane)
+        {
+            if (_CurrentPlane == null) return;
+            if (this.InvokeRequired)
+            {
+                Invoke(new SetPlaneDelegate(SetPlane), new object[] { _CurrentPlane});
+                return;
+            }
+            Text = _CurrentPlane.ToString();
+            MinZevel.Text = ""+_CurrentPlane.MinZ;
+            PnlGUI.CurrentPlane = _CurrentPlane;
         }
     }
 }

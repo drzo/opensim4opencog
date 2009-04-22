@@ -119,6 +119,18 @@ namespace PathSystem3D.Mesher
             return "(" + MinEdge + " - " + MaxEdge + ")";
         }
 
+        internal void SetBoxOccupied(CallbackXYBox p, float detail)
+        {
+            for (float x = MinX; x <= MaxX; x += detail)
+            {
+                for (float y = MinY; y <= MaxY; y += detail)
+                {
+                    p(x, y, this);
+                }
+            }
+            p(MaxX, MaxY, this);
+        }
+
         internal void SetOccupied(CallbackXY p, SimZMinMaxLevel MinMaxZ, float detail)
         {
             // detail /= 2f;

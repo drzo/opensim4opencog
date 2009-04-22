@@ -346,12 +346,33 @@ namespace PathSystem3D.Navigation.Debug
             get { return _CurrentPlane; }
             set
             {
-                if (value!=null && _CurrentPlane != value)
+                SetCurrentPlane(value);
+            }
+        }
+
+             
+        private delegate void SetCurrentPlaneDelegate(CollisionPlane value);
+        private void SetCurrentPlane(CollisionPlane value)
+        {
+            if (InvokeRequired)
+            {
+                this.Invoke(new SetCurrentPlaneDelegate(SetCurrentPlane),new object[]{value});
+                return;
+            }
+            if (value != null && _CurrentPlane != value)
+            {
+                _CurrentPlane = value;
+                if (_CurrentPlane != null)
                 {
-                    _CurrentPlane = value;
-                    Invalidate();
+                    PathFinderDemo pfd = _CurrentPlane.PathStore.PathFinder;
+                    if (pfd != null)
+                    {
+                        pfd.SetPlane(_CurrentPlane);
+                        pfd.Text = String.Format("{0} {1}", PathStore.RegionName, _CurrentPlane);
+                    }
+                    _Matrix = _CurrentPlane.ByteMatrix;
                 }
-                if (_CurrentPlane!=null) _Matrix = _CurrentPlane.ByteMatrix;
+                Invalidate();
             }
         }
         public float ZLevel

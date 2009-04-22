@@ -726,10 +726,10 @@ namespace cogbot.TheOpenSims
         {
             if (_TOSRTING == null)
             {
+                _TOSRTING = "";
                 UUID ID = Prim.ID;
                 OpenMetaverse.Primitive.ConstructionData PrimData = Prim.PrimData;
                 PrimType Type = Prim.Type;
-                _TOSRTING = " ";
 
                 if (PrimData.PCode == PCode.Prim)
                 {
@@ -752,7 +752,7 @@ namespace cogbot.TheOpenSims
                     {
                     }
                 }
-                _TOSRTING += "" + ID;
+                _TOSRTING += " " + ID + " ";
                 if (Prim.Properties != null)
                 {
                     if (!String.IsNullOrEmpty(Prim.Properties.Name))
@@ -870,7 +870,7 @@ namespace cogbot.TheOpenSims
 
         public virtual OpenMetaverse.Quaternion GetSimRotation()
         {
-            if (!IsRegionAttached()) throw Error("GetSimRotation !IsRegionAttached: " + this);
+            if (!IsRegionAttached()) ;// throw Error("GetSimRotation !IsRegionAttached: " + this);
             Quaternion transValue = Prim.Rotation;
             Primitive outerPrim = Prim;
             while (outerPrim.ParentID != 0)

@@ -9,8 +9,20 @@ namespace PathSystem3D.Navigation
     public class CollisionPlane
     {
 
+        private FloatRange _Range = FloatRange.ALL;
+
+        public FloatRange Range
+        {
+            get {
+                if (_Range == FloatRange.ALL)
+                {
+                    _Range = new FloatRange(MinZ, MaxZ);
+                }
+                return _Range; }
+            set { _Range = value; }
+        }
         static int TotalCollisionPlanes = 0;
-        SimPathStore PathStore;
+        internal SimPathStore PathStore;
         int MaxXPt, MaxYPt;
         private bool _UsePotentialFields = true;
 
@@ -94,7 +106,7 @@ namespace PathSystem3D.Navigation
         public bool NeedsUpdate { get; set; }
         public override string ToString()
         {
-            return GetType().Name + "=" + MinZ + "-" + MaxZ;
+            return MinZ + "-" + MaxZ;
         }
         byte[,] _BM;
 
@@ -129,6 +141,25 @@ namespace PathSystem3D.Navigation
         }
 
 
+        public byte DefaultCollisionValue(float gl, byte b)
+        {
+         //   return SimPathStore.INITIALLY;
+            gl -= 0.001f;
+            float MinZLevel = MinZ;
+            float MaxZLevel = MaxZ;
+            if (MaxZLevel <= gl)
+            {
+                return SimPathStore.BLOCKED;
+            }
+            else if (MinZLevel < gl)
+                return SimPathStore.MAYBE_BLOCKED;
+            else if (gl + 20 < MaxZLevel) // needs passable
+                 return SimPathStore.MAYBE_BLOCKED;
+            else if (b > 64) // needs passable
+                return SimPathStore.INITIALLY;
+            return b;
+        }
+
         internal void UpdateCollisionPlane(CollisionPlane CP, bool usePotentialFieleds, bool cutNarrows)
         {
             lock (CP)
@@ -145,13 +176,12 @@ namespace PathSystem3D.Navigation
                     CopyFromMatrix(FromMatrix);
                 }
 
-                SimPathStore R = PathStore;
-                R.BakeTerrain();
-                float MinZLevel = CP.MinZ + StepSize;
+                PathStore.BakeTerrain();
+                float MinZLevel = CP.MinZ - 1;
                 float MaxZLevel = CP.MaxZ + StepSize;
                 
                 PathStore.TaintMatrix();
-                Console.WriteLine("\nStart UpdateMatrix: {0} for {1}", R, CP);
+                Console.WriteLine("\nStart UpdateMatrix: {0} for {1}", PathStore, CP);
                 float fy = 256f;
                 for (int y = MaxYPt; y >= 0; y--)
                 {
@@ -165,25 +195,18 @@ namespace PathSystem3D.Navigation
                         {
                             CollisionIndex W = MeshIndex[x, y];
                             if (W != null)
-                                W.UpdateMatrix(this);
+                                W.UpdateMatrix(this, MinZLevel);
                             else
                             {
-                                float gl = R.GetGroundLevel(fx, fy);
-                                if (MaxZLevel <= gl)
-                                {
-                                    ToMatrix[x, y] = SimPathStore.BLOCKED;
-                                }
-                                else if (MinZLevel < gl)
-                                    ToMatrix[x, y] = SimPathStore.MAYBE_BLOCKED;
-                                else if (b > 64) // needs passable
-                                    ToMatrix[x, y] = SimPathStore.INITIALLY;
+                                ToMatrix[x, y] = CP.DefaultCollisionValue(PathStore.GetGroundLevel(fx, fy), b);
                             }
                         }
                     }
                 }
-                if (usePotentialFieleds) AddFieldEffects(FromMatrix,ToMatrix, SimPathStore.BLOCKED, 10);
+                if (usePotentialFieleds) AddFieldEffects(FromMatrix, ToMatrix, SimPathStore.BLOCKED, 1, 1);
+                if (usePotentialFieleds) AddFieldEffects(FromMatrix, ToMatrix, SimPathStore.MAYBE_BLOCKED, 5, 3);
                 if (cutNarrows) AddAdjacentBlocking(ToMatrix);
-                Console.WriteLine("\nEnd UpdateMatrix: {0} for {1}", R, CP);
+                Console.WriteLine("\nEnd UpdateMatrix: {0} for {1}", PathStore, CP);
             }
         }
 
@@ -192,23 +215,23 @@ namespace PathSystem3D.Navigation
             throw new NotImplementedException();
         }
 
-        private void AddFieldEffects(byte[,] from, byte[,] to, byte fronteer, int iterations)
+        private void AddFieldEffects(byte[,] from, byte[,] to, byte fronteer, int iterations, byte step)
         {
             int xsizem1 = MaxXPt - 1;
             while (iterations-- > 0)
             {
-                byte self = (byte)(fronteer - 1);
+                byte self = (byte)(fronteer - step);
                 for (int y = MaxYPt - 1; y > 0; y--)
                 {
                     for (int x = xsizem1; x > 0; x--)
                     {
                         byte b = from[x, y];
-                        if (b > 2 && b < self)
-                            if (SurroundingBlocked0(x, y, fronteer, from) > 0)
+                        if (b > 2 && b < fronteer)
+                            if (SurroundingBlocked0(x, y, fronteer, from) > 1)
                                 to[x, y] = self;
                     }
                 }
-                fronteer--;
+                fronteer -= step;
             }
         }
 
@@ -222,7 +245,7 @@ namespace PathSystem3D.Navigation
                 {
                     byte b = from[x, y];
                     if (b == SimPathStore.MAYBE_BLOCKED)
-                        if (SurroundingBlocked0(x, y, SimPathStore.BLOCKED, from) > 1)
+                        if (SurroundingBlocked0(x, y, SimPathStore.BLOCKED, from) > 2)
                             to[x, y] = SimPathStore.BLOCKED;                        
                 }
             }

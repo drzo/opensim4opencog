@@ -409,6 +409,9 @@ namespace cogbot.TheOpenSims
 
         public int CompareObjects(SimObject act1, SimObject act2)
         {
+            if (act1 == act2) return 0;
+            if (act1 == null) return -1;
+            if (act2 == null) return 1;
             return (int)(act2.RateIt(CurrentNeeds) - act1.RateIt(CurrentNeeds));
         }
 
