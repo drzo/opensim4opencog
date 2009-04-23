@@ -73,7 +73,7 @@ namespace PathSystem3D.Navigation
 
         public void SetMatrixForced(CollisionPlane CP, int v)
         {
-            CP[PX, PY] = (byte)v;
+            CP.ByteMatrix[PX, PY] = (byte)v;
         }
 
         public int OccupiedCount;
