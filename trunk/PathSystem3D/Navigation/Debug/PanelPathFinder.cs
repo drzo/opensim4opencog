@@ -310,7 +310,8 @@ namespace PathSystem3D.Navigation.Debug
                 {
                     float low = CurrentPlane == null ? 0 : CurrentPlane.MinZ;
                     float high = CurrentPlane == null ? float.MaxValue : CurrentPlane.MaxZ;
-                    str = o.OccupiedString(low, high) + " matrix=" + Matrix[x, y];
+                    str = String.Format("{0} matrix={1}", o.OccupiedString(low, high), Matrix[x, y]);
+                    str += CurrentPlane == null ? "" : String.Format(" GL={0}", CurrentPlane.GroundPlane[o.PX, o.PY]);
                 }
                 else
                 {

@@ -93,7 +93,7 @@ namespace cogbot.TheOpenSims
             }
             if (pos.X < 256 || pos.Y < 256)
             {
-                Console.WriteLine("GlobalToWaypoint? " + pos);
+                Debug("GlobalToWaypoint? " + pos);
             }
             return GetRegion(Utils.UIntsToLong(Round256(pos.X), Round256(pos.Y)));
         }
@@ -146,7 +146,7 @@ namespace cogbot.TheOpenSims
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e);
+                Debug("" + e);
                 Vector3 l2 = local;
                 l2 *= 0.99f;
                 return R.GetWaypointOf(l2);
@@ -161,7 +161,7 @@ namespace cogbot.TheOpenSims
             }
             if (pos.X < 256 || pos.Y < 256)
             {
-                Console.WriteLine("GlobalToWaypoint? " + pos);
+                Debug("GlobalToWaypoint? " + pos);
             }
             return new Vector3((float)pos.X - Round256(pos.X), (float)pos.Y - Round256(pos.Y), (float)pos.Z);
         }
@@ -544,7 +544,7 @@ namespace cogbot.TheOpenSims
             RegionHandle = Handle;
             // RegionName = gridRegionName;
             //WorldSystem = worldSystem;
-            //Console.WriteLine("++++++++++++++++++++++++++Created region: ");
+            //Debug("++++++++++++++++++++++++++Created region: ");
             PathStore = SimPathStore.GetPathStore(GetGridLocation());
             PathStore.SetGroundLevel(this.GetGroundLevel);
            // if (PathStore.RegionName
@@ -691,7 +691,7 @@ namespace cogbot.TheOpenSims
         //    SimPathStore PathStore = GetPathStore(localStart);
         //    CollisionPlane CP = PathStore.GetCollisionPlane(localStart.Z);
 
-        //    Console.WriteLine("very bad fake route for " + CP);
+        //    Debug("very bad fake route for " + CP);
         //    return route;
         //}
 
@@ -868,7 +868,7 @@ namespace cogbot.TheOpenSims
                     Thread.Sleep(4000);
                     if (GetGroundLevelTried > 10)
                     {
-                        Console.WriteLine("BADDDDD Height " + x + " " + y + " waiting " + AverageHieght + " sim " + RegionName);
+                        Debug("BADDDDD Height " + x + " " + y + " waiting " + AverageHieght + " sim " + RegionName);
                         return AverageHieght;
                     }
                 }
@@ -877,6 +877,12 @@ namespace cogbot.TheOpenSims
                 //Client.Grid.RequestMapRegion(
             }
             return AverageHieght;
+        }
+
+        static void Debug(string p, params object[] args)
+        {
+            if (Settings.LOG_LEVEL == Helpers.LogLevel.Debug)
+                Console.WriteLine(p, args);
         }
 
         public static bool IsMaster(Simulator simulator, GridClient client)
@@ -899,7 +905,7 @@ namespace cogbot.TheOpenSims
         {
             if (Client == gridClient) return;
             Client = gridClient;
-            Console.WriteLine("SetMaster " + GridInfo.Name);
+            Debug("SetMaster " + GridInfo.Name);
             EnsureClientEvents(Client);
         }
 

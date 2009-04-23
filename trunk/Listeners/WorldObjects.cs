@@ -395,8 +395,8 @@ namespace cogbot.Listeners
 
         static void Debug(string p)
         {
-            //if (Settings.LOG_LEVEL == Helpers.LogLevel.Debug) 
-            Console.WriteLine(p);
+            if (Settings.LOG_LEVEL != Helpers.LogLevel.None)
+                Console.WriteLine(p);
         }
 
         // these will be shared between Clients and regions
@@ -498,11 +498,11 @@ namespace cogbot.Listeners
                                 {
                                     O.ResetPrim(prim);
                                 }
-                                Debug("Prim with differnt region handle " + prim);
+                                if (Settings.LOG_LEVEL != Helpers.LogLevel.Info) Debug("Prim with differnt region handle " + prim);
                             }
                             else
                             {
-                                Debug("Child with differnt region handle " + prim);
+                                if (Settings.LOG_LEVEL != Helpers.LogLevel.Info) Debug("Child with differnt region handle " + prim);
                             }
                             return O;
                         }
@@ -740,7 +740,7 @@ namespace cogbot.Listeners
                 SendNewEvent("on-prim-killed", p);
                 return;
             }
-            Debug("Killing object: " + O);
+            if (Settings.LOG_LEVEL != Helpers.LogLevel.Info) Debug("Killing object: " + O);
             if (!(O is SimAvatar))
             {
                 {

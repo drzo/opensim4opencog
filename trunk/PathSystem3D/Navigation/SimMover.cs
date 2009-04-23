@@ -60,12 +60,14 @@ namespace PathSystem3D.Navigation
         CollisionPlane MoverPlane = null;
         static protected double TurnAvoid = 0f;
         bool UseTurnAvoid = false;  // this toggles each time
+        readonly SimPosition FinalPosition;
 
-        public SimAbstractMover(SimMover mover, Vector3d finalGoal, double finalDistance)
+        public SimAbstractMover(SimMover mover, SimPosition finalGoal, double finalDistance)
         {
             Mover = mover;
             FinalDistance = finalDistance;
-            FinalLocation = finalGoal;
+            FinalLocation = finalGoal.GetWorldPosition();
+            FinalPosition = finalGoal;
             lock (MoverPlanes)
             {
                 if (!MoverPlanes.ContainsKey(mover))
@@ -195,6 +197,11 @@ namespace PathSystem3D.Navigation
                + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
         }
 
+        public string DistanceVectorString(SimPosition loc3d)
+        {
+            return DistanceVectorString(loc3d.GetWorldPosition());
+        }
+
         public string DistanceVectorString(Vector3 loc)
         {    
             return String.Format("{0:0.00}m ", Vector3.Distance(GetSimPosition(), loc))
@@ -272,7 +279,7 @@ namespace PathSystem3D.Navigation
         public override string ToString()
         {
 
-            string s = GetType().Name + "::" + Mover;// +" " + point.ToString() + " to " + end;
+            string s = GetType().Name + "::" + Mover + " -> " + DistanceVectorString(FinalPosition) + " to " + FinalPosition;
             return s;
             //SimWaypoint point = Routes[0].StartNode;
             //int c = Routes.Count;

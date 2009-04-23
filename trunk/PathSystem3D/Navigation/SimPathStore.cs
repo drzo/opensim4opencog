@@ -33,6 +33,7 @@ namespace PathSystem3D.Navigation
     [Serializable]
     public class SimPathStore //: PathSystem3D.Navigation.IPathStore
     {
+        public static int DebugLevel = 0;
         public string RegionName { get; set; }
         // util
         static public void TrianglesToBoxes(IList<Triangle> tl, Box3Fill OuterBox, float PADXY, IList<Box3Fill> InnerBoxes)
@@ -40,7 +41,7 @@ namespace PathSystem3D.Navigation
 
 
             int tc = tl.Count;
-            if (tc < 16)
+            if (false && tc < 16)
             {
                 AddTrianglesV1(tl, tc, OuterBox, PADXY, InnerBoxes);
             }
@@ -48,7 +49,7 @@ namespace PathSystem3D.Navigation
             {
                 AddTrianglesV2(tl, tc, OuterBox, PADXY, InnerBoxes);
             }
-            // Console.WriteLine(InnerBoxes.Count);
+            // Debug(InnerBoxes.Count);
         }
 
         private static void AddTrianglesV1(IList<Triangle> ts, int len, Box3Fill OuterBox, float PADXY, IList<Box3Fill> InnerBoxes)
@@ -139,7 +140,7 @@ namespace PathSystem3D.Navigation
         /// <summary>
         /// The Pathstore can implment this
         /// </summary>
-        public SimZLevel GroundLevel = delegate(float x, float y) { return 10; };
+        public SimZLevel GroundLevelDelegate = delegate(float x, float y) { return 10; };
 
         // setup
         void AddBoxes(IComparable id, IList<Box3Fill> boxes)
@@ -184,7 +185,7 @@ namespace PathSystem3D.Navigation
         }
         public void SetGroundLevel(SimZLevel callback)
         {
-            GroundLevel = callback;
+            GroundLevelDelegate = callback;
         }
 
         // Updates
@@ -193,7 +194,7 @@ namespace PathSystem3D.Navigation
             Vector3 dif = LastPosition - nextPosition;
             if (Math.Abs(dif.Z) > 0.5)
             {
-                Console.WriteLine("BIGZ " + LastPosition + " ->" + nextPosition + " " + this);
+                Debug("BIGZ " + LastPosition + " ->" + nextPosition + " " + this);
                 return;
             }
             if (!(dif.X == 0 && dif.Y == 0))
@@ -201,7 +202,7 @@ namespace PathSystem3D.Navigation
                 float dist = Vector3.Distance(LastPosition, nextPosition);
                 int stepsNeeded = (int)(dist * POINTS_PER_METER) + 1;
               // if (OpenMetaverse.Settings.LOG_LEVEL == OpenMetaverse.Helpers.LogLevel.Debug) 
-                Console.WriteLine("MakeMovement " + LastPosition + " -> " + stepsNeeded + " -> " + nextPosition + " " + this);
+                Debug("MakeMovement " + LastPosition + " -> " + stepsNeeded + " -> " + nextPosition + " " + this);
                 Vector3 vstep = dif / stepsNeeded;
                 Vector3 traveled = nextPosition;
                 SetTraveled(nextPosition.X, nextPosition.Y, nextPosition.Z);
@@ -346,7 +347,7 @@ namespace PathSystem3D.Navigation
             route.Add(LocalToGlobal(localStart));           
             SimPathStore PathStore = GetPathStore3D(localStart);
 
-            Console.WriteLine("very bad fake route for " + CP);
+            Debug("very bad fake route for " + CP);
             return route;
         }
 
@@ -366,9 +367,39 @@ namespace PathSystem3D.Navigation
         {
             SimPathStore PathStore = GetPathStore3D(v3);
 
-            byte b = PathStore.GetNodeQuality(v3, CP);
+            int ix = ARRAY_X(v3.X);
+            int iy = ARRAY_Y(v3.Y);
+
+            byte[,] ByteMatrix = CP.ByteMatrix;
+            byte b = ByteMatrix[ix,iy];
+            float[,] GP = CP.GroundPlane;
+            float zl = GP[ix,iy];
+
+            GetCollisionIndex(ix, iy).SetNodeQualityTimer(CP, MAYBE_BLOCKED, 30);
             // float useDist = GetSizeDistance();      
             if (b != SimPathStore.BLOCKED) return v3;
+
+            int count = CP.NeighborPredicate(ix, iy,(int)( useDist*POINTS_PER_METER*1.5), delegate(int NX, int NY)
+            {
+                byte NB = ByteMatrix[NX, NY];
+                if (NB == BLOCKED)
+                {
+                    float NZ = GP[NX, NY];
+                    if (Math.Abs(NZ - zl) < 0.2)
+                    {
+                        CollisionIndex CI = GetCollisionIndex(NX, NY);
+                        CI.SetNodeQualityTimer(CP, MAYBE_BLOCKED, 30);
+                        return 1;
+                    }
+                }
+                return 0;
+            });
+            if (count > 3)
+            {
+                Debug("Clearing small area " + v3);
+                return v3;
+            }
+
             SimWaypoint swp = GetWaypointOf(v3);
             for (float distance = PathStore.StepSize; distance < useDist * 2; distance += PathStore.StepSize)
             {
@@ -379,7 +410,7 @@ namespace PathSystem3D.Navigation
                     if (b < SimPathStore.BLOCKED) return v3;
                 }
             }
-            Console.WriteLine("Clearing area " + swp);
+            Debug("Clearing area " + swp);
             SetNodeQualityTimer(v3, SimPathStore.MAYBE_BLOCKED, 30);
             for (float distance = PathStore.StepSize; distance < useDist * 2; distance += PathStore.StepSize)
             {
@@ -413,7 +444,7 @@ namespace PathSystem3D.Navigation
                     if (b < SimPathStore.BLOCKED) return v3;
                 }
             }
-            Console.WriteLine("Clearing area " + swp);
+            Debug("Clearing area " + swp);
             SetNodeQualityTimer(v3, SimPathStore.MAYBE_BLOCKED, 30);
             for (float distance = PathStore.StepSize; distance < useDist * 1.5; distance += PathStore.StepSize)
             {
@@ -635,7 +666,7 @@ namespace PathSystem3D.Navigation
             float dist = Vector3.Distance(v3, swp.GetSimPosition());
             if (!swp.IsPassable)
             {
-                Console.WriteLine("CreateClosestWaypoint: " + v3 + " <- " + dist + " -> " + swp + " " + this);
+                Debug("CreateClosestWaypoint: " + v3 + " <- " + dist + " -> " + swp + " " + this);
             }
             return swp;
         }
@@ -667,7 +698,7 @@ namespace PathSystem3D.Navigation
                 // if (TerrainBaked) return;
                 TerrainBaked = true;
 
-                Console.WriteLine("ScanTerrainBlockages: {0}", RegionName);
+                Debug("ScanTerrainBlockages: {0}", RegionName);
                 float WH = WaterHeight;
                 float LastHieght = GetGroundLevel(0, 0);
                 return;
@@ -688,7 +719,7 @@ namespace PathSystem3D.Navigation
 
         public float GetGroundLevel(float x, float y)
         {
-            return GroundLevel(x,y);
+            return GroundLevelDelegate(x,y);
         }
 
         public void BlockRange(float x, float y, float sx, float sy, float z)
@@ -809,11 +840,7 @@ namespace PathSystem3D.Navigation
                     }
                 }
             }
-            CollisionPlane found = new CollisionPlane(MAPSPACE, MAPSPACE, Z - 0.5f, Z + 1.7f, this);
-            Debug("Created matrix[{0}] {1} for {2}", Z, found, this);
-            Matrixes.Add(found);
-            if (PathFinder != null) PathFinder.OnNewCollisionPlane(found);
-            return found;
+            return CreateMoverPlane(Z);
         }
 
         float CollisionPlaneHeights = 3.0f;
@@ -911,12 +938,12 @@ namespace PathSystem3D.Navigation
 
         public byte GetNodeQuality(Vector3 v3, CollisionPlane CP)
         {
-            return CP[ARRAY_X((v3.X)), ARRAY_Y((v3.Y))];
+            return CP.ByteMatrix[ARRAY_X((v3.X)), ARRAY_Y((v3.Y))];
         }
 
         public void SetNodeQuality(Vector3 v3, byte v, CollisionPlane CP)
         {
-            CP[ARRAY_X((v3.X)), ARRAY_Y((v3.Y))] = v;
+            CP.ByteMatrix[ARRAY_X((v3.X)), ARRAY_Y((v3.Y))] = v;
         }
 
         /// <summary>
@@ -1449,7 +1476,7 @@ namespace PathSystem3D.Navigation
         }
         public static void Debug(string format, params object[] arg)
         {
-            Console.WriteLine(String.Format("[SimPathStore] {0}", format), arg);
+            if (DebugLevel > 0) Console.WriteLine(String.Format("[SimPathStore] {0}", format), arg);
         }
 
 
@@ -1612,7 +1639,7 @@ namespace PathSystem3D.Navigation
             }
             if (pos.X < 256 || pos.Y < 256)
             {
-                Console.WriteLine("GlobalToWaypoint? " + pos);
+                Debug("GlobalToWaypoint? " + pos);
             }
             return GetPathStore(new Vector2(Round256(pos.X)/256, Round256(pos.Y)/256));
         }
@@ -1637,7 +1664,7 @@ namespace PathSystem3D.Navigation
             }
             if (pos.X < 256 || pos.Y < 256)
             {
-                Console.WriteLine("GlobalToWaypoint? " + pos);
+                Debug("GlobalToWaypoint? " + pos);
             }
             return new Vector3((float)pos.X - Round256(pos.X), (float)pos.Y - Round256(pos.Y), (float)pos.Z);
         }
@@ -1679,8 +1706,8 @@ namespace PathSystem3D.Navigation
         internal CollisionPlane CreateMoverPlane(float Z)
         {
             CollisionPlane found = new CollisionPlane(MAPSPACE, MAPSPACE, Z - 0.5f, Z + 1.7f, this);
-            Debug("Created matrix[{0}] {1} for {2}", Z, found, this);
-            Matrixes.Add(found);
+            Console.WriteLine("Created matrix[{0}] {1} for {2}", Z, found, this);
+            lock (Matrixes) Matrixes.Add(found);
             if (PathFinder != null) PathFinder.OnNewCollisionPlane(found);
             return found;
         }

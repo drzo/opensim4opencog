@@ -104,6 +104,27 @@ namespace PathSystem3D.Navigation
         }
 
         public bool NeedsUpdate { get; set; }
+        public delegate int NeighborPredicateDelegate(int NX,int XY);
+        public int NeighborPredicate(int ix, int iy, int circleSize, NeighborPredicateDelegate param1)
+        {
+            int count = 0;
+            int startx = ix - circleSize;
+            int starty = iy - circleSize;
+            int endx = ix + circleSize;
+            int endy = iy + circleSize;
+            if (startx < 0) startx = 0; else if (startx > MaxXPt) startx = MaxXPt;
+            if (starty < 0) starty = 0; else if (starty > MaxYPt) starty = MaxYPt;
+            if (endx < 0) endx = 0; else if (endx > MaxXPt) endx = MaxXPt;
+            if (endy < 0) endy = 0; else if (endy > MaxYPt) endy = MaxYPt;
+            for (int x = startx; x <= endx; x++)
+                for (int y = starty; y <= endy; y++)
+                {
+                    if (y != iy && x != ix)
+                        count += param1(x, y);
+                }
+            return count;
+        }
+
         public override string ToString()
         {
             return MinZ + "-" + MaxZ;
@@ -147,11 +168,11 @@ namespace PathSystem3D.Navigation
             }
         }
 
-        public byte this[int x, int y]
-        {
-            get { return ByteMatrix[x, y]; }
-            set { ByteMatrix[x, y] = value; }
-        }
+        //public byte this[int x, int y]
+        //{
+        //    get { return ByteMatrix[x, y]; }
+        //    set { ByteMatrix[x, y] = value; }
+        //}
 
         public void EnsureUpToDate()
         {
@@ -181,6 +202,11 @@ namespace PathSystem3D.Navigation
 
         internal void UpdateCollisionPlane(CollisionPlane CP, bool usePotentialFieleds, bool cutNarrows)
         {
+            if (true)
+            {
+                UpdateCollisionPlaneOld(CP, usePotentialFieleds, cutNarrows);
+                return;
+            }
             PathStore.TaintMatrix();
             PathStore.BakeTerrain();
             RenderGroundPlane();
@@ -205,7 +231,7 @@ namespace PathSystem3D.Navigation
                     {
                         byte b = ToMatrix[x, y];
                         float ZLevel = GP[x, y];
-                        int bumps = NeighborBump(x, y, MinZLevel, MaxZLevel, ZLevel, 0.56f, GP);                                               
+                        int bumps = NeighborBump(x, y, MinZLevel, MaxZLevel, ZLevel, 0.60f, GP);                                               
                         if (bumps > 2)
                             ToMatrix[x, y] = SimPathStore.BLOCKED;
                         else if (bumps > 1)
@@ -265,7 +291,7 @@ namespace PathSystem3D.Navigation
                     float fx = 256f;
                     for (int x = MaxXPt; x >= 0; x--)
                     {
-                        float ZLevel = GP[x, y];
+                        float locaZLevel = GP[x, y];
                         fx = fx - StepSize;
                         byte b = ToMatrix[x, y];
                         if (b != SimPathStore.STICKY_PASSABLE)
@@ -274,14 +300,14 @@ namespace PathSystem3D.Navigation
                             CollisionIndex W = MeshIndex[x, y];
                             if (W != null)
                             {
-                                ZLevel = W.UpdateMatrix(this, ZLevel, ZLevel - 0.5f, ZLevel + 1.7f, GP);
-                                GP[x, y] = ZLevel;
+                                locaZLevel = W.UpdateMatrix(this, locaZLevel, locaZLevel - 0.5f, locaZLevel + 1.7f, GP);
+                                GP[x, y] = locaZLevel;
                             }
                             else
                             {
-                                ZLevel = PathStore.GetGroundLevel(fx, fy);
-                                ToMatrix[x, y] = CP.DefaultCollisionValue(ZLevel, b);
-                                GP[x, y] = ZLevel;
+                                locaZLevel = PathStore.GetGroundLevel(fx, fy);
+                                ToMatrix[x, y] = CP.DefaultCollisionValue(locaZLevel, b);
+                                GP[x, y] = locaZLevel;
                             }
                         }
                     }

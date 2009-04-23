@@ -118,14 +118,14 @@ namespace cogbot.TheOpenSims
 
             for (int i = 0; i < 8; i++)
             {
-                bool result = FollowPathTo(pos.GetWorldPosition(), pos.GetSizeDistance());
+                bool result = FollowPathTo(pos, pos.GetSizeDistance());
                 if (result)
                 {
                     SetMoveTarget(pos);
                     return result;
                 }
             }
-            return FollowPathTo(pos.GetWorldPosition(), pos.GetSizeDistance());
+            return FollowPathTo(pos, pos.GetSizeDistance());
         }
 
         public virtual bool IsLocal()
@@ -134,14 +134,14 @@ namespace cogbot.TheOpenSims
             return true;// WorldSystem.client.Network.CurrentSim == GetSimRegion().TheSimulator;
         }
 
-        public bool FollowPathTo(Vector3d globalEnd, double distance)
+        public bool FollowPathTo(SimPosition globalEnd, double distance)
         {
             if (!IsLocal())
             {
                 throw Error("FollowPathTo !IsLocal()");
             }
             SimAbstractMover move = new SimAbstractMover(this, globalEnd, distance);
-            return move.FollowPathTo(globalEnd, distance);
+            return move.FollowPathTo(globalEnd.GetWorldPosition(), distance);
         }
 
 
@@ -1262,7 +1262,7 @@ namespace cogbot.TheOpenSims
         string DistanceVectorString(OpenMetaverse.Vector3d loc3d);
         string DistanceVectorString(SimPosition obj);
         Exception Error(string p, params object[] args);
-        bool FollowPathTo(OpenMetaverse.Vector3d globalEnd, double distance);
+        bool FollowPathTo(SimPosition globalEnd, double distance);
         BotNeeds GetActualUpdate(string pUse);
         SimTypeUsage GetBestUse(BotNeeds needs);
         ListAsSet<SimObject> GetChildren();
