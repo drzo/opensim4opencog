@@ -191,6 +191,11 @@ namespace PathSystem3D.Navigation
         public void SetTraveled(Vector3 LastPosition, Vector3 nextPosition)
         {
             Vector3 dif = LastPosition - nextPosition;
+            if (Math.Abs(dif.Z) > 0.5)
+            {
+                Console.WriteLine("BIGZ " + LastPosition + " ->" + nextPosition + " " + this);
+                return;
+            }
             if (!(dif.X == 0 && dif.Y == 0))
             {
                 float dist = Vector3.Distance(LastPosition, nextPosition);
@@ -283,7 +288,7 @@ namespace PathSystem3D.Navigation
         }
 
 
-        public static IList<Vector3d> GetPath(Vector3d globalStart, Vector3d globalEnd, double endFudge, out bool OnlyStart)
+        public static IList<Vector3d> GetPath(CollisionPlane CP, Vector3d globalStart, Vector3d globalEnd, double endFudge, out bool OnlyStart)
         {
             SimPosition posStart = SimWaypointImpl.CreateGlobal(globalStart);
             SimPosition posEnd = SimWaypointImpl.CreateGlobal(globalEnd);
@@ -295,13 +300,13 @@ namespace PathSystem3D.Navigation
             // Same region?
             if (regStart == regEnd)
             {
-                return regStart.GetAtLeastPartial(localStart, localEnd, (float)endFudge, out OnlyStart);
+                return regStart.GetAtLeastPartial(CP,localStart, localEnd, (float)endFudge, out OnlyStart);
             }
             OnlyStart = true; // will be only a partial path
             SimPathStore nextRegion;
             Vector3 localLast = regStart.LocalOuterEdge(localStart, posEnd, out nextRegion);
             // needs to go to edge
-            route = regStart.GetLocalPath(localStart, localLast);
+            route = regStart.GetLocalPath(CP,localStart, localLast);
             // at egde so make a crossing
             Vector3 enterEdge = EnterEdge(localLast, nextRegion.GetGridLocation() - regStart.GetGridLocation());
             route.Add(nextRegion.LocalToGlobal(enterEdge));
@@ -309,11 +314,11 @@ namespace PathSystem3D.Navigation
         }
 
 
-        internal IList<Vector3d> GetAtLeastPartial(Vector3 localStart, Vector3 localEnd, float endFudge, out bool OnlyStart)
+        internal IList<Vector3d> GetAtLeastPartial(CollisionPlane CP, Vector3 localStart, Vector3 localEnd, float endFudge, out bool OnlyStart)
         {
             IList<Vector3d> route;
             Vector3 newEnd = localEnd;
-            route = GetLocalPath(localStart, newEnd);
+            route = GetLocalPath(CP, localStart, newEnd);
             if (route.Count > 1)
             {
                 OnlyStart = false;
@@ -325,7 +330,7 @@ namespace PathSystem3D.Navigation
             {
                 diff = diff * 0.8f;
                 newEnd = localStart + diff;
-                route = GetLocalPath(localStart, newEnd);
+                route = GetLocalPath(CP,localStart, newEnd);
                 if (route.Count > 1) return route;
             }
             OnlyStart = false; // Since this will be the best
@@ -334,13 +339,12 @@ namespace PathSystem3D.Navigation
             for (double angle = 0; angle < SimPathStore.PI2; angle += step)
             {
                 newEnd = localEnd + ZAngleVector(angle) * endFudge;
-                route = GetLocalPath(localStart, newEnd);
+                route = GetLocalPath(CP,localStart, newEnd);
                 if (route.Count > 1) return route;
             }
             route = new List<Vector3d>();
-            route.Add(LocalToGlobal(localStart));
+            route.Add(LocalToGlobal(localStart));           
             SimPathStore PathStore = GetPathStore3D(localStart);
-            CollisionPlane CP = PathStore.GetCollisionPlane(localStart.Z);
 
             Console.WriteLine("very bad fake route for " + CP);
             return route;
@@ -357,13 +361,47 @@ namespace PathSystem3D.Navigation
         /// </summary>
         /// <param name="v3"></param>
         /// <returns></returns>
-        public Vector3 GetUsableLocalPositionOf(Vector3 v3, float useDist)
+        ///         
+        public Vector3 GetUsableLocalPositionOf(CollisionPlane CP, Vector3 v3, float useDist)
         {
             SimPathStore PathStore = GetPathStore3D(v3);
-            CollisionPlane CP = PathStore.GetCollisionPlane(v3.Z);
 
             byte b = PathStore.GetNodeQuality(v3, CP);
-            // float useDist = GetSizeDistance();
+            // float useDist = GetSizeDistance();      
+            if (b != SimPathStore.BLOCKED) return v3;
+            SimWaypoint swp = GetWaypointOf(v3);
+            for (float distance = PathStore.StepSize; distance < useDist * 2; distance += PathStore.StepSize)
+            {
+                for (int dir = 0; dir < 360; dir += 15)
+                {
+                    v3 = SimPathStore.GetLocalLeftPos(swp, dir, distance);
+                    b = PathStore.GetNodeQuality(v3, CP);
+                    if (b < SimPathStore.BLOCKED) return v3;
+                }
+            }
+            Console.WriteLine("Clearing area " + swp);
+            SetNodeQualityTimer(v3, SimPathStore.MAYBE_BLOCKED, 30);
+            for (float distance = PathStore.StepSize; distance < useDist * 2; distance += PathStore.StepSize)
+            {
+                for (int dir = 0; dir < 360; dir += 15)
+                {
+                    v3 = SimPathStore.GetLocalLeftPos(swp, dir, distance);
+                    b = PathStore.GetNodeQuality(v3, CP);
+                    if (b == SimPathStore.BLOCKED)
+                    {
+                        SetNodeQualityTimer(v3, SimPathStore.MAYBE_BLOCKED, 30);
+                    }
+                }
+            }
+            return GetWaypointOf(v3).GetSimPosition();
+        }
+
+        public Vector3 GetUsableLocalPositionOfOLD(CollisionPlane CP, Vector3 v3, float useDist)
+        {
+            SimPathStore PathStore = GetPathStore3D(v3);
+
+            byte b = PathStore.GetNodeQuality(v3, CP);
+            // float useDist = GetSizeDistance();      
             if (b != SimPathStore.BLOCKED) return v3;
             SimWaypoint swp = GetWaypointOf(v3);
             for (float distance = PathStore.StepSize; distance < useDist * 1.5; distance += PathStore.StepSize)
@@ -474,10 +512,19 @@ namespace PathSystem3D.Navigation
             SimPathStore PathStore = GetPathStore3D(vector3);
             Point P = PathStore.ToPoint(vector3);
             CollisionIndex WP = PathStore.GetCollisionIndex(P.X, P.Y);
-            WP.SetNodeQualityTimer(PathStore.GetCollisionPlane(vector3.Z), value, seconds);
+            foreach (CollisionPlane CP in PathStore.CollisionPlanesFor(vector3.Z))
+                WP.SetNodeQualityTimer(CP, value, seconds);
         }
 
-
+        private IEnumerable<CollisionPlane> CollisionPlanesFor(float z)
+        {
+            List<CollisionPlane> CPS = new List<CollisionPlane>();
+            lock (Matrixes)
+                foreach (CollisionPlane CP in Matrixes)
+                    if (CP.Accepts(z))
+                        CPS.Add(CP);
+            return CPS;
+        }
 
         static Dictionary<Vector2, SimPathStore> _PathStores = new Dictionary<Vector2, SimPathStore>();
 
@@ -595,11 +642,11 @@ namespace PathSystem3D.Navigation
 
 
 
-        public IList<Vector3d> GetLocalPath(Vector3 start, Vector3 end)
+        public IList<Vector3d> GetLocalPath(CollisionPlane CP, Vector3 start, Vector3 end)
         {
+            CP.EnsureUpToDate();
             if (!TerrainBaked) BakeTerrain();
             float Z = start.Z;
-            CollisionPlane CP = GetCollisionPlane(Z);
             if (!IsPassable(start, CP))
             {
                 Debug("start is not passable: " + start);
@@ -608,7 +655,7 @@ namespace PathSystem3D.Navigation
             {
                 Debug("end is not passable: " + end);
             }
-            return (IList<Vector3d>)GetLocalPath0(GetUsableLocalPositionOf(start, 4), GetUsableLocalPositionOf(end, 4),CP,Z);
+            return (IList<Vector3d>)GetLocalPath0(GetUsableLocalPositionOf(CP,start, 4), GetUsableLocalPositionOf(CP,end, 4), CP, Z);
         }
 
         bool TerrainBaked = false;
@@ -881,27 +928,31 @@ namespace PathSystem3D.Navigation
         {
             int ix = ARRAY_X(x);
             int iy = ARRAY_Y(y);
-            byte[,] mMatrix = GetByteMatrix(z);
-            byte b = mMatrix[ix, iy];
-            switch (b)
+            foreach (CollisionPlane CP in CollisionPlanesFor(z))
             {
-                case BLOCKED:
-                    {
-                        mMatrix[ix, iy] = MAYBE_BLOCKED;
-                        return;
-                    }
-                case MAYBE_BLOCKED:
-                    return;
-                case STICKY_PASSABLE:
-                    return;
-                case PASSABLE:
-                    return;
+                byte[,] ByteMatrix = CP.ByteMatrix;
+                ///Debug("SetBlocked: {0} {1}", x, y);
+                byte b = ByteMatrix[ix, iy];
+                switch (b)
+                {
+                    case BLOCKED:
+                        {
+                            //mMatrix[ix, iy] = MAYBE_BLOCKED;
+                            continue;
+                        }
+                    case MAYBE_BLOCKED:
+                        continue;
+                    case STICKY_PASSABLE:
+                        continue;
+                    case PASSABLE:
+                        continue;
+                }
+                if (b < 3)
+                {
+                    continue;
+                }
+                ByteMatrix[ix, iy] = (byte)(b / 2);
             }
-            if (b < 3)
-            {
-                return;
-            }
-            mMatrix[ix, iy] = (byte)(b / 2);
         }
 
         public CollisionIndex SetObjectAt(float x, float y, IMeshedObject simObject, float minZ, float maxZ)
@@ -919,14 +970,18 @@ namespace PathSystem3D.Navigation
 
         public void SetPassable(float x, float y, float z)
         {
-            ///Debug("SetBlocked: {0} {1}", x, y);
             int ix = ARRAY_X(x);
             int iy = ARRAY_Y(y);
-            if (GetByteMatrix(z)[ix, iy] > 100)
+            foreach (CollisionPlane CP in CollisionPlanesFor(z))
             {
-                return;
+                byte[,] ByteMatrix = CP.ByteMatrix;
+                ///Debug("SetBlocked: {0} {1}", x, y);
+                if (ByteMatrix[ix, iy] > 100)
+                {
+                    continue;
+                }
+                ByteMatrix[ix, iy] = STICKY_PASSABLE;           
             }
-            GetByteMatrix(z)[ix, iy] = STICKY_PASSABLE;
         }
 
         //static IList<ISimObject> NOOBJECTS = new List<ISimObject>();
@@ -951,13 +1006,17 @@ namespace PathSystem3D.Navigation
             if (blocker != null) SetObjectAt(x, y, blocker,z,z);
             int ix = ARRAY_X(x);
             int iy = ARRAY_Y(y);
-            ///Debug("SetBlocked: {0} {1}", x, y);
-            // if was set Passable dont re-block
-            if (GetByteMatrix(z)[ix, iy] == STICKY_PASSABLE)
+            foreach (CollisionPlane CP in CollisionPlanesFor(z))
             {
-                //  return;
+                byte[,] ByteMatrix = CP.ByteMatrix;
+                ///Debug("SetBlocked: {0} {1}", x, y);
+                // if was set Passable dont re-block
+                if (ByteMatrix[ix, iy] == STICKY_PASSABLE)
+                {
+                    //  return;
+                }
+                ByteMatrix[ix, iy] = BLOCKED;
             }
-            GetByteMatrix(z)[ix, iy] = BLOCKED;
             //   SetBubbleBlock(ix, iy, blocker);
         }
 
@@ -1231,7 +1290,7 @@ namespace PathSystem3D.Navigation
         }
 
         bool PunishChangeDirection;
-        public IList<Vector3d> GetLocalPath0(Vector3 start, Vector3 end, CollisionPlane CP, float Z)
+        private IList<Vector3d> GetLocalPath0(Vector3 start, Vector3 end, CollisionPlane CP, float Z)
         {
             PathFinderDemo panel = PathFinder;
             PunishChangeDirection = !PunishChangeDirection;    //toggle each time
@@ -1242,8 +1301,8 @@ namespace PathSystem3D.Navigation
             Point S = ToPoint(start);
             Point E = ToPoint(end);
             IList<PathFinderNode> pfn = null;
-            
-            CP.EnsureUpToDate();
+
+
             try
             {
                 PathFinderFasting pff = new PathFinderFasting(CP.ByteMatrix);

@@ -575,7 +575,7 @@ namespace cogbot.TheOpenSims
         /// <returns></returns>
         public Vector3 GetUsableLocalPositionOf(Vector3 v3, float useDist)
         {
-            return PathStore.GetUsableLocalPositionOf(v3, useDist);
+            return PathStore.GetUsableLocalPositionOf(PathStore.GetCollisionPlane(v3.Z), v3, useDist);
         }
 
         /// <summary>
