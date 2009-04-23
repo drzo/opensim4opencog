@@ -90,7 +90,7 @@ namespace PathSystem3D.Navigation
             while (OnlyStart && MadeIt)
             {
                 if (Vector3d.Distance(GetWorldPosition(), globalEnd) < distance) return true;
-                IList<Vector3d> route = SimPathStore.GetPath(GetWorldPosition(), globalEnd, distance, out OnlyStart);
+                IList<Vector3d> route = SimPathStore.GetPath(MoverPlane,GetWorldPosition(), globalEnd, distance, out OnlyStart);
                 MadeIt = FollowPathTo(route, globalEnd, distance);
             }
             return MadeIt;

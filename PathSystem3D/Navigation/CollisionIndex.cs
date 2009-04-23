@@ -104,7 +104,7 @@ namespace PathSystem3D.Navigation
 
         public bool IsUnderWater(float low,float high)
         {
-            return high < GetSimRegion().WaterHeight;
+            return high < PathStore.WaterHeight;
         }
 
         public bool IsFlyZone(float low,float high)
@@ -177,62 +177,16 @@ namespace PathSystem3D.Navigation
         {
             if (PX < 1 || PY < 1 || _LocalPos.X > 254 || _LocalPos.Y > 254)
                 return 0;
-            float O;
-
-            byte found = 0;
-            O = NeighborLevel(low, high, PX, PY + 1, GP);
-            if (!DiffLessThan(O, original, mostDiff)) found++;
-
-            O = NeighborLevel(low, high, PX + 1, PY + 1, GP);
-            if (!DiffLessThan(O, original, mostDiff)) found++;
-
-            O = NeighborLevel(low, high, PX + 1, PY, GP);
-            if (!DiffLessThan(O, original, mostDiff)) found++;
-
-            O = NeighborLevel(low, high, PX + 1, PY - 1, GP);
-            if (!DiffLessThan(O, original, mostDiff)) found++;
-
-            O = NeighborLevel(low, high, PX, PY - 1, GP);
-            if (!DiffLessThan(O, original, mostDiff)) found++;
-
-            O = NeighborLevel(low, high, PX - 1, PY - 1, GP);
-            if (!DiffLessThan(O, original, mostDiff)) found++;
-
-            O = NeighborLevel(low, high, PX - 1, PY, GP);
-            if (!DiffLessThan(O, original, mostDiff)) found++;
-
-            O = NeighborLevel(low, high, PX - 1, PY + 1, GP);
-            if (!DiffLessThan(O, original, mostDiff)) found++;
-
-            return found;
+            return CollisionPlane.NeighborBump(PX, PY, low, high, original, mostDiff, GP);
         }
-
-        internal float NeighborLevel(float low,float high, int PX, int PY, float[,] GP)
-        {
-            return GP[PX, PY];
-            CollisionIndex WP = PathStore.MeshIndex[PX, PY];
-            if (WP != null) return WP.GetZLevel(low,high);
-            float x = PX / PathStore.POINTS_PER_METER;
-            float y = PY / PathStore.POINTS_PER_METER;
-            float GL = GetSimRegion().GetGroundLevel(x, y);
-            float CPL = low;
-            return (GL > CPL) ? GL : CPL;
-        }
-
 
         float _GroundLevelCache = float.MinValue;
         public float GetGroundLevel()
         {
             if (_GroundLevelCache > 0) return _GroundLevelCache;
-            _GroundLevelCache = GetSimRegion().GetGroundLevel(_LocalPos.X, _LocalPos.Y);
+            _GroundLevelCache = PathStore.GetGroundLevel(_LocalPos.X, _LocalPos.Y);
             return _GroundLevelCache;
         }
-
-        public SimPathStore GetSimRegion()
-        {
-            return PathStore.GetPathStore();
-        }
-
 
         public void TaintMatrix()
         {            
@@ -334,7 +288,7 @@ namespace PathSystem3D.Navigation
         public string ExtraInfoString(float low,float high)
         {
             string S = "" + PX + "/" + PY + " GLevel=" + GetGroundLevel(low,high);
-            if (IsUnderWater(low,high)) S += " UnderWater=" + GetSimRegion().WaterHeight;
+            if (IsUnderWater(low,high)) S += " UnderWater=" + PathStore.WaterHeight;
             if (IsFlyZone(low,high)) S += " FlyZone=" + low;
             S += " LastGL=" + low +"-" + high;
             S += " ZLevel=" + GetZLevel(low, high);
@@ -350,9 +304,8 @@ namespace PathSystem3D.Navigation
         /// <returns>String describing this node.</returns>
         public override string ToString()
         {
-            SimPathStore R = GetSimRegion();
             Vector3 loc = GetSimPosition();
-            return String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, GetGroundLevel());
+            return String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", PathStore.RegionName, loc.X, loc.Y, GetGroundLevel());
         }
 
         ///// <summary>

@@ -72,7 +72,15 @@ namespace PathSystem3D.Navigation.Debug
         public byte[,] Matrix
         {
             get {
-                if (_Matrix == null) _Matrix = PathStore.GetByteMatrix(ZLevel);
+                if (_Matrix == null)
+                {
+                    if (CurrentPlane != null)
+                        _Matrix = CurrentPlane.ByteMatrix;
+                }
+                if (_Matrix == null)
+                {
+                    _Matrix = PathStore.GetByteMatrix(ZLevel);
+                }
                 return _Matrix; }
         }
         byte[,] _Matrix;
