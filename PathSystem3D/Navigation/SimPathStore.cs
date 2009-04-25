@@ -47,7 +47,7 @@ namespace PathSystem3D.Navigation
             }
             else
             {
-                AddTrianglesV2(tl, tc, OuterBox, PADXY, InnerBoxes);
+                AddTrianglesV3(tl, tc, OuterBox, PADXY, InnerBoxes);
             }
             // Debug(InnerBoxes.Count);
         }
@@ -99,6 +99,17 @@ namespace PathSystem3D.Navigation
         }
 
         private static void AddTrianglesV2(IList<Triangle> ts, int len, Box3Fill OuterBox, float PADXY, IList<Box3Fill> InnerBoxes)
+        {
+            foreach (Triangle t1 in ts)
+            {
+                Box3Fill B = new Box3Fill(true);
+                OuterBox.AddTriangle(t1, PADXY);
+                B.AddTriangle(t1, PADXY);
+                InnerBoxes.Add(B);
+            }
+        }
+
+        private static void AddTrianglesV3(IList<Triangle> ts, int len, Box3Fill OuterBox, float PADXY, IList<Box3Fill> InnerBoxes)
         {
             int len1 = len - 2;
             for (int i = 0; i < len1; i += 2)
@@ -372,7 +383,7 @@ namespace PathSystem3D.Navigation
 
             byte[,] ByteMatrix = CP.ByteMatrix;
             byte b = ByteMatrix[ix,iy];
-            float[,] GP = CP.GroundPlane;
+            float[,] GP = CP.HeightMap;
             float zl = GP[ix,iy];
 
             GetCollisionIndex(ix, iy).SetNodeQualityTimer(CP, MAYBE_BLOCKED, 30);
@@ -717,6 +728,66 @@ namespace PathSystem3D.Navigation
             }
         }
 
+
+        float[,] _GroundPlane;
+        public float[,] GroundPlane
+        {
+            get
+            {
+                if (_GroundPlane == null)
+                {
+
+                    int MAPSPACE1 = MAPSPACE - 1; // 1270
+                    _GroundPlane = new float[MAPSPACE, MAPSPACE];
+                    float fy = 256f;
+                    for (int y = MAPSPACE1; y >= 0; y--)
+                    {
+                        fy = fy - StepSize;
+                        float fx = 256f;
+                        for (int x = MAPSPACE1; x >= 0; x--)
+                        {
+                            fx = fx - StepSize;
+                            _GroundPlane[x, y] = GetGroundLevel(fx, fy);
+                        }
+                    }
+
+
+                    MAPSPACE1--;
+
+                    // smooth it
+                    for (int i = (int)POINTS_PER_METER; i > 0; i--)
+                    {
+                        fy = 256f;
+                        for (int y = MAPSPACE1; y > 1; y--)
+                        {
+                            fy = fy - StepSize;
+                            float fx = 256f;
+                            for (int x = MAPSPACE1; x > 1; x--)
+                            {
+                                fx = fx - StepSize;
+                                _GroundPlane[x, y] =
+                                    (_GroundPlane[x, y] * 2 +
+
+                                    _GroundPlane[x + 1, y] +
+                                    _GroundPlane[x, y + 1] +
+                                    _GroundPlane[x + 1, y + 1] +
+
+                                    _GroundPlane[x - 1, y] +
+                                    _GroundPlane[x, y - 1] +
+                                    _GroundPlane[x - 1, y - 1] +
+
+                                    _GroundPlane[x - 1, y + 1] +
+                                    _GroundPlane[x + 1, y - 1]) / 10;
+
+                            }
+                        }
+                    }
+                }
+
+                return _GroundPlane;
+            }
+        }
+
         public float GetGroundLevel(float x, float y)
         {
             return GroundLevelDelegate(x,y);
@@ -806,6 +877,7 @@ namespace PathSystem3D.Navigation
 
         public const byte BLOCKED = 255;
         public const byte MAYBE_BLOCKED = 254;
+        public const byte MAYBE_BLOCKED2 = 250;
         public const byte INITIALLY = 20;
         public const byte PASSABLE = 1;
         public const byte STICKY_PASSABLE = 0;
@@ -908,6 +980,8 @@ namespace PathSystem3D.Navigation
                     return OccupiedColor(Color.Pink, MeshIndex[x, y]);
                 case PASSABLE:
                     return OccupiedColor(Color.Blue, MeshIndex[x, y]);
+                case MAYBE_BLOCKED2:
+                    return OccupiedColor(Color.Yellow, MeshIndex[x, y]);
                 case STICKY_PASSABLE:
                     return OccupiedColor(Color.Green, MeshIndex[x, y]);
             }
@@ -1563,7 +1637,7 @@ namespace PathSystem3D.Navigation
             if (ys < MAX) ye++;
 
 
-            float[,] GP = CurrentPlane.GroundPlane;
+            float[,] GP = CurrentPlane.HeightMap;
             //  lock (mWaypoints)
             {
                 for (int x = xs; x <= xe; x++)
@@ -1579,7 +1653,8 @@ namespace PathSystem3D.Navigation
                             CollisionIndex WP = MeshIndex[x, y];
                             if (WP != null)
                             {
-                                WP.UpdateMatrix(CurrentPlane,GP[x,y],CurrentPlane.MinZ, CurrentPlane.MaxZ,GP);
+                                float ZLevel = GP[x, y];
+                                WP.UpdateMatrix(CurrentPlane, ZLevel - CollisionIndex.MaxBump, ZLevel + CollisionIndex.MaxBump, GP);
                             }
                         }
             }
@@ -1705,7 +1780,7 @@ namespace PathSystem3D.Navigation
 
         internal CollisionPlane CreateMoverPlane(float Z)
         {
-            CollisionPlane found = new CollisionPlane(MAPSPACE, MAPSPACE, Z - 0.5f, Z + 1.7f, this);
+            CollisionPlane found = new CollisionPlane(MAPSPACE, MAPSPACE, Z, Z + 0.499f, this);
             Console.WriteLine("Created matrix[{0}] {1} for {2}", Z, found, this);
             lock (Matrixes) Matrixes.Add(found);
             if (PathFinder != null) PathFinder.OnNewCollisionPlane(found);

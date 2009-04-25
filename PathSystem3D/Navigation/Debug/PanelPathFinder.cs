@@ -223,8 +223,8 @@ namespace PathSystem3D.Navigation.Debug
         protected override void OnPaint(PaintEventArgs e)
         {
             Graphics g = e.Graphics;
-            if (PathStore != null)
-            {
+            if (PathStore != null && _Matrix!=null)
+            {            
                 byte[,] matrix = Matrix;
                 for (int y = (e.ClipRectangle.Y / mGridSize) * mGridSize; y <= e.ClipRectangle.Bottom; y += mGridSize)
                     for (int x = (e.ClipRectangle.X / mGridSize) * mGridSize; x <= e.ClipRectangle.Right; x += mGridSize)
@@ -308,10 +308,12 @@ namespace PathSystem3D.Navigation.Debug
                 CollisionIndex o = PathStore.GetCollisionIndex(x, y);
                 if (o != null)
                 {
-                    float low = CurrentPlane == null ? 0 : CurrentPlane.MinZ;
-                    float high = CurrentPlane == null ? float.MaxValue : CurrentPlane.MaxZ;
-                    str = String.Format("{0} matrix={1}", o.OccupiedString(low, high), Matrix[x, y]);
-                    str += CurrentPlane == null ? "" : String.Format(" GL={0}", CurrentPlane.GroundPlane[o.PX, o.PY]);
+                    float low = _CurrentPlane == null ? 0 : CurrentPlane.MinZ;
+                    float high = _CurrentPlane == null ? float.MaxValue : CurrentPlane.MaxZ;
+                    str = "";
+                    if (_CurrentPlane != null) str += o.OccupiedString(low, high);
+                    if (_Matrix != null) str += String.Format("maxtrix={0}", Matrix[x, y]);
+                    //if (_CurrentPlane != null) str += String.Format(" GL={0}", CurrentPlane.HeightMap[o.PX, o.PY]);
                 }
                 else
                 {

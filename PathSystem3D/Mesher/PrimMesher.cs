@@ -1,4 +1,4 @@
-﻿﻿/*
+﻿/*
  * Copyright (c) Contributors
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using PathSystem3D.Mesher;
 
 //namespace PrimMesher
 namespace THIRDPARTY.PrimMesher
@@ -925,7 +926,8 @@ namespace THIRDPARTY.PrimMesher
                 if (hasProfileCut)
                     this.faceNumbers.Add(0);
                 for (int i = 0; i < numHollowVerts; i++)
-                    this.faceNumbers.Add(faceNum++);
+                    //this.faceNumbers.Add(faceNum++);
+                    this.faceNumbers.Add(hollowSides < 5 ? faceNum++ : faceNum);
                 this.bottomFaceNumber = faceNum++;
                 if (hasHollow && hasProfileCut)
                     this.faceNumbers.Add(faceNum++);
@@ -1128,16 +1130,16 @@ namespace THIRDPARTY.PrimMesher
         }
     }
 
-    public class PrimMesh
+    public class PrimMesh: IPrimMesh
     {
         public string errorMessage = "";
         private const float twoPi = 2.0f * (float)Math.PI;
 
-        public List<Coord> coords;
-        public List<Coord> normals;
-        public List<Face> faces;
+        public List<Coord> coords { get; set; }
+        public List<Coord> normals { get; set; }
+        public List<Face> faces { get; set; }
 
-        public List<ViewerFace> viewerFaces;
+        public List<ViewerFace> viewerFaces { get; set; }
 
         private int sides = 4;
         private int hollowSides = 4;

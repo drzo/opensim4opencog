@@ -63,7 +63,7 @@ namespace PathSystem3D.Navigation
 
         public string OccupiedString()
         {
-            IList<IMeshedObject> OccupiedListObject = GetOccupied();
+            IEnumerable<IMeshedObject> OccupiedListObject = GetOccupied();
             string S = "";
             lock (OccupiedListObject)
             {
@@ -76,7 +76,7 @@ namespace PathSystem3D.Navigation
             return S + this.ToString() + " " + ExtraInfoString();
         }
 
-        private IList<IMeshedObject> GetOccupied()
+        private IEnumerable<IMeshedObject> GetOccupied()
         {
             return CIndex.GetOccupied(MinZ, MaxZ);
         }
@@ -93,7 +93,7 @@ namespace PathSystem3D.Navigation
 
         private void SetMatrix(CollisionPlane CP, int v)
         {
-            CIndex.SetMatrix(CP, v);
+            CIndex.SetMatrixForced(CP, v);
         }
 
         private float GetZLevel(CollisionPlane CP)
@@ -105,7 +105,7 @@ namespace PathSystem3D.Navigation
 
         public float GetGroundLevel()
         {
-            return CIndex.GetGroundLevel(float.MinValue,float.MaxValue);
+            return CIndex.GetGroundLevel();
         }
 
 
