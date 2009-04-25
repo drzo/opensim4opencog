@@ -31,33 +31,31 @@ using System.Text;
 using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
+using PathSystem3D.Mesher;
 
 namespace THIRDPARTY.PrimMesher
 {    
-    public class SculptMesh
+    public class SculptMesh : IPrimMesh
     {
-        public List<Coord> coords;
-        public List<Face> faces;
+        public List<Coord> coords { get; set; }
+        public List<Face> faces { get; set; }
 
-        public List<ViewerFace> viewerFaces;
-        public List<Coord> normals;
-        public List<UVCoord> uvs;
+        public List<ViewerFace> viewerFaces { get; set; }
+        public List<Coord> normals { get; set; }
+        public List<UVCoord> uvs;    
 
-        public enum SculptType { sphere = 1, torus = 2, plane = 3, cylinder = 4 };
-        private const float pixScale = 0.00390625f; // 1.0 / 256
-
-        public SculptMesh Copy()
-        {
-            return new SculptMesh(this);
-        }
+        public SculptMesh Copy() { return new SculptMesh(this); }
         public SculptMesh(SculptMesh param1)
         {
             coords = new List<Coord>(param1.coords);
-            faces = new List<Face>(param1.faces);
+            faces = new List<Face>(param1.faces); 
             viewerFaces = new List<ViewerFace>(param1.viewerFaces);
-            normals = new List<Coord>(param1.normals);
+            normals = new List<Coord>(param1.normals); 
             uvs = new List<UVCoord>(param1.uvs);
         }
+
+        public enum SculptType { sphere = 1, torus = 2, plane = 3, cylinder = 4 };
+        private const float pixScale = 0.00390625f; // 1.0 / 256
 
         private Bitmap ScaleImage(Bitmap srcImage, float scale)
         {
@@ -81,8 +79,8 @@ namespace THIRDPARTY.PrimMesher
 
             Bitmap scaledImage = new Bitmap(destWidth, destHeight,
                                      PixelFormat.Format24bppRgb);
-            scaledImage.SetResolution(srcImage.HorizontalResolution,
-                                    srcImage.VerticalResolution);
+
+            scaledImage.SetResolution(96.0f, 96.0f);
 
             Graphics grPhoto = Graphics.FromImage(scaledImage);
             grPhoto.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Bilinear;
@@ -96,7 +94,6 @@ namespace THIRDPARTY.PrimMesher
             return scaledImage;
         }
 
-
         public SculptMesh SculptMeshFromFile(string fileName, SculptType sculptType, int lod, bool viewerMode)
         {
             Bitmap bitmap = (Bitmap)Bitmap.FromFile(fileName);
@@ -106,7 +103,7 @@ namespace THIRDPARTY.PrimMesher
         }
 
         /// <summary>
-        /// ** Experimental ** May disappear from future versions ** not recommeneded for use in applications
+        /// ** Experimental ** May disappear from future versions ** not recommended for use in applications
         /// Construct a sculpt mesh from a 2D array of floats
         /// </summary>
         /// <param name="zMap"></param>
@@ -181,24 +178,6 @@ namespace THIRDPARTY.PrimMesher
                     {
                         Face f1, f2;
 
-                        //if (viewerMode)
-                        //{
-                        //    f1 = new Face(p1, p3, p4, p1, p3, p4);
-                        //    f1.uv1 = p1;
-                        //    f1.uv2 = p3;
-                        //    f1.uv3 = p4;
-
-                        //    f2 = new Face(p1, p4, p2, p1, p4, p2);
-                        //    f2.uv1 = p1;
-                        //    f2.uv2 = p4;
-                        //    f2.uv3 = p2;
-                        //}
-                        //else
-                        //{
-                        //    f1 = new Face(p1, p3, p4);
-                        //    f2 = new Face(p1, p4, p2);
-                        //}
-
                         if (viewerMode)
                         {
                             f1 = new Face(p1, p4, p3, p1, p4, p3);
@@ -229,10 +208,24 @@ namespace THIRDPARTY.PrimMesher
 
         public SculptMesh(Bitmap sculptBitmap, SculptType sculptType, int lod, bool viewerMode)
         {
+            _SculptMesh(sculptBitmap, sculptType, lod, viewerMode, false, false);
+        }
+
+        public SculptMesh(Bitmap sculptBitmap, SculptType sculptType, int lod, bool viewerMode, bool mirror, bool invert)
+        {
+            _SculptMesh(sculptBitmap, sculptType, lod, viewerMode, mirror, invert);
+        }
+
+        void _SculptMesh(Bitmap sculptBitmap, SculptType sculptType, int lod, bool viewerMode, bool mirror, bool invert)
+        {
             coords = new List<Coord>();
             faces = new List<Face>();
             normals = new List<Coord>();
             uvs = new List<UVCoord>();
+
+            if (mirror)
+                if (sculptType != SculptType.plane)
+                    invert = !invert;
 
             //float sourceScaleFactor = (float)lod / (float)Math.Max(sculptBitmap.Width, sculptBitmap.Height);
             float sourceScaleFactor = (float)(lod) / (float)Math.Sqrt(sculptBitmap.Width * sculptBitmap.Height);
@@ -323,6 +316,7 @@ namespace THIRDPARTY.PrimMesher
                     color = bitmap.GetPixel(imageX == width ? 0 : imageX, imageY == height ? height - 1 : imageY);
 
                     x = (color.R - 128) * pixScale;
+                    if (mirror) x = -x;
                     y = (color.G - 128) * pixScale;
                     z = (color.B - 128) * pixScale;
 
@@ -340,20 +334,43 @@ namespace THIRDPARTY.PrimMesher
 
                         if (viewerMode)
                         {
-                            f1 = new Face(p1, p3, p4, p1, p3, p4);
-                            f1.uv1 = p1;
-                            f1.uv2 = p3;
-                            f1.uv3 = p4;
+                            if (invert)
+                            {
+                                f1 = new Face(p1, p4, p3, p1, p4, p3);
+                                f1.uv1 = p1;
+                                f1.uv2 = p4;
+                                f1.uv3 = p3;
 
-                            f2 = new Face(p1, p4, p2, p1, p4, p2);
-                            f2.uv1 = p1;
-                            f2.uv2 = p4;
-                            f2.uv3 = p2;
+                                f2 = new Face(p1, p2, p4, p1, p2, p4);
+                                f2.uv1 = p1;
+                                f2.uv2 = p2;
+                                f2.uv3 = p4;
+                            }
+                            else
+                            {
+                                f1 = new Face(p1, p3, p4, p1, p3, p4);
+                                f1.uv1 = p1;
+                                f1.uv2 = p3;
+                                f1.uv3 = p4;
+
+                                f2 = new Face(p1, p4, p2, p1, p4, p2);
+                                f2.uv1 = p1;
+                                f2.uv2 = p4;
+                                f2.uv3 = p2;
+                            }
                         }
                         else
                         {
-                            f1 = new Face(p1, p3, p4);
-                            f2 = new Face(p1, p4, p2);
+                            if (invert)
+                            {
+                                f1 = new Face(p1, p4, p3);
+                                f2 = new Face(p1, p2, p4);
+                            }
+                            else
+                            {
+                                f1 = new Face(p1, p3, p4);
+                                f2 = new Face(p1, p4, p2);
+                            }
                         }
 
                         this.faces.Add(f1);

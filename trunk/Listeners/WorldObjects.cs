@@ -447,7 +447,7 @@ namespace cogbot.Listeners
                 if (prim is Avatar)
                 {
                     CountnumAvatars++;
-                    Debug("+++++++++++++++Making AVATAR" + prim);
+                    Debug("+++++++++++++++Making {0} {1}", prim, ((Avatar)prim).Name);
                     if (prim.ID == UUID.Zero)
                     {
                         Debug("  - - -#$%#$%#$%% - ------- - Wierd Avatar " + prim);

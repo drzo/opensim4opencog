@@ -61,7 +61,7 @@ namespace PathSystem3D.Navigation.Debug
 
         private void object_click(object sender, EventArgs e)
         {
-            IList<IMeshedObject> occs = Current.GetOccupied(LastPlane.MinZ, LastPlane.MaxZ);
+            IList<IMeshedObject> occs = (IList<IMeshedObject>)Current.GetOccupied(LastPlane.MinZ, LastPlane.MaxZ);
             try
             {
                 if (sender is Button)

@@ -311,11 +311,14 @@ namespace cogbot.TheOpenSims
             {           
                 GridInfoKnown = true;
                 _GridInfo = value;
-                if (value.WaterHeight == 0) _GridInfo.WaterHeight = 20;
-                PathStore.WaterHeight = value.WaterHeight;
+                if (value.WaterHeight != 0)
+                {
+                    PathStore.WaterHeight = value.WaterHeight;                    
+                    Console.WriteLine("{0} WaterHeight = {1}", value.Name, PathStore.WaterHeight);                    
+                }
                 PathStore.RegionName = _GridInfo.Name;
                 regionEvent.Set();
-                //Client.Grid.RequestMapRegion(PathStore.RegionName, GridLayerType.Terrain);
+              //  Client.Grid.RequestMapRegion(PathStore.RegionName, GridLayerType.Terrain);
             }
         }
 
@@ -488,7 +491,10 @@ namespace cogbot.TheOpenSims
             get
             {
                 Simulator best = null;
-                lock (_Simulators) foreach (Simulator S in _Simulators)
+                lock (_Simulators)
+                {
+                    if (_Simulators.Count == 0) return _Simulators[0];
+                    foreach (Simulator S in _Simulators)
                     {
                         if (!S.Connected)
                         {
@@ -504,6 +510,7 @@ namespace cogbot.TheOpenSims
                         }
                         best = S;
                     }
+                }
                 return best;
             }
             set
@@ -511,7 +518,12 @@ namespace cogbot.TheOpenSims
                 if (value == null) return;
                 lock (_Simulators)
                     if (!_Simulators.Contains(value))
+                    {
                         _Simulators.Add(value);
+                        PathStore.WaterHeight = value.WaterHeight;
+                        _GridInfo.WaterHeight = (byte)value.WaterHeight;
+                        Console.WriteLine("{0} SimWaterHeight = {1}", value.Name, PathStore.WaterHeight);
+                    }
                 Simulator simulator = TheSimulator;
                 if (simulator == value) return;
                 SetMaster((GridClient)value.Client);
@@ -561,7 +573,7 @@ namespace cogbot.TheOpenSims
 
         public float WaterHeight()
         {
-            return GridInfo.WaterHeight;
+            return TheSimulator.WaterHeight;
         }
 
         public void ShowDebugger()
@@ -865,10 +877,10 @@ namespace cogbot.TheOpenSims
                     {
                         return AverageHieght;
                     }
-                    Thread.Sleep(4000);
+                    Thread.Sleep(1000);
                     if (GetGroundLevelTried > 10)
                     {
-                        Debug("BADDDDD Height " + x + " " + y + " waiting " + AverageHieght + " sim " + RegionName);
+                        if (Settings.LOG_LEVEL != Helpers.LogLevel.None) Console.WriteLine("BADDDDD Height " + x + " " + y + " waiting " + AverageHieght + " sim " + RegionName);
                         return AverageHieght;
                     }
                 }
@@ -905,7 +917,7 @@ namespace cogbot.TheOpenSims
         {
             if (Client == gridClient) return;
             Client = gridClient;
-            Debug("SetMaster " + GridInfo.Name);
+            Debug("SetMaster {0}" , GridInfo.Name);
             EnsureClientEvents(Client);
         }
 
