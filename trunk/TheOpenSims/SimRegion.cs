@@ -25,7 +25,7 @@ namespace cogbot.TheOpenSims
     /// <summary>
     /// Denotes a Simulator region and can help with bot navigation
     /// </summary>
-    public class SimRegion  //: IPathStore
+    public class SimRegion// : SimPathStore
     {
 
         public static List<SimRegion> CurrentRegions
@@ -552,6 +552,7 @@ namespace cogbot.TheOpenSims
 
         readonly public ulong RegionHandle;
         public SimRegion(ulong Handle)
+            //: base(null, default(Vector2), default(Vector3d), default(Vector3))
         {
             RegionHandle = Handle;
             // RegionName = gridRegionName;

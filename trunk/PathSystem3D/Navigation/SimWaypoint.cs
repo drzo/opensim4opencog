@@ -61,7 +61,7 @@ namespace PathSystem3D.Navigation
             return IsUnderWater();
         }
 
-        public string OccupiedString()
+        public string OccupiedString(CollisionPlane cp)
         {
             IEnumerable<IMeshedObject> OccupiedListObject = GetOccupied();
             string S = "";
@@ -73,7 +73,7 @@ namespace PathSystem3D.Navigation
                     S += "\r\n";
                 }
             }
-            return S + this.ToString() + " " + ExtraInfoString();
+            return S + this.ToString() + " " + ExtraInfoString(cp);
         }
 
         private IEnumerable<IMeshedObject> GetOccupied()
@@ -81,9 +81,9 @@ namespace PathSystem3D.Navigation
             return CIndex.GetOccupied(MinZ, MaxZ);
         }
 
-        public string ExtraInfoString()
+        public string ExtraInfoString(CollisionPlane cp)
         {
-            return CIndex.ExtraInfoString(MinZ, MaxZ);
+            return CIndex.ExtraInfoString(cp);
         }
 
         private float GetMatrix(CollisionPlane CP)
@@ -551,6 +551,12 @@ namespace PathSystem3D.Navigation
 
         public static SimWaypoint CreateLocal(Vector3 from, SimPathStore PathStore)
         {
+            return CreateLocal(from, PathStore.GetCollisionPlane(from.Z));
+        }
+
+        public static SimWaypoint CreateLocal(Vector3 from, CollisionPlane CP)
+        {
+            SimPathStore PathStore = CP.PathStore;
             float POINTS_PER_METER = PathStore.POINTS_PER_METER;
             int PX = PathStore.ARRAY_X(from.X);
             int PY = PathStore.ARRAY_Y(from.Y);
@@ -563,11 +569,11 @@ namespace PathSystem3D.Navigation
                 from.X = PX / POINTS_PER_METER;
                 from.Y = PY / POINTS_PER_METER;
                 Vector3d GlobalPos = PathStore.LocalToGlobal(from);
-                if (GlobalPos.X < 256 || GlobalPos.Y<256)
+                if (GlobalPos.X < 256 || GlobalPos.Y < 256)
                 {
                     Console.WriteLine("bad global " + GlobalPos);
                 }
-                WP = new SimWaypointImpl(from, GlobalPos, CI, PathStore.GetCollisionPlane(from.Z), PathStore);
+                WP = new SimWaypointImpl(from, GlobalPos, CI, CP, PathStore);
                 WP.IsPassable = true;
             }
             // wp._IncomingArcs = new ArrayList();
@@ -575,7 +581,6 @@ namespace PathSystem3D.Navigation
             //  PathStore.EnsureKnown(wp);
             return WP;
         }
-
         public Vector3 GetSimPosition()
         {
             return _LocalPos;
@@ -741,7 +746,7 @@ namespace PathSystem3D.Navigation
         bool IsGroundLevel();
         void Isolate();
         bool IsUnderWater();
-        string OccupiedString();
+        string OccupiedString(CollisionPlane cp);
        // SimPathStore GetSimRegion();
     }
 }

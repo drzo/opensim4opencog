@@ -870,7 +870,7 @@ namespace cogbot.TheOpenSims
 
         public virtual OpenMetaverse.Quaternion GetSimRotation()
         {
-            if (!IsRegionAttached()) ;// throw Error("GetSimRotation !IsRegionAttached: " + this);
+            //if (!IsRegionAttached()) ;// throw Error("GetSimRotation !IsRegionAttached: " + this);
             Quaternion transValue = Prim.Rotation;
             Primitive outerPrim = Prim;
             while (outerPrim.ParentID != 0)

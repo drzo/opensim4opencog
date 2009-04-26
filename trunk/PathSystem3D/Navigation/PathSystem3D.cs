@@ -13,23 +13,23 @@ namespace PathSystem3D.Navigation
     //    SimPathStore PathStore;
     //    public string RegionName { get; private set; }
     //    // util
-    //    static public List<Box3Fill> TrianglesToBoxes(List<Triangle> tl, Box3Fill OuterBox, float PADXY)
+    //    static public List<Box3Fill> TrianglesToBoxes(List<Triangle> tl, Box3Fill OuterBox, float padXYZ)
     //    {
 
 
     //        int tc = tl.Count;
     //        if (tc < 16)
     //        {
-    //            return AddTrianglesV1(tl, tc, OuterBox, PADXY);
+    //            return AddTrianglesV1(tl, tc, OuterBox, padXYZ);
     //        }
     //        else
     //        {
-    //            return AddTrianglesV2(tl, tc, OuterBox, PADXY);
+    //            return AddTrianglesV2(tl, tc, OuterBox, padXYZ);
     //        }
     //        // Console.WriteLine(InnerBoxes.Count);
     //    }
 
-    //    private static List<Box3Fill> AddTrianglesV1(List<Triangle> triangles, int len, Box3Fill OuterBox, float PADXY)
+    //    private static List<Box3Fill> AddTrianglesV1(List<Triangle> triangles, int len, Box3Fill OuterBox, float padXYZ)
     //    {
     //        List<Box3Fill> InnerBoxes = new List<Box3Fill>();
     //        Triangle[] ts = triangles.ToArray();
@@ -38,7 +38,7 @@ namespace PathSystem3D.Navigation
     //        {
     //            Triangle t1 = ts[i];
     //            bool used = false;
-    //            OuterBox.AddTriangle(t1, PADXY);
+    //            OuterBox.AddTriangle(t1, padXYZ);
     //            for (int ii = i + 1; ii < len; ii++)
     //            {
     //                Triangle t2 = ts[ii];
@@ -46,7 +46,7 @@ namespace PathSystem3D.Navigation
     //                if (shared == 3) continue;
     //                if (shared == 2)
     //                {
-    //                    Box3Fill B = new Box3Fill(t1, t2, PADXY);
+    //                    Box3Fill B = new Box3Fill(t1, t2, padXYZ);
     //                    InnerBoxes.Add(B);
     //                    used = true;
     //                }
@@ -54,7 +54,7 @@ namespace PathSystem3D.Navigation
     //            if (!used)
     //            {
     //                Box3Fill B = new Box3Fill(true);
-    //                B.AddTriangle(t1, PADXY);
+    //                B.AddTriangle(t1, padXYZ);
     //                InnerBoxes.Add(B);
     //            }
     //        }
@@ -77,7 +77,7 @@ namespace PathSystem3D.Navigation
     //        return sharedV;
     //    }
 
-    //    private static List<Box3Fill> AddTrianglesV2(List<Triangle> ts, int len, Box3Fill OuterBox, float PADXY)
+    //    private static List<Box3Fill> AddTrianglesV2(List<Triangle> ts, int len, Box3Fill OuterBox, float padXYZ)
     //    {
     //        List<Box3Fill> InnerBoxes = new List<Box3Fill>();
     //        int len1 = len - 2;
@@ -85,9 +85,9 @@ namespace PathSystem3D.Navigation
     //        {
     //            Triangle t1 = ts[i];
     //            Triangle t2 = ts[i + 1];
-    //            OuterBox.AddTriangle(t1, PADXY);
-    //            OuterBox.AddTriangle(t2, PADXY);
-    //            Box3Fill B = new Box3Fill(t1, t2, PADXY);
+    //            OuterBox.AddTriangle(t1, padXYZ);
+    //            OuterBox.AddTriangle(t2, padXYZ);
+    //            Box3Fill B = new Box3Fill(t1, t2, padXYZ);
     //            InnerBoxes.Add(B);
     //            bool used = false;
     //            for (int ii = i + 2; ii < len; ii++)
@@ -97,7 +97,7 @@ namespace PathSystem3D.Navigation
     //                if (shared == 3) continue;
     //                if (shared == 2)
     //                {
-    //                    B = new Box3Fill(t1, t2, PADXY);
+    //                    B = new Box3Fill(t1, t2, padXYZ);
     //                    InnerBoxes.Add(B);
     //                    used = true;
     //                }
@@ -105,7 +105,7 @@ namespace PathSystem3D.Navigation
     //            if (!used)
     //            {
     //                B = new Box3Fill(true);
-    //                B.AddTriangle(t1, PADXY);
+    //                B.AddTriangle(t1, padXYZ);
     //                InnerBoxes.Add(B);
     //            }
     //        }

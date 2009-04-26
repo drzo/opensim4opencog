@@ -57,7 +57,27 @@ namespace PathSystem3D.Navigation
         {
             get { return Mover.GetPathStore(); }
         }
-        CollisionPlane MoverPlane = null;
+        CollisionPlane MoverPlane
+        {
+            get
+            {
+                CollisionPlane _MoverPlane;
+                lock (MoverPlanes)
+                {
+                    if (!MoverPlanes.ContainsKey(Mover))
+                    {
+                        MoverPlanes[Mover] = PathStore.GetCollisionPlane(Mover.GetSimPosition().Z);
+                    }
+                    _MoverPlane = MoverPlanes[Mover];
+                    if (_MoverPlane.PathStore != Mover.GetPathStore())
+                    {
+                        _MoverPlane = PathStore.GetCollisionPlane(Mover.GetSimPosition().Z);
+                        MoverPlanes[Mover] = _MoverPlane;
+                    }
+                }
+                return _MoverPlane;
+            }
+        }
         static protected double TurnAvoid = 0f;
         bool UseTurnAvoid = false;  // this toggles each time
         readonly SimPosition FinalPosition;
@@ -68,14 +88,8 @@ namespace PathSystem3D.Navigation
             FinalDistance = finalDistance;
             FinalLocation = finalGoal.GetWorldPosition();
             FinalPosition = finalGoal;
-            lock (MoverPlanes)
-            {
-                if (!MoverPlanes.ContainsKey(mover))
-                {
-                    MoverPlanes[mover] = PathStore.CreateMoverPlane(mover.GetSimPosition().Z);
-                }
-                MoverPlane = MoverPlanes[mover];
-            }
+            MoverPlane.WalkZLevel = mover.GetSimPosition().Z;
+            MoverPlane.WalkZLevel = finalGoal.GetSimPosition().Z;
         }
 
 
@@ -91,7 +105,11 @@ namespace PathSystem3D.Navigation
 
             while (OnlyStart && MadeIt)
             {
-                if (Vector3d.Distance(GetWorldPosition(), globalEnd) < distance) return true;
+                Vector3d v3d = GetWorldPosition();
+                if (Vector3d.Distance(v3d, globalEnd) < distance) return true;
+                MoverPlane.WalkZLevel = (float)globalEnd.Z;
+                MoverPlane.WalkZLevel = (float)v3d.Z;
+                MoverPlane.EnsureUpToDate();
                 IList<Vector3d> route = SimPathStore.GetPath(MoverPlane,GetWorldPosition(), globalEnd, distance, out OnlyStart);
                 MadeIt = FollowPathTo(route, globalEnd, distance);
             }

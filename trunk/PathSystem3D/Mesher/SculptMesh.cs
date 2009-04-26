@@ -435,6 +435,8 @@ namespace THIRDPARTY.PrimMesher
 
         public void AddRot(Quat q)
         {
+            if (Quat.Identity == q) return;
+
             int i;
             int numVerts = this.coords.Count;
 

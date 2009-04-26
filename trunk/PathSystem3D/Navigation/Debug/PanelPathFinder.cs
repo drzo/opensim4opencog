@@ -311,9 +311,9 @@ namespace PathSystem3D.Navigation.Debug
                     float low = _CurrentPlane == null ? 0 : CurrentPlane.MinZ;
                     float high = _CurrentPlane == null ? float.MaxValue : CurrentPlane.MaxZ;
                     str = "";
-                    if (_CurrentPlane != null) str += o.OccupiedString(low, high);
-                    if (_Matrix != null) str += String.Format("maxtrix={0}", Matrix[x, y]);
-                    //if (_CurrentPlane != null) str += String.Format(" GL={0}", CurrentPlane.HeightMap[o.PX, o.PY]);
+                    if (_CurrentPlane != null) str += o.OccupiedString(_CurrentPlane);
+                    if (_Matrix != null) str += String.Format(" matrix={0}", Matrix[x, y]);
+                    if (_CurrentPlane != null) str += String.Format(" GL={0}", CurrentPlane.HeightMap[o.PX, o.PY]);
                 }
                 else
                 {

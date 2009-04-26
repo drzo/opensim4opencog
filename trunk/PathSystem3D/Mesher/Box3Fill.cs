@@ -65,7 +65,7 @@ namespace PathSystem3D.Mesher
         public float MinZ;// = float.MaxValue;
         public float MaxZ;// = float.MinValue;
 
-        public Box3Fill(Triangle t1, Triangle t2, float PADXY)
+        public Box3Fill(Triangle t1, Triangle t2, Vector3 padXYZ)
         {
             MinX = t1.v1.X;
             MaxX = t1.v1.X;
@@ -73,9 +73,9 @@ namespace PathSystem3D.Mesher
             MaxY = t1.v1.Y;
             MinZ = t1.v1.Z;
             MaxZ = t1.v1.Z;
-            AddVertex(t1.v2, PADXY);
-            AddVertex(t1.v3, PADXY);
-            AddTriangle(t2, PADXY);
+            AddVertex(t1.v2, padXYZ);
+            AddVertex(t1.v3, padXYZ);
+            AddTriangle(t2, padXYZ);
         }
 
         /// <summary>
@@ -105,8 +105,8 @@ namespace PathSystem3D.Mesher
             MaxZ = float.MinValue;
         }
 
-        //const float PADXY = 0.33f;// SimPathStore.StepSize*0.75f;
-        public const float PADZ = 0.20f;// SimPathStore.StepSize*0.75f;
+        //const float padXYZ = 0.33f;// SimPathStore.StepSize*0.75f;
+        //public const float PADZ = 0.1f;// SimPathStore.StepSize*0.75f;
 
         public override int GetHashCode()
         {
@@ -207,43 +207,43 @@ namespace PathSystem3D.Mesher
         /// </summary>
         /// <param name="v"></param>
         /// <returns>true if the box has grown</returns>
-        internal void AddVertex(Vertex v, float PADXY)
+        internal void AddVertex(Vertex v, Vector3 padXYZ)
         {
-            AddPoint(v.X, v.Y, v.Z, PADXY);
+            AddPoint(v.X, v.Y, v.Z, padXYZ);
         }
 
-        internal void AddPoint(float x, float y, float z, float PADXY)
+        internal void AddPoint(float x, float y, float z, Vector3 padXYZ)
         {
             // bool changed = false;
             if (x < MinX)
             {
-                MinX = x - PADXY;
+                MinX = x - padXYZ.X;
                 //  changed = true;
             }
             if (y < MinY)
             {
-                MinY = y - PADXY;
+                MinY = y - padXYZ.Y;
                 // changed = true;
             }
             if (z < MinZ)
             {
-                MinZ = z;// -PADZ;
+                MinZ = z;// -padXYZ.Z;
                 //changed = true;
             }
 
             if (x > MaxX)
             {
-                MaxX = x + PADXY;
+                MaxX = x + padXYZ.X;
                 // changed = true;
             }
             if (y > MaxY)
             {
-                MaxY = y + PADXY;
+                MaxY = y + padXYZ.Y;
                 // changed = true;
             }
             if (z > MaxZ)
             {
-                MaxZ = z + PADZ;
+                MaxZ = z +padXYZ.Z;
                 //changed = true;
             }
             //return changed;
@@ -254,11 +254,11 @@ namespace PathSystem3D.Mesher
         /// </summary>
         /// <param name="t"></param>
         /// <returns>true if the boxsize was increased</returns>
-        public void AddTriangle(Triangle t, float PADXY)
+        public void AddTriangle(Triangle t, Vector3 padXYZ)
         {
-            AddVertex(t.v1, PADXY);
-            AddVertex(t.v2, PADXY);
-            AddVertex(t.v3, PADXY);
+            AddVertex(t.v1, padXYZ);
+            AddVertex(t.v2, padXYZ);
+            AddVertex(t.v3, padXYZ);
         }
 
         public Vector3 MinEdge
@@ -403,7 +403,7 @@ namespace PathSystem3D.Mesher
 
         private void AddPoint(Vector3 vector3)
         {
-            AddPoint(vector3.X, vector3.Y, vector3.Z, 0);
+            AddPoint(vector3.X, vector3.Y, vector3.Z, Vector3.Zero);
         }
     }
 }

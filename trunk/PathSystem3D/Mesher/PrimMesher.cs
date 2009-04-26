@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using OpenMetaverse;
 using PathSystem3D.Mesher;
 
 //namespace PrimMesher
@@ -36,6 +37,25 @@ namespace THIRDPARTY.PrimMesher
 {
     public struct Quat
     {
+
+        #region Operators
+
+        public static bool operator ==(Quat quaternion1, Quat quaternion2)
+        {
+            return quaternion1.W == quaternion2.W
+                && quaternion1.X == quaternion2.X
+                && quaternion1.Y == quaternion2.Y
+                && quaternion1.Z == quaternion2.Z;
+        }
+
+        public static bool operator !=(Quat quaternion1, Quat quaternion2)
+        {
+            return !(quaternion1 == quaternion2);
+        }
+
+        #endregion
+        
+        static public Quat Identity = new Quat(0f, 0f, 0f, 1f);
         /// <summary>X value</summary>
         public float X;
         /// <summary>Y value</summary>

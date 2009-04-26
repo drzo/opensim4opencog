@@ -26,7 +26,7 @@ namespace PathSystem3D.Navigation.Debug
             }
             Current = WP;
             this.Text = WP.ToString();// +" matrix=" + WP.GetMatrix((float)WP.Position.Z);
-            this.button1.Text = WP.ExtraInfoString(p.MinZ, p.MaxZ);
+            this.button1.Text = WP.ExtraInfoString(LastPlane);
             int i = 0;
 
             foreach (Button B in CurrentButtons)
