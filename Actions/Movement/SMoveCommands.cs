@@ -229,7 +229,7 @@ namespace cogbot.Actions.Movement
             Vector3 v3 = pos.GetSimPosition();
             WriteLine("SimZInfo: " + pos + " " + R.GetGroundLevel(v3.X, v3.Y));
             SimWaypoint WP = R.GetWaypointOf(v3);
-            WriteLine("WaypointInfo: {0}", WP.OccupiedString());
+            WriteLine("WaypointInfo: {0}", WP.OccupiedString(R.GetCollisionPlane(v3.Z)));
             return "ran " + Name;
         }
     }

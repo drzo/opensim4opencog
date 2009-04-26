@@ -240,6 +240,11 @@ namespace THIRDPARTY.OpenSim.Region.Physics.Meshing
 
             return s1;
         }
+
+        internal Vector3 ToVector3()
+        {
+            return new Vector3(X,Y,Z);
+        }
     }
 
     public class Triangle

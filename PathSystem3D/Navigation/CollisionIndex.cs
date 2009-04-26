@@ -16,7 +16,7 @@ namespace PathSystem3D.Navigation
     {
 
         public const float CapsuleZ = 1.99f;
-        public const float MaxBump = 0.59f;
+        public const float MaxBump = 0.40f;
 
         //public Point Point;
 
@@ -90,8 +90,8 @@ namespace PathSystem3D.Navigation
 
         public byte GetOccupiedValue(float low,float high)
         {
-            int b = SimPathStore.INITIALLY + OccupiedCount * 1 + IsSolid * 1;
-            if (b > 240) return 240;
+            int b = SimPathStore.INITIALLY + OccupiedCount * 1 + IsSolid * 2;
+            if (b > 190) return 190;
             return (byte)b;
         }
 
@@ -112,21 +112,21 @@ namespace PathSystem3D.Navigation
                 {
                     if (maxZ > heightMap[PX, PY])
                         heightMap[PX, PY] = maxZ;
-                    return SimPathStore.MAYBE_BLOCKED;
+                    return SimPathStore.MAYBE_BLOCKED3;
                 }
                 else if (SomethingBetween(zlevel + 0.1f, zlevel + 0.3f, OccupiedCP, out maxZ))
                 {
                     if (maxZ > heightMap[PX, PY])
                         heightMap[PX, PY] = maxZ;
-                    return SimPathStore.MAYBE_BLOCKED;
+                    return SimPathStore.MAYBE_BLOCKED4;
                 }
                 else if (NeighborBump(low, high, zlevel, 0.2f, heightMap) > 1)
                 {
-                    return SimPathStore.MAYBE_BLOCKED;
+                    return SimPathStore.MAYBE_BLOCKED5;
                 }
                 else if (IsMidAir(low, high))
                 {
-                    return SimPathStore.MAYBE_BLOCKED;
+                    return SimPathStore.MAYBE_BLOCKED6;
                 }
             }
             if (IsUnderWater(low, high))
@@ -146,10 +146,7 @@ namespace PathSystem3D.Navigation
 
         internal bool SomethingBetween(float low, float high, IEnumerable OccupiedListObject, out float maxZ)
         {
-            if (PX == 1091 && PY == 1098)
-            {
-            }
-            maxZ = GetGroundLevel();
+            maxZ = low;// GetGroundLevel();
             if (IsSolid == 0)
             {
                 return (maxZ > high);
@@ -174,7 +171,7 @@ namespace PathSystem3D.Navigation
         float _GroundLevelCache = float.MinValue;
         public float GetGroundLevel()
         {
-            if (_GroundLevelCache > 0) return _GroundLevelCache;
+            //if (_GroundLevelCache > 0) return _GroundLevelCache;
             _GroundLevelCache = PathStore.GetGroundLevel(_LocalPos.X, _LocalPos.Y);
             return _GroundLevelCache;
         }
@@ -216,11 +213,38 @@ namespace PathSystem3D.Navigation
                     }
                     else break;
                 }
-                if (!found) return low;
+                if (!found) return high;
                 _LocalPos.Z = low;
                 _GlobalPos.Z = above;
             }
             return above;
+        }
+
+        public bool OpenCapsuleAt(float low, float high,float capsuleSize, out float above)
+        {    
+            above = low;
+            IEnumerable<IMeshedObject> objs = GetOccupied(low, high);
+            while (above < high)
+            {
+                float newMaxZ;
+                if (!SomethingBetween(above, above + capsuleSize, objs, out newMaxZ))
+                {
+                    //above = 
+                    IsDebugged();
+                    return true;
+                }
+                IsDebugged();
+                if (newMaxZ > above)
+                {
+                    above = newMaxZ;
+                }
+                else
+                {
+                    above += 0.1f;
+                }
+             
+            }
+            return false;
         }
 
         public bool AddOccupied(IMeshedObject simObject, float minZ, float maxZ)
@@ -253,6 +277,7 @@ namespace PathSystem3D.Navigation
                 foreach (IMeshedObject O in ShadowList)
                 {
                     if (O.OuterBox.MaxZ < low) continue;
+                    if (O.OuterBox.MinZ > high) continue;
                     objs.Add(O);
                 }
             }
@@ -261,21 +286,23 @@ namespace PathSystem3D.Navigation
 
         private void IsDebugged()
         {
-            if (PX == 393 && PY == 388)
+            if (PX == 402 && PY == 403)
             {
             }
         }
         //string OcString = null;
         //public IList<Vector2> OccupiedListMinMaxZ = new List<Vector2>();
 
-        public string OccupiedString(float low,float high)
+        public string OccupiedString(CollisionPlane cp)
         {
             string S = "";
 
+            float low = cp.MinZ-10f;
+            float high = cp.MaxZ+10f;
 
             if (OccupiedCount > 0)
             {
-                IEnumerable<IMeshedObject> objs = GetOccupied(low, high);
+                IEnumerable<IMeshedObject> objs = GetOccupied(low,high);
                 lock (objs)
                 {
                     foreach (IMeshedObject O in objs)
@@ -285,12 +312,15 @@ namespace PathSystem3D.Navigation
                     }
                 }
             }
-            return String.Format("{0}{1} {2}", S, this.ToString(), ExtraInfoString(low, high));
+            return String.Format("{0}{1} {2}", S, this.ToString(), ExtraInfoString(cp));
         }
 
-        public string ExtraInfoString(float low,float high)
+        public string ExtraInfoString(CollisionPlane cp)
         {
+            float low = cp.MinZ;
+            float high = cp.MaxZ;
             string S = String.Format("{0}/{1} GLevel={2}", PX, PY, GetGroundLevel());
+            S += String.Format(" HLevel={0}", cp.HeightMap[PX,PY]);
             if (IsUnderWater(low, high)) S += String.Format(" UnderWater={0}", PathStore.WaterHeight);
             if (IsFlyZone(low, high)) S += String.Format(" FlyZone={0}", low);
             S += String.Format(" LastGL={0}-{1}", low, high);
@@ -507,6 +537,22 @@ namespace PathSystem3D.Navigation
         {
             CollisionPlane CP = CollisionPlaneAt(z);
             WaypointsHash[CP] = v;
+        }
+
+        internal bool IsPortal(CollisionPlane collisionPlane)
+        {
+            IEnumerable<IMeshedObject> mis = GetOccupied(collisionPlane.MinZ, collisionPlane.MaxZ);
+            foreach (var o in mis)
+            {
+                string s = o.ToString().ToLower();
+                {
+                    if (s.Contains("stair")) return true;
+                    if (s.Contains("ramp")) return true;
+                    if (s.Contains("brigde")) return true;
+                    if (s.Contains(" path ")) return true;
+                }
+            }
+            return false;
         }
     }
 

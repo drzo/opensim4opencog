@@ -31,7 +31,7 @@ namespace PathSystem3D.Mesher
         public Primitive Prim;
 
         public SimMesh(SimPosition simObject, Primitive prim, SimPathStore PS)
-            : base(new Box3Fill(true),new List<Box3Fill>(),PS)
+            : base(new Box3Fill(true), new List<Box3Fill>(), PS)
         {
             RootObject = simObject;
             Prim = prim;
@@ -70,14 +70,25 @@ namespace PathSystem3D.Mesher
                             Update(RootObject);
                         }
 
-                    } else
-                    PathStore.Refresh(OuterBox);
+                    }
+                    else
+                        PathStore.Refresh(OuterBox);
                 }
             }
         }
 
         private void AddPos(Vector3 offset)
         {
+#if TRIANGE_MESH
+            Vertex v3 = new Vertex(offset.X, offset.Y, offset.Z);
+            foreach (Triangle tri in triangles)
+            {
+                tri.v1 = tri.v1 + v3;
+                tri.v2 = tri.v2 + v3;
+                tri.v3 = tri.v3 + v3;
+            } 
+#endif
+
             OuterBox.AddPos(offset);
             foreach (Box3Fill B in InnerBoxes)
             {
@@ -126,10 +137,9 @@ namespace PathSystem3D.Mesher
             //        AddMesh(extramesh);
             //    }
             //}
-
             InnerBoxes.Clear();
             OuterBox.Reset();
-            CalcBoxesFromMeshes(mesh,InnerBoxes);
+            CalcBoxesFromMeshes(mesh, InnerBoxes);
             // int b = InnerBoxes.Count;
             InnerBoxes = Box3Fill.Simplify((List<Box3Fill>)InnerBoxes);
             // Console.Write("Simplfy mesh {0} -> {1} ", b, InnerBoxes.Count);
@@ -141,13 +151,16 @@ namespace PathSystem3D.Mesher
         /// UseExtremeDetailSize is compared to Scale X/Y/Z added together and if greater will try to
         ///   generate more faces
         /// </summary>
-        static float UseExtremeDetailSize = 4f;//3f;
+        static float UseExtremeDetailSize = 3f;
         static float UseLowDetailSize = 1f;//3f;
         static bool UseViewerMode = false;
 
         void CalcBoxesFromMeshes(Mesh M, IList<Box3Fill> InnerBoxes)
         {
-            SimPathStore.TrianglesToBoxes(M.triangles, OuterBox, PADXY, InnerBoxes);
+#if TRIANGE_MESH
+            triangles = M.triangles;     
+#endif
+            SimPathStore.TrianglesToBoxes(M.triangles, OuterBox, padXYZ, InnerBoxes);
         }
 
 
@@ -198,9 +211,9 @@ namespace PathSystem3D.Mesher
             if (primitive.Sculpt != null)
             {
                 Primitive.SculptData SD = primitive.Sculpt;
-                UUID Id = SD.SculptTexture;                    
+                UUID Id = SD.SculptTexture;
                 SculptMesh SM;
-                if (!SculptedMeshes.TryGetValue(Id,out SM))
+                if (!SculptedMeshes.TryGetValue(Id, out SM))
                 {
                     byte[] bytes = WorldObjects.Master.TextureBytesFormUUID(SD.SculptTexture);
                     SM = ToSculptMesh(bytes, primitive.Sculpt.Type);
@@ -220,10 +233,10 @@ namespace PathSystem3D.Mesher
             bool UseExtremeDetail = scaleSize > UseExtremeDetailSize;
             LevelOfDetail detail;
             if (scaleSize < UseLowDetailSize)
-                detail = LevelOfDetail.Low;
+                detail = LevelOfDetail.Medium;
             else
                 detail = LevelOfDetail.High;
-            //else if (!UseExtremeDetail)
+            //if (!UseExtremeDetail)
             //{
             //    if (primitive.Type == PrimType.Box)
             //    {
@@ -231,11 +244,9 @@ namespace PathSystem3D.Mesher
             //    }
             //}
 
-            float DetailMult = UseExtremeDetail ? 2 : 1;
-
-            PrimMesh primMesh = ConstructionDataToPrimMesh(primitive.PrimData, detail, DetailMult);
+            PrimMesh primMesh = ConstructionDataToPrimMesh(primitive.PrimData, detail, UseExtremeDetail ? 2 : 1);
             primMesh.Scale(Scale.X, Scale.Y, Scale.Z);
-            primMesh.AddRot(QuaternionToQuat(rot));
+            if (rot!=Quaternion.Identity) primMesh.AddRot(QuaternionToQuat(rot));
             return PrimMeshToMesh(primMesh);
         }
 
@@ -509,6 +520,15 @@ namespace PathSystem3D.Mesher
         internal void RemoveCollisions()
         {
             base.RemoveCollisions(GetPathStore());
+        }
+        public override bool xyMaxZ(float x, float y, float z, out float zout)
+        {
+            float izout;
+            // x -= RootObject.GetSimPosition().X;
+            bool b = base.xyMaxZ(x, y, z, out izout);
+            zout = izout;
+            return b;
+
         }
     }
 

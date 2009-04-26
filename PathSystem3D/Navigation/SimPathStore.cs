@@ -36,30 +36,30 @@ namespace PathSystem3D.Navigation
         public static int DebugLevel = 0;
         public string RegionName { get; set; }
         // util
-        static public void TrianglesToBoxes(IList<Triangle> tl, Box3Fill OuterBox, float PADXY, IList<Box3Fill> InnerBoxes)
+        static public void TrianglesToBoxes(IList<Triangle> tl, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
         {
 
 
             int tc = tl.Count;
             if (false && tc < 16)
             {
-                AddTrianglesV1(tl, tc, OuterBox, PADXY, InnerBoxes);
+                AddTrianglesV1(tl, tc, OuterBox, padXYZ, InnerBoxes);
             }
             else
             {
-                AddTrianglesV3(tl, tc, OuterBox, PADXY, InnerBoxes);
+                AddTrianglesV3(tl, tc, OuterBox, padXYZ, InnerBoxes);
             }
             // Debug(InnerBoxes.Count);
         }
 
-        private static void AddTrianglesV1(IList<Triangle> ts, int len, Box3Fill OuterBox, float PADXY, IList<Box3Fill> InnerBoxes)
+        private static void AddTrianglesV1(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
         {
             int len1 = len - 1;
             for (int i = 0; i < len1; i++)
             {
                 Triangle t1 = ts[i];
                 bool used = false;
-                OuterBox.AddTriangle(t1, PADXY);
+                OuterBox.AddTriangle(t1, padXYZ);
                 for (int ii = i + 1; ii < len; ii++)
                 {
                     Triangle t2 = ts[ii];
@@ -67,7 +67,7 @@ namespace PathSystem3D.Navigation
                     if (shared == 3) continue;
                     if (shared == 2)
                     {
-                        Box3Fill B = new Box3Fill(t1, t2, PADXY);
+                        Box3Fill B = new Box3Fill(t1, t2, padXYZ);
                         InnerBoxes.Add(B);
                         used = true;
                     }
@@ -75,7 +75,7 @@ namespace PathSystem3D.Navigation
                 if (!used)
                 {
                     Box3Fill B = new Box3Fill(true);
-                    B.AddTriangle(t1, PADXY);
+                    B.AddTriangle(t1, padXYZ);
                     InnerBoxes.Add(B);
                 }
             }
@@ -98,27 +98,27 @@ namespace PathSystem3D.Navigation
             return sharedV;
         }
 
-        private static void AddTrianglesV2(IList<Triangle> ts, int len, Box3Fill OuterBox, float PADXY, IList<Box3Fill> InnerBoxes)
+        private static void AddTrianglesV2(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
         {
             foreach (Triangle t1 in ts)
             {
                 Box3Fill B = new Box3Fill(true);
-                OuterBox.AddTriangle(t1, PADXY);
-                B.AddTriangle(t1, PADXY);
+                OuterBox.AddTriangle(t1, padXYZ);
+                B.AddTriangle(t1, padXYZ);
                 InnerBoxes.Add(B);
             }
         }
 
-        private static void AddTrianglesV3(IList<Triangle> ts, int len, Box3Fill OuterBox, float PADXY, IList<Box3Fill> InnerBoxes)
+        private static void AddTrianglesV3(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
         {
             int len1 = len - 2;
             for (int i = 0; i < len1; i += 2)
             {
                 Triangle t1 = ts[i];
                 Triangle t2 = ts[i + 1];
-                OuterBox.AddTriangle(t1, PADXY);
-                OuterBox.AddTriangle(t2, PADXY);
-                Box3Fill B = new Box3Fill(t1, t2, PADXY);
+                OuterBox.AddTriangle(t1, padXYZ);
+                OuterBox.AddTriangle(t2, padXYZ);
+                Box3Fill B = new Box3Fill(t1, t2, padXYZ);
                 InnerBoxes.Add(B);
                 bool used = false;
                 for (int ii = i + 2; ii < len; ii++)
@@ -128,7 +128,7 @@ namespace PathSystem3D.Navigation
                     if (shared == 3) continue;
                     if (shared == 2)
                     {
-                        B = new Box3Fill(t1, t2, PADXY);
+                        B = new Box3Fill(t1, t2, padXYZ);
                         InnerBoxes.Add(B);
                         used = true;
                     }
@@ -136,7 +136,7 @@ namespace PathSystem3D.Navigation
                 if (!used)
                 {
                     B = new Box3Fill(true);
-                    B.AddTriangle(t1, PADXY);
+                    B.AddTriangle(t1, padXYZ);
                     InnerBoxes.Add(B);
                 }
             }
@@ -149,7 +149,7 @@ namespace PathSystem3D.Navigation
         /// </summary>
         public Predicate<IComparable> IsPassablePredicate = delegate(IComparable id) { return false; };
         /// <summary>
-        /// The Pathstore can implment this
+        /// The Pathstore can implement this
         /// </summary>
         public SimZLevel GroundLevelDelegate = delegate(float x, float y) { return 10; };
 
@@ -170,13 +170,12 @@ namespace PathSystem3D.Navigation
         }
 
         public void AddCollisions(IMeshedObject MO)
-        {           
-            throw new NotImplementedException();
+        {
+            MO.UpdateOccupied(this);
         }
         public void RemoveBoxes(IComparable id)
         {
             IMeshedObject MO = meshedObjects[id];//.Remove(id);
-
             Box3Fill changed = new Box3Fill(true);
             MO.RemoveFromWaypoints(changed);
             UpdateMatrixes();
@@ -186,7 +185,12 @@ namespace PathSystem3D.Navigation
 
         private void UpdateMatrixes()
         {
-            throw new NotImplementedException();
+            foreach (var of in Matrixes)
+            {
+                //of.EnsureUpToDate();
+                of.UpdateCollisionPlane(of.UsePotentialFields,of.AdjacentBlocking);
+                
+            }
         }
 
 
@@ -257,7 +261,7 @@ namespace PathSystem3D.Navigation
             double mdist = Vector3.Distance(middle, b1);
             if (mdist > 0.1)
             {
-                Debug("Wierd mdist = " + mdist);
+                Debug("Weird mdist = " + mdist);
             }
             Dist = 0.4f;
             //ZAngle -= (90 / SimPathStore.RAD2DEG);
@@ -276,7 +280,7 @@ namespace PathSystem3D.Navigation
         }
 
         /// <summary>
-        /// Blocks a point temporarilly (one minute)
+        /// Blocks a point temporarily (one minute)
         /// </summary>
         /// <param name="vector3"></param>
         internal void BlockPointTemp(Vector3 vector3)
@@ -284,14 +288,7 @@ namespace PathSystem3D.Navigation
             SetNodeQualityTimer(vector3, SimPathStore.BLOCKED, 60);
         }
 
-
-        internal static byte[] TextureBytesToUUID(UUID uUID)
-        {
-            throw new NotImplementedException();
-        }
-
-
-        private float _WaterHeight=float.MaxValue;
+        private float _WaterHeight = float.MinValue;
 
         public float WaterHeight
         {
@@ -319,7 +316,7 @@ namespace PathSystem3D.Navigation
             Vector3 localLast = regStart.LocalOuterEdge(localStart, posEnd, out nextRegion);
             // needs to go to edge
             route = regStart.GetLocalPath(CP,localStart, localLast);
-            // at egde so make a crossing
+            // at edge so make a crossing
             Vector3 enterEdge = EnterEdge(localLast, nextRegion.GetGridLocation() - regStart.GetGridLocation());
             route.Add(nextRegion.LocalToGlobal(enterEdge));
             return route;
@@ -877,7 +874,16 @@ namespace PathSystem3D.Navigation
 
         public const byte BLOCKED = 255;
         public const byte MAYBE_BLOCKED = 254;
-        public const byte MAYBE_BLOCKED2 = 250;
+        public const byte BLOCKED_YELLOW = 253;
+        public const byte MAYBE_BLOCKED3 = 203;
+        public const byte MAYBE_BLOCKED4 = 204;
+        public const byte MAYBE_BLOCKED5 = 205;
+        public const byte MAYBE_BLOCKED6 = 206;
+        public const byte MAYBE_BLOCKED7 = 207;
+        public const byte TOO_HIGH = 208;
+        public const byte TOO_LOW = 209;
+        public const byte WATER_G = 210;
+        public const byte WATER_Z = 211;
         public const byte INITIALLY = 20;
         public const byte PASSABLE = 1;
         public const byte STICKY_PASSABLE = 0;
@@ -915,8 +921,8 @@ namespace PathSystem3D.Navigation
             return CreateMoverPlane(Z);
         }
 
-        float CollisionPlaneHeights = 3.0f;
-        internal IList<CollisionPlane> Matrixes = new List<CollisionPlane>();
+      //  float CollisionPlaneHeights = 3.0f;
+        readonly internal IList<CollisionPlane> Matrixes = new List<CollisionPlane>();
         public byte[,] GetByteMatrix(float Z)
         {
             return GetCollisionPlane(Z).ByteMatrix;
@@ -974,16 +980,30 @@ namespace PathSystem3D.Navigation
             byte p = matrix[x, y];
             switch (p)
             {
+                case STICKY_PASSABLE:
+                    return OccupiedColor(Color.Green, MeshIndex[x, y]);
+                case PASSABLE:
+                    return OccupiedColor(Color.Blue, MeshIndex[x, y]);
                 case BLOCKED:
                     return OccupiedColor(Color.Olive, MeshIndex[x, y]);
                 case MAYBE_BLOCKED:
                     return OccupiedColor(Color.Pink, MeshIndex[x, y]);
-                case PASSABLE:
-                    return OccupiedColor(Color.Blue, MeshIndex[x, y]);
-                case MAYBE_BLOCKED2:
+                case BLOCKED_YELLOW:
                     return OccupiedColor(Color.Yellow, MeshIndex[x, y]);
-                case STICKY_PASSABLE:
-                    return OccupiedColor(Color.Green, MeshIndex[x, y]);
+                case MAYBE_BLOCKED3:
+                    return OccupiedColor(Color.Orange, MeshIndex[x, y]);
+                case MAYBE_BLOCKED4:
+                    return OccupiedColor(Color.Orchid, MeshIndex[x, y]);
+                case MAYBE_BLOCKED5:
+                    return OccupiedColor(Color.Tomato, MeshIndex[x, y]);
+                case WATER_G:
+                    return OccupiedColor(Color.CornflowerBlue, MeshIndex[x, y]);
+                case WATER_Z:
+                    return OccupiedColor(Color.CornflowerBlue, MeshIndex[x, y]);
+                case TOO_LOW:
+                    return OccupiedColor(Color.Firebrick, MeshIndex[x, y]);
+                case TOO_HIGH:
+                    return OccupiedColor(Color.Firebrick, MeshIndex[x, y]);
             }
             Color sb = lastColour[p];
             if (sb == Color.Empty)
@@ -998,6 +1018,7 @@ namespace PathSystem3D.Navigation
 
         private static Color OccupiedColor(Color c, CollisionIndex cIndex)
         {
+            return c;
             if (cIndex != null)
             {
                 int dense = cIndex.OccupiedCount;
@@ -1180,8 +1201,8 @@ namespace PathSystem3D.Navigation
             Size = endTop;
             _XY256 = Size.X;
             _OuterBounds = new Box3Fill(true);
-            OuterBounds.AddPoint(Start.X, Start.Y, Start.Z, 0);
-            OuterBounds.AddPoint(endTop.X, endTop.Y, endTop.Z, 0);
+            OuterBounds.AddPoint(Start.X, Start.Y, Start.Z, Vector3.Zero);
+            OuterBounds.AddPoint(endTop.X, endTop.Y, endTop.Z, Vector3.Zero);
             //TheSimZMinMaxLevel = new SimZMinMaxLevel(MinMaxLevel);
             StepSize = 1f / POINTS_PER_METER;
             _Max256 = XY256 - StepSize;
@@ -1435,7 +1456,7 @@ namespace PathSystem3D.Navigation
         {
             double Dist;
             if (GetNodeQuality(end,CP) == BLOCKED) return false;
-            // if (true) return true;
+            if (true) return true;
             SimWaypoint W = ClosestRegionNode(end.X, end.Y, end.Z, out Dist, true);
             return W.IsPassable;
         }
@@ -1780,7 +1801,7 @@ namespace PathSystem3D.Navigation
 
         internal CollisionPlane CreateMoverPlane(float Z)
         {
-            CollisionPlane found = new CollisionPlane(MAPSPACE, MAPSPACE, Z, Z + 0.499f, this);
+            CollisionPlane found = new CollisionPlane(MAPSPACE, MAPSPACE, Z-0.1f, Z + 0.499f, this);
             Console.WriteLine("Created matrix[{0}] {1} for {2}", Z, found, this);
             lock (Matrixes) Matrixes.Add(found);
             if (PathFinder != null) PathFinder.OnNewCollisionPlane(found);

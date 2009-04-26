@@ -58,20 +58,20 @@ namespace PathSystem3D.Navigation
             set
             {
                 if (value > MaxZ)
-                {
-                    //   Console.WriteLine("Resizing {0} < {1} ", this, value);
+                {                   
+                    Console.WriteLine("Resizing {0} < {1} ", this, value);
                     NeedsUpdate = true;
                     MaxZ = value;
                 }
                 else if (value < MinZ)
                 {
-                    //   Console.WriteLine("Resizing {0} > {1} > ", this, value);
+                      Console.WriteLine("Resizing {0} > {1} > ", this, value);
                     NeedsUpdate = true;
                     MinZ = value;
                 }
                 if ((MaxZ - MinZ) > 5)
                 {
-                    throw new ArgumentException(String.Format("Resizing {0} > {1} > ", this, value));
+                    //throw new ArgumentException(String.Format("Resizing {0} > {1} > ", this, value));
                 }
             }
         }
@@ -160,42 +160,57 @@ namespace PathSystem3D.Navigation
         }
 
 
-        public byte DefaultCollisionValue(int x, int y, float ZLevel, byte b, float[,] Heights)
+        public byte DefaultCollisionValue(int x, int y, float ZLevel, byte b, float[,] Heights, CollisionIndex[,] cI)
         {
+            CollisionIndex c = cI[x, y];
+            if (c!=null)
+            {
+               // if (c.IsPortal(this)) return SimPathStore.PASSABLE;
+            }
+            int bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.60f, Heights);
+            if (bumps > 0)
+                return SimPathStore.BLOCKED;
+
+            bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.40f, Heights);
+            if (bumps > 0)
+                return SimPathStore.MAYBE_BLOCKED4;
+
+            bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.40f, Heights);
+            if (bumps > 0)
+                return SimPathStore.MAYBE_BLOCKED;
+
             float Water = PathStore.WaterHeight;
             if (DiffLessThan(Water, ZLevel, 0.1f))
             {
-                return SimPathStore.MAYBE_BLOCKED2;
+                return SimPathStore.WATER_Z;
             }
             if (DiffLessThan(Water, PathStore.GroundPlane[x, y], 0.1f))
             {
-                return SimPathStore.MAYBE_BLOCKED2;
+                return SimPathStore.WATER_G;
             }
 
-            int bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, CollisionIndex.MaxBump, Heights);
-            if (bumps > 2)
-                return SimPathStore.BLOCKED;
-            else if (bumps > 1)
-                return SimPathStore.MAYBE_BLOCKED;
-            else if (bumps > 0)
-                return SimPathStore.MAYBE_BLOCKED2;
+            bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.10f, Heights);
+            if (bumps > 0)
+                return SimPathStore.BLOCKED_YELLOW;
 
-            //   return SimPathStore.INITIALLY;
-            float MinZLevel = MinZ;
-            if (MinZLevel > ZLevel)
-            {
-                return SimPathStore.INITIALLY;
-            }
             float MaxZLevel = MaxZ;
             if (MaxZLevel <= ZLevel - 2)
             {
-                return SimPathStore.MAYBE_BLOCKED;
+                return SimPathStore.TOO_HIGH;
             }
             //    else if (MinZLevel < gl)
             //      return SimPathStore.MAYBE_BLOCKED;
-            else if (ZLevel + 20 < MaxZLevel) // needs passable
-                return SimPathStore.MAYBE_BLOCKED;
-            else if (b > 64) // needs passable
+            if (ZLevel + 20 < MaxZLevel) // needs passable
+                return SimPathStore.TOO_LOW;
+
+
+            
+            if (c!=null)
+            {
+                return c.GetOccupiedValue(ZLevel,ZLevel);
+            }
+            //if (PathStore.S)
+            if (b > 64) // needs passable
                 return SimPathStore.INITIALLY;
             return b;
         }
@@ -232,7 +247,7 @@ namespace PathSystem3D.Navigation
                             if (b != SimPathStore.STICKY_PASSABLE)
                             {
                                 CollisionIndex W = MeshIndex[x, y];
-                                if (W != null)
+                                if (false && W != null)
                                 {
                                     if (ZLevel < MinZ) ZLevel = MinZ;
                                     if (ZLevel > MaxZ) ZLevel = MaxZ;
@@ -241,15 +256,19 @@ namespace PathSystem3D.Navigation
                                 }
                                 else
                                 {
-                                    ToMatrix[x, y] = DefaultCollisionValue(x, y, ZLevel, b, Heights);
+                                    ToMatrix[x, y] = DefaultCollisionValue(x, y, ZLevel, b, Heights,MeshIndex);
                                 }
                             }
                         }
                     }
                 }
                 if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, SimPathStore.BLOCKED, 1, 1);
+                //if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, SimPathStore.MAYBE_BLOCKED, 5, 3);
+                if (cutNarrows) AddAdjacentBlocking(ToMatrix,2);
+                if (cutNarrows) AddAdjacentBlocking(ToMatrix,2);
+                if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, SimPathStore.BLOCKED, 1, 1);
                 if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, SimPathStore.MAYBE_BLOCKED, 5, 3);
-                if (cutNarrows) AddAdjacentBlocking(ToMatrix);
+                if (cutNarrows) AddAdjacentBlocking(ToMatrix,3);
                 Console.WriteLine("\nEnd UpdateCollisionPlane: {0} for {1}", PathStore, this);
             }
         }
@@ -299,7 +318,7 @@ namespace PathSystem3D.Navigation
                             else
                             {
                                 locaZLevel = PathStore.GetGroundLevel(fx, fy);
-                                ToMatrix[x, y] = CP.DefaultCollisionValue(x, y, locaZLevel, b, heights);
+                                ToMatrix[x, y] = CP.DefaultCollisionValue(x, y, locaZLevel, b, heights,MeshIndex);
                                 heights[x, y] = locaZLevel;
                             }
                         }
@@ -307,7 +326,7 @@ namespace PathSystem3D.Navigation
                 }
                 if (usePotentialFieleds) AddFieldEffects(FromMatrix, ToMatrix, SimPathStore.BLOCKED, 1, 1);
                 if (usePotentialFieleds) AddFieldEffects(FromMatrix, ToMatrix, SimPathStore.MAYBE_BLOCKED, 5, 3);
-                if (cutNarrows) AddAdjacentBlocking(ToMatrix);
+                if (cutNarrows) AddAdjacentBlocking(ToMatrix,2);
                 Console.WriteLine("\nEnd UpdateMatrix: {0} for {1}", PathStore, CP);
             }
         }
@@ -352,7 +371,7 @@ namespace PathSystem3D.Navigation
         internal static float NeighborLevel(float low, float high,float originZ, int PX, int PY, float[,] heights)
         {
             float n = heights[PX, PY];
-            if (n < originZ) return originZ;
+          //  if (n < originZ) return originZ;
             return n;
             //CollisionIndex WP = PathStore.MeshIndex[PX, PY];
             //if (WP != null) return WP.GetZLevel(low, high);
@@ -378,31 +397,50 @@ namespace PathSystem3D.Navigation
                 float[,] Heights = HeightMap;
                 float[,] GroundPlane = PathStore.GroundPlane;
                 PathStore.TaintMatrix();
-                Console.WriteLine("\nStart RenderPlane: {0} for {1}", PathStore, CP);
+                Console.WriteLine("\nStart RenderHeightMap: {0} for {1}", PathStore, CP);
                 for (int y = MaxYPt; y >= 0; y--)
                 {
                     for (int x = MaxXPt; x >= 0; x--)
                     {
-                        float groundPlane = GroundPlane[x, y];
-                        Heights[x, y] = groundPlane;
+                        float testPlane = GroundPlane[x, y];
 
-                        if (groundPlane + 1f < MinZ)
+                        if (testPlane + 1f < MinZ)
                         {
-                            groundPlane = MinZ - 1;
+                            testPlane = MinZ - 1;
                         }
+                        Heights[x, y] = testPlane;
 
                         CollisionIndex W = MeshIndex[x, y];
                         if (W != null)
                         {
-                            groundPlane = W.GetZLevel(groundPlane, groundPlane + 3f);
+                            float level;
+                            if (W.OpenCapsuleAt(testPlane, testPlane + 6f, CollisionIndex.CapsuleZ, out level))
+                            {
+                                if (level < testPlane)
+                                {
+                                   // level = testPlane;
+                                }
+                                Heights[x, y] = level;
+                            } else
+                                if (W.OpenCapsuleAt(testPlane, testPlane + 126f, CollisionIndex.CapsuleZ, out level))
+                                {
+                                    if (level < testPlane)
+                                    {
+                                        // level = testPlane;
+                                    }
+                                    Heights[x, y] = level;
+                                }
+                                else
+                                {
+                                    Heights[x, y] = W.GetZLevel(testPlane, testPlane + 6f);
+                                }
                         }
-                        // rest covered from RenderGroundPlane
-                        Heights[x, y] = groundPlane;
                     }
                 }
-                Console.WriteLine("\nEnd RenderPlane: {0} for {1}", PathStore, CP);
             }
+            Console.WriteLine("\nEnd RenderHeightMap: {0} for {1}", PathStore, CP);
         }
+
 
         private void RenderGroundPlane()
         {
@@ -453,7 +491,7 @@ namespace PathSystem3D.Navigation
             }
         }
 
-        private void AddAdjacentBlocking(byte[,] to)
+        private void AddAdjacentBlocking(byte[,] to, int req)
         {
             byte[,] from =(byte[,]) to.Clone();
             int xsizem1 = MaxXPt - 1;
@@ -463,16 +501,16 @@ namespace PathSystem3D.Navigation
                 {
                     byte b = from[x, y];
                     if (b == SimPathStore.MAYBE_BLOCKED)
-                        if (SurroundingBlocked0(x, y, SimPathStore.BLOCKED, from) > 2)
+                        if (SurroundingBlocked0(x, y, SimPathStore.BLOCKED, from) > req)
                             to[x, y] = SimPathStore.BLOCKED;                        
                 }
             }
         }
 
-        public bool SurroundingBlocked(int PX, int PY, byte[,] ZMatrix)
+        public int SurroundingBlocked(int PX, int PY, byte[,] ZMatrix)
         {
-            if (PX < 1 || PY < 1 || PX > MaxXPt - 1 || PY > MaxYPt - 1) return false;
-            return SurroundingBlocked0(PX, PY, SimPathStore.BLOCKED, ZMatrix) > 0;
+            if (PX < 1 || PY < 1 || PX > MaxXPt - 1 || PY > MaxYPt - 1) return 0;
+            return SurroundingBlocked0(PX, PY, SimPathStore.BLOCKED, ZMatrix);
         }
 
         /// <summary>
