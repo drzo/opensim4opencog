@@ -1272,6 +1272,7 @@ namespace PathSystem3D.Navigation.Debug
         private System.Windows.Forms.TrackBar TBarX;
         private System.Windows.Forms.TrackBar TBarY;
 
+        private Thread WorkThread;
         private void BtnRecomputeMatrix_Click(object sender, EventArgs e)
         {
             float tryFloat;
@@ -1280,17 +1281,31 @@ namespace PathSystem3D.Navigation.Debug
                 PnlGUI.ZLevel = tryFloat;
             }
             CollisionPlane CP = PnlGUI.CurrentPlane;
-            if (CP == null) return;
-            CP.NeedsUpdate = true;
-            CP.EnsureUpToDate();
-            PnlGUI.Invalidate();
+            if (CP == null || WorkThread != null) return;
+            WorkThread = new Thread(new ThreadStart(delegate()
+            {
+                CP.NeedsUpdate = true;
+                CP.EnsureUpToDate();
+                WorkThread = null;
+                PnlGUI.Invalidate();
+
+            }));
+            WorkThread.Start();
         }
 
         private void BtnRebakeTerrain_Click(object sender, EventArgs e)
         {
-            PnlGUI.CurrentPlane.NeedsUpdate = true;
-            PathStore.BakeTerrain();
-            PnlGUI.Invalidate();
+            CollisionPlane CP = PnlGUI.CurrentPlane;
+            if (CP == null || WorkThread != null) return;
+            WorkThread = new Thread(new ThreadStart(delegate()
+            {
+                CP.NeedsUpdate = true;
+                PathStore.BakeTerrain();
+                WorkThread = null;
+                PnlGUI.Invalidate();
+
+            }));
+
         }
 
         private void MinZevel_TextChanged(object sender, EventArgs e)
