@@ -440,7 +440,7 @@ namespace cogbot.Actions.Movement
 
             Vector3d v3d = pos.GetWorldPosition();
             Vector3 v3 = pos.GetSimPosition();
-            SimAbstractMover sam = new SimAbstractMover(WorldSystem.TheSimAvatar, pos, pos.GetSizeDistance());
+            SimAbstractMover sam = SimCollisionPlaneMover.CreateSimPathMover(WorldSystem.TheSimAvatar, pos, pos.GetSizeDistance());
             sam.BlockTowardsVector(v3);
             return ("SUCCESS ");
         }

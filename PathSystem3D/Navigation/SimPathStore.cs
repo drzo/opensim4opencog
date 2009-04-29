@@ -691,7 +691,7 @@ namespace PathSystem3D.Navigation
             return route;
         }
 
-        public Vector3d LocalToGlobal(Vector3 objectLoc)
+        public  Vector3d LocalToGlobal(Vector3 objectLoc)
         {
             Vector2 V2 = GetGridLocation();
             return new Vector3d(V2.X * 256 + objectLoc.X, V2.Y * 256 + objectLoc.Y, objectLoc.Z);
@@ -2061,6 +2061,11 @@ namespace PathSystem3D.Navigation
         public SimWaypoint CreateClosestRegionWaypoint(Vector3 v3, double maxDist)
         {
             Vector3d v3d = GetPathStore().LocalToGlobal(v3);
+            return CreateClosestWaypoint(v3d, maxDist);
+        }
+
+        public SimWaypoint CreateClosestWaypoint(Vector3d v3d, double maxDist)
+        {
             double Dist;
             SimWaypoint W = SimGlobalRoutes.Instance.ClosestNode(v3d.X, v3d.Y, v3d.Z, out Dist, true);
             if (Dist > maxDist)
@@ -2070,7 +2075,6 @@ namespace PathSystem3D.Navigation
             }
             return W;
         }
-
         public SimRoute Intern2Arc(SimWaypoint StartNode, SimWaypoint EndNode, double Weight)
         {
             return SimGlobalRoutes.Instance.Intern2Arc(StartNode, EndNode, Weight);

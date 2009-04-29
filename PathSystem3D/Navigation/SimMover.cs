@@ -11,15 +11,15 @@ namespace PathSystem3D.Navigation
     public interface SimMover : PathSystem3D.Navigation.SimPosition
     {
         void TurnToward(Vector3d targetPosition);
-        //void SetMoveTarget(MeshableObject v3);
+        //void SetMoveTarget(SimPosition v3);
         void StopMoving();
         bool MoveTo(Vector3d end, double maxDistance, int maxSeconds);
         // Quaternion GetSimRotation();
         void Debug(string format, params object[] args);
-        //double Distance(MeshableObject v3);
+        //double Distance(SimPosition v3);
        // List<SimObject> GetNearByObjects(double maxDistance, bool rootOnly);
 
-        ///oid Touch(MeshableObject simObject);
+        ///oid Touch(SimPosition simObject);
 
         void OpenNearbyClosedPassages();
     }
@@ -34,53 +34,20 @@ namespace PathSystem3D.Navigation
     }
 
 
-
-    public class SimAbstractMover
+    public abstract class SimAbstractMover
     {
-
-        static Dictionary<SimMover, CollisionPlane> MoverPlanes = new Dictionary<SimMover, CollisionPlane>();
-            
-            
-        public SimMoverState STATE
-        {
-            get { return _STATE; }
-            set { _STATE = value; }
-        }
-
-        protected SimMoverState _STATE = SimMoverState.PAUSED;
-        protected SimMover Mover;
-        protected readonly Vector3d FinalLocation;
-        protected readonly double FinalDistance;
-        protected double CloseDistance = 1f;// SimPathStore.LargeScale-SimPathStore.StepSize;
-
-        protected SimPathStore PathStore
-        {
-            get { return Mover.GetPathStore(); }
-        }
-        CollisionPlane MoverPlane
-        {
-            get
-            {
-                CollisionPlane _MoverPlane;
-                lock (MoverPlanes)
-                {
-                    if (!MoverPlanes.ContainsKey(Mover))
-                    {
-                        MoverPlanes[Mover] = PathStore.GetCollisionPlane(Mover.GetSimPosition().Z);
-                    }
-                    _MoverPlane = MoverPlanes[Mover];
-                    if (_MoverPlane.PathStore != Mover.GetPathStore())
-                    {
-                        _MoverPlane = PathStore.GetCollisionPlane(Mover.GetSimPosition().Z);
-                        MoverPlanes[Mover] = _MoverPlane;
-                    }
-                }
-                return _MoverPlane;
-            }
-        }
-        static protected double TurnAvoid = 0f;
-        bool UseTurnAvoid = false;  // this toggles each time
-        readonly SimPosition FinalPosition;
+        public static Dictionary<SimMover, CollisionPlane> MoverPlanes = new Dictionary<SimMover, CollisionPlane>();
+        public SimMoverState _STATE = SimMoverState.PAUSED;
+        public SimMover Mover;
+        public Vector3d FinalLocation;
+        public double FinalDistance;
+        public double CloseDistance = 1f;// SimPathStore.LargeScale-SimPathStore.StepSize;
+        static public double TurnAvoid = 0f;
+        public bool UseTurnAvoid = false;  // this toggles each time
+        public SimPosition FinalPosition;
+        public bool UseSkipping = false;
+        public bool UseReverse = false;
+        public abstract SimMoverState Goto();
 
         public SimAbstractMover(SimMover mover, SimPosition finalGoal, double finalDistance)
         {
@@ -88,36 +55,30 @@ namespace PathSystem3D.Navigation
             FinalDistance = finalDistance;
             FinalLocation = finalGoal.GetWorldPosition();
             FinalPosition = finalGoal;
-            MoverPlane.WalkZLevel = mover.GetSimPosition().Z;
-            MoverPlane.WalkZLevel = finalGoal.GetSimPosition().Z;
+        }
+
+        public SimMoverState STATE
+        {
+            get { return _STATE; }
+            set { _STATE = value; }
+        }
+
+        public SimPathStore PathStore
+        {
+            get { return Mover.GetPathStore(); }
         }
 
 
-        private Vector3 GetSimPosition()
+        public static SimAbstractMover CreateSimPathMover(SimMover mover, SimPosition finalGoal, double finalDistance)
+        {
+            return new SimCollisionPlaneMover(mover, finalGoal, finalDistance);
+        }
+
+        public Vector3 GetSimPosition()
         {
             return Mover.GetSimPosition();
         }
 
-        public bool FollowPathTo(Vector3d globalEnd, double distance)
-        {
-            bool OnlyStart = true;
-            bool MadeIt = true;
-
-            while (OnlyStart && MadeIt)
-            {
-                Vector3d v3d = GetWorldPosition();
-                if (Vector3d.Distance(v3d, globalEnd) < distance) return true;
-                MoverPlane.WalkZLevel = (float)globalEnd.Z;
-                MoverPlane.WalkZLevel = (float)v3d.Z;
-                MoverPlane.EnsureUpToDate();
-                IList<Vector3d> route = SimPathStore.GetPath(MoverPlane,GetWorldPosition(), globalEnd, distance, out OnlyStart);
-                MadeIt = FollowPathTo(route, globalEnd, distance);
-            }
-            return MadeIt;
-        }
-
-        bool UseSkipping = false;
-        bool UseReverse = false;
         public bool FollowPathTo(IList<Vector3d> v3s, Vector3d finalTarget, double finalDistance)
         {
             Vector3d vstart = v3s[0];
@@ -129,7 +90,7 @@ namespace PathSystem3D.Navigation
             Debug("FollowPath: {0} -> {1} for {2}", v3s.Count, DistanceVectorString(finalTarget), finalDistance);
             int CanSkip = UseSkipping ? 1 : 0; //never right now
             int Skipped = 0;
-            UseSkipping =  !UseSkipping;
+            UseSkipping = !UseSkipping;
             int v3sLength = v3s.Count;
             int at = 0;
             while (at < v3sLength)
@@ -146,7 +107,7 @@ namespace PathSystem3D.Navigation
                         at = nbest + 1;
                         continue;
                     }
-                    if (!MoveTo(v3, PathStore.StepSize*3, 2))
+                    if (!MoveTo(v3, PathStore.StepSize * 3, 2))
                     {
                         OpenNearbyClosedPassages();
                         if (Skipped++ <= CanSkip)
@@ -171,33 +132,36 @@ namespace PathSystem3D.Navigation
                 int best = ClosestAt(v3s);
                 if (best > at)
                 {
-                    Debug("Fastforward {0} -> {1} ", at, best);
+                    Debug("Fast forward {0} -> {1} ", at, best);
                 }
                 else if (best < at)
                 {
-                    Debug("Reverse {0} -> {1} ", at, best);
-                    if (UseReverse && maxReverse-->0)
+                    if (!UseReverse || maxReverse-- < 0)
                     {
+                        // not using reverse
+                        Debug("Wont Reverse {0} -> {1} ", at, best);
                         best = at;
+                    }
+                    else
+                    {
+                        Debug("Reverse {0} -> {1} ", at, best);
                     }
                     UseReverse = !UseReverse;
                 }
-                at = best+1;
+                at = best + 1;
 
             }
             Debug("Complete: {0} -> {1}", DistanceVectorString(GetWorldPosition()), DistanceVectorString(finalTarget));
             return true;
         }
 
-
-
-        private int ClosestAt(IList<Vector3d> v3s)
+        public int ClosestAt(IList<Vector3d> v3s)
         {
             Vector3d newPos = GetWorldPosition();
-            int v3sLength = v3s.Count-1;
+            int v3sLength = v3s.Count - 1;
             double bestDist = Vector3d.Distance(newPos, v3s[v3sLength]);
             int best = v3sLength;
-            while (v3sLength-->0)
+            while (v3sLength-- > 0)
             {
                 double lenNat = Vector3d.Distance(newPos, v3s[v3sLength]);
                 if (lenNat < bestDist)
@@ -214,7 +178,7 @@ namespace PathSystem3D.Navigation
             Vector3 loc = SimPathStore.GlobalToLocal(loc3d);
             SimPathStore R = SimPathStore.GetPathStore(loc3d);
             return String.Format("{0:0.00}m ", Vector3d.Distance(GetWorldPosition(), loc3d))
-               + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
+                   + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
         }
 
         public string DistanceVectorString(SimPosition loc3d)
@@ -223,23 +187,21 @@ namespace PathSystem3D.Navigation
         }
 
         public string DistanceVectorString(Vector3 loc)
-        {    
+        {
             return String.Format("{0:0.00}m ", Vector3.Distance(GetSimPosition(), loc))
-               + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", PathStore.RegionName, loc.X, loc.Y, loc.Z);
+                   + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", PathStore.RegionName, loc.X, loc.Y, loc.Z);
         }
+
+        public bool MoveTo(Vector3d finalTarget)
+        {
+            return MoveTo(finalTarget, PathStore.StepSize*2, 4);
+        }
+
 
         public bool MoveTo(Vector3d finalTarget, double maxDistance, int maxSeconds)
         {
             return Mover.MoveTo(finalTarget, maxDistance, maxSeconds);
         }
-
-
-        //    internal Vector3d GetUsePosition()
-        //    {
-        //        return Mover.GetUsePosition();
-        //        //throw new Exception("The method or operation is not implemented.");
-        //    }
-
 
         public Vector3 MoveToPassableArround(Vector3 start)
         {
@@ -269,32 +231,10 @@ namespace PathSystem3D.Navigation
             return start;
         }
 
-        //    internal bool MoveTo(Vector3d endVect)
-        //    {
-        //        bool MadeIt = Mover.MoveTo(endVect, CloseDistance, 6);
-        //        if (!MadeIt)
-        //        {
-        //            Debug("!MadeIt " + endVect);
-        //            return MadeIt;
-        //            Vector3d vectMover = Mover.GetWorldPosition();
-        //            List<ISimObject> nears = ((ISimObject)Mover).GetNearByObjects(CloseDistance / 2, false);
-        //            while (!MadeIt && nears.Count == 0)
-        //            {
-        //                MadeIt = Mover.MoveTo(endVect, CloseDistance, 6);
-        //                vectMover = Mover.GetWorldPosition();
-        //                nears = ((ISimObject)Mover).GetNearByObjects(2f, false);
-        //            }
-        //        }
-        //        if (!MadeIt)
-        //        {
-        //            Mover.StopMoving();
-
-        //        }
-        //        else
-        //        {              
-        //        }
-        //        return MadeIt;
-        //    }
+        public SimWaypoint GetWaypoint()
+        {
+            return PathStore.CreateClosestRegionWaypoint(GetSimPosition(), 2f);
+        }
 
         public override string ToString()
         {
@@ -322,35 +262,15 @@ namespace PathSystem3D.Navigation
             //return s;
         }
 
-        //    public Vector3d InFrontOf()
-        //    {
-        //        return FrontOf(Mover.GetWorldPosition(), CloseDistance, Mover.GetSimRotation());
-        //    }
-
-        //    static Vector3d FrontOf(Vector3d c, double distance, Quaternion r)
-        //    {
-        //        double ax, ay, az;
-        //        r.GetEulerAngles(out ax, out ay, out az);
-        //        double xmul = (double)Math.Cos(az);
-        //        double ymul = (double)Math.Sin(az);
-        //        Vector3d v3 = new Vector3d(xmul, ymul, 0);
-        //        v3 = v3 * distance;
-        //        Vector3d front = c + v3;
-        //        return front;
-        //    }
-
-        internal void Debug(string p, params object[] args)
+        public void Debug(string p, params object[] args)
         {
             Mover.Debug(p + " for " + this.ToString(), args);
         }
 
-        internal Vector3d GetWorldPosition()
+        public Vector3d GetWorldPosition()
         {
             return Mover.GetWorldPosition();
         }
-
-        //    public abstract SimMoverState Goto();
-
 
         /// <summary>
         /// Blocks points -45 to +45 degrees in front of Bot (assumes the bot is heading toward V3)
@@ -362,12 +282,12 @@ namespace PathSystem3D.Navigation
             PathStore.SetBlockedTemp(GetSimPosition(), l3);
         }
 
-        internal void OpenNearbyClosedPassages()
+        public void OpenNearbyClosedPassages()
         {
             Mover.OpenNearbyClosedPassages();
         }
 
-        internal Vector3 ZAngleVector(double ZAngle)
+        public static Vector3 ZAngleVector(double ZAngle)
         {
             while (ZAngle < 0)
             {
@@ -380,359 +300,348 @@ namespace PathSystem3D.Navigation
             return new Vector3((float)Math.Sin(ZAngle), (float)Math.Cos(ZAngle), 0);
         }
 
+        //public abstract bool FollowPathTo(Vector3d globalEnd, double distance);
+    }
+
+    public class SimCollisionPlaneMover : SimAbstractMover
+    {
+        public SimCollisionPlaneMover(SimMover mover, SimPosition finalGoal, double finalDistance) :
+            base(mover, finalGoal, finalDistance)
+        {
+            MoverPlane.WalkZLevel = mover.GetSimPosition().Z;
+            MoverPlane.WalkZLevel = finalGoal.GetSimPosition().Z;
+        }
+
+        public CollisionPlane MoverPlane
+        {
+            get
+            {
+                CollisionPlane _MoverPlane;
+                lock (MoverPlanes)
+                {
+                    if (!MoverPlanes.ContainsKey(Mover))
+                    {
+                        MoverPlanes[Mover] = PathStore.GetCollisionPlane(Mover.GetSimPosition().Z);
+                    }
+                    _MoverPlane = MoverPlanes[Mover];
+                    if (_MoverPlane.PathStore != Mover.GetPathStore())
+                    {
+                        _MoverPlane = PathStore.GetCollisionPlane(Mover.GetSimPosition().Z);
+                        MoverPlanes[Mover] = _MoverPlane;
+                    }
+                }
+                return _MoverPlane;
+            }
+        }
+
+        public override SimMoverState Goto()
+        {
+            if (FollowPathTo(FinalLocation, FinalDistance)) return SimMoverState.COMPLETE;
+            return SimMoverState.TRYAGAIN;
+        }
+
+        public bool FollowPathTo(Vector3d globalEnd, double distance)
+        {
+            bool OnlyStart = true;
+            bool MadeIt = true;
+
+            while (OnlyStart && MadeIt)
+            {
+                Vector3d v3d = GetWorldPosition();
+                if (Vector3d.Distance(v3d, globalEnd) < distance) return true;
+                MoverPlane.WalkZLevel = (float)globalEnd.Z;
+                MoverPlane.WalkZLevel = (float)v3d.Z;
+                MoverPlane.EnsureUpToDate();
+                IList<Vector3d> route = SimPathStore.GetPath(MoverPlane, GetWorldPosition(), globalEnd, distance, out OnlyStart);
+                MadeIt = FollowPathTo(route, globalEnd, distance);
+            }
+            return MadeIt;
+        }
+
+    }
 
 
-        //    //internal void BlockForwardPos()
-        //    //{
-        //    //    Point P1 = PathStore.ToPoint(GetWorldPosition());
-        //    //    Point Last = Point.Empty;
-        //    //    for (double dist = 0.1f; dist < 0.75f; dist += 0.14f)
-        //    //    {
-        //    //        Vector3d blocked = GetLeftPos(0, dist);
-        //    //        Point P2 = PathStore.ToPoint(blocked);
-        //    //        if (P2 != P1 && Last != P2)
-        //    //        {
-        //    //            BlockPoint(blocked);
-        //    //            Debug("Blocked {0},{1}", P2.X / PathStore.POINTS_PER_METER, P2.Y / PathStore.POINTS_PER_METER);
-        //    //            Last = P2;
-        //    //        }
-        //    //    }
-        //    //    for (double dist = 0.1f; dist < 0.75f; dist += 0.14f)
-        //    //    {
-        //    //        Vector3d blocked = GetLeftPos(45, dist);
-        //    //        Point P2 = PathStore.ToPoint(blocked);
-        //    //        if (P2 != P1 && Last != P2)
-        //    //        {
-        //    //            BlockPoint(blocked);
-        //    //            Debug("Blocked {0},{1}", P2.X / PathStore.POINTS_PER_METER, P2.Y / PathStore.POINTS_PER_METER);
-        //    //            Last = P2;
-        //    //        }
-        //    //    }
-        //    //    for (double dist = 0.1f; dist < 0.75f; dist += 0.14f)
-        //    //    {
-        //    //        Vector3d blocked = GetLeftPos(360 - 45, dist);
-        //    //        Point P2 = PathStore.ToPoint(blocked);
-        //    //        if (P2 != P1 && Last != P2)
-        //    //        {
-        //    //            BlockPoint(blocked);
-        //    //            Debug("Blocked {0},{1}", P2.X / PathStore.POINTS_PER_METER, P2.Y / PathStore.POINTS_PER_METER);
-        //    //            Last = P2;
-        //    //        }
-        //    //    }
+        public class SimReRouteMover : SimAbstractMover
+        {
+            public SimReRouteMover(SimMover mover, SimPosition finalGoal, double finalDistance)
+                : base(mover, finalGoal, finalDistance)
+            {
 
-        //    //    Last = Point.Empty;
-        //    //    for (double dist = 0.1f; dist < 0.75f; dist += 0.14f)
-        //    //    {
-        //    //        Vector3d blocked = GetLeftPos(0, dist);
-        //    //        Point P2 = PathStore.ToPoint(blocked);
-        //    //        if (P2 != P1 && Last != P2)
-        //    //        {
-        //    //            PathStore.SetPassable(blocked.X, blocked.Y);
-        //    //            Debug("Unblocked {0},{1}", P2.X / PathStore.POINTS_PER_METER, P2.Y / PathStore.POINTS_PER_METER);
-        //    //            Last = P2;
-        //    //        }
-        //    //    }
-        //    //    //Last = Point.Empty;
-        //    //    //for (double dist = 0.0f; dist < 1f; dist += 0.14f)
-        //    //    //{
-        //    //    //    Vector3d blocked = GetLeftPos(180, dist);
-        //    //    //    Point P2 = PathStore.ToPoint(blocked);
-        //    //    //    if (P2 != Last)
-        //    //    //    {
-        //    //    //        PathStore.SetPassable(blocked.X, blocked.Y);
-        //    //    //        Debug("Unblocked {0},{1}", P2.X / PathStore.POINTS_PER_METER, P2.Y / PathStore.POINTS_PER_METER);
-        //    //    //        Last = P2;
-        //    //    //    }
-        //    //    //}
-        //    //}
+            }
 
-        //}
-        //public class SimReRouteMover : SimAbstractMover
-        //{
-        //    public SimReRouteMover(SimMover mover, MeshableObject finalGoal, double finalDistance)
-        //        : base(mover, finalGoal.GetWorldPosition(), finalDistance)
-        //    {
+            public IList<SimRoute> GetRouteList(SimWaypoint to, out bool IsFake)
+            {
+                SimWaypoint from = GetWaypoint();
 
-        //    }
+                //IList<SimRoute> route = PathStore.GetRoute(from, to, out IsFake);
+                //if (false)
+                //{
+                //    ////pathByNodes
+                //    //if (GraphFormer.DEBUGGER != null)
+                //    //{
+                //    //    new Thread(new ThreadStart(delegate()
+                //    //    {
+                //    //        //GraphFormer.DEBUGGER.Invalidate();
+                //    //        //      GraphFormer.DEBUGGER.SetTryPathNow(from, to, pathByNodes);
+                //    //    })).Start();
+                //    //}
+                //}
+                // TODO return PathStore.GetRoute(from, to, out IsFake);
+                throw new Exception("The method or operation is not implemented.");
+            }
 
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="pos"></param>
+            /// <param name="IsFake"></param>
+            /// <returns></returns>s
+            public bool TryGotoTarget(SimPosition pos, out bool IsFake)
+            {
+                IsFake = false;
+                SimMoverState state = SimMoverState.TRYAGAIN;
+                while (state == SimMoverState.TRYAGAIN)
+                {
+                    SimWaypoint target = (SimWaypoint)pos;
+                    IList<SimRoute> routes = (IList<SimRoute>)GetRouteList(target, out IsFake);
+                    if (routes == null) return false;
+                    SimRouteMover ApproachPlan = new SimRouteMover(Mover, routes, pos.GetWorldPosition(), pos.GetSizeDistance());
+                    state = ApproachPlan.Goto();
+                    if (state == SimMoverState.COMPLETE) return true;
+                }
+                return false;
 
-        //    public IList<SimRoute> GetRouteList(SimWaypoint to, out bool IsFake)
-        //    {
-        //        SimWaypoint from = GetWaypoint();
+                //== SimMoverState.COMPLETE;
+            }
 
-        //        //IList<SimRoute> route = PathStore.GetRoute(from, to, out IsFake);
-        //        //if (false)
-        //        //{
-        //        //    ////pathByNodes
-        //        //    //if (GraphFormer.DEBUGGER != null)
-        //        //    //{
-        //        //    //    new Thread(new ThreadStart(delegate()
-        //        //    //    {
-        //        //    //        //GraphFormer.DEBUGGER.Invalidate();
-        //        //    //        //      GraphFormer.DEBUGGER.SetTryPathNow(from, to, pathByNodes);
-        //        //    //    })).Start();
-        //        //    //}
-        //        //}
-        //        return PathStore.GetRoute(from, to, out IsFake);
-        //    }
+            public bool GotoSimRoute(SimPosition pos)
+            {
+                bool IsFake;
+                for (int i = 0; i < 19; i++)
+                {
+                    Debug("PLAN GotoTarget: " + pos);
+                    // StopMoving();
+                    if (TryGotoTarget(pos, out IsFake))
+                    {
+                        Mover.StopMoving();
+                        Mover.TurnToward(pos.GetWorldPosition());
+                        Debug("SUCCESS GotoTarget: " + pos);
+                        return true;
+                    }
 
-        //    private SimWaypoint GetWaypoint()
-        //    {
-        //        throw new Exception("The method or operation is not implemented.");
-        //    }
+                    //TurnToward(pos);
+                    double posDist = Vector3d.Distance(GetWorldPosition(), pos.GetWorldPosition());
+                    if (posDist <= pos.GetSizeDistance() + 0.5)
+                    {
+                        Debug("OK GotoTarget: " + pos);
+                        return true;
+                    }
+                    TurnAvoid += 115;
+                    while (TurnAvoid > 360)
+                    {
+                        TurnAvoid -= 360;
+                    }
+                    //Vector3d newPost = GetLeftPos(TurnAvoid, 4f);
 
+                    //StopMoving();
+                    //Debug("MOVELEFT GotoTarget: " + pos);
+                    //MoveTo(newPost, 2f, 4);
+                    if (IsFake) break;
+                }
+                Debug("FAILED GotoTarget: " + pos);
+                return false;
+            }
 
-        //    /// <summary>
-        //    /// 
-        //    /// </summary>
-        //    /// <param name="pos"></param>
-        //    /// <param name="IsFake"></param>
-        //    /// <returns></returns>
-        //    public bool TryGotoTarget(MeshableObject pos, out bool IsFake)
-        //    {
-        //        IsFake = false;
-        //        SimMoverState state = SimMoverState.TRYAGAIN;
-        //        while (state == SimMoverState.TRYAGAIN)
-        //        {
-        //            SimWaypoint target = pos.GetWaypoint();
-        //            IList<SimRoute> routes = (IList<SimRoute>)GetRouteList(target, out IsFake);
-        //            if (routes == null) return false;
-        //            SimRouteMover ApproachPlan = new SimRouteMover(Mover, routes, pos.GetWorldPosition(), pos.GetSizeDistance());
-        //            state = ApproachPlan.Goto();
-        //            if (state == SimMoverState.COMPLETE) return true;
-        //        }
-        //        return false;
+            public override SimMoverState Goto()
+            {
+                GotoSimRoute(SimWaypointImpl.CreateGlobal(FinalLocation));
+                return STATE;
+            }
+        }
 
-        //        //== SimMoverState.COMPLETE;
-        //    }
+        public class SimRouteMover : SimAbstractMover
+        {
 
-        //    private bool GotoSimRoute(MeshableObject pos)
-        //    {
-        //        bool IsFake;
-        //        for (int i = 0; i < 19; i++)
-        //        {
-        //            Debug("PLAN GotoTarget: " + pos);
-        //            // StopMoving();
-        //            if (TryGotoTarget(pos, out IsFake))
-        //            {
-        //                Mover.StopMoving();
-        //                Mover.TurnToward(pos.GetWorldPosition());
-        //                Debug("SUCCESS GotoTarget: " + pos);
-        //                return true;
-        //            }
-
-        //            //TurnToward(pos);
-        //            double posDist = Vector3d.Distance(GetWorldPosition(), pos.GetWorldPosition());
-        //            if (posDist <= pos.GetSizeDistance() + 0.5)
-        //            {
-        //                Debug("OK GotoTarget: " + pos);
-        //                return true;
-        //            }
-        //            TurnAvoid += 115;
-        //            while (TurnAvoid > 360)
-        //            {
-        //                TurnAvoid -= 360;
-        //            }
-        //            //Vector3d newPost = GetLeftPos(TurnAvoid, 4f);
-
-        //            //StopMoving();
-        //            //Debug("MOVELEFT GotoTarget: " + pos);
-        //            //MoveTo(newPost, 2f, 4);
-        //            if (IsFake) break;
-        //        }
-        //        Debug("FAILED GotoTarget: " + pos);
-        //        return false;
-        //    }
-
-        //    public override SimMoverState Goto()
-        //    {
-        //        GotoSimRoute(SimWaypointImpl.CreateGlobal(FinalLocation));
-        //        return STATE;
-        //    }
-        //}
-
-        //public class SimRouteMover : SimAbstractMover
-        //{
-
-        //    IList<SimRoute> Routes;
-        //    int CurrentRouteIndex = 0;
-        //    SimRoute OuterRoute = null;
+            IList<SimRoute> Routes;
+            int CurrentRouteIndex = 0;
+            SimRoute OuterRoute = null;
 
 
-        //    public SimRouteMover(SimMover mover, IList<SimRoute> routes, Vector3d finalGoal, double finalDistance)
-        //        : base(mover, finalGoal, finalDistance)
-        //    {
-        //        Routes = routes;
-        //        OuterRoute = new SimRouteMulti(routes);
-        //    }
+            public SimRouteMover(SimMover mover, IList<SimRoute> routes, Vector3d finalGoal, double finalDistance)
+                : base(mover, mover.GetPathStore().CreateClosestWaypoint(finalGoal, finalDistance), finalDistance)
+            {
+                Routes = routes;
+                OuterRoute = new SimRouteMulti(routes);
+            }
 
-        //    public override SimMoverState Goto()
-        //    {
-        //        _STATE = SimMoverState.MOVING;
-        //        int CanSkip = 0;
-        //        int Skipped = 0;
-        //        int tried = 0;
-        //        SimRoute prev = null;
+            public override SimMoverState Goto()
+            {
+                _STATE = SimMoverState.MOVING;
+                int CanSkip = 0;
+                int Skipped = 0;
+                int tried = 0;
+                SimRoute prev = null;
 
-        //        for (int cI = CurrentRouteIndex; cI < Routes.Count; cI++)
-        //        {
-        //            CurrentRouteIndex = cI;
-        //            if (cI > 0)
-        //            {
-        //                prev = Routes[cI - 1];
-        //            }
+                for (int cI = CurrentRouteIndex; cI < Routes.Count; cI++)
+                {
+                    CurrentRouteIndex = cI;
+                    if (cI > 0)
+                    {
+                        prev = Routes[cI - 1];
+                    }
 
-        //            SimRoute route = Routes[cI];
-        //            if (route.IsBlocked)
-        //            {
-        //                STATE = SimMoverState.BLOCKED;
-        //                continue;
-        //            }
+                    SimRoute route = Routes[cI];
+                    if (route.IsBlocked)
+                    {
+                        STATE = SimMoverState.BLOCKED;
+                        continue;
+                    }
 
-        //            tried++;
-        //            // TRY
-        //            STATE = FollowRoute(route);
+                    tried++;
+                    // TRY
+                    STATE = FollowRoute(route);
 
-        //            double distance = Vector3d.Distance(Mover.GetWorldPosition(), FinalLocation);
-        //            if (STATE == SimMoverState.BLOCKED)
-        //            {
-        //                Mover.StopMoving();
-        //                //  SetBlocked(route);
-        //                if (distance < FinalDistance)
-        //                {
-        //                    return SimMoverState.COMPLETE;
-        //                }
-        //                //CreateSurroundWaypoints();
-        //                route.ReWeight(1.1f);
-        //                route.BumpyCount++;
-        //                if (CanSkip > 0)
-        //                {
-        //                    CanSkip--;
-        //                    Skipped++;
-        //                    continue;
-        //                }
-        //                if (route.BumpyCount > 0 && Skipped==0)
-        //                {
-        //                    SetBlocked(route);
-        //                  //  if (prev!=null) if (FollowRoute(prev.Reverse) == SimMoverState.COMPLETE)
-        //                   // {
-        //                     //   return SimMoverState.TRYAGAIN;
-        //                   // }
-        //                }
-        //                return STATE;
-        //            }
-        //            if (STATE == SimMoverState.PAUSED)
-        //            {
-        //                if (distance < FinalDistance)
-        //                {
-        //                    return SimMoverState.COMPLETE;
-        //                }
-        //                return SimMoverState.TRYAGAIN;
-        //            }
-        //            if (STATE == SimMoverState.COMPLETE)
-        //            {
-        //                // if made it here then the prev was very good
-        //                if (prev!=null)
-        //                    prev.ReWeight(0.8f);
-        //            }
+                    double distance = Vector3d.Distance(Mover.GetWorldPosition(), FinalLocation);
+                    if (STATE == SimMoverState.BLOCKED)
+                    {
+                        Mover.StopMoving();
+                        //  SetBlocked(route);
+                        if (distance < FinalDistance)
+                        {
+                            return SimMoverState.COMPLETE;
+                        }
+                        //CreateSurroundWaypoints();
+                        route.ReWeight(1.1f);
+                        route.BumpyCount++;
+                        if (CanSkip > 0)
+                        {
+                            CanSkip--;
+                            Skipped++;
+                            continue;
+                        }
+                        if (route.BumpyCount > 0 && Skipped == 0)
+                        {
+                            SetBlocked(route);
+                            //  if (prev!=null) if (FollowRoute(prev.Reverse) == SimMoverState.COMPLETE)
+                            // {
+                            //   return SimMoverState.TRYAGAIN;
+                            // }
+                        }
+                        return STATE;
+                    }
+                    if (STATE == SimMoverState.PAUSED)
+                    {
+                        if (distance < FinalDistance)
+                        {
+                            return SimMoverState.COMPLETE;
+                        }
+                        return SimMoverState.TRYAGAIN;
+                    }
+                    if (STATE == SimMoverState.COMPLETE)
+                    {
+                        // if made it here then the prev was very good
+                        if (prev != null)
+                            prev.ReWeight(0.8f);
+                    }
 
-        //            if (distance < FinalDistance)
-        //            {
-        //                return SimMoverState.COMPLETE;
-        //            }
-        //        }
-        //        if (STATE != SimMoverState.COMPLETE)
-        //        {
+                    if (distance < FinalDistance)
+                    {
+                        return SimMoverState.COMPLETE;
+                    }
+                }
+                if (STATE != SimMoverState.COMPLETE)
+                {
 
-        //            if (tried == 0)
-        //            {
-        //                return SimMoverState.TRYAGAIN;
-        //            }
-        //            return STATE;
-        //        }
-        //        OuterRoute.ReWeight(0.7f); // Reward
-        //        Mover.GetSimRegion().AddArc(OuterRoute);
-        //        STATE = SimMoverState.COMPLETE;
-        //        return STATE;
-        //    }
+                    if (tried == 0)
+                    {
+                        return SimMoverState.TRYAGAIN;
+                    }
+                    return STATE;
+                }
+                OuterRoute.ReWeight(0.7f); // Reward
+                //TODO Mover.PathStore.AddArc(OuterRoute);
+                STATE = SimMoverState.COMPLETE;
+                return STATE;
+            }
 
-        //    internal void SetBlocked(SimRoute StuckAt)
-        //    {
-        //        BlockTowardsVector(StuckAt._EndNode.GetWorldPosition());
+            public void SetBlocked(SimRoute StuckAt)
+            {
+                BlockTowardsVector(StuckAt._EndNode.GetSimPosition());
 
-        //        Vector3d pos = Mover.GetWorldPosition();
-        //        if (StuckAt.BlockedPoint(GetGlobal(pos)))
-        //        {
-        //            StuckAt.ReWeight(1.1f);
-        //            Debug("BLOCKED: " + StuckAt);
-        //        }
-        //        else
-        //        {
-        //            SimRoute StuckAt2 = OuterRoute.WhichRoute(GetGlobal(pos));
-        //            if (StuckAt2 == null)
-        //            {
-        //                StuckAt.ReWeight(1.3f);
-        //                //OuterRoute.ReWeight(1.2f);
-        //                Debug("INACESSABLE: " + StuckAt);
-        //                StuckAt.Passable = false;
-        //            }
-        //            else
-        //            {
-        //                StuckAt2.ReWeight(1.1f);
-        //                Debug("ROUTE BLOCKED: " + StuckAt2);
-        //                StuckAt2.BlockedPoint(GetGlobal(pos));
-        //                StuckAt2.Passable = false;
-        //                StuckAt2.Reverse.Passable = false;
-        //            }
-        //        }
+                Vector3d pos = Mover.GetWorldPosition();
+                if (StuckAt.BlockedPoint(GetGlobal(pos)))
+                {
+                    StuckAt.ReWeight(1.1f);
+                    Debug("BLOCKED: " + StuckAt);
+                }
+                else
+                {
+                    SimRoute StuckAt2 = OuterRoute.WhichRoute(GetGlobal(pos));
+                    if (StuckAt2 == null)
+                    {
+                        StuckAt.ReWeight(1.3f);
+                        //OuterRoute.ReWeight(1.2f);
+                        Debug("INACESSABLE: " + StuckAt);
+                        StuckAt.Passable = false;
+                    }
+                    else
+                    {
+                        StuckAt2.ReWeight(1.1f);
+                        Debug("ROUTE BLOCKED: " + StuckAt2);
+                        StuckAt2.BlockedPoint(GetGlobal(pos));
+                        StuckAt2.Passable = false;
+                        StuckAt2.Reverse.Passable = false;
+                    }
+                }
 
-        //        // SimPathStore.Instance.RemoveArc(StuckAt);
-        //        ///SimPathStore.Instance.RemoveArc(StuckAt.Reverse);
+                // SimPathStore.Instance.RemoveArc(StuckAt);
+                ///SimPathStore.Instance.RemoveArc(StuckAt.Reverse);
 
-        //        STATE = SimMoverState.BLOCKED;
-        //    }
+                STATE = SimMoverState.BLOCKED;
+            }
 
-        //    private Vector3d GetGlobal(Vector3d pos)
-        //    {
-        //        return Mover.GetSimRegion().LocalToGlobal(pos);
-        //    }
+            public Vector3d GetGlobal(Vector3d pos)
+            {
+                return pos;// PathStore.LocalToGlobal(pos);
+            }
 
 
-        //    internal SimMoverState FollowRoute(SimRoute route)
-        //    {
-        //        Vector3d vectStart = route.StartNode.GetWorldPosition();
-        //        Vector3d vectMover = Mover.GetWorldPosition();
-        //        double currentDistFromStart = Vector3d.Distance(vectMover, vectStart);
-        //        if (currentDistFromStart > CloseDistance)
-        //        {
-        //            Debug("FollowRoute: TRYING for Start " + vectMover + " -> " + vectStart);
-        //            if (!MoveTo(vectStart))
-        //            {
-        //                Debug("FollowRoute: FAILED Start " + vectMover + " -> " + vectStart);
-        //                return SimMoverState.TRYAGAIN;
-        //            }
-        //        }
-        //        Vector3d endVect = route.EndNode.GetWorldPosition();
+            public SimMoverState FollowRoute(SimRoute route)
+            {
+                Vector3d vectStart = route.StartNode.GetWorldPosition();
+                Vector3d vectMover = Mover.GetWorldPosition();
+                double currentDistFromStart = Vector3d.Distance(vectMover, vectStart);
+                if (currentDistFromStart > CloseDistance)
+                {
+                    Debug("FollowRoute: TRYING for Start " + vectMover + " -> " + vectStart);
+                    if (!MoveTo(vectStart))
+                    {
+                        Debug("FollowRoute: FAILED Start " + vectMover + " -> " + vectStart);
+                        return SimMoverState.TRYAGAIN;
+                    }
+                }
+                Vector3d endVect = route.EndNode.GetWorldPosition();
 
-        //        bool MadeIt = MoveTo(endVect);
+                bool MadeIt = MoveTo(endVect);
 
-        //        if (!MadeIt)
-        //        {               
-        //            Debug("FollowRoute: BLOCKED ROUTE " + vectMover + "-> " + endVect);
-        //            //route.Passable = false;
-        //            return SimMoverState.BLOCKED;
-        //        }
+                if (!MadeIt)
+                {
+                    Debug("FollowRoute: BLOCKED ROUTE " + vectMover + "-> " + endVect);
+                    //route.Passable = false;
+                    return SimMoverState.BLOCKED;
+                }
 
-        //        Vector3d endVectMover = Mover.GetWorldPosition();
-        //        double currentDistFromfinish = Vector3d.Distance(endVectMover, endVect);
-        //        if (currentDistFromfinish > CloseDistance)
-        //        {
-        //            Debug("FollowRoute: CANNOT FINISH " + endVectMover + " -> " + endVect);
-        //            return SimMoverState.PAUSED;
-        //        }
-        //        Debug("FollowRoute: SUCCEED " + vectStart + " -> " + endVectMover);
-        //        return SimMoverState.COMPLETE;
-        //    }
+                Vector3d endVectMover = Mover.GetWorldPosition();
+                double currentDistFromfinish = Vector3d.Distance(endVectMover, endVect);
+                if (currentDistFromfinish > CloseDistance)
+                {
+                    Debug("FollowRoute: CANNOT FINISH " + endVectMover + " -> " + endVect);
+                    return SimMoverState.PAUSED;
+                }
+                Debug("FollowRoute: SUCCEED " + vectStart + " -> " + endVectMover);
+                return SimMoverState.COMPLETE;
+            }
+        }
 
         //}
 
@@ -744,7 +653,7 @@ namespace PathSystem3D.Navigation
         //    {
         //    }
 
-        //    private bool GotoSimVector(Vector3d vector3, double finalDistance)
+        //    public bool FollowPathTo(Vector3d vector3, double finalDistance)
         //    {
 
         //        int OneCount = 0;
@@ -763,7 +672,7 @@ namespace PathSystem3D.Navigation
         //            Vector3d end = vector3;
 
 
-        //            List<Vector3d> v3s = (List<Vector3d>)Mover.GetSimRegion().GetV3Route(start, end);
+        //            List<Vector3d> v3s = (List<Vector3d>)Mover.PathStore.GetV3Route(start, end);
         //            if (v3s.Count > 1)
         //            {
         //                if (Vector3d.Distance(v3s[0], start) > Vector3d.Distance(v3s[v3s.Count - 1], start))
@@ -786,7 +695,7 @@ namespace PathSystem3D.Navigation
         //    }
 
 
-        //    private bool FollowPath(List<Vector3d> v3sIn, Vector3d finalTarget, double finalDistance)
+        //    public bool FollowPath(List<Vector3d> v3sIn, Vector3d finalTarget, double finalDistance)
         //    {
         //        IList<Vector3d> v3s = PathStore.GetSimplifedRoute(GetWorldPosition(), v3sIn, 10, 8f);
         //        Debug("FollowPath: {0} -> {1}", v3sIn.Count, v3s.Count);
@@ -828,12 +737,11 @@ namespace PathSystem3D.Navigation
 
         //    public override SimMoverState Goto()
         //    {
-        //        if (GotoSimVector(FinalLocation, FinalDistance))
+        //        if (FollowPathTo(FinalLocation, FinalDistance))
         //        {
         //            return SimMoverState.COMPLETE;
         //        }
         //        return SimMoverState.TRYAGAIN;
         //    }
         //}
-    }
 }

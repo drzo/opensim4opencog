@@ -140,8 +140,8 @@ namespace cogbot.TheOpenSims
             {
                 throw Error("FollowPathTo !IsLocal()");
             }
-            SimAbstractMover move = new SimAbstractMover(this, globalEnd, distance);
-            return move.FollowPathTo(globalEnd.GetWorldPosition(), distance);
+            SimAbstractMover move = SimAbstractMover.CreateSimPathMover(this, globalEnd, distance);
+            return move.Goto() == SimMoverState.COMPLETE;
         }
 
 
