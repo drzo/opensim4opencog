@@ -5,7 +5,7 @@ using System.Threading;
 using THIRDPARTY.OpenSim.Region.Physics.Meshing;
 using System.Collections.Generic;
 using THIRDPARTY.OpenSim.Region.Physics.Manager;
-#if USING_ODE
+#if COLLIDER_ODE
 using THIRDPARTY.OpenSim.Region.Physics.OdePlugin;
 #endif
 
@@ -38,7 +38,7 @@ namespace PathSystem3D.Mesher
         IList<Box3Fill> InnerBoxes {get;}
         Box3Fill OuterBox {get;}
         bool IsPassable { get; }
-#if TRIANGE_MESH
+#if COLLIDER_TRIANGLE
         IList<Triangle> triangles { get; }
 #endif
         void RegionTaintedThis();
@@ -55,9 +55,7 @@ namespace PathSystem3D.Mesher
     }
     abstract public class MeshedObject: IMeshedObject
     {
-        public static bool USE_ODE = SimPathStore.USE_ODE;
-        public static bool UseBoxes = true;        
-#if TRIANGE_MESH
+#if COLLIDER_TRIANGLE
         public IList<Triangle> triangles { get; set;}
 #endif
 
@@ -430,28 +428,27 @@ namespace PathSystem3D.Mesher
 
         public bool SomethingMaxZ(float xf, float yf, float low, float high, out float maxZ)
         {
-            if (UseBoxes)
+#if COLLIDER_TRIANGLE
+                        return xyMaxZ(xf, yf, high, out maxZ);
+#endif
+            bool found = false;
+            maxZ = OuterBox.MinZ;
+            foreach (Box3Fill B in InnerBoxes)
             {
-                bool found = false;
-                maxZ = OuterBox.MinZ;
-                foreach (Box3Fill B in InnerBoxes)
+                if (B.MinX > xf
+                    || B.MaxX < xf
+                    || B.MinY > yf
+                    || B.MaxY < yf) continue;
+                if (B.IsZInside(low, high))
                 {
-                    if (B.MinX > xf
-                        || B.MaxX < xf
-                        || B.MinY > yf
-                        || B.MaxY < yf) continue;
-                    if (B.IsZInside(low, high))
-                    {
-                        found = true;
-                        if (B.MaxZ > maxZ) maxZ = B.MaxZ;
-                    }
+                    found = true;
+                    if (B.MaxZ > maxZ) maxZ = B.MaxZ;
                 }
-                return found;
             }
-        
-            return xyMaxZ(xf, yf, high, out maxZ);   
+            return found;
 
         }
+
         public virtual bool xyMaxZ(float x, float y, float z, out float zout)
         {            
             //start ray at our feet
@@ -497,7 +494,7 @@ namespace PathSystem3D.Mesher
                 // Iterate through all of the triangles in the mesh, doing a ray-triangle intersection
                 IEnumerable<Triangle> triangles = null;
       
-#if TRIANGE_MESH
+#if COLLIDER_TRIANGLE
   triangles = this.triangles;
 #endif
                 float closestDistance = Single.MaxValue;

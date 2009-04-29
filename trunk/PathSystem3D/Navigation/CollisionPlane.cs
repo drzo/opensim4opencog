@@ -1,9 +1,8 @@
 using System;
 using OpenMetaverse;
+#if COLLIDER_ODE
 using THIRDPARTY.OpenSim.Framework;
 using THIRDPARTY.OpenSim.Region.Physics.Manager;
-#if USING_ODE
-
 using THIRDPARTY.OpenSim.Region.Physics.OdePlugin;
 #endif
 
@@ -138,7 +137,7 @@ namespace PathSystem3D.Navigation
             }
 
         }
-       #if USING_ODE
+       #if COLLIDER_ODE
 
         void ComputeLandingHeights()
         {
@@ -216,8 +215,6 @@ namespace PathSystem3D.Navigation
             }
             _HeightMap = LandingHieghts;
         }
-#endif
-#if USING_ODE
 
         internal float[,] LandingHieghts;
         //internal FallingPrim[,] FallingPrims;
@@ -283,12 +280,10 @@ namespace PathSystem3D.Navigation
                     Console.WriteLine("Y={0} MaxTries Left over = {1}", y, MaxTries);
             }
         }
-#endif
         //public class FallingPrim
         //{
              //public bool DoneMoving = false;
              //public uint localId;
-        #if USING_ODE
 
             public void FallingPrim(OdeScene ps, CollisionPlane Plane, PhysicsVector position, int x, int y, float offsetZ)
             {
@@ -373,8 +368,6 @@ namespace PathSystem3D.Navigation
             {
                 return SimPathStore.TOO_HIGH;
             }
-            //    else if (MinZLevel < gl)
-            //      return SimPathStore.MAYBE_BLOCKED;
             if (ZLevel + 20 < MaxZLevel) // needs passable
                 return SimPathStore.TOO_LOW;
             
@@ -382,8 +375,6 @@ namespace PathSystem3D.Navigation
             {
                 return c.GetOccupiedValue(ZLevel,ZLevel);
             }
-
-            //if (PathStore.S)
             if (!Special(b)) // needs passable
                 return SimPathStore.INITIALLY;
             return b;
@@ -391,11 +382,6 @@ namespace PathSystem3D.Navigation
 
         internal void UpdateCollisionPlane(bool usePotentialFieleds, bool cutNarrows)
         {
-            if (false)
-            {
-                UpdateCollisionPlaneOld(this, usePotentialFieleds, cutNarrows);
-                return;
-            }
             //PathStore.TaintMatrix();
             //PathStore.BakeTerrain();
             RenderHeightMap();
@@ -455,64 +441,6 @@ namespace PathSystem3D.Navigation
             }
         }
 
-        internal void UpdateCollisionPlaneOld(CollisionPlane CP, bool usePotentialFieleds, bool cutNarrows)
-        {
-            RenderHeightMap();
-            lock (CP)
-            {
-                float StepSize = PathStore.StepSize;
-                CollisionIndex[,] MeshIndex = PathStore.MeshIndex;
-                NeedsUpdate = false;
-                byte[,] ToMatrix = ByteMatrix;
-                byte[,] FromMatrix = CP.ByteMatrix;
-                // In case its not this
-                if (FromMatrix != ToMatrix)
-                {
-                    CP.EnsureUpToDate();
-                    CopyFromMatrix(FromMatrix);
-                }
-
-                float[,] heights = HeightMap;
-                PathStore.BakeTerrain();
-                // float MinZLevel = CP.MinZ - 1;
-                //float MaxZLevel = CP.MaxZ + StepSize;
-
-                PathStore.TaintMatrix();
-                Console.WriteLine("\nStart UpdateMatrix: {0} for {1}", PathStore, CP);
-                float fy = 256f;
-                for (int y = MaxYPt; y >= 0; y--)
-                {
-                    fy = fy - StepSize;
-                    float fx = 256f;
-                    for (int x = MaxXPt; x >= 0; x--)
-                    {
-                        float locaZLevel = heights[x, y];
-                        fx = fx - StepSize;
-                        byte b = ToMatrix[x, y];
-                        if (b != SimPathStore.STICKY_PASSABLE)
-                        {
-
-                            CollisionIndex W = MeshIndex[x, y];
-                            if (W != null)
-                            {
-                                ToMatrix[x, y] = W.UpdateMatrix(this, locaZLevel, locaZLevel + 1.7f, heights);
-                            }
-                            else
-                            {
-                                locaZLevel = PathStore.GetGroundLevel(fx, fy);
-                                ToMatrix[x, y] = CP.DefaultCollisionValue(x, y, locaZLevel, b, heights,MeshIndex);
-                                heights[x, y] = locaZLevel;
-                            }
-                        }
-                    }
-                }
-                if (usePotentialFieleds) AddFieldEffects(FromMatrix, ToMatrix, SimPathStore.BLOCKED, 1, 1);
-                if (usePotentialFieleds) AddFieldEffects(FromMatrix, ToMatrix, SimPathStore.MAYBE_BLOCKED, 5, 3);
-                if (cutNarrows) AddAdjacentBlocking(ToMatrix,2);
-                Console.WriteLine("\nEnd UpdateMatrix: {0} for {1}", PathStore, CP);
-            }
-        }
-
         static bool DiffLessThan(float A, float B, float D)
         {
             return Math.Abs(A - B) <= D;
@@ -568,18 +496,13 @@ namespace PathSystem3D.Navigation
 
         internal void RenderHeightMap()
         {
+            Console.WriteLine("\nStart RenderHeightMap: {0} for {1}", PathStore, this);
             _HeightMap = null;
-            RenderGroundPlane();
-            #if USING_ODE
-
-            if (SimPathStore.USE_ODE)
-            {
+            RenderGroundPlane();            
+#if COLLIDER_ODE
                 ComputeLandingHeights();
-                return;
-            }
-#endif
-            CollisionPlane CP = this;
-            lock (CP)
+#else
+            lock (this)
             {
                 CollisionIndex[,] MeshIndex = PathStore.MeshIndex;
                 NeedsUpdate = false;
@@ -587,7 +510,6 @@ namespace PathSystem3D.Navigation
                 float[,] Heights = HeightMap;
                 float[,] GroundPlane = PathStore.GroundPlane;
                 PathStore.TaintMatrix();
-                Console.WriteLine("\nStart RenderHeightMap: {0} for {1}", PathStore, CP);
                 for (int y = MaxYPt; y >= 0; y--)
                 {
                     for (int x = MaxXPt; x >= 0; x--)
@@ -628,7 +550,8 @@ namespace PathSystem3D.Navigation
                     }
                 }
             }
-            Console.WriteLine("\nEnd RenderHeightMap: {0} for {1}", PathStore, CP);
+#endif
+            Console.WriteLine("\nEnd RenderHeightMap: {0} for {1}", PathStore, this);
         }
 
 
@@ -656,11 +579,6 @@ namespace PathSystem3D.Navigation
             Console.WriteLine("\nEnd RenderGroundPlane: {0} for {1}", PathStore, this);
         }
      
-        private void CopyFromMatrix(byte[,] FromMatrix)
-        {
-            throw new NotImplementedException();
-        }
-
         private void AddFieldEffects(byte[,] from, byte[,] to, byte when, int iterations, byte step)
         {
             byte fronteer = when;
@@ -765,167 +683,6 @@ namespace PathSystem3D.Navigation
             if (O == someValue) found++;
 
             return found;
-        }
-
-        public float[,] ResizeTerrain512Interpolation(float[,] heightMap, int m_regionWidth, int m_regionHeight)
-        {
-            int THE512 = m_regionWidth * 5;
-            int THE2 = 5;
-            float[,] returnarr = new float[MaxXPt+1,MaxYPt+1];
-            float[,] resultarr = new float[m_regionWidth, m_regionHeight];
-
-            // Filling out the array into it's multi-dimentional components
-            for (int y = 0; y < m_regionHeight; y++)
-            {
-                for (int x = 0; x < m_regionWidth; x++)
-                {
-                    resultarr[y, x] = heightMap[m_regionWidth, m_regionHeight];
-                }
-            }
-
-            // Resize using interpolation
-
-            // This particular way is quick but it only works on a multiple of the original
-
-            // The idea behind this method can be described with the following diagrams
-            // second pass and third pass happen in the same loop really..  just separated
-            // them to show what this does.
-
-            // First Pass
-            // ResultArr:
-            // 1,1,1,1,1,1
-            // 1,1,1,1,1,1
-            // 1,1,1,1,1,1
-            // 1,1,1,1,1,1
-            // 1,1,1,1,1,1
-            // 1,1,1,1,1,1
-
-            // Second Pass
-            // ResultArr2:
-            // 1,,1,,1,,1,,1,,1,
-            // ,,,,,,,,,,
-            // 1,,1,,1,,1,,1,,1,
-            // ,,,,,,,,,,
-            // 1,,1,,1,,1,,1,,1,
-            // ,,,,,,,,,,
-            // 1,,1,,1,,1,,1,,1,
-            // ,,,,,,,,,,
-            // 1,,1,,1,,1,,1,,1,
-            // ,,,,,,,,,,
-            // 1,,1,,1,,1,,1,,1,
-
-            // Third pass fills in the blanks
-            // ResultArr2:
-            // 1,1,1,1,1,1,1,1,1,1,1,1
-            // 1,1,1,1,1,1,1,1,1,1,1,1
-            // 1,1,1,1,1,1,1,1,1,1,1,1
-            // 1,1,1,1,1,1,1,1,1,1,1,1
-            // 1,1,1,1,1,1,1,1,1,1,1,1
-            // 1,1,1,1,1,1,1,1,1,1,1,1
-            // 1,1,1,1,1,1,1,1,1,1,1,1
-            // 1,1,1,1,1,1,1,1,1,1,1,1
-            // 1,1,1,1,1,1,1,1,1,1,1,1
-            // 1,1,1,1,1,1,1,1,1,1,1,1
-            // 1,1,1,1,1,1,1,1,1,1,1,1
-
-            // X,Y = .
-            // X+1,y = ^
-            // X,Y+1 = *
-            // X+1,Y+1 = #
-
-            // Filling in like this;
-            // .*
-            // ^#
-            // 1st .
-            // 2nd *
-            // 3rd ^
-            // 4th #
-            // on single loop.
-
-            float[,] resultarr2 = new float[THE512, THE512];
-            for (int y = 0; y < m_regionHeight; y++)
-            {
-                for (int x = 0; x < m_regionWidth; x++)
-                {
-                    resultarr2[y * THE2, x * THE2] = resultarr[y, x];
-
-                    if (y < m_regionHeight)
-                    {
-                        if (y + 1 < m_regionHeight)
-                        {
-                            if (x + 1 < m_regionWidth)
-                            {
-                                resultarr2[(y * THE2) + 1, x * THE2] = ((resultarr[y, x] + resultarr[y + 1, x] +
-                                                               resultarr[y, x + 1] + resultarr[y + 1, x + 1]) / 4);
-                            }
-                            else
-                            {
-                                resultarr2[(y * THE2) + 1, x * THE2] = ((resultarr[y, x] + resultarr[y + 1, x]) / THE2);
-                            }
-                        }
-                        else
-                        {
-                            resultarr2[(y * THE2) + 1, x * THE2] = resultarr[y, x];
-                        }
-                    }
-                    if (x < m_regionWidth)
-                    {
-                        if (x + 1 < m_regionWidth)
-                        {
-                            if (y + 1 < m_regionHeight)
-                            {
-                                resultarr2[y * THE2, (x * THE2) + 1] = ((resultarr[y, x] + resultarr[y + 1, x] +
-                                                               resultarr[y, x + 1] + resultarr[y + 1, x + 1]) / 4);
-                            }
-                            else
-                            {
-                                resultarr2[y * THE2, (x * THE2) + 1] = ((resultarr[y, x] + resultarr[y, x + 1]) / THE2);
-                            }
-                        }
-                        else
-                        {
-                            resultarr2[y * THE2, (x * THE2) + 1] = resultarr[y, x];
-                        }
-                    }
-                    if (x < m_regionWidth && y < m_regionHeight)
-                    {
-                        if ((x + 1 < m_regionWidth) && (y + 1 < m_regionHeight))
-                        {
-                            resultarr2[(y * THE2) + 1, (x * THE2) + 1] = ((resultarr[y, x] + resultarr[y + 1, x] +
-                                                                 resultarr[y, x + 1] + resultarr[y + 1, x + 1]) / 4);
-                        }
-                        else
-                        {
-                            resultarr2[(y * THE2) + 1, (x * THE2) + 1] = resultarr[y, x];
-                        }
-                    }
-                }
-            }
-            //Flatten out the array
-            int i = 0;
-            for (int y = 0; y < THE512; y++)
-            {
-                for (int x = 0; x < THE512; x++)
-                {
-                    if (Single.IsNaN(resultarr2[y, x]) || Single.IsInfinity(resultarr2[y, x]))
-                    {
-                      //  Logger.Log("[PHYSICS]: Non finite heightfield element detected.  Setting it to 0", Helpers.LogLevel.Warning);
-                        resultarr2[y, x] = 0;
-                    }
-
-                    if (resultarr2[y, x] <= 0)
-                    {
-                        returnarr[y,x] = 0.0000001f;
-
-                    }
-                    else
-                        returnarr[y,x] = resultarr2[y, x];
-
-                    i++;
-                }
-            }
-
-            return returnarr;
         }
     }
 
