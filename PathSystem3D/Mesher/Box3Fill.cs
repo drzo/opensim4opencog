@@ -105,7 +105,7 @@ namespace PathSystem3D.Mesher
             MaxZ = float.MinValue;
         }
 
-        //const float padXYZ = 0.33f;// SimPathStore.StepSize*0.75f;
+        //const float PadXYZ = 0.33f;// SimPathStore.StepSize*0.75f;
         //public const float PADZ = 0.1f;// SimPathStore.StepSize*0.75f;
 
         public override int GetHashCode()
@@ -227,7 +227,7 @@ namespace PathSystem3D.Mesher
             }
             if (z < MinZ)
             {
-                MinZ = z;// -padXYZ.Z;
+                MinZ = z;// -PadXYZ.Z;
                 //changed = true;
             }
 

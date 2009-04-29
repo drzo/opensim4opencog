@@ -1,5 +1,11 @@
 using System;
+using OpenMetaverse;
+using THIRDPARTY.OpenSim.Framework;
+using THIRDPARTY.OpenSim.Region.Physics.Manager;
+#if USING_ODE
 
+using THIRDPARTY.OpenSim.Region.Physics.OdePlugin;
+#endif
 
 namespace PathSystem3D.Navigation
 {
@@ -41,14 +47,14 @@ namespace PathSystem3D.Navigation
             }
         }
 
-        public CollisionPlane(int xsize0, int ysize0, float minZ, float maxZ, SimPathStore pathStore)
+        public CollisionPlane(int xsize0, int ysize0, float minZ, SimPathStore pathStore)
         {
             TotalCollisionPlanes++;
             PathStore = pathStore;
             MaxXPt = xsize0 - 1;
             MaxYPt = ysize0 - 1;
             MinZ = minZ;
-            MaxZ = maxZ;
+            MaxZ = minZ + 5f;
         }
 
         public float MinZ { get; private set; }
@@ -80,7 +86,7 @@ namespace PathSystem3D.Navigation
         {
             if (Z < MaxZ)
             {
-                if (Z >= MinZ) return true;
+                if (Z >= MinZ-0.3f) return true;
                 //if (MaxZ - Z > 3) return false;
             }
             return false;
@@ -132,8 +138,181 @@ namespace PathSystem3D.Navigation
             }
 
         }
+       #if USING_ODE
 
-                
+        void ComputeLandingHeights()
+        {
+            float fromZ = MaxZ + 10;
+            float StepSize = PathStore.StepSize; //0.2f
+            int MAPSPACE = PathStore.MAPSPACE;
+            int MAPSPACE1 = MAPSPACE - 1; // 1279
+            bool needsInit = false;
+            float[,] _HeightMap = HeightMap;
+
+            if (LandingHieghts == null)
+            {
+                if (_HeightMap != null)
+                {
+                    LandingHieghts = (float[,])_HeightMap.Clone();
+                }
+                else
+                {
+                    LandingHieghts = new float[MAPSPACE, MAPSPACE];
+                    needsInit = true;
+                }
+            }
+
+            CollisionIndex[,] MeshIndex = PathStore.MeshIndex;
+            // FallingPrims = new FallingPrim[MAPSPACE, MAPSPACE];
+            float fy = 256.1f;
+            OdeScene ps = PathStore.odeScene;
+            PrimitiveBaseShape newcube = PrimitiveBaseShape.CreateBox();
+            uint localId = 6666666;
+            PhysicsVector position = new PhysicsVector(1,1,30);
+            OdePrim oprim = (OdePrim)ps.AddPrimShape("FallingPrim_" + localId, newcube, position, new PhysicsVector(0.1f, 0.1f, 2f), Quaternion.Identity, true);
+            oprim.LocalID = localId + 100000;
+            oprim.SubscribeEvents(30000);
+
+            for (int y = MAPSPACE1; y >= 0; y--)
+            {
+                fy = fy - StepSize;
+                position.Y = fy;
+                float fx = 256.1f;
+                for (int x = MAPSPACE1; x >= 0; x--)
+                {
+                    fx = fx - StepSize;
+                    position.X = fx;
+                    if (needsInit) LandingHieghts[x, y] = float.MinValue;
+                    if (MeshIndex[x, y] == null) continue;
+                    float z = MinZ;
+                    bool FoundClearZ = false;
+                    while (z < MaxZ && !FoundClearZ)
+                    {
+                        float ClearZ = z;
+                        position.Z = z;
+                        if (!ps.IsSomethingAt(oprim))
+                        {
+                            FoundClearZ = true;
+                            float CapZ = 2f + z;
+                            while (z < CapZ && FoundClearZ)
+                            {
+                                if (ps.IsSomethingAt(oprim))
+                                 {
+                                     FoundClearZ = false;
+                                     break;
+                                 } 
+                            }
+                            FoundClearZ = true;
+                            break;
+                        }
+                        z += 0.1f;
+                    }
+                    if (FoundClearZ)
+                    {
+                        LandingHieghts[x, y] = z;
+                    }
+                    //FallingPrims[x, y] = new
+                }
+            }
+            _HeightMap = LandingHieghts;
+        }
+#endif
+#if USING_ODE
+
+        internal float[,] LandingHieghts;
+        //internal FallingPrim[,] FallingPrims;
+        internal uint fallingPrims = 0;
+        void ComputeLandingHeightsOld()
+        {
+            float fromZ = MaxZ + 10;
+            float StepSize = PathStore.StepSize; //0.2f
+            int MAPSPACE = PathStore.MAPSPACE;
+            int MAPSPACE1 = MAPSPACE - 1; // 1279
+            bool needsInit = false;
+            float[,] _HeightMap = HeightMap;
+
+            if (LandingHieghts == null)
+            {
+                if (_HeightMap != null)
+                {
+                    LandingHieghts = (float[,])_HeightMap.Clone();
+                }
+                else
+                {
+                    LandingHieghts = new float[MAPSPACE, MAPSPACE];
+                    needsInit = true;
+                }
+            }
+            CollisionIndex[,] MeshIndex = PathStore.MeshIndex;
+            // FallingPrims = new FallingPrim[MAPSPACE, MAPSPACE];
+            float fy = 256.1f;
+            OdeScene ps = PathStore.odeScene;
+            fallingPrims = 0;
+            for (int y = MAPSPACE1; y >= 0; y--)
+            {
+                fy = fy - StepSize;
+                float fx = 256.1f;
+                for (int x = MAPSPACE1; x >= 0; x--)
+                {
+                    fx = fx - StepSize;
+                    if (needsInit) LandingHieghts[x, y] = float.MinValue;
+                    if (MeshIndex[x, y] == null) continue;
+                    //FallingPrims[x, y] = new
+                    FallingPrim(ps, this, new PhysicsVector(fx, fy, fromZ), x, y, 0f);
+                    fallingPrims++;
+                }
+
+                int MaxTries = 100;
+                while (fallingPrims > 0 && MaxTries-- > 0)
+                {
+                    //   Console.WriteLine("fallingPrims=" + fallingPrims);
+                    ps.Simulate(0.133f);
+                }
+                //Console.WriteLine("fallingPrims left over {0} MaxTries Left over = {1}", fallingPrims, MaxTries);
+                ps.Simulate(0.133f); // for removal of remainders or not needed?
+                if (fallingPrims < 10)
+                {
+                    _HeightMap = LandingHieghts;
+                }
+                if (fallingPrims != 0)
+                {
+                    Console.WriteLine("fallingPrims left over {0} MaxTries Left over = {1}", fallingPrims, MaxTries);
+                }
+                else if (y % 100 == 0)
+
+                    Console.WriteLine("Y={0} MaxTries Left over = {1}", y, MaxTries);
+            }
+        }
+#endif
+        //public class FallingPrim
+        //{
+             //public bool DoneMoving = false;
+             //public uint localId;
+        #if USING_ODE
+
+            public void FallingPrim(OdeScene ps, CollisionPlane Plane, PhysicsVector position, int x, int y, float offsetZ)
+            {
+                uint localId = Plane.fallingPrims;
+                PrimitiveBaseShape newcube = PrimitiveBaseShape.CreateBox();
+                OdePrim oprim = (OdePrim)ps.AddPrimShape("FallingPrim_" + localId, newcube, position, new PhysicsVector(0.1f, 0.1f, 2f), Quaternion.Identity, true);
+                oprim.LocalID = localId + 100000;
+                oprim.OnCollisionUpdate += delegate(EventArgs args)
+                {
+                    if (!oprim.m_taintremove)
+                    {
+                       // CollisionEventUpdate arg = (CollisionEventUpdate)args;
+                        //simhinfo 58 58 30
+                       // DoneMoving = true;
+                        LandingHieghts[x, y] = oprim.Position.Z + offsetZ;
+                        fallingPrims--;
+                        ps.remCollisionEventReporting(oprim);
+                        ps.RemovePrim(oprim);
+                    }
+                };
+                oprim.SubscribeEvents(30000);
+            }
+        //}
+#endif
         float[,] _HeightMap;
         public float[,] HeightMap
         {
@@ -173,11 +352,7 @@ namespace PathSystem3D.Navigation
 
             bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.40f, Heights);
             if (bumps > 0)
-                return SimPathStore.MAYBE_BLOCKED4;
-
-            bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.40f, Heights);
-            if (bumps > 0)
-                return SimPathStore.MAYBE_BLOCKED;
+                return SimPathStore.BLOCK_PURPLE;
 
             float Water = PathStore.WaterHeight;
             if (DiffLessThan(Water, ZLevel, 0.1f))
@@ -202,15 +377,14 @@ namespace PathSystem3D.Navigation
             //      return SimPathStore.MAYBE_BLOCKED;
             if (ZLevel + 20 < MaxZLevel) // needs passable
                 return SimPathStore.TOO_LOW;
-
-
             
             if (c!=null)
             {
                 return c.GetOccupiedValue(ZLevel,ZLevel);
             }
+
             //if (PathStore.S)
-            if (b > 64) // needs passable
+            if (!Special(b)) // needs passable
                 return SimPathStore.INITIALLY;
             return b;
         }
@@ -262,13 +436,21 @@ namespace PathSystem3D.Navigation
                         }
                     }
                 }
-                if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, SimPathStore.BLOCKED, 1, 1);
-                //if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, SimPathStore.MAYBE_BLOCKED, 5, 3);
+                cutNarrows = false;
                 if (cutNarrows) AddAdjacentBlocking(ToMatrix,2);
-                if (cutNarrows) AddAdjacentBlocking(ToMatrix,2);
-                if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, SimPathStore.BLOCKED, 1, 1);
-                if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, SimPathStore.MAYBE_BLOCKED, 5, 3);
-                if (cutNarrows) AddAdjacentBlocking(ToMatrix,3);
+                byte FeildEffect = SimPathStore.BLOCKED;
+                if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, FeildEffect, 1, 1);
+                if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, --FeildEffect, 5, 30);
+
+                FeildEffect = SimPathStore.BLOCKED_YELLOW;
+                if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, FeildEffect, 1, 1);
+                if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, --FeildEffect, 5, 30);
+
+                FeildEffect = SimPathStore.BLOCK_PURPLE;
+                if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, FeildEffect, 1, 1);
+                if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, --FeildEffect, 5, 30);
+
+                if (cutNarrows) AddAdjacentBlocking(ToMatrix, 3);
                 Console.WriteLine("\nEnd UpdateCollisionPlane: {0} for {1}", PathStore, this);
             }
         }
@@ -388,6 +570,14 @@ namespace PathSystem3D.Navigation
         {
             _HeightMap = null;
             RenderGroundPlane();
+            #if USING_ODE
+
+            if (SimPathStore.USE_ODE)
+            {
+                ComputeLandingHeights();
+                return;
+            }
+#endif
             CollisionPlane CP = this;
             lock (CP)
             {
@@ -471,25 +661,51 @@ namespace PathSystem3D.Navigation
             throw new NotImplementedException();
         }
 
-        private void AddFieldEffects(byte[,] from, byte[,] to, byte fronteer, int iterations, byte step)
+        private void AddFieldEffects(byte[,] from, byte[,] to, byte when, int iterations, byte step)
         {
+            byte fronteer = when;
             int xsizem1 = MaxXPt - 1;
             while (iterations-- > 0)
             {
-                byte self = (byte)(fronteer - step);
+                byte self = (byte) (fronteer - step);
                 for (int y = MaxYPt - 1; y > 0; y--)
                 {
                     for (int x = xsizem1; x > 0; x--)
                     {
                         byte b = from[x, y];
                         if (b > 2 && b < fronteer)
+                        {
+                            if (Special(b)) continue;
                             if (SurroundingBlocked0(x, y, fronteer, from) > 1)
                                 to[x, y] = self;
+                        }
                     }
                 }
                 fronteer -= step;
             }
         }
+
+        static bool Special(byte b)
+        {
+            switch (b)
+            {
+                case SimPathStore.STICKY_PASSABLE:
+                case SimPathStore.PASSABLE:
+                case SimPathStore.BLOCKED:
+                case SimPathStore.MAYBE_BLOCKED:
+                case SimPathStore.BLOCKED_YELLOW:
+                case SimPathStore.BLOCK_PURPLE:
+                case SimPathStore.BLOCK_ORANGE:
+                case SimPathStore.WATER_G:
+                case SimPathStore.WATER_Z:
+                case SimPathStore.TOO_LOW:
+                case SimPathStore.TOO_HIGH:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
 
         private void AddAdjacentBlocking(byte[,] to, int req)
         {

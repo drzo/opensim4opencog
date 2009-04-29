@@ -1155,6 +1155,8 @@ namespace THIRDPARTY.PrimMesher
         public string errorMessage = "";
         private const float twoPi = 2.0f * (float)Math.PI;
 
+        public THIRDPARTY.OpenSim.Framework.PrimitiveBaseShape PBS { get; set; }
+
         public List<Coord> coords { get; set; }
         public List<Coord> normals { get; set; }
         public List<Face> faces { get; set; }
@@ -1222,6 +1224,7 @@ namespace THIRDPARTY.PrimMesher
 
             return s;
         }
+
 
         /// <summary>
         /// Constructs a PrimMesh object and creates the profile for extrusion.

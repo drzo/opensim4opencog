@@ -217,7 +217,7 @@ namespace cogbot.Actions.Movement
         public simzinfo(BotClient client)
         {
             Name = GetType().Name;
-            Description = "Calulates the Z level of walking at point. Usage: simzinfo 120 123";
+            Description = "Calculates the Z level of walking at point. Usage: simzinfo 120 123";
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
@@ -233,6 +233,32 @@ namespace cogbot.Actions.Movement
             return "ran " + Name;
         }
     }
+
+    class simhinfo : cogbot.Actions.Command
+    {
+        public simhinfo(BotClient client)
+        {
+            Name = GetType().Name;
+            Description = "Calculates the Height (Z) level of walking at point. Usage: simzinfo 120 123 30";
+            Category = cogbot.Actions.CommandCategory.Movement;
+        }
+
+        public override string Execute(string[] args, UUID fromAgentID)
+        {
+            int argcount;
+            SimPosition pos = WorldSystem.GetVector(args, out argcount);
+            SimPathStore R = pos.GetPathStore();
+            Vector3 v3 = pos.GetSimPosition();
+            WriteLine("SimZInfo: " + pos + " " + R.GetGroundLevel(v3.X, v3.Y));
+
+#if USING_ODE  
+            Vector3 landing = R.CreateAndDropPhysicalCube(v3);
+            WriteLine("SimHInfo: {0}", landing);
+#endif
+            return "ran " + Name;
+        }
+    }
+
 
 
     class srmap : cogbot.Actions.Command

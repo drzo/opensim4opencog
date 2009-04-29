@@ -5,6 +5,10 @@ using System.Threading;
 using THIRDPARTY.OpenSim.Region.Physics.Meshing;
 using System.Collections.Generic;
 using THIRDPARTY.OpenSim.Region.Physics.Manager;
+#if USING_ODE
+using THIRDPARTY.OpenSim.Region.Physics.OdePlugin;
+#endif
+
 namespace PathSystem3D.Mesher
 {
     //public interface MeshedObject
@@ -34,7 +38,9 @@ namespace PathSystem3D.Mesher
         IList<Box3Fill> InnerBoxes {get;}
         Box3Fill OuterBox {get;}
         bool IsPassable { get; }
-     //   IList<Triangle> triangles { get; }
+#if TRIANGE_MESH
+        IList<Triangle> triangles { get; }
+#endif
         void RegionTaintedThis();
         void RemeshObject(Box3Fill changed);
         bool SomethingBetween(float x, float y, float low, float high);
@@ -43,14 +49,18 @@ namespace PathSystem3D.Mesher
         bool xyMaxZ(float x, float y, float z, out float zout);
         void RemeshObject();
         string DebugString();
+        //Mesh GetTriMesh();
 
         void UpdateOccupied(SimPathStore simPathStore);
     }
     abstract public class MeshedObject: IMeshedObject
     {
+        public static bool USE_ODE = SimPathStore.USE_ODE;
+        public static bool UseBoxes = true;        
+#if TRIANGE_MESH
+        public IList<Triangle> triangles { get; set;}
+#endif
 
-        public static bool UseBoxes = true;
-      //  public IList<Triangle> triangles { get; set;}
         public string DebugString()
         {
             string MI = ToString() + " ";
@@ -79,7 +89,6 @@ namespace PathSystem3D.Mesher
             get;
             set;
         }
-
 
         public void RegionTaintedThis()
         {
@@ -202,7 +211,7 @@ namespace PathSystem3D.Mesher
             {
                 //                UpdateOccupiedFast(PathStore);
                 int tc = Environment.TickCount;
-                UpdateOccupiedFast(pathStore);
+                UpdateOccupiedVeryFast(pathStore);
                 t1 = Environment.TickCount - tc;
                 //  Console.WriteLine("t1 vs t2 = " + t1 );
                 return;
@@ -220,6 +229,26 @@ namespace PathSystem3D.Mesher
             // Mesh = null;
         }
 
+        private void UpdateOccupiedVeryFast(SimPathStore PathStore)
+        {
+            float detail = PathStore.StepSize;// -0.001f;
+            float MinX = OuterBox.MinX;
+            float MaxX = OuterBox.MaxX;
+            float MinY = OuterBox.MinY;
+            float MaxY = OuterBox.MaxY;
+
+            float MinZ = OuterBox.MinZ;
+            float MaxZ = OuterBox.MaxZ;
+
+            for (float x = MinX; x <= MaxX; x += detail)
+            {
+                for (float y = MinY; y <= MaxY; y += detail)
+                {                    
+                        SetLocatedOld(x, y, MinZ, MaxZ);
+                }
+            }
+            SetLocatedOld(MaxX, MaxY, MinZ, MaxZ);
+        }
         private void UpdateOccupiedFast(SimPathStore PathStore)
         {
             float detail = PathStore.StepSize;// -0.001f;
@@ -280,7 +309,7 @@ namespace PathSystem3D.Mesher
 
         //   public static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        readonly public static Vector3 padXYZ = new Vector3(0.1f,0.1f,0.02f);
+        readonly public static Vector3 PadXYZ = new Vector3(0.2f,0.2f,0.12f);
 
         public Box3Fill OuterBox { get; set; }
 
@@ -466,7 +495,11 @@ namespace PathSystem3D.Mesher
             // Get the mesh that has been transformed into world-space
             {
                 // Iterate through all of the triangles in the mesh, doing a ray-triangle intersection
-                IEnumerable<Triangle> triangles = null;//this.triangles;
+                IEnumerable<Triangle> triangles = null;
+      
+#if TRIANGE_MESH
+  triangles = this.triangles;
+#endif
                 float closestDistance = Single.MaxValue;
                 foreach (Triangle tri in triangles)
                 {

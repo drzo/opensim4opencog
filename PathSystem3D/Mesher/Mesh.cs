@@ -31,27 +31,31 @@ using System.IO;
 using System.Runtime.InteropServices;
 using THIRDPARTY.OpenSim.Region.Physics.Manager;
 using THIRDPARTY.PrimMesher;
+using OpenMetaverse;
+using THIRDPARTY.OpenSim.Framework;
 
 namespace THIRDPARTY.OpenSim.Region.Physics.Meshing
 {
-    public class Mesh //: IMesh
+    public class Mesh //: Mesh
     {
         public List<Vertex> vertices;
         public List<Triangle> triangles;
         GCHandle pinnedVirtexes;
         GCHandle pinnedIndex;
         public PrimMesh primMesh = null;
+        public PrimitiveBaseShape PBS;
         public float[] normals;
 
-        public Mesh()
+        public Mesh(PrimitiveBaseShape PBS)
         {
+            this.PBS = PBS;
             vertices = new List<Vertex>();
             triangles = new List<Triangle>();
         }
 
         public Mesh Clone()
         {
-            Mesh result = new Mesh();
+            Mesh result = new Mesh(PBS);
 
             foreach (Vertex v in vertices)
             {
@@ -298,10 +302,20 @@ namespace THIRDPARTY.OpenSim.Region.Physics.Meshing
 
         public void Append(Mesh newMesh)
         {
-            foreach (Vertex v in newMesh.vertices)
+            Mesh newMesh2;
+            if (newMesh is Mesh)
+            {
+                newMesh2 = (Mesh)newMesh;
+            }
+            else
+            {
+                return;
+            }
+
+            foreach (Vertex v in newMesh2.vertices)
                 vertices.Add(v);
 
-            foreach (Triangle t in newMesh.triangles)
+            foreach (Triangle t in newMesh2.triangles)
                 Add(t);
         }
 
@@ -335,6 +349,14 @@ namespace THIRDPARTY.OpenSim.Region.Physics.Meshing
                 sw.WriteLine(s);
             }
             sw.Close();
+        }
+
+        public void AddPos(PhysicsVector Position)
+        {
+            foreach (Vertex t in vertices)
+            {
+                t.AddPos(Position);
+            }
         }
     }
 }

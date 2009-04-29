@@ -112,21 +112,21 @@ namespace PathSystem3D.Navigation
                 {
                     if (maxZ > heightMap[PX, PY])
                         heightMap[PX, PY] = maxZ;
-                    return SimPathStore.MAYBE_BLOCKED3;
+                    return SimPathStore.BLOCK_ORANGE;
                 }
                 else if (SomethingBetween(zlevel + 0.1f, zlevel + 0.3f, OccupiedCP, out maxZ))
                 {
                     if (maxZ > heightMap[PX, PY])
                         heightMap[PX, PY] = maxZ;
-                    return SimPathStore.MAYBE_BLOCKED4;
+                    return SimPathStore.BLOCK_PURPLE;
                 }
                 else if (NeighborBump(low, high, zlevel, 0.2f, heightMap) > 1)
                 {
-                    return SimPathStore.MAYBE_BLOCKED5;
+                    return SimPathStore.BLOCKED_YELLOW;
                 }
                 else if (IsMidAir(low, high))
                 {
-                    return SimPathStore.MAYBE_BLOCKED6;
+                    return SimPathStore.BLOCKED_AIR;
                 }
             }
             if (IsUnderWater(low, high))
@@ -249,11 +249,11 @@ namespace PathSystem3D.Navigation
 
         public bool AddOccupied(IMeshedObject simObject, float minZ, float maxZ)
         {
-            float GroundLevel = GetGroundLevel();
-            if (simObject.OuterBox.MaxZ < GetGroundLevel())
-            {
-                return false;
-            }
+            //float GroundLevel = GetGroundLevel();
+           // if (simObject.OuterBox.MaxZ < GetGroundLevel())
+           // {
+            //    return false;
+            //}
             List<IMeshedObject> meshes = ShadowList;
             lock (meshes)
                 if (!meshes.Contains(simObject))

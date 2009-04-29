@@ -245,6 +245,13 @@ namespace THIRDPARTY.OpenSim.Region.Physics.Meshing
         {
             return new Vector3(X,Y,Z);
         }
+
+        internal void AddPos(PhysicsVector Position)
+        {
+            X = X + Position.X;
+            Y = Y + Position.Y;
+            Z = Z + Position.Z;
+        }
     }
 
     public class Triangle
@@ -415,6 +422,12 @@ namespace THIRDPARTY.OpenSim.Region.Physics.Meshing
         {
             String output = v1.ToRaw() + " " + v2.ToRaw() + " " + v3.ToRaw();
             return output;
+        }
+
+        internal Vertex GetCenter()
+        {
+            Vertex cent = v1 + v2 + v3;
+            return cent/3;
         }
     }
 }
