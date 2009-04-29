@@ -377,7 +377,7 @@ namespace PathSystem3D.Navigation.Debug
                 _CurrentPlane = value;
                 if (_CurrentPlane != null)
                 {
-                    PathFinderDemo pfd = _CurrentPlane.PathStore.PathFinder;
+                    PathFinderDemo pfd = _CurrentPlane.PathStore.PanelGUI;
                     if (pfd != null)
                     {
                         pfd.SetPlane(_CurrentPlane);

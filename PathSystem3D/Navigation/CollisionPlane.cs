@@ -422,8 +422,8 @@ namespace PathSystem3D.Navigation
                         }
                     }
                 }
-                cutNarrows = false;
-                if (cutNarrows) AddAdjacentBlocking(ToMatrix,2);
+               // cutNarrows = false;
+               // if (cutNarrows) AddAdjacentBlocking(ToMatrix,2);
                 byte FeildEffect = SimPathStore.BLOCKED;
                 if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, FeildEffect, 1, 1);
                 if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, --FeildEffect, 5, 30);
