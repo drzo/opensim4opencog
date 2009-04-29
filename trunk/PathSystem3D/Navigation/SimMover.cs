@@ -125,6 +125,7 @@ namespace PathSystem3D.Navigation
 
             v3s = SimPathStore.GetSimplifedRoute(vstart, v3s, 45, 4f);
 
+            int maxReverse = 5;
             Debug("FollowPath: {0} -> {1} for {2}", v3s.Count, DistanceVectorString(finalTarget), finalDistance);
             int CanSkip = UseSkipping ? 1 : 0; //never right now
             int Skipped = 0;
@@ -175,7 +176,7 @@ namespace PathSystem3D.Navigation
                 else if (best < at)
                 {
                     Debug("Reverse {0} -> {1} ", at, best);
-                    if (UseReverse)
+                    if (UseReverse && maxReverse-->0)
                     {
                         best = at;
                     }

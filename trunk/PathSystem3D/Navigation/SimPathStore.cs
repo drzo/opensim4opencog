@@ -50,7 +50,7 @@ namespace PathSystem3D.Navigation
         static public void TrianglesToBoxes(IList<Triangle> tl, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
         {
             int tc = tl.Count;
-            AddTrianglesV321(tl, tc, OuterBox, padXYZ, InnerBoxes);
+            AddTrianglesV32(tl, tc, OuterBox, padXYZ, InnerBoxes);
             // Debug(InnerBoxes.Count);
         }
 
@@ -802,6 +802,7 @@ namespace PathSystem3D.Navigation
             if (count > 3)
             {
                 Debug("Clearing small area " + v3);
+                if (PanelGUI != null) PanelGUI.Invalidate();
                 return v3;
             }
 
@@ -829,6 +830,7 @@ namespace PathSystem3D.Navigation
                     }
                 }
             }
+            if (PanelGUI != null) PanelGUI.Invalidate();
             return GetWaypointOf(v3).GetSimPosition();
         }
 
@@ -874,8 +876,8 @@ namespace PathSystem3D.Navigation
         /// <returns></returns>
         static public Vector3 GetLocalLeftPos(SimPosition pos, int zAngleFromFace, double distance)
         {
-            double RAD_TO_DEG = 57.29577951f;
-            double Pi2 = (double)(Math.PI * 2.0);
+            //double RAD_TO_DEG = 57.29577951f;
+            //double PI2 = (double)(Math.PI * 2.0);
 
             while (zAngleFromFace > 360)
             {
@@ -886,38 +888,8 @@ namespace PathSystem3D.Navigation
                 zAngleFromFace += 360;
             }
 
-            double radAngle = zAngleFromFace / RAD_TO_DEG;
+            Vector3 result = pos.GetSimPosition() + GetXYDiffOfMovement(zAngleFromFace, pos.GetSimRotation(), distance);
 
-
-            Quaternion rot = pos.GetSimRotation();
-            rot.Normalize();
-            float rx, ry, rz;
-            rot.GetEulerAngles(out rx, out rz, out ry);
-            //if (rx != 0f || ry != 0f)
-            //{
-            //    Debug("180 Eulers:  {0} {1} {2}", rx * RAD_TO_DEG, ry * RAD_TO_DEG, rz * RAD_TO_DEG);
-            //}
-            //else
-            //{
-            //    Debug("Current Eulers:  {0} {1} {2}", rx * RAD_TO_DEG, ry * RAD_TO_DEG, rz * RAD_TO_DEG);
-            //}
-            double az = rz + radAngle;
-
-
-            while (az < 0)
-            {
-                az += Pi2;
-            }
-            while (az > Pi2)
-            {
-                az -= Pi2;
-            }
-
-            float xmul = (float)Math.Cos(az);
-            float ymul = (float)Math.Sin(az);
-            Vector3 diff = new Vector3(xmul, ymul, 0) * (float)distance;
-
-            Vector3 result = pos.GetSimPosition() + diff;
 
             if (result.X > 254f)
             {
@@ -941,6 +913,37 @@ namespace PathSystem3D.Navigation
                     Client.Self.Movement.Camera.AtAxis, Client.Self.Movement.Camera.LeftAxis, Client.Self.Movement.Camera.UpAxis,
                     Client.Self.Movement.BodyRotation, Client.Self.Movement.HeadRotation, Client.Self.Movement.Camera.Far, AgentFlags.None,
                     AgentState.None, true);*/
+        }
+
+        static Vector3 GetXYDiffOfMovement(int zAngleFromFace, Quaternion rot, double distance)
+        {
+            double radAngle = zAngleFromFace / RAD2DEG;
+            rot.Normalize();
+            float rx, ry, rz;
+            rot.GetEulerAngles(out rx, out rz, out ry);
+            //if (rx != 0f || ry != 0f)
+            //{
+            //    Debug("180 Eulers:  {0} {1} {2}", rx * RAD_TO_DEG, ry * RAD_TO_DEG, rz * RAD_TO_DEG);
+            //}
+            //else
+            //{
+            //    Debug("Current Eulers:  {0} {1} {2}", rx * RAD_TO_DEG, ry * RAD_TO_DEG, rz * RAD_TO_DEG);
+            //}
+            double az = rz + radAngle;
+
+
+            while (az < 0)
+            {
+                az += PI2;
+            }
+            while (az > PI2)
+            {
+                az -= PI2;
+            }
+
+            float xmul = (float)Math.Cos(az);
+            float ymul = (float)Math.Sin(az);
+            return new Vector3(xmul, ymul, 0) * (float)distance;
         }
 
         public void SetNodeQualityTimer(Vector3 vector3, int value, int seconds)
@@ -1085,13 +1088,26 @@ namespace PathSystem3D.Navigation
             float Z = start.Z;
             if (!IsPassable(start, CP))
             {
+                Vector3 newStart = start;
                 Debug("start is not passable: " + start);
+                for (int i = 0; i < 360; i += 45)
+                {
+                    newStart = start + GetXYDiffOfMovement(i, Quaternion.Identity, 4);
+                    if (IsPassable(newStart))
+                    {
+                        break;
+                    }
+                }
+                if (newStart == start)
+                {
+                    start = GetUsableLocalPositionOf(CP, start, 4);
+                }
             }
             if (!IsPassable(end, CP))
             {
                 Debug("end is not passable: " + end);
             }
-            return (IList<Vector3d>)GetLocalPath0(GetUsableLocalPositionOf(CP,start, 4), GetUsableLocalPositionOf(CP,end, 4), CP, Z);
+            return (IList<Vector3d>)GetLocalPath0(start, GetUsableLocalPositionOf(CP,end, 4), CP, Z);
         }
 
         bool TerrainBaked = false;
@@ -1862,7 +1878,7 @@ namespace PathSystem3D.Navigation
         bool PunishChangeDirection;
         private IList<Vector3d> GetLocalPath0(Vector3 start, Vector3 end, CollisionPlane CP, float Z)
         {
-            PathFinderDemo panel = PathFinder;
+            PathFinderDemo panel = PanelGUI;
             PunishChangeDirection = !PunishChangeDirection;    //toggle each time
             if (!PunishChangeDirection)
             {
@@ -2134,16 +2150,16 @@ namespace PathSystem3D.Navigation
             Refresh(changed, null);
         }
 
-        internal PathFinderDemo PathFinder;
+        internal PathFinderDemo PanelGUI;
 
         public void ShowDebugger()
         {
-            if (PathFinder == null)
+            if (PanelGUI == null)
             {
-                PathFinder = new PathFinderDemo(this);
+                PanelGUI = new PathFinderDemo(this);
             }
-            PathFinder.CollisionPlaneListUpdate();
-            PathFinder.Show();
+            PanelGUI.CollisionPlaneListUpdate();
+            PanelGUI.Show();
         }
 
 
@@ -2253,7 +2269,7 @@ namespace PathSystem3D.Navigation
             CollisionPlane found = new CollisionPlane(MAPSPACE, MAPSPACE, Z, this);
             Console.WriteLine("Created matrix[{0}] {1} for {2}", Z, found, this);
             lock (Matrixes) Matrixes.Add(found);
-            if (PathFinder != null) PathFinder.OnNewCollisionPlane(found);
+            if (PanelGUI != null) PanelGUI.OnNewCollisionPlane(found);
             return found;
         }
     }
