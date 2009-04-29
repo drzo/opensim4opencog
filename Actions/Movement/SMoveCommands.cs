@@ -251,7 +251,7 @@ namespace cogbot.Actions.Movement
             Vector3 v3 = pos.GetSimPosition();
             WriteLine("SimZInfo: " + pos + " " + R.GetGroundLevel(v3.X, v3.Y));
 
-#if USING_ODE  
+#if COLLIDER_ODE  
             Vector3 landing = R.CreateAndDropPhysicalCube(v3);
             WriteLine("SimHInfo: {0}", landing);
 #endif

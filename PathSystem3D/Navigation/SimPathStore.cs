@@ -19,7 +19,7 @@ using OpenMetaverse;
 using THIRDPARTY.OpenSim.Framework;
 using THIRDPARTY.OpenSim.Region.Physics.Manager;
 using THIRDPARTY.OpenSim.Region.Physics.Meshing;
-#if USING_ODE
+#if COLLIDER_ODE
 using NUnit.Framework;
 using THIRDPARTY.OpenSim.Region.Physics.OdePlugin;
 #endif
@@ -40,7 +40,7 @@ namespace PathSystem3D.Navigation
     [Serializable]
     public class SimPathStore //: PathSystem3D.Navigation.IPathStore
     {
-#if USING_ODE
+#if COLLIDER_ODE
         public OdePlugin odePhysics = new OdePlugin();
         public OdeScene odeScene;
 #endif
@@ -50,7 +50,7 @@ namespace PathSystem3D.Navigation
         static public void TrianglesToBoxes(IList<Triangle> tl, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
         {
             int tc = tl.Count;
-            AddTrianglesV32(tl, tc, OuterBox, padXYZ, InnerBoxes);
+            AddTrianglesV321(tl, tc, OuterBox, padXYZ, InnerBoxes);
             // Debug(InnerBoxes.Count);
         }
 
@@ -295,11 +295,51 @@ namespace PathSystem3D.Navigation
             }
         }
 
+        private static void AddTrianglesV321(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
+        {
+            int len2 = len - 2;
+            int len1 = len - 1;
+            OuterBox.AddTriangle(ts[len - 1], padXYZ);
+            for (int i = 0; i < len2; i += 2)
+            {
+                Triangle t1 = ts[i];
+                if (t1 == null) continue;
+                OuterBox.AddTriangle(t1, padXYZ);
+                Triangle t2 = ts[i + 1];
+                if (t2 != null)
+                {
+                    OuterBox.AddTriangle(t2, padXYZ);
+                    InnerBoxes.Add(new Box3Fill(t1, t2, padXYZ));
+                }
+                bool used = false;
+                int until = i + 1;
+
+                for (int ii = len1; ii > until;ii-- )
+                {
+                    t2 = ts[ii];
+                    if (t2 == null) continue;
+                    int shared = SharedVertexs(t1, t2);
+                    if (shared == 3) continue;
+                    if (shared == 2)
+                    {
+                        InnerBoxes.Add(new Box3Fill(t1, t2, padXYZ));
+                        ts[ii] = null;
+                        used = true;
+                    }
+                }
+                if (!used)
+                {
+                    Box3Fill B = new Box3Fill(true);
+                    B.AddTriangle(t1, padXYZ);
+                    InnerBoxes.Add(B);
+                }
+            }
+        }
         private static void AddTrianglesV32(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
         {
-            int len1 = len - 2;
+            int len2 = len - 2;
             OuterBox.AddTriangle(ts[len - 1], padXYZ);
-            for (int i = 0; i < len1; i += 2)
+            for (int i = 0; i < len2; i += 2)
             {
                 Triangle t1 = ts[i];
                 if (t1 == null) continue;
@@ -581,7 +621,7 @@ namespace PathSystem3D.Navigation
         {
             get { return _WaterHeight; }
             set { _WaterHeight = value;
-#if USING_ODE
+#if COLLIDER_ODE
                 odeScene.SetWaterLevel(value);
 #endif
                 StartGatheringTerrainFromCallback();
@@ -657,7 +697,7 @@ namespace PathSystem3D.Navigation
             return new Vector3d(V2.X * 256 + objectLoc.X, V2.Y * 256 + objectLoc.Y, objectLoc.Z);
         }
 
-#if USING_ODE
+#if COLLIDER_ODE
 
         public Vector3 CreateAndDropPhysicalCube(Vector3 from)
         {
@@ -1170,7 +1210,7 @@ namespace PathSystem3D.Navigation
                 for (int y = 0; y < 256; y++)
                     hts[y * 256 + x] = GetGroundLevel(x, y);
 
-#if USING_ODE
+#if COLLIDER_ODE
             odeScene.SetTerrain(hts);
             GroundLevel512 = odeScene.GroundLevel512;
 #endif
@@ -1208,9 +1248,6 @@ namespace PathSystem3D.Navigation
                 sx -= StepSize;
             }
         }
-
-
-        public static bool USE_ODE = false;
 
         public Vector3 ZAngleVector(double ZAngle)
         {
@@ -1585,7 +1622,7 @@ namespace PathSystem3D.Navigation
         readonly Vector3 Start;
         readonly Vector3 Size;
 
-#if USING_ODE  
+#if COLLIDER_ODE  
         readonly static Meshmerizer meshMerizer = new Meshmerizer();
 #endif
         /// <summary>
@@ -1610,7 +1647,7 @@ namespace PathSystem3D.Navigation
             MAPSPACE = (int) XY256*((int) POINTS_PER_METER);
             SetMapSpace(MAPSPACE);
             if (Size.X != Size.Y) throw new Exception("X and Y must be the same for " + this);
-#if USING_ODE            
+#if COLLIDER_ODE            
             odeScene = (OdeScene) odePhysics.GetScene(RegionName);
             odeScene.Initialise(meshMerizer, null);
             float[] _heightmap = new float[256*256];

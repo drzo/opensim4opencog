@@ -1,4 +1,4 @@
-//#define TRIANGE_MESH
+//#define COLLIDER_TRIANGLE
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -12,7 +12,7 @@ using THIRDPARTY.OpenSim.Region.Physics.Meshing;
 using THIRDPARTY.PrimMesher;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
-#if USING_ODE  
+#if COLLIDER_ODE  
 using THIRDPARTY.OpenSim.Region.Physics.OdePlugin;
 #endif
 namespace PathSystem3D.Mesher
@@ -34,11 +34,11 @@ namespace PathSystem3D.Mesher
     {
 
 
-        private Mesh mesh;
+#if COLLIDER_ODE  
         private PhysicsVector LastPosition;
         private PhysicsVector LastSize;
         private Quaternion LastRotation;      
-#if USING_ODE  
+        private Mesh mesh;
         private OdePrim physicsActor;
 #endif
         public SimPosition RootObject;
@@ -93,15 +93,15 @@ namespace PathSystem3D.Mesher
 
         private void AddPos(Vector3 offset)
         {
-//#if TRIANGE_MESH
-//            Vertex v3 = new Vertex(offset.X, offset.Y, offset.Z);
-//            foreach (Triangle tri in triangles)
-//            {
-//                tri.v1 = tri.v1 + v3;
-//                tri.v2 = tri.v2 + v3;
-//                tri.v3 = tri.v3 + v3;
-//            } 
-//#endif
+#if COLLIDER_TRIANGLE
+            Vertex v3 = new Vertex(offset.X, offset.Y, offset.Z);
+            foreach (Triangle tri in triangles)
+            {
+                tri.v1 = tri.v1 + v3;
+                tri.v2 = tri.v2 + v3;
+                tri.v3 = tri.v3 + v3;
+            } 
+#endif
 
             OuterBox.AddPos(offset);
             foreach (Box3Fill B in InnerBoxes)
@@ -123,9 +123,11 @@ namespace PathSystem3D.Mesher
             Vector3 Scale = Prim.Scale;//.GetSimScale();
             Vector3 Position = simObject.GetSimPosition();
 
+#if COLLIDER_ODE  
             LastSize = new PhysicsVector(1, 1, 1); // we scaled the PrimMesh already!
             LastRotation = Quaternion.Identity;  // we rotated the PrimMesh already!
             LastPosition = ToPhysicsVector(Position); // we hadn't done position though
+#endif
             //pbs.
 
             //List<Mesh> MeshList = new List<Mesh>();
@@ -143,9 +145,10 @@ namespace PathSystem3D.Mesher
 
             // Add High PrimMesh (IdealistViewer code)
 
-            mesh = PrimitiveToMesh(Prim, Scale, Rotation);
+            Mesh mesh = PrimitiveToMesh(Prim, Scale, Rotation);
             
-#if USING_ODE  
+#if COLLIDER_ODE  
+            this.mesh = mesh;
             if (!RootObject.IsPassable)
                 physicsActor = GetPhysicsActor();
 #endif
@@ -174,14 +177,13 @@ namespace PathSystem3D.Mesher
            // InnerBoxes = Box3Fill.Simplify((List<Box3Fill>)InnerBoxes);
             // Console.Write("Simplfy mesh {0} -> {1} ", b, InnerBoxes.Count);
             AddPos(Position);
-            if (!USE_ODE) mesh.AddPos(LastPosition);
-#if TRIANGE_MESH
+#if COLLIDER_TRIANGLE
             triangles = mesh.triangles;
 #endif
             return true;
         }
 
-#if USING_ODE  
+#if COLLIDER_ODE  
         public OdePrim GetPhysicsActor()
         {
             if (!USE_ODE) return null;
@@ -213,7 +215,7 @@ namespace PathSystem3D.Mesher
 
         void CalcBoxesFromMeshes(Mesh M, IList<Box3Fill> InnerBoxes)
         {
-#if TRIANGE_MESH
+#if COLLIDER_TRIANGLE
             triangles = M.triangles;     
 #endif
             SimPathStore.TrianglesToBoxes(M.triangles, OuterBox, PadXYZ, InnerBoxes);
