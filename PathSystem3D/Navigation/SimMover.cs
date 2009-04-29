@@ -147,6 +147,7 @@ namespace PathSystem3D.Navigation
                     }
                     if (!MoveTo(v3, PathStore.StepSize*3, 2))
                     {
+                        OpenNearbyClosedPassages();
                         if (Skipped++ <= CanSkip)
                         {
                             MoveToPassableArround(GetSimPosition());
