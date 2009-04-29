@@ -12,10 +12,17 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Threading;
 using PathSystem3D.Mesher;
 using PathSystem3D.Navigation.Debug;
 using OpenMetaverse;
+using THIRDPARTY.OpenSim.Framework;
+using THIRDPARTY.OpenSim.Region.Physics.Manager;
 using THIRDPARTY.OpenSim.Region.Physics.Meshing;
+#if USING_ODE
+using NUnit.Framework;
+using THIRDPARTY.OpenSim.Region.Physics.OdePlugin;
+#endif
 
 namespace PathSystem3D.Navigation
 {
@@ -33,28 +40,24 @@ namespace PathSystem3D.Navigation
     [Serializable]
     public class SimPathStore //: PathSystem3D.Navigation.IPathStore
     {
+#if USING_ODE
+        public OdePlugin odePhysics = new OdePlugin();
+        public OdeScene odeScene;
+#endif
         public static int DebugLevel = 0;
         public string RegionName { get; set; }
         // util
         static public void TrianglesToBoxes(IList<Triangle> tl, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
         {
-
-
             int tc = tl.Count;
-            if (false && tc < 16)
-            {
-                AddTrianglesV1(tl, tc, OuterBox, padXYZ, InnerBoxes);
-            }
-            else
-            {
-                AddTrianglesV3(tl, tc, OuterBox, padXYZ, InnerBoxes);
-            }
+            AddTrianglesV32(tl, tc, OuterBox, padXYZ, InnerBoxes);
             // Debug(InnerBoxes.Count);
         }
 
         private static void AddTrianglesV1(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
         {
             int len1 = len - 1;
+            OuterBox.AddTriangle(ts[len1], padXYZ);
             for (int i = 0; i < len1; i++)
             {
                 Triangle t1 = ts[i];
@@ -81,6 +84,51 @@ namespace PathSystem3D.Navigation
             }
         }
 
+        private static void AddTrianglesV13(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
+        {
+            Vertex[] unsharedV = new Vertex[6];
+            Vertex[] sharedV = new Vertex[3];
+            //int len1 = len - 1;
+            //OuterBox.AddTriangle(ts[len1], padXYZ);
+            for (int i = 0; i < len; i++)
+            {
+                Triangle t1 = ts[i];
+                if (t1 == null) continue;
+                bool used = false;
+                OuterBox.AddTriangle(t1, padXYZ);
+                for (int ii = i + 1; ii < len; ii++)
+                {
+                    Triangle t2 = ts[ii];
+                    if (t2 == null) continue;
+                    int shared = SharedVertexs(t1, t2,sharedV,unsharedV);
+                    if (shared == 3) continue;
+                    if (shared == 2)
+                    {
+                        Vertex u1 = unsharedV[0];
+                        Vertex u2 = unsharedV[1];
+                        Vertex s1 = sharedV[0];
+                        Vertex s2 = sharedV[1];
+                        float ZDiff = u1.Z - u2.Z;
+                        if (ZDiff < 0) ZDiff = -ZDiff;
+                        if (ZDiff < 3)
+                        {
+                            Box3Fill B = new Box3Fill(t1, t2, padXYZ);
+                            InnerBoxes.Add(B);
+                            used = true;
+                        }
+                        else
+                        {
+
+                        }
+                    }
+                }
+                if (!used)
+                {
+                    AddThreeFour(2, t1.v1, t1.v2, t1.v3, InnerBoxes, padXYZ);
+                }
+            }
+        }
+
         private static int SharedVertexs(Triangle t1, Triangle t2)
         {
             int sharedV = 0;
@@ -98,6 +146,110 @@ namespace PathSystem3D.Navigation
             return sharedV;
         }
 
+        private static int SharedVertexs(Triangle t1, Triangle t2, Vertex[] shared,Vertex[] unshared)
+        {
+            int sharedV = 0;
+            int unsharedV = 0;
+            bool[] t2Shared = new bool[3];
+            if (t1.v1 == t2.v1)
+            {
+                shared[sharedV] = t1.v1;
+                t2Shared[0] = true;
+                sharedV++;
+            }
+            else
+                if (t1.v1 == t2.v2)
+                {
+                    shared[sharedV] = t1.v1;
+                    t2Shared[1] = true;
+                    sharedV++;
+                }
+                else
+                    if (t1.v1 == t2.v3)
+                    {
+                        shared[sharedV] = t1.v1;
+                        t2Shared[2] = true;
+                        sharedV++;
+                    }
+                    else
+                    {
+                        unshared[unsharedV] = t1.v1;
+                        unsharedV++;
+                    }
+            if (t1.v2 == t2.v1)
+            {
+                shared[sharedV] = t1.v2;
+                t2Shared[0] = true;
+                sharedV++;
+            }
+            else
+                if (t1.v2 == t2.v2)
+                {
+                    shared[sharedV] = t1.v2;
+                    t2Shared[1] = true;
+                    sharedV++;
+                }
+                else
+                    if (t1.v2 == t2.v3)
+                    {
+                        shared[sharedV] = t1.v2;
+                        t2Shared[2] = true;
+                        sharedV++;
+                    }
+                    else
+                    {
+                        unshared[unsharedV] = t1.v2;
+                        unsharedV++;
+                    }
+            if (t1.v3 == t2.v1)
+            {
+                shared[sharedV] = t1.v3;
+                t2Shared[0] = true;
+                sharedV++;
+            }
+            else
+                if (t1.v3 == t2.v2)
+                {
+                    shared[sharedV] = t1.v3;
+                    t2Shared[1] = true;
+                    sharedV++;
+                }
+                else
+                    if (t1.v3 == t2.v3)
+                    {
+                        shared[sharedV] = t1.v3;
+                        t2Shared[2] = true;
+                        sharedV++;
+                    }
+                    else
+                    {
+                        unshared[unsharedV] = t1.v3;
+                        unsharedV++;
+                    }
+            if (sharedV==2 && unsharedV<2)
+            {
+                if (unshared[0] != t2.v1)
+                {
+                    if (!t2Shared[0])
+                    {
+                        unshared[1] = t2.v1;
+                        return sharedV;
+                    }
+                }
+                if (unshared[0] != t2.v2)
+                {
+                    if (!t2Shared[1])
+                    {
+                        unshared[1] = t2.v2;
+                        return sharedV;
+                    }
+                }
+                unshared[1] = t2.v3;
+                
+            }
+            return sharedV;
+        }
+
         private static void AddTrianglesV2(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
         {
             foreach (Triangle t1 in ts)
@@ -112,6 +264,7 @@ namespace PathSystem3D.Navigation
         private static void AddTrianglesV3(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
         {
             int len1 = len - 2;
+            OuterBox.AddTriangle(ts[len-1], padXYZ);
             for (int i = 0; i < len1; i += 2)
             {
                 Triangle t1 = ts[i];
@@ -142,16 +295,148 @@ namespace PathSystem3D.Navigation
             }
         }
 
+        private static void AddTrianglesV32(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
+        {
+            int len1 = len - 2;
+            OuterBox.AddTriangle(ts[len - 1], padXYZ);
+            for (int i = 0; i < len1; i += 2)
+            {
+                Triangle t1 = ts[i];
+                if (t1 == null) continue;
+                Triangle t2 = ts[i + 1];
+                if (t2 == null) continue;
+                OuterBox.AddTriangle(t1, padXYZ);
+                OuterBox.AddTriangle(t2, padXYZ);
+                Box3Fill B = new Box3Fill(t1, t2, padXYZ);
+                InnerBoxes.Add(B);
+                bool used = false;
+                for (int ii = i + 2; ii < len; ii++)
+                {
+                    t2 = ts[ii];
+                    if (t2 == null) continue;
+                    int shared = SharedVertexs(t1, t2);
+                    if (shared == 3) continue;
+                    if (shared == 2)
+                    {
+                        B = new Box3Fill(t1, t2, padXYZ);
+                        InnerBoxes.Add(B);
+                        ts[ii] = null;
+                        used = true;
+                    }
+                }
+                if (!used)
+                {
+                    B = new Box3Fill(true);
+                    B.AddTriangle(t1, padXYZ);
+                    InnerBoxes.Add(B);
+                }
+            }
+        }
+
+        private static void AddTrianglesV34(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
+        {
+            //int len1 = len - 2;
+            //OuterBox.AddTriangle(ts[len - 1], padXYZ);
+            for (int i = 0; i < len; i += 1)
+            {
+                Triangle t1 = ts[i];
+                if (t1 == null) continue;
+                OuterBox.AddTriangle(t1, padXYZ);
+                Box3Fill B;// = new Box3Fill(t1, t2, padXYZ);
+                //InnerBoxes.Add(B);
+                bool used = false;
+                for (int ii = i + 1; ii < len; ii++)
+                {
+                    Triangle t2 = ts[ii];
+                    if (t2 == null) continue;
+                    int shared = SharedVertexs(t1, t2);
+                    if (shared == 3) continue;
+                    if (shared == 2)
+                    {
+                        ts[ii] = null;
+                        B = new Box3Fill(t1, t2, padXYZ);
+                        InnerBoxes.Add(B);
+                        used = true;
+                    }
+                }
+                if (!used)
+                {
+                    AddThreeFour(2, t1.v1, t1.v2, t1.v3, InnerBoxes, padXYZ);
+                }
+            }
+        }
+      
+        private static void AddTrianglesV4(IEnumerable<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
+        {
+            foreach (Triangle t1 in ts)
+            {
+                OuterBox.AddTriangle(t1, padXYZ);
+                Vertex v1 = t1.v1;
+                Vertex v2 = t1.v2;
+                Vertex v3 = t1.v3;
+                AddThreeTwo(v1, v2, v3,InnerBoxes, padXYZ);
+            }
+        }
+
+        private static void AddFour(int count, Vertex v1, Vertex v2, Vertex v3, Vertex v4, ICollection<Box3Fill> InnerBoxes, Vector3 padXYZ)
+        {
+            AddThreeFour(count, v1, v2, v4, InnerBoxes, padXYZ);
+            AddThreeFour(count, v2, v3, v4, InnerBoxes, padXYZ);
+            AddThreeFour(count, v1, v3, v4, InnerBoxes, padXYZ);
+        }
+
+        private static void AddThree(Vertex v1, Vertex v2, Vertex v3, ICollection<Box3Fill> InnerBoxes, Vector3 padXYZ)
+        {
+            Box3Fill B = new Box3Fill(true);
+            B.AddVertex(v1, padXYZ);
+            B.AddVertex(v2, padXYZ);
+            B.AddVertex(v3, padXYZ);
+            InnerBoxes.Add(B);
+        }
+
+        private static void AddTwo(Vertex v1, Vertex v2, ICollection<Box3Fill> InnerBoxes, Vector3 padXYZ)
+        {
+            Vertex v4 = new Vertex((v1.X + v2.X) / 2, (v1.Y + v2.Y ) / 2, (v1.Z + v2.Z ) / 2);
+            Box3Fill B = new Box3Fill(true);
+            B.AddVertex(v1, padXYZ);
+            B.AddVertex(v4, padXYZ);
+            InnerBoxes.Add(B);
+            B = new Box3Fill(true);
+            B.AddVertex(v2, padXYZ);
+            B.AddVertex(v4, padXYZ);
+            InnerBoxes.Add(B);
+        }
+
+        private static void AddThreeTwo(Vertex v1, Vertex v2, Vertex v3, ICollection<Box3Fill> InnerBoxes, Vector3 padXYZ)
+        {
+            //Vertex v4 = new Vertex((v1.X + v2.X + v3.X)/3, (v1.Y + v2.Y + v3.Y)/3, (v1.Z + v2.Z + v3.Z)/3);
+            //AddTwo(v1, v4, InnerBoxes, padXYZ);
+          //  AddTwo(v2, v4, InnerBoxes, padXYZ);
+            //AddTwo(v3, v4, InnerBoxes, padXYZ);
+            AddTwo(v1, v2, InnerBoxes, padXYZ);
+            AddTwo(v2, v3, InnerBoxes, padXYZ);
+            AddTwo(v1, v3, InnerBoxes, padXYZ);
+        }
+
+        private static void AddThreeFour(int count, Vertex v1, Vertex v2, Vertex v3, ICollection<Box3Fill> InnerBoxes, Vector3 padXYZ)
+        {
+            if (count > 0)
+                AddFour(count-1,v1, v2, v3, new Vertex((v1.X + v2.X + v3.X)/3, (v1.Y + v2.Y + v3.Y)/3, (v1.Z + v2.Z + v3.Z)/3),
+                        InnerBoxes, padXYZ);
+            else
+                AddThree(v1, v2, v3, InnerBoxes, padXYZ);
+        }
 
         Dictionary<IComparable, IMeshedObject> meshedObjects = new Dictionary<IComparable, IMeshedObject>();
         /// <summary>
         /// By default no boxes are passable
         /// </summary>
         public Predicate<IComparable> IsPassablePredicate = delegate(IComparable id) { return false; };
+
         /// <summary>
         /// The Pathstore can implement this
         /// </summary>
-        public SimZLevel GroundLevelDelegate = delegate(float x, float y) { return 10; };
+        public SimZLevel GroundLevelDelegate = null;//delegate(float x, float y) { return 10; };
 
         // setup
         void AddBoxes(IComparable id, IList<Box3Fill> boxes)
@@ -198,9 +483,11 @@ namespace PathSystem3D.Navigation
         {
             IsPassablePredicate = callback;
         }
+
         public void SetGroundLevel(SimZLevel callback)
         {
             GroundLevelDelegate = callback;
+            StartGatheringTerrainFromCallback();
         }
 
         // Updates
@@ -293,7 +580,12 @@ namespace PathSystem3D.Navigation
         public float WaterHeight
         {
             get { return _WaterHeight; }
-            set { _WaterHeight = value; }
+            set { _WaterHeight = value;
+#if USING_ODE
+                odeScene.SetWaterLevel(value);
+#endif
+                StartGatheringTerrainFromCallback();
+            }
         }
 
 
@@ -365,6 +657,71 @@ namespace PathSystem3D.Navigation
             return new Vector3d(V2.X * 256 + objectLoc.X, V2.Y * 256 + objectLoc.Y, objectLoc.Z);
         }
 
+#if USING_ODE
+
+        public Vector3 CreateAndDropPhysicalCube(Vector3 from)
+        {
+            OdeScene ps = odeScene;
+            PrimitiveBaseShape newcube = PrimitiveBaseShape.CreateBox();
+            PhysicsVector position = new PhysicsVector(from.X, from.Y, from.Z);
+            PhysicsVector size = new PhysicsVector(0.2f, 0.2f, 1f);
+            Quaternion rot = Quaternion.Identity;
+            PhysicsActor prim = ps.AddPrimShape("CoolShape", newcube, position, size, rot, true);
+            OdePrim oprim = (OdePrim)prim;
+            OdeScene pscene = (OdeScene)ps;
+            //   prim.OnCollisionUpdate;
+            Assert.That(oprim.m_taintadd);
+            bool falling = true;
+            prim.LocalID = 5;
+            //oprim.OnVelocityUpdate += delegate(PhysicsVector velocity)
+            //                              {
+            //                                  falling = false;
+            //                              };
+            oprim.OnCollisionUpdate += delegate(EventArgs args)
+                                           {
+                                               CollisionEventUpdate arg = (CollisionEventUpdate)args;
+                                               //simhinfo 58 58 30
+                                               Console.WriteLine("oprim OnCollisionUpdate " + args);
+                                               falling = false;
+                                           };
+           
+            oprim.SubscribeEvents(30000)
+            ;
+            
+            while (falling)
+            {
+                ps.Simulate(0.133f);
+                //Assert.That(oprim.prim_geom != (IntPtr)0);
+
+                //Assert.That(oprim.m_targetSpace != (IntPtr)0);
+
+                ////Assert.That(oprim.m_targetSpace == pscene.space);
+                //Debug("TargetSpace: " + oprim.m_targetSpace + " - SceneMainSpace: " + pscene.space);
+
+                //Assert.That(!oprim.m_taintadd);
+                //Debug("Prim Position (" + oprim.m_localID + "): " + prim.Position.ToString());
+
+                //// Make sure we're above the ground
+                ////Assert.That(prim.Position.Z > 20f);
+                ////m_log.Info("PrimCollisionScore (" + oprim.m_localID + "): " + oprim.m_collisionscore);
+
+                //// Make sure we've got a Body
+                //Assert.That(oprim.Body != (IntPtr)0);
+                ////m_log.Info(
+            }
+
+            PhysicsVector primPosition = prim.Position;
+
+            // Make sure we're not somewhere above the ground
+ 
+            Vector3 v3 = new Vector3(primPosition.X,primPosition.Y,primPosition.Z);
+            ps.RemovePrim(prim);
+           // Assert.That(oprim.m_taintremove);
+            ps.Simulate(0.133f); // for removal or not needed?
+            // Assert.That(oprim.Body == (IntPtr)0);
+            return v3;
+        }
+#endif
         /// <summary>
         ///  The closet usable space to the v3 TODO
         /// </summary>
@@ -735,7 +1092,7 @@ namespace PathSystem3D.Navigation
                 {
 
                     int MAPSPACE1 = MAPSPACE - 1; // 1270
-                    _GroundPlane = new float[MAPSPACE, MAPSPACE];
+                    _GroundPlane = new float[MAPSPACE,MAPSPACE];
                     float fy = 256f;
                     for (int y = MAPSPACE1; y >= 0; y--)
                     {
@@ -748,45 +1105,87 @@ namespace PathSystem3D.Navigation
                         }
                     }
 
-
-                    MAPSPACE1--;
-
-                    // smooth it
-                    for (int i = (int)POINTS_PER_METER; i > 0; i--)
+                    if (GroundLevel512 == null)
                     {
-                        fy = 256f;
-                        for (int y = MAPSPACE1; y > 1; y--)
+                        MAPSPACE1--;
+
+                        // smooth it
+                        for (int i = (int) POINTS_PER_METER; i > 0; i--)
                         {
-                            fy = fy - StepSize;
-                            float fx = 256f;
-                            for (int x = MAPSPACE1; x > 1; x--)
+                            fy = 256f;
+                            for (int y = MAPSPACE1; y > 1; y--)
                             {
-                                fx = fx - StepSize;
-                                _GroundPlane[x, y] =
-                                    (_GroundPlane[x, y] * 2 +
+                                fy = fy - StepSize;
+                                float fx = 256f;
+                                for (int x = MAPSPACE1; x > 1; x--)
+                                {
+                                    fx = fx - StepSize;
+                                    _GroundPlane[x, y] =
+                                        (_GroundPlane[x, y]*2 +
 
-                                    _GroundPlane[x + 1, y] +
-                                    _GroundPlane[x, y + 1] +
-                                    _GroundPlane[x + 1, y + 1] +
+                                         _GroundPlane[x + 1, y] +
+                                         _GroundPlane[x, y + 1] +
+                                         _GroundPlane[x + 1, y + 1] +
 
-                                    _GroundPlane[x - 1, y] +
-                                    _GroundPlane[x, y - 1] +
-                                    _GroundPlane[x - 1, y - 1] +
+                                         _GroundPlane[x - 1, y] +
+                                         _GroundPlane[x, y - 1] +
+                                         _GroundPlane[x - 1, y - 1] +
 
-                                    _GroundPlane[x - 1, y + 1] +
-                                    _GroundPlane[x + 1, y - 1]) / 10;
+                                         _GroundPlane[x - 1, y + 1] +
+                                         _GroundPlane[x + 1, y - 1])/10;
 
+                                }
                             }
                         }
                     }
                 }
-
                 return _GroundPlane;
             }
         }
 
+        private object StartedBakingTerrainLock = new Object();
+        private Thread PutTerrainInSceneThread;
+
+        private void StartGatheringTerrainFromCallback()
+        {
+            lock (StartedBakingTerrainLock)
+            {
+                if (PutTerrainInSceneThread != null)
+                    return;
+                if (GroundLevelDelegate == null)
+                    return;
+                PutTerrainInSceneThread = new Thread(new ThreadStart(PutTerrainInScene));
+                PutTerrainInSceneThread.Name = String.Format("PutTerrainInSceneThread {0}", RegionName);
+                PutTerrainInSceneThread.Start();
+            }
+        }
+
+        public float[,] GroundLevel512;
+        public void PutTerrainInScene()
+        {
+            float[] hts =
+                new float[256 * 256];
+            Thread.Sleep(15000);
+            for (int x = 0; x < 256; x++)
+                for (int y = 0; y < 256; y++)
+                    hts[y * 256 + x] = GetGroundLevel(x, y);
+
+#if USING_ODE
+            odeScene.SetTerrain(hts);
+            GroundLevel512 = odeScene.GroundLevel512;
+#endif
+            _GroundPlane = null;
+        }
+
         public float GetGroundLevel(float x, float y)
         {
+            if (GroundLevelDelegate == null) return 10f;
+            if (GroundLevel512!=null)
+            {
+                int ix = (int)(x * 2);
+                int iy = (int)(y * 2);
+                return GroundLevel512[ix, iy];
+            }
             return GroundLevelDelegate(x,y);
         }
 
@@ -810,6 +1209,8 @@ namespace PathSystem3D.Navigation
             }
         }
 
+
+        public static bool USE_ODE = false;
 
         public Vector3 ZAngleVector(double ZAngle)
         {
@@ -874,12 +1275,10 @@ namespace PathSystem3D.Navigation
 
         public const byte BLOCKED = 255;
         public const byte MAYBE_BLOCKED = 254;
-        public const byte BLOCKED_YELLOW = 253;
-        public const byte MAYBE_BLOCKED3 = 203;
-        public const byte MAYBE_BLOCKED4 = 204;
-        public const byte MAYBE_BLOCKED5 = 205;
-        public const byte MAYBE_BLOCKED6 = 206;
-        public const byte MAYBE_BLOCKED7 = 207;
+        public const byte BLOCK_PURPLE = 253;
+        public const byte BLOCKED_YELLOW = 200;
+        public const byte BLOCK_ORANGE = 203;
+        public const byte BLOCKED_AIR = 206;
         public const byte TOO_HIGH = 208;
         public const byte TOO_LOW = 209;
         public const byte WATER_G = 210;
@@ -981,27 +1380,25 @@ namespace PathSystem3D.Navigation
             switch (p)
             {
                 case STICKY_PASSABLE:
-                    return OccupiedColor(Color.Green, MeshIndex[x, y]);
-                case PASSABLE:
                     return OccupiedColor(Color.Blue, MeshIndex[x, y]);
+                case PASSABLE:
+                    return OccupiedColor(Color.Green, MeshIndex[x, y]);
                 case BLOCKED:
                     return OccupiedColor(Color.Olive, MeshIndex[x, y]);
                 case MAYBE_BLOCKED:
                     return OccupiedColor(Color.Pink, MeshIndex[x, y]);
                 case BLOCKED_YELLOW:
                     return OccupiedColor(Color.Yellow, MeshIndex[x, y]);
-                case MAYBE_BLOCKED3:
+                case BLOCK_ORANGE:
                     return OccupiedColor(Color.Orange, MeshIndex[x, y]);
-                case MAYBE_BLOCKED4:
+                case BLOCK_PURPLE:
                     return OccupiedColor(Color.Orchid, MeshIndex[x, y]);
-                case MAYBE_BLOCKED5:
-                    return OccupiedColor(Color.Tomato, MeshIndex[x, y]);
                 case WATER_G:
                     return OccupiedColor(Color.CornflowerBlue, MeshIndex[x, y]);
                 case WATER_Z:
                     return OccupiedColor(Color.CornflowerBlue, MeshIndex[x, y]);
                 case TOO_LOW:
-                    return OccupiedColor(Color.Firebrick, MeshIndex[x, y]);
+                    return OccupiedColor(Color.Tomato, MeshIndex[x, y]);
                 case TOO_HIGH:
                     return OccupiedColor(Color.Firebrick, MeshIndex[x, y]);
             }
@@ -1018,7 +1415,7 @@ namespace PathSystem3D.Navigation
 
         private static Color OccupiedColor(Color c, CollisionIndex cIndex)
         {
-            return c;
+            //return c;
             if (cIndex != null)
             {
                 int dense = cIndex.OccupiedCount;
@@ -1187,6 +1584,10 @@ namespace PathSystem3D.Navigation
         readonly Vector3d GlobalEnd;
         readonly Vector3 Start;
         readonly Vector3 Size;
+
+#if USING_ODE  
+        readonly static Meshmerizer meshMerizer = new Meshmerizer();
+#endif
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -1204,13 +1605,23 @@ namespace PathSystem3D.Navigation
             OuterBounds.AddPoint(Start.X, Start.Y, Start.Z, Vector3.Zero);
             OuterBounds.AddPoint(endTop.X, endTop.Y, endTop.Z, Vector3.Zero);
             //TheSimZMinMaxLevel = new SimZMinMaxLevel(MinMaxLevel);
-            StepSize = 1f / POINTS_PER_METER;
+            StepSize = 1f/POINTS_PER_METER;
             _Max256 = XY256 - StepSize;
-            MAPSPACE = (int)XY256 * ((int)POINTS_PER_METER);
+            MAPSPACE = (int) XY256*((int) POINTS_PER_METER);
             SetMapSpace(MAPSPACE);
             if (Size.X != Size.Y) throw new Exception("X and Y must be the same for " + this);
+#if USING_ODE            
+            odeScene = (OdeScene) odePhysics.GetScene(RegionName);
+            odeScene.Initialise(meshMerizer, null);
+            float[] _heightmap = new float[256*256];
+            for (int i = 0; i < (256*256); i++)
+            {
+                _heightmap[i] = 21f;
+            }
+            odeScene.SetTerrain(_heightmap);
+#endif
             //CreateDefaultRoutes();
-          //  CurrentPlane = new CollisionPlane(MAPSPACE,MAPSPACE,0);
+            //  CurrentPlane = new CollisionPlane(MAPSPACE,MAPSPACE,0);
         }
 
 
@@ -1748,7 +2159,8 @@ namespace PathSystem3D.Navigation
                 if (_PathStores.TryGetValue(loc,out PS)) {
                     return PS;
                 }
-                return new SimPathStore(null, loc, new Vector3d(loc.X * 256, loc.Y * 256, 0), new Vector3(256, 256, float.MaxValue));
+                PS = new SimPathStore(loc.ToString(), loc, new Vector3d(loc.X * 256, loc.Y * 256, 0), new Vector3(256, 256, float.MaxValue));
+                return PS;
             }
         }
 
@@ -1801,7 +2213,7 @@ namespace PathSystem3D.Navigation
 
         internal CollisionPlane CreateMoverPlane(float Z)
         {
-            CollisionPlane found = new CollisionPlane(MAPSPACE, MAPSPACE, Z-0.1f, Z + 0.499f, this);
+            CollisionPlane found = new CollisionPlane(MAPSPACE, MAPSPACE, Z, this);
             Console.WriteLine("Created matrix[{0}] {1} for {2}", Z, found, this);
             lock (Matrixes) Matrixes.Add(found);
             if (PathFinder != null) PathFinder.OnNewCollisionPlane(found);

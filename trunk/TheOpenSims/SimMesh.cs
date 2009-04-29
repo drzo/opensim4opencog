@@ -1,3 +1,4 @@
+//#define TRIANGE_MESH
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -5,11 +6,15 @@ using PathSystem3D.Navigation;
 using OpenMetaverse;
 //using THIRDPARTY.OpenSim.Framework;
 //using THIRDPARTY.OpenSim.Region.Physics.Manager;
+using THIRDPARTY.OpenSim.Framework;
+using THIRDPARTY.OpenSim.Region.Physics.Manager;
 using THIRDPARTY.OpenSim.Region.Physics.Meshing;
 using THIRDPARTY.PrimMesher;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
-
+#if USING_ODE  
+using THIRDPARTY.OpenSim.Region.Physics.OdePlugin;
+#endif
 namespace PathSystem3D.Mesher
 {
 
@@ -27,6 +32,15 @@ namespace PathSystem3D.Mesher
 
     public class SimMesh : MeshedObject
     {
+
+
+        private Mesh mesh;
+        private PhysicsVector LastPosition;
+        private PhysicsVector LastSize;
+        private Quaternion LastRotation;      
+#if USING_ODE  
+        private OdePrim physicsActor;
+#endif
         public SimPosition RootObject;
         public Primitive Prim;
 
@@ -79,21 +93,26 @@ namespace PathSystem3D.Mesher
 
         private void AddPos(Vector3 offset)
         {
-#if TRIANGE_MESH
-            Vertex v3 = new Vertex(offset.X, offset.Y, offset.Z);
-            foreach (Triangle tri in triangles)
-            {
-                tri.v1 = tri.v1 + v3;
-                tri.v2 = tri.v2 + v3;
-                tri.v3 = tri.v3 + v3;
-            } 
-#endif
+//#if TRIANGE_MESH
+//            Vertex v3 = new Vertex(offset.X, offset.Y, offset.Z);
+//            foreach (Triangle tri in triangles)
+//            {
+//                tri.v1 = tri.v1 + v3;
+//                tri.v2 = tri.v2 + v3;
+//                tri.v3 = tri.v3 + v3;
+//            } 
+//#endif
 
             OuterBox.AddPos(offset);
             foreach (Box3Fill B in InnerBoxes)
             {
                 B.AddPos(offset);
             }
+        }
+        
+        public String GetObjectName()
+        {
+            return RootObject.ToString();
         }
 
         public override bool Update(SimPosition simObject)
@@ -103,6 +122,11 @@ namespace PathSystem3D.Mesher
             Quaternion Rotation = simObject.GetSimRotation();
             Vector3 Scale = Prim.Scale;//.GetSimScale();
             Vector3 Position = simObject.GetSimPosition();
+
+            LastSize = new PhysicsVector(1, 1, 1); // we scaled the PrimMesh already!
+            LastRotation = Quaternion.Identity;  // we rotated the PrimMesh already!
+            LastPosition = ToPhysicsVector(Position); // we hadn't done position though
+            //pbs.
 
             //List<Mesh> MeshList = new List<Mesh>();
 
@@ -118,7 +142,13 @@ namespace PathSystem3D.Mesher
             //}
 
             // Add High PrimMesh (IdealistViewer code)
-            Mesh mesh = PrimitiveToMesh(Prim, Scale, Rotation);
+
+            mesh = PrimitiveToMesh(Prim, Scale, Rotation);
+            
+#if USING_ODE  
+            if (!RootObject.IsPassable)
+                physicsActor = GetPhysicsActor();
+#endif
             //MeshList.Add(mesh);
 
 
@@ -141,11 +171,37 @@ namespace PathSystem3D.Mesher
             OuterBox.Reset();
             CalcBoxesFromMeshes(mesh, InnerBoxes);
             // int b = InnerBoxes.Count;
-            InnerBoxes = Box3Fill.Simplify((List<Box3Fill>)InnerBoxes);
+           // InnerBoxes = Box3Fill.Simplify((List<Box3Fill>)InnerBoxes);
             // Console.Write("Simplfy mesh {0} -> {1} ", b, InnerBoxes.Count);
             AddPos(Position);
+            if (!USE_ODE) mesh.AddPos(LastPosition);
+#if TRIANGE_MESH
+            triangles = mesh.triangles;
+#endif
             return true;
         }
+
+#if USING_ODE  
+        public OdePrim GetPhysicsActor()
+        {
+            if (!USE_ODE) return null;
+            if (pbs == null) pbs = mesh.PBS;
+            if (physicsActor == null)
+            {
+                physicsActor = (OdePrim)
+                               PathStore.odeScene.AddPrim(GetObjectName(), LastPosition, LastSize, LastRotation, mesh,
+                                                          pbs, false);
+                physicsActor.UnSubscribeEvents();
+            }
+            return physicsActor;
+        }
+#endif
+
+        static PhysicsVector ToPhysicsVector(Vector3 p)
+        {
+            return new PhysicsVector(p.X,p.Y,p.Z);
+        }
+
         public static bool FastAndImpercise = false;
         /// <summary>
         /// UseExtremeDetailSize is compared to Scale X/Y/Z added together and if greater will try to
@@ -160,7 +216,7 @@ namespace PathSystem3D.Mesher
 #if TRIANGE_MESH
             triangles = M.triangles;     
 #endif
-            SimPathStore.TrianglesToBoxes(M.triangles, OuterBox, padXYZ, InnerBoxes);
+            SimPathStore.TrianglesToBoxes(M.triangles, OuterBox, PadXYZ, InnerBoxes);
         }
 
 
@@ -178,7 +234,7 @@ namespace PathSystem3D.Mesher
         /// <returns></returns>
         public static Mesh PrimMeshToMesh(PrimMesh meshIn)
         {
-            Mesh mesh = new Mesh();
+            Mesh mesh = new Mesh(meshIn.PBS);
             mesh.primMesh = meshIn;
             {
                 List<Coord> coords = meshIn.coords;
@@ -204,6 +260,7 @@ namespace PathSystem3D.Mesher
 
 
         static Dictionary<UUID, SculptMesh> SculptedMeshes = new Dictionary<UUID, SculptMesh>();
+        private PrimitiveBaseShape pbs;
 
         public static Mesh PrimitiveToMesh(Primitive primitive, Vector3 Scale, Quaternion rot)
         {
@@ -225,7 +282,7 @@ namespace PathSystem3D.Mesher
                     SM = SM.Copy();
                     SM.AddRot(QuaternionToQuat(rot));
                     SM.Scale(Scale.X, Scale.Y, Scale.Z);
-                    return ToMesh(SM.coords, SM.faces, SM.viewerFaces, primitive.Type == PrimType.Sphere);
+                    return ToMesh(PrimToBaseShape(primitive), SM.coords, SM.faces, SM.viewerFaces, primitive.Type == PrimType.Sphere);
                 }
             }
 
@@ -247,12 +304,14 @@ namespace PathSystem3D.Mesher
             PrimMesh primMesh = ConstructionDataToPrimMesh(primitive.PrimData, detail, UseExtremeDetail ? 2 : 1);
             primMesh.Scale(Scale.X, Scale.Y, Scale.Z);
             if (rot!=Quaternion.Identity) primMesh.AddRot(QuaternionToQuat(rot));
-            return PrimMeshToMesh(primMesh);
+            Mesh m = PrimMeshToMesh(primMesh);
+            m.PBS = PrimToBaseShape(primitive);
+            return m;
         }
 
-        public static Mesh ToMesh(List<Coord> coords, List<Face> faces, List<ViewerFace> viewerFaces, bool isSphere)
+        public static Mesh ToMesh(PrimitiveBaseShape pbs, List<Coord> coords, List<Face> faces, List<ViewerFace> viewerFaces, bool isSphere)
         {
-            Mesh mesh = new Mesh();
+            Mesh mesh = new Mesh(pbs);
 
             int numCoords = coords.Count;
             int numFaces = faces.Count;
@@ -359,6 +418,7 @@ namespace PathSystem3D.Mesher
         {
             bool UseExtremeDetail = Scale.X + Scale.Y + Scale.Z > UseExtremeDetailSize;
             PrimMesh mesh = ConstructionDataToPrimMesh(thePrim.PrimData, detail, UseExtremeDetail ? 2 : 1);
+            mesh.PBS = PrimToBaseShape(thePrim);
             mesh.Scale(Scale.X, Scale.Y, Scale.Z);
             // if (rot != Quaternion.Identity)                
             mesh.AddRot(QuaternionToQuat(rot));
@@ -511,7 +571,7 @@ namespace PathSystem3D.Mesher
         }
 
 
-        internal void UpdateOccupied()
+        public override void UpdateOccupied()
         {
             base.UpdatePathOccupied(GetPathStore());
             //throw new NotImplementedException();
@@ -521,6 +581,7 @@ namespace PathSystem3D.Mesher
         {
             base.RemoveCollisions(GetPathStore());
         }
+
         public override bool xyMaxZ(float x, float y, float z, out float zout)
         {
             float izout;
@@ -530,6 +591,154 @@ namespace PathSystem3D.Mesher
             return b;
 
         }
+
+        /// <summary>
+        /// [05:31] <AFrisby> dmiles_afk, search my blog, I wrote a function for converting OpenMetaverse.Primitive to OpenSimulator.SceneObjectGroup
+        /// 
+        /// from: http://www.adamfrisby.com/blog/2008/10/code-snippet-converting-openmetaverseprimitive-to-opensimulatorsceneobjectpart/
+        /// </summary>
+        /// <param name="orig"></param>
+        /// <returns></returns>
+        static public PrimitiveBaseShape PrimToBaseShape(Primitive orig)
+        {
+            //bool root = orig.ParentID == 0;
+
+            //SceneObjectPart sop = new SceneObjectPart();
+            //sop.LastOwnerID = orig.OwnerID;
+            //sop.OwnerID = orig.OwnerID;
+            //sop.GroupID = orig.GroupID;
+
+            //sop.CreatorID = orig.Properties.CreatorID;
+
+            //sop.OwnershipCost = orig.Properties.OwnershipCost;
+            //sop.ObjectSaleType = (byte)orig.Properties.SaleType;
+            //sop.SalePrice = orig.Properties.SalePrice;
+            //sop.CreationDate = (int)Utils.DateTimeToUnixTime(orig.Properties.CreationDate);
+
+            //// Special   
+            //sop.ParentID = 0;
+
+            //sop.OwnerMask = (uint)orig.Properties.Permissions.OwnerMask;
+            //sop.NextOwnerMask = (uint)orig.Properties.Permissions.NextOwnerMask;
+            //sop.GroupMask = (uint)orig.Properties.Permissions.GroupMask;
+            //sop.EveryoneMask = (uint)orig.Properties.Permissions.EveryoneMask;
+            //sop.BaseMask = (uint)orig.Properties.Permissions.BaseMask;
+
+            //sop.ParticleSystem = orig.ParticleSys.GetBytes();
+
+            //// OS only   
+            //sop.TimeStampFull = 0;
+            //sop.TimeStampLastActivity = 0;
+            //sop.TimeStampTerse = 0;
+
+            //// Not sure nessecary   
+            //sop.UpdateFlag = 2;
+
+            //sop.InventorySerial = 0;
+            //sop.UUID = orig.ID;
+            //sop.LocalId = orig.LocalID;
+            //sop.Name = orig.Properties.Name;
+            //sop.Flags = orig.Flags;
+            //sop.Material = 0;
+            //sop.RegionHandle = orig.RegionHandle;
+
+            //sop.GroupPosition = orig.Position;
+
+            //if (!root)
+            //    sop.OffsetPosition = orig.Position;
+            //else
+            //    sop.OffsetPosition = Vector3.Zero;
+
+            //sop.RotationOffset = orig.Rotation;
+            //sop.Velocity = orig.Velocity;
+            //sop.RotationalVelocity = Vector3.Zero;
+            //sop.AngularVelocity = Vector3.Zero;
+            //sop.Acceleration = Vector3.Zero;
+
+            //sop.Description = orig.Properties.Description;
+            //sop.Color = Color.White;
+            //sop.Text = orig.Text;
+            //sop.SitName = orig.Properties.SitName;
+            //sop.TouchName = orig.Properties.TouchName;
+            //sop.ClickAction = (byte)orig.ClickAction;
+
+            //sop.PayPrice = new int[1];
+
+            PrimitiveBaseShape sopShape = new PrimitiveBaseShape(true);
+            //sopShape.Scale = orig.Scale;
+            sopShape.FlexiEntry = false;
+            if (orig.Flexible != null)
+            {
+                sopShape.FlexiDrag = orig.Flexible.Drag;
+                sopShape.FlexiEntry = false;
+                sopShape.FlexiForceX = orig.Flexible.Force.X;
+                sopShape.FlexiForceY = orig.Flexible.Force.Y;
+                sopShape.FlexiForceZ = orig.Flexible.Force.Z;
+                sopShape.FlexiGravity = orig.Flexible.Gravity;
+                sopShape.FlexiSoftness = orig.Flexible.Softness;
+                sopShape.FlexiTension = orig.Flexible.Tension;
+                sopShape.FlexiWind = orig.Flexible.Wind;
+            }
+
+            Primitive.ConstructionData origPrimData = orig.PrimData;
+
+            switch (origPrimData.ProfileHole)
+            {
+                case HoleType.Circle:
+                    sopShape.HollowShape = HollowShape.Circle;
+                    break;
+                case HoleType.Square:
+                    sopShape.HollowShape = HollowShape.Square;
+                    break;
+                case HoleType.Triangle:
+                    sopShape.HollowShape = HollowShape.Triangle;
+                    break;
+                default:
+                case HoleType.Same:
+                    sopShape.HollowShape = HollowShape.Same;
+                    break;
+            }
+
+            sopShape.LightEntry = false;
+            if (orig.Light != null)
+            {
+                sopShape.LightColorA = orig.Light.Color.A;
+                sopShape.LightColorB = orig.Light.Color.B;
+                sopShape.LightColorG = orig.Light.Color.G;
+                sopShape.LightColorR = orig.Light.Color.R;
+                sopShape.LightCutoff = orig.Light.Cutoff;
+                sopShape.LightEntry = false;
+                sopShape.LightFalloff = orig.Light.Falloff;
+                sopShape.LightIntensity = orig.Light.Intensity;
+                sopShape.LightRadius = orig.Light.Radius;
+            }
+
+            sopShape.PathBegin = Primitive.PackBeginCut(origPrimData.PathBegin);
+            sopShape.PathCurve = (byte)origPrimData.PathCurve;
+            sopShape.PathEnd = Primitive.PackEndCut(origPrimData.PathEnd);
+            sopShape.PathRadiusOffset = Primitive.PackPathTwist(origPrimData.PathRadiusOffset);
+            sopShape.PathRevolutions = Primitive.PackPathRevolutions(origPrimData.PathRevolutions);
+            sopShape.PathScaleX = Primitive.PackPathScale(origPrimData.PathScaleX);
+            sopShape.PathScaleY = Primitive.PackPathScale(origPrimData.PathScaleY);
+            sopShape.PathShearX = (byte)Primitive.PackPathShear(origPrimData.PathShearX);
+            sopShape.PathShearY = (byte)Primitive.PackPathShear(origPrimData.PathShearY);
+            sopShape.PathSkew = Primitive.PackPathTwist(origPrimData.PathSkew);
+            sopShape.PathTaperX = Primitive.PackPathTaper(origPrimData.PathTaperX);
+            sopShape.PathTaperY = Primitive.PackPathTaper(origPrimData.PathTaperY);
+            sopShape.PathTwist = Primitive.PackPathTwist(origPrimData.PathTwist);
+            sopShape.PathTwistBegin = Primitive.PackPathTwist(origPrimData.PathTwistBegin);
+            sopShape.PCode = (byte)origPrimData.PCode;
+            sopShape.ProfileBegin = Primitive.PackBeginCut(origPrimData.ProfileBegin);
+            sopShape.ProfileCurve = origPrimData.profileCurve;
+            sopShape.ProfileEnd = Primitive.PackEndCut(origPrimData.ProfileEnd);
+            sopShape.ProfileHollow = Primitive.PackProfileHollow(origPrimData.ProfileHollow);
+            sopShape.ProfileShape = (ProfileShape)(byte)origPrimData.ProfileCurve;
+
+            sopShape.Textures = orig.Textures;
+
+            return sopShape;
+        }
+
     }
 
 }
