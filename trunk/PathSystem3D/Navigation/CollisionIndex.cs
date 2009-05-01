@@ -468,7 +468,7 @@ namespace PathSystem3D.Navigation
             return _MeshedObjectIndexs;
         }
 
-        bool IsTimerTicking = false;
+        public bool IsTimerTicking = false;
         public void SetNodeQualityTimer(CollisionPlane CP, int value, int seconds)
         {
             byte oldValue = GetMatrix(CP);

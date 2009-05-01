@@ -14,19 +14,19 @@
 ; Login and Network events
 ;----------------------------------
  (def (on-login-fail  login description)
-  (block
+  (progn
     ;; (thisClient.output (@"fromLispExample: (on-login-fail {0} {1})" (str login)(str description)) )
     )
  )
 
 (def (on-login-success  login description)
-  (block
+  (progn
     ;; (thisClient.output (@"fromLispExample: (on-login-success {0} {1})" (str login)(str description)) )
     )
  )
 
  (def (on-network-disconnected reason message)
-  (block
+  (progn
     ;; (thisClient.output (@"fromLispExample: (on-network-disconnected {0} {1})" (str reason)(str message)) )
     )
  )
@@ -36,15 +36,17 @@
  ; have it perform a initial inworld tasks like wearing some clothes
  ;-------------------------------------
  (def (on-network-connected &opt reason message)
-  (block
+  (progn
     ;; (thisClient.output (@"fromLispExample: (on-network-connected )" ) )
     (thisClient.ExecuteCommand (@"say Hello World"))   
+    (thisClient.ExecuteCommand (@"thread appearance"))   
+    
 ;; Ghosted right now    (thisClient.ExecuteCommand (@"use HMG to wear"))
     )
  )
 
 (def (on-simulator-connected simulator)
-  (block
+  (progn
     ;; (thisClient.output (@"fromLispExample: (on-simulator-connected {0} )" (str simulator)) )
     )
  )
@@ -53,7 +55,7 @@
 ; Avatars and objects
 ;----------------------------------
 (def (on-new-avatar  avatar-name avatar-uuid)
-  (block
+  (progn
     ;; (thisClient.output (@"fromLispExample: (on-new-avatar {0} {1})" (str avatar-name)(str avatar-uuid)) )
     )
  )
@@ -65,7 +67,7 @@
     )
  )
 (def (on-new-foliage  foliage-name foliage-uuid foliage-description)
-  (block
+  (progn
     ;; (thisClient.output (@"fromLispExample: (on-new-prim {0} {1})" (str foliage-name)(str foliage-uuid)(str foliage-description)) )
     )
  )
@@ -87,7 +89,7 @@
     ; (thisClient.ExecuteCommand (@"{0}" (str message)))
   (if
    (notme agent)
-    ;; end this block
+    ;; end this progn
     (setj message (str message))
     ; (setj messageList (into nil (message.Split(" "))))     
     ; (when (member messageList wamo ) (thisClient.ExecuteCommand "say I just saw wamo"))
@@ -109,7 +111,7 @@
  
  ;  (on-instantmessage agent message) -> "(heard (agent) message)";
 (def (on-instantmessage agent message)
-  (block
+  (progn
     ;; (thisClient.output (@"fromLispExample: (heard-in-im {0} '{1}')" (str agent)(str message)) )
     )
  )
@@ -117,7 +119,7 @@
  
 ;  (on-meanCollision perp victim) -> "(collision (perp) (victim) )";
 (def (on-meanCollision perp victim)
-  (block
+  (progn
     ;; (thisClient.output (@"fromLispExample: (collision {0} {1})" (str perp)(str victim)) )
     )
  )
@@ -127,25 +129,25 @@
 ; on-self-look-target occurs when someone looks or mouses at the Cogbot avatar
 ;----------------------------------
  (def (on-self-look-target source description)
-  (block
+  (progn
     ;; (thisClient.output (@"fromLispExample: (on-self-look-target {0} {1})" (str source)(str description)) )
     )
  )
  
  (def (on-self-point-target source description)
-  (block
+  (progn
     ;; (thisClient.output (@"fromLispExample: (on-self-point-target {0} {1})" (str source)(str description)) )
     )
  )
 
  (def (on-avatar-point source dest description)
-  (block
+  (progn
     ;; (thisClient.output (@"fromLispExample: (on-avatar-point {0} {1} {2})" (str source)(str dest)(str description)) )
     )
  )
 
  (def (on-avatar-look source dest description)
-  (block
+  (progn
     ;; (thisClient.output (@"fromLispExample: (on-avatar-look {0} {1} {2})" (str source)(str dest)(str description)) )
     )
  )
@@ -155,21 +157,21 @@
 ;---------------------------------
 ;  (on-avatar-dist agent dist) -> "(distance (agent) distance)";
 (def (on-avatar-dist agent dist)
-  (block
+  (progn
     ;; (thisClient.output (@"fromLispExample: (distance-from {0} {1})" (str agent)(str dist)) )
     )
  )
 
 ;  (on-avatar-pos agent vector) -> "(position (agent) vector)";
 (def (on-avatar-pos agent vector)
-  (block
+  (progn
     ;; (thisClient.output (@"fromLispExample: (position {0} '{1}')" (str agent)(str vector)) )
     )
  )
 
 ;  (on-avatar-posture agent sitstand) -> "(posture (agent) sitstand)";
 (def (on-avatar-posture agent sitstand)
-  (block
+  (progn
     ;; (thisClient.output (@"fromLispExample: (posture {0} '{1}')" (str agent)(str sitstand)) )
     )
  )
@@ -187,7 +189,7 @@
 
 ;  (on-prim-dist primID dist) -> "(distance-from-prim primID distance)";
 (def (on-prim-dist primID dist)
-  (block
+  (progn
     ;; (thisClient.output (@"fromLispExample: (distance-from-prim {0} {1})" (str primID)(str dist)) )
     )
  )

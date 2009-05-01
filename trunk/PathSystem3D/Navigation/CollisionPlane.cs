@@ -53,7 +53,7 @@ namespace PathSystem3D.Navigation
             MaxXPt = xsize0 - 1;
             MaxYPt = ysize0 - 1;
             MinZ = minZ;
-            MaxZ = minZ + 5f;
+            MaxZ = minZ + 2.5f;
         }
 
         public float MinZ { get; private set; }
@@ -76,7 +76,7 @@ namespace PathSystem3D.Navigation
                 }
                 if ((MaxZ - MinZ) > 5)
                 {
-                    //throw new ArgumentException(String.Format("Resizing {0} > {1} > ", this, value));
+              //      throw new ArgumentException(String.Format("Resizing {0} > {1} > ", this, value));
                 }
             }
         }
@@ -400,29 +400,8 @@ namespace PathSystem3D.Navigation
                 {
                     for (int x = MaxXPt - 1; x > 0; x--)
                     {
-                        byte b = ToMatrix[x, y];
-                        if (SimPathStore.MaybeBlocked(b)) continue;
-                        //if (b != SimPathStore.STICKY_PASSABLE)
-                        {
-                            float ZLevel = Heights[x, y];
-                            float GLevel = GroundPlane[x, y];
-                            if (ZLevel < GLevel) ZLevel = GLevel;
-                            if (b != SimPathStore.STICKY_PASSABLE)
-                            {
-                                CollisionIndex W = MeshIndex[x, y];
-                                if (false && W != null)
-                                {
-                                    if (ZLevel < MinZ) ZLevel = MinZ;
-                                    if (ZLevel > MaxZ) ZLevel = MaxZ;
-                                    ToMatrix[x, y] = W.UpdateMatrix(this, ZLevel, ZLevel + 1.7f, Heights);
-                                    continue;
-                                }
-                                else
-                                {
-                                    ToMatrix[x, y] = DefaultCollisionValue(x, y, ZLevel, b, Heights,MeshIndex);
-                                }
-                            }
-                        }
+                        TersePlaneUpdate(ToMatrix, x, y, Heights, GroundPlane, MeshIndex, MinZ);
+
                     }
                 }
                // cutNarrows = false;
@@ -445,6 +424,31 @@ namespace PathSystem3D.Navigation
             }
         }
 
+        private void TersePlaneUpdate(byte[,] ToMatrix, int x, int y, float[,] Heights, float[,] GroundPlane, CollisionIndex[,] MeshIndex, float minZ)
+        {
+            byte b = ToMatrix[x, y];
+            if (SimPathStore.MaybeBlocked(b)) return;
+            //if (b != SimPathStore.STICKY_PASSABLE)
+            {
+                float ZLevel = Heights[x, y];
+                float GLevel = GroundPlane[x, y];
+                if (ZLevel < GLevel) ZLevel = GLevel;
+                if (b != SimPathStore.STICKY_PASSABLE)
+                {
+                    CollisionIndex W = MeshIndex[x, y];
+                    if (false && W != null)
+                    {
+                        if (ZLevel < minZ) ZLevel = minZ;
+                        if (ZLevel > MaxZ) ZLevel = MaxZ;
+                        ToMatrix[x, y] = W.UpdateMatrix(this, ZLevel, ZLevel + 1.7f, Heights);
+                        return;
+                    }
+                    else
+                    {
+                    }
+                }
+            }
+        }
         static bool DiffLessThan(float A, float B, float D)
         {
             return Math.Abs(A - B) <= D;
@@ -562,9 +566,9 @@ namespace PathSystem3D.Navigation
         private void RenderGroundPlane()
         {
             float LowestCared = MinZ - 2f;
+            Console.WriteLine("\nStart RenderGroundPlane: {0} for {1} LowestCared={2}", PathStore, this, LowestCared);
             float[,] heights = HeightMap;
             float[,] GLevels = PathStore.GroundPlane;
-            Console.WriteLine("\nStart RenderGroundPlane: {0} for {1} LowestCared={2}", PathStore, this, LowestCared);
             for (int y = MaxYPt; y >= 0; y--)
             {
                 for (int x = MaxXPt; x >= 0; x--)

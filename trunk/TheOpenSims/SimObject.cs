@@ -130,7 +130,7 @@ namespace cogbot.TheOpenSims
 
         public virtual bool IsLocal()
         {
-            if (!IsRoot()) return false;
+            if (!IsRoot) return false;
             return true;// WorldSystem.client.Network.CurrentSim == GetSimRegion().TheSimulator;
         }
 
@@ -163,7 +163,7 @@ namespace cogbot.TheOpenSims
 
         public bool SetObjectPosition(Vector3 localPos)
         {
-            if (!IsRoot())
+            if (!IsRoot)
             {
                 Vector3 start = GetSimPosition();
                 Vector3 offset = localPos - start;
@@ -198,7 +198,7 @@ namespace cogbot.TheOpenSims
         {
             Quaternion parentRot = Quaternion.Identity;
 
-            if (!IsRoot())
+            if (!IsRoot)
             {
                 parentRot = Parent.GetSimRotation();
             }
@@ -212,7 +212,7 @@ namespace cogbot.TheOpenSims
 
         public bool SetObjectRotation(Quaternion localPos)
         {
-            if (!IsRoot())
+            if (!IsRoot)
             {
                 Quaternion start = GetSimRotation();
                 Quaternion offset = localPos / start;
@@ -291,8 +291,8 @@ namespace cogbot.TheOpenSims
                 IsPassable = false;
                 return _Passable;
                 // unused for now
-                if (IsRoot() || true) return false;
-                if (!IsRoot() && IsRegionAttached()) return Parent.IsPassable;
+                if (IsRoot || true) return false;
+                if (!IsRoot && IsRegionAttached()) return Parent.IsPassable;
                 if (Parent == null) return true;
                 return Parent.IsPassable;
             }
@@ -310,8 +310,8 @@ namespace cogbot.TheOpenSims
             get
             {
                 if (MadePhantom) return true;
-                if (IsRoot() || true) return (Prim.Flags & PrimFlags.Phantom) == PrimFlags.Phantom;
-                if (!IsRoot() && IsRegionAttached()) return Parent.IsPhantom;
+                if (IsRoot || true) return (Prim.Flags & PrimFlags.Phantom) == PrimFlags.Phantom;
+                if (!IsRoot && IsRegionAttached()) return Parent.IsPhantom;
                 if (Parent == null) return true;
                 return Parent.IsPhantom;
             }
@@ -336,7 +336,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                if (!IsRoot()) return Parent.IsPhysical;
+                if (!IsRoot) return Parent.IsPhysical;
                 return (Prim.Flags & PrimFlags.Physics) == PrimFlags.Physics;
             }
             set
@@ -519,7 +519,7 @@ namespace cogbot.TheOpenSims
             bool b = AttachedChildren.AddTo(simObject);
             if (b)
             {
-                if (!IsTyped())
+                if (!IsTyped)
                 {// borrow from child?
                     // UpdateProperties(simObject.thePrim.Properties);
                 }
@@ -528,25 +528,50 @@ namespace cogbot.TheOpenSims
 
         }
 
-        public bool IsTyped()
+        public bool IsTyped
         {
-            if (WasKilled) return false;
-            return ObjectType.IsComplete;
+            get
+            {
+                if (WasKilled) return false;
+                return ObjectType.IsComplete;
+            }
         }
 
-        public virtual bool IsRoot()
+        public virtual bool IsRoot
         {
-            if (WasKilled) return false;
-            if (Prim.ParentID == 0) return true;
-            _Parent = Parent;
-            return false;
+            get
+            {
+                if (WasKilled) return false;
+                if (Prim.ParentID == 0) return true;
+                _Parent = Parent;
+                return false;
+            }
         }
 
         public virtual string DebugInfo()
         {
             string str = ToString();
-            if (Prim.ParentID != 0)
-                return Prim.ParentID + " " + str;
+            IList<SimTypeUsage> TUs = GetTypeUsages();
+            if (TUs.Count>0)
+            {
+                str += "\n type usages:";
+                foreach (SimTypeUsage v in TUs)
+                {
+                    str += "\n   " + v;
+                }
+            }
+            string sn;
+            sn = SitName;
+            if (sn != "SitOnObject")
+            {
+                str += "sit: " + sn;
+            }
+            sn = TouchName;
+            if (sn != "TouchTheObject")
+            {
+                str += "touch: " + sn;
+            }
+
             return str;
         }
 
@@ -581,12 +606,14 @@ namespace cogbot.TheOpenSims
             List<string> list = new List<string>();
             if (Prim.Properties != null)
             {
-                //  if (thePrim.Properties.TextName != "")
-                list.Add("grab");
-                //   if (thePrim.Properties.SitName != "")
-                list.Add("sit");
+
+                if (IsTouchDefined) list.Add("grab");
+                if (IsSitDefined) list.Add("sit");
                 PermissionMask mask = Prim.Properties.Permissions.EveryoneMask;
-                if (Prim.OwnerID == avatar.theAvatar.ID) { mask = Prim.Properties.Permissions.OwnerMask; }
+                if (Prim.OwnerID == avatar.theAvatar.ID)
+                {
+                    mask = Prim.Properties.Permissions.OwnerMask;
+                }
                 PermissionMask result = mask | Prim.Properties.Permissions.BaseMask;
                 if ((result & PermissionMask.Copy) != 0)
                     list.Add("copy");
@@ -645,7 +672,7 @@ namespace cogbot.TheOpenSims
         public virtual void UpdateOccupied()
         {
             if (!IsRegionAttached()) return;
-            if (!IsRoot())
+            if (!IsRoot)
             {
                 // dont mesh armor
                 if (Parent is SimAvatar)
@@ -677,7 +704,7 @@ namespace cogbot.TheOpenSims
                 changed = true;
                 IsPhantom = false;
             }
-            if (!IsRoot())
+            if (!IsRoot)
             {
                 SimObject P = Parent;
                 if (P.Prim != this.Prim)
@@ -698,7 +725,7 @@ namespace cogbot.TheOpenSims
                 return false;
             }
 
-            if (!IsRoot())
+            if (!IsRoot)
             {
                 SimObject P = Parent;
                 if (P.Prim != this.Prim)
@@ -825,7 +852,7 @@ namespace cogbot.TheOpenSims
         public bool IsRegionAttached()
         {
             if (WasKilled) return false;
-            if (IsRoot()) return true;
+            if (IsRoot) return true;
             if (_Parent == null)
             {
                 Simulator simu = GetSimulator();
@@ -1253,11 +1280,10 @@ namespace cogbot.TheOpenSims
 
         #region SimObject Members
 
-        public virtual void AddCanBeTargetOf(string sit, params object[] args)
+        public virtual void AddCanBeTargetOf(string SitOnObject, params object[] args)
         {
-
+            ObjectType.AddSuperType(SimTypeSystem.CreateObjectUse(SitOnObject));
         }
-
 
         public virtual void AddPossibleAction(string sit, params object[] args)
         {
@@ -1287,6 +1313,49 @@ namespace cogbot.TheOpenSims
             Array.Copy(args,p,o,0,newLen);
             return o;
         }
+        #endregion
+
+        #region SimObject Members
+
+
+        public string GetSimVerb()
+        {
+            string sn = Prim.Properties.TouchName;
+            if (!String.IsNullOrEmpty(sn)) return sn;
+            sn = ObjectType.GetTouchName();
+            if (!String.IsNullOrEmpty(sn)) return sn;
+            sn = Prim.Properties.SitName;
+            if (!String.IsNullOrEmpty(sn)) return sn;
+            sn = ObjectType.GetSitName();
+            if (!String.IsNullOrEmpty(sn)) return sn;
+            return null;
+        }
+
+
+        public string SitName
+        {
+            get
+            {
+                string sn = Prim.Properties.SitName;
+                if (!String.IsNullOrEmpty(sn)) return sn;
+                sn = ObjectType.GetSitName();
+                if (!String.IsNullOrEmpty(sn)) return sn;
+                return "SitOnObject";
+            }
+        }
+
+        public string TouchName
+        {
+            get
+            {
+                string sn = Prim.Properties.TouchName;
+                if (!String.IsNullOrEmpty(sn)) return sn;
+                sn = ObjectType.GetTouchName();
+                if (!String.IsNullOrEmpty(sn)) return sn;
+                return "TouchTheObject";
+            }
+        }
+
         #endregion
     }
     public interface SimObject : SimPosition, SimMover, BotMentalAspect
@@ -1323,13 +1392,13 @@ namespace cogbot.TheOpenSims
         //inherited from SimPosition: bool IsPassable { get; set; }
         bool IsPhantom { get; set; }
         bool IsPhysical { get; set; }
-        bool IsRoot();
+        bool IsRoot { get; }
         bool IsSculpted { get; }
         bool IsSitDefined { get; }
         bool IsTouchDefined { get; }
         Primitive Prim { get; }
         Box3Fill OuterBox { get; }
-        bool IsTyped();
+        bool IsTyped { get; }
         SimObjectType IsTypeOf(SimObjectType superType);
         bool MakeEnterable(PathSystem3D.Navigation.SimMover actor);
         bool Matches(string name);
@@ -1361,5 +1430,7 @@ namespace cogbot.TheOpenSims
         void AddPossibleAction(string textualActionName, params object[] args);
 
         void AddCanBeTargetOf(string textualActionName, params object[] args);
+
+        string SitName { get; }
     }
 }

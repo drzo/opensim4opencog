@@ -627,6 +627,17 @@ namespace cogbot.TheOpenSims
             return type;
         }
 
+        static public SimTypeUsage CreateTypeUsage(string classname, params object[] parseStr)
+        {
+            if (parseStr.Length == 1 && parseStr[0] is object[]) parseStr = (object[])parseStr[0];
+            SimObjectType type = GetObjectType(classname);
+            type.AddSuperType(USEABLE);
+            type.IsUseType = true;
+            SimTypeUsage usage = type.CreateObjectUsage(classname);
+            type.ParseAffect(usage, parseStr);
+            return usage;
+        }
+
         static public SimObjectType CreateObjectType(string aspectName, Cons parseStr)
         {
             return CreateObjectType(aspectName, ConsParams(parseStr));

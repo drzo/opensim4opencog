@@ -18,6 +18,8 @@ namespace cogbot.Listeners
 
     public class WorldObjects : DebugAllEvents
     {
+        public static bool CanUseSit = true;
+
         public static implicit operator GridClient(WorldObjects m)
         {
             return m.client.gridClient;
@@ -226,19 +228,19 @@ namespace cogbot.Listeners
         public float buildingSize = 5;
         public List<ObjectHeuristic> objectHeuristics;
         public Dictionary<UUID, List<Primitive>> primGroups;
-        public Object newLock = new Object();
-        public Dictionary<uint, OSDMap> lastOSD = new Dictionary<uint, OSDMap>();
+        //public Object newLock = new Object();
+        readonly public Dictionary<uint, OSDMap> lastOSD = new Dictionary<uint, OSDMap>();
 
-        static bool maintainUpdates = false;
-        static Dictionary<UUID, ObjectUpdate> LastObjectUpdate = new Dictionary<UUID, ObjectUpdate>();
-        static Dictionary<UUID, ObjectUpdate> LastObjectUpdateDiff = new Dictionary<UUID, ObjectUpdate>();
-        static Dictionary<Avatar, List<UUID>> avatarAminsSent = new Dictionary<Avatar, List<UUID>>();
-        static Dictionary<Avatar, UUID> avatarAminCurrent = new Dictionary<Avatar, UUID>();
+        public static bool MaintainObjectUpdates = false;
+        readonly static Dictionary<UUID, ObjectUpdate> LastObjectUpdate = new Dictionary<UUID, ObjectUpdate>();
+        readonly static Dictionary<UUID, ObjectUpdate> LastObjectUpdateDiff = new Dictionary<UUID, ObjectUpdate>();
+        readonly static Dictionary<Avatar, List<UUID>> AvatarAminsSent = new Dictionary<Avatar, List<UUID>>();
+        readonly static Dictionary<Avatar, UUID> AvatarAminCurrent = new Dictionary<Avatar, UUID>();
         //Dictionary<UUID, UUID> texturesFinished = new Dictionary<UUID, UUID>();
-        static Dictionary<Simulator, List<uint>> primsSelected = new Dictionary<Simulator, List<uint>>();
-        static Dictionary<Simulator, List<uint>> primsSelectedOutbox = new Dictionary<Simulator, List<uint>>();
+        readonly static Dictionary<Simulator, List<uint>> primsSelected = new Dictionary<Simulator, List<uint>>();
+        readonly static Dictionary<Simulator, List<uint>> primsSelectedOutbox = new Dictionary<Simulator, List<uint>>();
 
-        static object WorldObjectsMasterLock =   new object();
+        readonly static object WorldObjectsMasterLock = new object();
         public WorldObjects(BotClient client)
             : base(client)
         {
@@ -251,6 +253,7 @@ namespace cogbot.Listeners
             {
                 if (Master == null) Master = this;
 
+                //new DebugAllEvents(client);
 
                 primGroups = new Dictionary<UUID, List<Primitive>>();
 
@@ -664,11 +667,11 @@ namespace cogbot.Listeners
                     // currents.Add(key);
                     names.Add(GetAnimationName(key));
                 });
-            lock (avatarAminCurrent)
+            lock (AvatarAminCurrent)
             {
                 String newName = GetAnimationName(mostCurrentAnim);
                 UUID oldAnim;
-                if (avatarAminCurrent.TryGetValue(avatar,out oldAnim))
+                if (AvatarAminCurrent.TryGetValue(avatar,out oldAnim))
                 {
                     if (oldAnim != mostCurrentAnim)
                     {
@@ -685,10 +688,10 @@ namespace cogbot.Listeners
                     SendNewEvent("On-Object-Animation", avatar, newName);
                 }
             }
-            avatarAminCurrent[avatar] = mostCurrentAnim;
+            AvatarAminCurrent[avatar] = mostCurrentAnim;
 
 
-            if (avatarAminsSent.ContainsKey(avatar))
+            if (AvatarAminsSent.ContainsKey(avatar))
             {
 
             }
@@ -818,7 +821,7 @@ namespace cogbot.Listeners
             if (prim.ID != UUID.Zero)
             {
                 GetSimObject(prim, simulator).ResetPrim(prim);
-                if (maintainUpdates)
+                if (MaintainObjectUpdates)
                     LastObjectUpdate[prim.ID] = updatFromPrim(prim);
             }
             // Make an intial "ObjectUpdate" for later diffing
@@ -893,6 +896,7 @@ namespace cogbot.Listeners
             {
                 SimObject updateMe = GetSimObject(prim, simulator);
                 updateMe.UpdateProperties(props);
+                //Debug("UpdateProperties: {0}", updateMe.DebugInfo());
             }
             describePrimToAI(prim, simulator);
         }
@@ -902,7 +906,7 @@ namespace cogbot.Listeners
             return;
            //
             //Objects_OnNewPrim(simulator, prim, regionHandle, timeDilation);
-           GetSimObject(prim, simulator);//.IsAttachment = true;
+            GetSimObject(prim, simulator);//.IsAttachment = true;
            // base.Objects_OnNewAttachment(simulator, prim, regionHandle, timeDilation);
         }
 
@@ -985,13 +989,13 @@ namespace cogbot.Listeners
                 }
             }
 
-            if (!maintainUpdates) return;
+            if (!MaintainObjectUpdates) return;
             lock (updateQueue) updateQueue.Enqueue(() => Objects_OnObjectUpdated1(simulator, update, regionHandle, timeDilation));
         }
 
         public void Objects_OnObjectUpdated1(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
         {
-            if (!maintainUpdates) return;
+            if (!MaintainObjectUpdates) return;
             // base.Objects_OnObjectUpdated(simulator, update, regionHandle, timeDilation);
             Primitive objectUpdated = GetPrimitive(update.LocalID, simulator);
             //Debug("timeDilation " + timeDilation);
@@ -1016,7 +1020,7 @@ namespace cogbot.Listeners
                     // bool needsOsdDiff = false; //for debugging should be false otherwise
 
                     // Make a Last Object Update from the Primitive if we knew nothing about it
-                    if (maintainUpdates)
+                    if (MaintainObjectUpdates)
                     {
                         lock (LastObjectUpdate) if (!LastObjectUpdate.ContainsKey(objectUpdated.ID))
                             {
@@ -1065,7 +1069,7 @@ namespace cogbot.Listeners
                         }
                         // Call ISimObject Update the Previous object update will be saved in the "lastObjectUpdate[objectUpdated.ID]"
                         //Delegate d= new delegate()
-                        if (maintainUpdates)
+                        if (MaintainObjectUpdates)
                         {
                             ObjectUpdate TheDiff = default(ObjectUpdate);
                             lock (LastObjectUpdateDiff)
@@ -1229,11 +1233,11 @@ namespace cogbot.Listeners
             SimObject oldSit = GetSimObject(oldSeat, simulator);
             if (user!=null)
             {
-                if (newSit != null) user.AddPossibleAction("sit", newSit);
-                if (oldSit != null) user.AddPossibleAction("sit", oldSit);
+                if (newSit != null) user.AddPossibleAction(newSit.SitName, newSit);
+                if (oldSit != null) user.AddPossibleAction(oldSit.SitName, oldSit);
             }
-            if (newSit != null) newSit.AddCanBeTargetOf("sit");
-            if (oldSit != null) oldSit.AddCanBeTargetOf("sit");
+            if (newSit != null) newSit.AddCanBeTargetOf(newSit.SitName);
+            if (oldSit != null) oldSit.AddCanBeTargetOf(oldSit.SitName);
         }
 
         public SimObject GetSimObject(uint sittingOn, Simulator simulator)
@@ -2271,7 +2275,7 @@ namespace cogbot.Listeners
             foreach (SimObject obj in GetAllSimObjects())
             {
                 if (obj != except)
-                    if (!(rootOnly && !obj.IsRoot() && !obj.IsTyped()))
+                    if (!(rootOnly && !obj.IsRoot && !obj.IsTyped))
                         if (obj.IsRegionAttached() && Vector3d.Distance(obj.GetWorldPosition(), here) <= maxDistance)
                             nearby.Add(obj);
             };
