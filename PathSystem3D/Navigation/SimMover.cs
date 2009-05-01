@@ -51,6 +51,7 @@ namespace PathSystem3D.Navigation
         public bool UseSkipping = false;
         public bool UseReverse = false;
         public abstract SimMoverState Goto();
+        public int completedAt = 0;
 
         public SimAbstractMover(SimMover mover, SimPosition finalGoal, double finalDistance)
         {
@@ -84,6 +85,7 @@ namespace PathSystem3D.Navigation
 
         public SimMoverState FollowPathTo(IList<Vector3d> v3s, Vector3d finalTarget, double finalDistance)
         {
+            completedAt = 0;
             _STATE = SimMoverState.MOVING;
             Vector3d vstart = v3s[0];
             Vector3 vv3 = SimPathStore.GlobalToLocal(vstart);
@@ -97,14 +99,17 @@ namespace PathSystem3D.Navigation
             UseSkipping = !UseSkipping;
             int v3sLength = v3s.Count;
             int at = 0;
+            int MoveToFailed = 0;
             while (at < v3sLength)
             {
                 Vector3d v3 = v3s[at];
                 // try to get there first w/in StepSize 0.2f 
+                v3.Z = GetSimPosition().Z;
                 if (!MoveTo(v3, PathStore.StepSize, 3))
                 {
                     // didn't make it but are we close enough for govt work?
-                    if (Vector3d.Distance(GetWorldPosition(), finalTarget) < finalDistance) return SimMoverState.COMPLETE;
+                    if (Vector3d.Distance(GetWorldPosition(), finalTarget) < finalDistance)
+                        return SimMoverState.COMPLETE;
                     // See what point in the list we are closest to
                     int nbest = ClosestAt(v3s);
                     if (nbest > at)
@@ -114,8 +119,9 @@ namespace PathSystem3D.Navigation
                         continue;
                     }
                     // Try again with distance of 0.6f
-                    if (!MoveTo(v3, PathStore.StepSize * 3, 2))
+                    if (!MoveTo(v3, PathStore.StepSize*3, 2))
                     {
+                        MoveToFailed++;
                         // still did not make it
                         OpenNearbyClosedPassages();
                         if (Skipped++ <= CanSkip)
@@ -149,15 +155,20 @@ namespace PathSystem3D.Navigation
                     if (!UseReverse || maxReverse-- < 0)
                     {
                         // not using reverse
-                      //  Debug("Wont Reverse {0} -> {1} ", at, best);
+                        //  Debug("Wont Reverse {0} -> {1} ", at, best);
                         best = at;
                     }
                     else
                     {
                         Debug("Reverse {0} -> {1} ", at, best);
                     }
+                    if (MoveToFailed == 0)
+                    {
+                        best = at;
+                    }
                     UseReverse = !UseReverse;
                 }
+                completedAt = best;
                 at = best + 1;
 
             }
@@ -171,7 +182,7 @@ namespace PathSystem3D.Navigation
             int v3sLength = v3s.Count - 1;
             double bestDist = Vector3d.Distance(newPos, v3s[v3sLength]);
             int best = v3sLength;
-            while (v3sLength-- > 0)
+            while (v3sLength-- > completedAt)
             {
                 double lenNat = Vector3d.Distance(newPos, v3s[v3sLength]);
                 if (lenNat < bestDist)
@@ -179,6 +190,10 @@ namespace PathSystem3D.Navigation
                     best = v3sLength;
                     bestDist = lenNat;
                 }
+            }
+            if (completedAt<best)
+            {
+                completedAt = best;
             }
             return best;
         }
