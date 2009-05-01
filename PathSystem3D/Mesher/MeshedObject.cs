@@ -51,7 +51,7 @@ namespace PathSystem3D.Mesher
         string DebugString();
         //Mesh GetTriMesh();
 
-        void UpdateOccupied(SimPathStore simPathStore);
+        void UpdateOccupied(SimPathStore pathStore);
     }
     abstract public class MeshedObject: IMeshedObject
     {
@@ -149,11 +149,11 @@ namespace PathSystem3D.Mesher
         }
 
 
-        protected void RemoveCollisions(SimPathStore simPathStore)
+        protected void RemoveCollisions(SimPathStore pathStore)
         {
             Box3Fill changed = new Box3Fill(true);
             RemoveFromWaypoints(changed);
-            simPathStore.Refresh(changed);            
+            pathStore.Refresh(changed);            
         }
 
         public void RemoveFromWaypoints(Box3Fill changed)
@@ -171,25 +171,25 @@ namespace PathSystem3D.Mesher
             }
         }
 
-        public void ForceUpdateOccupied(SimPathStore PathStore)
+        public void ForceUpdateOccupied(SimPathStore pathStore)
         {
             if (!IsRegionAttached()) return;
             // if (!IsSculpted)
             {
-                UpdatePathOccupied(PathStore);
+                UpdatePathOccupied(pathStore);
                 return;
             }
             new Thread(new ThreadStart(delegate()
             {
                 try
                 {
-                    UpdatePathOccupied(PathStore);
+                    UpdatePathOccupied(pathStore);
                 }
                 catch (Exception)
                 {
                     lock (SimPathStoresOccupied)
                     {
-                        SimPathStoresOccupied.Remove(PathStore);
+                        SimPathStoresOccupied.Remove(pathStore);
                     }
                 }
             })).Start();
@@ -227,17 +227,16 @@ namespace PathSystem3D.Mesher
             // Mesh = null;
         }
 
-        private void UpdateOccupiedVeryFast(SimPathStore PathStore)
+        private void UpdateOccupiedVeryFast(SimPathStore pathStore)
         {
-            float detail = PathStore.StepSize;// -0.001f;
+            float detail = pathStore.StepSize;// -0.001f;
             float MinX = OuterBox.MinX;
             float MaxX = OuterBox.MaxX;
             float MinY = OuterBox.MinY;
             float MaxY = OuterBox.MaxY;
-
             float MinZ = OuterBox.MinZ;
             float MaxZ = OuterBox.MaxZ;
-
+            pathStore.TaintCollisionPlanes(OuterBox);
             for (float x = MinX; x <= MaxX; x += detail)
             {
                 for (float y = MinY; y <= MaxY; y += detail)
@@ -247,9 +246,9 @@ namespace PathSystem3D.Mesher
             }
             SetLocatedOld(MaxX, MaxY, MinZ, MaxZ);
         }
-        private void UpdateOccupiedFast(SimPathStore PathStore)
+        private void UpdateOccupiedFast(SimPathStore pathStore)
         {
-            float detail = PathStore.StepSize;// -0.001f;
+            float detail = pathStore.StepSize;// -0.001f;
             float MinX = OuterBox.MinX;
             float MaxX = OuterBox.MaxX;
             float MinY = OuterBox.MinY;
@@ -314,7 +313,7 @@ namespace PathSystem3D.Mesher
         public IList<Box3Fill> InnerBoxes { get; set; }//  = new List<Box3Fill>();
 
 
-        public MeshedObject(Box3Fill o, IList<Box3Fill> i, SimPathStore R)
+        protected MeshedObject(Box3Fill o, IList<Box3Fill> i, SimPathStore R)
         {
             OuterBox = o;
             InnerBoxes = i;
@@ -361,7 +360,7 @@ namespace PathSystem3D.Mesher
         {
             if (InnerBoxes.Count == 0)
             {
-                Console.WriteLine("using outerbox for " + this);
+                Console.WriteLine("using outer box for {0}", this);
                 OuterBox.SetOccupied(p, SimZLevel, SimZMaxLevel, detail);
                 return;
             }
@@ -378,7 +377,7 @@ namespace PathSystem3D.Mesher
         {
             if (InnerBoxes.Count == 0)
             {
-                Console.WriteLine("using outerbox for " + this);
+                Console.WriteLine("using outer box for {0}", this);
                 OuterBox.SetOccupied(p, MinMaxZ, detail);
                 return;
             }

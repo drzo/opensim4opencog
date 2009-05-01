@@ -15,9 +15,10 @@ namespace cogbot.TheOpenSims
     public class SimAvatarImpl : SimObjectImpl, SimMover, cogbot.TheOpenSims.SimAvatar
     {
 
-        public override void AddPossibleAction(string sit, params object[] args)
+        public override void AddPossibleAction(string typeUse, params object[] args)
         {
-            base.AddPossibleAction(sit, args);
+            KnownTypeUsages.AddTo(SimTypeSystem.CreateTypeUsage(typeUse));
+            base.AddPossibleAction(typeUse, args);
         }
 
         public override void AddCanBeTargetOf(string textualActionName, params object[] args)
@@ -91,7 +92,7 @@ namespace cogbot.TheOpenSims
         readonly List<BotAction> ObservedBotActions = new List<BotAction>();
 
         // Action template stubs 
-        readonly List<SimTypeUsage> KnownTypeUsages = new List<SimTypeUsage>();
+        readonly ListAsSet<SimTypeUsage> KnownTypeUsages = new ListAsSet<SimTypeUsage>();
 
         // Assumptions about stubs
         readonly public Dictionary<SimObjectType, BotNeeds> Assumptions = new Dictionary<SimObjectType, BotNeeds>();
@@ -142,9 +143,9 @@ namespace cogbot.TheOpenSims
             return false;// base.RestoreEnterable(this);
         }
 
-        public override bool IsRoot()
+        public override bool IsRoot
         {
-            return theAvatar.ParentID == 0;
+            get { return theAvatar.ParentID == 0; }
         }
 
         // public override ISimObject Parent {  get { return this; }   }
@@ -215,7 +216,7 @@ namespace cogbot.TheOpenSims
 
         public bool IsThinking()
         {
-            return (avatarThinkerThread != null);
+            return (avatarThinkerThread != null && avatarThinkerThread.IsAlive);
         }
         public void PauseThinking()
         {
@@ -556,7 +557,13 @@ namespace cogbot.TheOpenSims
         }
 
         readonly Random MyRandom = new Random(DateTime.Now.Millisecond);
-        // TODO Real Eval routine
+
+        /// <summary>
+        ///  TODO Real Eval routine
+        /// </summary>
+        /// <param name="mostInteresting"></param>
+        /// <param name="cAspect"></param>
+        /// <returns></returns>
         public BotMentalAspect CompareTwo(BotMentalAspect mostInteresting, BotMentalAspect cAspect)
         {
             if ((mostInteresting is SimObject) && (cAspect is SimObject))
@@ -586,7 +593,7 @@ namespace cogbot.TheOpenSims
                 foreach (SimObject obj in objects)
                 {
                     if (obj != this)
-                        if (obj.IsRoot() || obj.IsTyped())
+                        if (obj.IsRoot || obj.IsTyped)
                         {
                             lock (KnownSimObjects) if (!KnownSimObjects.Contains(obj))
                                 {
@@ -665,22 +672,38 @@ namespace cogbot.TheOpenSims
 
         public ThreadStart WithSitOn(SimObject obj, ThreadStart closure)
         {
+            bool CanUseSit = WorldObjects.CanUseSit;
             BotClient Client = GetGridClient();
             AgentManager ClientSelf = Client.Self;
-            return new ThreadStart(delegate()
+            return () =>
             {
-                Primitive targetPrim = obj.Prim;
-                //ClientSelf.RequestSit(targetPrim.ID, Vector3.Zero);
-                //ClientSelf.Sit();
+                if (CanUseSit)
+                {
+                    Primitive targetPrim = obj.Prim;
+
+                    ClientSelf.RequestSit(targetPrim.ID, Vector3.Zero);
+                    ClientSelf.Sit();
+                }
+
                 try
                 {
                     closure.Invoke();
                 }
                 finally
                 {
-                    //  ClientSelf.Stand();
+                    bool SAU = Client.Settings.SEND_AGENT_UPDATES;
+                    try
+                    {
+                        Client.Settings.SEND_AGENT_UPDATES = true;
+                        ClientSelf.AnimationStart(Animations.STANDUP, true);
+                        if (CanUseSit) ClientSelf.Stand();
+                    }
+                    finally
+                    {
+                        Client.Settings.SEND_AGENT_UPDATES = SAU;
+                    }
                 }
-            });
+            };
         }
 
         public ThreadStart WithGrabAt(SimObject obj, ThreadStart closure)
@@ -707,18 +730,18 @@ namespace cogbot.TheOpenSims
         {
             BotClient Client = GetGridClient();
             AnimThread animThread = new AnimThread(Client.Self, anim);
-            return new ThreadStart(delegate()
-            {
-                try
-                {
-                    animThread.Start();
-                    closure.Invoke();
-                }
-                finally
-                {
-                    animThread.Stop();
-                }
-            });
+            return () =>
+                       {
+                           try
+                           {
+                               animThread.Start();
+                               closure.Invoke();
+                           }
+                           finally
+                           {
+                               animThread.Stop();
+                           }
+                       };
         }
 
         public UUID FindAnimUUID(string use)
@@ -844,7 +867,7 @@ namespace cogbot.TheOpenSims
             }
             else
             {
-                //   Debug("Cant touch !IsLocal() " + simObject);
+                Debug("Cant touch !IsLocal() " + simObject);
             }
         }
 
@@ -943,12 +966,11 @@ namespace cogbot.TheOpenSims
             return (double)Distance(obj);
         }
 
-        object TrackerLoopLock = new object();
+        readonly object TrackerLoopLock = new object();
 
         void TrackerLoop()
         {
             Boolean stopNext = false;
-            Random MyRandom = new Random(Environment.TickCount);// We do stuff randomly here
             while (true)
             {
                 Vector3d targetPosition;
@@ -1018,12 +1040,12 @@ namespace cogbot.TheOpenSims
                             ClientMovement.Fly = false;
                         }
 
-                        bool nudge = true;
+                        bool nudgeUpDownMoves = true;
 
                         if (selfZ > WaterHeight - 0.5)
                         {
                             // Bob downward
-                            if (nudge)
+                            if (nudgeUpDownMoves)
                                 ClientMovement.NudgeUpNeg = true;
                             else
                                 ClientMovement.UpNeg = true;
@@ -1037,7 +1059,7 @@ namespace cogbot.TheOpenSims
                             if (selfZ < WaterHeight - 2.5)
                             {
                                 // Bob upward
-                                if (nudge)
+                                if (nudgeUpDownMoves)
                                     ClientMovement.NudgeUpPos = true;
                                 else
                                     ClientMovement.UpPos = true;
@@ -1062,7 +1084,7 @@ namespace cogbot.TheOpenSims
                     }
 
                     //// Little Jumps
-                    if (ZDist > ApproachDistance)
+                    if (ZDist*2 > curDist)
                     {
                         if (!ClientMovement.Fly)
                         {
@@ -1210,7 +1232,7 @@ namespace cogbot.TheOpenSims
         {
             //Client.Self.Movement.AutoResetControls = true;
             Client.Self.Movement.SendUpdate(true);
-            Thread.Sleep(ms);
+            if (ms>0) Thread.Sleep(ms);
         }
 
         public override void TeleportTo(SimRegion R, Vector3 local)
@@ -1305,7 +1327,7 @@ namespace cogbot.TheOpenSims
                 }
                 finally
                 {
-                    //  Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = prev;
+                    Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = prev;
                 }
             }
             return changed;

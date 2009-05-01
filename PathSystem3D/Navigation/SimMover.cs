@@ -90,7 +90,7 @@ namespace PathSystem3D.Navigation
             Vector3d vstart = v3s[0];
             Vector3 vv3 = SimPathStore.GlobalToLocal(vstart);
 
-            v3s = SimPathStore.GetSimplifedRoute(vstart, v3s, 45, 4f);
+            v3s = SimPathStore.GetSimplifedRoute(vstart, v3s, 45, 2f);
 
             int maxReverse = 2;
             Debug("FollowPath: {0} -> {1} for {2}", v3s.Count, DistanceVectorString(finalTarget), finalDistance);
@@ -166,7 +166,8 @@ namespace PathSystem3D.Navigation
                     {
                         best = at;
                     }
-                    UseReverse = !UseReverse;
+                   // for now never use (leave default false)
+                   // UseReverse = !UseReverse;
                 }
                 completedAt = best;
                 at = best + 1;
@@ -363,7 +364,7 @@ namespace PathSystem3D.Navigation
         public override SimMoverState Goto()
         {
             if (FollowPathTo(FinalLocation, FinalDistance)) return SimMoverState.COMPLETE;
-            return SimMoverState.TRYAGAIN;
+            return STATE; 
         }
 
         public bool FollowPathTo(Vector3d globalEnd, double distance)

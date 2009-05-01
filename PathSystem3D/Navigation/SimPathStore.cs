@@ -801,14 +801,14 @@ namespace PathSystem3D.Navigation
 
             byte[,] ByteMatrix = CP.ByteMatrix;
             byte b = ByteMatrix[ix,iy];
+            if (b != BLOCKED) return v3;
             float[,] GP = CP.HeightMap;
             float zl = GP[ix,iy];
 
-            GetCollisionIndex(ix, iy).SetNodeQualityTimer(CP, MAYBE_BLOCKED, 30);
-            // float useDist = GetSizeDistance();      
-            if (b != BLOCKED) return v3;
+            List<CollisionIndex> RestoreBlocked = new List<CollisionIndex>();
+            RestoreBlocked.Add(GetCollisionIndex(ix, iy));
 
-            int count = CP.NeighborPredicate(ix, iy,(int)( useDist*POINTS_PER_METER*1.5), delegate(int NX, int NY)
+            int count = CP.NeighborPredicate(ix, iy,(int)( useDist*POINTS_PER_METER), delegate(int NX, int NY)
             {
                 byte NB = ByteMatrix[NX, NY];
                 if (NB == BLOCKED)
@@ -817,7 +817,8 @@ namespace PathSystem3D.Navigation
                     if (Math.Abs(NZ - zl) < 0.2)
                     {
                         CollisionIndex CI = GetCollisionIndex(NX, NY);
-                        CI.SetNodeQualityTimer(CP, MAYBE_BLOCKED, 30);
+                        if (CI.IsTimerTicking) return 0;
+                        RestoreBlocked.Add(CI);
                         return 1;
                     }
                 }
@@ -826,6 +827,20 @@ namespace PathSystem3D.Navigation
             if (count > 3)
             {
                 Debug("Clearing small area " + v3);
+                foreach (CollisionIndex CI in RestoreBlocked)
+                {
+                    CI.IsTimerTicking = true;
+                    CI.SetMatrixForced(CP,MAYBE_BLOCKED);
+                }
+                new Thread(() =>
+                {
+                    Thread.Sleep(30000);
+                    foreach (CollisionIndex CI in RestoreBlocked)
+                    {
+                        CI.IsTimerTicking = false;
+                        CI.SetMatrixForced(CP, BLOCKED);
+                    }
+                });
                 if (PanelGUI != null) PanelGUI.Invalidate();
                 return v3;
             }
@@ -1124,14 +1139,14 @@ namespace PathSystem3D.Navigation
                 }
                 if (newStart == start)
                 {
-                    start = GetUsableLocalPositionOf(CP, start, 4);
+                    start = GetUsableLocalPositionOf(CP, start, 2);
                 }
             }
             if (!IsPassable(end, CP))
             {
                 Debug("end is not passable: " + end);
             }
-            return (IList<Vector3d>)GetLocalPath0(start, GetUsableLocalPositionOf(CP,end, 4), CP, Z);
+            return (IList<Vector3d>)GetLocalPath0(start, GetUsableLocalPositionOf(CP,end, 2), CP, Z);
         }
 
         bool TerrainBaked = false;
@@ -1949,6 +1964,7 @@ namespace PathSystem3D.Navigation
                 pff.SearchLimit = 100000000;
                 pff.PunishChangeDirection = PunishChangeDirection;
                 pfn = pff.FindPath(S, E);
+                pff = null;
             }
             catch (Exception e)
             {
@@ -2365,6 +2381,17 @@ namespace PathSystem3D.Navigation
                     return true;
                 default:
                     return false;
+            }
+        }
+
+        internal void TaintCollisionPlanes(Box3Fill OuterBox)
+        {
+            foreach (CollisionPlane list in Matrixes)
+            {
+                if (OuterBox.IsZInside(list.MinZ,list.MaxZ))
+                {
+                    list.NeedsUpdate = true;
+                }
             }
         }
     }
