@@ -15,8 +15,8 @@ namespace PathSystem3D.Navigation
     {
 
         static int TotalCollisionPlanes = 0;
-        internal SimPathStore PathStore;
-        int MaxXPt, MaxYPt;
+        readonly internal SimPathStore PathStore;
+        readonly int MaxXPt, MaxYPt;
         private bool _UsePotentialFields = true;
 
         public bool UsePotentialFields
@@ -137,7 +137,8 @@ namespace PathSystem3D.Navigation
             }
 
         }
-       #if COLLIDER_ODE
+       
+#if COLLIDER_ODE
 
         void ComputeLandingHeights()
         {
@@ -308,6 +309,7 @@ namespace PathSystem3D.Navigation
             }
         //}
 #endif
+
         float[,] _HeightMap;
         public float[,] HeightMap
         {
@@ -375,7 +377,7 @@ namespace PathSystem3D.Navigation
             {
                 return c.GetOccupiedValue(ZLevel,ZLevel);
             }
-            if (!Special(b)) // needs passable
+            if (!SimPathStore.Special(b)) // needs passable
                 return SimPathStore.INITIALLY;
             return b;
         }
@@ -399,6 +401,7 @@ namespace PathSystem3D.Navigation
                     for (int x = MaxXPt - 1; x > 0; x--)
                     {
                         byte b = ToMatrix[x, y];
+                        if (SimPathStore.MaybeBlocked(b)) continue;
                         //if (b != SimPathStore.STICKY_PASSABLE)
                         {
                             float ZLevel = Heights[x, y];
@@ -436,7 +439,8 @@ namespace PathSystem3D.Navigation
                 if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, FeildEffect, 1, 1);
                 if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, --FeildEffect, 5, 30);
 
-                if (cutNarrows) AddAdjacentBlocking(ToMatrix, 3);
+                if (cutNarrows) AddAdjacentBlocking(ToMatrix,SimPathStore.MAYBE_BLOCKED, 3, SimPathStore.BLOCKED);
+                AddEdgeBlocking(ToMatrix);
                 Console.WriteLine("\nEnd UpdateCollisionPlane: {0} for {1}", PathStore, this);
             }
         }
@@ -496,9 +500,9 @@ namespace PathSystem3D.Navigation
 
         internal void RenderHeightMap()
         {
-            Console.WriteLine("\nStart RenderHeightMap: {0} for {1}", PathStore, this);
             _HeightMap = null;
-            RenderGroundPlane();            
+            RenderGroundPlane();
+            Console.WriteLine("\nStart RenderHeightMap: {0} for {1}", PathStore, this);
 #if COLLIDER_ODE
                 ComputeLandingHeights();
 #else
@@ -593,7 +597,7 @@ namespace PathSystem3D.Navigation
                         byte b = from[x, y];
                         if (b > 2 && b < fronteer)
                         {
-                            if (Special(b)) continue;
+                            if (SimPathStore.Special(b)) continue;
                             if (SurroundingBlocked0(x, y, fronteer, from) > 1)
                                 to[x, y] = self;
                         }
@@ -603,29 +607,7 @@ namespace PathSystem3D.Navigation
             }
         }
 
-        static bool Special(byte b)
-        {
-            switch (b)
-            {
-                case SimPathStore.STICKY_PASSABLE:
-                case SimPathStore.PASSABLE:
-                case SimPathStore.BLOCKED:
-                case SimPathStore.MAYBE_BLOCKED:
-                case SimPathStore.BLOCKED_YELLOW:
-                case SimPathStore.BLOCK_PURPLE:
-                case SimPathStore.BLOCK_ORANGE:
-                case SimPathStore.WATER_G:
-                case SimPathStore.WATER_Z:
-                case SimPathStore.TOO_LOW:
-                case SimPathStore.TOO_HIGH:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-
-        private void AddAdjacentBlocking(byte[,] to, int req)
+        private void AddAdjacentBlocking(byte[,] to, byte when, int req, byte then)
         {
             byte[,] from =(byte[,]) to.Clone();
             int xsizem1 = MaxXPt - 1;
@@ -634,10 +616,28 @@ namespace PathSystem3D.Navigation
                 for (int x = xsizem1; x > 0; x--)
                 {
                     byte b = from[x, y];
-                    if (b == SimPathStore.MAYBE_BLOCKED)
-                        if (SurroundingBlocked0(x, y, SimPathStore.BLOCKED, from) > req)
-                            to[x, y] = SimPathStore.BLOCKED;                        
+                    if (b == when)
+                        if (SurroundingBlocked0(x, y, then, from) > req)
+                            to[x, y] =  then;                        
                 }
+            }
+            from = null;
+        }
+        private void AddEdgeBlocking(byte[,] to)
+        {
+            int xsizem1 = MaxXPt - 1;
+            int xsizem2 = MaxXPt - 2;
+            int ysizem1 = MaxYPt - 1;
+            int ysizem2 = MaxYPt - 2;
+            for (int y = ysizem1; y >= 0; y--)
+            {
+                to[0, y] = to[1, y];
+                to[xsizem1, y] = to[xsizem2, y];
+            }
+            for (int x = xsizem1; x >= 0; x--)
+            {
+                to[x, 0] = to[x, 1];
+                to[x,ysizem1] = to[x,ysizem2];
             }
         }
 

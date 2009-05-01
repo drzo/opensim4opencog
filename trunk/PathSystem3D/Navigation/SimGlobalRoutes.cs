@@ -70,9 +70,8 @@ namespace PathSystem3D.Navigation
 
         public void CreateDefaultRoutes()
         {
-
-            return;
             Console.WriteLine("CreateDefaultRoutes <{0},{1}>-<{2},{3}> StepSize={4}", StartX, StartY, EndX, EndY, StepSize);
+            return;
             double W = 0.75f;
             int made = 0;
             for (int x = StartX; x < EndX; x += StepSize)

@@ -911,7 +911,7 @@ namespace cogbot.Listeners
             base.Avatars_OnAvatarAppearance(avatarID, isTrial, defaultTexture, faceTextures, visualParams);
         }
 
-        object Objects_OnNewAvatarLock = new object();
+        //object Objects_OnNewAvatarLock = new object();
         public override void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
         {
             //lock (Objects_OnNewAvatarLock)
@@ -941,7 +941,7 @@ namespace cogbot.Listeners
             }
             catch (Exception e)
             {
-                output("err :" + e.StackTrace);
+                output(String.Format("err :{0}", e.StackTrace));
             }
         }
 
@@ -1222,6 +1222,25 @@ namespace cogbot.Listeners
  sittingOn: 3135593693
  oldSeat: 0
          */
+        public override void Objects_OnAvatarSitChanged(Simulator simulator, Avatar avatar, uint sittingOn, uint oldSeat)
+        {
+            SimObject user = GetSimObject(avatar, simulator);
+            SimObject newSit = GetSimObject(sittingOn, simulator);
+            SimObject oldSit = GetSimObject(oldSeat, simulator);
+            if (user!=null)
+            {
+                if (newSit != null) user.AddPossibleAction("sit", newSit);
+                if (oldSit != null) user.AddPossibleAction("sit", oldSit);
+            }
+            if (newSit != null) newSit.AddCanBeTargetOf("sit");
+            if (oldSit != null) oldSit.AddCanBeTargetOf("sit");
+        }
+
+        public SimObject GetSimObject(uint sittingOn, Simulator simulator)
+        {
+            if (sittingOn == 0) return null;
+            return GetSimObject(GetPrimitive(sittingOn, simulator), simulator);
+        }
         class SomeChange
         {
             Object before;

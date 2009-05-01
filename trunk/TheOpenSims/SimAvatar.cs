@@ -15,6 +15,16 @@ namespace cogbot.TheOpenSims
     public class SimAvatarImpl : SimObjectImpl, SimMover, cogbot.TheOpenSims.SimAvatar
     {
 
+        public override void AddPossibleAction(string sit, params object[] args)
+        {
+            base.AddPossibleAction(sit, args);
+        }
+
+        public override void AddCanBeTargetOf(string textualActionName, params object[] args)
+        {
+            base.AddCanBeTargetOf(textualActionName, args);
+        }
+
         public Thread avatarThinkerThread;
         public Thread avatarHeartbeatThread;
 
@@ -26,6 +36,7 @@ namespace cogbot.TheOpenSims
         public SimAvatar InDialogWith { get; set; }
 
         readonly BotNeeds _CurrentNeeds;
+
         public BotNeeds CurrentNeeds
         {
             get { return _CurrentNeeds; }
@@ -48,7 +59,7 @@ namespace cogbot.TheOpenSims
             }
         }
         // things the bot cycles through mentally
-        public ListAsSet<SimObject> KnownSimObjects = new ListAsSet<SimObject>();
+        readonly public ListAsSet<SimObject> KnownSimObjects = new ListAsSet<SimObject>();
 
         public List<SimObject> GetKnownObjects()
         {
@@ -68,34 +79,41 @@ namespace cogbot.TheOpenSims
         public List<BotAction> KnownBotActions = new List<BotAction>();
 
         // which will be skewed with how much one bot like a Mental Aspect
-        public Dictionary<BotMentalAspect, int> AspectEnjoyment = new Dictionary<BotMentalAspect, int>();
+        readonly public Dictionary<BotMentalAspect, int> AspectEnjoyment = new Dictionary<BotMentalAspect, int>();
 
         //notice this also stores object types that pleases the bot as well as people
-        // (so how much one bot likes another avatar is sotred here as well)
+        // (so how much one bot likes another avatar is stored here as well)
 
-        // Actions tbe bot might do next cycle.
+        // Actions the bot might do next cycle.
         List<BotAction> TodoBotActions = new List<BotAction>();
 
         // Actions observed
-        List<BotAction> ObservedBotActions = new List<BotAction>();
+        readonly List<BotAction> ObservedBotActions = new List<BotAction>();
 
         // Action template stubs 
-        List<SimTypeUsage> KnownTypeUsages = new List<SimTypeUsage>();
+        readonly List<SimTypeUsage> KnownTypeUsages = new List<SimTypeUsage>();
 
-
-        // assuptions about stubs
-        public Dictionary<SimObjectType, BotNeeds> Assumptions = new Dictionary<SimObjectType, BotNeeds>();
+        // Assumptions about stubs
+        readonly public Dictionary<SimObjectType, BotNeeds> Assumptions = new Dictionary<SimObjectType, BotNeeds>();
 
         // Current action 
         public BotAction CurrentAction;
 
+        // When seeking out objects for use
+        // the whole region at least - this is different than the sight distance
+        public double MaxThinkAboutDistance = 256d;
 
-        public override bool MakeEnterable(SimMover actor)
+        // When seeking out objects for use -  
+        // this is only limited due to the pathfinder demo for the moment
+        public double MaxSupportedZChange = 2d;
+
+
+        public override sealed bool MakeEnterable(SimMover actor)
         {
             return false;
         }
 
-        string AspectName;
+        readonly string AspectName;
         public SimAvatarImpl(Avatar slAvatar, WorldObjects objectSystem, Simulator reg)
             : base(slAvatar, objectSystem, reg)
         {
@@ -117,7 +135,7 @@ namespace cogbot.TheOpenSims
             avatarHeartbeatThread.Start();
             MakeEnterable(this);
         }
-         
+
 
         public override bool RestoreEnterable(SimMover agent)
         {
@@ -153,37 +171,38 @@ namespace cogbot.TheOpenSims
 
         public override string DebugInfo()
         {
-            String s = ToString();
+            String s = String.Format("\n{0}" ,ToString());
             List<SimObject> KnowsAboutList = GetKnownObjects();
             KnowsAboutList.Sort(CompareObjects);
+            s += String.Format("\nCurrentAction: {0}", CurrentAction);
             int show = 10;
-            s += "\nKnowsAboutList: " + KnowsAboutList.Count;
+            s += String.Format("\nKnowsAboutList: {0}", KnowsAboutList.Count);
             foreach (SimObject item in KnowsAboutList)
             {
                 show--;
                 if (show < 0) break;
                 //if (item is ISimAvatar) continue;
-                s += "\n   " + item + " " + DistanceVectorString(item);
+                s += String.Format("\n   {0} {1}", item, DistanceVectorString(item));
             }
             show = 10;
             KnownTypeUsages.Sort(CompareUsage);
-            s += "\nKnownTypeUsages: " + KnownTypeUsages.Count;
+            s += String.Format("\nKnownTypeUsages: {0}", KnownTypeUsages.Count);
             foreach (SimTypeUsage item in KnownTypeUsages)
             {
                 show--;
                 if (show < 0) break;
                 //if (item is ISimAvatar) continue;
-                s += "\n   " + item + " " + item.RateIt(CurrentNeeds);
+                s += String.Format("\n   {0} {1}", item, item.RateIt(CurrentNeeds));
             }
-            return String.Format("\n{0}", s);
+            s += String.Format("\nCurrentNeeds: {0}", CurrentNeeds);
+            return s;
         }
 
         public void StartThinking()
         {
             if (avatarThinkerThread == null)
             {
-                avatarThinkerThread = new Thread(new ThreadStart(Think));
-                avatarThinkerThread.Name = "AvatarThinkerThread for " + Client;
+                avatarThinkerThread = new Thread(Think) { Name = "AvatarThinkerThread for " + Client };
                 if (IsLocal())
                 {
                     // only think for ourselves
@@ -334,7 +353,7 @@ namespace cogbot.TheOpenSims
         {
             BotAction act = CurrentAction;
 
-            IList<BotAction> acts = GetPossibleActions();
+            IList<BotAction> acts = GetPossibleActions(MaxThinkAboutDistance, MaxSupportedZChange);
 
             if (acts.Count > 0)
             {
@@ -415,25 +434,34 @@ namespace cogbot.TheOpenSims
             return (int)(act2.RateIt(CurrentNeeds) - act1.RateIt(CurrentNeeds));
         }
 
-        public IList<BotAction> GetPossibleActions()
+        public IList<BotAction> GetPossibleActions(double maxXYDistance, double maxZDist)
         {
             if (TodoBotActions.Count < 2)
             {
-                TodoBotActions = NewPossibleActions();
+                TodoBotActions = NewPossibleActions(maxXYDistance, maxZDist);
             }
             return TodoBotActions;
         }
 
-        public List<BotAction> NewPossibleActions()
+        public List<BotAction> NewPossibleActions(double maxXYDistance, double maxZDist)
         {
-            List<SimObject> knowns = GetKnownObjects();
+            double myZ = GetWorldPosition().Z;
+            List<SimObject> useObjects = new List<SimObject>();
+            foreach (SimObject O in GetKnownObjects())
+            {
+                if (O.Distance(this) > maxXYDistance) continue;
+                if (Math.Abs(O.GetWorldPosition().Z - myZ) > maxZDist) continue;
+                useObjects.Add(O);
+            }
+
+
             List<BotAction> acts = new List<BotAction>();
             foreach (BotAction obj in ObservedBotActions)
             {
                 acts.Add(obj);
             }
 
-            foreach (SimObject obj in knowns)
+            foreach (SimObject obj in useObjects)
             {
                 foreach (SimObjectUsage objuse in obj.GetUsages())
                 {
@@ -597,7 +625,7 @@ namespace cogbot.TheOpenSims
 
         public void TalkTo(SimAvatar avatar, String talkAbout)
         {
-            SimAvatar avatarWasInDialogWith = ((SimAvatarImpl) avatar).InDialogWith;
+            SimAvatar avatarWasInDialogWith = ((SimAvatarImpl)avatar).InDialogWith;
             SimAvatar wasInDialogWith = InDialogWith;
             try
             {
@@ -701,7 +729,7 @@ namespace cogbot.TheOpenSims
         public void ExecuteLisp(SimObjectUsage botObjectAction, Object lisp)
         {
             BotClient Client = GetGridClient();
-            if (lisp!=null)
+            if (lisp != null)
             {
                 Client.Intern("TheBot", this);
                 Client.Intern("TheTarget", botObjectAction.Target);
@@ -755,17 +783,20 @@ namespace cogbot.TheOpenSims
                 //  WorldSystem = Client.WorldSystem;
                 //if (IsLocal())
                 {
- //                   EnsureTrackerRunning();
+                    //                   EnsureTrackerRunning();
                 }
             }
             //WorldSystem.AddTracking(this,Client);
         }
 
-        public SimObject FindSimObject(SimObjectType pUse)
+        public SimObject FindSimObject(SimObjectType pUse, double maxXYDistance, double maxZDist)
         {
+            double myZ = GetWorldPosition().Z;
             IList<SimObject> objects = GetKnownObjects();
             foreach (SimObject O in objects)
             {
+                if (O.Distance(this) > maxXYDistance) continue;
+                if (Math.Abs(O.GetWorldPosition().Z - myZ) > maxZDist) continue;
                 if (O.IsTypeOf(pUse) != null) return O;
             }
             return null;
@@ -813,7 +844,7 @@ namespace cogbot.TheOpenSims
             }
             else
             {
-             //   Debug("Cant touch !IsLocal() " + simObject);
+                //   Debug("Cant touch !IsLocal() " + simObject);
             }
         }
 
@@ -1002,7 +1033,7 @@ namespace cogbot.TheOpenSims
                         }
                         else
                         {
-                          //  nudge = !nudge;
+                            //  nudge = !nudge;
                             if (selfZ < WaterHeight - 2.5)
                             {
                                 // Bob upward
@@ -1085,19 +1116,19 @@ namespace cogbot.TheOpenSims
                             ClientMovement.AtPos = true;
                             ClientMovement.UpdateInterval = 0;
                             SendUpdate(MyRandom.Next(25, 100));
-                           // TurnToward(targetPosition);
+                            // TurnToward(targetPosition);
                             //(int)(25 * (1 + (curDist / followDist)))
                             //   MoveFast(ApproachPosition);
                             //    if (ApproachPosition!=null) MoveSlow(ApproachPosition);
-                           stopNext = true;
-                           continue;
+                            stopNext = true;
+                            continue;
                         }
                     }
                     else
                     {
                         if (stopNext)
                         {
-//                            TurnToward(targetPosition);
+                            //                            TurnToward(targetPosition);
                             ClientMovement.AtPos = false;
                             ClientMovement.UpdateInterval = 0;
                             //ClientMovement.StandUp = true;
@@ -1249,7 +1280,7 @@ namespace cogbot.TheOpenSims
 
                 else
                 {
-                    Primitive parent = WorldSystem.GetPrimitive(Prim.ParentID,Client.Network.CurrentSim);
+                    Primitive parent = WorldSystem.GetPrimitive(Prim.ParentID, Client.Network.CurrentSim);
                     parentRot = parent.Rotation;
                 }
             }
@@ -1274,17 +1305,17 @@ namespace cogbot.TheOpenSims
                 }
                 finally
                 {
-                  //  Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = prev;
+                    //  Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = prev;
                 }
             }
             return changed;
         }
         public override void UpdateOccupied()
         {
-            // avatars do not occlude the path system
-            Vector3 pos = GetSimPosition();
-            if (SimPathStore.OutOfRegion(pos)) return;
-            GetPathStore().SetPassable(pos.X, pos.Y, pos.Z);
+            // Vector3 pos = GetSimPosition();
+            // if (SimPathStore.OutOfRegion(pos)) return;
+            //don't change this spot
+            //GetPathStore().SetPassable(pos.X, pos.Y, pos.Z);
         }
     }
 
@@ -1302,15 +1333,15 @@ namespace cogbot.TheOpenSims
         void ExecuteLisp(SimObjectUsage botObjectAction, object lisp);
         OpenMetaverse.UUID FindAnimUUID(string use);
         SimUsage FindBestUsage(System.Collections.IEnumerable acts);
-        SimObject FindSimObject(SimObjectType pUse);
+        SimObject FindSimObject(SimObjectType pUse, double maxXYDistance, double maxZDist);
         cogbot.BotClient GetGridClient();
         System.Collections.Generic.List<SimObject> GetKnownObjects();
         BotAction GetNextAction();
         SimObject GetNextInterestingObject();
-        System.Collections.Generic.IList<BotAction> GetPossibleActions();
+        IList<BotAction> GetPossibleActions(double maxXYDistance, double maxZDist);
         bool IsSitting();
         bool IsThinking();
-        System.Collections.Generic.List<BotAction> NewPossibleActions();
+        System.Collections.Generic.List<BotAction> NewPossibleActions(double maxXYDistance, double maxZDist);
         void PauseThinking();
         void ScanNewObjects(int minimum, double sightRange);
         void SetClient(cogbot.BotClient Client);
