@@ -469,7 +469,7 @@ namespace cogbot.Properties {
                     object obj = ResourceManager.GetObject("Sauver", resourceCulture);
                     return ((System.Drawing.Bitmap)(obj));
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     return null;
                 }

@@ -579,8 +579,9 @@ namespace cogbot.TheOpenSims
 
         public void ShowDebugger()
         {
-                PathStore.ShowDebugger();
+            PathStore.ShowDebugger();
         }
+
         /// <summary>
         ///  The closet usable space to the v3 TODO
         /// </summary>

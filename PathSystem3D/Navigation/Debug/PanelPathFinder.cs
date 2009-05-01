@@ -284,6 +284,7 @@ namespace PathSystem3D.Navigation.Debug
         WaypointProperties tipForm ;
         protected override void OnMouseMove(MouseEventArgs e)
         {
+            if (_Matrix==null) return;
             int x = e.X / mGridSize;
             int sy = e.Y / mGridSize;
             int y = TRANSPOSE(sy);
@@ -377,7 +378,8 @@ namespace PathSystem3D.Navigation.Debug
                 _CurrentPlane = value;
                 if (_CurrentPlane != null)
                 {
-                    PathFinderDemo pfd = _CurrentPlane.PathStore.PanelGUI;
+                    PathStore = _CurrentPlane.PathStore;
+                    PathFinderDemo pfd = PathStore.PanelGUI;
                     if (pfd != null)
                     {
                         pfd.SetPlane(_CurrentPlane);
@@ -392,7 +394,8 @@ namespace PathSystem3D.Navigation.Debug
         {
             get { if (CurrentPlane == null) return 22;
                 return CurrentPlane.MinZ; }
-            set {                
+            set {       
+                if (PathStore!=null)
                 CurrentPlane = PathStore.GetCollisionPlane(value); }
         }
 

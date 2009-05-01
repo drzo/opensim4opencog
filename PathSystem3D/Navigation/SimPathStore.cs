@@ -527,7 +527,9 @@ namespace PathSystem3D.Navigation
         public void SetGroundLevel(SimZLevel callback)
         {
             GroundLevelDelegate = callback;
+#if COLLIDER_ODE
             StartGatheringTerrainFromCallback();
+#endif
         }
 
         // Updates
@@ -580,8 +582,10 @@ namespace PathSystem3D.Navigation
             float x = UNARRAY_X(Last.X);
             float y = UNARRAY_Y(Last.Y);
             Vector3 v3o = new Vector3(x, y, v3.Z);
+
+
             BlockPointTemp(v3o);
-            double A45 = 45f / SimPathStore.RAD2DEG;
+            double A45 = 45f / RAD2DEG;
             Debug("BlockTowardsVector {0}", Vector3.Distance(cp,v3o));
             Vector3 middle = ZAngleVector(ZAngle) * Dist;
             middle += cp;
@@ -602,20 +606,40 @@ namespace PathSystem3D.Navigation
             BlockPointTemp(ZAngleVector(ZAngle + A45 * 0.5) * Dist + cp);
             BlockPointTemp(ZAngleVector(ZAngle + A45) * Dist + cp);
             BlockPointTemp(ZAngleVector(ZAngle + A45 * 1.5) * Dist + cp);
-            //Dont Run back
+            //Don't Run back (anymore)
             //MoveTo(cp + ZAngleVector(ZAngle - Math.PI) * 2, 1f, 2);
         }
 
         /// <summary>
         /// Blocks a point temporarily (one minute)
+        /// However! if the point is of questionable quality it will permanently block it
         /// </summary>
         /// <param name="vector3"></param>
         internal void BlockPointTemp(Vector3 vector3)
         {
-            SetNodeQualityTimer(vector3, SimPathStore.BLOCKED, 60);
+            CollisionPlane CP = FindCollisionPlane(vector3.Z);
+            if (CP != null)
+            {
+                int ix = ARRAY_X(vector3.X);
+                int iy = ARRAY_Y(vector3.Y);
+
+                byte b = CP.ByteMatrix[ix, iy];
+                if (MaybeBlocked(b))
+                {
+                    CP.ByteMatrix[ix, iy] = BLOCKED;
+                    Debug("Permanently blocking off " + vector3);
+                } else
+                {
+                    // this is for the second time around
+                    CP.ByteMatrix[ix, iy] = BLOCK_PURPLE;
+                }
+            }
+
+
+            SetNodeQualityTimer(vector3, BLOCKED, 60);
         }
 
-        private float _WaterHeight = float.MinValue;
+        private float _WaterHeight = Single.MinValue;
 
         public float WaterHeight
         {
@@ -623,8 +647,8 @@ namespace PathSystem3D.Navigation
             set { _WaterHeight = value;
 #if COLLIDER_ODE
                 odeScene.SetWaterLevel(value);
-#endif
                 StartGatheringTerrainFromCallback();
+#endif
             }
         }
 
@@ -676,8 +700,8 @@ namespace PathSystem3D.Navigation
             }
             OnlyStart = false; // Since this will be the best
             // try to move to nearby
-            float step = 45 * SimPathStore.RAD2DEG;
-            for (double angle = 0; angle < SimPathStore.PI2; angle += step)
+            float step = 45 * RAD2DEG;
+            for (double angle = 0; angle < PI2; angle += step)
             {
                 newEnd = localEnd + ZAngleVector(angle) * endFudge;
                 route = GetLocalPath(CP,localStart, newEnd);
@@ -782,7 +806,7 @@ namespace PathSystem3D.Navigation
 
             GetCollisionIndex(ix, iy).SetNodeQualityTimer(CP, MAYBE_BLOCKED, 30);
             // float useDist = GetSizeDistance();      
-            if (b != SimPathStore.BLOCKED) return v3;
+            if (b != BLOCKED) return v3;
 
             int count = CP.NeighborPredicate(ix, iy,(int)( useDist*POINTS_PER_METER*1.5), delegate(int NX, int NY)
             {
@@ -811,22 +835,22 @@ namespace PathSystem3D.Navigation
             {
                 for (int dir = 0; dir < 360; dir += 15)
                 {
-                    v3 = SimPathStore.GetLocalLeftPos(swp, dir, distance);
+                    v3 = GetLocalLeftPos(swp, dir, distance);
                     b = PathStore.GetNodeQuality(v3, CP);
-                    if (b < SimPathStore.BLOCKED) return v3;
+                    if (b < BLOCKED) return v3;
                 }
             }
             Debug("Clearing area " + swp);
-            SetNodeQualityTimer(v3, SimPathStore.MAYBE_BLOCKED, 30);
+            SetNodeQualityTimer(v3, MAYBE_BLOCKED, 30);
             for (float distance = PathStore.StepSize; distance < useDist * 2; distance += PathStore.StepSize)
             {
                 for (int dir = 0; dir < 360; dir += 15)
                 {
-                    v3 = SimPathStore.GetLocalLeftPos(swp, dir, distance);
+                    v3 = GetLocalLeftPos(swp, dir, distance);
                     b = PathStore.GetNodeQuality(v3, CP);
-                    if (b == SimPathStore.BLOCKED)
+                    if (b == BLOCKED)
                     {
-                        SetNodeQualityTimer(v3, SimPathStore.MAYBE_BLOCKED, 30);
+                        SetNodeQualityTimer(v3, MAYBE_BLOCKED, 30);
                     }
                 }
             }
@@ -840,28 +864,28 @@ namespace PathSystem3D.Navigation
 
             byte b = PathStore.GetNodeQuality(v3, CP);
             // float useDist = GetSizeDistance();      
-            if (b != SimPathStore.BLOCKED) return v3;
+            if (b != BLOCKED) return v3;
             SimWaypoint swp = GetWaypointOf(v3);
             for (float distance = PathStore.StepSize; distance < useDist * 1.5; distance += PathStore.StepSize)
             {
                 for (int dir = 0; dir < 360; dir += 15)
                 {
-                    v3 = SimPathStore.GetLocalLeftPos(swp, dir, distance);
+                    v3 = GetLocalLeftPos(swp, dir, distance);
                     b = PathStore.GetNodeQuality(v3, CP);
-                    if (b < SimPathStore.BLOCKED) return v3;
+                    if (b < BLOCKED) return v3;
                 }
             }
             Debug("Clearing area " + swp);
-            SetNodeQualityTimer(v3, SimPathStore.MAYBE_BLOCKED, 30);
+            SetNodeQualityTimer(v3, MAYBE_BLOCKED, 30);
             for (float distance = PathStore.StepSize; distance < useDist * 1.5; distance += PathStore.StepSize)
             {
                 for (int dir = 0; dir < 360; dir += 15)
                 {
-                    v3 = SimPathStore.GetLocalLeftPos(swp, dir, distance);
+                    v3 = GetLocalLeftPos(swp, dir, distance);
                     b = PathStore.GetNodeQuality(v3, CP);
-                    if (b == SimPathStore.BLOCKED)
+                    if (b == BLOCKED)
                     {
-                        SetNodeQualityTimer(v3, SimPathStore.MAYBE_BLOCKED, 30);
+                        SetNodeQualityTimer(v3, MAYBE_BLOCKED, 30);
                     }
                 }
             }
@@ -1111,7 +1135,7 @@ namespace PathSystem3D.Navigation
         }
 
         bool TerrainBaked = false;
-        object TerrainBakedLock = new object();
+        readonly object TerrainBakedLock = new object();
         public void BakeTerrain()
         {
             lock (TerrainBakedLock)
@@ -1161,7 +1185,10 @@ namespace PathSystem3D.Navigation
                         }
                     }
 
+
+#if COLLIDER_ODE
                     if (GroundLevel512 == null)
+#endif
                     {
                         MAPSPACE1--;
 
@@ -1199,6 +1226,8 @@ namespace PathSystem3D.Navigation
             }
         }
 
+
+#if COLLIDER_ODE
         private object StartedBakingTerrainLock = new Object();
         private Thread PutTerrainInSceneThread;
 
@@ -1217,6 +1246,7 @@ namespace PathSystem3D.Navigation
         }
 
         public float[,] GroundLevel512;
+      
         public void PutTerrainInScene()
         {
             float[] hts =
@@ -1226,22 +1256,27 @@ namespace PathSystem3D.Navigation
                 for (int y = 0; y < 256; y++)
                     hts[y * 256 + x] = GetGroundLevel(x, y);
 
-#if COLLIDER_ODE
+
             odeScene.SetTerrain(hts);
             GroundLevel512 = odeScene.GroundLevel512;
-#endif
+
             _GroundPlane = null;
         }
+#endif
 
         public float GetGroundLevel(float x, float y)
         {
             if (GroundLevelDelegate == null) return 10f;
+
+#if COLLIDER_ODE
+
             if (GroundLevel512!=null)
             {
                 int ix = (int)(x * 2);
                 int iy = (int)(y * 2);
                 return GroundLevel512[ix, iy];
             }
+#endif
             return GroundLevelDelegate(x,y);
         }
 
@@ -1269,11 +1304,11 @@ namespace PathSystem3D.Navigation
         {
             while (ZAngle < 0)
             {
-                ZAngle += SimPathStore.PI2;
+                ZAngle += PI2;
             }
-            while (ZAngle > SimPathStore.PI2)
+            while (ZAngle > PI2)
             {
-                ZAngle -= SimPathStore.PI2;
+                ZAngle -= PI2;
             }
             return new Vector3((float)Math.Sin(ZAngle), (float)Math.Cos(ZAngle), 0);
         }
@@ -1373,6 +1408,22 @@ namespace PathSystem3D.Navigation
             return CreateMoverPlane(Z);
         }
 
+
+        internal CollisionPlane FindCollisionPlane(float Z)
+        {
+            if (Matrixes.Count > 0)
+            {
+                lock (Matrixes) foreach (CollisionPlane P in Matrixes)
+                {
+                    if (P.Accepts(Z))
+                    {
+                        return P;
+                    }
+                }
+            }
+            return null;
+        }
+
       //  float CollisionPlaneHeights = 3.0f;
         readonly internal IList<CollisionPlane> Matrixes = new List<CollisionPlane>();
         public byte[,] GetByteMatrix(float Z)
@@ -1459,8 +1510,8 @@ namespace PathSystem3D.Navigation
             if (sb == Color.Empty)
             {
                 int colorIndex = 240 - ((int)(Math.Log10(p) * 127));
-                colorIndex = colorIndex < byte.MinValue ? byte.MinValue : colorIndex > byte.MaxValue ? byte.MaxValue : colorIndex;
-                sb = Color.FromArgb(byte.MaxValue, colorIndex, colorIndex, colorIndex);
+                colorIndex = colorIndex < Byte.MinValue ? Byte.MinValue : colorIndex > Byte.MaxValue ? Byte.MaxValue : colorIndex;
+                sb = Color.FromArgb(Byte.MaxValue, colorIndex, colorIndex, colorIndex);
                 lastColour[p] = sb;
             }
             return sb;
@@ -1753,7 +1804,7 @@ namespace PathSystem3D.Navigation
         {
             List<SimRoute> vectors = new List<SimRoute>();
             List<SimRoute> skipped = new List<SimRoute>();
-            float ZAngle = float.NaN;
+            float ZAngle = Single.NaN;
             bool ZAngleValid = false;
             Vector3d currentV3 = v3s[0].StartNode.Position;
             vectors.Add(v3s[0]);
@@ -1804,7 +1855,7 @@ namespace PathSystem3D.Navigation
             Vector3d currentV3 = currentV3In;
             IList<Vector3d> vectors = new List<Vector3d>();
             float MaxTurnRadians = MaxTurnDegrees / RAD2DEG;
-            float ZAngle = float.NaN;
+            float ZAngle = Single.NaN;
             bool ZAngleValid = false;
             int Max = v3s.Count - 1;
             for (int Current = 0; Current < Max; Current++)
@@ -1985,8 +2036,8 @@ namespace PathSystem3D.Navigation
         {
             System.Drawing.Bitmap TempBitmap = Image;
             System.Drawing.Bitmap NewBitmap = new System.Drawing.Bitmap(TempBitmap.Width, TempBitmap.Height);
-            System.Drawing.Graphics NewGraphics = System.Drawing.Graphics.FromImage(NewBitmap);
-            NewGraphics.DrawImage(TempBitmap, new System.Drawing.Rectangle(0, 0, TempBitmap.Width, TempBitmap.Height), new System.Drawing.Rectangle(0, 0, TempBitmap.Width, TempBitmap.Height), System.Drawing.GraphicsUnit.Pixel);
+            System.Drawing.Graphics NewGraphics = Graphics.FromImage(NewBitmap);
+            NewGraphics.DrawImage(TempBitmap, new System.Drawing.Rectangle(0, 0, TempBitmap.Width, TempBitmap.Height), new System.Drawing.Rectangle(0, 0, TempBitmap.Width, TempBitmap.Height), GraphicsUnit.Pixel);
             NewGraphics.Dispose();
             for (int x = 0; x < NewBitmap.Width; ++x)
             {
@@ -2216,7 +2267,7 @@ namespace PathSystem3D.Navigation
                 if (_PathStores.TryGetValue(loc,out PS)) {
                     return PS;
                 }
-                PS = new SimPathStore(loc.ToString(), loc, new Vector3d(loc.X * 256, loc.Y * 256, 0), new Vector3(256, 256, float.MaxValue));
+                PS = new SimPathStore(loc.ToString(), loc, new Vector3d(loc.X * 256, loc.Y * 256, 0), new Vector3(256, 256, Single.MaxValue));
                 return PS;
             }
         }
@@ -2275,6 +2326,46 @@ namespace PathSystem3D.Navigation
             lock (Matrixes) Matrixes.Add(found);
             if (PanelGUI != null) PanelGUI.OnNewCollisionPlane(found);
             return found;
+        }
+
+        public static bool Special(byte b)
+        {
+            switch (b)
+            {
+                case STICKY_PASSABLE:
+                case PASSABLE:
+                case BLOCKED:
+                case MAYBE_BLOCKED:
+                case BLOCKED_YELLOW:
+                case BLOCK_PURPLE:
+                case BLOCK_ORANGE:
+                case WATER_G:
+                case WATER_Z:
+                case TOO_LOW:
+                case TOO_HIGH:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool MaybeBlocked(byte b)
+        {
+            switch (b)
+            {
+                case MAYBE_BLOCKED:
+                case BLOCKED:
+                case BLOCKED_YELLOW:
+                case BLOCK_PURPLE:
+                case BLOCK_ORANGE:
+                case WATER_G:
+                case WATER_Z:
+                case TOO_LOW:
+                case TOO_HIGH:
+                    return true;
+                default:
+                    return false;
+            }
         }
     }
 

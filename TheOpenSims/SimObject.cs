@@ -1217,19 +1217,22 @@ namespace cogbot.TheOpenSims
             // look for closed doors
 
             List<SimObject> UnEnterables = new List<SimObject>();
-            foreach (SimObject O in (this).GetNearByObjects(3, false))
+            foreach (SimObject O in GetNearByObjects(3, false))
             {
                 if (!O.IsPhantom)
                 {
+                    O.UpdateOccupied();
                     if (O.IsTypeOf(DOOR) != null)
                     {
                         O.MakeEnterable(this);
                         UnEnterables.Add(O);
+                        continue;
                     }
                     if (O.IsSculpted)
                     {
                         O.MakeEnterable(this);
                         UnEnterables.Add(O);
+                        continue;
                     }
                 }
             }
@@ -1247,6 +1250,44 @@ namespace cogbot.TheOpenSims
         }        
 
         #endregion
+
+        #region SimObject Members
+
+        public virtual void AddCanBeTargetOf(string sit, params object[] args)
+        {
+
+        }
+
+
+        public virtual void AddPossibleAction(string sit, params object[] args)
+        {
+            if (args.Length > 0)
+            {
+                object o = args[0];
+                if (o is SimObject)
+                {
+                    SimObject newSit = (SimObject) o;
+                    newSit.AddCanBeTargetOf(sit,RestOfArray(args, 1));
+                }
+            }
+
+        }
+
+        static public object[] RestOfArray(object[] args, int p)
+        {
+            if (args == null) return null;
+            int len = args.Length;
+            Type t = args.GetType().GetElementType();
+            int newLen = len - p;
+            if (newLen<=0)
+            {
+                return (object[])Array.CreateInstance(t, 0);
+            }
+            object[] o= (object[])Array.CreateInstance(t, newLen);
+            Array.Copy(args,p,o,0,newLen);
+            return o;
+        }
+        #endregion
     }
     public interface SimObject : SimPosition, SimMover, BotMentalAspect
     {
@@ -1260,7 +1301,7 @@ namespace cogbot.TheOpenSims
         double Distance(SimPosition prim);
         string DistanceVectorString(OpenMetaverse.Vector3 loc);
         string DistanceVectorString(OpenMetaverse.Vector3d loc3d);
-        string DistanceVectorString(SimPosition obj);
+        //inherited from SimPosition: string DistanceVectorString(SimPosition obj);
         Exception Error(string p, params object[] args);
         bool FollowPathTo(SimPosition globalEnd, double distance);
         BotNeeds GetActualUpdate(string pUse);
@@ -1279,7 +1320,7 @@ namespace cogbot.TheOpenSims
         bool IsInside(OpenMetaverse.Vector3 L);
         bool IsKilled { set; }
         bool IsLocal();
-        bool IsPassable { get; set; }
+        //inherited from SimPosition: bool IsPassable { get; set; }
         bool IsPhantom { get; set; }
         bool IsPhysical { get; set; }
         bool IsRoot();
@@ -1306,7 +1347,7 @@ namespace cogbot.TheOpenSims
         void SortByDistance(System.Collections.Generic.List<SimObject> sortme);
         string SuperTypeString();
         void TeleportTo(SimRegion R, OpenMetaverse.Vector3 local);
-        string ToString();
+        //inherited from Object string ToString();
         void TurnToward(SimPosition targetPosition);
         bool TurnToward(OpenMetaverse.Vector3 target);
         void UpdateObject(OpenMetaverse.ObjectUpdate objectUpdate, OpenMetaverse.ObjectUpdate objectUpdateDiff);
@@ -1316,5 +1357,9 @@ namespace cogbot.TheOpenSims
         void UpdateOccupied();
 
         void Touch(SimObject simObjectImpl);
+
+        void AddPossibleAction(string textualActionName, params object[] args);
+
+        void AddCanBeTargetOf(string textualActionName, params object[] args);
     }
 }

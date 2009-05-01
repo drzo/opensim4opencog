@@ -37,7 +37,7 @@ namespace PathSystem3D.Navigation.Debug
         private const string NODE_START = "Start";
         private const string NODE_END = "End";
         private const string NODE_X = "X";
-        private const string NODE_M = "X";
+        private const string NODE_M = "M";
         public const int MAPSPACE_LS = 1000;
         #endregion
 
@@ -54,15 +54,15 @@ namespace PathSystem3D.Navigation.Debug
         public PathFinderDemo(SimPathStore pathStore)
         {
             PathStore = pathStore;
-            //this.PnlGUI = new PanelPathFinder(pathStore);
+            //this.PnlGUI = new PanelPathFinder();          
             InitializeComponent();
-            PnlGUI.SetPathStore(pathStore);
             CboFormula.SelectedIndex = 0;
             BtnStartStop.Text = RUN;
             BtnPause.Text = PAUSE;
             BtnStart.Text = NODE_START;
             BtnEnd.Text = NODE_END;
             BtnX.Text = NODE_X;
+            BtnM.Text = NODE_M; 
             mDelay = TBarSpeed.Value;
         }
         #endregion
@@ -304,7 +304,12 @@ namespace PathSystem3D.Navigation.Debug
                 PnlGUI.DrawModeSetup = DrawModeSetup.End;
             else if (text == NODE_X)
             {
-                PnlGUI.NodeWeight = 0;
+                PnlGUI.NodeWeight = SimPathStore.BLOCKED;
+                PnlGUI.DrawModeSetup = DrawModeSetup.Block;
+            }
+            else if (text == NODE_M)
+            {
+                PnlGUI.NodeWeight = SimPathStore.MAYBE_BLOCKED;
                 PnlGUI.DrawModeSetup = DrawModeSetup.Block;
             }
             else
@@ -483,7 +488,7 @@ namespace PathSystem3D.Navigation.Debug
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.Btn80 = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator12 = new System.Windows.Forms.ToolStripSeparator();
-            this.ButtonM = new System.Windows.Forms.ToolStripButton();
+            this.BtnM = new System.Windows.Forms.ToolStripButton();
             this.BtnX = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.BtnStart = new System.Windows.Forms.ToolStripButton();
@@ -504,6 +509,7 @@ namespace PathSystem3D.Navigation.Debug
             this.ChkTieBraker = new System.Windows.Forms.CheckBox();
             this.BtnStartStop = new System.Windows.Forms.Button();
             this.PnlSettings = new System.Windows.Forms.Panel();
+            this.CollisionPlaneList = new System.Windows.Forms.ComboBox();
             this.MinZevel = new System.Windows.Forms.TextBox();
             this.BtnRecomputeMatrix = new System.Windows.Forms.Button();
             this.BtnRebakeTerrain = new System.Windows.Forms.Button();
@@ -519,7 +525,6 @@ namespace PathSystem3D.Navigation.Debug
             this.TBarY = new System.Windows.Forms.TrackBar();
             this.LblCompletedTimeValue = new System.Windows.Forms.Label();
             this.LblCompletedTime = new System.Windows.Forms.Label();
-            this.CollisionPlaneList = new System.Windows.Forms.ComboBox();
             this.ToolStrp.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.TBarSpeed)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.NumUpDownHeuristic)).BeginInit();
@@ -537,6 +542,7 @@ namespace PathSystem3D.Navigation.Debug
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.PnlGUI.BackColor = System.Drawing.Color.White;
             this.PnlGUI.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.PnlGUI.CurrentPlane = null;
             this.PnlGUI.DrawModeSetup = PathSystem3D.Navigation.Debug.DrawModeSetup.None;
             this.PnlGUI.End = new System.Drawing.Point(0, 0);
             this.PnlGUI.Formula = PathSystem3D.Navigation.HeuristicFormula.Manhattan;
@@ -547,7 +553,8 @@ namespace PathSystem3D.Navigation.Debug
             this.PnlGUI.Size = new System.Drawing.Size(664, 611);
             this.PnlGUI.Start = new System.Drawing.Point(1, 1);
             this.PnlGUI.TabIndex = 1;
-            // this.PnlGUI.ZLevel = 0F;
+            this.PnlGUI.ZLevel = 22F;
+            this.PnlGUI.Load += new System.EventHandler(this.PnlGUI_Load);
             // 
             // ToolStrp
             // 
@@ -573,7 +580,7 @@ namespace PathSystem3D.Navigation.Debug
             this.toolStripSeparator6,
             this.Btn80,
             this.toolStripSeparator12,
-            this.ButtonM,
+            this.BtnM,
             this.BtnX,
             this.toolStripSeparator7,
             this.BtnStart,
@@ -611,7 +618,6 @@ namespace PathSystem3D.Navigation.Debug
             // BtnSave
             // 
             this.BtnSave.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-          //  this.BtnSave.Image = global::cogbot.Properties.Resources.Sauver;
             this.BtnSave.ImageTransparentColor = System.Drawing.Color.Black;
             this.BtnSave.Name = "BtnSave";
             this.BtnSave.Size = new System.Drawing.Size(23, 22);
@@ -752,16 +758,17 @@ namespace PathSystem3D.Navigation.Debug
             this.toolStripSeparator12.Name = "toolStripSeparator12";
             this.toolStripSeparator12.Size = new System.Drawing.Size(6, 25);
             // 
-            // ButtonM
+            // BtnM
             // 
-            this.ButtonM.CheckOnClick = true;
-            this.ButtonM.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.ButtonM.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.ButtonM.Name = "ButtonM";
-            this.ButtonM.Size = new System.Drawing.Size(23, 22);
-            this.ButtonM.Tag = "0";
-            this.ButtonM.Text = "M";
-            this.ButtonM.ToolTipText = "M";
+            this.BtnM.CheckOnClick = true;
+            this.BtnM.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.BtnM.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.BtnM.Name = "BtnM";
+            this.BtnM.Size = new System.Drawing.Size(23, 22);
+            this.BtnM.Tag = "254";
+            this.BtnM.Text = "M";
+            this.BtnM.ToolTipText = "M";
+            this.BtnM.Click += new System.EventHandler(this.Btn_Click);
             // 
             // BtnX
             // 
@@ -770,7 +777,7 @@ namespace PathSystem3D.Navigation.Debug
             this.BtnX.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.BtnX.Name = "BtnX";
             this.BtnX.Size = new System.Drawing.Size(23, 22);
-            this.BtnX.Tag = "0";
+            this.BtnX.Tag = "255";
             this.BtnX.Text = "X";
             this.BtnX.Click += new System.EventHandler(this.Btn_Click);
             // 
@@ -990,6 +997,15 @@ namespace PathSystem3D.Navigation.Debug
             this.PnlSettings.Size = new System.Drawing.Size(155, 534);
             this.PnlSettings.TabIndex = 17;
             // 
+            // CollisionPlaneList
+            // 
+            this.CollisionPlaneList.FormattingEnabled = true;
+            this.CollisionPlaneList.Location = new System.Drawing.Point(81, 416);
+            this.CollisionPlaneList.Name = "CollisionPlaneList";
+            this.CollisionPlaneList.Size = new System.Drawing.Size(61, 21);
+            this.CollisionPlaneList.TabIndex = 27;
+            this.CollisionPlaneList.SelectedIndexChanged += new System.EventHandler(this.CollisionPlaneList_SelectedIndexChanged);
+            // 
             // MinZevel
             // 
             this.MinZevel.Location = new System.Drawing.Point(15, 416);
@@ -1171,15 +1187,6 @@ namespace PathSystem3D.Navigation.Debug
             this.LblCompletedTime.TabIndex = 27;
             this.LblCompletedTime.Text = "Completed Time               sec.";
             // 
-            // CollisionPlaneList
-            // 
-            this.CollisionPlaneList.FormattingEnabled = true;
-            this.CollisionPlaneList.Location = new System.Drawing.Point(81, 416);
-            this.CollisionPlaneList.Name = "CollisionPlaneList";
-            this.CollisionPlaneList.Size = new System.Drawing.Size(61, 21);
-            this.CollisionPlaneList.TabIndex = 27;
-            this.CollisionPlaneList.SelectedIndexChanged += new System.EventHandler(this.CollisionPlaneList_SelectedIndexChanged);
-            // 
             // PathFinderDemo
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1211,7 +1218,10 @@ namespace PathSystem3D.Navigation.Debug
             this.PerformLayout();
 
         }
+        private void ButtonM_Click(object sender, EventArgs e)
+        {
 
+        }
         #endregion
 
         private System.Windows.Forms.ToolStrip ToolStrp;
@@ -1252,7 +1262,7 @@ namespace PathSystem3D.Navigation.Debug
         private System.Windows.Forms.Label LblFormula;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator12;
         private System.Windows.Forms.ToolStripButton BtnX;
-        private System.Windows.Forms.ToolStripButton ButtonM;
+        private System.Windows.Forms.ToolStripButton BtnM;
         private System.Windows.Forms.CheckBox ChkTieBraker;
         private PanelPathFinder PnlGUI;
         private System.Windows.Forms.Button BtnStartStop;
@@ -1365,5 +1375,12 @@ namespace PathSystem3D.Navigation.Debug
             MinZevel.Text = ""+_CurrentPlane.MinZ;
             PnlGUI.CurrentPlane = _CurrentPlane;
         }
+
+        private void PnlGUI_Load(object sender, EventArgs e)
+        {
+
+        }
+
+
     }
 }
