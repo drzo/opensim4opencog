@@ -334,6 +334,27 @@ namespace PathSystem3D.Navigation
         public SimCollisionPlaneMover(SimMover mover, SimPosition finalGoal, double finalDistance) :
             base(mover, finalGoal, finalDistance)
         {
+            float startZ = mover.GetSimPosition().Z;
+            float endZ = finalGoal.GetSimPosition().Z;
+            float MinZ = endZ;
+            float cpz = MoverPlane.MinZ;
+            if (startZ < MinZ)
+            {
+                MinZ = startZ;
+            }
+            if (cpz < MinZ)
+            {
+                MoverPlane.MinZ = MinZ;
+                MoverPlane.MaxZ = MinZ + 3;
+                MoverPlane.NeedsUpdate = true;
+            }
+            else if (cpz > MinZ)
+            {
+                MoverPlane.MinZ = MinZ;
+                MoverPlane.MaxZ = MinZ + 3;
+                MoverPlane.NeedsUpdate = true; 
+            }
+
             MoverPlane.WalkZLevel = mover.GetSimPosition().Z;
             MoverPlane.WalkZLevel = finalGoal.GetSimPosition().Z;
         }

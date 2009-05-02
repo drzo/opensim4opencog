@@ -655,13 +655,10 @@ namespace PathSystem3D.Navigation
 
         public static IList<Vector3d> GetPath(CollisionPlane CP, Vector3d globalStart, Vector3d globalEnd, double endFudge, out bool OnlyStart)
         {
-            SimPosition posStart = SimWaypointImpl.CreateGlobal(globalStart);
-            SimPosition posEnd = SimWaypointImpl.CreateGlobal(globalEnd);
-            SimPathStore regStart = posStart.GetPathStore();
-            SimPathStore regEnd = posEnd.GetPathStore();
-            Vector3 localStart = posStart.GetSimPosition();
-            Vector3 localEnd = posEnd.GetSimPosition();
-            IList<Vector3d> route;
+            SimPathStore regStart = SimPathStore.GetPathStore(globalStart);// posStart.GetPathStore();
+            SimPathStore regEnd = GetPathStore(globalEnd);
+            Vector3 localStart = GlobalToLocal(globalStart);
+            Vector3 localEnd = GlobalToLocal(globalEnd); 
             // Same region?
             if (regStart == regEnd)
             {
@@ -669,9 +666,9 @@ namespace PathSystem3D.Navigation
             }
             OnlyStart = true; // will be only a partial path
             SimPathStore nextRegion;
-            Vector3 localLast = regStart.LocalOuterEdge(localStart, posEnd, out nextRegion);
+            Vector3 localLast = regStart.LocalOuterEdge(localStart, globalEnd, out nextRegion);
             // needs to go to edge
-            route = regStart.GetLocalPath(CP,localStart, localLast);
+            IList<Vector3d> route = regStart.GetLocalPath(CP, localStart, localLast);
             // at edge so make a crossing
             Vector3 enterEdge = EnterEdge(localLast, nextRegion.GetGridLocation() - regStart.GetGridLocation());
             route.Add(nextRegion.LocalToGlobal(enterEdge));
@@ -681,9 +678,8 @@ namespace PathSystem3D.Navigation
 
         internal IList<Vector3d> GetAtLeastPartial(CollisionPlane CP, Vector3 localStart, Vector3 localEnd, float endFudge, out bool OnlyStart)
         {
-            IList<Vector3d> route;
             Vector3 newEnd = localEnd;
-            route = GetLocalPath(CP, localStart, newEnd);
+            IList<Vector3d> route = GetLocalPath(CP, localStart, newEnd);
             if (route.Count > 1)
             {
                 OnlyStart = false;
@@ -808,7 +804,7 @@ namespace PathSystem3D.Navigation
             List<CollisionIndex> RestoreBlocked = new List<CollisionIndex>();
             RestoreBlocked.Add(GetCollisionIndex(ix, iy));
 
-            int count = CP.NeighborPredicate(ix, iy,(int)( useDist*POINTS_PER_METER), delegate(int NX, int NY)
+            int count = 1+CP.NeighborPredicate(ix, iy,(int)( useDist*POINTS_PER_METER), delegate(int NX, int NY)
             {
                 byte NB = ByteMatrix[NX, NY];
                 if (NB == BLOCKED)
@@ -844,6 +840,7 @@ namespace PathSystem3D.Navigation
                 if (PanelGUI != null) PanelGUI.Invalidate();
                 return v3;
             }
+            return v3;
 
             SimWaypoint swp = GetWaypointOf(v3);
             for (float distance = PathStore.StepSize; distance < useDist * 2; distance += PathStore.StepSize)
@@ -1122,6 +1119,7 @@ namespace PathSystem3D.Navigation
 
         public IList<Vector3d> GetLocalPath(CollisionPlane CP, Vector3 start, Vector3 end)
         {
+
             CP.EnsureUpToDate();
             if (!TerrainBaked) BakeTerrain();
             float Z = start.Z;
@@ -1950,6 +1948,10 @@ namespace PathSystem3D.Navigation
             {
 
             }
+            if (panel != null)
+            {
+                panel.PnlGUI.CurrentPlane = CP;
+            }
             Point S = ToPoint(start);
             Point E = ToPoint(end);
             IList<PathFinderNode> pfn = null;
@@ -2234,10 +2236,10 @@ namespace PathSystem3D.Navigation
         }
 
 
-        public Vector3 LocalOuterEdge(Vector3 startLocal, SimPosition endPosOther, out SimPathStore nextRegion)
+        public Vector3 LocalOuterEdge(Vector3 startLocal, Vector3d globalEnd, out SimPathStore nextRegion)
         {
-            SimPathStore rother = endPosOther.GetPathStore();
-            Vector3 vother = endPosOther.GetSimPosition();
+            SimPathStore rother = GetPathStore(globalEnd);
+            Vector3 vother = GlobalToLocal(globalEnd);//.GetSimPosition();
             if (rother == this)
             {
                 nextRegion = this;
@@ -2390,9 +2392,19 @@ namespace PathSystem3D.Navigation
             {
                 if (OuterBox.IsZInside(list.MinZ,list.MaxZ))
                 {
-                    list.NeedsUpdate = true;
+                  // list.NeedsUpdate = true;
                 }
             }
+        }
+
+        public bool IsUnderWater(Vector3d vector3)
+        {
+            return vector3.Z <= WaterHeight;
+        }
+
+        public bool IsFlyZone(Vector3 vector3)
+        {
+            return GetCollisionPlane(vector3.Z).IsFlyZone(ARRAY_X(vector3.X),ARRAY_Y(vector3.Y));
         }
     }
 

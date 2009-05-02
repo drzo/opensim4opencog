@@ -56,7 +56,7 @@ namespace PathSystem3D.Navigation
             MaxZ = minZ + 2.5f;
         }
 
-        public float MinZ { get; private set; }
+        public float MinZ { get; set;}
         public float WalkZLevel
         {
             //get { return _ZLevelMin; }
@@ -119,7 +119,7 @@ namespace PathSystem3D.Navigation
         }
         byte[,] _BM;
 
-        public float MaxZ { get; private set; }
+        public float MaxZ { get; set; }
 
         public byte[,] ByteMatrix
         {
@@ -445,6 +445,7 @@ namespace PathSystem3D.Navigation
                     }
                     else
                     {
+                        ToMatrix[x, y] = DefaultCollisionValue(x, y, ZLevel, b, Heights, MeshIndex);
                     }
                 }
             }
@@ -687,6 +688,17 @@ namespace PathSystem3D.Navigation
             if (O == someValue) found++;
 
             return found;
+        }
+
+        internal bool IsFlyZone(int x, int y)
+        {
+            CollisionIndex CI = PathStore.MeshIndex[x, y];
+            if (CI != null)
+            {
+                return CI.IsFlyZone(MinZ, MaxZ);
+            }
+            float h = HeightMap[x, y];
+            return (MinZ > h);
         }
     }
 

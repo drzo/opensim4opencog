@@ -893,7 +893,7 @@ namespace cogbot.TheOpenSims
         {
             lock (TrackerLoopLock)
             {
-                ApproachPosition = null;
+                ApproachVector3D = Vector3d.Zero;
             }
             AgentManager ClientSelf = Client.Self;
             ClientSelf.AutoPilotCancel();
@@ -973,17 +973,24 @@ namespace cogbot.TheOpenSims
             Boolean stopNext = false;
             while (true)
             {
-                Vector3d targetPosition;
+                Vector3d targetPosition = ApproachVector3D;
                 lock (TrackerLoopLock)
                 {
                     // Debug("TrackerLoop: " + Thread.CurrentThread);
-                    if (ApproachPosition == null)
+                    if (ApproachVector3D == Vector3d.Zero)
                     {
-                        Thread.Sleep(100);
-                        continue;
+                        if (ApproachPosition == null)
+                        {
+                            Thread.Sleep(100);
+                            continue;
+                        }
+                       
                     }
-
-                    targetPosition = ApproachPosition.GetWorldPosition();
+                    if (ApproachPosition!=null)
+                    {
+                        targetPosition = ApproachPosition.GetWorldPosition();
+                    }
+                    
                 }
                 double realTargetZ = targetPosition.Z;
                 Vector3d worldPosition = GetWorldPosition();
@@ -1017,9 +1024,8 @@ namespace cogbot.TheOpenSims
                         targetPosition.Z = selfZ;
                     }
 
-                    SimWaypoint WP = WorldSystem.GetWaypoint(worldPosition);
                     // Like water areas
-                    bool swimming = WP.IsUnderWater();
+                    bool swimming = GetPathStore().IsUnderWater(worldPosition);
 
                     // Reset previous Z 
                     ClientMovement.FastUp = false;
@@ -1070,7 +1076,7 @@ namespace cogbot.TheOpenSims
                         targetPosition.Z = WaterHeight - 0.25f;
                     }
 
-                    ClientMovement.Fly = swimming || WP.IsFlyZone();
+                    ClientMovement.Fly = swimming || GetPathStore().IsFlyZone(SimPathStore.GlobalToLocal(worldPosition));
 
                     if (swimming)
                     {
@@ -1107,9 +1113,12 @@ namespace cogbot.TheOpenSims
                     //}
 
 
-                    if (ApproachPosition == null)
+                    if (ApproachVector3D == Vector3d.Zero)
                     {
-                        continue;
+                        if (ApproachPosition == null)
+                        {                         
+                            continue;
+                        }
                     }
 
                     TurnToward(targetPosition);
@@ -1194,8 +1203,8 @@ namespace cogbot.TheOpenSims
             if (currentDist < maxDistance) return true;
             lock (TrackerLoopLock)
             {
-                SimWaypoint P = SimWaypointImpl.CreateGlobal(finalTarget);
-                SetMoveTarget(P);
+              //  SimWaypoint P = SimWaypointImpl.CreateGlobal(finalTarget);
+                SetMoveTarget(finalTarget);
                 ApproachDistance = maxDistance;
             }
             double lastDistance = currentDist;
@@ -1244,16 +1253,32 @@ namespace cogbot.TheOpenSims
             Client.Self.Teleport(R.RegionName, local);
         }
 
-        public override void SetMoveTarget(SimPosition target)
+        public void SetMoveTarget(SimPosition target)
+        {
+            if (target==null)
+            {
+                ApproachVector3D = Vector3d.Zero;
+                ApproachPosition = null;
+                return;
+            }
+            if (ApproachPosition != target)
+            {
+                SetMoveTarget(target.GetWorldPosition());
+            }
+        }
+
+
+        public override void SetMoveTarget(Vector3d target)
         {
             lock (TrackerLoopLock)
             {
-                if (target != ApproachPosition)
+                if (target != ApproachVector3D)
                 {
-                    ApproachPosition = target;
-                    if (target != null)
+                    //ApproachPosition = target;
+                    ApproachVector3D = target;
+                    if (target != Vector3d.Zero)
                     {
-                        ApproachDistance = target.GetSizeDistance();
+                       
                         EnsureTrackerRunning();
                     }
                     else
@@ -1283,6 +1308,7 @@ namespace cogbot.TheOpenSims
         double ApproachDistance = 2f;
 
         public SimPosition ApproachPosition { get; set; }
+        public Vector3d ApproachVector3D { get; set; }
 
         Thread ApproachThread;//= new Thread(TrackerLoop);
 
@@ -1339,11 +1365,17 @@ namespace cogbot.TheOpenSims
             //don't change this spot
             //GetPathStore().SetPassable(pos.X, pos.Y, pos.Z);
         }
+
+        #region SimAvatar Members
+
+
+        #endregion
     }
 
     public interface SimAvatar : SimObject, SimMover
     {
         void Aging();
+        SimPosition ApproachPosition { get; set; }
         void RemoveObject(SimObject O);
         double Approach(SimObject obj, double maxDistance);
         int CompareObjects(SimObject act1, SimObject act2);
@@ -1369,7 +1401,7 @@ namespace cogbot.TheOpenSims
         void SetClient(cogbot.BotClient Client);
         double SightRange { get; set; }
         SimAvatar InDialogWith { get; set; }
-        SimPosition ApproachPosition { get; set; }
+       // SimPosition ApproachPosition { get; set; }
         BotNeeds CurrentNeeds { get; }
         SimObject StandUp();
         void StartThinking();
@@ -1384,5 +1416,7 @@ namespace cogbot.TheOpenSims
         System.Threading.ThreadStart WithSitOn(SimObject obj, System.Threading.ThreadStart closure);
 
         //List<SimObject> GetNearByObjects(double p, bool p_2);
+
+        void SetMoveTarget(SimPosition followAvatar);
     }
 }
