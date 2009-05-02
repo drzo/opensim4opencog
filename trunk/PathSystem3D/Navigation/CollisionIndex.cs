@@ -471,6 +471,7 @@ namespace PathSystem3D.Navigation
         public bool IsTimerTicking = false;
         public void SetNodeQualityTimer(CollisionPlane CP, int value, int seconds)
         {
+            return;
             byte oldValue = GetMatrix(CP);
             if (oldValue == value) // already set
                 return;
@@ -509,7 +510,7 @@ namespace PathSystem3D.Navigation
             return CreateCollisionIndex(new Vector3(x, y, 0), simPathStore);
         }
 
-        Dictionary<CollisionPlane, SimWaypoint> WaypointsHash = new Dictionary<CollisionPlane, SimWaypoint>();
+        private Dictionary<CollisionPlane, SimWaypoint> WaypointsHash = new Dictionary<CollisionPlane, SimWaypoint>();
         public SimWaypoint FindWayPoint(float z)
         {
             CollisionPlane CP = CollisionPlaneAt(z);
@@ -538,7 +539,7 @@ namespace PathSystem3D.Navigation
             CollisionPlane CP = CollisionPlaneAt(z);
             WaypointsHash[CP] = v;
         }
-
+       
         internal bool IsPortal(CollisionPlane collisionPlane)
         {
             IEnumerable<IMeshedObject> mis = GetOccupied(collisionPlane.MinZ, collisionPlane.MaxZ);

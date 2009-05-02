@@ -474,7 +474,7 @@ namespace cogbot.Listeners
 
         private static SimObject TryGetSimObjectFromUUID(Primitive prim)
         {
-            if (prim.ID == UUID.Zero) return null;
+            if (prim==null || prim.ID == UUID.Zero) return null;
             Object obj0;
             //lock (uuidTypeObject)
                 if (uuidTypeObject.TryGetValue(prim.ID, out obj0))

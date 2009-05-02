@@ -37,8 +37,8 @@ namespace cogbot.TheOpenSims
             double currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
             if (currentDist < maxDistance) return true;
             {
-                SimWaypoint P = SimWaypointImpl.CreateGlobal(finalTarget);
-                SetMoveTarget(P);
+              //  SimWaypoint P = SimWaypointImpl.CreateGlobal(finalTarget);
+                SetMoveTarget(finalTarget);
             }
             for (int i = 0; i < maxSeconds; i++)
             {
@@ -83,14 +83,14 @@ namespace cogbot.TheOpenSims
             Thread.Sleep(ms);
         }
 
-        public virtual void SetMoveTarget(SimPosition target)
+        public virtual void SetMoveTarget(Vector3d target)
         {
             //SimRegion R = target.GetSimRegion();
             //if (R != GetSimRegion())
             //{
             //    TeleportTo(R,target.GetSimPosition());
             //}
-            Vector3d finalPos = target.GetWorldPosition();
+            Vector3d finalPos = target;// target.GetWorldPosition();
             Vector3d start = GetWorldPosition();
             Vector3d offset = finalPos - start;
             double points = offset.Length();
@@ -121,7 +121,7 @@ namespace cogbot.TheOpenSims
                 bool result = FollowPathTo(pos, pos.GetSizeDistance());
                 if (result)
                 {
-                    SetMoveTarget(pos);
+                    SetMoveTarget(pos.GetWorldPosition());
                     return result;
                 }
             }
@@ -1336,7 +1336,9 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                string sn = Prim.Properties.SitName;
+                string sn = null;
+                if (Prim.Properties != null)
+                    sn = Prim.Properties.SitName;
                 if (!String.IsNullOrEmpty(sn)) return sn;
                 sn = ObjectType.GetSitName();
                 if (!String.IsNullOrEmpty(sn)) return sn;
@@ -1348,7 +1350,9 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                string sn = Prim.Properties.TouchName;
+                string sn = null;
+                if (Prim.Properties != null)
+                    sn = Prim.Properties.TouchName;
                 if (!String.IsNullOrEmpty(sn)) return sn;
                 sn = ObjectType.GetTouchName();
                 if (!String.IsNullOrEmpty(sn)) return sn;
@@ -1409,7 +1413,7 @@ namespace cogbot.TheOpenSims
         void ResetRegion(ulong regionHandle);
         bool RestoreEnterable(PathSystem3D.Navigation.SimMover actor);
         void SendUpdate(int ms);
-        void SetMoveTarget(SimPosition target);
+        void SetMoveTarget(Vector3d target);
         bool SetObjectPosition(OpenMetaverse.Vector3 localPos);
         bool SetObjectPosition(OpenMetaverse.Vector3d globalPos);
         bool SetObjectRotation(OpenMetaverse.Quaternion localPos);
