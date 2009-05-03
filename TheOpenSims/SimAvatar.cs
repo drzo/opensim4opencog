@@ -15,15 +15,15 @@ namespace cogbot.TheOpenSims
     public class SimAvatarImpl : SimObjectImpl, SimMover, cogbot.TheOpenSims.SimAvatar
     {
 
-        public override void AddPossibleAction(string typeUse, params object[] args)
+        public override void LogEvent(string typeUse, params object[] args1_N)
         {
             KnownTypeUsages.AddTo(SimTypeSystem.CreateTypeUsage(typeUse));
-            base.AddPossibleAction(typeUse, args);
+            base.LogEvent(typeUse, args1_N);
         }
 
-        public override void AddCanBeTargetOf(string textualActionName, params object[] args)
+        public override void AddCanBeTargetOf(string textualActionName, int argN, params object[] arg0_N)
         {
-            base.AddCanBeTargetOf(textualActionName, args);
+            base.AddCanBeTargetOf(textualActionName, argN, arg0_N);
         }
 
         public Thread avatarThinkerThread;
@@ -300,7 +300,7 @@ namespace cogbot.TheOpenSims
                 if (Client.Settings.OBJECT_TRACKING)
                     return Client.Self.SimRotation;
             }
-            lock (Prim)
+            //lock (Prim)
             {
                 if (theAvatar.RegionHandle != _CurrentRegion.RegionHandle)
                 {
@@ -611,6 +611,15 @@ namespace cogbot.TheOpenSims
                 }
             }
         }
+
+        public override void ResetRegion(ulong regionHandle)
+        {
+            KnownSimObjects.Clear();
+            TodoBotActions.Clear();
+            GetKnownObjects();
+            base.ResetRegion(regionHandle);
+        }
+
 
         // Avatars approach distance
         public override float GetSizeDistance()
@@ -1370,6 +1379,180 @@ namespace cogbot.TheOpenSims
 
 
         #endregion
+
+        #region SimAvatar Members
+
+        readonly Dictionary<UUID, int> ExpectedCurrentAnims = new Dictionary<UUID, int>();
+        readonly Dictionary<UUID, int> RemovedAnims = new Dictionary<UUID, int>();
+        readonly Dictionary<UUID, int> AddedAnims = new Dictionary<UUID, int>();
+        
+
+        //public UUID CurrentAmin = UUID.Zero;
+        /// <summary>
+        /// Nephrael Rae: [on-object-animation '(avatar "Candie Brooks") "TALK"][on-object-animation '(avatar "Candie Brooks") "STAND_1"][on-object-animation '(avatar "Candie Brooks") "e45fbdc9-af8f-9408-f742-fcb8c341d2c8"]
+        /// </summary>
+        /// <param name="anims"></param>
+        public void OnAvatarAnimations(InternalDictionary<UUID, int> anims)
+        {
+            //if (!theAvatar.Name.Contains("rael")) return;
+            lock (ExpectedCurrentAnims)
+            {
+                int mostCurrentSequence = -1;
+                int leastCurrentSequence = -1;
+
+
+                // first time so find the lowest number
+                leastCurrentSequence = int.MaxValue;
+                mostCurrentSequence = int.MinValue;
+                anims.ForEach(delegate(UUID key)
+                                  {
+                                      int newAnimNumber;
+                                      anims.TryGetValue(key, out newAnimNumber);
+                                      if (newAnimNumber < leastCurrentSequence)
+                                      {
+                                          leastCurrentSequence = newAnimNumber;
+                                      }
+                                      if (newAnimNumber > mostCurrentSequence)
+                                      {
+                                          mostCurrentSequence = newAnimNumber;
+                                      }
+                                      WorldObjects.RequestAsset(key, AssetType.Animation, true);
+                                  });
+
+
+
+                UUID mostCurrentAnim = UUID.Zero;
+                // List<String> names = new List<String>();
+                List<UUID> RemovedThisEvent = new List<UUID>(ExpectedCurrentAnims.Keys);
+                anims.ForEach(delegate(UUID key)
+                                  {
+                                      RemovedThisEvent.Remove(key);
+                                      int newAnimNumber;
+                                      anims.TryGetValue(key, out newAnimNumber);
+                                      if (newAnimNumber >= mostCurrentSequence)
+                                      {
+                                          mostCurrentSequence = newAnimNumber;
+                                          WorldObjects.RequestAsset(key, AssetType.Animation, true);
+                                          mostCurrentAnim = key;
+                                      }
+                                      if (ExpectedCurrentAnims.ContainsKey(key))
+                                      {
+                                          int oldAnimNumber;
+                                          ExpectedCurrentAnims.TryGetValue(key, out oldAnimNumber);
+                                          if (oldAnimNumber == newAnimNumber)
+                                              // still the same
+                                          {
+                                              AddedAnims.Remove(key);
+                                              RemovedAnims.Remove(key);
+                                              return;
+                                          }
+                                          if (oldAnimNumber > newAnimNumber)
+                                          {
+                                              Debug("error");
+                                          }
+                                          else
+                                          {
+                                              if (oldAnimNumber + 1 != newAnimNumber)
+                                              {
+                                                  RemovedAnims[key] = oldAnimNumber + 1;
+                                                  AddedAnims[key] = newAnimNumber;
+                                              }
+                                          }
+                                          return;
+                                      }
+                                      AddedAnims[key] = newAnimNumber; //AddedAnims.Add(key, newAnimNumber);
+                                      RemovedAnims.Remove(key);
+                                      //int whenSeq = newAnimNumber + 1;
+                                      //if (!RemovedAnimsWhen.ContainsKey(whenSeq))
+                                      //{
+                                      //    RemovedAnimsWhen[whenSeq] = new List<UUID>();
+                                      //}
+                                      //RemovedAnimsWhen[whenSeq].Add(key);
+
+                                  });
+                List<UUID> shownRemoved = new List<UUID>();
+                List<UUID> showAdded = new List<UUID>();
+
+                foreach (UUID key in RemovedThisEvent)
+                {
+                    ExpectedCurrentAnims.Remove(key);
+                }
+
+                foreach (UUID list in RemovedAnims.Keys)
+                {
+                    if (RemovedThisEvent.Contains(list))
+                    {
+                        RemovedThisEvent.Remove(list);
+                    }
+                }
+                foreach (UUID key in RemovedThisEvent)
+                {
+                    WorldSystem.SendNewEvent("On-Stop-Animation", this, key, GetHeading());
+                }
+
+                for (int seq = leastCurrentSequence; seq <= mostCurrentSequence; seq++)
+                {
+                    if (RemovedAnims.Count > 0)
+                    {
+                        foreach (UUID uuid in RemovedAnims.Keys)
+                        {
+                            if (seq == RemovedAnims[uuid])
+                            {
+                                WorldSystem.SendNewEvent("On-Finished-Animation", this, uuid, GetWorldPosition(), GetHeading());
+                                shownRemoved.Add(uuid);
+                                //ExpectedCurrentAnims.Remove(uuid);
+                            }
+                        }
+                    }
+                    if (AddedAnims.Count > 0)
+                    {
+                        foreach (UUID uuid in AddedAnims.Keys)
+                        {
+                            if (seq == AddedAnims[uuid])
+                            {
+                                WorldSystem.SendNewEvent("On-Start-Animation", this, uuid, GetHeading());
+                                ExpectedCurrentAnims[uuid] = seq;
+                                showAdded.Add(uuid);
+                                //RemovedAnims[uuid] = mostCurrentSequence + 1;
+                            }
+                        }
+                    }
+                }
+                leastCurrentSequence = mostCurrentSequence;
+
+                foreach (UUID key in shownRemoved)
+                {
+                    RemovedThisEvent.Remove(key);
+                    RemovedAnims.Remove(key);
+                }
+                foreach (UUID key in showAdded)
+                {
+                    AddedAnims.Remove(key);
+                }
+            }
+
+            //String newName = WorldSystem.GetAnimationName(mostCurrentAnim);
+            //{
+            //    if (oldAnim != mostCurrentAnim)
+            //    {
+            //        String oldName = WorldSystem.GetAnimationName(oldAnim);
+            //        if (oldName.Length > 4 && newName.Length > 4 &&
+            //            oldName.Substring(0, 5) == newName.Substring(0, 5))
+            //        {
+            //        }
+            //        else
+            //            WorldSystem.SendNewEvent("On-Object-Start-Animation", this, newName);
+            //    }
+            //}
+            //else
+            //{
+            //    WorldSystem.SendNewEvent("On-Object-Start-Animation", this, newName);
+            //}
+
+            //CurrentAmin = mostCurrentAnim;
+            //SendNewEvent("On-Avatar-Animation", avatar, names);
+        }
+        #endregion
     }
 
     public interface SimAvatar : SimObject, SimMover
@@ -1418,5 +1601,7 @@ namespace cogbot.TheOpenSims
         //List<SimObject> GetNearByObjects(double p, bool p_2);
 
         void SetMoveTarget(SimPosition followAvatar);
+
+        void OnAvatarAnimations(InternalDictionary<UUID, int> anims);
     }
 }

@@ -140,7 +140,7 @@ namespace cogbot
         public int RunningMode = (int)Modes.normal;
         public UUID AnimationFolder = UUID.Zero;
 
-        InventoryEval searcher = null; // new InventoryEval(this);
+        BotInventoryEval searcher = null; // new InventoryEval(this);
         //public Inventory Inventory;
         //public InventoryManager Manager;
         // public Configuration config;
@@ -317,7 +317,7 @@ namespace cogbot
             Self.OnChat += new AgentManager.ChatCallback(Self_OnChat);
 
             updateTimer.Start();
-            searcher = new InventoryEval(this);
+            searcher = new BotInventoryEval(this);
             initTaskInterperter();
         }
 
@@ -604,7 +604,7 @@ namespace cogbot
 			InventoryFolder rootFolder = Inventory.Store.RootFolder;
 			//List<FolderData> folderContents;
 			// List<ItemData> folderItems;
-			InventoryEval searcher = new InventoryEval(this);
+			BotInventoryEval searcher = new BotInventoryEval(this);
 
 			folderID = searcher.findInFolders(rootFolder, folderName);
 

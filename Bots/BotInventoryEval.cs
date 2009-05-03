@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Collections;
 using OpenMetaverse;
 
 namespace cogbot
 {
-    public class InventoryEval
+    public class BotInventoryEval
     {
         // recursive evaluator
         public string current_operation = "";
@@ -17,7 +16,7 @@ namespace cogbot
         //private Inventory Inventory;
         //private InventoryManager Manager;
 
-        public InventoryEval(BotClient _c)
+        public BotInventoryEval(BotClient _c)
         {
             //  botclient = _c.botclient;
             botclient = _c;// botclient.CurrentClient;
@@ -39,7 +38,7 @@ namespace cogbot
             if (!hooked.ContainsKey(folder.UUID))
             {
                 hooked.Add(folder.UUID, folder.Name);
-            //    botclient.Inventory.OnContentsRetrieved += new InventoryFolder.ContentsRetrieved(myfolder_OnContentsRetrieved);
+                //    botclient.Inventory.OnContentsRetrieved += new InventoryFolder.ContentsRetrieved(myfolder_OnContentsRetrieved);
                 botclient.output("  appendFolderHook " + folder.Name);
             }
 
@@ -80,14 +79,14 @@ namespace cogbot
                         }
                     }
                 }
-                // now run any subfolders
+                // now run any sub folders
                 foreach (InventoryBase ib in folderContents)
                 {
                     if (ib is InventoryFolder)
                     {
                         InventoryFolder fld = (InventoryFolder)ib;
 
-                        botclient.output(" [Folder] Name: " + ib.Name + " <==> " + ib.UUID.ToString() + " in folder[" + folder.Name + "] RECIEVED" );
+                        botclient.output(String.Format(" [Folder] Name: {0} <==> {1} in folder[{2}] RECIEVED", ib.Name, ib.UUID, folder.Name));
 
                         //evalOnFolders(ib as InventoryFolder, operation, itemName);
                         appendFolderHook(fld);
@@ -147,7 +146,7 @@ namespace cogbot
                                 //StringBuilder result = new StringBuilder();
                                 //result.AppendFormat("{0}{1} ({2})\n", new String(' ', indent * 2), ii.Name, ii.UUID.ToString());
                                 //output(result.ToString());
-                                botclient.output(" [Inventory Item] Name: " + ii.Name + " <==> " + ii.UUID.ToString() + " OP:" + operation + " ITEM:"+itemName);
+                                botclient.output(String.Format(" [Inventory Item] Name: {0} <==> {1} OP:{2} ITEM:{3}", ii.Name, ii.UUID, operation, itemName));
                             }
 
 
@@ -163,13 +162,13 @@ namespace cogbot
                         }
                     }
 
-                    // now run any subfolders
+                    // now run any sub folders
                     foreach (InventoryBase ib in folderContents)
                     {
 
                         if (ib is InventoryFolder)
                         {
-                            botclient.output(" [Folder] Name: " + ib.Name + " <==> " + ib.UUID.ToString()  + " OP:" + operation + " ITEM:"+itemName);
+                            botclient.output(String.Format(" [Folder] Name: {0} <==> {1} OP:{2} ITEM:{3}", ib.Name, ib.UUID, operation, itemName));
                             InventoryFolder fld = (InventoryFolder)ib;
                             //appendFolderHook(fld);
                             //fld.RequestContents();
@@ -222,7 +221,7 @@ namespace cogbot
                             }
                         }
                     }
-                    // now run any subfolders
+                    // now run any sub folders
                     foreach (InventoryBase ib in folderContents)
                     {
                         if (ib is InventoryFolder)
@@ -230,7 +229,7 @@ namespace cogbot
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
             }
         }
@@ -272,7 +271,7 @@ namespace cogbot
                 }
 
             }
-            catch (Exception e)
+            catch (Exception)
             {
             }
             return UUID.Zero;
