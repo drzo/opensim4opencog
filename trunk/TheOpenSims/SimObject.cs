@@ -197,7 +197,6 @@ namespace cogbot.TheOpenSims
         public virtual bool TurnToward(Vector3 target)
         {
             Quaternion parentRot = Quaternion.Identity;
-
             if (!IsRoot)
             {
                 parentRot = Parent.GetSimRotation();
@@ -228,14 +227,14 @@ namespace cogbot.TheOpenSims
             get { return Mesh.OuterBox; }
         }
 
-        public void ResetRegion(ulong regionHandle)
+        public virtual void ResetRegion(ulong regionHandle)
         {
             //lock (Prim)
-            if (regionHandle!=0)
+            if (regionHandle != 0)
             {
                 _CurrentRegion = SimRegion.GetRegion(regionHandle);
                 //  Prim.RegionHandle = regionHandle;
-              //  Debug("Changing regions " + this);
+                //  Debug("Changing regions " + this);
                 // PathStore = GetSimRegion();
             }
         }
@@ -400,12 +399,8 @@ namespace cogbot.TheOpenSims
             return Vector3d.Distance(GetWorldPosition(), prim.GetWorldPosition());
         }
 
-        // the prim in Secondlife
-        Primitive _Prim;
-        public Primitive Prim
-        {
-            get { return _Prim; }
-        }
+        // the prim in SecondLife
+        public Primitive Prim { get; private set; }
         //{
         //    get { return base.Prim; }
         //    set { Prim = value; }
@@ -425,11 +420,10 @@ namespace cogbot.TheOpenSims
                 if (!WasKilled)  //already
                 {
                     WasKilled = value;
-                    List<SimObject> AttachedChildren = GetChildren();
-                    lock (AttachedChildren) foreach (SimObject C in AttachedChildren)
-                        {
-                            C.IsKilled = true;
-                        }
+                    foreach (SimObject C in GetChildren())
+                    {
+                        C.IsKilled = true;
+                    }
                     RemoveCollisions();
                 }
             }
@@ -455,7 +449,7 @@ namespace cogbot.TheOpenSims
         }
 
         /// <summary>
-        /// the bonus or handicap the object has compared to the defination 
+        /// the bonus or handicap the object has compared to the definition 
         /// (more expensive chair might have more effect)
         /// </summary>
         public float scaleOnNeeds = 1.11F;
@@ -465,7 +459,7 @@ namespace cogbot.TheOpenSims
            // : base(prim, SimRegion.SceneProviderFromSimulator(sim))
         {
 
-            _Prim = prim;
+            Prim = prim;
             WorldSystem = objectSystem;
             ObjectType = SimTypeSystem.CreateInstanceType(prim.ID.ToString());
             UpdateProperties(Prim.Properties);
@@ -498,6 +492,7 @@ namespace cogbot.TheOpenSims
                             WorldSystem.EnsureSelected(parent, simu);
                             return null;
                         }
+                        if (prim.ID == UUID.Zero) return null;
                         _Parent = WorldSystem.GetSimObject(prim, simu);
                         _Parent.AddChild(this);
                     }
@@ -852,6 +847,8 @@ namespace cogbot.TheOpenSims
         public bool IsRegionAttached()
         {
             if (WasKilled) return false;
+            if (Prim.ParentID == 0) return true;
+            if (Prim.RegionHandle==0) return false;
             if (IsRoot) return true;
             if (_Parent == null)
             {
@@ -863,7 +860,9 @@ namespace cogbot.TheOpenSims
                     return false;
                 }
             }
-            return Parent.IsRegionAttached();
+            _Parent = Parent;
+            if (_Parent == null) return false;
+            return _Parent.IsRegionAttached();
         }
 
         public virtual Simulator GetSimulator()
@@ -916,10 +915,21 @@ namespace cogbot.TheOpenSims
             return transValue;
         }
 
+        public float GetZHeading()
+        {
+            Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(GetSimRotation()));
+            return (float)Math.Atan2(v3.Y, v3.X);
+        }
+
+        public object[] GetHeading()
+        {
+            return new object[] { GetZHeading() * SimPathStore.RAD2DEG, GetSimulator().Name, GetSimPosition() };
+        }
+
         public virtual Vector3 GetSimPosition()
         {
-            //if (!IsRegionAttached()) return Prim.Position; 
-            //throw Error("GetWorldPosition !IsRegionAttached: " + this);
+            //if (!IsRegionAttached())// return Prim.Position; 
+             //   throw Error("GetSimPosition !IsRegionAttached: " + this);
             Primitive thisPrim = Prim;
             Vector3 thisPos = thisPrim.Position;
             while (thisPrim.ParentID != 0)
@@ -1210,9 +1220,9 @@ namespace cogbot.TheOpenSims
 
         public void ResetPrim(Primitive prim)
         {
-            if (prim != _Prim)
+            if (prim != Prim)
             {
-                _Prim = prim;
+                Prim = prim;
                 ResetRegion(prim.RegionHandle);
                 Debug("two differnt prims {0} {1}", prim, Prim);
             }
@@ -1280,23 +1290,30 @@ namespace cogbot.TheOpenSims
 
         #region SimObject Members
 
-        public virtual void AddCanBeTargetOf(string SitOnObject, params object[] args)
+        public virtual void AddCanBeTargetOf(string eventName, int ArgN, object[] arg0_N)
         {
-            ObjectType.AddSuperType(SimTypeSystem.CreateObjectUse(SitOnObject));
+            if (ArgN == 1)
+                ObjectType.AddSuperType(SimTypeSystem.CreateObjectUse(eventName));
         }
 
-        public virtual void AddPossibleAction(string sit, params object[] args)
+        public static int MaxEventSize = 10; // Keeps only last 9 events
+        public Queue<SimObjectEvent> ActionEventQueue = new Queue<SimObjectEvent>(MaxEventSize);
+        public virtual void LogEvent(string eventName, params object[] args1_N)
         {
-            if (args.Length > 0)
+            object[] args0_N = PushFrontOfArray(ref args1_N, this);
+            SimObjectEvent SE = new SimObjectEvent(eventName, args0_N, 0);
+            if (ActionEventQueue.Count >= MaxEventSize) ActionEventQueue.Dequeue();
+            ActionEventQueue.Enqueue(SE);
+
+            for (int argN = 1; argN < args0_N.Length; argN++)
             {
-                object o = args[0];
+                object o = args0_N[argN];
                 if (o is SimObject)
                 {
                     SimObject newSit = (SimObject) o;
-                    newSit.AddCanBeTargetOf(sit,RestOfArray(args, 1));
+                    newSit.AddCanBeTargetOf(eventName, argN, args0_N);
                 }
             }
-
         }
 
         static public object[] RestOfArray(object[] args, int p)
@@ -1311,6 +1328,17 @@ namespace cogbot.TheOpenSims
             }
             object[] o= (object[])Array.CreateInstance(t, newLen);
             Array.Copy(args,p,o,0,newLen);
+            return o;
+        }
+        static public object[] PushFrontOfArray(ref object[] args, object p)
+        {
+            if (args == null) return null;
+            int len = args.Length;
+            Type t = args.GetType().GetElementType();
+            int newLen = len +1;
+            object[] o = (object[])Array.CreateInstance(t, newLen);
+            Array.Copy(args, 0, o, 1, len);
+            o[0] = p;
             return o;
         }
         #endregion
@@ -1358,6 +1386,51 @@ namespace cogbot.TheOpenSims
                 if (!String.IsNullOrEmpty(sn)) return sn;
                 return "TouchTheObject";
             }
+        }
+
+        #endregion
+
+        #region SimObject Members
+
+        readonly ListAsSet<UUID> CurrentSounds = new ListAsSet<UUID>();
+        public static float SoundGainThreshold = 0.1f;
+
+        public void OnSound(UUID soundID, float gain)
+        {
+            if (soundID == UUID.Zero)
+            {
+                if (gain < SoundGainThreshold)
+                {
+                    CurrentSounds.Clear();
+                } else
+                {
+                    Debug("Gain change for unknown sound: " + gain);
+                }
+            }
+            else
+            {
+                if (gain < SoundGainThreshold)
+                {
+                    CurrentSounds.Remove(soundID);
+                }
+                else
+                {
+                    CurrentSounds.AddTo(soundID);
+                }
+            }
+        }
+
+        #endregion
+
+        #region SimObject Members
+
+
+        public void OnEffect(string effectType, object t, object p, float duration, UUID id)
+        {
+            LogEvent(effectType, t, p, duration, id);
+            //todo
+            WorldSystem.SendNewEvent("on-effect", effectType, this, t, p, duration, id);
+            //throw new NotImplementedException();
         }
 
         #endregion
@@ -1431,10 +1504,14 @@ namespace cogbot.TheOpenSims
 
         void Touch(SimObject simObjectImpl);
 
-        void AddPossibleAction(string textualActionName, params object[] args);
+        void LogEvent(string textualActionName, params object[] args1_N);
 
-        void AddCanBeTargetOf(string textualActionName, params object[] args);
+        void AddCanBeTargetOf(string textualActionName, int argN, object[] args0_N);
 
         string SitName { get; }
+
+        void OnSound(UUID soundID, float gain);
+
+        void OnEffect(string effectType, object t, object p, float duration, UUID id);
     }
 }

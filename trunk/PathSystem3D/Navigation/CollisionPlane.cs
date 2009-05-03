@@ -76,7 +76,8 @@ namespace PathSystem3D.Navigation
                 }
                 if ((MaxZ - MinZ) > 5)
                 {
-              //      throw new ArgumentException(String.Format("Resizing {0} > {1} > ", this, value));
+                    SimPathStore.Debug("Very Tall CollisionPlane " + this);
+                    //      throw new ArgumentException(String.Format("Resizing {0} > {1} > ", this, value));
                 }
             }
         }

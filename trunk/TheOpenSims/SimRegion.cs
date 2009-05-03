@@ -1007,20 +1007,9 @@ namespace cogbot.TheOpenSims
             }
 
             double radAngle = zAngleFromFace / RAD_TO_DEG;
-
-
             Quaternion rot = pos.GetSimRotation();
-            rot.Normalize();
-            float rx, ry, rz;
-            rot.GetEulerAngles(out rx, out rz, out ry);
-            //if (rx != 0f || ry != 0f)
-            //{
-            //    Debug("180 Eulers:  {0} {1} {2}", rx * RAD_TO_DEG, ry * RAD_TO_DEG, rz * RAD_TO_DEG);
-            //}
-            //else
-            //{
-            //    Debug("Current Eulers:  {0} {1} {2}", rx * RAD_TO_DEG, ry * RAD_TO_DEG, rz * RAD_TO_DEG);
-            //}
+            Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(rot));
+            double rz = Math.Atan2(v3.Y, v3.X);
             double az = rz + radAngle;
 
 
@@ -1085,22 +1074,11 @@ namespace cogbot.TheOpenSims
             }
 
             double radAngle = zAngleFromFace / RAD_TO_DEG;
-
-
             Quaternion rot = pos.GetSimRotation();
-            rot.Normalize();
-            float rx, ry, rz;
-            rot.GetEulerAngles(out rx, out rz, out ry);
-            //if (rx != 0f || ry != 0f)
-            //{
-            //    Debug("180 Eulers:  {0} {1} {2}", rx * RAD_TO_DEG, ry * RAD_TO_DEG, rz * RAD_TO_DEG);
-            //}
-            //else
-            //{
-            //    Debug("Current Eulers:  {0} {1} {2}", rx * RAD_TO_DEG, ry * RAD_TO_DEG, rz * RAD_TO_DEG);
-            //}
+            Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(rot));
+            double rz = Math.Atan2(v3.Y, v3.X);
+            
             double az = rz + radAngle;
-
 
             while (az < 0)
             {

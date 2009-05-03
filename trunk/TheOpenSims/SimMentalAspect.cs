@@ -291,6 +291,11 @@ namespace cogbot.TheOpenSims
 
     public class ListAsSet<T> : List<T>
     {
+        public void Clear()
+        {
+            lock (this)
+                base.Clear();
+        }
         // synchronization
         public bool Remove(T item)
         {
