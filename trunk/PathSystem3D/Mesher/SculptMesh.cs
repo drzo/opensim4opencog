@@ -224,7 +224,7 @@ namespace THIRDPARTY.PrimMesher
             uvs = new List<UVCoord>();
 
             if (mirror)
-                if (sculptType != SculptType.plane)
+                if (sculptType == SculptType.plane)
                     invert = !invert;
 
             //float sourceScaleFactor = (float)lod / (float)Math.Max(sculptBitmap.Width, sculptBitmap.Height);
