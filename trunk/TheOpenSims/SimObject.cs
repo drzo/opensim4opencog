@@ -899,22 +899,20 @@ namespace cogbot.TheOpenSims
             //if (!IsRegionAttached()) ;// throw Error("GetSimRotation !IsRegionAttached: " + this);
             Quaternion transValue = Prim.Rotation;
             Primitive outerPrim = Prim;
-            if (outerPrim.ParentID != 0 && outerPrim.ParentID != outerPrim.LocalID)
+            if (outerPrim.ParentID != 0)
             {
                 uint theLPrimParentID = outerPrim.ParentID;
-                if (_Parent != null && _Parent!=this)
+                Simulator simu = GetSimulator();
+                outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
+                while (outerPrim == null)
                 {
-                    outerPrim = _Parent.Prim;
-                }
-                else
-                {
-                    Simulator simu = GetSimulator();
-                    outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
-                    while (outerPrim == null)
+                    Thread.Sleep(100);
+                    if (_Parent != null && _Parent != this)
                     {
-                        Thread.Sleep(100);
-                        outerPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
+                        outerPrim = _Parent.Prim;
                     }
+                    else
+                        outerPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
                 }
                 transValue = outerPrim.Rotation * transValue;
               //  transValue.Normalize();
@@ -941,23 +939,16 @@ namespace cogbot.TheOpenSims
             Vector3 thisPos = thisPrim.Position;
             if (thisPrim.ParentID != 0)
             {
-                 
-                Primitive outerPrim = null;
-                if (_Parent != null && _Parent!=this)
+                uint theLPrimParentID = thisPrim.ParentID;
+                Simulator simu = GetSimulator();
+                Primitive outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
+                while (outerPrim == null)
                 {
-                    outerPrim = _Parent.Prim;
-                }
-                else
-                {
-                    uint theLPrimParentID = thisPrim.ParentID;
-                    Simulator simu = GetSimulator();
-                    outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
-                    while (outerPrim == null)
-                    {
-                        Thread.Sleep(100);
-                        Debug("Cant get parent of " + this);
-                        outerPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
-                    }
+                    Thread.Sleep(100);
+                    if (_Parent!=null && _Parent !=this) {
+                        outerPrim = _Parent.Prim;
+                    }else
+                    outerPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
                 }
                 thisPos = outerPrim.Position + Vector3.Transform(thisPos, Matrix4.CreateFromQuaternion(outerPrim.Rotation));
                 thisPrim = outerPrim;
@@ -1254,6 +1245,17 @@ namespace cogbot.TheOpenSims
             return Mesh.IsInside(L.X, L.Y, L.Z);
         }
 
+        #endregion
+
+        #region SimPosition Members
+
+
+        #endregion
+
+        #region SimMover Members
+
+
+
         public void OpenNearbyClosedPassages()
         {
             SimObjectType DOOR = SimTypeSystem.DOOR;
@@ -1291,6 +1293,10 @@ namespace cogbot.TheOpenSims
                 })).Start();
             }
         }        
+
+        #endregion
+
+        #region SimObject Members
 
         public virtual void AddCanBeTargetOf(string eventName, int ArgN, object[] arg0_N)
         {
@@ -1421,6 +1427,11 @@ namespace cogbot.TheOpenSims
                 }
             }
         }
+
+        #endregion
+
+        #region SimObject Members
+
 
         public void OnEffect(string effectType, object t, object p, float duration, UUID id)
         {
