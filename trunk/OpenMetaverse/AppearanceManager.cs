@@ -1163,7 +1163,7 @@ namespace OpenMetaverse
                         foreach (WearableData data in Wearables.Dictionary.Values)
                         {
                             //todo dmiles asks why the NPE?
-                            if (data != null && data.Asset != null && data.Asset.Params !=null && && data.Asset.Params.ContainsKey(vp.ParamID))
+                            if (data != null && data.Asset != null && data.Asset.Params !=null && data.Asset.Params.ContainsKey(vp.ParamID))
                             {
                                 paramValues.Add(vp.ParamID, data.Asset.Params[vp.ParamID]);
                                 found = true;
