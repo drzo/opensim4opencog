@@ -89,9 +89,9 @@ namespace cogbot
             Network.Login(BotLoginParams.FirstName, BotLoginParams.LastName, BotLoginParams.Password, "OnRez", "UNR");
         }
 
-		int thisTcpPort;
+        readonly int thisTcpPort;
 		public OpenMetaverse.LoginParams BotLoginParams;// = null;
-        SimEventPublisher botPipeline = new SimEventMulticastPipeline();
+        readonly SimEventPublisher botPipeline = new SimEventMulticastPipeline();
         public List<Thread> botCommandThreads = new ListAsSet<Thread>();
 		public UUID GroupID = UUID.Zero;
 		public Dictionary<UUID, GroupMember> GroupMembers = null; // intialized from a callback
@@ -110,7 +110,7 @@ namespace cogbot
 		private Vector3 forward = new Vector3(0, 0.9999f, 0);
 		private Vector3 left = new Vector3(0.9999f, 0, 0);
 		private Vector3 up = new Vector3(0, 0, 0.9999f);
-		private System.Timers.Timer updateTimer;
+		readonly private System.Timers.Timer updateTimer;
 
 		public Listeners.WorldObjects WorldSystem;
         //   static public TextForm SingleInstance = null;
@@ -311,8 +311,8 @@ namespace cogbot
             Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
             Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
             Self.OnInstantMessage += new AgentManager.InstantMessageCallback(Self_OnInstantMessage);
-            Self.OnScriptDialog += new AgentManager.ScriptDialogCallback(Self_OnScriptDialog);
-            Self.OnScriptQuestion += new AgentManager.ScriptQuestionCallback(Self_OnScriptQuestion);
+            //Self.OnScriptDialog += new AgentManager.ScriptDialogCallback(Self_OnScriptDialog);
+            //Self.OnScriptQuestion += new AgentManager.ScriptQuestionCallback(Self_OnScriptQuestion);
             Self.OnTeleport += new AgentManager.TeleportCallback(Self_OnTeleport);
             Self.OnChat += new AgentManager.ChatCallback(Self_OnChat);
 
@@ -358,7 +358,7 @@ namespace cogbot
 		{
 			AgentDataUpdatePacket p = (AgentDataUpdatePacket)packet;
 			if (p.AgentData.AgentID == sim.Client.Self.AgentID) {
-				output("Got the group ID for " + sim.Client.ToString() + ", requesting group members...");
+                output(String.Format("Got the group ID for {0}, requesting group members...", sim.Client));
 				GroupID = p.AgentData.ActiveGroupID;
 
 				sim.Client.Groups.RequestGroupMembers(GroupID);
@@ -367,7 +367,7 @@ namespace cogbot
 
 		private void GroupMembersHandler(Dictionary<UUID, GroupMember> members)
 		{
-			output("Got " + members.Count + " group members.");
+            output(String.Format("Got {0} group members.", members.Count));
 			GroupMembers = members;
 		}
 
@@ -381,8 +381,7 @@ namespace cogbot
 		private void AlertMessageHandler(Packet packet, Simulator simulator)
 		{
 			AlertMessagePacket message = (AlertMessagePacket)packet;
-
-			output("[AlertMessage] " + Utils.BytesToString(message.AlertData.Message));
+            output("[AlertMessage] " + Utils.BytesToString(message.AlertData.Message));
 		}
 
 
@@ -405,9 +404,7 @@ namespace cogbot
         {
             if (message.Length > 0 && sourceType == ChatSourceType.Agent && !muteList.Contains(fromName))
             {
-                output(fromName + " says, \"" + message + "\".");
-                //botenqueueLispEvent("(thisClient.msgClient \"(heard (" + fromName + ") '" + message + "' )\" )");
-                SendNewEvent("on-chat", fromName, message);
+                output(String.Format("{0} says, \"{1}\".", fromName, message));
             }
         }
 
@@ -415,8 +412,7 @@ namespace cogbot
 		{
             if (im.Message.Length > 0 && im.Dialog == InstantMessageDialog.MessageFromAgent)
             {
-                output(im.FromAgentName + " whispers, \"" + im.Message + "\".");
-                SendNewEvent("on-instantmessage", im.FromAgentName, im.Message);
+                output(String.Format("{0} whispers, \"{1}\".", im.FromAgentName, im.Message));
 
                 Actions.Whisper whisper = (Actions.Whisper)Commands["whisper"];
                 whisper.currentAvatar = im.FromAgentID;
@@ -444,18 +440,6 @@ namespace cogbot
 				return;
 			}
 		}
-
-        void Self_OnScriptQuestion(Simulator simulator, UUID taskID, UUID itemID, string objectName, string objectOwner, ScriptPermission questions)
-        {
-            SendNewEvent("On-Script-Question", simulator, taskID, itemID, objectName, objectOwner, questions);
-            //throw new NotImplementedException();
-        }
-
-        void Self_OnScriptDialog(string message, string objectName, UUID imageID, UUID objectID, string firstName, string lastName, int chatChannel, List<string> buttons)
-        {
-            SendNewEvent("On-Script-Dialog", message, objectName, imageID, objectID, firstName, lastName, chatChannel, buttons);
-            //throw new NotImplementedException();
-        }
 
         private bool Inventory_OnInventoryObjectReceived(InstantMessage offer, AssetType type,
 														 UUID objectID, bool fromTask)
