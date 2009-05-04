@@ -982,6 +982,7 @@ namespace cogbot.TheOpenSims
             Boolean stopNext = false;
             while (true)
             {
+
                 Vector3d targetPosition = ApproachVector3D;
                 lock (TrackerLoopLock)
                 {
@@ -993,7 +994,6 @@ namespace cogbot.TheOpenSims
                             Thread.Sleep(100);
                             continue;
                         }
-                       
                     }
                     if (ApproachPosition!=null)
                     {
@@ -1014,15 +1014,7 @@ namespace cogbot.TheOpenSims
                     float WaterHeight = R.WaterHeight();
                     float selfZ = ClientSelf.SimPosition.Z;
                     double UpDown = realTargetZ - selfZ;
-                    double curDist = Vector3d.Distance(worldPosition, targetPosition);
 
-                    //if (curDist < ApproachDistance)
-                    //{
-                    //    ClientMovement.Stop = true;
-                    //    TurnToward(targetPosition);
-                    //    ClientMovement.SendUpdate();
-                    //    continue;
-                    //}
                     double ZDist = Math.Abs(UpDown);
                     if (UpDown > 1)
                     {
@@ -1045,15 +1037,15 @@ namespace cogbot.TheOpenSims
 
                     double curXYDist = Vector3d.Distance(worldPosition, new Vector3d(targetPosition.X, targetPosition.Y, selfZ));
 
-                    curDist = Vector3d.Distance(worldPosition, targetPosition);
-
+                    double curDist = Vector3d.Distance(worldPosition, targetPosition);
+                    
                     if (swimming)
                     {
                         // WaterHeight = WaterHeight - 1f;
-                        if (!ClientMovement.Fly)
-                        {
-                            ClientMovement.Fly = false;
-                        }
+                        //if (!ClientMovement.Fly)
+                        //{
+                        //    ClientMovement.Fly = false;
+                        //}
 
                         bool nudgeUpDownMoves = true;
 
@@ -1085,7 +1077,7 @@ namespace cogbot.TheOpenSims
                         targetPosition.Z = WaterHeight - 0.25f;
                     }
 
-                    ClientMovement.Fly = swimming || GetPathStore().IsFlyZone(SimPathStore.GlobalToLocal(worldPosition));
+                    ClientMovement.Fly = swimming ||  GetPathStore().IsFlyZone(SimPathStore.GlobalToLocal(worldPosition));
 
                     if (swimming)
                     {
