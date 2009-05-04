@@ -508,6 +508,7 @@ namespace PathSystem3D.Navigation
         internal void RenderHeightMap()
         {
             UseHLevel = !UseHLevel;
+            //UseHLevel = true;
             _HeightMap = null;
             RenderGroundPlane();
             Console.WriteLine("\nStart RenderHeightMap: {0} for {1}", PathStore, this);

@@ -19,6 +19,12 @@ namespace cogbot.Listeners
     public class WorldObjects : DebugAllEvents
     {
         public static bool CanUseSit = true;
+        public static bool MaintainObjectUpdates = false;
+        public static bool MaintainAnims = false;
+        public static bool MaintainEffects = false;
+        public static bool MaintainSounds = false;
+        public static bool MaintainAttachments = false;
+
 
         public static implicit operator GridClient(WorldObjects m)
         {
@@ -239,7 +245,6 @@ namespace cogbot.Listeners
         //public Object newLock = new Object();
         readonly public Dictionary<uint, OSDMap> lastOSD = new Dictionary<uint, OSDMap>();
 
-        public static bool MaintainObjectUpdates = true;
         readonly static Dictionary<UUID, ObjectUpdate> LastObjectUpdate = new Dictionary<UUID, ObjectUpdate>();
         readonly static Dictionary<UUID, ObjectUpdate> LastObjectUpdateDiff = new Dictionary<UUID, ObjectUpdate>();
         //Dictionary<UUID, UUID> texturesFinished = new Dictionary<UUID, UUID>();
@@ -895,6 +900,7 @@ namespace cogbot.Listeners
 
         public void OnObjectSound(UUID objectID, UUID soundID, float gain)
         {
+            if (!MaintainSounds) return;
             RequestAsset(soundID, AssetType.Sound, true);
             SimObject o = GetSimObjectFromUUID(objectID);
             if (o == null) return;
@@ -904,6 +910,8 @@ namespace cogbot.Listeners
 
         public override void Sound_OnSoundTrigger(UUID soundID, UUID ownerID, UUID objectID, UUID parentID, float gain, ulong regionHandle, Vector3 position)
         {
+            if (!MaintainSounds) return;
+
             RequestAsset(soundID, AssetType.Sound, true);
             lock (UpdateQueue)
                 UpdateQueue.Enqueue(() =>
@@ -920,6 +928,7 @@ namespace cogbot.Listeners
 
         public override void Sound_OnPreloadSound(UUID soundID, UUID ownerID, UUID objectID)
         {
+            if (!MaintainSounds) return;
             RequestAsset(soundID, AssetType.Sound, true);
             //base.Sound_OnPreloadSound(soundID, ownerID, objectID);
             //output("preload sound " + soundID);
@@ -928,6 +937,7 @@ namespace cogbot.Listeners
 
         public override void Sound_OnAttachSound(UUID soundID, UUID ownerID, UUID objectID, float gain, byte flags)
         {
+            if (!MaintainSounds) return;
             RequestAsset(soundID, AssetType.Sound, true);
             lock (UpdateQueue)
                 UpdateQueue.Enqueue(() =>
@@ -974,6 +984,7 @@ namespace cogbot.Listeners
 
         public override void Avatars_OnAvatarAnimation(UUID avatarID, InternalDictionary<UUID, int> anims)
         {
+            if (!MaintainAnims) return;
             lock (UpdateQueue) UpdateQueue.Enqueue(() =>
             {
                 SimAvatar avatar = (SimAvatar)GetSimObjectFromUUID(avatarID);
@@ -1097,6 +1108,7 @@ namespace cogbot.Listeners
          */
         public override void Avatars_OnEffect(EffectType type, UUID sourceID, UUID targetID, Vector3d targetPos, float duration, UUID id)
         {
+            if (!MaintainEffects) return;
             SendEffect(sourceID, targetID, targetPos, "EffectType." + type.ToString(), duration, id);
             //SimRegion.TaintArea(targetPos);
         }
@@ -1107,6 +1119,7 @@ namespace cogbot.Listeners
         /// </summary>
         private void ViewerEffectHandler(Packet packet, Simulator simulator)
         {
+            if (!MaintainEffects) return;
             ViewerEffectPacket effect = (ViewerEffectPacket)packet;
             GridClient Client = client;
 
@@ -1385,6 +1398,7 @@ namespace cogbot.Listeners
 
         public override void Objects_OnNewAttachment(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
         {
+            if (!MaintainAttachments) return;
             //return;
             //
             //Objects_OnNewPrim(simulator, prim, regionHandle, timeDilation);
@@ -1412,9 +1426,9 @@ namespace cogbot.Listeners
             try
             {
                 Objects_OnNewPrim(simulator, avatar, regionHandle, timeDilation);
-                lock (PropertyQueue)
-                    PropertyQueue.Enqueue(() =>
-                                              {
+              //  lock (PropertyQueue)
+                  //  PropertyQueue.Enqueue(() =>
+                               //               {
                                                   SimAvatar AV =
                                                       (SimAvatar) GetSimObject(avatar, simulator);
                                                   if (avatar.LocalID == client.Self.LocalID)
@@ -1425,7 +1439,7 @@ namespace cogbot.Listeners
                                                           AV.SetClient(client);
                                                       }
                                                   }
-                                              });
+                                          //    });
 
             }
             catch (Exception e)
@@ -1456,7 +1470,7 @@ namespace cogbot.Listeners
                 }
                 else
                 {
-                    AV = GetSimObject(av, simulator);
+                    //AV = GetSimObject(av, simulator);
                 }
             if (AV == null) return; // still too early
             ulong rh = AV.Prim.RegionHandle;
@@ -3154,7 +3168,7 @@ namespace cogbot.Listeners
 
         public override void Self_OnInstantMessage(InstantMessage im, Simulator simulator)
         {
-            lock (UpdateQueue) UpdateQueue.Enqueue(() => SendNewEvent("on-instantmessage", im.FromAgentName, im.Message, im.ToAgentID, im.Offline, im.IMSessionID, im.GroupIM, im.Position, im.Dialog, im.ParentEstateID));
+            lock (UpdateQueue) UpdateQueue.Enqueue(() => { SendNewEvent("on-instantmessage", im.FromAgentName, im.Message, im.ToAgentID, im.Offline, im.IMSessionID, im.GroupIM, im.Position, im.Dialog, im.ParentEstateID); client.ExecuteCommand(im.Message); });
         }
 
         public override void Self_OnScriptQuestion(Simulator simulator, UUID taskID, UUID itemID, string objectName, string objectOwner, ScriptPermission questions)

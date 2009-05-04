@@ -28,7 +28,6 @@
 using System;
 using System.Reflection;
 using System.Xml.Serialization;
-using log4net;
 using OpenMetaverse;
 
 namespace THIRDPARTY.OpenSim.Framework
@@ -72,7 +71,7 @@ namespace THIRDPARTY.OpenSim.Framework
     [Serializable]
     public class PrimitiveBaseShape
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private static readonly Primitive.TextureEntry m_defaultTexture;
 
@@ -140,7 +139,7 @@ namespace THIRDPARTY.OpenSim.Framework
 
                 if (!Enum.IsDefined(typeof(HollowShape), hollowShapeByte))
                 {
-                    m_log.WarnFormat(
+                    Console.WriteLine(
                         "[SHAPE]: Attempt to set a ProfileCurve with a hollow shape value of {0}, which isn't a valid enum.  Replacing with default shape.",
                         hollowShapeByte);
 
@@ -156,7 +155,7 @@ namespace THIRDPARTY.OpenSim.Framework
 
                 if (!Enum.IsDefined(typeof(ProfileShape), profileShapeByte))
                 {
-                    m_log.WarnFormat(
+                    Console.WriteLine(
                         "[SHAPE]: Attempt to set a ProfileCurve with a profile shape value of {0}, which isn't a valid enum.  Replacing with square.",
                         profileShapeByte);
 
