@@ -503,9 +503,11 @@ namespace PathSystem3D.Navigation
 
         }
 
+        public bool UseHLevel = true;
 
         internal void RenderHeightMap()
         {
+            UseHLevel = !UseHLevel;
             _HeightMap = null;
             RenderGroundPlane();
             Console.WriteLine("\nStart RenderHeightMap: {0} for {1}", PathStore, this);
@@ -514,6 +516,7 @@ namespace PathSystem3D.Navigation
 #else
             lock (this)
             {
+                
                 CollisionIndex[,] MeshIndex = PathStore.MeshIndex;
                 NeedsUpdate = false;
                 byte[,] ToMatrix = ByteMatrix;
@@ -535,8 +538,8 @@ namespace PathSystem3D.Navigation
                         CollisionIndex W = MeshIndex[x, y];
                         if (W != null)
                         {
-                            float level;
-                            if (W.OpenCapsuleAt(testPlane, testPlane + 6f, CollisionIndex.CapsuleZ, out level))
+                            float level = testPlane;
+                            if (UseHLevel && W.OpenCapsuleAt(testPlane, testPlane + 6f, CollisionIndex.CapsuleZ, out level))
                             {
                                 if (level < testPlane)
                                 {
@@ -544,7 +547,7 @@ namespace PathSystem3D.Navigation
                                 }
                                 Heights[x, y] = level;
                             } else
-                                if (W.OpenCapsuleAt(testPlane, testPlane + 126f, CollisionIndex.CapsuleZ, out level))
+                                if (UseHLevel && W.OpenCapsuleAt(testPlane, testPlane + 126f, CollisionIndex.CapsuleZ, out level))
                                 {
                                     if (level < testPlane)
                                     {

@@ -385,6 +385,7 @@ namespace PathSystem3D.Navigation
         public override SimMoverState Goto()
         {
             if (FollowPathTo(FinalLocation, FinalDistance)) return SimMoverState.COMPLETE;
+            MoverPlane.NeedsUpdate = true;
             return STATE; 
         }
 
