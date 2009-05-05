@@ -776,31 +776,33 @@ namespace cogbot
 		/// <returns></returns>
 		public string XML2Lisp2(string URL, string args)
 		{
-			string xcmd = URL + args;
+            args=args.Replace("\\", "");
+            args=args.Replace("\"", "");
+            string xcmd = URL + args;
 			return XML2Lisp(xcmd);             
 		} // method: XML2Lisp2
 
 
 		public string XML2Lisp(string xcmd)
 		{
+			String lispCodeString = "";
+
 			try {
-				XmlDocument xdoc = new XmlDocument();
 				XmlTextReader reader;
 				StringReader stringReader;
-				if (xcmd.Contains("http:") || xcmd.Contains(".xml") || xcmd.Contains(".xlsp")) {
+                
+                if (xcmd.Contains("http:") || xcmd.Contains(".xml") || xcmd.Contains(".xlsp"))
+                {
 					// assuming its a file
 					xcmd = xcmd.Trim();
-					reader = new XmlTextReader(xcmd);
-					xdoc.Load(xcmd);
+                    reader = new XmlTextReader(xcmd);
 				} else {
 					// otherwise just use the string
 					stringReader = new System.IO.StringReader(xcmd);
-					reader = new XmlTextReader(stringReader);
-					xdoc.LoadXml(xcmd);
+                    reader = new XmlTextReader( stringReader);
 				}
 
 				Hashtable[] attributeStack = new Hashtable[64];
-				String lispCodeString = "";
 
 				for (int i = 0; i < 64; i++) {
 					attributeStack[i] = new Hashtable();
@@ -871,7 +873,8 @@ namespace cogbot
 			catch (Exception e) {
 				output("error occured: " + e.Message);
 				output("        Stack: " + e.StackTrace.ToString());
-				return "()";
+                output("        lispCodeString: " + lispCodeString);
+                return "()";
 			}
 
 
