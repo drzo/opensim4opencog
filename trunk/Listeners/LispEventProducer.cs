@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
-using DotLisp;
+using cogbot.ScriptEngines;
 using System.IO;
+using DotLisp;
 
 namespace cogbot.Listeners
 {
     public class LispEventProducer : AllEvents
     {
-        private DotLisp.Interpreter Interpreter;
-        public LispEventProducer(BotClient bc, DotLisp.Interpreter interp)
+        private ScriptInterpreter Interpreter;
+        public LispEventProducer(BotClient bc, ScriptInterpreter interp)
             : base(bc)
         {
             Interpreter = interp;
@@ -23,31 +23,60 @@ namespace cogbot.Listeners
             UnregisterAll();
         }
 
+        public static bool EventArgsInDictionary = true;
         public override bool BooleanOnEvent(string eventName, string[] paramNames, Type[] paramTypes, params object[] parameters)
         {
-            return true;
-            Dictionary<String, object> eventArgs = new Dictionary<string, object>();
-            for (int i = 0; i < paramNames.Length; i++)
+            if (Interpreter==null) return true;
+            if (EventArgsInDictionary)
             {
-                eventArgs.Add(paramNames[i], paramNames[i]);
+                Dictionary<String, object> eventArgs = new Dictionary<string, object>();
+                for (int i = 0; i < paramNames.Length; i++)
+                {
+                    eventArgs.Add(paramNames[i], CoerceArg(parameters[i], paramTypes[i]));
+                }
+                object o = Interpreter.Eval(new Cons(eventName, new Cons(eventArgs, null)));
             }
-            object o= Interpreter.Eval(new Cons(eventName,new Cons(eventArgs,null)));
+            else
+            {
+                Cons invokeMe = null;
+                Dictionary<String, object> eventArgs = new Dictionary<string, object>();
+                for (int i = paramNames.Length - 1; i >= 0; i--)
+                {
+                    invokeMe = new Cons(CoerceArg(parameters[i], paramTypes[i]), invokeMe);
+                }
+                object o = Interpreter.Eval(new Cons(eventName, invokeMe));
+            }
+            // right now most events are void but there is one that is boolean which means we may as well eturn true for all
             return true;
         }
 
-        public void MakeStubFile(string filename)
+        public object CoerceArg(object p, Type type)
+        {
+            return Interpreter.ConvertArgToLisp(p);
+        }
+
+        public void MakeStubFile(String filename)
+        {
+            if (EventArgsInDictionary)
+            {
+                MakeStubFileDictionary(filename);
+                return;
+            }
+            MakeStubFileNoDictionary(filename);
+        }
+        public void MakeStubFileNoDictionary(string filename)
         {
             Type eventClass = typeof(AllEvents);
-            FileStream FS = new FileStream(filename,FileMode.CreateNew);
+            FileStream FS = new FileStream(filename, FileMode.CreateNew);
             TextWriter TW = new StreamWriter(FS);
             foreach (MethodInfo mi in eventClass.GetMethods())
             {
 
-                int fa = mi.Name.IndexOf("_");   
-                if (fa>0)
+                int fa = mi.Name.IndexOf("_");
+                if (fa > 0)
                 {
                     string LispCall = "\n\n;; ";
-                    string EventName = mi.Name.Substring(fa+1);
+                    string EventName = mi.Name.Substring(fa + 1);
                     FieldInfo FI = eventClass.GetField("paramTypes" + EventName);
                     Type[] types = (Type[])FI.GetValue(this);
                     for (int i = 0; i < types.Length; i++)
@@ -75,7 +104,7 @@ namespace cogbot.Listeners
                     LispCall += ")\n (progn (thisClient.output (@\"fromLispExample: ";
                     for (int i = 0; i < names.Length; i++)
                     {
-                        LispCall += " {"+i+"}";
+                        LispCall += " {" + i + "}";
                     }
                     LispCall += "\" ";
                     for (int i = 0; i < names.Length; i++)
@@ -90,7 +119,67 @@ namespace cogbot.Listeners
             }
             FS.Close();
             //FS.Write()
-           // FS.Write();
+            // FS.Write();
+
+
+        }
+
+        public void MakeStubFileDictionary(string filename)
+        {
+            Type eventClass = typeof (AllEvents);
+            FileStream FS = new FileStream(filename, FileMode.CreateNew);
+            TextWriter TW = new StreamWriter(FS);
+            foreach (MethodInfo mi in eventClass.GetMethods())
+            {
+
+                int fa = mi.Name.IndexOf("_");
+                if (fa > 0)
+                {
+                    string LispCall = "\n\n;; ";
+                    string EventName = mi.Name.Substring(fa + 1);
+                    FieldInfo FI = eventClass.GetField("paramTypes" + EventName);
+                    Type[] types = (Type[])FI.GetValue(this);
+                    FI = eventClass.GetField("paramNames" + EventName);
+                    string[] names = (string[])FI.GetValue(this);
+    
+                    for (int i = 0; i < types.Length; i++)
+                    {
+                        LispCall += "  ";
+                        LispCall += types[i];
+                        LispCall += ":";
+                        LispCall += names[i];
+                    }
+
+                    LispCall += "\n(def (" + EventName.Substring(0, 1).ToLower();
+                    for (int i = 1; i < EventName.Length; i++)
+                    {
+                        char ch = EventName[i];
+                        if (Char.IsUpper(ch))
+                        {
+                            LispCall += "-";
+                        }
+                        LispCall += Char.ToLower(ch);
+                    }
+                    LispCall += " evArgs)\n (progn (thisClient.output (@\"fromLispExample: ";
+                    for (int i = 0; i < names.Length; i++)
+                    {
+                        LispCall += " {" + i + "}";
+                    }
+                    LispCall += "\"";
+                    for (int i = 0; i < names.Length; i++)
+                    {
+                        LispCall += " (get \"";
+                        LispCall += names[i];
+                        LispCall += "\"" + " evArgs)";
+                    }
+                    LispCall += "))))\n";
+                    TW.Write(LispCall);
+                }
+                TW.Flush();
+            }
+            FS.Close();
+            //FS.Write()
+            // FS.Write();
 
 
         }

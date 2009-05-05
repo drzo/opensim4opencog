@@ -16,6 +16,10 @@ namespace cogbot.ScriptEngines
 
         object Eval(object code);
 
+        object ConvertArgToLisp(object code);
+
+        object ConvertArgFromLisp(object code);
+
         string Str(object code);
 
         ScriptInterpreter newInterpreter();

@@ -100,9 +100,9 @@ namespace cogbot.ScriptEngines
     }
 
 
-    public class ABCLInterpreter : ScriptInterpreter
+    public class ABCLInterpreter : CommonScriptInterpreter
     {
-        public bool IsSubscriberOf(string eventName)
+        public override bool IsSubscriberOf(string eventName)
         {
             eventName = eventName.ToUpper();
             Symbol s = Package.getCurrentPackage().findAccessibleSymbol(eventName);
@@ -236,7 +236,7 @@ namespace cogbot.ScriptEngines
             System.Windows.Forms.Application.DoEvents();
         }
 
-        bool ScriptInterpreter.LoadFile(string p)
+        public override bool LoadFile(string p)
         {
             if (!p.StartsWith("cl-"))
             {
@@ -255,7 +255,7 @@ namespace cogbot.ScriptEngines
             return false;
         }
 
-        object ScriptInterpreter.Read(string p, StringReader stringCodeReader)
+        public override object Read(string p, StringReader stringCodeReader)
         {
             try
             {
@@ -269,7 +269,7 @@ namespace cogbot.ScriptEngines
             }
         }
 
-        bool ScriptInterpreter.Eof(object codeTree)
+        public override bool Eof(object codeTree)
         {
             return codeTree == Lisp.EOF;
         }
@@ -277,7 +277,7 @@ namespace cogbot.ScriptEngines
         static public List<object> allExceptFor = new List<object>();
         static public List<object> subTreeDoneFor = new List<object>();
 
-        void ScriptInterpreter.Intern(string p, object globalcogbotTextForm)
+        public override void Intern(string p, object globalcogbotTextForm)
         {
             java.lang.Class ic = ikvm.runtime.Util.getInstanceTypeFromClass(globalcogbotTextForm.GetType());
             Intern(p, globalcogbotTextForm, allExceptFor, ic, 2);
@@ -405,7 +405,7 @@ namespace cogbot.ScriptEngines
             return (Package)lastPackage;
         }
 
-        object ScriptInterpreter.Eval(object p)
+        public override object Eval(object p)
         {
             TextForm.debugLevel = 2;
             getInterpreter();
@@ -431,13 +431,13 @@ namespace cogbot.ScriptEngines
             return x.ToString();
         }
 
-        ScriptInterpreter ScriptInterpreter.newInterpreter()
+        public override ScriptInterpreter newInterpreter()
         {
             getInterpreter();
             return this; //throw new Exception("The method or operation is not implemented.");
         }
 
-        string ScriptInterpreter.Str(object x)
+        public override string Str(object x)
         {
             return ToStr(x);
         }

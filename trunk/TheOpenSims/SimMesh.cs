@@ -51,6 +51,12 @@ namespace PathSystem3D.Mesher
             Prim = prim;
             Update(simObject);
         }
+        protected SimMesh(Box3Fill o, IList<Box3Fill> i, SimPathStore R)
+            : base(o, i, R)
+        {
+            
+        }
+         
         public override void RemeshObject(Box3Fill changed)
         {
             RemoveFromWaypoints(changed);
@@ -117,6 +123,7 @@ namespace PathSystem3D.Mesher
 
         public override bool Update(SimPosition simObject)
         {
+            if (!WorldObjects.MaintainCollisions) return false;
             if (!simObject.IsRegionAttached()) return false;
             if (DoNotMeshPassable && simObject.IsPassable) return false;
             Quaternion Rotation = simObject.GetSimRotation();

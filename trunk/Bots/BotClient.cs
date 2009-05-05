@@ -1149,7 +1149,6 @@ namespace cogbot
         {
             ((BotClient)this).ShutDown();
         }
-
         #endregion
 
 

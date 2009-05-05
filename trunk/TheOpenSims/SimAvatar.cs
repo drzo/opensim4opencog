@@ -248,23 +248,17 @@ namespace cogbot.TheOpenSims
                     return Client.Self.SimPosition;
                 if (theAvatar.ParentID == 0) return theAvatar.Position;
             }
-
-            Vector3 local = base.GetSimPosition();
-            if (SimPathStore.OutOfRegion(local))
-            {
-                Debug(" OutOfRegion " + local);
-            }
-            return local;
+            return base.GetSimPosition();
         }
 
         public override Vector3d GetWorldPosition()
         {
-            //if (IsLocal())
-            //{
-            //    if (Client.Settings.OBJECT_TRACKING)
-            //        return Client.Self.GlobalPosition;
+            if (IsLocal())
+            {
+                if (Client.Settings.OBJECT_TRACKING)
+                    return Client.Self.GlobalPosition;
 
-            //}
+            }
             return GetSimRegion().LocalToGlobal(GetSimPosition());
         }
 
@@ -806,6 +800,7 @@ namespace cogbot.TheOpenSims
         }
 
         BotClient Client;
+
         public void SetClient(BotClient Client)
         {
             lock (Client)

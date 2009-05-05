@@ -19,11 +19,12 @@ namespace cogbot.Listeners
     public class WorldObjects : DebugAllEvents
     {
         public static bool CanUseSit = true;
-        public static bool MaintainObjectUpdates = false;
-        public static bool MaintainAnims = false;
-        public static bool MaintainEffects = false;
-        public static bool MaintainSounds = false;
-        public static bool MaintainAttachments = false;
+        public static bool MaintainObjectUpdates = true;
+        public static bool MaintainAnims = true;
+        public static bool MaintainEffects = true;
+        public static bool MaintainSounds = true;
+        public static bool MaintainAttachments = true;
+        public static bool MaintainCollisions = true;
 
 
         public static implicit operator GridClient(WorldObjects m)

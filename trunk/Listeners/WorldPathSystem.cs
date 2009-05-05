@@ -25,7 +25,7 @@ namespace cogbot.Listeners
                 if ((!gc.Settings.AVATAR_TRACKING)) Error("client.Settings.AVATAR_TRACKING != true");
                 if ((!gc.Settings.ALWAYS_DECODE_OBJECTS)) Error("client.Settings.ALWAYS_DECODE_OBJECTS != true");
                 if ((!gc.Settings.OBJECT_TRACKING)) Error("client.Settings.OBJECT_TRACKING != true");
-                if (TrackPathsThread == null)
+                if (TrackPathsThread == null && WorldObjects.MaintainCollisions)
                 {
                     TrackPathsThread = new Thread(TrackPaths);
                     TrackPathsThread.Name = "Track paths";
