@@ -4,11 +4,11 @@ using System.Text;
 
 namespace cogbot.ScriptEngines
 {
-    class CycInterpreter : ScriptInterpreter
+    class CycInterpreter : CommonScriptInterpreter
     {
         DotLisp.Interpreter dotLispInterpreter;
 
-        public bool IsSubscriberOf(string eventName)
+        public override bool IsSubscriberOf(string eventName)
         {
             eventName = eventName.ToLower();
             return false;
@@ -24,7 +24,7 @@ namespace cogbot.ScriptEngines
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        public bool LoadFile(string filename)
+        public override bool LoadFile(string filename)
         {
             if (!filename.EndsWith(".lisp"))
             {
@@ -46,7 +46,7 @@ namespace cogbot.ScriptEngines
         /// <param name="context_name"></param>
         /// <param name="stringCodeReader"></param>
         /// <returns></returns>
-        public object Read(string context_name, System.IO.StringReader stringCodeReader)
+        public override object Read(string context_name, System.IO.StringReader stringCodeReader)
         {
             return dotLispInterpreter.Read(context_name, stringCodeReader);
         } // method: Read
@@ -57,7 +57,7 @@ namespace cogbot.ScriptEngines
         /// </summary>
         /// <param name="codeTree"></param>
         /// <returns></returns>
-        public bool Eof(object codeTree)
+        public override bool Eof(object codeTree)
         {
            return dotLispInterpreter.Eof(codeTree);
         } // method: Eof
@@ -68,7 +68,7 @@ namespace cogbot.ScriptEngines
         /// </summary>
         /// <param name="varname"></param>
         /// <param name="textForm"></param>
-        public void Intern(string varname, object value)
+        public override void Intern(string varname, object value)
         {
            dotLispInterpreter.Intern(varname, value);
         } // method: Intern
@@ -79,7 +79,7 @@ namespace cogbot.ScriptEngines
         /// </summary>
         /// <param name="code"></param>
         /// <returns></returns>
-        public object Eval(object code)
+        public override object Eval(object code)
         {
             return dotLispInterpreter.Eval(code);
         } // method: Eval
@@ -90,7 +90,7 @@ namespace cogbot.ScriptEngines
         /// </summary>
         /// <param name="code"></param>
         /// <returns></returns>
-        public string Str(object code)
+        public override string Str(object code)
         {
             return dotLispInterpreter.Str(code);
         } // method: Str
@@ -100,7 +100,7 @@ namespace cogbot.ScriptEngines
         /// 
         /// </summary>
         /// <returns></returns>
-        public ScriptInterpreter newInterpreter()
+        public override ScriptInterpreter newInterpreter()
         {
             return new CycInterpreter();
         } // method: newInterpreter

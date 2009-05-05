@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 using cogbot.Listeners;
-using PathSystem3D.Navigation.Debug;
 using PathSystem3D.Mesher;
 using System.Threading;
 using cogbot.ScriptEngines;
 using System.Drawing;
-using PathSystem3D;
 
 namespace cogbot.TheOpenSims
 {
@@ -25,7 +22,7 @@ namespace cogbot.TheOpenSims
     /// <summary>
     /// Denotes a Simulator region and can help with bot navigation
     /// </summary>
-    public class SimRegion// : SimPathStore
+    public class SimRegion
     {
 
         public static List<SimRegion> CurrentRegions
@@ -1182,7 +1179,7 @@ namespace cogbot.TheOpenSims
 
         public bool IsPassable(Vector3 next)
         {
-            if (OutOfRegion(next)) return false;
+            if (OutOfRegion(next)) return true;
             SimPathStore PathStore = GetPathStore(next);
             CollisionPlane CP = PathStore.GetCollisionPlane(next.Z);
             return PathStore.IsPassable(next,CP);
