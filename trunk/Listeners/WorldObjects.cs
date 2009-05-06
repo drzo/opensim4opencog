@@ -19,11 +19,11 @@ namespace cogbot.Listeners
     public class WorldObjects : DebugAllEvents
     {
         public static bool CanUseSit = true;
-        public static bool MaintainObjectUpdates = true;
-        public static bool MaintainAnims = true;
-        public static bool MaintainEffects = true;
-        public static bool MaintainSounds = true;
-        public static bool MaintainAttachments = true;
+        public static bool MaintainObjectUpdates = false;
+        public static bool MaintainAnims = false;
+        public static bool MaintainEffects = false;
+        public static bool MaintainSounds = false;
+        public static bool MaintainAttachments = false;
         public static bool MaintainCollisions = true;
 
 
@@ -298,7 +298,7 @@ namespace cogbot.Listeners
 
                 if (RegionMasterTexturePipeline == null)
                 {
-                    RegionMasterTexturePipeline = new TexturePipeline(client, 100);
+                    RegionMasterTexturePipeline = new TexturePipeline(client, 4);
                     //RegionMasterTexturePipeline.OnDownloadFinished += new TexturePipeline.DownloadFinishedCallback(RegionMasterTexturePipeline_OnDownloadFinished);
                     client.Settings.USE_TEXTURE_CACHE = true;
                 }
@@ -1400,12 +1400,8 @@ namespace cogbot.Listeners
         public override void Objects_OnNewAttachment(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
         {
             if (!MaintainAttachments) return;
-            //return;
-            //
-            //Objects_OnNewPrim(simulator, prim, regionHandle, timeDilation);
-            //GetSimObject(prim, simulator).IsAttachment = true;
             Objects_OnNewPrim(simulator, prim, regionHandle, timeDilation);
-           // GetSimObject(prim, simulator);//.IsAttachment = true;
+            lock (UpdateQueue) UpdateQueue.Enqueue(() => GetSimObject(prim, simulator).IsAttachment = true);
         }
 
         public override void Avatars_OnAvatarAppearance(UUID avatarID, bool isTrial, Primitive.TextureEntryFace defaultTexture, Primitive.TextureEntryFace[] faceTextures, List<byte> visualParams)

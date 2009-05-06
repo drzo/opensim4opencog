@@ -30,10 +30,12 @@ namespace PathSystem3D.Navigation
             return true;
         }
 
-        public override bool IsPassable
+        public override bool IsSolid
         {
-            get { return system.IsPassablePredicate(ID); }
-            set { }
+            get { return system.IsSolidPredicate(ID); }
+            set
+            {
+            }
         }
     }
 }

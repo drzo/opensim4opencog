@@ -1,21 +1,19 @@
-//#define COLLIDER_TRIANGLE
 using System;
 using System.Collections.Generic;
-using System.Threading;
+using PathSystem3D.Mesher;
 using PathSystem3D.Navigation;
 using OpenMetaverse;
-//using THIRDPARTY.OpenSim.Framework;
-//using THIRDPARTY.OpenSim.Region.Physics.Manager;
 using THIRDPARTY.OpenSim.Framework;
 using THIRDPARTY.OpenSim.Region.Physics.Manager;
 using THIRDPARTY.OpenSim.Region.Physics.Meshing;
 using THIRDPARTY.PrimMesher;
 using cogbot.Listeners;
-using cogbot.TheOpenSims;
 #if COLLIDER_ODE  
 using THIRDPARTY.OpenSim.Region.Physics.OdePlugin;
+//using THIRDPARTY.OpenSim.Framework;
+//using THIRDPARTY.OpenSim.Region.Physics.Manager;
 #endif
-namespace PathSystem3D.Mesher
+namespace cogbot.TheOpenSims
 {
 
     // from IdealistViewer
@@ -41,10 +39,10 @@ namespace PathSystem3D.Mesher
         private Mesh mesh;
         private OdePrim physicsActor;
 #endif
-        public SimPosition RootObject;
+        public MeshableObject RootObject;
         public Primitive Prim;
 
-        public SimMesh(SimPosition simObject, Primitive prim, SimPathStore PS)
+        public SimMesh(MeshableObject simObject, Primitive prim, SimPathStore PS)
             : base(new Box3Fill(true), new List<Box3Fill>(), PS)
         {
             RootObject = simObject;
@@ -75,25 +73,12 @@ namespace PathSystem3D.Mesher
         }
 
 
-        public override bool IsPassable
+        public override bool IsSolid
         {
-            get { return RootObject.IsPassable; }
+            get { return RootObject.IsSolid; }
             set
             {
-                if (RootObject.IsPassable != value)
-                {
-                    RootObject.IsPassable = value;
-                    if (!value)
-                    {
-                        if (InnerBoxes.Count == 0)
-                        {
-                            Update(RootObject);
-                        }
-
-                    }
-                    else
-                        PathStore.Refresh(OuterBox);
-                }
+                RootObject.IsSolid = value;
             }
         }
 
@@ -125,7 +110,7 @@ namespace PathSystem3D.Mesher
         {
             if (!WorldObjects.MaintainCollisions) return false;
             if (!simObject.IsRegionAttached()) return false;
-            if (DoNotMeshPassable && simObject.IsPassable) return false;
+            if (DoNotMeshPhantom && ((SimObject)simObject).IsPhantom) return false;
             Quaternion Rotation = simObject.GetSimRotation();
             Vector3 Scale = Prim.Scale;//.GetSimScale();
             Vector3 Position = simObject.GetSimPosition();
@@ -156,7 +141,7 @@ namespace PathSystem3D.Mesher
             
 #if COLLIDER_ODE  
             this.mesh = mesh;
-            if (!RootObject.IsPassable)
+            if (!RootObject.IsPhantom)
                 physicsActor = GetPhysicsActor();
 #endif
             //MeshList.Add(mesh);
@@ -749,5 +734,4 @@ namespace PathSystem3D.Mesher
         }
 
     }
-
 }

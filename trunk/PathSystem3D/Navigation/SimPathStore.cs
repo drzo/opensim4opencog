@@ -471,7 +471,7 @@ namespace PathSystem3D.Navigation
         /// <summary>
         /// By default no boxes are passable
         /// </summary>
-        public Predicate<IComparable> IsPassablePredicate = delegate(IComparable id) { return false; };
+        public Predicate<IComparable> IsSolidPredicate = delegate(IComparable id) { return true; };
 
         /// <summary>
         /// The Pathstore can implement this
@@ -521,7 +521,7 @@ namespace PathSystem3D.Navigation
 
         public void SetPhysicalPredicate(Predicate<IComparable> callback)
         {
-            IsPassablePredicate = callback;
+            IsSolidPredicate = callback;
         }
 
         public void SetGroundLevel(SimZLevel callback)
@@ -1950,7 +1950,7 @@ namespace PathSystem3D.Navigation
             }
             if (panel != null)
             {
-                panel.PnlGUI.CurrentPlane = CP;
+                //panel.PnlGUI.CurrentPlane = CP;
             }
             Point S = ToPoint(start);
             Point E = ToPoint(end);
@@ -2342,7 +2342,8 @@ namespace PathSystem3D.Navigation
             CollisionPlane found = new CollisionPlane(MAPSPACE, MAPSPACE, Z, this);
             Console.WriteLine("Created matrix[{0}] {1} for {2}", Z, found, this);
             lock (Matrixes) Matrixes.Add(found);
-            if (PanelGUI != null) PanelGUI.OnNewCollisionPlane(found);
+            if (PanelGUI != null) new Thread(()=>     
+                PanelGUI.OnNewCollisionPlane(found));
             return found;
         }
 
@@ -2392,7 +2393,7 @@ namespace PathSystem3D.Navigation
             {
                 if (OuterBox.IsZInside(list.MinZ,list.MaxZ))
                 {
-                  // list.NeedsUpdate = true;
+                  list.NeedsUpdate = true;
                 }
             }
         }
@@ -2402,10 +2403,10 @@ namespace PathSystem3D.Navigation
             return vector3.Z <= WaterHeight;
         }
 
-        public bool IsFlyZone(Vector3 vector3)
-        {
-            return GetCollisionPlane(vector3.Z).IsFlyZone(ARRAY_X(vector3.X),ARRAY_Y(vector3.Y));
-        }
+        //public bool IsFlyZone(Vector3 vector3)
+        //{
+        //    return GetCollisionPlane(vector3.Z).IsFlyZone(ARRAY_X(vector3.X),ARRAY_Y(vector3.Y));
+        //}
     }
 
     public class MoverTracking

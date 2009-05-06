@@ -1264,7 +1264,7 @@ namespace PathSystem3D.Navigation.Debug
         private System.Windows.Forms.ToolStripButton BtnX;
         private System.Windows.Forms.ToolStripButton BtnM;
         private System.Windows.Forms.CheckBox ChkTieBraker;
-        public PanelPathFinder PnlGUI;
+        private PanelPathFinder PnlGUI;
         private System.Windows.Forms.Button BtnStartStop;
         private System.Windows.Forms.Button BtnRecomputeMatrix;
         private System.Windows.Forms.Button BtnRebakeTerrain;

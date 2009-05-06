@@ -66,19 +66,18 @@ namespace cogbot.Listeners
                 int occUpdate = 0;
                 foreach (SimObject O in SimObjects.CopyOf())
                 {
-                    //   DoEvents();
                     if (O.IsRegionAttached())
                     {
                         O.UpdateOccupied();
-                        occUpdate++;
                     }
+                    occUpdate++;
                     if (occUpdate % 100 == 0)
                     {
                         Console.Write("." + occUpdate);
                         Console.Out.Flush();
                     }
-                    //if (occUpdate
                 }
+
                 Debug("TrackPaths Completed: " + thisCount);
                 
                 SimRegion.BakeRegions();
