@@ -39,7 +39,7 @@
   (progn
     ;; (thisClient.output (@"fromLispExample: (on-network-connected )" ) )
     ;; annoys people sometimes in SL  (thisClient.ExecuteCommand (@"say Hello World"))   
-    (thisClient.ExecuteCommand (@"teleport Nakama/128.08/111.95/22.06"))
+    ;;(thisClient.ExecuteCommand (@"teleport Nakama/128.08/111.95/22.06"))
     ;; this works but the next is faster (thisClient.ExecuteCommand (@"use HMG to wear"))
     (thisClient.ExecuteCommand (@"wear Clothing/HMG"))
     ;; interesting places

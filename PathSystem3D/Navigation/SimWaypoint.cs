@@ -533,7 +533,6 @@ namespace PathSystem3D.Navigation
             PathStore = pathStore;
             _GlobalPos = global;// RoundPoint(firstP, PathStore);
             _LocalPos = local;
-            CIndex.SetWayPoint(local.Z,this);
             //PX = PX0;
             //PY = PY0;
             //PathStore.SimWaypoint[PX, PY] = this;

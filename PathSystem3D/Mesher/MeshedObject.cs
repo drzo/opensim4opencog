@@ -17,7 +17,7 @@ namespace PathSystem3D.Mesher
     //    void ForceUpdateOccupied(PathSystem3D.Navigation.SimPathStore PathStore);
     //    bool IsInside(OpenMetaverse.Vector3 L);
     //    bool IsInside(float x, float y, float z);
-    //    bool IsPassable { get; }        
+    //    bool IsPhantom { get; }        
     //    Box3Fill OuterBox { get; set; }
     //    void RegionTaintedThis();
     //    void RemeshObject(PathSystem3D.Mesher.Box3Fill changed);
@@ -32,12 +32,16 @@ namespace PathSystem3D.Mesher
     //    void UpdateOccupied();
     //}
 
+    public interface MeshableObject : SimPosition
+    {
+        bool IsSolid { get; set; }
+    }
 
     public interface IMeshedObject
     {
         IList<Box3Fill> InnerBoxes {get;}
         Box3Fill OuterBox {get;}
-        bool IsPassable { get; }
+        bool IsSolid { get; }
 #if COLLIDER_TRIANGLE
         IList<Triangle> triangles { get; }
 #endif
@@ -51,7 +55,7 @@ namespace PathSystem3D.Mesher
         string DebugString();
         //Mesh GetTriMesh();
 
-        void UpdateOccupied(SimPathStore pathStore);
+        void UpdateOccupied(SimPathStore simPathStore);
     }
     abstract public class MeshedObject: IMeshedObject
     {
@@ -82,10 +86,9 @@ namespace PathSystem3D.Mesher
         abstract public bool IsRegionAttached();
 
 
-        abstract public bool IsPassable
+        abstract public bool IsSolid
         {
-            get;
-            set;
+            get; set;
         }
 
         public void RegionTaintedThis()
@@ -103,7 +106,7 @@ namespace PathSystem3D.Mesher
         //}
 
         List<SimPathStore> SimPathStoresOccupied = new List<SimPathStore>();
-        public static bool DoNotMeshPassable = true;
+        public static bool DoNotMeshPhantom = true;
 
         public virtual void UpdateOccupied(SimPathStore pathStore)
         {
@@ -112,7 +115,7 @@ namespace PathSystem3D.Mesher
                 Console.WriteLine(String.Format("Cant UpdateOccupied for {0}", this));// + " pos " + RootObject.DistanceVectorString(RootObject));
                 return;
             }
-            if (DoNotMeshPassable && IsPassable) return;
+            if (DoNotMeshPhantom && !IsSolid) return;
             if (!IsRegionAttached()) return;
             lock (SimPathStoresOccupied)
             {
@@ -149,11 +152,11 @@ namespace PathSystem3D.Mesher
         }
 
 
-        protected void RemoveCollisions(SimPathStore pathStore)
+        protected void RemoveCollisions(SimPathStore simPathStore)
         {
             Box3Fill changed = new Box3Fill(true);
             RemoveFromWaypoints(changed);
-            pathStore.Refresh(changed);            
+            simPathStore.Refresh(changed);            
         }
 
         public void RemoveFromWaypoints(Box3Fill changed)
@@ -171,25 +174,25 @@ namespace PathSystem3D.Mesher
             }
         }
 
-        public void ForceUpdateOccupied(SimPathStore pathStore)
+        public void ForceUpdateOccupied(SimPathStore PathStore)
         {
             if (!IsRegionAttached()) return;
             // if (!IsSculpted)
             {
-                UpdatePathOccupied(pathStore);
+                UpdatePathOccupied(PathStore);
                 return;
             }
             new Thread(new ThreadStart(delegate()
             {
                 try
                 {
-                    UpdatePathOccupied(pathStore);
+                    UpdatePathOccupied(PathStore);
                 }
                 catch (Exception)
                 {
                     lock (SimPathStoresOccupied)
                     {
-                        SimPathStoresOccupied.Remove(pathStore);
+                        SimPathStoresOccupied.Remove(PathStore);
                     }
                 }
             })).Start();
@@ -227,16 +230,17 @@ namespace PathSystem3D.Mesher
             // Mesh = null;
         }
 
-        private void UpdateOccupiedVeryFast(SimPathStore pathStore)
+        private void UpdateOccupiedVeryFast(SimPathStore PathStore)
         {
-            float detail = pathStore.StepSize;// -0.001f;
+            float detail = PathStore.StepSize;// -0.001f;
             float MinX = OuterBox.MinX;
             float MaxX = OuterBox.MaxX;
             float MinY = OuterBox.MinY;
             float MaxY = OuterBox.MaxY;
+
             float MinZ = OuterBox.MinZ;
             float MaxZ = OuterBox.MaxZ;
-            pathStore.TaintCollisionPlanes(OuterBox);
+
             for (float x = MinX; x <= MaxX; x += detail)
             {
                 for (float y = MinY; y <= MaxY; y += detail)
@@ -246,9 +250,9 @@ namespace PathSystem3D.Mesher
             }
             SetLocatedOld(MaxX, MaxY, MinZ, MaxZ);
         }
-        private void UpdateOccupiedFast(SimPathStore pathStore)
+        private void UpdateOccupiedFast(SimPathStore PathStore)
         {
-            float detail = pathStore.StepSize;// -0.001f;
+            float detail = PathStore.StepSize;// -0.001f;
             float MinX = OuterBox.MinX;
             float MaxX = OuterBox.MaxX;
             float MinY = OuterBox.MinY;
@@ -313,7 +317,7 @@ namespace PathSystem3D.Mesher
         public IList<Box3Fill> InnerBoxes { get; set; }//  = new List<Box3Fill>();
 
 
-        protected MeshedObject(Box3Fill o, IList<Box3Fill> i, SimPathStore R)
+        public MeshedObject(Box3Fill o, IList<Box3Fill> i, SimPathStore R)
         {
             OuterBox = o;
             InnerBoxes = i;
@@ -360,7 +364,7 @@ namespace PathSystem3D.Mesher
         {
             if (InnerBoxes.Count == 0)
             {
-                Console.WriteLine("using outer box for {0}", this);
+                Console.WriteLine("using outerbox for " + this);
                 OuterBox.SetOccupied(p, SimZLevel, SimZMaxLevel, detail);
                 return;
             }
@@ -377,7 +381,7 @@ namespace PathSystem3D.Mesher
         {
             if (InnerBoxes.Count == 0)
             {
-                Console.WriteLine("using outer box for {0}", this);
+                Console.WriteLine("using outerbox for " + this);
                 OuterBox.SetOccupied(p, MinMaxZ, detail);
                 return;
             }

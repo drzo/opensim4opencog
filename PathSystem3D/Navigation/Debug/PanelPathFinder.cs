@@ -473,7 +473,6 @@ namespace PathSystem3D.Navigation.Debug
         private delegate void DrawPathDelegate(List<PathFinderNode> path);
         internal void DrawPath(IList<PathFinderNode> path)
         {
-            if (PathStore==null) return;
             if (path == null) return;
             if (this.InvokeRequired)
             {

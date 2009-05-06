@@ -242,23 +242,23 @@ namespace cogbot.TheOpenSims
 
         public override Vector3 GetSimPosition()
         {
-            if (IsLocal())
-            {
-                if (Client.Settings.OBJECT_TRACKING)
-                    return Client.Self.SimPosition;
-                if (theAvatar.ParentID == 0) return theAvatar.Position;
-            }
+            //if (IsLocal())
+            //{
+            //    if (Client.Settings.OBJECT_TRACKING)
+            //        return Client.Self.SimPosition;
+            //    if (theAvatar.ParentID == 0) return theAvatar.Position;
+            //}
             return base.GetSimPosition();
         }
 
         public override Vector3d GetWorldPosition()
         {
-            if (IsLocal())
-            {
-                if (Client.Settings.OBJECT_TRACKING)
-                    return Client.Self.GlobalPosition;
+            //if (IsLocal())
+            //{
+            //    if (Client.Settings.OBJECT_TRACKING)
+            //        return Client.Self.GlobalPosition;
 
-            }
+            //}
             return GetSimRegion().LocalToGlobal(GetSimPosition());
         }
 
@@ -1021,7 +1021,7 @@ namespace cogbot.TheOpenSims
                     }
 
                     // Like water areas
-                    bool swimming = GetPathStore().IsUnderWater(worldPosition);
+                    bool swimming = WaterHeight > selfZ;
 
                     // Reset previous Z 
                     ClientMovement.FastUp = false;
@@ -1072,7 +1072,7 @@ namespace cogbot.TheOpenSims
                         targetPosition.Z = WaterHeight - 0.25f;
                     }
 
-                    ClientMovement.Fly = swimming ||  GetPathStore().IsFlyZone(SimPathStore.GlobalToLocal(worldPosition));
+                    ClientMovement.Fly = swimming ;// todo ||  GetPathStore().IsFlyZone(SimPathStore.GlobalToLocal(worldPosition));
 
                     if (swimming)
                     {

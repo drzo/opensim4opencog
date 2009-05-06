@@ -395,28 +395,43 @@ namespace cogbot.TheOpenSims
             {
                 string objName = " " + props.Name.ToLower() + " | " + props.Description.ToLower() + " ";
 
-                lock (objectTypes) foreach (SimObjectType otype in objectTypes)
-                {
-                    foreach (Regex smatch in otype.NoMatch)
-                    { // NoMatch
-                        if (smatch.IsMatch(objName))
+                lock (objectTypes)
+                    foreach (SimObjectType otype in objectTypes)
+                    {
+                        foreach (Regex smatch in otype.NoMatch)
                         {
-                            goto nextOType;
-                        }
-                    }
-                    foreach (Regex smatch in otype.Match)
-                    { // Match
-                        if (smatch.IsMatch(objName))
-                        {
-                            if (!possibles.Contains(otype))
+                            // NoMatch
+                            if (smatch.IsMatch(objName))
                             {
-                                possibles.Add(otype);
-                                SetNames(props, otype);
+                                goto nextOType;
                             }
-                            break;
+                        }
+                        foreach (Regex smatch in otype.Match)
+                        {
+                            // Match
+                            if (smatch.IsMatch(objName))
+                            {
+                                if (!possibles.Contains(otype))
+                                {
+                                    possibles.Add(otype);
+                                    SetNames(props, otype);
+                                }
+                                break;
+                            }
+                        }
+                        nextOType:
+                        {
                         }
                     }
-                nextOType: { }
+                if (!String.IsNullOrEmpty(props.TouchName))
+                {
+                    string verb = props.TouchName;
+                    possibles.Add(SimTypeSystem.CreateObjectUse(verb, new object[] { "UseGrab", true, "TextName", verb }));
+                }
+                if (!String.IsNullOrEmpty(props.SitName))
+                {
+                    string verb = props.SitName;
+                    possibles.Add(SimTypeSystem.CreateObjectUse(verb, new object[] {"UseSit", true, "TextName", verb}));
                 }
             }
             return possibles;
