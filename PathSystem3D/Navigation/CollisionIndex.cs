@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Threading;
 using PathSystem3D.Mesher;
 using OpenMetaverse;
@@ -553,6 +554,16 @@ namespace PathSystem3D.Navigation
                 }
             }
             return false;
+        }
+
+        internal System.Drawing.Color DebugColor(CollisionPlane CP)
+        {
+            foreach (var v in GetOccupied(CP.MinZ, CP.MaxZ))
+            {
+                Color c = v.DebugColor();
+                if (c!=Color.Empty) return c;
+            }
+            return Color.Empty;
         }
     }
 

@@ -266,7 +266,8 @@ namespace PathSystem3D.Navigation.Debug
 
         private int TRANSPOSE(int sy)
         {
-           return PathStore.MAPSPACE-1-sy;
+           if (PathStore!=null) return PathStore.MAPSPACE-1-sy;
+           return sy;
         }
 
 
@@ -274,7 +275,7 @@ namespace PathSystem3D.Navigation.Debug
        // byte lastColorByte;
         private SolidBrush ColourForByte(int x,int y, byte[,] matrix)
         {
-            Color sb = PathStore.GetColor(x,y,matrix);
+            Color sb = PathStore.GetColor(CurrentPlane, x,y,matrix);
             SolidBrush lastsb = new SolidBrush(sb);
            // lastColorByte= p;
             return lastsb;

@@ -36,6 +36,7 @@ namespace cogbot.Actions
                     WriteLine(str);
                     // The thread that accepts the Client and awaits messages
                     WorldSystem.TheSimAvatar.SetMoveTarget(followAvatar);
+                    WorldSystem.TheSimAvatar.ApproachPosition = followAvatar;
                 }
                 else
                 {
@@ -48,6 +49,7 @@ namespace cogbot.Actions
 
                 WriteLine("You stop following " + WorldSystem.TheSimAvatar.ApproachPosition + ".");
 
+                WorldSystem.TheSimAvatar.SetMoveTarget(null);
                 WorldSystem.TheSimAvatar.StopMoving();
             }
             else

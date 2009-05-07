@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using PathSystem3D.Navigation;
 using OpenMetaverse;
 using System.Threading;
@@ -53,6 +54,7 @@ namespace PathSystem3D.Mesher
         bool xyMaxZ(float x, float y, float z, out float zout);
         void RemeshObject();
         string DebugString();
+        Color DebugColor();
         //Mesh GetTriMesh();
 
         void UpdateOccupied(SimPathStore simPathStore);
@@ -62,6 +64,11 @@ namespace PathSystem3D.Mesher
 #if COLLIDER_TRIANGLE
         public IList<Triangle> triangles { get; set;}
 #endif
+
+        public virtual Color DebugColor()
+        {
+            return Color.Empty;
+        }
 
         public string DebugString()
         {
@@ -106,7 +113,7 @@ namespace PathSystem3D.Mesher
         //}
 
         List<SimPathStore> SimPathStoresOccupied = new List<SimPathStore>();
-        public static bool DoNotMeshPhantom = true;
+        public static bool MeshOnlySolids = false;
 
         public virtual void UpdateOccupied(SimPathStore pathStore)
         {
@@ -115,7 +122,7 @@ namespace PathSystem3D.Mesher
                 Console.WriteLine(String.Format("Cant UpdateOccupied for {0}", this));// + " pos " + RootObject.DistanceVectorString(RootObject));
                 return;
             }
-            if (DoNotMeshPhantom && !IsSolid) return;
+            if (MeshOnlySolids && !IsSolid) return;
             if (!IsRegionAttached()) return;
             lock (SimPathStoresOccupied)
             {
@@ -310,7 +317,7 @@ namespace PathSystem3D.Mesher
 
         //   public static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        readonly public static Vector3 PadXYZ = new Vector3(0.2f,0.2f,0.12f);
+        readonly public static Vector3 PadXYZ = new Vector3(0.2f,0.2f,0.2f);
 
         public Box3Fill OuterBox { get; set; }
 

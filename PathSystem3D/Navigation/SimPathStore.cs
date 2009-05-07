@@ -512,8 +512,8 @@ namespace PathSystem3D.Navigation
         {
             foreach (var of in Matrixes)
             {
-                //of.EnsureUpToDate();
-                of.UpdateCollisionPlane(of.UsePotentialFields,of.AdjacentBlocking);
+                of.EnsureUpToDate();
+              //  of.UpdateCollisionPlane(of.UsePotentialFields,of.AdjacentBlocking);
                 
             }
         }
@@ -1491,33 +1491,33 @@ namespace PathSystem3D.Navigation
 
         readonly Color[] lastColour = new Color[256];//(Color.Black);
 
-        public Color GetColor(int x, int y , byte[,] matrix)
+        public Color GetColor(CollisionPlane CP, int x, int y , byte[,] matrix)
         {
             byte p = matrix[x, y];
             switch (p)
             {
                 case STICKY_PASSABLE:
-                    return OccupiedColor(Color.Blue, MeshIndex[x, y]);
+                    return OccupiedColor(CP, Color.Blue, MeshIndex[x, y]);
                 case PASSABLE:
-                    return OccupiedColor(Color.Green, MeshIndex[x, y]);
+                    return OccupiedColor(CP, Color.Green, MeshIndex[x, y]);
                 case BLOCKED:
-                    return OccupiedColor(Color.Olive, MeshIndex[x, y]);
+                    return OccupiedColor(CP, Color.Olive, MeshIndex[x, y]);
                 case MAYBE_BLOCKED:
-                    return OccupiedColor(Color.Pink, MeshIndex[x, y]);
+                    return OccupiedColor(CP, Color.Pink, MeshIndex[x, y]);
                 case BLOCKED_YELLOW:
-                    return OccupiedColor(Color.Yellow, MeshIndex[x, y]);
+                    return OccupiedColor(CP, Color.Yellow, MeshIndex[x, y]);
                 case BLOCK_ORANGE:
-                    return OccupiedColor(Color.Orange, MeshIndex[x, y]);
+                    return OccupiedColor(CP, Color.Orange, MeshIndex[x, y]);
                 case BLOCK_PURPLE:
-                    return OccupiedColor(Color.Orchid, MeshIndex[x, y]);
+                    return OccupiedColor(CP, Color.Orchid, MeshIndex[x, y]);
                 case WATER_G:
-                    return OccupiedColor(Color.CornflowerBlue, MeshIndex[x, y]);
+                    return OccupiedColor(CP, Color.CornflowerBlue, MeshIndex[x, y]);
                 case WATER_Z:
-                    return OccupiedColor(Color.CornflowerBlue, MeshIndex[x, y]);
+                    return OccupiedColor(CP, Color.CornflowerBlue, MeshIndex[x, y]);
                 case TOO_LOW:
-                    return OccupiedColor(Color.Tomato, MeshIndex[x, y]);
+                    return OccupiedColor(CP, Color.Tomato, MeshIndex[x, y]);
                 case TOO_HIGH:
-                    return OccupiedColor(Color.Firebrick, MeshIndex[x, y]);
+                    return OccupiedColor(CP, Color.Firebrick, MeshIndex[x, y]);
             }
             Color sb = lastColour[p];
             if (sb == Color.Empty)
@@ -1530,15 +1530,19 @@ namespace PathSystem3D.Navigation
             return sb;
         }
 
-        private static Color OccupiedColor(Color c, CollisionIndex cIndex)
+        private static Color OccupiedColor(CollisionPlane CP, Color c, CollisionIndex cIndex)
         {
             //return c;
             if (cIndex != null)
             {
+                Color cAdd = cIndex.DebugColor(CP);
                 int dense = cIndex.OccupiedCount;
                 int A = 240 - 10 * dense;
                 if (A < 0) A = 20;
-
+                if (cAdd!=Color.Empty)
+                {
+                    c = cAdd; 
+                }
                 return Color.FromArgb(A, c.R, c.G, c.B);
             }
             return c;
@@ -2393,7 +2397,7 @@ namespace PathSystem3D.Navigation
             {
                 if (OuterBox.IsZInside(list.MinZ,list.MaxZ))
                 {
-                  list.NeedsUpdate = true;
+                  list.HeigthMapNeedsUpdate = true;
                 }
             }
         }

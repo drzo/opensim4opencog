@@ -27,7 +27,7 @@ namespace PathSystem3D.Navigation
                 if (!_UsePotentialFields == value)
                 {
                     _UsePotentialFields = value;
-                    NeedsUpdate = true;
+                    MatrixNeedsUpdate = true;
                 }
             }
         }
@@ -41,7 +41,7 @@ namespace PathSystem3D.Navigation
                 if (!_AdjacentBlocking == value)
                 {
                     _AdjacentBlocking = value;
-                    NeedsUpdate = true;
+                    MatrixNeedsUpdate = true;
                 }
             }
         }
@@ -65,13 +65,13 @@ namespace PathSystem3D.Navigation
                 if (value > MaxZ)
                 {                   
                     Console.WriteLine("Resizing {0} < {1} ", this, value);
-                    NeedsUpdate = true;
+                    HeigthMapNeedsUpdate = true;
                     MaxZ = value;
                 }
                 else if (value < MinZ)
                 {
                       Console.WriteLine("Resizing {0} > {1} > ", this, value);
-                    NeedsUpdate = true;
+                      HeigthMapNeedsUpdate = true;
                     MinZ = value;
                 }
                 if ((MaxZ - MinZ) > 5)
@@ -83,7 +83,7 @@ namespace PathSystem3D.Navigation
 
         internal bool Accepts(float Z)
         {
-            if (Z < MaxZ)
+            if (Z < MinZ + 3.3f)
             {
                 if (Z >= MinZ-0.3f) return true;
                 //if (MaxZ - Z > 3) return false;
@@ -91,7 +91,9 @@ namespace PathSystem3D.Navigation
             return false;
         }
 
-        public bool NeedsUpdate { get; set; }
+        public bool MatrixNeedsUpdate { get; set; }
+        public bool HeigthMapNeedsUpdate { get; set; }
+        
         public delegate int NeighborPredicateDelegate(int NX,int XY);
         public int NeighborPredicate(int ix, int iy, int circleSize, NeighborPredicateDelegate param1)
         {
@@ -115,7 +117,7 @@ namespace PathSystem3D.Navigation
 
         public override string ToString()
         {
-            return MinZ + "-" + MaxZ;
+            return MinZ + "-" + MaxZ + "@" + BumpConstraint + "f";
         }
         byte[,] _BM;
 
@@ -127,7 +129,7 @@ namespace PathSystem3D.Navigation
             {
                 if (_BM == null)
                 {
-                    NeedsUpdate = true;
+                    MatrixNeedsUpdate = true;
                     _BM = new byte[MaxXPt+1, MaxYPt+1];
                     for (int y = MaxYPt; y >= 0; y--)
                         for (int x = MaxXPt; x >= 0; x--)
@@ -329,12 +331,8 @@ namespace PathSystem3D.Navigation
         //    set { ByteMatrix[x, y] = value; }
         //}
 
-        public void EnsureUpToDate()
-        {
-            if (!NeedsUpdate) return;
-            UpdateCollisionPlane(UsePotentialFields, AdjacentBlocking);
-        }
-
+        private float BumpConstraint = 0.6f;
+        private float BumpConstraintPurple =  0.4f;
 
         public byte DefaultCollisionValue(int x, int y, float ZLevel, byte b, float[,] Heights, CollisionIndex[,] cI)
         {
@@ -343,11 +341,11 @@ namespace PathSystem3D.Navigation
             {
                // if (c.IsPortal(this)) return SimPathStore.PASSABLE;
             }
-            int bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.60f, Heights);
+            int bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, BumpConstraint, Heights);
             if (bumps > 0)
                 return SimPathStore.BLOCKED;
 
-            bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.40f, Heights);
+            bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, BumpConstraintPurple, Heights);
             if (bumps > 0)
                 return SimPathStore.BLOCK_PURPLE;
 
@@ -361,10 +359,10 @@ namespace PathSystem3D.Navigation
                 return SimPathStore.WATER_G;
             }
 
-            bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.10f, Heights);
+           /* bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.1f, Heights);
             if (bumps > 0)
                 return SimPathStore.BLOCKED_YELLOW;
-
+             */
             float MaxZLevel = MaxZ;
             if (MaxZLevel <= ZLevel - 2)
             {
@@ -372,26 +370,27 @@ namespace PathSystem3D.Navigation
             }
             if (ZLevel + 20 < MaxZLevel) // needs passable
                 return SimPathStore.TOO_LOW;
-            
-            if (c!=null)
+
+            if (b != SimPathStore.BLOCKED)
+                return SimPathStore.INITIALLY;
+
+            if (c != null)
             {
                 return c.GetOccupiedValue(ZLevel,ZLevel);
             }
-            // todo if (!SimPathStore.Special(b) || true) // needs passable
-            if (b!=SimPathStore.BLOCKED)
-                return SimPathStore.INITIALLY;
             return b;
         }
 
-        internal void UpdateCollisionPlane(bool usePotentialFieleds, bool cutNarrows)
+        internal void EnsureUpToDate()
         {
             //PathStore.TaintMatrix();
             //PathStore.BakeTerrain();
             RenderHeightMap();
+            if (!MatrixNeedsUpdate) return;
             {
                 float MinZ = this.MinZ;
                 CollisionIndex[,] MeshIndex = PathStore.MeshIndex;
-                NeedsUpdate = false;
+                MatrixNeedsUpdate = false;
                 byte[,] ToMatrix = ByteMatrix;
                 float[,] Heights = HeightMap;
                 float[,] GroundPlane = PathStore.GroundPlane;
@@ -402,7 +401,7 @@ namespace PathSystem3D.Navigation
                     for (int x = MaxXPt - 1; x > 0; x--)
                     {
                         byte b = ToMatrix[x, y];
-                        if (SimPathStore.MaybeBlocked(b)) continue;
+                       // if (SimPathStore.MaybeBlocked(b)) continue;
                         //if (b != SimPathStore.STICKY_PASSABLE)
                         {
                             float ZLevel = Heights[x, y];
@@ -420,28 +419,33 @@ namespace PathSystem3D.Navigation
                                 }
                                 else
                                 {
-                                    ToMatrix[x, y] = DefaultCollisionValue(x, y, ZLevel, b, Heights,MeshIndex);
+                                    ToMatrix[x, y] = DefaultCollisionValue(x, y, ZLevel, b, Heights, MeshIndex);
                                 }
                             }
                         }
                     }
                 }
-               // cutNarrows = false;
-               // if (cutNarrows) AddAdjacentBlocking(ToMatrix,2);
-                byte FeildEffect = SimPathStore.BLOCKED;
-                if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, FeildEffect, 1, 1);
-                if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, --FeildEffect, 5, 30);
+                // cutNarrows = false;
+                // if (cutNarrows) AddAdjacentBlocking(ToMatrix,2);
+                if (UsePotentialFields)
+                {
+                    byte FeildEffect = SimPathStore.BLOCKED;
+                    AddFieldEffects(ToMatrix, ToMatrix, FeildEffect, 1, 1);
+                    AddFieldEffects(ToMatrix, ToMatrix, --FeildEffect, 5, 30);
 
-                FeildEffect = SimPathStore.BLOCKED_YELLOW;
-                if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, FeildEffect, 1, 1);
-                if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, --FeildEffect, 5, 30);
+                    FeildEffect = SimPathStore.BLOCKED_YELLOW;
+                    AddFieldEffects(ToMatrix, ToMatrix, FeildEffect, 1, 1);
+                    AddFieldEffects(ToMatrix, ToMatrix, --FeildEffect, 5, 30);
 
-                FeildEffect = SimPathStore.BLOCK_PURPLE;
-                if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, FeildEffect, 1, 1);
-                if (usePotentialFieleds) AddFieldEffects(ToMatrix, ToMatrix, --FeildEffect, 5, 30);
-
-                if (cutNarrows) AddAdjacentBlocking(ToMatrix,SimPathStore.MAYBE_BLOCKED, 3, SimPathStore.BLOCKED);
-                AddEdgeBlocking(ToMatrix);
+                    FeildEffect = SimPathStore.BLOCK_PURPLE;
+                    AddFieldEffects(ToMatrix, ToMatrix, FeildEffect, 1, 1);
+                    AddFieldEffects(ToMatrix, ToMatrix, --FeildEffect, 5, 30);
+                }
+                if (AdjacentBlocking)
+                {
+                   // AddAdjacentBlocking(ToMatrix, SimPathStore.MAYBE_BLOCKED, 3, SimPathStore.BLOCKED);
+                   // AddEdgeBlocking(ToMatrix);
+                }
                 Console.WriteLine("\nEnd UpdateCollisionPlane: {0} for {1}", PathStore, this);
             }
         }
@@ -501,6 +505,7 @@ namespace PathSystem3D.Navigation
 
         internal void RenderHeightMap()
         {
+            if (!HeigthMapNeedsUpdate) return;
             _HeightMap = null;
             RenderGroundPlane();
             Console.WriteLine("\nStart RenderHeightMap: {0} for {1}", PathStore, this);
@@ -510,8 +515,9 @@ namespace PathSystem3D.Navigation
             lock (this)
             {
                 CollisionIndex[,] MeshIndex = PathStore.MeshIndex;
-                NeedsUpdate = false;
-                byte[,] ToMatrix = ByteMatrix;
+                HeigthMapNeedsUpdate = false;
+                MatrixNeedsUpdate = true;
+                //byte[,] ToMatrix = ByteMatrix;
                 float[,] Heights = HeightMap;
                 float[,] GroundPlane = PathStore.GroundPlane;
                 PathStore.TaintMatrix();
@@ -521,9 +527,9 @@ namespace PathSystem3D.Navigation
                     {
                         float testPlane = GroundPlane[x, y];
 
-                        if (testPlane + 1f < MinZ)
+                        if (testPlane + 2f < MinZ)
                         {
-                            testPlane = MinZ - 1;
+                            testPlane = MinZ - 2;
                         }
                         Heights[x, y] = testPlane;
 
@@ -531,26 +537,19 @@ namespace PathSystem3D.Navigation
                         if (W != null)
                         {
                             float level;
-                            if (W.OpenCapsuleAt(testPlane, testPlane + 6f, CollisionIndex.CapsuleZ, out level))
+                            if (W.OpenCapsuleAt(testPlane, testPlane + 16f, CollisionIndex.CapsuleZ, out level))
                             {
                                 if (level < testPlane)
                                 {
-                                   // level = testPlane;
+                                    level = testPlane;
                                 }
-                                Heights[x, y] = level;
-                            } else
-                                if (W.OpenCapsuleAt(testPlane, testPlane + 126f, CollisionIndex.CapsuleZ, out level))
-                                {
-                                    if (level < testPlane)
-                                    {
-                                        // level = testPlane;
-                                    }
-                                    Heights[x, y] = level;
-                                }
-                                else
-                                {
-                                    Heights[x, y] = W.GetZLevel(testPlane, testPlane + 6f);
-                                }
+                               // Heights[x, y] = level;
+                            }
+                               Heights[x, y] = level;
+                            //else
+                            //{
+                            //    Heights[x, y] = W.GetZLevel(testPlane, testPlane + 16f);
+                            //}
                         }
                     }
                 }
@@ -685,6 +684,49 @@ namespace PathSystem3D.Navigation
 
             return found;
         }
+
+        internal void SetDefaultConstraints()
+        {
+            MatrixNeedsUpdate = true;
+            _BM = null;
+            BumpConstraint = 0.6f;
+            BumpConstraintPurple = 0.4f;
+        }
+
+        internal bool TigthenConstraints()
+        {
+            if (MatrixNeedsUpdate) return false;
+            MatrixNeedsUpdate = true;
+            //_BM = null;
+            BumpConstraint -= 0.05f;
+            BumpConstraintPurple -= 0.05f;
+            SimPathStore.Debug("\nTigthenConstraints " + this + " to " + BumpConstraint);
+            if (BumpConstraint < 0.1)
+            {
+                SetDefaultConstraints();
+               // return false;
+            }
+            EnsureUpToDate();
+            return true;
+        }
+
+        internal bool LoosenConstraints()
+        {
+            if (MatrixNeedsUpdate) return false;
+            MatrixNeedsUpdate = true;
+            _BM = null;
+            BumpConstraint += 0.1f;
+            BumpConstraintPurple += 0.1f;
+            SimPathStore.Debug("\nLoosenConstraints " + this + " to " + BumpConstraint);
+            if (BumpConstraint > 2)
+            {
+                SetDefaultConstraints();
+            }
+
+            EnsureUpToDate();
+            return true;
+        }
+
     }
 
 }
