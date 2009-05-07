@@ -153,7 +153,6 @@ namespace cogbot.Listeners
         }
 
 
-
         public override void Grid_OnRegionHandleReply(UUID regionID, ulong regionHandle)
         {
             RegisterUUID(regionID, SimRegion.GetRegion(regionHandle));
@@ -180,6 +179,7 @@ namespace cogbot.Listeners
                     client.Avatars.OnPointAt -= Avatars_OnPointAt;
                     client.Avatars.OnLookAt -= Avatars_OnLookAt;
                     client.Avatars.OnEffect -= Avatars_OnEffect;
+                    client.Self.OnCameraConstraint -= Self_OnCameraConstraint;
                 }
             }
         }
@@ -227,6 +227,11 @@ namespace cogbot.Listeners
 
                 if (isMaster) RegisterAll();
             }
+        }
+
+        public override void Self_OnCameraConstraint(Vector4 collidePlane)
+        {
+            //base.Self_OnCameraConstraint(collidePlane);
         }
 
 
@@ -298,7 +303,7 @@ namespace cogbot.Listeners
 
                 if (RegionMasterTexturePipeline == null)
                 {
-                    RegionMasterTexturePipeline = new TexturePipeline(client, 4);
+                    RegionMasterTexturePipeline = new TexturePipeline(client, 40);
                     //RegionMasterTexturePipeline.OnDownloadFinished += new TexturePipeline.DownloadFinishedCallback(RegionMasterTexturePipeline_OnDownloadFinished);
                     client.Settings.USE_TEXTURE_CACHE = true;
                 }

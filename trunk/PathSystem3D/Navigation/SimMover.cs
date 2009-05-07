@@ -88,13 +88,13 @@ namespace PathSystem3D.Navigation
             completedAt = 0;
             _STATE = SimMoverState.MOVING;
             Vector3d vstart = v3s[0];
-            Vector3 vv3 = SimPathStore.GlobalToLocal(vstart);
+           // Vector3 vv3 = SimPathStore.GlobalToLocal(vstart);
 
             v3s = SimPathStore.GetSimplifedRoute(vstart, v3s, 45, 2f);
 
             int maxReverse = 2;
             Debug("FollowPath: {0} -> {1} for {2}", v3s.Count, DistanceVectorString(finalTarget), finalDistance);
-            int CanSkip = UseSkipping ? 1 : 0; //never right now
+            int CanSkip = UseSkipping ? 0 : 0; //never right now
             int Skipped = 0;
             UseSkipping = !UseSkipping;
             int v3sLength = v3s.Count;
@@ -308,7 +308,7 @@ namespace PathSystem3D.Navigation
             PathStore.SetBlockedTemp(GetSimPosition(), l3);
         }
 
-        public void OpenNearbyClosedPassages()
+        public virtual void OpenNearbyClosedPassages()
         {
             Mover.OpenNearbyClosedPassages();
         }
@@ -331,6 +331,11 @@ namespace PathSystem3D.Navigation
 
     public class SimCollisionPlaneMover : SimAbstractMover
     {
+        public override void OpenNearbyClosedPassages()
+        {
+            base.OpenNearbyClosedPassages();
+        }
+
         public SimCollisionPlaneMover(SimMover mover, SimPosition finalGoal, double finalDistance) :
             base(mover, finalGoal, finalDistance)
         {
@@ -346,13 +351,13 @@ namespace PathSystem3D.Navigation
             {
                 MoverPlane.MinZ = MinZ;
                 MoverPlane.MaxZ = MinZ + 3;
-                MoverPlane.NeedsUpdate = true;
+                MoverPlane.HeigthMapNeedsUpdate = true;
             }
             else if (cpz > MinZ)
             {
                 MoverPlane.MinZ = MinZ;
                 MoverPlane.MaxZ = MinZ + 3;
-                MoverPlane.NeedsUpdate = true; 
+                MoverPlane.HeigthMapNeedsUpdate = true;
             }
 
             MoverPlane.WalkZLevel = mover.GetSimPosition().Z;
@@ -385,7 +390,7 @@ namespace PathSystem3D.Navigation
         public override SimMoverState Goto()
         {
             if (FollowPathTo(FinalLocation, FinalDistance)) return SimMoverState.COMPLETE;
-            MoverPlane.NeedsUpdate = true;
+            MoverPlane.TigthenConstraints();
             return STATE; 
         }
 
@@ -394,14 +399,11 @@ namespace PathSystem3D.Navigation
             bool OnlyStart = true;
             bool MadeIt = true;
 
-            int maxTryAgains = 2;
+            int maxTryAgains = 0;
             while (OnlyStart && MadeIt)
             {
                 Vector3d v3d = GetWorldPosition();
                 if (Vector3d.Distance(v3d, globalEnd) < distance) return true;
-                MoverPlane.WalkZLevel = (float)globalEnd.Z;
-                MoverPlane.WalkZLevel = (float)v3d.Z;
-                MoverPlane.EnsureUpToDate();
                 IList<Vector3d> route = SimPathStore.GetPath(MoverPlane, GetWorldPosition(), globalEnd, distance, out OnlyStart);
                 STATE = FollowPathTo(route, globalEnd, distance);
                 switch (STATE)
@@ -413,6 +415,7 @@ namespace PathSystem3D.Navigation
                                 OnlyStart = true;
                                 continue;
                             }
+                            MoverPlane.TigthenConstraints();
                             MadeIt = false;
                             continue;
                         }

@@ -227,7 +227,7 @@ namespace PathSystem3D.Mesher
             }
             if (z < MinZ)
             {
-                MinZ = z;// -PadXYZ.Z;
+                MinZ = z - padXYZ.Z;
                 //changed = true;
             }
 
@@ -243,7 +243,7 @@ namespace PathSystem3D.Mesher
             }
             if (z > MaxZ)
             {
-                MaxZ = z +padXYZ.Z;
+                MaxZ = z;// +padXYZ.Z;
                 //changed = true;
             }
             //return changed;

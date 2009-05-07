@@ -6,6 +6,7 @@ using System.Threading;
 using PathSystem3D.Navigation;
 using PathSystem3D.Mesher;
 using System.Windows.Forms;
+using System.Drawing;
 
 namespace cogbot.TheOpenSims
 {
@@ -1424,8 +1425,33 @@ namespace cogbot.TheOpenSims
         }
 
         #endregion
+
+        private bool IsVerbDefinedKnown, IsVerbDefinedTrue;
+        public bool IsUsable
+        {
+            get
+            {
+                if (!IsVerbDefinedKnown)
+                {
+                    IsVerbDefinedKnown = true;
+                    IsVerbDefinedTrue = IsSitDefined || IsTouchDefined;
+                }
+                return IsVerbDefinedTrue;
+            }
+            set
+            {
+                IsVerbDefinedKnown = true;
+            	IsVerbDefinedTrue = value;
+            }
+        }
+        internal System.Drawing.Color DebugColor()
+        {
+            if (IsUsable) return System.Drawing.Color.Red;
+            return Color.Empty;
+        }
     }
-    public interface SimObject : SimPosition, SimMover, BotMentalAspect
+
+    public interface SimObject : SimPosition, SimMover, BotMentalAspect,MeshableObject
     {
         bool AddChild(SimObject simObject);
         void AddSuperTypes(System.Collections.Generic.IList<SimObjectType> listAsSet);

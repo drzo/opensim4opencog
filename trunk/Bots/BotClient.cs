@@ -218,7 +218,7 @@ namespace cogbot
             // Opensim recommends 250k total
 
             //Settings.ENABLE_CAPS = true;
-            Self.Movement.Camera.Far = 256f;
+            Self.Movement.Camera.Far = 512f;
             //Settings.LOG_ALL_CAPS_ERRORS = true;
             //Settings.FETCH_MISSING_INVENTORY = true;
             //Settings.SEND_AGENT_THROTTLE = false;

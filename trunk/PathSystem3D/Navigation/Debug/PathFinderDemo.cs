@@ -509,6 +509,9 @@ namespace PathSystem3D.Navigation.Debug
             this.ChkTieBraker = new System.Windows.Forms.CheckBox();
             this.BtnStartStop = new System.Windows.Forms.Button();
             this.PnlSettings = new System.Windows.Forms.Panel();
+            this.BtnLoosen = new System.Windows.Forms.Button();
+            this.BtnTighten = new System.Windows.Forms.Button();
+            this.BtnRefresh = new System.Windows.Forms.Button();
             this.CollisionPlaneList = new System.Windows.Forms.ComboBox();
             this.MinZevel = new System.Windows.Forms.TextBox();
             this.BtnRecomputeMatrix = new System.Windows.Forms.Button();
@@ -550,7 +553,7 @@ namespace PathSystem3D.Navigation.Debug
             this.PnlGUI.Location = new System.Drawing.Point(-1, -1);
             this.PnlGUI.Name = "PnlGUI";
             this.PnlGUI.NodeWeight = ((byte)(1));
-            this.PnlGUI.Size = new System.Drawing.Size(664, 611);
+            this.PnlGUI.Size = new System.Drawing.Size(722, 710);
             this.PnlGUI.Start = new System.Drawing.Point(1, 1);
             this.PnlGUI.TabIndex = 1;
             this.PnlGUI.ZLevel = 22F;
@@ -587,9 +590,9 @@ namespace PathSystem3D.Navigation.Debug
             this.toolStripSeparator8,
             this.BtnEnd,
             this.toolStripSeparator9});
-            this.ToolStrp.Location = new System.Drawing.Point(0, 620);
+            this.ToolStrp.Location = new System.Drawing.Point(0, 719);
             this.ToolStrp.Name = "ToolStrp";
-            this.ToolStrp.Size = new System.Drawing.Size(824, 25);
+            this.ToolStrp.Size = new System.Drawing.Size(882, 25);
             this.ToolStrp.TabIndex = 20;
             this.ToolStrp.Text = "toolStrip1";
             // 
@@ -835,7 +838,7 @@ namespace PathSystem3D.Navigation.Debug
             this.TBarSpeed.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.TBarSpeed.AutoSize = false;
             this.TBarSpeed.LargeChange = 10;
-            this.TBarSpeed.Location = new System.Drawing.Point(674, 24);
+            this.TBarSpeed.Location = new System.Drawing.Point(732, 24);
             this.TBarSpeed.Maximum = 60;
             this.TBarSpeed.Name = "TBarSpeed";
             this.TBarSpeed.Size = new System.Drawing.Size(121, 33);
@@ -851,7 +854,7 @@ namespace PathSystem3D.Navigation.Debug
             this.LblSpeed.AutoSize = true;
             this.LblSpeed.BackColor = System.Drawing.Color.Transparent;
             this.LblSpeed.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F);
-            this.LblSpeed.Location = new System.Drawing.Point(676, 9);
+            this.LblSpeed.Location = new System.Drawing.Point(734, 9);
             this.LblSpeed.Name = "LblSpeed";
             this.LblSpeed.Size = new System.Drawing.Size(38, 13);
             this.LblSpeed.TabIndex = 12;
@@ -909,7 +912,7 @@ namespace PathSystem3D.Navigation.Debug
             // 
             this.BtnPause.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.BtnPause.Enabled = false;
-            this.BtnPause.Location = new System.Drawing.Point(673, 587);
+            this.BtnPause.Location = new System.Drawing.Point(731, 686);
             this.BtnPause.Name = "BtnPause";
             this.BtnPause.Size = new System.Drawing.Size(143, 23);
             this.BtnPause.TabIndex = 19;
@@ -960,7 +963,7 @@ namespace PathSystem3D.Navigation.Debug
             // BtnStartStop
             // 
             this.BtnStartStop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.BtnStartStop.Location = new System.Drawing.Point(673, 558);
+            this.BtnStartStop.Location = new System.Drawing.Point(731, 657);
             this.BtnStartStop.Name = "BtnStartStop";
             this.BtnStartStop.Size = new System.Drawing.Size(143, 23);
             this.BtnStartStop.TabIndex = 18;
@@ -971,6 +974,9 @@ namespace PathSystem3D.Navigation.Debug
             // PnlSettings
             // 
             this.PnlSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.PnlSettings.Controls.Add(this.BtnLoosen);
+            this.PnlSettings.Controls.Add(this.BtnTighten);
+            this.PnlSettings.Controls.Add(this.BtnRefresh);
             this.PnlSettings.Controls.Add(this.CollisionPlaneList);
             this.PnlSettings.Controls.Add(this.MinZevel);
             this.PnlSettings.Controls.Add(this.BtnRecomputeMatrix);
@@ -992,10 +998,40 @@ namespace PathSystem3D.Navigation.Debug
             this.PnlSettings.Controls.Add(this.LblHeuristic);
             this.PnlSettings.Controls.Add(this.TBarX);
             this.PnlSettings.Controls.Add(this.TBarY);
-            this.PnlSettings.Location = new System.Drawing.Point(669, 59);
+            this.PnlSettings.Location = new System.Drawing.Point(727, 59);
             this.PnlSettings.Name = "PnlSettings";
-            this.PnlSettings.Size = new System.Drawing.Size(155, 534);
+            this.PnlSettings.Size = new System.Drawing.Size(155, 561);
             this.PnlSettings.TabIndex = 17;
+            // 
+            // BtnLoosen
+            // 
+            this.BtnLoosen.Location = new System.Drawing.Point(64, 530);
+            this.BtnLoosen.Name = "BtnLoosen";
+            this.BtnLoosen.Size = new System.Drawing.Size(52, 23);
+            this.BtnLoosen.TabIndex = 30;
+            this.BtnLoosen.Text = "Loosen";
+            this.BtnLoosen.UseVisualStyleBackColor = true;
+            this.BtnLoosen.Click += new System.EventHandler(this.BtnLoosen_Click);
+            // 
+            // BtnTighten
+            // 
+            this.BtnTighten.Location = new System.Drawing.Point(6, 530);
+            this.BtnTighten.Name = "BtnTighten";
+            this.BtnTighten.Size = new System.Drawing.Size(52, 23);
+            this.BtnTighten.TabIndex = 29;
+            this.BtnTighten.Text = "Tighten";
+            this.BtnTighten.UseVisualStyleBackColor = true;
+            this.BtnTighten.Click += new System.EventHandler(this.BtnTighten_Click);
+            // 
+            // BtnRefresh
+            // 
+            this.BtnRefresh.Location = new System.Drawing.Point(6, 500);
+            this.BtnRefresh.Name = "BtnRefresh";
+            this.BtnRefresh.Size = new System.Drawing.Size(136, 23);
+            this.BtnRefresh.TabIndex = 28;
+            this.BtnRefresh.Text = "Refresh";
+            this.BtnRefresh.UseVisualStyleBackColor = true;
+            this.BtnRefresh.Click += new System.EventHandler(this.BtnRefresh_Click);
             // 
             // CollisionPlaneList
             // 
@@ -1170,7 +1206,7 @@ namespace PathSystem3D.Navigation.Debug
             // LblCompletedTimeValue
             // 
             this.LblCompletedTimeValue.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.LblCompletedTimeValue.Location = new System.Drawing.Point(752, 396);
+            this.LblCompletedTimeValue.Location = new System.Drawing.Point(810, 396);
             this.LblCompletedTimeValue.Margin = new System.Windows.Forms.Padding(0);
             this.LblCompletedTimeValue.Name = "LblCompletedTimeValue";
             this.LblCompletedTimeValue.Size = new System.Drawing.Size(44, 13);
@@ -1181,7 +1217,7 @@ namespace PathSystem3D.Navigation.Debug
             // 
             this.LblCompletedTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.LblCompletedTime.AutoSize = true;
-            this.LblCompletedTime.Location = new System.Drawing.Point(672, 396);
+            this.LblCompletedTime.Location = new System.Drawing.Point(730, 396);
             this.LblCompletedTime.Name = "LblCompletedTime";
             this.LblCompletedTime.Size = new System.Drawing.Size(148, 13);
             this.LblCompletedTime.TabIndex = 27;
@@ -1191,7 +1227,7 @@ namespace PathSystem3D.Navigation.Debug
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(824, 645);
+            this.ClientSize = new System.Drawing.Size(882, 744);
             this.Controls.Add(this.LblSpeed);
             this.Controls.Add(this.LblCompletedTimeValue);
             this.Controls.Add(this.LblCompletedTime);
@@ -1290,11 +1326,12 @@ namespace PathSystem3D.Navigation.Debug
             {
                 PnlGUI.ZLevel = tryFloat;
             }
+            tryFloat = PnlGUI.ZLevel;
             CollisionPlane CP = PnlGUI.CurrentPlane;
             if (CP == null || WorkThread != null) return;
             WorkThread = new Thread(new ThreadStart(delegate()
             {
-                CP.NeedsUpdate = true;
+                CP.HeigthMapNeedsUpdate = true;
                 CP.EnsureUpToDate();
                 WorkThread = null;
                 PnlGUI.Invalidate();
@@ -1309,7 +1346,8 @@ namespace PathSystem3D.Navigation.Debug
             if (CP == null || WorkThread != null) return;
             WorkThread = new Thread(new ThreadStart(delegate()
             {
-                CP.NeedsUpdate = true;
+                CP.HeigthMapNeedsUpdate = true;
+                CP.MatrixNeedsUpdate = true;
                 PathStore.BakeTerrain();
                 WorkThread = null;
                 PnlGUI.Invalidate();
@@ -1333,12 +1371,10 @@ namespace PathSystem3D.Navigation.Debug
            // lock (PathStore.Matrixes)
             try
             {
+                CollisionPlaneList.Items.Clear();
                 foreach (CollisionPlane P in PathStore.Matrixes)
                 {
-                    if (!CollisionPlaneList.Items.Contains(P))
-                    {
                         CollisionPlaneList.Items.Add(P);
-                    }
                 }
                 CollisionPlaneList.Invalidate();
             }
@@ -1379,6 +1415,41 @@ namespace PathSystem3D.Navigation.Debug
         private void PnlGUI_Load(object sender, EventArgs e)
         {
 
+        }
+
+        private void BtnRefresh_Click(object sender, EventArgs e)
+        {
+            PnlGUI.Invalidate();
+        }
+
+        private void BtnTighten_Click(object sender, EventArgs e)
+        {
+            CollisionPlane CP = PnlGUI.CurrentPlane;
+            if (CP == null || WorkThread != null) return;
+            WorkThread = new Thread(new ThreadStart(delegate()
+            {
+                CP.HeigthMapNeedsUpdate = true;
+                CP.MatrixNeedsUpdate = true;
+                PnlGUI.CurrentPlane.TigthenConstraints();
+                WorkThread = null;
+                PnlGUI.Invalidate();
+
+            }));
+        }
+
+        private void BtnLoosen_Click(object sender, EventArgs e)
+        {
+            CollisionPlane CP = PnlGUI.CurrentPlane;
+            if (CP == null || WorkThread != null) return;
+            WorkThread = new Thread(new ThreadStart(delegate()
+            {
+                CP.HeigthMapNeedsUpdate = true;
+                CP.MatrixNeedsUpdate = true;
+                PnlGUI.CurrentPlane.LoosenConstraints();
+                WorkThread = null;
+                PnlGUI.Invalidate();
+
+            }));
         }
 
 

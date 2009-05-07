@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using PathSystem3D.Mesher;
 using PathSystem3D.Navigation;
 using OpenMetaverse;
@@ -47,12 +48,21 @@ namespace cogbot.TheOpenSims
         {
             RootObject = simObject;
             Prim = prim;
-            Update(simObject);
+            Update(RootObject);
         }
         protected SimMesh(Box3Fill o, IList<Box3Fill> i, SimPathStore R)
             : base(o, i, R)
         {
             
+        }
+
+        public override Color DebugColor()
+        {
+            if (RootObject is SimObjectImpl)
+            {
+                return ((SimObjectImpl) RootObject).DebugColor();
+            }
+            return Color.Empty;
         }
          
         public override void RemeshObject(Box3Fill changed)
@@ -106,11 +116,11 @@ namespace cogbot.TheOpenSims
             return RootObject.ToString();
         }
 
-        public override bool Update(SimPosition simObject)
+        public override sealed bool Update(SimPosition simObject)
         {
             if (!WorldObjects.MaintainCollisions) return false;
             if (!simObject.IsRegionAttached()) return false;
-            if (DoNotMeshPhantom && ((SimObject)simObject).IsPhantom) return false;
+            if (MeshOnlySolids && !((MeshableObject)simObject).IsSolid) return false;
             Quaternion Rotation = simObject.GetSimRotation();
             Vector3 Scale = Prim.Scale;//.GetSimScale();
             Vector3 Position = simObject.GetSimPosition();
@@ -205,12 +215,12 @@ namespace cogbot.TheOpenSims
         static float UseLowDetailSize = 1f;//3f;
         static bool UseViewerMode = false;
 
-        void CalcBoxesFromMeshes(Mesh M, IList<Box3Fill> InnerBoxes)
+        void CalcBoxesFromMeshes(Mesh M, IList<Box3Fill> innerBoxes)
         {
 #if COLLIDER_TRIANGLE
             triangles = M.triangles;     
 #endif
-            SimPathStore.TrianglesToBoxes(M.triangles, OuterBox, PadXYZ, InnerBoxes);
+            SimPathStore.TrianglesToBoxes(M.triangles, OuterBox, PadXYZ, innerBoxes);
         }
 
 

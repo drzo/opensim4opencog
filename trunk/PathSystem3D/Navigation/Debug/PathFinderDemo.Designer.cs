@@ -34,6 +34,9 @@ namespace PathSystem3D.Navigation.Debug {
 
         private System.Windows.Forms.TextBox MinZevel;
         private System.Windows.Forms.ComboBox CollisionPlaneList;
+        private System.Windows.Forms.Button BtnRefresh;
+        private System.Windows.Forms.Button BtnLoosen;
+        private System.Windows.Forms.Button BtnTighten;
         
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
