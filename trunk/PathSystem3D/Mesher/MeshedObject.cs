@@ -332,7 +332,7 @@ namespace PathSystem3D.Mesher
 
         //   public static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        readonly public static Vector3 PadXYZ = new Vector3(0.1f,0.1f,0.1f);
+        readonly public static Vector3 PadXYZ = new Vector3(0.2f,0.2f,0.2f);
 
         public Box3Fill OuterBox { get; set; }
 
