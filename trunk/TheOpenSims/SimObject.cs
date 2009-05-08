@@ -890,30 +890,13 @@ namespace cogbot.TheOpenSims
 
         public virtual Vector3 GetSimScale()
         {
-            if (true) return Prim.Scale; // the scale is all in the prim w/o parents?
-            if (!IsRegionAttached()) throw Error("GetSimScale !IsRegionAttached: " + this);
-            Primitive outerPrim = Prim;
-            Vector3 transValue = outerPrim.Scale;
-            while (!IsRoot)
-            {
-                uint theLPrimParentID = outerPrim.ParentID;
-                Simulator simu = GetSimulator();
-                outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
-                while (outerPrim == null)
-                {
-                    Thread.Sleep(100);
-                    outerPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
-                }
-                // maybe plus?
-                transValue = transValue + outerPrim.Scale;
-            }
-            return transValue;
+            return Prim.Scale; // the scale is all in the prim w/o parents?
         }
 
 
         public virtual OpenMetaverse.Quaternion GetSimRotation()
         {
-            if (!IsRegionAttached()) throw Error("GetSimRotation !IsRegionAttached: " + this);
+            if (!IsRegionAttached()) Error("GetSimRotation !IsRegionAttached: " + this);
             if (!IsRoot)
             {
                 return Parent.GetSimRotation() * Prim.Rotation;
@@ -935,10 +918,7 @@ namespace cogbot.TheOpenSims
         public virtual Vector3 GetSimPosition()
         {
             if (!IsRegionAttached()) throw Error("GetSimPosition !IsRegionAttached: " + this);
-            if (!IsRoot)
-            {
-                return Parent.GetSimPosition() + Vector3.Transform(Prim.Position, Matrix4.CreateFromQuaternion(Parent.GetSimRotation()));
-            }
+            if (!IsRoot) return Parent.GetSimPosition() + Vector3.Transform(Prim.Position, Matrix4.CreateFromQuaternion(Parent.GetSimRotation()));
             return Prim.Position;
         }
 
@@ -1069,7 +1049,7 @@ namespace cogbot.TheOpenSims
         {
             string str = String.Format(p, args);
             Debug(str);
-            return new ArgumentException(str);
+           throw new ArgumentException(str);
         }
 
         public void SortByDistance(List<SimObject> sortme)
@@ -1415,33 +1395,42 @@ namespace cogbot.TheOpenSims
 
         #region MeshableObject Members
 
+        private bool IsSolidCachedKnown, IsSolidCachedTrue;
         public bool IsSolid
         {
-            get { return !IsPhantom; }
+            get
+            {
+                if (!IsSolidCachedKnown)
+                {
+                    IsSolidCachedKnown = true;
+                    IsSolidCachedTrue = !(IsPhantom || IsTypeOf(SimTypeSystem.PASSABLE) != null);
+                }
+                return IsSolidCachedTrue;
+            }
             set
             {
-                IsPhantom = !value;
+                IsSolidCachedKnown = true;
+                IsSolidCachedTrue = value;
             }
         }
 
         #endregion
 
-        private bool IsVerbDefinedKnown, IsVerbDefinedTrue;
+        private bool IsUsableCachedKnown, IsUsableCachedTrue;
         public bool IsUsable
         {
             get
             {
-                if (!IsVerbDefinedKnown)
+                if (!IsUsableCachedKnown)
                 {
-                    IsVerbDefinedKnown = true;
-                    IsVerbDefinedTrue = IsSitDefined || IsTouchDefined;
+                    IsUsable = IsSitDefined || IsSitDefined || IsTypeOf(SimTypeSystem.USEABLE) != null;
                 }
-                return IsVerbDefinedTrue;
+                return IsUsableCachedTrue;
             }
             set
             {
-                IsVerbDefinedKnown = true;
-            	IsVerbDefinedTrue = value;
+                IsUsableCachedKnown = true;
+            	IsUsableCachedTrue = value;
             }
         }
         internal System.Drawing.Color DebugColor()

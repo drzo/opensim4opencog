@@ -68,6 +68,7 @@ namespace THIRDPARTY.OpenSim.Framework
         Flexible = 128
     }
 
+#if USE_ODE
     [Serializable]
     public class PrimitiveBaseShape
     {
@@ -1058,4 +1059,5 @@ namespace THIRDPARTY.OpenSim.Framework
             return data;
         }
     }
+#endif
 }

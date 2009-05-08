@@ -1154,8 +1154,9 @@ namespace THIRDPARTY.PrimMesher
     {
         public string errorMessage = "";
         private const float twoPi = 2.0f * (float)Math.PI;
-
+#if COLLIDER_ODE
         public THIRDPARTY.OpenSim.Framework.PrimitiveBaseShape PBS { get; set; }
+#endif
 
         public List<Coord> coords { get; set; }
         public List<Coord> normals { get; set; }

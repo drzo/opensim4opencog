@@ -8,9 +8,13 @@ using THIRDPARTY.PrimMesher;
 
 namespace PathSystem3D.Mesher
 {
-    public class Box3Fill : IComparable<Box3Fill>, IEquatable<Box3Fill>
+    public class Box3Fill : IComparable<Box3Fill>, IEquatable<Box3Fill>, CollisionObject
     {
 
+        public bool IsSolid
+        {
+            get { return true; }
+        }
         #region IEquatable<Box3Fill> Members
 
         public bool Equals(Box3Fill other)
@@ -62,8 +66,8 @@ namespace PathSystem3D.Mesher
         public float MaxX;// = float.MinValue;
         public float MinY;// = float.MaxValue;
         public float MaxY;// = float.MinValue;
-        public float MinZ;// = float.MaxValue;
-        public float MaxZ;// = float.MinValue;
+        public float MinZ { get; private set; }// = float.MaxValue;
+        public float MaxZ { get; private set; }// = float.MinValue;
 
         public Box3Fill(Triangle t1, Triangle t2, Vector3 padXYZ)
         {
@@ -119,7 +123,7 @@ namespace PathSystem3D.Mesher
             return "(" + MinEdge + " - " + MaxEdge + ")";
         }
 
-        internal void SetBoxOccupied(CallbackXYBox p, float detail)
+        public void SetBoxOccupied(CallbackXYBox p, float detail)
         {
             for (float x = MinX; x <= MaxX; x += detail)
             {
@@ -131,7 +135,7 @@ namespace PathSystem3D.Mesher
             p(MaxX, MaxY, this);
         }
 
-        internal void SetOccupied(CallbackXY p, SimZMinMaxLevel MinMaxZ, float detail)
+        public void SetOccupied(CallbackXY p, SimZMinMaxLevel MinMaxZ, float detail)
         {
             // detail /= 2f;
             //float MinX = this.MinX + offset.X;
@@ -167,7 +171,7 @@ namespace PathSystem3D.Mesher
             p(MaxX, MaxY, MinZ, MaxZ);
         }
 
-        internal void SetOccupied(CallbackXY p, float SimZMinLevel, float SimZMaxLevel, float detail)
+        public void SetOccupied(CallbackXY p, float SimZMinLevel, float SimZMaxLevel, float detail)
         {
             //float MinX = this.MinX + offset.X;
             //float MaxX = this.MaxX + offset.X;
@@ -389,7 +393,7 @@ namespace PathSystem3D.Mesher
         }
 
 
-        internal bool IsZInside(float low, float high)
+        public bool IsZInside(float low, float high)
         {
             if (low > MaxZ || high < MinZ) return false;
             return true;
@@ -405,5 +409,25 @@ namespace PathSystem3D.Mesher
         {
             AddPoint(vector3.X, vector3.Y, vector3.Z, Vector3.Zero);
         }
+
+        #region CollisionObject Members
+
+
+        public void RemeshObject(Box3Fill changed)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region CollisionObject Members
+
+
+        public bool SomethingMaxZ(float x, float y, float low, float high, out float maxZ)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }

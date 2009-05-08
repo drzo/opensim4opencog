@@ -63,11 +63,11 @@ namespace PathSystem3D.Navigation
 
         public string OccupiedString(CollisionPlane cp)
         {
-            IEnumerable<IMeshedObject> OccupiedListObject = GetOccupied();
+            IEnumerable<CollisionObject> OccupiedListObject = GetOccupied();
             string S = "";
             lock (OccupiedListObject)
             {
-                foreach (IMeshedObject O in OccupiedListObject)
+                foreach (CollisionObject O in OccupiedListObject)
                 {
                     S += O.ToString();
                     S += "\r\n";
@@ -76,7 +76,7 @@ namespace PathSystem3D.Navigation
             return S + this.ToString() + " " + ExtraInfoString(cp);
         }
 
-        private IEnumerable<IMeshedObject> GetOccupied()
+        private IEnumerable<CollisionObject> GetOccupied()
         {
             return CIndex.GetOccupied(MinZ, MaxZ);
         }

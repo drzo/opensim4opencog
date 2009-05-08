@@ -47,7 +47,7 @@ namespace PathSystem3D.Navigation
         public static int DebugLevel = 0;
         public string RegionName { get; set; }
         // util
-        static public void TrianglesToBoxes(IList<Triangle> tl, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
+        static public void TrianglesToBoxes(IList<Triangle> tl, Box3Fill OuterBox, Vector3 padXYZ, IList<CollisionObject> InnerBoxes)
         {
             int tc = tl.Count;
             AddTrianglesV32(tl, tc, OuterBox, padXYZ, InnerBoxes);
@@ -295,6 +295,40 @@ namespace PathSystem3D.Navigation
             }
         }
 
+        private static void AddTrianglesV3S(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
+        {
+            int len1 = len - 2;
+            for (int i = 0; i < len1; i += 2)
+            {
+                Triangle t1 = ts[i];
+                Triangle t2 = ts[i + 1];
+                OuterBox.AddTriangle(t1, padXYZ);
+                OuterBox.AddTriangle(t2, padXYZ);
+                Box3Fill B = new Box3Fill(t1, t2, padXYZ);
+                InnerBoxes.Add(B);
+                bool used = false;
+                for (int ii = i + 2; ii < len; ii++)
+                {
+                    t2 = ts[ii];
+                    int shared = SharedVertexs(t1, t2);
+                    if (shared == 3) continue;
+                    if (shared == 2)
+                    {
+                        B = new Box3Fill(t1, t2, padXYZ);
+                        InnerBoxes.Add(B);
+                        used = true;
+                    }
+                }
+                if (!used)
+                {
+                    B = new Box3Fill(true);
+                    B.AddTriangle(t1, padXYZ);
+                    InnerBoxes.Add(B);
+                }
+            }
+        }
+
+
         private static void AddTrianglesV321(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
         {
             int len2 = len - 2;
@@ -335,19 +369,26 @@ namespace PathSystem3D.Navigation
                 }
             }
         }
-        private static void AddTrianglesV32(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
+        private static void AddTrianglesV32(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<CollisionObject> InnerBoxes)
         {
+            Triangle t1 = ts[0];
+            Triangle t2 = ts[len - 1];
+            OuterBox.AddTriangle(t1, padXYZ);
+            OuterBox.AddTriangle(t2, padXYZ);
+            Box3Fill B = new Box3Fill(t1, t2, padXYZ);
+            //InnerBoxes.Add(B);
+
             int len2 = len - 2;
             OuterBox.AddTriangle(ts[len - 1], padXYZ);
-            for (int i = 0; i < len2; i += 2)
+            for (int i = 0; i < len2; i += 1)
             {
-                Triangle t1 = ts[i];
+                t1 = ts[i];
                 if (t1 == null) continue;
-                Triangle t2 = ts[i + 1];
+                t2 = ts[i + 1];
                 if (t2 == null) continue;
                 OuterBox.AddTriangle(t1, padXYZ);
                 OuterBox.AddTriangle(t2, padXYZ);
-                Box3Fill B = new Box3Fill(t1, t2, padXYZ);
+                B = new Box3Fill(t1, t2, padXYZ);
                 InnerBoxes.Add(B);
                 bool used = false;
                 for (int ii = i + 2; ii < len; ii++)
@@ -417,6 +458,81 @@ namespace PathSystem3D.Navigation
                 AddThreeTwo(v1, v2, v3,InnerBoxes, padXYZ);
             }
         }
+        private static void AddTrianglesV4S(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
+        {
+            List<Vertex> Shared;
+            List<Vertex> UnShared;
+
+            Box3Fill B;// = new Box3Fill(t1, t2, padXYZ);
+            for (int i = 0; i < len; i += 1)
+            {
+                Triangle t1 = ts[i];
+                if (t1 == null) continue;
+                OuterBox.AddTriangle(t1, padXYZ);
+                //InnerBoxes.Add(B);
+                bool used = false;
+                for (int ii = i + 1; ii < len; ii++)
+                {
+                    Triangle t2 = ts[ii];
+                    if (t2 == null) continue;
+                    List<Vertex> verts = AddedVertexs(t1, t2,out Shared,out UnShared);
+                 //   if (Shared.Count == 0) continue;
+                    if (Shared.Count == 2)
+                    {
+                       // ts[ii] = null;
+                        B = new Box3Fill(t1, t2, padXYZ);
+                        InnerBoxes.Add(B);
+                        used = true;
+                      //  break;
+                    }
+                }
+                if (!used)
+                {
+                    Vertex v1 = t1.v1;
+                    Vertex v2 = t1.v2;
+                    Vertex v3 = t1.v3;
+                    AddThreeTwo(v1, v2, v3, InnerBoxes, padXYZ);
+                }
+            }
+        }
+
+        private static List<Vertex> AddedVertexs(Triangle t1, Triangle t2, out List<Vertex> Shared, out List<Vertex> UnShared)
+        {
+            Shared = new List<Vertex>();
+            UnShared = new List<Vertex>();
+            List<Vertex> lsit = new List<Vertex>();
+            lsit.Add(t1.v1);
+            lsit.Add(t1.v2);
+            lsit.Add(t1.v3);
+            Vertex v = t2.v1;
+            if (lsit.Remove(v))
+            {
+                Shared.Add(v);
+            }
+            else
+            {
+                UnShared.Add(v);
+            }
+            v = t2.v2;
+            if (lsit.Remove(v))
+            {
+                Shared.Add(v);
+            }
+            else
+            {
+                UnShared.Add(v);
+            }
+            v = t2.v3;
+            if (lsit.Remove(v))
+            {
+                Shared.Add(v);
+            }
+            else
+            {
+                UnShared.Add(v);
+            }
+            return lsit;
+        }
 
         private static void AddFour(int count, Vertex v1, Vertex v2, Vertex v3, Vertex v4, ICollection<Box3Fill> InnerBoxes, Vector3 padXYZ)
         {
@@ -479,7 +595,7 @@ namespace PathSystem3D.Navigation
         public SimZLevel GroundLevelDelegate = null;//delegate(float x, float y) { return 10; };
 
         // setup
-        void AddBoxes(IComparable id, IList<Box3Fill> boxes)
+        void AddBoxes(IComparable id, IList<CollisionObject> boxes)
         {
             Box3Fill Outer = new Box3Fill(true);
 
@@ -503,21 +619,10 @@ namespace PathSystem3D.Navigation
             IMeshedObject MO = meshedObjects[id];//.Remove(id);
             Box3Fill changed = new Box3Fill(true);
             MO.RemoveFromWaypoints(changed);
-            UpdateMatrixes();
+            RecomputeMatrix();
             meshedObjects.Remove(id);
 
         }
-
-        private void UpdateMatrixes()
-        {
-            foreach (var of in Matrixes)
-            {
-                of.EnsureUpToDate();
-              //  of.UpdateCollisionPlane(of.UsePotentialFields,of.AdjacentBlocking);
-                
-            }
-        }
-
 
         public void SetPhysicalPredicate(Predicate<IComparable> callback)
         {
@@ -1001,6 +1106,16 @@ namespace PathSystem3D.Navigation
             return CPS;
         }
 
+        private IEnumerable<CollisionPlane> CollisionPlanesFor(float min,float max)
+        {
+            List<CollisionPlane> CPS = new List<CollisionPlane>();
+            lock (Matrixes)
+                foreach (CollisionPlane CP in Matrixes)
+                    if (CP.Overlaps(min,max))
+                        CPS.Add(CP);
+            return CPS;
+        }
+
         static Dictionary<Vector2, SimPathStore> _PathStores = new Dictionary<Vector2, SimPathStore>();
 
         readonly float MAXY = 256f;
@@ -1120,8 +1235,7 @@ namespace PathSystem3D.Navigation
         public IList<Vector3d> GetLocalPath(CollisionPlane CP, Vector3 start, Vector3 end)
         {
 
-            CP.EnsureUpToDate();
-            if (!TerrainBaked) BakeTerrain();
+            CP.EnsureUpdated();
             float Z = start.Z;
             if (!IsPassable(start, CP))
             {
@@ -1146,35 +1260,6 @@ namespace PathSystem3D.Navigation
             }
             return (IList<Vector3d>)GetLocalPath0(start, GetUsableLocalPositionOf(CP,end, 2), CP, Z);
         }
-
-        bool TerrainBaked = false;
-        readonly object TerrainBakedLock = new object();
-        public void BakeTerrain()
-        {
-            lock (TerrainBakedLock)
-            {
-                // if (TerrainBaked) return;
-                TerrainBaked = true;
-
-                Debug("ScanTerrainBlockages: {0}", RegionName);
-                float WH = WaterHeight;
-                float LastHieght = GetGroundLevel(0, 0);
-                return;
-                for (int y = 0; y < 256; y++)
-                    for (int x = 0; x < 256; x++)
-                    {
-                        float thisH = GetGroundLevel(x, y);
-                        float thisH2 = GetGroundLevel(x, y + 1);
-                        float thisH3 = GetGroundLevel(x + 1, y);
-                        if (Math.Abs(thisH - LastHieght) > 1 || Math.Abs(thisH - thisH2) > 1 || Math.Abs(thisH - thisH3) > 1)
-                        {
-                            BlockRange(x, y, 1.001f, 1.001f, thisH);
-                        }
-                        LastHieght = thisH;
-                    }
-            }
-        }
-
 
         float[,] _GroundPlane;
         public float[,] GroundPlane
@@ -2108,7 +2193,8 @@ namespace PathSystem3D.Navigation
         }
         public static void Debug(string format, params object[] arg)
         {
-            if (DebugLevel > 0) Console.WriteLine(String.Format("[SimPathStore] {0}", format), arg);
+            //if (DebugLevel > 0) 
+                Console.WriteLine(String.Format("[SimPathStore] {0}", format), arg);
         }
 
 
@@ -2182,49 +2268,12 @@ namespace PathSystem3D.Navigation
             LaskKnownPos[uUID].Update(after, rot);
         }
 
-        private void Refresh(PathSystem3D.Mesher.Box3Fill changed, CollisionPlane CurrentPlane)
+
+
+        public void Refresh(Box3Fill changed, float BumpConstraint)
         {
-            int xs = (int)changed.MinX;
-            int ys = (int)changed.MaxX;
-            int xe = (int)changed.MinY;
-            int ye = (int)changed.MaxY;
-            float ConsiderOnlyAboveZ = changed.MinZ;
-            if (CurrentPlane!=null)
-                ConsiderOnlyAboveZ = CurrentPlane.MinZ - 1f;
-            if (ye < 0 || xe < 0) return;
-            if (xs > 0) xs--;
-            if (ys > 0) ys--;
-            int MAX = MAPSPACE - 1;
-            if (xe < MAX) xe++;
-            if (ys < MAX) ye++;
-
-
-            float[,] GP = CurrentPlane.HeightMap;
-            //  lock (mWaypoints)
-            {
-                for (int x = xs; x <= xe; x++)
-                    for (int y = ys; y <= ye; y++)
-                    {
-                        CollisionIndex WP = MeshIndex[x, y];
-                        if (WP != null) WP.TaintMatrix();
-                    }
-                if (CurrentPlane != null)
-                    for (int x = xs; x <= xe; x++)
-                        for (int y = ys; y <= ye; y++)
-                        {
-                            CollisionIndex WP = MeshIndex[x, y];
-                            if (WP != null)
-                            {
-                                float ZLevel = GP[x, y];
-                                WP.UpdateMatrix(CurrentPlane, ZLevel - CollisionIndex.MaxBump, ZLevel + CollisionIndex.MaxBump, GP);
-                            }
-                        }
-            }
-        }
-
-        public void Refresh(Box3Fill changed)
-        {
-            Refresh(changed, null);
+            foreach (CollisionPlane CP in CollisionPlanesFor(changed.MinZ, changed.MaxZ))
+                CP.Refresh(changed, BumpConstraint);
         }
 
         internal PathFinderDemo PanelGUI;
@@ -2397,7 +2446,7 @@ namespace PathSystem3D.Navigation
             {
                 if (OuterBox.IsZInside(list.MinZ,list.MaxZ))
                 {
-                  list.HeigthMapNeedsUpdate = true;
+                    list.HeightMapNeedsUpdate = true;
                 }
             }
         }
@@ -2411,6 +2460,21 @@ namespace PathSystem3D.Navigation
         //{
         //    return GetCollisionPlane(vector3.Z).IsFlyZone(ARRAY_X(vector3.X),ARRAY_Y(vector3.Y));
         //}
+
+        public void RecomputeMatrix()
+        {
+            foreach (CollisionPlane list in Matrixes)
+            {
+                list.HeightMapNeedsUpdate = true;
+                list.EnsureUpdated();
+            }
+        }
+
+
+        internal void Refresh(Box3Fill changed)
+        {
+           Refresh(changed,CollisionIndex.MaxBump);
+        }
     }
 
     public class MoverTracking

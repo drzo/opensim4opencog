@@ -195,7 +195,7 @@ namespace PathSystem3D.Navigation.Debug
                         mPathFinder.PathFinderDebug -= new PathFinderDebugHandler(PathFinderDebug);
 
                     CollisionPlane CP = PnlGUI.CurrentPlane;
-                    CP.EnsureUpToDate();
+                    CP.EnsureUpdated();
 
                     mPathFinder = new PathFinderFasting(CP.ByteMatrix);
                     mPathFinder.PathFinderDebug += new PathFinderDebugHandler(PathFinderDebug);
@@ -210,7 +210,7 @@ namespace PathSystem3D.Navigation.Debug
 
 
                     CollisionPlane CP = PnlGUI.CurrentPlane;
-                    CP.EnsureUpToDate();
+                    CP.EnsureUpdated();
                     mPathFinder = new PathFinder(CP.ByteMatrix);
                     mPathFinder.PathFinderDebug += new PathFinderDebugHandler(PathFinderDebug);
                 }
@@ -1331,8 +1331,9 @@ namespace PathSystem3D.Navigation.Debug
             if (CP == null || WorkThread != null) return;
             WorkThread = new Thread(new ThreadStart(delegate()
             {
-                CP.HeigthMapNeedsUpdate = true;
-                CP.EnsureUpToDate();
+                CP.MatrixNeedsUpdate = true;
+                CP.HeightMapNeedsUpdate = true;
+                CP.EnsureUpdated();
                 WorkThread = null;
                 PnlGUI.Invalidate();
 
@@ -1346,9 +1347,8 @@ namespace PathSystem3D.Navigation.Debug
             if (CP == null || WorkThread != null) return;
             WorkThread = new Thread(new ThreadStart(delegate()
             {
-                CP.HeigthMapNeedsUpdate = true;
-                CP.MatrixNeedsUpdate = true;
-                PathStore.BakeTerrain();
+                CP.HeightMapNeedsUpdate = true;
+                CP.EnsureUpdated();
                 WorkThread = null;
                 PnlGUI.Invalidate();
 
@@ -1428,9 +1428,10 @@ namespace PathSystem3D.Navigation.Debug
             if (CP == null || WorkThread != null) return;
             WorkThread = new Thread(new ThreadStart(delegate()
             {
-                CP.HeigthMapNeedsUpdate = true;
+                CP.TightenConstraints();
+                CP.HeightMapNeedsUpdate = true;
                 CP.MatrixNeedsUpdate = true;
-                PnlGUI.CurrentPlane.TigthenConstraints();
+                CP.EnsureUpdated();
                 WorkThread = null;
                 PnlGUI.Invalidate();
 
@@ -1443,9 +1444,10 @@ namespace PathSystem3D.Navigation.Debug
             if (CP == null || WorkThread != null) return;
             WorkThread = new Thread(new ThreadStart(delegate()
             {
-                CP.HeigthMapNeedsUpdate = true;
+                CP.LoosenConstraints();
+                CP.HeightMapNeedsUpdate = true;
                 CP.MatrixNeedsUpdate = true;
-                PnlGUI.CurrentPlane.LoosenConstraints();
+                CP.EnsureUpdated();
                 WorkThread = null;
                 PnlGUI.Invalidate();
 

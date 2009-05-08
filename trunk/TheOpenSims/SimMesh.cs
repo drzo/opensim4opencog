@@ -1,3 +1,4 @@
+//#define COLLIDER_TRIANGLE
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -44,13 +45,13 @@ namespace cogbot.TheOpenSims
         public Primitive Prim;
 
         public SimMesh(MeshableObject simObject, Primitive prim, SimPathStore PS)
-            : base(new Box3Fill(true), new List<Box3Fill>(), PS)
+            : base(new Box3Fill(true), new List<CollisionObject>(), PS)
         {
             RootObject = simObject;
             Prim = prim;
             Update(RootObject);
         }
-        protected SimMesh(Box3Fill o, IList<Box3Fill> i, SimPathStore R)
+        protected SimMesh(Box3Fill o, IList<CollisionObject> i, SimPathStore R)
             : base(o, i, R)
         {
             
@@ -92,7 +93,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        private void AddPos(Vector3 offset)
+        public override void AddPos(Vector3 offset)
         {
 #if COLLIDER_TRIANGLE
             Vertex v3 = new Vertex(offset.X, offset.Y, offset.Z);
@@ -105,7 +106,7 @@ namespace cogbot.TheOpenSims
 #endif
 
             OuterBox.AddPos(offset);
-            foreach (Box3Fill B in InnerBoxes)
+            foreach (CollisionObject B in InnerBoxes)
             {
                 B.AddPos(offset);
             }
@@ -215,7 +216,7 @@ namespace cogbot.TheOpenSims
         static float UseLowDetailSize = 1f;//3f;
         static bool UseViewerMode = false;
 
-        void CalcBoxesFromMeshes(Mesh M, IList<Box3Fill> innerBoxes)
+        void CalcBoxesFromMeshes(Mesh M, IList<CollisionObject> innerBoxes)
         {
 #if COLLIDER_TRIANGLE
             triangles = M.triangles;     
@@ -238,7 +239,10 @@ namespace cogbot.TheOpenSims
         /// <returns></returns>
         public static Mesh PrimMeshToMesh(PrimMesh meshIn)
         {
-            Mesh mesh = new Mesh(meshIn.PBS);
+            Mesh mesh = new Mesh();
+#if COLLIDER_ODE
+               mesh.PBS = meshIn.PBS
+#endif
             mesh.primMesh = meshIn;
             {
                 List<Coord> coords = meshIn.coords;
@@ -264,7 +268,9 @@ namespace cogbot.TheOpenSims
 
 
         static Dictionary<UUID, SculptMesh> SculptedMeshes = new Dictionary<UUID, SculptMesh>();
+#if USE_ODE
         private PrimitiveBaseShape pbs;
+#endif
 
         public static Mesh PrimitiveToMesh(Primitive primitive, Vector3 Scale, Quaternion rot)
         {
@@ -284,9 +290,14 @@ namespace cogbot.TheOpenSims
                 if (SM != null)
                 {
                     SM = SM.Copy();
-                    SM.AddRot(QuaternionToQuat(rot));
                     SM.Scale(Scale.X, Scale.Y, Scale.Z);
-                    return ToMesh(PrimToBaseShape(primitive), SM.coords, SM.faces, SM.viewerFaces, primitive.Type == PrimType.Sphere);
+                    SM.AddRot(QuaternionToQuat(rot));
+                    return ToMesh(
+#if COLLIDER_ODE
+                        PrimToBaseShape(primitive),
+                        #endif
+
+                        SM.coords, SM.faces, SM.viewerFaces, primitive.Type == PrimType.Sphere);
                 }
             }
 
@@ -307,15 +318,27 @@ namespace cogbot.TheOpenSims
 
             PrimMesh primMesh = ConstructionDataToPrimMesh(primitive.PrimData, detail, UseExtremeDetail ? 2 : 1);
             primMesh.Scale(Scale.X, Scale.Y, Scale.Z);
-            if (rot!=Quaternion.Identity) primMesh.AddRot(QuaternionToQuat(rot));
+            primMesh.AddRot(QuaternionToQuat(rot));
             Mesh m = PrimMeshToMesh(primMesh);
+#if USE_ODE
             m.PBS = PrimToBaseShape(primitive);
+#endif
             return m;
         }
 
-        public static Mesh ToMesh(PrimitiveBaseShape pbs, List<Coord> coords, List<Face> faces, List<ViewerFace> viewerFaces, bool isSphere)
+        public static Mesh ToMesh(
+#if (USEODE)
+            PrimitiveBaseShape pbs, 
+#endif
+            List<Coord> coords, List<Face> faces, List<ViewerFace> viewerFaces, bool isSphere)
         {
-            Mesh mesh = new Mesh(pbs);
+            Mesh mesh = new Mesh(
+
+#if USE_ODE 
+                pbs
+#endif
+
+                );
 
             int numCoords = coords.Count;
             int numFaces = faces.Count;
@@ -422,7 +445,9 @@ namespace cogbot.TheOpenSims
         {
             bool UseExtremeDetail = Scale.X + Scale.Y + Scale.Z > UseExtremeDetailSize;
             PrimMesh mesh = ConstructionDataToPrimMesh(thePrim.PrimData, detail, UseExtremeDetail ? 2 : 1);
+#if COLLIDER_ODE
             mesh.PBS = PrimToBaseShape(thePrim);
+#endif
             mesh.Scale(Scale.X, Scale.Y, Scale.Z);
             // if (rot != Quaternion.Identity)                
             mesh.AddRot(QuaternionToQuat(rot));
@@ -596,6 +621,7 @@ namespace cogbot.TheOpenSims
 
         }
 
+#if USE_ODE
         /// <summary>
         /// [05:31] <AFrisby> dmiles_afk, search my blog, I wrote a function for converting OpenMetaverse.Primitive to OpenSimulator.SceneObjectGroup
         /// 
@@ -742,6 +768,7 @@ namespace cogbot.TheOpenSims
 
             return sopShape;
         }
+#endif
 
     }
 }

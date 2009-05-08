@@ -31,7 +31,9 @@ using System.IO;
 using System.Runtime.InteropServices;
 using THIRDPARTY.OpenSim.Region.Physics.Manager;
 using THIRDPARTY.PrimMesher;
+#if COLLIDER_ODE
 using OpenMetaverse;
+#endif
 using THIRDPARTY.OpenSim.Framework;
 
 namespace THIRDPARTY.OpenSim.Region.Physics.Meshing
@@ -43,20 +45,23 @@ namespace THIRDPARTY.OpenSim.Region.Physics.Meshing
         GCHandle pinnedVirtexes;
         GCHandle pinnedIndex;
         public PrimMesh primMesh = null;
-        public PrimitiveBaseShape PBS;
         public float[] normals;
+#if COLLIDER_ODE
+        public PrimitiveBaseShape PBS;
+#endif
 
-        public Mesh(PrimitiveBaseShape PBS)
+        public Mesh()
         {
-            this.PBS = PBS;
             vertices = new List<Vertex>();
             triangles = new List<Triangle>();
         }
 
         public Mesh Clone()
         {
-            Mesh result = new Mesh(PBS);
-
+            Mesh result = new Mesh();
+#if COLLIDER_ODE
+            result.PBS = PBS;
+#endif
             foreach (Vertex v in vertices)
             {
                 if (v == null)
