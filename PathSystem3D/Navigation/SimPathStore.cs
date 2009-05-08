@@ -50,7 +50,7 @@ namespace PathSystem3D.Navigation
         static public void TrianglesToBoxes(IList<Triangle> tl, Box3Fill OuterBox, Vector3 padXYZ, IList<CollisionObject> InnerBoxes)
         {
             int tc = tl.Count;
-            AddTrianglesV32(tl, tc, OuterBox, padXYZ, InnerBoxes);
+            AddTrianglesV3(tl, tc, OuterBox, padXYZ, InnerBoxes);
             // Debug(InnerBoxes.Count);
         }
 
@@ -261,7 +261,7 @@ namespace PathSystem3D.Navigation
             }
         }
 
-        private static void AddTrianglesV3(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
+        private static void AddTrianglesV3(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<CollisionObject> InnerBoxes)
         {
             int len1 = len - 2;
             OuterBox.AddTriangle(ts[len-1], padXYZ);
@@ -369,13 +369,14 @@ namespace PathSystem3D.Navigation
                 }
             }
         }
-        private static void AddTrianglesV32(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, IList<CollisionObject> InnerBoxes)
+        private static void AddTrianglesV32(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, 
+            IList<CollisionObject> InnerBoxes)
         {
             Triangle t1 = ts[0];
             Triangle t2 = ts[len - 1];
             OuterBox.AddTriangle(t1, padXYZ);
             OuterBox.AddTriangle(t2, padXYZ);
-            Box3Fill B = new Box3Fill(t1, t2, padXYZ);
+            Box3Fill B;// = new Box3Fill(t1, t2, padXYZ);
             //InnerBoxes.Add(B);
 
             int len2 = len - 2;
@@ -401,7 +402,7 @@ namespace PathSystem3D.Navigation
                     {
                         B = new Box3Fill(t1, t2, padXYZ);
                         InnerBoxes.Add(B);
-                        ts[ii] = null;
+                        //ts[ii] = null;
                         used = true;
                     }
                 }

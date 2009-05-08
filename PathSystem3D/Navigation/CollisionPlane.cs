@@ -697,6 +697,7 @@ namespace PathSystem3D.Navigation
         private bool TightOrLooseNeedsUpdate;
         internal bool TightenConstraints()
         {
+            return false;
             if (TightOrLooseNeedsUpdate) return false;
             TightOrLooseNeedsUpdate = true;
             MatrixNeedsUpdate = true;
