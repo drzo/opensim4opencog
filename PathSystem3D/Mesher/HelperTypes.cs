@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using OpenMetaverse;
+using PathSystem3D.Mesher;
 using THIRDPARTY.OpenSim.Region.Physics.Manager;
 using THIRDPARTY.OpenSim.Region.Physics.Meshing;
 
@@ -254,7 +255,7 @@ namespace THIRDPARTY.OpenSim.Region.Physics.Meshing
         }
     }
 
-    public class Triangle
+    public class Triangle : CollisionObject
     {
         public Vertex v1;
         public Vertex v2;
@@ -429,5 +430,79 @@ namespace THIRDPARTY.OpenSim.Region.Physics.Meshing
             Vertex cent = v1 + v2 + v3;
             return cent/3;
         }
+
+        #region CollisionObject Members
+
+        public bool IsInsideXY(float xf, float yf)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsZInside(float low, float high)
+        {
+            throw new NotImplementedException();
+        }
+
+        public float MaxZ
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public float MinZ
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public bool IsInside(float x, float y, float z)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetOccupied(PathSystem3D.Navigation.CallbackXY p, float SimZLevel, float SimZMaxLevel, float detail)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetOccupied(PathSystem3D.Navigation.CallbackXY p, PathSystem3D.Navigation.SimZMinMaxLevel MinMaxZ, float detail)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddPos(Vector3 offset)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region CollisionObject Members
+
+
+        public bool IsSolid
+        {
+            get { return true; }
+        }
+
+        #endregion
+
+        #region CollisionObject Members
+
+
+        public void RemeshObject(Box3Fill changed)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region CollisionObject Members
+
+
+        public bool SomethingMaxZ(float x, float y, float low, float high, out float maxZ)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }

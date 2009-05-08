@@ -51,16 +51,13 @@ namespace cogbot.TheOpenSims
         {
             foreach (SimRegion R in CurrentRegions)
             {
-                R.UpdateMatrixes();
+                R.RecomputeMatrix();
             }
         }
 
-        private void UpdateMatrixes()
+        private void RecomputeMatrix()
         {
-            SimRegion R = GetSimRegion();
-            R.BakeTerrain();
-
-                //PathStore.UpdateMatrix(PS.CurrentPlane);
+            PathStore.RecomputeMatrix();
         }
 
         //public static implicit operator SimRegion(SimPathStore m)
@@ -937,17 +934,6 @@ namespace cogbot.TheOpenSims
             return WorldObjects.Master.TextureBytesFormUUID(uUID);
         }
 
-        bool TerrainBaked = false;
-        object TerrainBakedLock = new object();
-        public void BakeTerrain()
-        {
-            lock (TerrainBakedLock)
-            {
-               // if (TerrainBaked) return;
-                TerrainBaked = true;
-                PathStore.BakeTerrain();
-            }
-        }
 
         internal void BlockRange(float x, float y, float sx, float sy, float z)
         {

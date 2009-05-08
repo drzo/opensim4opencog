@@ -173,7 +173,7 @@ namespace PathSystem3D.Navigation
 
     //        Box3Fill changed = new Box3Fill(true);
     //        MO.RemoveFromWaypoints(changed);
-    //        PathStore.UpdateMatrixes();
+    //        PathStore.RecomputeMatrix();
     //        meshedObjects.Remove(id);
 
     //    }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿//#define COLLIDER_TRIANGLE
+using System;
 using System.Drawing;
 using PathSystem3D.Navigation;
 using OpenMetaverse;
@@ -38,14 +39,11 @@ namespace PathSystem3D.Mesher
         bool IsSolid { get; set; }
     }
 
-    public interface IMeshedObject
+    public interface IMeshedObject : CollisionObject
     {
-        IList<Box3Fill> InnerBoxes {get;}
+        IList<CollisionObject> InnerBoxes { get; }
         Box3Fill OuterBox {get;}
-        bool IsSolid { get; }
-#if COLLIDER_TRIANGLE
-        IList<Triangle> triangles { get; }
-#endif
+      //  bool IsSolid { get; }
         void RegionTaintedThis();
         void RemeshObject(Box3Fill changed);
         bool SomethingBetween(float x, float y, float low, float high);
@@ -59,11 +57,28 @@ namespace PathSystem3D.Mesher
 
         void UpdateOccupied(SimPathStore simPathStore);
     }
-    abstract public class MeshedObject: IMeshedObject
+    public interface CollisionObject
     {
-#if COLLIDER_TRIANGLE
-        public IList<Triangle> triangles { get; set;}
-#endif
+        bool IsInsideXY(float xf, float yf);
+
+        bool IsZInside(float low, float high);
+        float MaxZ { get; }
+        float MinZ { get; }
+        bool IsSolid { get; }
+
+        bool IsInside(float x, float y, float z);
+
+        void SetOccupied(CallbackXY p, float SimZLevel, float SimZMaxLevel, float detail);
+
+        void SetOccupied(CallbackXY p, SimZMinMaxLevel MinMaxZ, float detail);
+
+        void AddPos(Vector3 offset);
+
+        //bool SomethingMaxZ(float x, float y, float low, float high, out float maxZ);
+    }
+
+    abstract public class MeshedObject : IMeshedObject, CollisionObject
+    {
 
         public virtual Color DebugColor()
         {
@@ -75,7 +90,7 @@ namespace PathSystem3D.Mesher
             string MI = ToString() + " ";
 
             MI += "\n Box Info:";
-            foreach (Box3Fill B in InnerBoxes)
+            foreach (CollisionObject B in InnerBoxes)
             {
                 MI += "\n    Box: " + B.ToString();
             }
@@ -281,7 +296,7 @@ namespace PathSystem3D.Mesher
 
         private bool xyInside(float x, float y)
         {
-            foreach (Box3Fill B in InnerBoxes)
+            foreach (CollisionObject B in InnerBoxes)
             {
                 if (B.IsInsideXY(x, y)) return true;
             }
@@ -317,14 +332,14 @@ namespace PathSystem3D.Mesher
 
         //   public static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        readonly public static Vector3 PadXYZ = new Vector3(0.2f,0.2f,0.2f);
+        readonly public static Vector3 PadXYZ = new Vector3(0.1f,0.1f,0.1f);
 
         public Box3Fill OuterBox { get; set; }
 
-        public IList<Box3Fill> InnerBoxes { get; set; }//  = new List<Box3Fill>();
+        public IList<CollisionObject> InnerBoxes { get; set; }//  = new List<Box3Fill>();
 
 
-        public MeshedObject(Box3Fill o, IList<Box3Fill> i, SimPathStore R)
+        public MeshedObject(Box3Fill o, IList<CollisionObject> i, SimPathStore R)
         {
             OuterBox = o;
             InnerBoxes = i;
@@ -359,7 +374,7 @@ namespace PathSystem3D.Mesher
                     Console.WriteLine("using outerbox for " + this);
                     return true;
                 }
-                foreach (Box3Fill box in InnerBoxes)
+                foreach (CollisionObject box in InnerBoxes)
                 {
                     if (box.IsInside(x, y, z)) return true;
                 }
@@ -367,7 +382,7 @@ namespace PathSystem3D.Mesher
             return false;
         }
 
-        internal void SetOccupied(CallbackXY p, float SimZLevel, float SimZMaxLevel, float detail)
+        public void SetOccupied(CallbackXY p, float SimZLevel, float SimZMaxLevel, float detail)
         {
             if (InnerBoxes.Count == 0)
             {
@@ -377,14 +392,14 @@ namespace PathSystem3D.Mesher
             }
 
             {
-                foreach (Box3Fill box in InnerBoxes)
+                foreach (CollisionObject box in InnerBoxes)
                 {
                     box.SetOccupied(p, SimZLevel, SimZMaxLevel, detail);
                 }
             }
         }
 
-        internal void SetOccupied(CallbackXY p, SimZMinMaxLevel MinMaxZ, float detail)
+        public void SetOccupied(CallbackXY p, SimZMinMaxLevel MinMaxZ, float detail)
         {
             if (InnerBoxes.Count == 0)
             {
@@ -392,45 +407,19 @@ namespace PathSystem3D.Mesher
                 OuterBox.SetOccupied(p, MinMaxZ, detail);
                 return;
             }
-            foreach (Box3Fill box in InnerBoxes)
+            foreach (CollisionObject box in InnerBoxes)
             {
                 box.SetOccupied(p, MinMaxZ, detail);
             }
-        }
-
-        internal bool MinMaxZ(float xf, float yf, ref Vector2 V2)
-        {
-            bool found = false;
-            foreach (Box3Fill B in InnerBoxes)
-            {
-                if (B.MinX > xf
-                    || B.MaxX < xf
-                    || B.MinY > yf
-                    || B.MaxY < yf) continue;
-                if (B.MinZ < V2.X)
-                {
-                    V2.X = B.MinZ;
-                    found = true;
-                }
-                if (B.MaxZ > V2.Y)
-                {
-                    V2.Y = B.MaxZ;
-                    found = true;
-                }
-            }
-            return found;
         }
 
         public bool SomethingBetween(float xf, float yf, float low, float high)
         {
             if (OuterBox.MaxZ < low) return false;
             if (OuterBox.MinZ > high) return false;
-            foreach (Box3Fill B in InnerBoxes)
+            foreach (CollisionObject B in InnerBoxes)
             {
-                if (B.MinX > xf
-                    || B.MaxX < xf
-                    || B.MinY > yf
-                    || B.MaxY < yf) continue;
+                if (!B.IsInsideXY(xf,yf)) continue;
                 if (B.IsZInside(low, high)) return true;
             }
             return false;
@@ -443,12 +432,9 @@ namespace PathSystem3D.Mesher
 #endif
             bool found = false;
             maxZ = OuterBox.MinZ;
-            foreach (Box3Fill B in InnerBoxes)
+            foreach (CollisionObject B in InnerBoxes)
             {
-                if (B.MinX > xf
-                    || B.MaxX < xf
-                    || B.MinY > yf
-                    || B.MaxY < yf) continue;
+                if (!B.IsInsideXY(xf, yf)) continue;
                 if (B.IsZInside(low, high))
                 {
                     found = true;
@@ -505,7 +491,7 @@ namespace PathSystem3D.Mesher
                 IEnumerable<Triangle> triangles = null;
       
 #if COLLIDER_TRIANGLE
-  triangles = this.triangles;
+  triangles = this.InnerBoxes;
 #endif
                 float closestDistance = Single.MaxValue;
                 foreach (Triangle tri in triangles)
@@ -662,6 +648,41 @@ namespace PathSystem3D.Mesher
 
             return true;
         }
+
+        #region CollisionObject Members
+
+        public bool IsInsideXY(float xf, float yf)
+        {
+            foreach (var o in InnerBoxes)
+            {
+                if (o.IsInsideXY(xf, yf)) return true;
+            }
+            return false;
+        }
+
+        public bool IsZInside(float low, float high)
+        {
+            foreach (var o in InnerBoxes)
+            {
+                if (o.IsZInside(low, high)) return true;
+            }
+            return false;
+        }
+
+        public float MaxZ
+        {
+            get { return OuterBox.MaxZ; }
+        }
+
+        public float MinZ
+        {
+            get { return OuterBox.MinZ; }
+        }
+
+
+        public abstract void AddPos(Vector3 offset);
+
+        #endregion
     }
 
 }

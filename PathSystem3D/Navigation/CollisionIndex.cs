@@ -96,49 +96,6 @@ namespace PathSystem3D.Navigation
             return (byte)b;
         }
 
-        public byte UpdateMatrix(CollisionPlane CP, float low, float high, float[,] heightMap)
-        {
-            //  float zlevel = low;
-            float zlevel = GetZLevel(low, high);
-            if (zlevel < low) zlevel = low;
-            heightMap[PX, PY] = zlevel;
-            if (NeighborBump(zlevel, zlevel + CapsuleZ, zlevel, MaxBump, heightMap) > 1)
-                return SimPathStore.BLOCKED;
-            //else
-            //if (false && IsSolid != 0)
-            {
-                float maxZ;
-                IEnumerable<IMeshedObject> OccupiedCP = GetOccupied(low, high);
-                if (SomethingBetween(zlevel + 0.35f, zlevel + CapsuleZ, OccupiedCP, out maxZ))
-                {
-                    if (maxZ > heightMap[PX, PY])
-                        heightMap[PX, PY] = maxZ;
-                    return SimPathStore.BLOCK_ORANGE;
-                }
-                else if (SomethingBetween(zlevel + 0.1f, zlevel + 0.3f, OccupiedCP, out maxZ))
-                {
-                    if (maxZ > heightMap[PX, PY])
-                        heightMap[PX, PY] = maxZ;
-                    return SimPathStore.BLOCK_PURPLE;
-                }
-                else if (NeighborBump(low, high, zlevel, 0.2f, heightMap) > 1)
-                {
-                    return SimPathStore.BLOCKED_YELLOW;
-                }
-                else if (IsMidAir(low, high))
-                {
-                    return SimPathStore.BLOCKED_AIR;
-                }
-            }
-            if (IsUnderWater(low, high))
-                return SimPathStore.MAYBE_BLOCKED;
-            else if (IsMidAir(low, high))
-                return SimPathStore.MAYBE_BLOCKED;
-
-            return GetOccupiedValue(low, high);
-            //else low,high.DefaultCollisionValue(_GroundLevelCache, OV);
-        }
-
         private bool IsMidAir(float low,float high)
         {
             float zlevel = GetZLevel(low,high);
@@ -147,18 +104,19 @@ namespace PathSystem3D.Navigation
 
         internal bool SomethingBetween(float low, float high, IEnumerable OccupiedListObject, out float maxZ)
         {
-            maxZ = low;// GetGroundLevel();
             if (IsSolid == 0)
             {
+                maxZ = low;// GetGroundLevel();
                 return (maxZ > high);
             }
-            lock (OccupiedListObject) foreach (IMeshedObject O in OccupiedListObject)
+            lock (OccupiedListObject) foreach (CollisionObject O in OccupiedListObject)
                 {
                     if (O.IsSolid)
                     {
-                        if (O.SomethingMaxZ(_LocalPos.X, _LocalPos.Y, low, high, out maxZ)) return true;
+                        if (O is IMeshedObject) if (((IMeshedObject)O).SomethingMaxZ(_LocalPos.X, _LocalPos.Y, low, high, out maxZ)) return true;
                     }
                 }
+            maxZ = low;// GetGroundLevel();
             return false;
         }
 
@@ -197,7 +155,7 @@ namespace PathSystem3D.Navigation
                 float GL = GetGroundLevel();
                 bool found = false;
                 if (above < GL) above = GL;
-                IEnumerable<IMeshedObject> objs = GetOccupied(above, high);
+                IEnumerable<CollisionObject> objs = GetOccupied(above, high);
                 while (above < high)
                 {
                     if (SomethingBetween(above, above + CapsuleZ, objs, out newMaxZ))
@@ -224,7 +182,7 @@ namespace PathSystem3D.Navigation
         public bool OpenCapsuleAt(float low, float high,float capsuleSize, out float above)
         {    
             above = low;
-            IEnumerable<IMeshedObject> objs = GetOccupied(low, high);
+            IEnumerable<CollisionObject> objs = GetOccupied(low, high);
             while (above < high)
             {
                 float newMaxZ;
@@ -251,11 +209,11 @@ namespace PathSystem3D.Navigation
         public bool AddOccupied(IMeshedObject simObject, float minZ, float maxZ)
         {
             //float GroundLevel = GetGroundLevel();
-           // if (simObject.OuterBox.MaxZ < GetGroundLevel())
-           // {
+            // if (simObject.OuterBox.MaxZ < GetGroundLevel())
+            // {
             //    return false;
             //}
-            List<IMeshedObject> meshes = ShadowList;
+            List<CollisionObject> meshes = ShadowList;
             lock (meshes)
                 if (!meshes.Contains(simObject))
                 {
@@ -269,16 +227,32 @@ namespace PathSystem3D.Navigation
             return false;
         }
 
-        public List<IMeshedObject> ShadowList = new List<IMeshedObject>();
-        public IEnumerable<IMeshedObject> GetOccupied(float low, float high)
+        public bool AddOccupiedC(CollisionObject simObject, float minZ, float maxZ)
         {
-            List<IMeshedObject> objs = new List<IMeshedObject>();
+            List<CollisionObject> meshes = ShadowList;
+            lock (meshes)
+                if (!meshes.Contains(simObject))
+                {
+                    meshes.Add(simObject);
+                    OccupiedCount++;
+                    if (simObject.IsSolid)
+                        IsSolid++;
+                    TaintMatrix();
+                    return true;
+                }
+            return false;
+        }
+
+        public List<CollisionObject> ShadowList = new List<CollisionObject>();
+        public IEnumerable<CollisionObject> GetOccupied(float low, float high)
+        {
+            List<CollisionObject> objs = new List<CollisionObject>();
             lock (ShadowList)
             {
-                foreach (IMeshedObject O in ShadowList)
+                foreach (CollisionObject O in ShadowList)
                 {
-                    if (O.OuterBox.MaxZ < low) continue;
-                    if (O.OuterBox.MinZ > high) continue;
+                    if (O.MaxZ < low) continue;
+                    if (O.MinZ > high) continue;
                     objs.Add(O);
                 }
             }
@@ -303,10 +277,10 @@ namespace PathSystem3D.Navigation
 
             if (OccupiedCount > 0)
             {
-                IEnumerable<IMeshedObject> objs = GetOccupied(low,high);
+                IEnumerable<CollisionObject> objs = GetOccupied(low,high);
                 lock (objs)
                 {
-                    foreach (IMeshedObject O in objs)
+                    foreach (CollisionObject O in objs)
                     {
                         S += ""+O;//.ToBoxString(_LocalPos.X, _LocalPos.Y, low, high);
                         S += Environment.NewLine;
@@ -416,9 +390,9 @@ namespace PathSystem3D.Navigation
             return _LocalPos;
         }
 
-        public void RemoveObject(IMeshedObject simObject)
+        public void RemoveObject(CollisionObject simObject)
         {
-            foreach (List<IMeshedObject> MOL in MeshedObjectIndexes())
+            foreach (List<CollisionObject> MOL in MeshedObjectIndexes())
             {
                 lock (MOL) if (MOL.Contains(simObject))
                     {
@@ -433,11 +407,11 @@ namespace PathSystem3D.Navigation
         public void RemeshObjects()
         {
             Box3Fill changed = new Box3Fill(true);
-            foreach (List<IMeshedObject> MOL in MeshedObjectIndexes())
+            foreach (List<CollisionObject> MOL in MeshedObjectIndexes())
             {
-                lock (MOL) foreach (IMeshedObject O in new List<IMeshedObject>(MOL))
+                lock (MOL) foreach (CollisionObject O in new List<CollisionObject>(MOL))
                     {
-                        O.RemeshObject(changed);
+                        if (O is IMeshedObject) ((IMeshedObject)O).RemeshObject(changed);
                     }
             }
             PathStore.Refresh(changed);
@@ -446,24 +420,24 @@ namespace PathSystem3D.Navigation
 
         public void RegionTaintedThis()
         {
-            foreach (List<IMeshedObject> MOL in MeshedObjectIndexes())
+            foreach (List<CollisionObject> MOL in MeshedObjectIndexes())
             {
-                lock (MOL) foreach (IMeshedObject O in new List<IMeshedObject>(MOL))
+                lock (MOL) foreach (CollisionObject O in new List<CollisionObject>(MOL))
                     {
-                        O.RegionTaintedThis();
+                        if (O is IMeshedObject) ((IMeshedObject)O).RegionTaintedThis();
                     }
             }
             TaintMatrix();
             //RemeshObjects();
             //UpdateMatrix(low,high);
         }
-        List<List<IMeshedObject>> _MeshedObjectIndexs = null;
-        private IEnumerable<List<IMeshedObject>> MeshedObjectIndexes()
+        List<List<CollisionObject>> _MeshedObjectIndexs = null;
+        private IEnumerable<List<CollisionObject>> MeshedObjectIndexes()
         {
 
             if (_MeshedObjectIndexs == null)
             {
-                _MeshedObjectIndexs = new List<List<IMeshedObject>>();
+                _MeshedObjectIndexs = new List<List<CollisionObject>>();
                 _MeshedObjectIndexs.Add(ShadowList);
             }
             return _MeshedObjectIndexs;
@@ -542,7 +516,7 @@ namespace PathSystem3D.Navigation
 
         internal bool IsPortal(CollisionPlane collisionPlane)
         {
-            IEnumerable<IMeshedObject> mis = GetOccupied(collisionPlane.MinZ, collisionPlane.MaxZ);
+            IEnumerable<CollisionObject> mis = GetOccupied(collisionPlane.MinZ, collisionPlane.MaxZ);
             foreach (var o in mis)
             {
                 string s = o.ToString().ToLower();
@@ -558,10 +532,13 @@ namespace PathSystem3D.Navigation
 
         internal System.Drawing.Color DebugColor(CollisionPlane CP)
         {
-            foreach (var v in GetOccupied(CP.MinZ, CP.MaxZ))
+            foreach (var O in GetOccupied(CP.MinZ, CP.MaxZ))
             {
-                Color c = v.DebugColor();
-                if (c!=Color.Empty) return c;
+                if (O is IMeshedObject)
+                {
+                    Color c = ((IMeshedObject)O).DebugColor();
+                    if (c != Color.Empty) return c;
+                }
             }
             return Color.Empty;
         }

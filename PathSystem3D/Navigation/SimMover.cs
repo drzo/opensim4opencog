@@ -351,13 +351,13 @@ namespace PathSystem3D.Navigation
             {
                 MoverPlane.MinZ = MinZ;
                 MoverPlane.MaxZ = MinZ + 3;
-                MoverPlane.HeigthMapNeedsUpdate = true;
+                MoverPlane.HeightMapNeedsUpdate = true;
             }
             else if (cpz > MinZ)
             {
                 MoverPlane.MinZ = MinZ;
                 MoverPlane.MaxZ = MinZ + 3;
-                MoverPlane.HeigthMapNeedsUpdate = true;
+                MoverPlane.HeightMapNeedsUpdate = true;
             }
 
             MoverPlane.WalkZLevel = mover.GetSimPosition().Z;
@@ -390,7 +390,7 @@ namespace PathSystem3D.Navigation
         public override SimMoverState Goto()
         {
             if (FollowPathTo(FinalLocation, FinalDistance)) return SimMoverState.COMPLETE;
-            MoverPlane.TigthenConstraints();
+            MoverPlane.TightenConstraints();
             return STATE; 
         }
 
@@ -406,6 +406,7 @@ namespace PathSystem3D.Navigation
                 if (Vector3d.Distance(v3d, globalEnd) < distance) return true;
                 IList<Vector3d> route = SimPathStore.GetPath(MoverPlane, GetWorldPosition(), globalEnd, distance, out OnlyStart);
                 STATE = FollowPathTo(route, globalEnd, distance);
+                Vector3 newPos = GetSimPosition();
                 switch (STATE)
                 {
                     case SimMoverState.TRYAGAIN:
@@ -415,7 +416,6 @@ namespace PathSystem3D.Navigation
                                 OnlyStart = true;
                                 continue;
                             }
-                            MoverPlane.TigthenConstraints();
                             MadeIt = false;
                             continue;
                         }

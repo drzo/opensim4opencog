@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using OpenMetaverse;
 using PathSystem3D.Mesher;
 
 namespace PathSystem3D.Navigation
@@ -9,7 +10,7 @@ namespace PathSystem3D.Navigation
         IComparable ID;
         static SimPathStore system;
 
-        public RuntimeMesh(IComparable id, Box3Fill outer, IList<Box3Fill> inners, SimPathStore paths)
+        public RuntimeMesh(IComparable id, Box3Fill outer, IList<CollisionObject> inners, SimPathStore paths)
             : base(outer, inners, paths)
         {
             ID = id;
@@ -36,6 +37,11 @@ namespace PathSystem3D.Navigation
             set
             {
             }
+        }
+
+        public override void AddPos(Vector3 offset)
+        {
+            throw new NotImplementedException();
         }
     }
 }
