@@ -77,7 +77,7 @@ namespace cogbot
 
         // Reflect events into lisp
         //        
-        int LoginRetries = 1; // for the times we are "already logged in"
+        int LoginRetries = 2; // for the times we are "already logged in"
         public void Login()
         {
             //if (TextForm.simulator.periscopeClient == null)

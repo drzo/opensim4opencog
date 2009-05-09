@@ -70,7 +70,7 @@ namespace cogbot.TheOpenSims
         {
             RemoveFromWaypoints(changed);
             Update(RootObject);
-            UpdatePathOccupied(GetPathStore());
+            UpdateOccupied(GetPathStore());
         }
 
         public SimPathStore GetPathStore()
@@ -600,9 +600,9 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public override void UpdateOccupied()
+        public override bool UpdateOccupied()
         {
-            base.UpdatePathOccupied(GetPathStore());
+            return base.UpdateOccupied(GetPathStore());
             //throw new NotImplementedException();
         }
 

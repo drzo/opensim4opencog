@@ -15,6 +15,17 @@ namespace cogbot.TheOpenSims
     public class SimAvatarImpl : SimObjectImpl, SimMover, cogbot.TheOpenSims.SimAvatar
     {
 
+        public float GetZHeading()
+        {
+            Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(GetSimRotation()));
+            return (float)Math.Atan2(v3.Y, v3.X);
+        }
+
+        public object[] GetHeading()
+        {
+            return new object[] { GetZHeading() * SimPathStore.RAD2DEG, GetSimulator().Name, GetSimPosition() };
+        }
+
         public override void LogEvent(string typeUse, params object[] args1_N)
         {
             KnownTypeUsages.AddTo(SimTypeSystem.CreateTypeUsage(typeUse));
@@ -1264,7 +1275,7 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public override void SetMoveTarget(Vector3d target)
+        public void SetMoveTarget(Vector3d target)
         {
             lock (TrackerLoopLock)
             {
@@ -1354,12 +1365,13 @@ namespace cogbot.TheOpenSims
             }
             return changed;
         }
-        public override void UpdateOccupied()
+        public override bool UpdateOccupied()
         {
             // Vector3 pos = GetSimPosition();
             // if (SimPathStore.OutOfRegion(pos)) return;
             //don't change this spot
             //GetPathStore().SetPassable(pos.X, pos.Y, pos.Z);
+            return false;
         }
 
         #region SimAvatar Members
