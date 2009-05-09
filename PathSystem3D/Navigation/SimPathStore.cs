@@ -50,7 +50,7 @@ namespace PathSystem3D.Navigation
         static public void TrianglesToBoxes(IList<Triangle> tl, Box3Fill OuterBox, Vector3 padXYZ, IList<CollisionObject> InnerBoxes)
         {
             int tc = tl.Count;
-            AddTrianglesV3(tl, tc, OuterBox, padXYZ, InnerBoxes);
+            AddTrianglesV32(tl, tc, OuterBox, padXYZ, InnerBoxes);
             // Debug(InnerBoxes.Count);
         }
 
@@ -402,7 +402,7 @@ namespace PathSystem3D.Navigation
                     {
                         B = new Box3Fill(t1, t2, padXYZ);
                         InnerBoxes.Add(B);
-                        //ts[ii] = null;
+                       // ts[ii] = null;
                         used = true;
                     }
                 }
@@ -611,9 +611,9 @@ namespace PathSystem3D.Navigation
             AddCollisions(MO);
         }
 
-        public void AddCollisions(IMeshedObject MO)
+        public bool AddCollisions(IMeshedObject MO)
         {
-            MO.UpdateOccupied(this);
+            return MO.UpdateOccupied(this);
         }
         public void RemoveBoxes(IComparable id)
         {
@@ -2396,8 +2396,8 @@ namespace PathSystem3D.Navigation
             CollisionPlane found = new CollisionPlane(MAPSPACE, MAPSPACE, Z, this);
             Console.WriteLine("Created matrix[{0}] {1} for {2}", Z, found, this);
             lock (Matrixes) Matrixes.Add(found);
-            if (PanelGUI != null) new Thread(()=>     
-                PanelGUI.OnNewCollisionPlane(found));
+            if (PanelGUI != null) (new Thread(()=>     
+                PanelGUI.OnNewCollisionPlane(found))).Start();
             return found;
         }
 

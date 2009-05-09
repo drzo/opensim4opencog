@@ -303,7 +303,7 @@ namespace cogbot.Listeners
 
                 if (RegionMasterTexturePipeline == null)
                 {
-                    RegionMasterTexturePipeline = new TexturePipeline(client, 40);
+                    RegionMasterTexturePipeline = new TexturePipeline(client, 4);
                     //RegionMasterTexturePipeline.OnDownloadFinished += new TexturePipeline.DownloadFinishedCallback(RegionMasterTexturePipeline_OnDownloadFinished);
                     client.Settings.USE_TEXTURE_CACHE = true;
                 }
@@ -2952,10 +2952,13 @@ namespace cogbot.Listeners
             foreach (SimObject obj in GetAllSimObjects())
             {
                 if (obj != except)
-                    if (!(rootOnly && !obj.IsRoot && !obj.IsTyped))
-                        if (obj.IsRegionAttached() && Vector3d.Distance(obj.GetWorldPosition(), here) <= maxDistance)
-                            nearby.Add(obj);
-            };
+                {
+                    if (rootOnly && !obj.IsRoot) continue;
+                    if (obj.IsRegionAttached() && Vector3d.Distance(obj.GetWorldPosition(), here) <= maxDistance)
+                        nearby.Add(obj);
+                }
+            }
+            ;
             return nearby;
         }
 

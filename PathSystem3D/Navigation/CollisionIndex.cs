@@ -9,15 +9,16 @@ using OpenMetaverse;
 namespace PathSystem3D.Navigation
 {
     /// <summary>
-    /// An x/y postion in a region that indexes the objects that can collide at this x/y
-    ///  Also indexes waypoints for fast lookup
+    /// An x/y position in a region that indexes the objects that can collide at this x/y
+    ///  Also indexes way points for fast lookup
+    /// right now i divide a 256fx256f to a 1280x1280  (0.2f x 0.2f) CollisionIndex[,]  where any box that touches in x/ys thhen its indexed no mater what the Z is.. then i can drill down any Z looking for openspaces for avatar capsules of 2f
     /// </summary>
     [Serializable]
     public class CollisionIndex
     {
 
         public const float CapsuleZ = 1.99f;
-        public const float MaxBump = 0.40f;
+        public const float MaxBump = 0.60f;
 
         //public Point Point;
 
@@ -246,6 +247,7 @@ namespace PathSystem3D.Navigation
         public List<CollisionObject> ShadowList = new List<CollisionObject>();
         public IEnumerable<CollisionObject> GetOccupied(float low, float high)
         {
+            if (true) return ShadowList;
             List<CollisionObject> objs = new List<CollisionObject>();
             lock (ShadowList)
             {

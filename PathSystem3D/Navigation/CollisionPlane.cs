@@ -57,6 +57,7 @@ namespace PathSystem3D.Navigation
             MaxYPt = ysize0 - 1;
             MinZ = minZ;
             MaxZ = minZ + 3f;
+            SetDefaultConstraints();
         }
 
         public float MinZ { get; set; }
@@ -537,7 +538,7 @@ namespace PathSystem3D.Navigation
             {
                 testPlane = MinZ - 2;
             }
-            Heights[x, y] = testPlane;
+            //Heights[x, y] = testPlane;
 
             CollisionIndex W = MeshIndex[x, y];
             if (W == null) return testPlane;
@@ -690,8 +691,8 @@ namespace PathSystem3D.Navigation
             MatrixNeedsUpdate = true;
             HeightMapNeedsUpdate = true;
             _BM = null;
-            BumpConstraint = 0.6f;
-            BumpConstraintPurple = 0.4f;
+            BumpConstraint = CollisionIndex.MaxBump;// 0.6f;
+            BumpConstraintPurple = BumpConstraint - 0.2f;
         }
 
         private bool TightOrLooseNeedsUpdate;

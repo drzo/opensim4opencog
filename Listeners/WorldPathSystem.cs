@@ -60,15 +60,16 @@ namespace cogbot.Listeners
                     continue;
                 }
 
-                Debug("TrackPaths Started: " + lastCount + "->" + thisCount);
+                Debug("\nTrackPaths Started: " + lastCount + "->" + thisCount);
                 
                 lastCount = thisCount;
                 int occUpdate = 0;
+                int realUpdates = 0;
                 foreach (SimObject O in SimObjects.CopyOf())
                 {
                     if (O.IsRegionAttached())
                     {
-                        O.UpdateOccupied();
+                        if (O.UpdateOccupied()) realUpdates++;
                     }
                     occUpdate++;
                     if (occUpdate % 100 == 0)
@@ -78,9 +79,9 @@ namespace cogbot.Listeners
                     }
                 }
 
-                Debug("TrackPaths Completed: " + thisCount);
+                Debug("\nTrackPaths Completed: " + thisCount + " realUpdates=" + realUpdates);
                 
-                SimRegion.BakeRegions();
+                //SimRegion.BakeRegions();
                 
             }
         }

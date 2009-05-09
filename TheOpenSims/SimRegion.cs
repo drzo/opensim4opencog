@@ -1181,9 +1181,9 @@ namespace cogbot.TheOpenSims
            // throw new NotImplementedException();
         }
       
-        internal void AddCollisions(SimMesh C)
+        internal bool AddCollisions(SimMesh C)
         {
-            C.UpdateOccupied();
+            return C.UpdateOccupied();
         }
 
     }

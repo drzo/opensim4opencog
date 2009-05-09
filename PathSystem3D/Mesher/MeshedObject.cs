@@ -16,7 +16,7 @@ namespace PathSystem3D.Mesher
     //public interface MeshedObject
     //{
     //    string DebugString();
-    //    void ForceUpdateOccupied(PathSystem3D.Navigation.SimPathStore PathStore);
+    //    void ForceUpdatePathOccupied(PathSystem3D.Navigation.SimPathStore PathStore);
     //    bool IsInside(OpenMetaverse.Vector3 L);
     //    bool IsInside(float x, float y, float z);
     //    bool IsPhantom { get; }        
@@ -30,8 +30,8 @@ namespace PathSystem3D.Mesher
     //    bool SomethingMaxZ(OpenMetaverse.Vector3 vector3, float low, float high, out float maxZ);
     //    string ToString();
     //    bool Update(PathSystem3D.Mesher.MeshableObject simObject);
-    //    void UpdateOccupied(PathSystem3D.Navigation.SimPathStore PathStore);
-    //    void UpdateOccupied();
+    //    void UpdatePathOccupied(PathSystem3D.Navigation.SimPathStore PathStore);
+    //    void UpdatePathOccupied();
     //}
 
     public interface MeshableObject : SimPosition
@@ -55,7 +55,7 @@ namespace PathSystem3D.Mesher
         Color DebugColor();
         //Mesh GetTriMesh();
 
-        void UpdateOccupied(SimPathStore simPathStore);
+        bool UpdateOccupied(SimPathStore simPathStore);
     }
     public interface CollisionObject
     {
@@ -130,23 +130,35 @@ namespace PathSystem3D.Mesher
         List<SimPathStore> SimPathStoresOccupied = new List<SimPathStore>();
         public static bool MeshOnlySolids = false;
 
-        public virtual void UpdateOccupied(SimPathStore pathStore)
+        public virtual bool UpdateOccupied(SimPathStore pathStore)
         {
             if (pathStore == null)
             {
-                Console.WriteLine(String.Format("Cant UpdateOccupied for {0}", this));// + " pos " + RootObject.DistanceVectorString(RootObject));
-                return;
+                Console.WriteLine(String.Format("Cant UpdatePathOccupied for {0}", this));// + " pos " + RootObject.DistanceVectorString(RootObject));
+                return false;
             }
-            if (MeshOnlySolids && !IsSolid) return;
-            if (!IsRegionAttached()) return;
-            lock (SimPathStoresOccupied)
-            {
-                if (SimPathStoresOccupied.Contains(pathStore)) return;
-                SimPathStoresOccupied.Add(pathStore);
-            }
+            if (!UpdateMeshPaths) return false;
+            if (MeshOnlySolids && !IsSolid) return false;
+            if (InnerBoxes.Count == 0) return false;
+            if (!IsRegionAttached()) return false;
+            int t1;
             try
             {
-                ForceUpdateOccupied(pathStore);
+                lock (SimPathStoresOccupied)
+                {
+                    if (SimPathStoresOccupied.Contains(pathStore)) return false;
+                    SimPathStoresOccupied.Add(pathStore);
+                    if (tryFastVersion)
+                    {
+                        //                UpdatePathOccupiedFast(PathStore);
+                        int tc = Environment.TickCount;
+                        UpdatePathOccupiedVeryFast(pathStore);
+                        t1 = Environment.TickCount - tc;
+                        //  Console.WriteLine("t1 vs t2 = " + t1 );
+                        return true;
+                    }
+                }
+                ForceUpdatePathOccupied(pathStore);
             }
             catch (Exception e)
             {
@@ -155,7 +167,21 @@ namespace PathSystem3D.Mesher
                     SimPathStoresOccupied.Remove(pathStore);
                 }
             };
+            return true;
+            int t2;
+            {
+                //  SetOccupied(SetLocated, float.MinValue, float.MaxValue, PathStore.StepSize);
+                int tc = Environment.TickCount;
+                // 10 60
+                SetOccupied(SetLocatedOld, float.MinValue, float.MaxValue, pathStore.StepSize);
+                t2 = Environment.TickCount - tc;
+            }
+            this.PathStore = pathStore;
+            // Console.WriteLine("t1 vs t2 = " + t1 + " vs " + t2);
+            // Mesh = null;
+            return true;
         }
+
 
         public SimPathStore PathStore { get; set; }
 
@@ -196,19 +222,19 @@ namespace PathSystem3D.Mesher
             }
         }
 
-        public void ForceUpdateOccupied(SimPathStore PathStore)
+        public void ForceUpdatePathOccupied(SimPathStore PathStore)
         {
             if (!IsRegionAttached()) return;
             // if (!IsSculpted)
             {
-                UpdatePathOccupied(PathStore);
+                UpdateOccupied(PathStore);
                 return;
             }
             new Thread(new ThreadStart(delegate()
             {
                 try
                 {
-                    UpdatePathOccupied(PathStore);
+                    UpdateOccupied(PathStore);
                 }
                 catch (Exception)
                 {
@@ -224,35 +250,9 @@ namespace PathSystem3D.Mesher
 
         public static bool tryFastVersion = true;
 
-        public void UpdatePathOccupied(SimPathStore pathStore)
-        {
-            if (InnerBoxes.Count == 0) return;
-            if (!UpdateMeshPaths) return;
-            if (!IsRegionAttached()) return;
-            int t1;
-            if (tryFastVersion)
-            {
-                //                UpdateOccupiedFast(PathStore);
-                int tc = Environment.TickCount;
-                UpdateOccupiedVeryFast(pathStore);
-                t1 = Environment.TickCount - tc;
-                //  Console.WriteLine("t1 vs t2 = " + t1 );
-                return;
-            }
-            int t2;
-            {
-                //  SetOccupied(SetLocated, float.MinValue, float.MaxValue, PathStore.StepSize);
-                int tc = Environment.TickCount;
-                // 10 60
-                SetOccupied(SetLocatedOld, float.MinValue, float.MaxValue, pathStore.StepSize);
-                t2 = Environment.TickCount - tc;
-            }
-            this.PathStore = pathStore;
-            // Console.WriteLine("t1 vs t2 = " + t1 + " vs " + t2);
-            // Mesh = null;
-        }
 
-        private void UpdateOccupiedVeryFast(SimPathStore PathStore)
+
+        private void UpdatePathOccupiedVeryFast(SimPathStore PathStore)
         {
             float detail = PathStore.StepSize;// -0.001f;
             float MinX = OuterBox.MinX;
@@ -272,7 +272,7 @@ namespace PathSystem3D.Mesher
             }
             SetLocatedOld(MaxX, MaxY, MinZ, MaxZ);
         }
-        private void UpdateOccupiedFast(SimPathStore PathStore)
+        private void UpdatePathOccupiedFast(SimPathStore PathStore)
         {
             float detail = PathStore.StepSize;// -0.001f;
             float MinX = OuterBox.MinX;
@@ -322,12 +322,13 @@ namespace PathSystem3D.Mesher
             maxLevel = double.MaxValue;
         }
 
-        public virtual void UpdateOccupied()
+        public virtual bool UpdateOccupied()
         {
             if (IsRegionAttached())
             {
-                UpdateOccupied(PathStore);
+                return UpdateOccupied(PathStore);
             }
+            return false;
         }
 
         //   public static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
