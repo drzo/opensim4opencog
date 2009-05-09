@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define USE_MINIAABB
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
@@ -103,6 +104,25 @@ namespace PathSystem3D.Navigation
             return low > zlevel;
         }
 
+
+#if USE_MINIAABB
+        private List<CollisionObject> InnerBoxes = new List<CollisionObject>();
+        public bool SomethingMaxZ(float low, float high, out float maxZ)
+        {
+            bool found = false;
+            maxZ = low;
+            foreach (CollisionObject B in InnerBoxes)
+            {
+                if (B.IsZInside(low, high))
+                {
+                    found = true;
+                    if (B.MaxZ > maxZ) maxZ = B.MaxZ;
+                }
+            }
+            return found;
+
+        }
+#endif
         internal bool SomethingBetween(float low, float high, IEnumerable OccupiedListObject, out float maxZ)
         {
             if (IsSolid == 0)
@@ -110,6 +130,10 @@ namespace PathSystem3D.Navigation
                 maxZ = low;// GetGroundLevel();
                 return (maxZ > high);
             }
+
+#if USE_MINIAABB
+            return SomethingMaxZ(low, high, out maxZ);
+#endif
             lock (OccupiedListObject) foreach (CollisionObject O in OccupiedListObject)
                 {
                     if (O.IsSolid)
@@ -209,6 +233,8 @@ namespace PathSystem3D.Navigation
 
         public bool AddOccupied(IMeshedObject simObject, float minZ, float maxZ)
         {
+            float x = _LocalPos.X,
+                  y = _LocalPos.Y;
             //float GroundLevel = GetGroundLevel();
             // if (simObject.OuterBox.MaxZ < GetGroundLevel())
             // {
@@ -221,23 +247,25 @@ namespace PathSystem3D.Navigation
                     meshes.Add(simObject);
                     OccupiedCount++;
                     if (simObject.IsSolid)
+                    {
                         IsSolid++;
-                    TaintMatrix();
-                    return true;
-                }
-            return false;
-        }
-
-        public bool AddOccupiedC(CollisionObject simObject, float minZ, float maxZ)
-        {
-            List<CollisionObject> meshes = ShadowList;
-            lock (meshes)
-                if (!meshes.Contains(simObject))
-                {
-                    meshes.Add(simObject);
-                    OccupiedCount++;
-                    if (simObject.IsSolid)
-                        IsSolid++;
+#if USE_MINIAABB
+                        IEnumerable<CollisionObject> mini = simObject.InnerBoxes;
+                        foreach (var o in mini)
+                        {
+                            if (o.IsInsideXY(x,y))
+                                InnerBoxes.Add(o);
+                        }
+#endif
+#if COLLIDER_TRIANGLE
+                        IEnumerable<CollisionObject> mini = simObject.triangles;
+                        foreach (var o in mini)
+                        {
+                            if (o.IsInsideXY(_LocalPos.X, _LocalPos.Y))
+                                InnerBoxes.Add(o);
+                        }
+#endif
+                    }
                     TaintMatrix();
                     return true;
                 }

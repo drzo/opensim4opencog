@@ -189,7 +189,7 @@ namespace cogbot.TheOpenSims
 #if COLLIDER_ODE  
         public OdePrim GetPhysicsActor()
         {
-            if (!USE_ODE) return null;
+            if (!COLLIDER_ODE) return null;
             if (pbs == null) pbs = mesh.PBS;
             if (physicsActor == null)
             {
@@ -268,7 +268,7 @@ namespace cogbot.TheOpenSims
 
 
         static Dictionary<UUID, SculptMesh> SculptedMeshes = new Dictionary<UUID, SculptMesh>();
-#if USE_ODE
+#if COLLIDER_ODE
         private PrimitiveBaseShape pbs;
 #endif
 
@@ -320,7 +320,7 @@ namespace cogbot.TheOpenSims
             primMesh.Scale(Scale.X, Scale.Y, Scale.Z);
             primMesh.AddRot(QuaternionToQuat(rot));
             Mesh m = PrimMeshToMesh(primMesh);
-#if USE_ODE
+#if COLLIDER_ODE
             m.PBS = PrimToBaseShape(primitive);
 #endif
             return m;
@@ -334,7 +334,7 @@ namespace cogbot.TheOpenSims
         {
             Mesh mesh = new Mesh(
 
-#if USE_ODE 
+#if COLLIDER_ODE 
                 pbs
 #endif
 
@@ -621,7 +621,7 @@ namespace cogbot.TheOpenSims
 
         }
 
-#if USE_ODE
+#if COLLIDER_ODE
         /// <summary>
         /// [05:31] <AFrisby> dmiles_afk, search my blog, I wrote a function for converting OpenMetaverse.Primitive to OpenSimulator.SceneObjectGroup
         /// 
