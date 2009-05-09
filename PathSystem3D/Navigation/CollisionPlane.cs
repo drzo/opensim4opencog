@@ -21,6 +21,7 @@ namespace PathSystem3D.Navigation
         readonly internal SimPathStore PathStore;
         readonly int MaxXPt, MaxYPt;
         private bool _UsePotentialFields = true;
+        public Box3Fill OuterBox = new Box3Fill(true);
 
         public bool UsePotentialFields
         {
@@ -57,6 +58,12 @@ namespace PathSystem3D.Navigation
             MaxYPt = ysize0 - 1;
             MinZ = minZ;
             MaxZ = minZ + 3f;
+            OuterBox.MinZ = MinZ;
+            OuterBox.MaxZ = MaxZ;
+            OuterBox.MinX = 0;
+            OuterBox.MinY = 0;
+            OuterBox.MaxX = 256f - PathStore.StepSize;
+            OuterBox.MaxY = 256f - PathStore.StepSize;
             SetDefaultConstraints();
         }
 
@@ -121,7 +128,7 @@ namespace PathSystem3D.Navigation
 
         public override string ToString()
         {
-            return MinZ + "-" + MaxZ + " @ " + BumpConstraint + "f";
+            return MinZ + "-" + MaxZ + " @ " + _globalBumpConstraint + "f";
         }
         byte[,] _BM;
 
@@ -330,13 +337,25 @@ namespace PathSystem3D.Navigation
             }
         }
 
+        public float GlobalBumpConstraint
+        {
+            get { return _globalBumpConstraint; }
+            set
+            {
+                if (_globalBumpConstraint == value) return;
+                _globalBumpConstraint = value;
+                MatrixNeedsUpdate = true;
+                BumpConstraintPurple = _globalBumpConstraint - 0.1f;
+            }
+        }
+
         //public byte this[int x, int y]
         //{
         //    get { return ByteMatrix[x, y]; }
         //    set { ByteMatrix[x, y] = value; }
         //}
 
-        private float BumpConstraint = 0.6f;
+        private float _globalBumpConstraint = 0.5f;
         private float BumpConstraintPurple =  0.4f;
 
         public byte DefaultCollisionValue(int x, int y, float BumpConstraint, float[,] GroundPlane, byte b, float[,] Heights, CollisionIndex[,] cI)
@@ -376,15 +395,17 @@ namespace PathSystem3D.Navigation
                 return SimPathStore.TOO_LOW;
 
 
+            bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.1f, Heights);
+            if (bumps > 0)
+                return SimPathStore.BLOCKED_YELLOW;
+
             CollisionIndex c = cI[x, y];
             if (c != null)
             {
                 return c.GetOccupiedValue(ZLevel,ZLevel);
             }
 
-            bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.1f, Heights);
-            if (bumps > 0)
-                return SimPathStore.BLOCKED_YELLOW;
+
 
             if (b != SimPathStore.BLOCKED)
                 return SimPathStore.INITIALLY;
@@ -409,7 +430,7 @@ namespace PathSystem3D.Navigation
                 {
                     for (int x = MaxXPt - 1; x > 0; x--)
                     {
-                        ToMatrix[x, y] = DefaultCollisionValue(x, y, BumpConstraint, GroundPlane, ToMatrix[x, y], Heights, MeshIndex);
+                        ToMatrix[x, y] = DefaultCollisionValue(x, y, _globalBumpConstraint, GroundPlane, ToMatrix[x, y], Heights, MeshIndex);
                     }
                 }
 
@@ -499,32 +520,33 @@ namespace PathSystem3D.Navigation
 #if COLLIDER_ODE
                 ComputeLandingHeights();
 #else
-//todo is silly to lock?            lock (this)
+            //todo is silly to lock?            lock (this)
             if (!Monitor.TryEnter(this, 10))
             {
                 SimPathStore.Debug("Someone is locking? " + this);
             }
-            lock (this)
+            //lock (this)
             {
                 if (!HeightMapNeedsUpdate) return;
-                _HeightMap = null;
-                RenderGroundPlane();
-                Console.WriteLine("\nStart RenderHeightMap: {0} for {1}", PathStore, this);
-                CollisionIndex[,] MeshIndex = PathStore.MeshIndex;
                 HeightMapNeedsUpdate = false;
-                MatrixNeedsUpdate = true;
-                //byte[,] ToMatrix = ByteMatrix;
-                float[,] Heights = HeightMap;
-                float[,] GroundPlane = PathStore.GroundPlane;
-                PathStore.TaintMatrix();
-                for (int y = MaxYPt; y >= 0; y--)
+            }
+            //            _HeightMap = null;
+            RenderGroundPlane();
+            Console.WriteLine("\nStart RenderHeightMap: {0} for {1}", PathStore, this);
+            CollisionIndex[,] MeshIndex = PathStore.MeshIndex;
+            MatrixNeedsUpdate = true;
+            //byte[,] ToMatrix = ByteMatrix;
+            float[,] Heights = HeightMap;
+            float[,] GroundPlane = PathStore.GroundPlane;
+            PathStore.TaintMatrix();
+            for (int y = MaxYPt; y >= 0; y--)
+            {
+                for (int x = MaxXPt; x >= 0; x--)
                 {
-                    for (int x = MaxXPt; x >= 0; x--)
-                    {
-                        Heights[x, y] = DefaultHeight(y, x, GroundPlane, Heights, MeshIndex);
-                    }
+                    Heights[x, y] = DefaultHeight(y, x, GroundPlane, Heights, MeshIndex);
                 }
             }
+
 #endif
             Console.WriteLine("\nEnd RenderHeightMap: {0} for {1}", PathStore, this);
         }
@@ -688,51 +710,17 @@ namespace PathSystem3D.Navigation
 
         internal void SetDefaultConstraints()
         {
-            MatrixNeedsUpdate = true;
-            HeightMapNeedsUpdate = true;
-            _BM = null;
-            BumpConstraint = CollisionIndex.MaxBump;// 0.6f;
-            BumpConstraintPurple = BumpConstraint - 0.2f;
+            GlobalBumpConstraint = CollisionIndex.MaxBump;// 0.6f;
         }
 
-        private bool TightOrLooseNeedsUpdate;
-        internal bool TightenConstraints()
-        {
-            return false;
-            if (TightOrLooseNeedsUpdate) return false;
-            TightOrLooseNeedsUpdate = true;
-            MatrixNeedsUpdate = true;
-            _BM = null;
-            BumpConstraint -= 0.05f;
-            BumpConstraintPurple -= 0.05f;
-            SimPathStore.Debug("\nTigthenConstraints " + this);
-            if (BumpConstraint < 0.1)
-            {
-                SetDefaultConstraints();
-               // return false;
-            }
-            EnsureUpdated();
-            TightOrLooseNeedsUpdate = false;
-            return true;
-        }
 
-        internal bool LoosenConstraints()
-        {
-            if (TightOrLooseNeedsUpdate) return false;
-            TightOrLooseNeedsUpdate = true;
-            MatrixNeedsUpdate = true;
-            MatrixNeedsUpdate = true;
-            _BM = null;
-            BumpConstraint += 0.1f;
-            BumpConstraintPurple += 0.1f;
-            SimPathStore.Debug("\nLoosenConstraints " + this);
-            if (BumpConstraint > 2)
-            {
-                SetDefaultConstraints();
-            }
-
-            EnsureUpdated();
-            TightOrLooseNeedsUpdate = false;
+        internal bool ChangeConstraints(Vector3 loc, float BumpConstraint)
+        {   
+            Box3Fill B = new Box3Fill(true);
+            B.AddPoint(loc.X,loc.Y,loc.Z,new Vector3(2f,2f,5f));
+            RefreshMatrix(B, BumpConstraint);
+            //GlobalBumpConstraint = BumpConstraint;
+            BumpConstraintPurple = BumpConstraint;
             return true;
         }
 
@@ -745,6 +733,7 @@ namespace PathSystem3D.Navigation
 
         internal void Refresh(Box3Fill changed, float BumpConstraint)
         {
+            changed.Constrain(OuterBox);
             byte[,] ToMatrix = ByteMatrix;
             float[,] Heights = HeightMap;
             float[,] GroundPlane = PathStore.GroundPlane;
@@ -762,6 +751,30 @@ namespace PathSystem3D.Navigation
                 for (int y = ys; y <= ye; y++)
                     ToMatrix[x, y] = DefaultCollisionValue(x, y, BumpConstraint, GroundPlane, ToMatrix[x, y],
                                                            Heights, MeshIndex);
+        }
+
+        internal void RefreshMatrix(Box3Fill changed, float BumpConstraint)
+        {
+            changed.Constrain(OuterBox);
+            byte[,] ToMatrix = ByteMatrix;
+            float[,] Heights = HeightMap;
+            float[,] GroundPlane = PathStore.GroundPlane;
+            CollisionIndex[,] MeshIndex = PathStore.MeshIndex;
+
+            int xs = PathStore.ARRAY_X(changed.MinX);
+            int xe = PathStore.ARRAY_X(changed.MaxX);
+            int ys = PathStore.ARRAY_Y(changed.MinY);
+            int ye = PathStore.ARRAY_Y(changed.MaxY);
+
+            for (int x = xs; x <= xe; x++)
+                for (int y = ys; y <= ye; y++)
+                    ToMatrix[x, y] = DefaultCollisionValue(x, y, BumpConstraint, GroundPlane, ToMatrix[x, y],
+                                                           Heights, MeshIndex);
+        }
+
+        public double GetHeight(Vector3 local)
+        {
+            return _HeightMap[PathStore.ARRAY_X(local.X),PathStore.ARRAY_Y(local.Y)];
         }
     }
 

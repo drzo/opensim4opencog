@@ -983,6 +983,8 @@ namespace cogbot.TheOpenSims
 
         readonly object TrackerLoopLock = new object();
 
+        bool stopFlyingNext = false;
+
         void TrackerLoop()
         {
             Boolean stopNext = false;
@@ -1020,14 +1022,22 @@ namespace cogbot.TheOpenSims
                     float WaterHeight = R.WaterHeight();
                     float selfZ = ClientSelf.SimPosition.Z;
                     double UpDown = realTargetZ - selfZ;
+                    bool needsLift = false;
 
                     double ZDist = Math.Abs(UpDown);
-                    if (UpDown > 1)
+                    if (UpDown > 0.5f) // todo is this enough lift to climb out of a hole?
                     {
-                        targetPosition.Z = selfZ + 0.2f; // incline upward
+                        targetPosition.Z = realTargetZ;
+                        needsLift = true;
+                        // todo else: selfZ + 0.2f; // incline upward
                     }
                     else
                     {
+                        if (stopFlyingNext && UpDown < 0.2f)
+                        {
+                            ClientMovement.Fly = false;
+                            stopFlyingNext = false;
+                        }
                         targetPosition.Z = selfZ;
                     }
 
@@ -1040,6 +1050,7 @@ namespace cogbot.TheOpenSims
                     ClientMovement.UpNeg = false;
                     ClientMovement.NudgeUpPos = false;
                     ClientMovement.NudgeUpNeg = false;
+
 
                     double curXYDist = Vector3d.Distance(worldPosition, new Vector3d(targetPosition.X, targetPosition.Y, selfZ));
 
@@ -1083,7 +1094,7 @@ namespace cogbot.TheOpenSims
                         targetPosition.Z = WaterHeight - 0.25f;
                     }
 
-                    ClientMovement.Fly = swimming ;// todo ||  GetPathStore().IsFlyZone(SimPathStore.GlobalToLocal(worldPosition));
+                    if (swimming) ClientMovement.Fly = swimming;// todo ||  GetPathStore().IsFlyZone(SimPathStore.GlobalToLocal(worldPosition));
 
                     if (swimming)
                     {
@@ -1128,10 +1139,14 @@ namespace cogbot.TheOpenSims
                         }
                     }
 
+                    if (needsLift) {
+                        stopFlyingNext = !ClientMovement.Fly;
+                        ClientMovement.Fly = true;
+                    }
                     TurnToward(targetPosition);
                     // Far away
                     if (curXYDist > ApproachDistance)
-                    {
+                    {                      
                         ClientMovement.Stop = false;
                         ClientMovement.FinishAnim = false;
                         TurnToward(targetPosition);
@@ -1142,6 +1157,7 @@ namespace cogbot.TheOpenSims
                             //SendUpdate(125);
                             //ClientMovement.Stop = true;
                             ClientMovement.AtPos = false;
+                            if (needsLift) ClientMovement.UpPos = true;
                             ClientMovement.NudgeAtPos = true;
                             SendUpdate(100);
                             ClientMovement.NudgeAtPos = false;
@@ -1151,6 +1167,7 @@ namespace cogbot.TheOpenSims
                         }
                         else
                         {
+                            if (needsLift) ClientMovement.UpPos = true;
                             ClientMovement.AtPos = true;
                             ClientMovement.UpdateInterval = 0;
                             SendUpdate(MyRandom.Next(25, 100));
@@ -1204,7 +1221,7 @@ namespace cogbot.TheOpenSims
         /// <param name="maxDistance"></param>
         /// <param name="maxSeconds"></param>
         /// <returns></returns>
-        public override bool MoveTo(Vector3d finalTarget, double maxDistance, int maxSeconds)
+        public override bool MoveTo(Vector3d finalTarget, double maxDistance, float maxSeconds)
         {
             double currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
             if (currentDist < maxDistance) return true;
@@ -1215,7 +1232,7 @@ namespace cogbot.TheOpenSims
                 ApproachDistance = maxDistance;
             }
             double lastDistance = currentDist;
-            long endTick = Environment.TickCount + maxSeconds * 1000;
+            long endTick = Environment.TickCount + (int)(maxSeconds * 1000);
             while (Environment.TickCount < endTick)
             {
                 currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());

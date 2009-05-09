@@ -66,8 +66,8 @@ namespace PathSystem3D.Mesher
         public float MaxX;// = float.MinValue;
         public float MinY;// = float.MaxValue;
         public float MaxY;// = float.MinValue;
-        public float MinZ { get; private set; }// = float.MaxValue;
-        public float MaxZ { get; private set; }// = float.MinValue;
+        public float MinZ { get; set; }// = float.MaxValue;
+        public float MaxZ { get; set; }// = float.MinValue;
 
         public Box3Fill(Triangle t1, Triangle t2, Vector3 padXYZ)
         {
@@ -418,16 +418,29 @@ namespace PathSystem3D.Mesher
             throw new NotImplementedException();
         }
 
-        #endregion
-
-        #region CollisionObject Members
-
-
-        public bool SomethingMaxZ(float x, float y, float low, float high, out float maxZ)
+        public bool SomethingMaxZ(float xf, float yf, float low, float high, out float maxZ)
         {
-            throw new NotImplementedException();
+            bool found = false;
+            maxZ = MinZ;
+            if (!IsInsideXY(xf, yf)) return false;
+            if (IsZInside(low, high))
+            {
+                found = true;
+                if (MaxZ > maxZ) maxZ = MaxZ;
+            }
+            return found;
         }
 
         #endregion
+
+        internal void Constrain(Box3Fill OuterBox)
+        {
+            if (MinX < OuterBox.MinX) MinX = OuterBox.MinX;
+            if (MinY < OuterBox.MinY) MinY = OuterBox.MinY;
+            if (MinZ < OuterBox.MinZ) MinZ = OuterBox.MinZ;
+            if (MaxX > OuterBox.MaxX) MaxX = OuterBox.MaxX;
+            if (MaxY > OuterBox.MaxY) MaxY = OuterBox.MaxY;
+            if (MaxZ > OuterBox.MaxZ) MaxZ = OuterBox.MaxZ;
+        }
     }
 }

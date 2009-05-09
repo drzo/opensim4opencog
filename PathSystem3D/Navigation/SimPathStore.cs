@@ -2097,7 +2097,7 @@ namespace PathSystem3D.Navigation
                 Vector3d v3 = new Vector3d(x + V.X, y + V.Y, Z);
                 v3s.Add(v3);
             }
-            return GetSimplifedRoute(v3s[0], v3s, 5, 4f);
+            return v3s;// GetSimplifedRoute(v3s[0], v3s, 5, 4f);
         }
 
         private Vector3d GetGlobalCorner()
@@ -2194,7 +2194,7 @@ namespace PathSystem3D.Navigation
         }
         public static void Debug(string format, params object[] arg)
         {
-            //if (DebugLevel > 0) 
+            if (DebugLevel > 0) 
                 Console.WriteLine(String.Format("[SimPathStore] {0}", format), arg);
         }
 

@@ -1425,13 +1425,12 @@ namespace PathSystem3D.Navigation.Debug
         private void BtnTighten_Click(object sender, EventArgs e)
         {
             CollisionPlane CP = PnlGUI.CurrentPlane;
-            if (CP == null || WorkThread != null) return;
+            if (CP == null) return;
+            CP.GlobalBumpConstraint -= 0.05f;
+            if (WorkThread != null) return;
             WorkThread = new Thread(new ThreadStart(delegate()
             {
-                CP.TightenConstraints();
-                CP.HeightMapNeedsUpdate = true;
-                CP.MatrixNeedsUpdate = true;
-                CP.EnsureUpdated();
+                CP.Refresh(CP.OuterBox, CP.GlobalBumpConstraint);
                 WorkThread = null;
                 PnlGUI.Invalidate();
 
@@ -1441,17 +1440,17 @@ namespace PathSystem3D.Navigation.Debug
         private void BtnLoosen_Click(object sender, EventArgs e)
         {
             CollisionPlane CP = PnlGUI.CurrentPlane;
-            if (CP == null || WorkThread != null) return;
+            if (CP == null) return;
+            CP.GlobalBumpConstraint += 0.05f;
+            if (WorkThread != null) return;
             WorkThread = new Thread(new ThreadStart(delegate()
             {
-                CP.LoosenConstraints();
-                CP.HeightMapNeedsUpdate = true;
-                CP.MatrixNeedsUpdate = true;
-                CP.EnsureUpdated();
+                CP.Refresh(CP.OuterBox, CP.GlobalBumpConstraint);
                 WorkThread = null;
                 PnlGUI.Invalidate();
 
             }));
+
         }
 
 
