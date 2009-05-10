@@ -563,7 +563,17 @@ namespace cogbot.TheOpenSims
             SimPathStore PathStore = GetPathStore(vector3);
             Point P = PathStore.ToPoint(vector3);
             CollisionIndex WP = PathStore.GetCollisionIndex(P.X, P.Y);
-            WP.SetNodeQualityTimer(PathStore.GetCollisionPlane(vector3.Z), value, seconds);
+
+            List<ThreadStart> undo = new List<ThreadStart>();
+            WP.SetNodeQualityTimer(PathStore.GetCollisionPlane(vector3.Z), value, undo);
+            if (undo.Count > 0) new Thread(() =>
+            {
+                Thread.Sleep(seconds * 1000);
+                foreach (ThreadStart u in undo)
+                {
+                    u();
+                }
+            }).Start();
         }
 
         public float WaterHeight()
@@ -1183,7 +1193,7 @@ namespace cogbot.TheOpenSims
       
         internal bool AddCollisions(SimMesh C)
         {
-            return C.UpdateOccupied();
+            return C.UpdateOccupied(PathStore);
         }
 
     }

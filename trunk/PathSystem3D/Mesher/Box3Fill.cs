@@ -15,16 +15,34 @@ namespace PathSystem3D.Mesher
         {
             get { return true; }
         }
-        #region IEquatable<Box3Fill> Members
 
-        public bool Equals(Box3Fill other)
+        public bool Same(Box3Fill other)
         {
+            if (Object.ReferenceEquals(other, null)) return false;
+            if (Object.ReferenceEquals(this, other)) return true;// Object.ReferenceEquals(o2, null);
             if (other.MaxX == MaxX &&
                 other.MaxY == MaxY &&
                 other.MaxZ == MaxZ &&
                 other.MinX == MinX &&
                 other.MinY == MinY &&
-                other.MinZ == MinZ) return true;
+                other.MinZ == MinZ) return true; 
+
+            return false;
+        }
+        #region IEquatable<Box3Fill> Members
+
+        public bool Equals(Box3Fill o2)
+        {
+            if (Object.ReferenceEquals(o2, null)) return false;
+            if (Object.ReferenceEquals(this, o2)) return true;// Object.ReferenceEquals(o2, null);
+            /*
+            if (other.MaxX == MaxX &&
+                other.MaxY == MaxY &&
+                other.MaxZ == MaxZ &&
+                other.MinX == MinX &&
+                other.MinY == MinY &&
+                other.MinZ == MinZ) return true;  */
+
             return false;
         }
 
@@ -53,7 +71,8 @@ namespace PathSystem3D.Mesher
         {
             if (Object.ReferenceEquals(o1, null)) return Object.ReferenceEquals(o2, null);
             if (Object.ReferenceEquals(o2, null)) return false;
-            return o1.Equals(o2);
+            if (Object.ReferenceEquals(o1, o2)) return true;// Object.ReferenceEquals(o2, null);
+            return false;// o1.Equals(o2);
         }
 
         public static bool operator !=(Box3Fill o1, Box3Fill o2)
@@ -318,19 +337,49 @@ namespace PathSystem3D.Mesher
             return true;
         }
 
+        #region IComparable<Box3Fill> Members
+
+        public int CompareTo(Box3Fill other)
+        {
+            return Bigger0(this, other);
+        }
+
+        #endregion
+
         public static List<Box3Fill> Simplify(List<Box3Fill> simpl)
         {
-            simpl.Sort(Bigger);
-            List<Box3Fill> retval = new List<Box3Fill>();
+           return Simplify1(simpl);
+            int bc = simpl.Count;
+            int t0 = Environment.TickCount;
+            List<Box3Fill> s0 = Simplify0(new List<Box3Fill>(simpl));
+            int t1 = Environment.TickCount;
+            List<Box3Fill> s1 = Simplify1(new List<Box3Fill>(simpl));
+            int t2 = Environment.TickCount;
+            int c0 = s0.Count;
+            int c1 = s1.Count;
+            Console.WriteLine("\nSimplify {0} S0={1}/{2}  S1={3}/{4}  ", bc, t1 - t0, c0, t2 - t1, c1);
+            if (c1 < c0) return s1;
+            return s0;
+        }
+
+        public static List<Box3Fill> Simplify1(List<Box3Fill> simpl)
+        {
+            int c = simpl.Count * 3 / 4;
+            simpl.Sort(Bigger1);
+            List<Box3Fill> retval = new List<Box3Fill>(c);
             int len = simpl.Count;
             int len1 = len - 1;
             for (int i = 0; i < len; i++)
             {
                 Box3Fill bi = simpl[i];
+                if (bi == null) continue;
                 bool foundInside = false;
                 for (int ii = len1; ii > i; ii--)
                 {
-                    if (simpl[ii].IsCompletelyInside(bi))
+                    Box3Fill bii = simpl[ii];
+                    if (bii == null) continue;
+
+                    if (bii.IsCompletelyInside(bi))
                     {
                         foundInside = true;
                         break;
@@ -344,19 +393,50 @@ namespace PathSystem3D.Mesher
             return retval;
         }
 
-        #region IComparable<Box3Fill> Members
-
-        public int CompareTo(Box3Fill other)
+        static int Bigger1(Box3Fill b1, Box3Fill b2)
         {
-            return Bigger(this, other);
+            float f1 = b1.Mass();
+            float f2 = b2.Mass();
+            if (f1 == f2)
+                return 0;
+            return f1 < f2 ? -1 : 1;
         }
 
-        #endregion
 
-        static int Bigger(Box3Fill b1, Box3Fill b2)
+        public static List<Box3Fill> Simplify0(List<Box3Fill> simpl)
         {
-            if (b1 == b2) return 0;
+            int c = simpl.Count*3/4;
+            simpl.Sort(Bigger0);
+            List<Box3Fill> retval = new List<Box3Fill>(c);
+            int len = simpl.Count;
+            int len1 = len - 1;
+            for (int i = 0; i < len; i++)
+            {
+                Box3Fill bi = simpl[i];
+                if (bi == null) continue;
+                bool foundInside = false;
+                for (int ii = len1; ii > i; ii--)
+                {
+                    Box3Fill bii = simpl[ii];
+                    if (bii == null) continue;
 
+                    if (bii.IsCompletelyInside(bi))
+                    {
+                        foundInside = true;
+                        break;
+                    }
+                }
+                if (!foundInside)
+                {
+                    retval.Add(bi);
+                }
+            }
+            return retval;
+        }
+
+        static int Bigger0(Box3Fill b1, Box3Fill b2)
+        {
+            if (b1.Same(b2)) return 0;
             if (b1.MinX > b2.MinX)
             {
                 return -1;
@@ -369,7 +449,6 @@ namespace PathSystem3D.Mesher
             {
                 return -1;
             }
-
             if (b1.MaxX < b2.MaxX)
             {
                 return -1;
@@ -382,15 +461,13 @@ namespace PathSystem3D.Mesher
             {
                 return -1;
             }
-
             float f1 = b1.Mass();
             float f2 = b2.Mass();
             if (f1 == f2)
-            {
                 return 1;
-            }
             return f1 < f2 ? -1 : 1;
         }
+
 
 
         public bool IsZInside(float low, float high)

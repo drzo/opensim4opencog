@@ -10,7 +10,7 @@ namespace PathSystem3D.Navigation
         IComparable ID;
         static SimPathStore system;
 
-        public RuntimeMesh(IComparable id, Box3Fill outer, IList<CollisionObject> inners, SimPathStore paths)
+        public RuntimeMesh(IComparable id, Box3Fill outer, IList<Box3Fill> inners, SimPathStore paths)
             : base(outer, inners, paths)
         {
             ID = id;

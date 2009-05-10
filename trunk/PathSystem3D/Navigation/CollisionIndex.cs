@@ -106,17 +106,27 @@ namespace PathSystem3D.Navigation
 
 
 #if USE_MINIAABB
-        private List<CollisionObject> InnerBoxes = new List<CollisionObject>();
+        private List<Box3Fill> InnerBoxes = new List<Box3Fill>();
+        private bool InnerBoxesSimplified = false;
         public bool SomethingMaxZ(float low, float high, out float maxZ)
         {
             bool found = false;
             maxZ = low;
-            foreach (CollisionObject B in InnerBoxes)
+
+            lock (InnerBoxes)
             {
-                if (B.IsZInside(low, high))
+                if (!InnerBoxesSimplified)
                 {
-                    found = true;
-                    if (B.MaxZ > maxZ) maxZ = B.MaxZ;
+                    if (InnerBoxes.Count<100) InnerBoxes = Box3Fill.Simplify(InnerBoxes);
+                    InnerBoxesSimplified = true;
+                }
+                foreach (CollisionObject B in InnerBoxes)
+                {
+                    if (B.IsZInside(low, high))
+                    {
+                        found = true;
+                        if (B.MaxZ > maxZ) maxZ = B.MaxZ;
+                    }
                 }
             }
             return found;
@@ -250,11 +260,15 @@ namespace PathSystem3D.Navigation
                     {
                         IsSolid++;
 #if USE_MINIAABB
-                        IEnumerable<CollisionObject> mini = simObject.InnerBoxes;
+                        IEnumerable<Box3Fill> mini = simObject.InnerBoxes;
                         foreach (var o in mini)
                         {
                             if (o.IsInsideXY(x,y))
-                                InnerBoxes.Add(o);
+                                lock (InnerBoxes)
+                                {
+                                    InnerBoxesSimplified = false;
+                                    InnerBoxes.Add(o);
+                                }
                         }
 #endif
 #if COLLIDER_TRIANGLE
@@ -473,35 +487,31 @@ namespace PathSystem3D.Navigation
             return _MeshedObjectIndexs;
         }
 
-        public bool IsTimerTicking = false;
-        public void SetNodeQualityTimer(CollisionPlane CP, int value, int seconds)
+       // public bool IsTimerTicking = false;
+        public void SetNodeQualityTimer(CollisionPlane CP, int value, List<ThreadStart> undo)
         {
             byte oldValue = GetMatrix(CP);
             if (oldValue == value) // already set
                 return;
             Debug("SetNodeQualityTimer of {0} form {1} to {2}", this, oldValue, value);
             SetMatrixForced(CP, value);
-            if (IsTimerTicking) return;
-            IsTimerTicking = true;
+            //if (IsTimerTicking) return;
+            //IsTimerTicking = true;
 
             float StepSize = PathStore.StepSize;
-            new Thread(new ThreadStart(delegate()
-            {
-                Thread.Sleep(seconds * 1000);
-                byte newValue = GetMatrix(CP);
-
-                if (newValue != value)
-                {
-                    // its been changed by something else since we set to Zero
-                    Debug("SetNodeQualityTimer Thread out of date {0} value changed to {1}", this, newValue);
-                }
-                else
-                {
-                    SetMatrixForced(CP, oldValue);
-                    Debug("ResetNodeQualityTimer {0} value reset to {1}", this, oldValue);
-                }
-                IsTimerTicking = false;
-            })).Start();
+            undo.Add(() =>
+                     {
+                         byte newValue = GetMatrix(CP);
+                         if (newValue != value)
+                             // its been changed by something else since we set to Zero
+                             Debug("SetNodeQualityTimer Thread out of date {0} value changed to {1}", this, newValue);
+                         else
+                         {
+                             SetMatrixForced(CP, oldValue);
+                             Debug("ResetNodeQualityTimer {0} value reset to {1}", this, oldValue);
+                         }
+                         //IsTimerTicking = false;
+                     });
         }
 
         private void Debug(string format, params object[] objs)
