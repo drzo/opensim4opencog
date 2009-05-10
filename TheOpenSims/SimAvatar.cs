@@ -1055,81 +1055,95 @@ namespace cogbot.TheOpenSims
                     double curXYDist = Vector3d.Distance(worldPosition, new Vector3d(targetPosition.X, targetPosition.Y, selfZ));
 
                     double curDist = Vector3d.Distance(worldPosition, targetPosition);
-                    
-                    if (swimming)
+
+
+                    if (needsLift)
                     {
-                        // WaterHeight = WaterHeight - 1f;
-                        //if (!ClientMovement.Fly)
-                        //{
-                        //    ClientMovement.Fly = false;
-                        //}
+                        if (!stopFlyingNext) stopFlyingNext = !ClientMovement.Fly;
+                        ClientMovement.Fly = true;
+                        if (needsLift) ClientMovement.UpPos = true;
+                        SendUpdate(100);
 
-                        bool nudgeUpDownMoves = true;
+                    }
+                    else
+                    {
+                        if (swimming)
+                        {
+                            // WaterHeight = WaterHeight - 1f;
+                            //if (!ClientMovement.Fly)
+                            //{
+                            //    ClientMovement.Fly = false;
+                            //}
 
-                        if (selfZ > WaterHeight - 0.5)
-                        {
-                            // Bob downward
-                            if (nudgeUpDownMoves)
-                                ClientMovement.NudgeUpNeg = true;
-                            else
-                                ClientMovement.UpNeg = true;
-                            SendUpdate(10);
-                            //
-                            //  continue; //to keep going up
-                        }
-                        else
-                        {
-                            //  nudge = !nudge;
-                            if (selfZ < WaterHeight - 2.5)
+                            bool nudgeUpDownMoves = true;
+
+                            if (selfZ > WaterHeight - 0.5)
                             {
-                                // Bob upward
+                                // Bob downward
                                 if (nudgeUpDownMoves)
-                                    ClientMovement.NudgeUpPos = true;
+                                    ClientMovement.NudgeUpNeg = true;
                                 else
-                                    ClientMovement.UpPos = true;
+                                    ClientMovement.UpNeg = true;
                                 SendUpdate(10);
-                                //   continue; //to keep going up
+                                //
+                                //  continue; //to keep going up
                             }
-                        }
-                        targetPosition.Z = WaterHeight - 0.25f;
-                    }
-
-                    if (swimming) ClientMovement.Fly = swimming;// todo ||  GetPathStore().IsFlyZone(SimPathStore.GlobalToLocal(worldPosition));
-
-                    if (swimming)
-                    {
-                        // Reset previous Z 
-                        ClientMovement.FastUp = false;
-                        ClientMovement.UpPos = false;
-                        ClientMovement.UpNeg = false;
-                        ClientMovement.NudgeUpPos = false;
-                        ClientMovement.NudgeUpNeg = false;
-                        SendUpdate(10);
-                    }
-
-                    //// Little Jumps
-                    if (ZDist*2 > curDist)
-                    {
-                        if (!ClientMovement.Fly)
-                        {
-                            if (UpDown > 0)
+                            else
                             {
-                                ClientMovement.NudgeUpPos = true;
-                                SendUpdate(10);
-                                ClientMovement.NudgeUpPos = false;
+                                //  nudge = !nudge;
+                                if (selfZ < WaterHeight - 2.5)
+                                {
+                                    // Bob upward
+                                    if (nudgeUpDownMoves)
+                                        ClientMovement.NudgeUpPos = true;
+                                    else
+                                        ClientMovement.UpPos = true;
+                                    SendUpdate(10);
+                                    //   continue; //to keep going up
+                                }
+                            }
+                            targetPosition.Z = WaterHeight - 0.25f;
+                        }
+
+                        if (swimming)
+                            ClientMovement.Fly = swimming;
+                                // todo ||  GetPathStore().IsFlyZone(SimPathStore.GlobalToLocal(worldPosition));
+
+                        if (swimming)
+                        {
+                            // Reset previous Z 
+                            ClientMovement.FastUp = false;
+                            ClientMovement.UpPos = false;
+                            ClientMovement.UpNeg = false;
+                            ClientMovement.NudgeUpPos = false;
+                            ClientMovement.NudgeUpNeg = false;
+                            SendUpdate(10);
+                        }
+
+
+                        //// Little Jumps
+                        if (ZDist*2 > curDist)
+                        {
+                            if (!ClientMovement.Fly)
+                            {
+                                if (UpDown > 0)
+                                {
+                                    ClientMovement.NudgeUpPos = true;
+                                    SendUpdate(10);
+                                    ClientMovement.NudgeUpPos = false;
+                                }
                             }
                         }
+                        //else
+                        //{
+                        //    if (ClientMovement.Fly)
+                        //    {
+                        //        ClientMovement.NudgeUpPos = false;
+                        //        // ClientSelf.Fly(false);
+                        //        ClientMovement.Fly = false;
+                        //    }
+                        //}
                     }
-                    //else
-                    //{
-                    //    if (ClientMovement.Fly)
-                    //    {
-                    //        ClientMovement.NudgeUpPos = false;
-                    //        // ClientSelf.Fly(false);
-                    //        ClientMovement.Fly = false;
-                    //    }
-                    //}
-
 
                     if (ApproachVector3D == Vector3d.Zero)
                     {
@@ -1139,10 +1153,6 @@ namespace cogbot.TheOpenSims
                         }
                     }
 
-                    if (needsLift) {
-                        stopFlyingNext = !ClientMovement.Fly;
-                        ClientMovement.Fly = true;
-                    }
                     TurnToward(targetPosition);
                     // Far away
                     if (curXYDist > ApproachDistance)
@@ -1157,7 +1167,7 @@ namespace cogbot.TheOpenSims
                             //SendUpdate(125);
                             //ClientMovement.Stop = true;
                             ClientMovement.AtPos = false;
-                            if (needsLift) ClientMovement.UpPos = true;
+                          //  if (needsLift) ClientMovement.UpPos = true;
                             ClientMovement.NudgeAtPos = true;
                             SendUpdate(100);
                             ClientMovement.NudgeAtPos = false;
@@ -1167,7 +1177,7 @@ namespace cogbot.TheOpenSims
                         }
                         else
                         {
-                            if (needsLift) ClientMovement.UpPos = true;
+                          //  if (needsLift) ClientMovement.UpPos = true;
                             ClientMovement.AtPos = true;
                             ClientMovement.UpdateInterval = 0;
                             SendUpdate(MyRandom.Next(25, 100));

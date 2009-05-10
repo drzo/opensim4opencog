@@ -25,6 +25,8 @@ namespace cogbot.Listeners
         public static bool MaintainSounds = false;
         public static bool MaintainAttachments = false;
         public static bool MaintainCollisions = true;
+        public static bool SimplifyBoxes = false;  // true takes longer startup but speeds up runtime path finding
+        
 
 
         public static implicit operator GridClient(WorldObjects m)

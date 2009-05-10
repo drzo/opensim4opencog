@@ -47,7 +47,7 @@ namespace PathSystem3D.Navigation
         public static int DebugLevel = 0;
         public string RegionName { get; set; }
         // util
-        static public void TrianglesToBoxes(IList<Triangle> tl, Box3Fill OuterBox, Vector3 padXYZ, IList<CollisionObject> InnerBoxes)
+        static public void TrianglesToBoxes(IList<Triangle> tl, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
         {
             int tc = tl.Count;
             AddTrianglesV32(tl, tc, OuterBox, padXYZ, InnerBoxes);
@@ -369,8 +369,8 @@ namespace PathSystem3D.Navigation
                 }
             }
         }
-        private static void AddTrianglesV32(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ, 
-            IList<CollisionObject> InnerBoxes)
+        private static void AddTrianglesV32(IList<Triangle> ts, int len, Box3Fill OuterBox, Vector3 padXYZ,
+            IList<Box3Fill> InnerBoxes)
         {
             Triangle t1 = ts[0];
             Triangle t2 = ts[len - 1];
@@ -596,7 +596,7 @@ namespace PathSystem3D.Navigation
         public SimZLevel GroundLevelDelegate = null;//delegate(float x, float y) { return 10; };
 
         // setup
-        void AddBoxes(IComparable id, IList<CollisionObject> boxes)
+        void AddBoxes(IComparable id, IList<Box3Fill> boxes)
         {
             Box3Fill Outer = new Box3Fill(true);
 
@@ -665,7 +665,7 @@ namespace PathSystem3D.Navigation
             }
         }
 
-        public void SetBlockedTemp(Vector3 cp, Vector3 v3)
+        public void SetBlockedTemp(Vector3 cp, Vector3 v3, float time)
         {
             Point P1 = ToPoint(cp);
             Vector3 offset = v3 - cp;
@@ -689,8 +689,9 @@ namespace PathSystem3D.Navigation
             float y = UNARRAY_Y(Last.Y);
             Vector3 v3o = new Vector3(x, y, v3.Z);
 
-
-            BlockPointTemp(v3o);
+                          
+            List<ThreadStart> undo = new List<ThreadStart>();
+            BlockPointTemp(v3o,undo);
             double A45 = 45f / RAD2DEG;
             Debug("BlockTowardsVector {0}", Vector3.Distance(cp,v3o));
             Vector3 middle = ZAngleVector(ZAngle) * Dist;
@@ -703,15 +704,25 @@ namespace PathSystem3D.Navigation
             Dist = 0.4f;
             //ZAngle -= (90 / SimPathStore.RAD2DEG);
 
-            BlockPointTemp(ZAngleVector(ZAngle - A45 * 1.5) * Dist + cp);
-            BlockPointTemp(ZAngleVector(ZAngle - A45) * Dist + cp);
-            BlockPointTemp(ZAngleVector(ZAngle - A45 * 0.5) * Dist + cp);
+            BlockPointTemp(ZAngleVector(ZAngle - A45 * 1.5) * Dist + cp, undo);
+            BlockPointTemp(ZAngleVector(ZAngle - A45) * Dist + cp, undo);
+            BlockPointTemp(ZAngleVector(ZAngle - A45 * 0.5) * Dist + cp, undo);
 
-            BlockPointTemp(ZAngleVector(ZAngle) * Dist + cp);
+            BlockPointTemp(ZAngleVector(ZAngle) * Dist + cp, undo);
 
-            BlockPointTemp(ZAngleVector(ZAngle + A45 * 0.5) * Dist + cp);
-            BlockPointTemp(ZAngleVector(ZAngle + A45) * Dist + cp);
-            BlockPointTemp(ZAngleVector(ZAngle + A45 * 1.5) * Dist + cp);
+            BlockPointTemp(ZAngleVector(ZAngle + A45 * 0.5) * Dist + cp, undo);
+            BlockPointTemp(ZAngleVector(ZAngle + A45) * Dist + cp, undo);
+            BlockPointTemp(ZAngleVector(ZAngle + A45 * 1.5) * Dist + cp, undo);
+
+            if (undo.Count > 0)
+                new Thread(() =>
+                {
+                    Thread.Sleep((int)(time*1000));
+                    foreach (ThreadStart u in undo)
+                    {
+                        u();
+                    }
+                }).Start();
             //Don't Run back (anymore)
             //MoveTo(cp + ZAngleVector(ZAngle - Math.PI) * 2, 1f, 2);
         }
@@ -721,7 +732,7 @@ namespace PathSystem3D.Navigation
         /// However! if the point is of questionable quality it will permanently block it
         /// </summary>
         /// <param name="vector3"></param>
-        internal void BlockPointTemp(Vector3 vector3)
+        internal void BlockPointTemp(Vector3 vector3, List<ThreadStart> undo)
         {
             CollisionPlane CP = FindCollisionPlane(vector3.Z);
             if (CP != null)
@@ -734,15 +745,17 @@ namespace PathSystem3D.Navigation
                 {
                     CP.ByteMatrix[ix, iy] = BLOCKED;
                     Debug("Permanently blocking off " + vector3);
-                } else
+                }
+                else
                 {
                     // this is for the second time around
                     CP.ByteMatrix[ix, iy] = BLOCK_PURPLE;
                 }
+                CollisionIndex CI = CreateFirstNode(vector3.X, vector3.Y);
+                CI.SetNodeQualityTimer(CP, BLOCKED, undo);
             }
-
-
-            SetNodeQualityTimer(vector3, BLOCKED, 60);
+            else
+                SetNodeQualityTimer(vector3, BLOCKED, 60);
         }
 
         private float _WaterHeight = Single.MinValue;
@@ -919,7 +932,7 @@ namespace PathSystem3D.Navigation
                     if (Math.Abs(NZ - zl) < 0.2)
                     {
                         CollisionIndex CI = GetCollisionIndex(NX, NY);
-                        if (CI.IsTimerTicking) return 0;
+                      //  if (CI.IsTimerTicking) return 0;
                         RestoreBlocked.Add(CI);
                         return 1;
                     }
@@ -931,7 +944,7 @@ namespace PathSystem3D.Navigation
                 Debug("Clearing small area " + v3);
                 foreach (CollisionIndex CI in RestoreBlocked)
                 {
-                    CI.IsTimerTicking = true;
+                  //  CI.IsTimerTicking = true;
                     CI.SetMatrixForced(CP,MAYBE_BLOCKED);
                 }
                 new Thread(() =>
@@ -939,7 +952,7 @@ namespace PathSystem3D.Navigation
                     Thread.Sleep(30000);
                     foreach (CollisionIndex CI in RestoreBlocked)
                     {
-                        CI.IsTimerTicking = false;
+                       // CI.IsTimerTicking = false;
                         CI.SetMatrixForced(CP, BLOCKED);
                     }
                 });
@@ -1093,8 +1106,18 @@ namespace PathSystem3D.Navigation
             SimPathStore PathStore = GetPathStore3D(vector3);
             Point P = PathStore.ToPoint(vector3);
             CollisionIndex WP = PathStore.GetCollisionIndex(P.X, P.Y);
+            List<ThreadStart> undo = new List<ThreadStart>();
             foreach (CollisionPlane CP in PathStore.CollisionPlanesFor(vector3.Z))
-                WP.SetNodeQualityTimer(CP, value, seconds);
+                WP.SetNodeQualityTimer(CP, value, undo);
+            if (undo.Count > 0)
+                new Thread(() =>
+                               {
+                                   Thread.Sleep(seconds*1000);
+                                   foreach (ThreadStart u in undo)
+                                   {
+                                       u();
+                                   }
+                               }).Start();
         }
 
         private IEnumerable<CollisionPlane> CollisionPlanesFor(float z)
@@ -2053,7 +2076,7 @@ namespace PathSystem3D.Navigation
                 if (panel != null) panel.SetStartEnd(S, E);
                 // pff.Diagonals = false;
                 //pff.ReopenCloseNodes = true;
-                pff.SearchLimit = 100000000;
+                pff.SearchLimit = 100000000;     // took off 2 0s
                 pff.PunishChangeDirection = PunishChangeDirection;
                 pfn = pff.FindPath(S, E);
                 pff = null;

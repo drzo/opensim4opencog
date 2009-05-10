@@ -41,7 +41,7 @@ namespace PathSystem3D.Mesher
 
     public interface IMeshedObject : CollisionObject
     {
-        IList<CollisionObject> InnerBoxes { get; }
+        IList<Box3Fill> InnerBoxes { get; }
         Box3Fill OuterBox {get;}
       //  bool IsSolid { get; }
         void RegionTaintedThis();
@@ -127,7 +127,7 @@ namespace PathSystem3D.Mesher
         //    return SomethingMaxZ(vector3.X, vector3.Y, low, high, out maxZ);
         //}
 
-        List<SimPathStore> SimPathStoresOccupied = new List<SimPathStore>();
+        protected SimPathStore PathStore { get; set; }// = new List<SimPathStore>();
         public static bool MeshOnlySolids = false;
 
         public virtual bool UpdateOccupied(SimPathStore pathStore)
@@ -139,53 +139,39 @@ namespace PathSystem3D.Mesher
             }
             if (!UpdateMeshPaths) return false;
             if (MeshOnlySolids && !IsSolid) return false;
+            if (InnerBoxes == null) return false;
             if (InnerBoxes.Count == 0) return false;
             if (!IsRegionAttached()) return false;
             int t1;
             try
             {
-                lock (SimPathStoresOccupied)
+                //lock (PathStore)
                 {
-                    if (SimPathStoresOccupied.Contains(pathStore)) return false;
-                    SimPathStoresOccupied.Add(pathStore);
+                    if (PathStore == pathStore) return false;
+                    PathStore = pathStore;//.Add(pathStore);
                     if (tryFastVersion)
                     {
                         //                UpdatePathOccupiedFast(PathStore);
                         int tc = Environment.TickCount;
                         UpdatePathOccupiedVeryFast(pathStore);
                         t1 = Environment.TickCount - tc;
+                        InnerBoxes = null;
                         //  Console.WriteLine("t1 vs t2 = " + t1 );
                         return true;
                     }
                 }
                 ForceUpdatePathOccupied(pathStore);
+                return true;
             }
             catch (Exception e)
             {
-                lock (SimPathStoresOccupied)
+              //  lock (PathStore)
                 {
-                    SimPathStoresOccupied.Remove(pathStore);
+                    PathStore = null;//.Remove(pathStore);
                 }
+                return false;
             };
-            return true;
-            int t2;
-            {
-                //  SetOccupied(SetLocated, float.MinValue, float.MaxValue, PathStore.StepSize);
-                int tc = Environment.TickCount;
-                // 10 60
-                SetOccupied(SetLocatedOld, float.MinValue, float.MaxValue, pathStore.StepSize);
-                t2 = Environment.TickCount - tc;
-            }
-            this.PathStore = pathStore;
-            // Console.WriteLine("t1 vs t2 = " + t1 + " vs " + t2);
-            // Mesh = null;
-            return true;
         }
-
-
-        public SimPathStore PathStore { get; set; }
-
-        List<CollisionIndex> OccupiedWPs = new List<CollisionIndex>();
 
         public bool IsInside(Vector3 L)
         {
@@ -202,45 +188,62 @@ namespace PathSystem3D.Mesher
 
         protected void RemoveCollisions(SimPathStore simPathStore)
         {
+            if (simPathStore != PathStore) return;
             Box3Fill changed = new Box3Fill(true);
             RemoveFromWaypoints(changed);
             simPathStore.Refresh(changed);            
         }
 
+
         public void RemoveFromWaypoints(Box3Fill changed)
         {
-            lock (OccupiedWPs)
+            float detail = PathStore.StepSize;// -0.001f;
+            float MinX = OuterBox.MinX;
+            float MaxX = OuterBox.MaxX;
+            float MinY = OuterBox.MinY;
+            float MaxY = OuterBox.MaxY;
+
+            float MinZ = OuterBox.MinZ;
+            float MaxZ = OuterBox.MaxZ;
+
+            changed.AddPoint(MinX, MinY, MinZ, Vector3.Zero);
+            changed.AddPoint(MaxX, MaxY, MaxZ, Vector3.Zero);
+
+            for (float x = MinX; x <= MaxX; x += detail)
             {
-//                SimPathStore S = GetPathStore();
-                foreach (CollisionIndex P in OccupiedWPs)
+                for (float y = MinY; y <= MaxY; y += detail)
                 {
-                    Vector3 Pos = P.GetSimPosition();
-                    changed.AddPoint(Pos.X, Pos.Y, Pos.Z, Vector3.Zero);
-                    P.RemoveObject(this);
+                    RemoveFromWaypoint(x, y, MinZ, MaxZ);
                 }
-                OccupiedWPs.Clear();
             }
+            RemoveFromWaypoint(MaxX, MaxY, MinZ, MaxZ);
         }
 
-        public void ForceUpdatePathOccupied(SimPathStore PathStore)
+        private void RemoveFromWaypoint(float MaxX, float MaxY, float MinZ, float MaxZ)
+        {
+            CollisionIndex I = PathStore.CreateFirstNode(MaxX, MaxY);
+            I.RemoveObject(this);
+        }
+
+        public void ForceUpdatePathOccupied(SimPathStore pathStore)
         {
             if (!IsRegionAttached()) return;
             // if (!IsSculpted)
             {
-                UpdateOccupied(PathStore);
+                UpdateOccupied(pathStore);
                 return;
             }
             new Thread(new ThreadStart(delegate()
             {
                 try
                 {
-                    UpdateOccupied(PathStore);
+                    UpdateOccupied(pathStore);
                 }
                 catch (Exception)
                 {
-                    lock (SimPathStoresOccupied)
+                    //lock (PathStore)
                     {
-                        SimPathStoresOccupied.Remove(PathStore);
+                        PathStore=null;//.Remove(PathStore);
                     }
                 }
             })).Start();
@@ -252,29 +255,9 @@ namespace PathSystem3D.Mesher
 
 
 
-        private void UpdatePathOccupiedVeryFast(SimPathStore PathStore)
+        private void UpdatePathOccupiedVeryFast(SimPathStore pathStore)
         {
-            float detail = PathStore.StepSize;// -0.001f;
-            float MinX = OuterBox.MinX;
-            float MaxX = OuterBox.MaxX;
-            float MinY = OuterBox.MinY;
-            float MaxY = OuterBox.MaxY;
-
-            float MinZ = OuterBox.MinZ;
-            float MaxZ = OuterBox.MaxZ;
-
-            for (float x = MinX; x <= MaxX; x += detail)
-            {
-                for (float y = MinY; y <= MaxY; y += detail)
-                {                    
-                        SetLocatedOld(x, y, MinZ, MaxZ);
-                }
-            }
-            SetLocatedOld(MaxX, MaxY, MinZ, MaxZ);
-        }
-        private void UpdatePathOccupiedFast(SimPathStore PathStore)
-        {
-            float detail = PathStore.StepSize;// -0.001f;
+            float detail = pathStore.StepSize; // -0.001f;
             float MinX = OuterBox.MinX;
             float MaxX = OuterBox.MaxX;
             float MinY = OuterBox.MinY;
@@ -287,32 +270,38 @@ namespace PathSystem3D.Mesher
             {
                 for (float y = MinY; y <= MaxY; y += detail)
                 {
-                    if (xyInside(x, y))
-                        SetLocatedOld(x, y, MinZ, MaxZ);
+                    PathStore.SetObjectAt(x, y, this, MinZ, MaxZ); //return true;
                 }
             }
-            SetLocatedOld(MaxX, MaxY, MinZ, MaxZ);
+            PathStore.SetObjectAt(MaxX, MaxY, this, MinZ, MaxZ);
         }
-
-        private bool xyInside(float x, float y)
+        private void UpdatePathOccupiedFast(SimPathStore pathStore)
         {
-            foreach (CollisionObject B in InnerBoxes)
-            {
-                if (B.IsInsideXY(x, y)) return true;
-            }
-            return false;
-        }
+            float detail = pathStore.StepSize; // -0.001f;
+            float MinX = OuterBox.MinX;
+            float MaxX = OuterBox.MaxX;
+            float MinY = OuterBox.MinY;
+            float MaxY = OuterBox.MaxY;
 
-        public void SetLocatedOld(float x, float y, float minZ, float maxZ)
-        {
-            //SimPathStore PathStore = GetPathStore();
-            CollisionIndex P = PathStore.SetObjectAt(x, y, this, minZ, maxZ);
-            return;
-            lock (OccupiedWPs)
+            float MinZ = OuterBox.MinZ;
+            float MaxZ = OuterBox.MaxZ;
+
+            for (float x = MinX; x <= MaxX; x += detail)
             {
-                if (OccupiedWPs.Contains(P)) return;
-                OccupiedWPs.Add(P);
+                for (float y = MinY; y <= MaxY; y += detail)
+                {
+                    foreach (CollisionObject B in InnerBoxes)
+                    {
+                        if (B.IsInsideXY(x, y))
+                        {
+                            PathStore.SetObjectAt(x, y, this, MinZ, MaxZ); //return true;
+                            break;
+
+                        }
+                    }
+                }
             }
+            PathStore.SetObjectAt(MaxX, MaxY, this, MinZ, MaxZ);
         }
 
 
@@ -322,14 +311,6 @@ namespace PathSystem3D.Mesher
             maxLevel = double.MaxValue;
         }
 
-        public virtual bool UpdateOccupied()
-        {
-            if (IsRegionAttached())
-            {
-                return UpdateOccupied(PathStore);
-            }
-            return false;
-        }
 
         //   public static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -337,14 +318,14 @@ namespace PathSystem3D.Mesher
 
         public Box3Fill OuterBox { get; set; }
 
-        public IList<CollisionObject> InnerBoxes { get; set; }//  = new List<Box3Fill>();
+        public IList<Box3Fill> InnerBoxes { get; set; }//  = new List<Box3Fill>();
 
 
-        public MeshedObject(Box3Fill o, IList<CollisionObject> i, SimPathStore R)
+        public MeshedObject(Box3Fill o, IList<Box3Fill> i, SimPathStore R)
         {
             OuterBox = o;
             InnerBoxes = i;
-            PathStore = R;
+            PathStore = null;// R;
         }
 
         private static int SharedVertexs(Triangle t1, Triangle t2)

@@ -521,10 +521,10 @@ namespace PathSystem3D.Navigation
                 ComputeLandingHeights();
 #else
             //todo is silly to lock?            lock (this)
-            if (!Monitor.TryEnter(this, 10))
-            {
-                SimPathStore.Debug("Someone is locking? " + this);
-            }
+            //if (!Monitor.TryEnter(this, 10))
+            //{
+            //    SimPathStore.Debug("Someone is locking? " + this);
+            //}
             //lock (this)
             {
                 if (!HeightMapNeedsUpdate) return;
@@ -556,14 +556,15 @@ namespace PathSystem3D.Navigation
         {
             float testPlane = GroundPlane[x, y];
 
+            CollisionIndex W = MeshIndex[x, y];
+            if (W == null) return testPlane;
+
             if (testPlane + 2f < MinZ)
             {
                 testPlane = MinZ - 2;
             }
             //Heights[x, y] = testPlane;
 
-            CollisionIndex W = MeshIndex[x, y];
-            if (W == null) return testPlane;
 
             float level;
             if (W.OpenCapsuleAt(testPlane, testPlane + 16f, CollisionIndex.CapsuleZ, out level))
@@ -740,13 +741,27 @@ namespace PathSystem3D.Navigation
             CollisionIndex[,] MeshIndex = PathStore.MeshIndex;
 
             int xs = PathStore.ARRAY_X(changed.MinX);
+            if (xs < 0) xs = 0;
             int xe = PathStore.ARRAY_X(changed.MaxX);
+            int xend = MaxXPt - 1;
+            if (xe > xend) xe = xend;
             int ys = PathStore.ARRAY_Y(changed.MinY);
+            if (ys < 0) ys = 0;
             int ye = PathStore.ARRAY_Y(changed.MaxY);
+            int yend = MaxYPt - 1;
+            if (ye > yend) ye = yend;
 
             for (int x = xs; x <= xe; x++)
                 for (int y = ys; y <= ye; y++)
                     Heights[x, y] = DefaultHeight(x, y, GroundPlane, Heights, MeshIndex);
+
+            if (xs < 1) xs = 1;
+            xend = MaxXPt - 2;
+            if (xe > xend) xe = xend;
+            if (ys < 1) ys = 1;
+            yend = MaxYPt - 2;
+            if (ye > yend) ye = yend;
+
             for (int x = xs; x <= xe; x++)
                 for (int y = ys; y <= ye; y++)
                     ToMatrix[x, y] = DefaultCollisionValue(x, y, BumpConstraint, GroundPlane, ToMatrix[x, y],
@@ -766,10 +781,19 @@ namespace PathSystem3D.Navigation
             int ys = PathStore.ARRAY_Y(changed.MinY);
             int ye = PathStore.ARRAY_Y(changed.MaxY);
 
+            if (xs < 1) xs = 1;
+            int xend = MaxXPt - 2;
+            if (xe > xend) xe = xend;
+            if (ys < 1) ys = 1;
+            int yend = MaxYPt - 2;
+            if (ye > yend) ye = yend;
+
+
             for (int x = xs; x <= xe; x++)
                 for (int y = ys; y <= ye; y++)
                     ToMatrix[x, y] = DefaultCollisionValue(x, y, BumpConstraint, GroundPlane, ToMatrix[x, y],
                                                            Heights, MeshIndex);
+            AddEdgeBlocking(ToMatrix);
         }
 
         public double GetHeight(Vector3 local)

@@ -1128,7 +1128,7 @@ namespace cogbot.TheOpenSims
                 }
                 return _Mesh;
             }
-            set { _Mesh = value; }
+           // set { _Mesh = value; }
         }
 
 
@@ -1482,7 +1482,7 @@ namespace cogbot.TheOpenSims
         SimObjectType IsTypeOf(SimObjectType superType);
         bool MakeEnterable(PathSystem3D.Navigation.SimMover actor);
         bool Matches(string name);
-        SimMesh Mesh { get; set; }
+        SimMesh Mesh { get; }
         SimObject Parent { get; }
         double RateIt(BotNeeds needs);
         void ResetPrim(OpenMetaverse.Primitive prim);

@@ -45,13 +45,13 @@ namespace cogbot.TheOpenSims
         public Primitive Prim;
 
         public SimMesh(MeshableObject simObject, Primitive prim, SimPathStore PS)
-            : base(new Box3Fill(true), new List<CollisionObject>(), PS)
+            : base(new Box3Fill(true), new List<Box3Fill>(), PS)
         {
             RootObject = simObject;
             Prim = prim;
             Update(RootObject);
         }
-        protected SimMesh(Box3Fill o, IList<CollisionObject> i, SimPathStore R)
+        protected SimMesh(Box3Fill o, IList<Box3Fill> i, SimPathStore R)
             : base(o, i, R)
         {
             
@@ -70,12 +70,7 @@ namespace cogbot.TheOpenSims
         {
             RemoveFromWaypoints(changed);
             Update(RootObject);
-            UpdateOccupied(GetPathStore());
-        }
-
-        public SimPathStore GetPathStore()
-        {
-            return PathStore;
+            UpdateOccupied(PathStore);
         }
 
         public override bool IsRegionAttached()
@@ -121,9 +116,9 @@ namespace cogbot.TheOpenSims
         {
             if (!WorldObjects.MaintainCollisions) return false;
             if (!simObject.IsRegionAttached()) return false;
-            if (MeshOnlySolids && !((MeshableObject)simObject).IsSolid) return false;
+            if (MeshOnlySolids && !((MeshableObject) simObject).IsSolid) return false;
             Quaternion Rotation = simObject.GetSimRotation();
-            Vector3 Scale = Prim.Scale;//.GetSimScale();
+            Vector3 Scale = Prim.Scale; //.GetSimScale();
             Vector3 Position = simObject.GetSimPosition();
 
 #if COLLIDER_ODE  
@@ -149,7 +144,7 @@ namespace cogbot.TheOpenSims
             // Add High PrimMesh (IdealistViewer code)
 
             Mesh mesh = PrimitiveToMesh(Prim, Scale, Rotation);
-            
+
 #if COLLIDER_ODE  
             this.mesh = mesh;
             if (!RootObject.IsPhantom)
@@ -176,9 +171,13 @@ namespace cogbot.TheOpenSims
             InnerBoxes.Clear();
             OuterBox.Reset();
             CalcBoxesFromMeshes(mesh, InnerBoxes);
-            // int b = InnerBoxes.Count;
-           // InnerBoxes = Box3Fill.Simplify((List<Box3Fill>)InnerBoxes);
-            // Console.Write("Simplfy mesh {0} -> {1} ", b, InnerBoxes.Count);
+            if (WorldObjects.SimplifyBoxes)
+            {
+                //int b = InnerBoxes.Count;
+                InnerBoxes = Box3Fill.Simplify((List<Box3Fill>) InnerBoxes);
+               // Console.Write("Simplfy mesh {0} -> {1} ", b, InnerBoxes.Count);
+            }
+
             AddPos(Position);
 #if COLLIDER_TRIANGLE
             triangles = mesh.triangles;
@@ -216,7 +215,7 @@ namespace cogbot.TheOpenSims
         static float UseLowDetailSize = 1f;//3f;
         static bool UseViewerMode = false;
 
-        void CalcBoxesFromMeshes(Mesh M, IList<CollisionObject> innerBoxes)
+        void CalcBoxesFromMeshes(Mesh M, IList<Box3Fill> innerBoxes)
         {
 #if COLLIDER_TRIANGLE
             triangles = M.triangles;     
@@ -600,15 +599,9 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public override bool UpdateOccupied()
-        {
-            return base.UpdateOccupied(GetPathStore());
-            //throw new NotImplementedException();
-        }
-
         internal void RemoveCollisions()
         {
-            base.RemoveCollisions(GetPathStore());
+            base.RemoveCollisions(PathStore);
         }
 
         public override bool xyMaxZ(float x, float y, float z, out float zout)

@@ -109,12 +109,12 @@ namespace PathSystem3D.Navigation
             while (at < v3sLength)
             {
                 Vector3d v3 = v3s[at];
-                // try to get there first w/in StepSize 0.2f 
                 // todo was v3.Z = GetSimPosition().Z;
                 double v3Z = GetZFor(v3);
+                // try to get there first w/in StepSize 0.2f 
                 if (!MoveTo(v3, PathStore.StepSize, 3))
                 {
-                    // didn't make it but are we close enough for govt work?
+                    // didn't make it, but are we close enough for govt work?
                     if (Vector3d.Distance(GetWorldPosition(), finalTarget) < finalDistance)
                         return SimMoverState.COMPLETE;
                     // See what point in the list we are closest to
@@ -128,7 +128,7 @@ namespace PathSystem3D.Navigation
                     // Try again with distance of 0.6f
                     if (!MoveTo(v3, PathStore.StepSize*3, 2))
                     {
-                        if(false){//todo doesnt work anyways
+                        if(false){//todo does't work anyways
                             Vector3d jump = new Vector3d(v3);
                             jump.Z += 1f;
                             Mover.MoveTo(jump, 2f, 0.1f);
@@ -148,6 +148,7 @@ namespace PathSystem3D.Navigation
                         Vector3 l3 = SimPathStore.GlobalToLocal(v3);
                         Vector3d mPos = GetWorldPosition();
                         BlockTowardsVector(l3);
+                        //if (mPos.Z > v3Z) ;
                         Debug("!MoveTo: Z= {0}  {1} ", mPos.Z - v3Z, DistanceVectorString(v3));
                         MoveToPassableArround(l3);
                         return SimMoverState.TRYAGAIN;
@@ -244,7 +245,7 @@ namespace PathSystem3D.Navigation
 
         public bool MoveTo(Vector3d finalTarget, double maxDistance, int maxSeconds)
         {
-            finalTarget.Z = GetZFor(finalTarget) + 0.1f;
+            finalTarget.Z = GetZFor(finalTarget);
             return Mover.MoveTo(finalTarget, maxDistance, maxSeconds);
         }
 
@@ -318,13 +319,12 @@ namespace PathSystem3D.Navigation
         }
 
         /// <summary>
-        /// Blocks points -45 to +45 degrees in front of Bot (assumes the bot is heading toward V3)
+        /// Blocks points -45 to +45 degrees in front of Bot (assumes the bot is heading toward V3) for 45 seconds
         /// </summary>
         /// <param name="v3"></param>
         public void BlockTowardsVector(Vector3 l3)
         {
-            OpenNearbyClosedPassages();
-            PathStore.SetBlockedTemp(GetSimPosition(), l3);
+            PathStore.SetBlockedTemp(GetSimPosition(), l3, 45);
         }
 
         public virtual void OpenNearbyClosedPassages()
@@ -354,8 +354,8 @@ namespace PathSystem3D.Navigation
         public override IList<Vector3d> GetSimplifedRoute(Vector3d vstart, IList<Vector3d> v3s)
         {
             if (UsedBigZ > 0 || PreXp)
-                return SimPathStore.GetSimplifedRoute(vstart, v3s, 45, 2.2f);
-            return SimPathStore.GetSimplifedRoute(vstart, v3s, 45, 6f);
+                return SimPathStore.GetSimplifedRoute(vstart, v3s, 45, 3.2f);
+            return SimPathStore.GetSimplifedRoute(vstart, v3s, 40, 8f);
         }
 
         public override double GetZFor(Vector3d v3)
@@ -374,27 +374,19 @@ namespace PathSystem3D.Navigation
         {
             float startZ = mover.GetSimPosition().Z;
             float endZ = finalGoal.GetSimPosition().Z;
-            float MinZ = endZ;
-            float cpz = MoverPlane.MinZ;
-            if (startZ < MinZ)
-            {
-                MinZ = startZ;
-            }
-            if (cpz < MinZ)
-            {
-                MoverPlane.MinZ = MinZ;
-                MoverPlane.MaxZ = MinZ + 3;
-                MoverPlane.HeightMapNeedsUpdate = true;
-            }
-            else if (cpz > MinZ)
-            {
-                MoverPlane.MinZ = MinZ;
-                MoverPlane.MaxZ = MinZ + 3;
-                MoverPlane.HeightMapNeedsUpdate = true;
-            }
+
+               float MinZ = startZ;
+               double diff = MoverPlane.MinZ = startZ;
+            //if ()
+               MoverPlane.MinZ = MinZ;
+               MoverPlane.MaxZ = MinZ + 3;
+               if (diff > .3 || diff < -0.3f)
+               {
+                   MoverPlane.HeightMapNeedsUpdate = true;
+               }
 
             MoverPlane.WalkZLevel = mover.GetSimPosition().Z;
-            MoverPlane.WalkZLevel = finalGoal.GetSimPosition().Z;
+            //MoverPlane.WalkZLevel = finalGoal.GetSimPosition().Z;
         }
         public static Dictionary<SimMover, CollisionPlane> MoverPlanes = new Dictionary<SimMover, CollisionPlane>();
 
@@ -426,29 +418,31 @@ namespace PathSystem3D.Navigation
         private float BumpConstraint = CollisionIndex.MaxBump;
         public override SimMoverState Goto()
         {
-            if (FollowPathTo(FinalLocation, FinalDistance)) return SimMoverState.COMPLETE;
+            if (Goto(FinalLocation, FinalDistance)) return SimMoverState.COMPLETE;
             BumpConstraint -= 0.05f; // tighten constraints locally
-            if (BumpConstraint < 0.15) BumpConstraint = 0.9f;    // recycle
-            MoverPlane.ChangeConstraints(GetSimPosition(),BumpConstraint);
-            if (FollowPathTo(FinalLocation, FinalDistance))
+            if (BumpConstraint < 0.15) BumpConstraint = 0.9f; // recycle
+            MoverPlane.ChangeConstraints(GetSimPosition(), BumpConstraint);
+            if (Goto(FinalLocation, FinalDistance))
             {
+                // use new tighter constraint semipermanently
                 MoverPlane.GlobalBumpConstraint = BumpConstraint;
                 return SimMoverState.COMPLETE;
             }
-            return STATE; 
+            return STATE;
         }
 
         static private int UsedBigZ = 0;
         static private float Orig = 0;
         static private float Works = 0;
         private bool PreXp;
-        public bool FollowPathTo(Vector3d globalEnd, double distance)
+        private bool Goto(Vector3d globalEnd, double distance)
         {
             bool OnlyStart = true;
             bool MadeIt = true;
+            bool KeepTrying = true;
 
             int maxTryAgains = 0;
-            while (OnlyStart && MadeIt)
+            while (OnlyStart && KeepTrying)
             {
                 Vector3d v3d = GetWorldPosition();
                 if (Vector3d.Distance(v3d, globalEnd) < distance) return true;
@@ -456,12 +450,12 @@ namespace PathSystem3D.Navigation
                 if (G < 1f) Orig = G;
                 IList<Vector3d> route = SimPathStore.GetPath(MoverPlane, v3d, globalEnd, distance, out OnlyStart);
                 // todo need to look at OnlyStart?
-                PreXp = route.Count == 1 && G < 6f;
-                while (route.Count == 1 && G < 6f)
+                PreXp = route.Count == 1 && G < 11f;
+                while (route.Count == 1 && G < 11f)
                 {
-                    if (Works > 0) G = Works;
-                    else
-                        G += 0.5f;
+                    G += 0.5f;
+                    if (Works > G) G = Works;
+
                     MoverPlane.GlobalBumpConstraint = G;
                     route = SimPathStore.GetPath(MoverPlane, v3d, globalEnd, distance, out OnlyStart);
                 }
@@ -469,14 +463,14 @@ namespace PathSystem3D.Navigation
                 {
                     Works = G;
                     UsedBigZ++;
-                    Debug("BigG used {0} instead of {1} !!", G, Orig);
+                    Debug("BigG used {0} instead of {1} !!", G, Orig);                    
                     OnlyStart = true;
                 }
                 else
                 {  // not PreXP
                     if (UsedBigZ > 0)
                     {
-                        Works -= 0.5f;  // todo not as liberal the next time?
+                        if (Works > 0.7f) Works -= 0.5f;  // todo not as liberal the next time?
                         UsedBigZ = 0;
                         Debug("BigG RESTORE {0} instead of {1} !!", Orig, MoverPlane.GlobalBumpConstraint);
                         MoverPlane.GlobalBumpConstraint = Orig;
@@ -491,20 +485,24 @@ namespace PathSystem3D.Navigation
                             if (maxTryAgains-- > 0)
                             {
                                 OnlyStart = true;
+                                KeepTrying = true;
                                 continue;
                             }
                             MadeIt = false;
+                            KeepTrying = false;
                             continue;
                         }
                     case SimMoverState.COMPLETE:
                         {
                             MadeIt = true;
+                            KeepTrying = false;
                             continue;
                         }
                     case SimMoverState.BLOCKED:
                         {
                             OnlyStart = false;
                             MadeIt = false;
+                            KeepTrying = false;
                             continue;
                         }
                     case SimMoverState.PAUSED:
@@ -513,6 +511,7 @@ namespace PathSystem3D.Navigation
                         {
                             //MadeIt = true;
                             OnlyStart = true;
+                            KeepTrying = true;
                             continue;
                         }
                 }
