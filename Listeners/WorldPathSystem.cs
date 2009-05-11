@@ -72,7 +72,7 @@ namespace cogbot.Listeners
                         if (O.UpdateOccupied()) realUpdates++;
                     }
                     occUpdate++;
-                    if (occUpdate > 800) break;
+                    if (occUpdate > 8000) break;
                     if (occUpdate % 100 == 0)
                     {
                         Console.Write("." + occUpdate);                             
