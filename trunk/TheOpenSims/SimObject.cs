@@ -296,10 +296,20 @@ namespace cogbot.TheOpenSims
                 if (Parent == null) return true;
                 return Parent.IsPassable;
             }
-            set {
+            set
+            {
+                if (_PassableKnown)
+                {
+                    if (value && !_Passable && !WorldObjects.CanPhantomize)
+                    {
+                        Debug("Wont set IsPassable because WorldObjects.CanPhantomize=false");
+                        return;
+                    }
+                }
                 _PassableKnown = true;
                 _Passable = value;
-                if (_Mesh != null && _Mesh.IsSolid==value)
+
+                if (_Mesh != null && _Mesh.IsSolid == value)
                 {
                     _Mesh.IsSolid = !value;
                 }
@@ -318,6 +328,11 @@ namespace cogbot.TheOpenSims
             set
             {
                 if (IsPhantom == value) return;
+                if (!WorldObjects.CanPhantomize)
+                {
+                    Debug("Wont set IsPhantom because WorldObjects.CanPhantomize=false");
+                    return;
+                }
                 if (value)
                 {
                     WorldSystem.SetPrimFlags(Prim, (PrimFlags)(Prim.Flags | PrimFlags.Phantom));

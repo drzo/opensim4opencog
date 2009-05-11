@@ -19,6 +19,7 @@ namespace cogbot.Listeners
     public class WorldObjects : DebugAllEvents
     {
         public static bool CanUseSit = true;
+        public static bool CanPhantomize = false;
         public static bool MaintainObjectUpdates = false;
         public static bool MaintainAnims = false;
         public static bool MaintainEffects = false;
