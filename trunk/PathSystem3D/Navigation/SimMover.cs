@@ -53,6 +53,12 @@ namespace PathSystem3D.Navigation
         public abstract SimMoverState Goto();
         public int completedAt = 0;
 
+        // just return v3.Z if unsure
+        public virtual double GetZFor(Vector3d v3)
+        {
+            return SimPathStore.GlobalToLocal(v3).Z;
+        }
+
         public SimAbstractMover(SimMover mover, SimPosition finalGoal, double finalDistance)
         {
             Mover = mover;
@@ -90,7 +96,7 @@ namespace PathSystem3D.Navigation
             Vector3d vstart = v3s[0];
             // Vector3 vv3 = SimPathStore.GlobalToLocal(vstart);
 
-            v3s = SimPathStore.GetSimplifedRoute(vstart, v3s, 45, 2f);
+            v3s = GetSimplifedRoute(vstart, v3s);
 
             int maxReverse = 2;
             Debug("FollowPath: {0} -> {1} for {2}", v3s.Count, DistanceVectorString(finalTarget), finalDistance);
@@ -177,6 +183,11 @@ namespace PathSystem3D.Navigation
             return SimMoverState.COMPLETE;
         }
 
+        public virtual IList<Vector3d> GetSimplifedRoute(Vector3d vstart, IList<Vector3d> v3s)
+        {
+            return SimPathStore.GetSimplifedRoute(vstart, v3s, 45, 5f);
+        }
+
         public int ClosestAt(IList<Vector3d> v3s)
         {
             Vector3d newPos = GetWorldPosition();
@@ -226,11 +237,13 @@ namespace PathSystem3D.Navigation
 
         public bool MoveTo(Vector3d finalTarget, double maxDistance, int maxSeconds)
         {
+            finalTarget.Z = GetZFor(finalTarget);
             return Mover.MoveTo(finalTarget, maxDistance, maxSeconds);
         }
 
         public Vector3 MoveToPassableArround(Vector3 start)
         {
+            return start;
             if (!UseTurnAvoid)
             {
                 UseTurnAvoid = !UseTurnAvoid;
@@ -331,6 +344,21 @@ namespace PathSystem3D.Navigation
 
     public class SimCollisionPlaneMover : SimAbstractMover
     {
+
+        public override IList<Vector3d> GetSimplifedRoute(Vector3d vstart, IList<Vector3d> v3s)
+        {
+            if (UsedBigZ > 0 || PreXp)
+                return SimPathStore.GetSimplifedRoute(vstart, v3s, 20, 0.5f);
+            return  SimPathStore.GetSimplifedRoute(vstart, v3s, 45, 2f);
+        }
+
+        public override double GetZFor(Vector3d v3)
+        {
+           // return v3.Z;
+            Vector3 local = SimPathStore.GlobalToLocal(v3);
+            return MoverPlane.GetHeight(local);
+        }
+
         public override void OpenNearbyClosedPassages()
         {
             base.OpenNearbyClosedPassages();
@@ -376,7 +404,7 @@ namespace PathSystem3D.Navigation
         private float BumpConstraint = CollisionIndex.MaxBump;
         public override SimMoverState Goto()
         {
-            if (GotoOld(FinalLocation, FinalDistance)) return SimMoverState.COMPLETE;
+            if (Goto(FinalLocation, FinalDistance)) return SimMoverState.COMPLETE;
             return STATE;
             BumpConstraint -= 0.05f; // tighten constraints locally
             if (BumpConstraint < 0.15) BumpConstraint = 0.9f; // recycle
@@ -401,7 +429,7 @@ namespace PathSystem3D.Navigation
             bool KeepTrying = true;
 
             int maxTryAgains = 0;
-            while (OnlyStart && KeepTrying)
+            while (OnlyStart && MadeIt)
             {
                 Vector3d v3d = GetWorldPosition();
                 if (Vector3d.Distance(v3d, globalEnd) < distance) return true;
@@ -437,31 +465,27 @@ namespace PathSystem3D.Navigation
                 }
                 STATE = FollowPathTo(route, globalEnd, distance);
                 Vector3 newPos = GetSimPosition();
-                switch (STATE)
+                           switch (STATE)
                 {
                     case SimMoverState.TRYAGAIN:
                         {
                             if (maxTryAgains-- > 0)
                             {
                                 OnlyStart = true;
-                                KeepTrying = true;
                                 continue;
                             }
                             MadeIt = false;
-                            KeepTrying = false;
                             continue;
                         }
                     case SimMoverState.COMPLETE:
                         {
                             MadeIt = true;
-                            KeepTrying = false;
                             continue;
                         }
                     case SimMoverState.BLOCKED:
                         {
                             OnlyStart = false;
                             MadeIt = false;
-                            KeepTrying = false;
                             continue;
                         }
                     case SimMoverState.PAUSED:
@@ -470,11 +494,11 @@ namespace PathSystem3D.Navigation
                         {
                             //MadeIt = true;
                             OnlyStart = true;
-                            KeepTrying = true;
                             continue;
                         }
                 }
 
+            
             }
             return MadeIt;
         }
@@ -485,7 +509,7 @@ namespace PathSystem3D.Navigation
             bool OnlyStart = true;
             bool MadeIt = true;
 
-            int maxTryAgains = 0;
+            int maxTryAgains = 1;
             while (OnlyStart && MadeIt)
             {
                 Vector3d v3d = GetWorldPosition();

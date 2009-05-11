@@ -183,7 +183,7 @@ namespace cogbot.TheOpenSims
 
         public override string DebugInfo()
         {
-            String s = String.Format("\n{0}" ,ToString());
+            String s = String.Format("\n{0}", ToString());
             List<SimObject> KnowsAboutList = GetKnownObjects();
             KnowsAboutList.Sort(CompareObjects);
             s += String.Format("\nCurrentAction: {0}", CurrentAction);
@@ -745,17 +745,17 @@ namespace cogbot.TheOpenSims
             BotClient Client = GetGridClient();
             AnimThread animThread = new AnimThread(Client.Self, anim);
             return () =>
-                       {
-                           try
-                           {
-                               animThread.Start();
-                               closure.Invoke();
-                           }
-                           finally
-                           {
-                               animThread.Stop();
-                           }
-                       };
+            {
+                try
+                {
+                    animThread.Start();
+                    closure.Invoke();
+                }
+                finally
+                {
+                    animThread.Stop();
+                }
+            };
         }
 
         public UUID FindAnimUUID(string use)
@@ -974,6 +974,7 @@ namespace cogbot.TheOpenSims
             // if (!MoveTo(obj.GetWorldPosition(), obj.GetSizeDistance() + 0.5f, 12))
             {
                 GotoTarget(obj);
+                TurnToward(obj);
             }
             if (UnPhantom != null)
                 UnPhantom.RestoreEnterable(this);
@@ -983,14 +984,14 @@ namespace cogbot.TheOpenSims
 
         readonly object TrackerLoopLock = new object();
 
-        bool stopFlyingNext = false;
-
         void TrackerLoop()
         {
             Boolean stopNext = false;
             while (true)
             {
 
+                Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
+                Client.Self.Movement.AutoResetControls = true;
                 Vector3d targetPosition = ApproachVector3D;
                 lock (TrackerLoopLock)
                 {
@@ -1003,11 +1004,11 @@ namespace cogbot.TheOpenSims
                             continue;
                         }
                     }
-                    if (ApproachPosition!=null)
+                    if (ApproachPosition != null)
                     {
                         targetPosition = ApproachPosition.GetWorldPosition();
                     }
-                    
+
                 }
                 double realTargetZ = targetPosition.Z;
                 Vector3d worldPosition = GetWorldPosition();
@@ -1022,27 +1023,33 @@ namespace cogbot.TheOpenSims
                     float WaterHeight = R.WaterHeight();
                     float selfZ = ClientSelf.SimPosition.Z;
                     double UpDown = realTargetZ - selfZ;
-                    bool needsLift = false;
 
                     double ZDist = Math.Abs(UpDown);
-                    if (UpDown > 0.5f) // todo is this enough lift to climb out of a hole?
+                    // Like water areas
+                    bool swimming = WaterHeight > selfZ;
+
+                    if (UpDown > .5f)
                     {
-                        targetPosition.Z = realTargetZ;
-                        needsLift = true;
-                        // todo else: selfZ + 0.2f; // incline upward
+                        targetPosition.Z = realTargetZ;// selfZ + 0.2f; // incline upward
+                        if (!ClientMovement.Fly)
+                        {
+                            Debug("Starting to fly");
+                            ClientMovement.Fly = true;
+                            SendUpdate(10);
+                            //  selfZ = realTargetZ;
+                            TurnToward(targetPosition);
+                            ClientMovement.AtPos = true;
+                            SendUpdate(10);
+                            ApproachVector3D = targetPosition;
+//                            continue;
+                        }
                     }
                     else
                     {
-                        if (stopFlyingNext && UpDown < 0.2f)
-                        {
-                            ClientMovement.Fly = false;
-                            stopFlyingNext = false;
-                        }
+                        ClientMovement.Fly = false;
                         targetPosition.Z = selfZ;
                     }
 
-                    // Like water areas
-                    bool swimming = WaterHeight > selfZ;
 
                     // Reset previous Z 
                     ClientMovement.FastUp = false;
@@ -1051,115 +1058,100 @@ namespace cogbot.TheOpenSims
                     ClientMovement.NudgeUpPos = false;
                     ClientMovement.NudgeUpNeg = false;
 
-
                     double curXYDist = Vector3d.Distance(worldPosition, new Vector3d(targetPosition.X, targetPosition.Y, selfZ));
 
                     double curDist = Vector3d.Distance(worldPosition, targetPosition);
 
-
-                    if (needsLift)
+                    if (swimming)
                     {
-                        if (!stopFlyingNext) stopFlyingNext = !ClientMovement.Fly;
-                        ClientMovement.Fly = true;
-                        if (needsLift) ClientMovement.UpPos = true;
-                        SendUpdate(100);
-
-                    }
-                    else
-                    {
-                        if (swimming)
-                        {
-                            // WaterHeight = WaterHeight - 1f;
-                            //if (!ClientMovement.Fly)
-                            //{
-                            //    ClientMovement.Fly = false;
-                            //}
-
-                            bool nudgeUpDownMoves = true;
-
-                            if (selfZ > WaterHeight - 0.5)
-                            {
-                                // Bob downward
-                                if (nudgeUpDownMoves)
-                                    ClientMovement.NudgeUpNeg = true;
-                                else
-                                    ClientMovement.UpNeg = true;
-                                SendUpdate(10);
-                                //
-                                //  continue; //to keep going up
-                            }
-                            else
-                            {
-                                //  nudge = !nudge;
-                                if (selfZ < WaterHeight - 2.5)
-                                {
-                                    // Bob upward
-                                    if (nudgeUpDownMoves)
-                                        ClientMovement.NudgeUpPos = true;
-                                    else
-                                        ClientMovement.UpPos = true;
-                                    SendUpdate(10);
-                                    //   continue; //to keep going up
-                                }
-                            }
-                            targetPosition.Z = WaterHeight - 0.25f;
-                        }
-
-                        if (swimming)
-                            ClientMovement.Fly = swimming;
-                                // todo ||  GetPathStore().IsFlyZone(SimPathStore.GlobalToLocal(worldPosition));
-
-                        if (swimming)
-                        {
-                            // Reset previous Z 
-                            ClientMovement.FastUp = false;
-                            ClientMovement.UpPos = false;
-                            ClientMovement.UpNeg = false;
-                            ClientMovement.NudgeUpPos = false;
-                            ClientMovement.NudgeUpNeg = false;
-                            SendUpdate(10);
-                        }
-
-
-                        //// Little Jumps
-                        if (ZDist*2 > curDist)
-                        {
-                            if (!ClientMovement.Fly)
-                            {
-                                if (UpDown > 0)
-                                {
-                                    ClientMovement.NudgeUpPos = true;
-                                    SendUpdate(10);
-                                    ClientMovement.NudgeUpPos = false;
-                                }
-                            }
-                        }
-                        //else
+                        // WaterHeight = WaterHeight - 1f;
+                        //if (!ClientMovement.Fly)
                         //{
-                        //    if (ClientMovement.Fly)
-                        //    {
-                        //        ClientMovement.NudgeUpPos = false;
-                        //        // ClientSelf.Fly(false);
-                        //        ClientMovement.Fly = false;
-                        //    }
+                        //    ClientMovement.Fly = false;
                         //}
+
+                        bool nudgeUpDownMoves = true;
+
+                        if (selfZ > WaterHeight - 0.5)
+                        {
+                            // Bob downward
+                            if (nudgeUpDownMoves)
+                                ClientMovement.NudgeUpNeg = true;
+                            else
+                                ClientMovement.UpNeg = true;
+                            SendUpdate(10);
+                            //
+                            //  continue; //to keep going up
+                        }
+                        else
+                        {
+                            //  nudge = !nudge;
+                            if (selfZ < WaterHeight - 2.5)
+                            {
+                                // Bob upward
+                                if (nudgeUpDownMoves)
+                                    ClientMovement.NudgeUpPos = true;
+                                else
+                                    ClientMovement.UpPos = true;
+                                SendUpdate(10);
+                                //   continue; //to keep going up
+                            }
+                        }
+                        targetPosition.Z = WaterHeight - 0.25f;
                     }
+
+                    //if ()//ClientMovement.Fly = swimming;// todo ||  GetPathStore().IsFlyZone(SimPathStore.GlobalToLocal(worldPosition));
+
+                    if (swimming)
+                    {
+                        ClientMovement.Fly = true;
+                        // Reset previous Z 
+                        ClientMovement.FastUp = false;
+                        ClientMovement.UpPos = false;
+                        ClientMovement.UpNeg = false;
+                        ClientMovement.NudgeUpPos = false;
+                        ClientMovement.NudgeUpNeg = false;
+                        SendUpdate(10);
+                    }
+
+                    //// Little Jumps
+                    if (ZDist * 2 > curDist)
+                    {
+                        if (!ClientMovement.Fly)
+                        {
+                            if (UpDown > 0)
+                            {
+                                ClientMovement.NudgeUpPos = true;
+                                SendUpdate(10);
+                                ClientMovement.NudgeUpPos = false;
+                            }
+                        }
+                    }
+                    //else
+                    //{
+                    //    if (ClientMovement.Fly)
+                    //    {
+                    //        ClientMovement.NudgeUpPos = false;
+                    //        // ClientSelf.Fly(false);
+                    //        ClientMovement.Fly = false;
+                    //    }
+                    //}
+
 
                     if (ApproachVector3D == Vector3d.Zero)
                     {
                         if (ApproachPosition == null)
-                        {                         
+                        {
                             continue;
                         }
                     }
 
-                    TurnToward(targetPosition);
                     // Far away
                     if (curXYDist > ApproachDistance)
-                    {                      
+                    {
                         ClientMovement.Stop = false;
                         ClientMovement.FinishAnim = false;
-                        TurnToward(targetPosition);
+                        //TurnToward(targetPosition);
                         // getting close though
                         if (curDist < (ApproachDistance * 1.25))
                         {
@@ -1167,21 +1159,21 @@ namespace cogbot.TheOpenSims
                             //SendUpdate(125);
                             //ClientMovement.Stop = true;
                             ClientMovement.AtPos = false;
-                          //  if (needsLift) ClientMovement.UpPos = true;
                             ClientMovement.NudgeAtPos = true;
                             SendUpdate(100);
                             ClientMovement.NudgeAtPos = false;
                             SendUpdate(100);
+                            TurnToward(targetPosition);
                             stopNext = true;
                             continue;
                         }
                         else
                         {
-                          //  if (needsLift) ClientMovement.UpPos = true;
+                            TurnToward(targetPosition);
                             ClientMovement.AtPos = true;
                             ClientMovement.UpdateInterval = 0;
-                            SendUpdate(MyRandom.Next(25, 100));
-                            // TurnToward(targetPosition);
+                            SendUpdate(MyRandom.Next(25, 100));                          
+                          //  TurnToward(targetPosition);
                             //(int)(25 * (1 + (curDist / followDist)))
                             //   MoveFast(ApproachPosition);
                             //    if (ApproachPosition!=null) MoveSlow(ApproachPosition);
@@ -1194,6 +1186,7 @@ namespace cogbot.TheOpenSims
                         if (stopNext)
                         {
                             //                            TurnToward(targetPosition);
+                           // ClientMovement.ResetControlFlags();
                             ClientMovement.AtPos = false;
                             ClientMovement.UpdateInterval = 0;
                             //ClientMovement.StandUp = true;
@@ -1237,18 +1230,16 @@ namespace cogbot.TheOpenSims
             if (currentDist < maxDistance) return true;
             lock (TrackerLoopLock)
             {
-              //  SimWaypoint P = SimWaypointImpl.CreateGlobal(finalTarget);
+                //  SimWaypoint P = SimWaypointImpl.CreateGlobal(finalTarget);
                 SetMoveTarget(finalTarget);
                 ApproachDistance = maxDistance;
             }
             double lastDistance = currentDist;
-            
-            long endTick = Environment.TickCount + (int)(maxSeconds * 1000);
-
+            long endTick = Environment.TickCount +(int)(maxSeconds * 1000);
             while (Environment.TickCount < endTick)
             {
                 currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
-                if (currentDist > lastDistance + 0.1)
+                if (currentDist > lastDistance )
                 {
                     Console.Write("=");
                     StopMoving();
@@ -1256,7 +1247,7 @@ namespace cogbot.TheOpenSims
                 }
                 if (currentDist > maxDistance)
                 {
-                    Thread.Sleep(200);
+                    Thread.Sleep(40);
                     //Application.DoEvents();
                     lastDistance = currentDist;
                     continue;
@@ -1277,7 +1268,7 @@ namespace cogbot.TheOpenSims
         {
             //Client.Self.Movement.AutoResetControls = true;
             Client.Self.Movement.SendUpdate(true);
-            if (ms>0) Thread.Sleep(ms);
+            if (ms > 0) Thread.Sleep(ms*3);
         }
 
         public override void TeleportTo(SimRegion R, Vector3 local)
@@ -1291,7 +1282,7 @@ namespace cogbot.TheOpenSims
 
         public override void SetMoveTarget(SimPosition target)
         {
-            if (target==null)
+            if (target == null)
             {
                 ApproachVector3D = Vector3d.Zero;
                 ApproachPosition = null;
@@ -1314,7 +1305,7 @@ namespace cogbot.TheOpenSims
                     ApproachVector3D = target;
                     if (target != Vector3d.Zero)
                     {
-                       
+
                         EnsureTrackerRunning();
                     }
                     else
@@ -1413,7 +1404,7 @@ namespace cogbot.TheOpenSims
         readonly Dictionary<UUID, int> ExpectedCurrentAnims = new Dictionary<UUID, int>();
         readonly Dictionary<UUID, int> RemovedAnims = new Dictionary<UUID, int>();
         readonly Dictionary<UUID, int> AddedAnims = new Dictionary<UUID, int>();
-        
+
 
         //public UUID CurrentAmin = UUID.Zero;
         /// <summary>
@@ -1433,19 +1424,19 @@ namespace cogbot.TheOpenSims
                 leastCurrentSequence = int.MaxValue;
                 mostCurrentSequence = int.MinValue;
                 anims.ForEach(delegate(UUID key)
-                                  {
-                                      int newAnimNumber;
-                                      anims.TryGetValue(key, out newAnimNumber);
-                                      if (newAnimNumber < leastCurrentSequence)
-                                      {
-                                          leastCurrentSequence = newAnimNumber;
-                                      }
-                                      if (newAnimNumber > mostCurrentSequence)
-                                      {
-                                          mostCurrentSequence = newAnimNumber;
-                                      }
-                                      WorldObjects.RequestAsset(key, AssetType.Animation, true);
-                                  });
+                {
+                    int newAnimNumber;
+                    anims.TryGetValue(key, out newAnimNumber);
+                    if (newAnimNumber < leastCurrentSequence)
+                    {
+                        leastCurrentSequence = newAnimNumber;
+                    }
+                    if (newAnimNumber > mostCurrentSequence)
+                    {
+                        mostCurrentSequence = newAnimNumber;
+                    }
+                    WorldObjects.RequestAsset(key, AssetType.Animation, true);
+                });
 
 
 
@@ -1453,51 +1444,51 @@ namespace cogbot.TheOpenSims
                 // List<String> names = new List<String>();
                 List<UUID> RemovedThisEvent = new List<UUID>(ExpectedCurrentAnims.Keys);
                 anims.ForEach(delegate(UUID key)
-                                  {
-                                      RemovedThisEvent.Remove(key);
-                                      int newAnimNumber;
-                                      anims.TryGetValue(key, out newAnimNumber);
-                                      if (newAnimNumber >= mostCurrentSequence)
-                                      {
-                                          mostCurrentSequence = newAnimNumber;
-                                          WorldObjects.RequestAsset(key, AssetType.Animation, true);
-                                          mostCurrentAnim = key;
-                                      }
-                                      if (ExpectedCurrentAnims.ContainsKey(key))
-                                      {
-                                          int oldAnimNumber;
-                                          ExpectedCurrentAnims.TryGetValue(key, out oldAnimNumber);
-                                          if (oldAnimNumber == newAnimNumber)
-                                              // still the same
-                                          {
-                                              AddedAnims.Remove(key);
-                                              RemovedAnims.Remove(key);
-                                              return;
-                                          }
-                                          if (oldAnimNumber > newAnimNumber)
-                                          {
-                                              Debug("error");
-                                          }
-                                          else
-                                          {
-                                              if (oldAnimNumber + 1 != newAnimNumber)
-                                              {
-                                                  RemovedAnims[key] = oldAnimNumber + 1;
-                                                  AddedAnims[key] = newAnimNumber;
-                                              }
-                                          }
-                                          return;
-                                      }
-                                      AddedAnims[key] = newAnimNumber; //AddedAnims.Add(key, newAnimNumber);
-                                      RemovedAnims.Remove(key);
-                                      //int whenSeq = newAnimNumber + 1;
-                                      //if (!RemovedAnimsWhen.ContainsKey(whenSeq))
-                                      //{
-                                      //    RemovedAnimsWhen[whenSeq] = new List<UUID>();
-                                      //}
-                                      //RemovedAnimsWhen[whenSeq].Add(key);
+                {
+                    RemovedThisEvent.Remove(key);
+                    int newAnimNumber;
+                    anims.TryGetValue(key, out newAnimNumber);
+                    if (newAnimNumber >= mostCurrentSequence)
+                    {
+                        mostCurrentSequence = newAnimNumber;
+                        WorldObjects.RequestAsset(key, AssetType.Animation, true);
+                        mostCurrentAnim = key;
+                    }
+                    if (ExpectedCurrentAnims.ContainsKey(key))
+                    {
+                        int oldAnimNumber;
+                        ExpectedCurrentAnims.TryGetValue(key, out oldAnimNumber);
+                        if (oldAnimNumber == newAnimNumber)
+                        // still the same
+                        {
+                            AddedAnims.Remove(key);
+                            RemovedAnims.Remove(key);
+                            return;
+                        }
+                        if (oldAnimNumber > newAnimNumber)
+                        {
+                            Debug("error");
+                        }
+                        else
+                        {
+                            if (oldAnimNumber + 1 != newAnimNumber)
+                            {
+                                RemovedAnims[key] = oldAnimNumber + 1;
+                                AddedAnims[key] = newAnimNumber;
+                            }
+                        }
+                        return;
+                    }
+                    AddedAnims[key] = newAnimNumber; //AddedAnims.Add(key, newAnimNumber);
+                    RemovedAnims.Remove(key);
+                    //int whenSeq = newAnimNumber + 1;
+                    //if (!RemovedAnimsWhen.ContainsKey(whenSeq))
+                    //{
+                    //    RemovedAnimsWhen[whenSeq] = new List<UUID>();
+                    //}
+                    //RemovedAnimsWhen[whenSeq].Add(key);
 
-                                  });
+                });
                 List<UUID> shownRemoved = new List<UUID>();
                 List<UUID> showAdded = new List<UUID>();
 
@@ -1612,7 +1603,7 @@ namespace cogbot.TheOpenSims
         void SetClient(cogbot.BotClient Client);
         double SightRange { get; set; }
         SimAvatar InDialogWith { get; set; }
-       // SimPosition ApproachPosition { get; set; }
+        // SimPosition ApproachPosition { get; set; }
         BotNeeds CurrentNeeds { get; }
         SimObject StandUp();
         void StartThinking();
@@ -1633,3 +1624,4 @@ namespace cogbot.TheOpenSims
         void OnAvatarAnimations(InternalDictionary<UUID, int> anims);
     }
 }
+

@@ -146,6 +146,7 @@ namespace PathSystem3D.Navigation
                         for (int x = MaxXPt; x >= 0; x--)
                             _BM[x, y] = SimPathStore.INITIALLY;
                 }
+                AddEdgeBlocking(_BM);
                 return _BM;
             }
 
@@ -360,6 +361,7 @@ namespace PathSystem3D.Navigation
 
         public byte DefaultCollisionValue(int x, int y, float BumpConstraint, float[,] GroundPlane, byte b, float[,] Heights, CollisionIndex[,] cI)
         {
+            if (x < 1 || y < 1 || x >= MaxXPt || y >= MaxYPt) return SimPathStore.BLOCKED;
             if (b == SimPathStore.STICKY_PASSABLE) return b;
             float ZLevel = Heights[x, y];
             float GLevel = GroundPlane[x, y];
@@ -556,7 +558,8 @@ namespace PathSystem3D.Navigation
 
         public float DefaultHeight(int y, int x, float[,] GroundPlane, float[,] Heights, CollisionIndex[,] MeshIndex)
         {
-            float testPlane = GroundPlane[x, y];
+            float gp = GroundPlane[x, y];
+            float testPlane = gp;
 
             CollisionIndex W = MeshIndex[x, y];
             if (W == null) return testPlane;
@@ -576,6 +579,15 @@ namespace PathSystem3D.Navigation
                     level = testPlane;
                 }
                 return level;
+            }
+            float nd;
+            if (W.OpenCapsuleAt(gp, testPlane, CollisionIndex.CapsuleZ, out nd))
+            {
+                if (nd < gp)
+                {
+                    nd = gp;
+                }
+                return nd;
             }
             return level;
             //else
@@ -651,19 +663,20 @@ namespace PathSystem3D.Navigation
         }
         private void AddEdgeBlocking(byte[,] to)
         {
-            int xsizem1 = MaxXPt - 1;
-            int xsizem2 = MaxXPt - 2;
-            int ysizem1 = MaxYPt - 1;
-            int ysizem2 = MaxYPt - 2;
+            
+            int xsizem1 = MaxXPt - 0;
+            int xsizem2 = MaxXPt - 1;
+            int ysizem1 = MaxYPt - 0;
+            int ysizem2 = MaxYPt - 1;
             for (int y = ysizem1; y >= 0; y--)
             {
-                to[0, y] = to[1, y];
-                to[xsizem1, y] = to[xsizem2, y];
+                to[0, y] = SimPathStore.BLOCKED;//to[1, y];
+                to[xsizem1, y] = SimPathStore.BLOCKED;//to[xsizem2, y];
             }
             for (int x = xsizem1; x >= 0; x--)
             {
-                to[x, 0] = to[x, 1];
-                to[x,ysizem1] = to[x,ysizem2];
+                to[x, 0] = SimPathStore.BLOCKED;//to[x, 1];
+                to[x, ysizem1] = SimPathStore.BLOCKED;//to[x,ysizem2];
             }
         }
 
