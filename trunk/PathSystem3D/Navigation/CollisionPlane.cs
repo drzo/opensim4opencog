@@ -402,16 +402,17 @@ namespace PathSystem3D.Navigation
             CollisionIndex c = cI[x, y];
             if (c != null)
             {
-                return c.GetOccupiedValue(ZLevel,ZLevel);
+                return c.GetOccupiedValue(GLevel, ZLevel);
             }
 
 
 
-            if (b != SimPathStore.BLOCKED)
-                return SimPathStore.INITIALLY;
+            if (b == SimPathStore.BLOCKED)
+                return SimPathStore.MAYBE_BLOCKED;
 
+            return SimPathStore.INITIALLY;
 
-            return b;
+            //return b;
         }
 
         internal void EnsureUpdated()
@@ -440,9 +441,10 @@ namespace PathSystem3D.Navigation
                 }
                 if (AdjacentBlocking)
                 {
-                   // AddAdjacentBlocking(ToMatrix, SimPathStore.MAYBE_BLOCKED, 3, SimPathStore.BLOCKED);
-                   // AddEdgeBlocking(ToMatrix);
+                   AddAdjacentBlocking(ToMatrix, SimPathStore.MAYBE_BLOCKED, 4, SimPathStore.BLOCKED);
+                   // 
                 }
+                AddEdgeBlocking(ToMatrix);
                 Console.WriteLine("\nEnd UpdateCollisionPlane: {0} for {1}", PathStore, this);
             }
         }

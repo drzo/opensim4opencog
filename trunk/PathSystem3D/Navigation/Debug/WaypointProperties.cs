@@ -61,7 +61,7 @@ namespace PathSystem3D.Navigation.Debug
 
         private void object_click(object sender, EventArgs e)
         {
-            IList<IMeshedObject> occs = (IList<IMeshedObject>)Current.GetOccupied(LastPlane.MinZ, LastPlane.MaxZ);
+            IList<CollisionObject> occs = (IList<CollisionObject>)Current.GetOccupied(LastPlane.MinZ, LastPlane.MaxZ);
             try
             {
                 if (sender is Button)
@@ -69,8 +69,8 @@ namespace PathSystem3D.Navigation.Debug
                     Button B = (Button)sender;
                     string name = B.Name.Substring(1);
                     int i = int.Parse(name) - 1;
-                    IMeshedObject O = occs[i];
-                    O.RemeshObject();
+                    CollisionObject O = occs[i];
+                    if (O is IMeshedObject) ((IMeshedObject)O).RemeshObject();
                 }
             }
             catch (Exception ex)

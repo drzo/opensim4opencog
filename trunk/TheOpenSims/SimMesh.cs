@@ -168,6 +168,8 @@ namespace cogbot.TheOpenSims
             //        AddMesh(extramesh);
             //    }
             //}
+            if (InnerBoxes == null) InnerBoxes = new List<Box3Fill>();
+            else
             InnerBoxes.Clear();
             OuterBox.Reset();
             CalcBoxesFromMeshes(mesh, InnerBoxes);
