@@ -1242,7 +1242,9 @@ namespace cogbot.TheOpenSims
                 ApproachDistance = maxDistance;
             }
             double lastDistance = currentDist;
+            
             long endTick = Environment.TickCount + (int)(maxSeconds * 1000);
+
             while (Environment.TickCount < endTick)
             {
                 currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
@@ -1287,7 +1289,7 @@ namespace cogbot.TheOpenSims
             Client.Self.Teleport(R.RegionName, local);
         }
 
-        public void SetMoveTarget(SimPosition target)
+        public override void SetMoveTarget(SimPosition target)
         {
             if (target==null)
             {

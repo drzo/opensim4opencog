@@ -1399,6 +1399,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
+                if (MadePhantom) return true;// since we "changed" it
                 if (!IsSolidCachedKnown)
                 {
                     IsSolidCachedKnown = true;

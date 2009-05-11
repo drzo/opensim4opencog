@@ -90,7 +90,7 @@ namespace PathSystem3D.Mesher
             string MI = ToString() + " ";
 
             MI += "\n Box Info:";
-            foreach (CollisionObject B in InnerBoxes)
+            if (InnerBoxes!=null) foreach (CollisionObject B in InnerBoxes)
             {
                 MI += "\n    Box: " + B.ToString();
             }
