@@ -842,7 +842,8 @@ namespace cogbot.TheOpenSims
                     return false;
                 }
             }
-            return Parent.IsRegionAttached();
+            _Parent = Parent;
+            return _Parent!=null&& _Parent.IsRegionAttached();
         }
 
         public virtual Simulator GetSimulator()
