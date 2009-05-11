@@ -908,6 +908,7 @@ namespace cogbot.TheOpenSims
         {
             lock (TrackerLoopLock)
             {
+                ApproachPosition = null;
                 ApproachVector3D = Vector3d.Zero;
             }
             AgentManager ClientSelf = Client.Self;
@@ -1241,7 +1242,7 @@ namespace cogbot.TheOpenSims
                 currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
                 if (currentDist > lastDistance )
                 {
-                    Console.Write("=");
+                   // Console.Write("=");
                     StopMoving();
                     return true;
                 }
