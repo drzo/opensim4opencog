@@ -68,7 +68,7 @@ namespace THIRDPARTY.OpenSim.Framework
         Flexible = 128
     }
 
-#if USE_ODE
+#if COLLIDER_ODE
     [Serializable]
     public class PrimitiveBaseShape
     {

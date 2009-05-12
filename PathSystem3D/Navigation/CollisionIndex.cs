@@ -19,7 +19,7 @@ namespace PathSystem3D.Navigation
     {
 
         public const float CapsuleZ = 1.99f;
-        public const float MaxBump = 0.60f;
+        public const float MaxBump = 0.50f;
 
         //public Point Point;
 
@@ -175,11 +175,44 @@ namespace PathSystem3D.Navigation
             _GroundLevelCache = float.MinValue;
         }
 
-
         public float GetZLevel(float low, float high)
         {
-            // IsDebugged();
+            return GetZLevel(low, high, CollisionIndex.CapsuleZ);
+        }
+
+        public float GetZLevel(float low, float high, float capsuleSize)
+        {
+            float groundLevel = GetGroundLevel();
+            if (high < groundLevel) return groundLevel;
             float above = low;
+            IEnumerable<CollisionObject> objs = GetOccupied(low, high);
+            while (above < high)
+            {
+                float newMaxZ;
+                if (!SomethingBetween(above, above + capsuleSize, objs, out newMaxZ))
+                {
+                    return above;
+                }
+                if (newMaxZ > above)
+                {
+                    above = newMaxZ;
+                }
+                else
+                {
+                    above += 0.1f;
+                }
+            }
+            float below;
+            if (OpenCapsuleBelow(low, groundLevel, capsuleSize, out below))
+            {
+                if (below < groundLevel)
+                {
+                    below = groundLevel;
+                }
+                return below;
+            }
+            return above;
+            // IsDebugged();
             {
                 if (//(PX == 566 && PY == 759) || (PX == 373 && PY == 1097) || 
                     (PX == 615 && PY == 594))
@@ -190,7 +223,7 @@ namespace PathSystem3D.Navigation
                 float GL = GetGroundLevel();
                 bool found = false;
                 if (above < GL) above = GL;
-                IEnumerable<CollisionObject> objs = GetOccupied(above, high);
+               // IEnumerable<CollisionObject> objs = GetOccupied(above, high);
                 while (above < high)
                 {
                     if (SomethingBetween(above, above + CapsuleZ, objs, out newMaxZ))
@@ -208,13 +241,11 @@ namespace PathSystem3D.Navigation
                     else break;
                 }
                 if (!found) return high;
-                _LocalPos.Z = low;
-                _GlobalPos.Z = above;
             }
             return above;
         }
 
-        public bool OpenCapsuleAt(float low, float high,float capsuleSize, out float above)
+        public bool OpenCapsuleAbove(float low, float high,float capsuleSize, out float above)
         {    
             above = low;
             IEnumerable<CollisionObject> objs = GetOccupied(low, high);
@@ -237,6 +268,27 @@ namespace PathSystem3D.Navigation
                     above += 0.1f;
                 }
              
+            }
+            return false;
+        }
+
+
+        public bool OpenCapsuleBelow(float high,float low, float capsuleSize, out float below)
+        {
+            below = high;
+            IEnumerable<CollisionObject> objs = GetOccupied(low, high);
+            while (below > low)
+            {
+                float newMaxZ;
+                if (SomethingBetween(below, below + capsuleSize, objs, out newMaxZ))
+                {
+                    below -= 0.2f;
+                }
+                else
+                {
+                    return true;
+                }
+
             }
             return false;
         }

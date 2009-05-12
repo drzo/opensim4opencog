@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using OpenMetaverse;
 
 namespace PathSystem3D.Navigation
@@ -241,24 +242,39 @@ namespace PathSystem3D.Navigation
             return Mover.MoveTo(finalTarget, maxDistance, maxSeconds);
         }
 
+        delegate Vector3 MoveToPassable(Vector3 start);
+        static int PathBreakAwayNumber = 0;
+        readonly static List<MoveToPassable> PathBreakAways = new List<MoveToPassable>();
         public Vector3 MoveToPassableArround(Vector3 start)
         {
-            return start;
+            //return start;
             if (!UseTurnAvoid)
             {
                 UseTurnAvoid = !UseTurnAvoid;
                 return start;
             }
+            if (PathBreakAways.Count > 0)
+            {
+                if (PathBreakAwayNumber > PathBreakAways.Count)
+                {
+                    PathBreakAwayNumber = 0;
+                }
+                else
+                {
+                    PathBreakAwayNumber++;
+                }
+                return PathBreakAways[PathBreakAwayNumber](start);
+            }
 
             UseTurnAvoid = !UseTurnAvoid;
             double A45 = 45f / SimPathStore.RAD2DEG;
+            Debug("Random avoidance");
             for (double angle = A45; angle < SimPathStore.PI2; angle += A45)
             {
                 Vector3 next = ZAngleVector(angle + TurnAvoid) * 2 + start;
-                if (PathStore.IsPassable(next))
                 {
                     Vector3d v3d = PathStore.LocalToGlobal(start);
-                    if (MoveTo(v3d, 1, 4))
+                    if (MoveTo(v3d, 1, 2))
                     {
                         TurnAvoid += angle;  // update for next use
                         if (TurnAvoid > SimPathStore.PI2)
