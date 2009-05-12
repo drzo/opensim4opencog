@@ -50,7 +50,7 @@ namespace PathSystem3D.Navigation
         static public void TrianglesToBoxes(IList<Triangle> tl, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
         {
             int tc = tl.Count;
-            AddTrianglesV32(tl, tc, OuterBox, padXYZ, InnerBoxes);
+            AddTrianglesV3S(tl, tc, OuterBox, padXYZ, InnerBoxes);
             // Debug(InnerBoxes.Count);
         }
 

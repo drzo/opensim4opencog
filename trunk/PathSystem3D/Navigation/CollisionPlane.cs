@@ -371,7 +371,7 @@ namespace PathSystem3D.Navigation
             if (bumps > 0)
                 return SimPathStore.BLOCKED;
 
-            if (BumpConstraintPurple > 0.6f)
+            if (BumpConstraintPurple > CollisionIndex.MaxBump)
             {
                 bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, BumpConstraintPurple, Heights);
                 if (bumps > 0)
@@ -572,7 +572,7 @@ namespace PathSystem3D.Navigation
 
 
             float level;
-            if (W.OpenCapsuleAt(testPlane, testPlane + 16f, CollisionIndex.CapsuleZ, out level))
+            if (W.OpenCapsuleAbove(testPlane, testPlane + 16f, CollisionIndex.CapsuleZ, out level))
             {
                 if (level < testPlane)
                 {
@@ -581,7 +581,7 @@ namespace PathSystem3D.Navigation
                 return level;
             }
             float nd;
-            if (W.OpenCapsuleAt(gp, testPlane, CollisionIndex.CapsuleZ, out nd))
+            if (W.OpenCapsuleBelow(gp, testPlane, CollisionIndex.CapsuleZ, out nd))
             {
                 if (nd < gp)
                 {
@@ -813,7 +813,7 @@ namespace PathSystem3D.Navigation
 
         public double GetHeight(Vector3 local)
         {
-            return _HeightMap[PathStore.ARRAY_X(local.X),PathStore.ARRAY_Y(local.Y)];
+            return HeightMap[PathStore.ARRAY_X(local.X),PathStore.ARRAY_Y(local.Y)];
         }
     }
 

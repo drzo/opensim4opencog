@@ -328,7 +328,7 @@ namespace cogbot.TheOpenSims
         }
 
         public static Mesh ToMesh(
-#if (USEODE)
+#if (COLLIDER_ODE)
             PrimitiveBaseShape pbs, 
 #endif
             List<Coord> coords, List<Face> faces, List<ViewerFace> viewerFaces, bool isSphere)

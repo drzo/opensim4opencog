@@ -142,7 +142,7 @@ namespace PathSystem3D.Mesher
             if (InnerBoxes == null) return false;
             if (InnerBoxes.Count == 0) return false;
             if (!IsRegionAttached()) return false;
-            int t1;
+          //  int t1;
             try
             {
                 //lock (PathStore)
@@ -152,9 +152,9 @@ namespace PathSystem3D.Mesher
                     if (tryFastVersion)
                     {
                         //                UpdatePathOccupiedFast(PathStore);
-                        int tc = Environment.TickCount;
+                       // int tc = Environment.TickCount;
                         UpdatePathOccupiedVeryFast(pathStore);
-                        t1 = Environment.TickCount - tc;
+                       // t1 = Environment.TickCount - tc;
                         InnerBoxes = null;
                         //  Console.WriteLine("t1 vs t2 = " + t1 );
                         return true;
