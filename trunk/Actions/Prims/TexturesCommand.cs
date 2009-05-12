@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using OpenMetaverse;
+using OpenMetaverse.Assets;
 
 namespace cogbot.Actions
 {
@@ -16,17 +17,9 @@ namespace cogbot.Actions
             Name = "textures";
             Description = "Turns automatic texture downloading on or off. Usage: textures [on/off]";
             Category = CommandCategory.Objects;
-            if (TextForm.DownloadTextures)
-            {
 
-                testClient.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
-                testClient.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
-                testClient.Assets.OnImageReceived += new AssetManager.ImageReceivedCallback(Assets_OnImageReceived);
-            }
-            else
-            {
-                testClient.ClientManager.GetTextures = false;
-            }
+            testClient.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
+            testClient.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
@@ -36,12 +29,12 @@ namespace cogbot.Actions
 
             if (args[0].ToLower() == "on")
             {
-                TheBotClient.ClientManager.GetTextures = enabled = true;
+                Client.ClientManager.GetTextures = enabled = true;
                 return "Texture downloading is on";
             }
             else if (args[0].ToLower() == "off")
             {
-                TheBotClient.ClientManager.GetTextures = enabled = false;
+                Client.ClientManager.GetTextures = enabled = false;
                 return "Texture downloading is off";
             }
             else
@@ -79,7 +72,7 @@ namespace cogbot.Actions
                                     break;
                             }
 
-                            Client.Assets.RequestImage(face.TextureID, type);
+                            Client.Assets.RequestImage(face.TextureID, type, Assets_OnImageReceived);
                         }
                     }
                 }
@@ -100,21 +93,21 @@ namespace cogbot.Actions
                         if (!alreadyRequested.ContainsKey(face.TextureID))
                         {
                             alreadyRequested[face.TextureID] = face.TextureID;
-                            Client.Assets.RequestImage(face.TextureID, ImageType.Normal);
+                            Client.Assets.RequestImage(face.TextureID, ImageType.Normal, Assets_OnImageReceived);
                         }
                     }
                 }
             }
         }
 
-        private void Assets_OnImageReceived(ImageDownload image, AssetTexture asset)
+        private void Assets_OnImageReceived(TextureRequestState state, AssetTexture asset)
         {
-            if (enabled && alreadyRequested.ContainsKey(image.ID))
+            if (state == TextureRequestState.Finished && enabled && alreadyRequested.ContainsKey(asset.AssetID))
             {
-                if (image.Success)
-                    Logger.DebugLog(String.Format("Finished downloading texture {0} ({1} bytes)", image.ID, image.Size));
+                if (state == TextureRequestState.Finished)
+                    Logger.DebugLog(String.Format("Finished downloading texture {0} ({1} bytes)", asset.AssetID, asset.AssetData.Length));
                 else
-                    Logger.Log("Failed to download texture " + image.ID.ToString(), Helpers.LogLevel.Warning);
+                    Logger.Log("Failed to download texture " + asset.AssetID + ": " + state, Helpers.LogLevel.Warning);
             }
         }
     }

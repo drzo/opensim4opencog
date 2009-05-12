@@ -32,6 +32,7 @@ using System.IO;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Imaging;
+using OpenMetaverse.Assets;
 
 namespace OpenMetaverse
 {
@@ -143,7 +144,7 @@ namespace OpenMetaverse
         private AssetManager Assets;
 
         /// <summary>
-        /// An <seealso cref="T:InternalDictionary"/> which keeps track of wearables data
+        /// An <seealso cref="InternalDictionary"/> which keeps track of wearables data
         /// </summary>
         public InternalDictionary<WearableType, WearableData> Wearables = new InternalDictionary<WearableType, WearableData>();
         // As wearable assets are downloaded and decoded, the textures are added to this array
@@ -644,10 +645,10 @@ namespace OpenMetaverse
 
             // Register an asset download callback to get wearable data
             AssetManager.AssetReceivedCallback assetCallback = new AssetManager.AssetReceivedCallback(Assets_OnAssetReceived);
-            AssetManager.ImageReceivedCallback imageCallback = new AssetManager.ImageReceivedCallback(Assets_OnImageReceived);
+            
             AssetManager.AssetUploadedCallback uploadCallback = new AssetManager.AssetUploadedCallback(Assets_OnAssetUploaded);
             Assets.OnAssetReceived += assetCallback;
-            Assets.OnImageReceived += imageCallback;
+            
             Assets.OnAssetUploaded += uploadCallback;
 
             // Download assets for what we are wearing and fill in AgentTextures
@@ -667,7 +668,7 @@ namespace OpenMetaverse
             if (bake) CachedResponseEvent.WaitOne();
 
             // Unregister the image download and asset upload callbacks
-            Assets.OnImageReceived -= imageCallback;
+            //Assets.OnImageReceived -= imageCallback;
             Assets.OnAssetUploaded -= uploadCallback;
 
             Logger.DebugLog("CachedResponseEvent completed", Client);
@@ -1162,8 +1163,7 @@ namespace OpenMetaverse
                         // Try and find this value in our collection of downloaded wearables
                         foreach (WearableData data in Wearables.Dictionary.Values)
                         {
-                            //todo dmiles asks why the NPE?
-                            if (data != null && data.Asset != null && data.Asset.Params !=null && data.Asset.Params.ContainsKey(vp.ParamID))
+                            if (data.Asset.Params.ContainsKey(vp.ParamID))
                             {
                                 paramValues.Add(vp.ParamID, data.Asset.Params[vp.ParamID]);
                                 found = true;
@@ -1343,7 +1343,7 @@ namespace OpenMetaverse
                     foreach (UUID image in imgKeys)
                     {
                         // Download all the images we need for baking
-                        Assets.RequestImage(image, ImageType.Normal, 1013000.0f, 0, 0);
+                        Assets.RequestImage(image, ImageType.Normal, Assets_OnImageReceived);
                     }
                 }
             }
@@ -1413,18 +1413,18 @@ namespace OpenMetaverse
             }
         }
 
-        private void Assets_OnImageReceived(ImageDownload image, AssetTexture assetTexture)
+        private void Assets_OnImageReceived(TextureRequestState state, AssetTexture assetTexture)
         {
             lock (ImageDownloads)
             {
-                if (ImageDownloads.ContainsKey(image.ID))
+                if (ImageDownloads.ContainsKey(assetTexture.AssetID))
                 {
-                    ImageDownloads.Remove(image.ID);
+                    ImageDownloads.Remove(assetTexture.AssetID);
 
                     // NOTE: This image may occupy more than one TextureIndex! We must finish this loop
                     for (int at = 0; at < AgentTextures.Length; at++)
                     {
-                        if (AgentTextures[at] == image.ID)
+                        if (AgentTextures[at] == assetTexture.AssetID)
                         {
                             TextureIndex index = (TextureIndex)at;
                             BakeType type = Baker.BakeTypeFor(index);
@@ -1438,15 +1438,15 @@ namespace OpenMetaverse
 
                             if (PendingBakes.ContainsKey(type))
                             {
-                                if (image.Success)
+                                if (state == TextureRequestState.Finished)
                                 {
                                     Logger.DebugLog("Finished downloading texture for " + index.ToString(), Client);
-                                    OpenJPEG.DecodeToImage(image.AssetData, out assetTexture.Image);
+                                    OpenJPEG.DecodeToImage(assetTexture.AssetData, out assetTexture.Image);
                                     baked = PendingBakes[type].AddTexture(index, assetTexture, false);
                                 }
                                 else
                                 {
-                                    Logger.Log("Texture for " + index.ToString() + " failed to download, " +
+                                    Logger.Log("Texture for " + index + " failed to download, " +
                                         "bake will be incomplete", Helpers.LogLevel.Warning, Client);
                                     baked = PendingBakes[type].MissingTexture(index);
                                 }
@@ -1476,7 +1476,7 @@ namespace OpenMetaverse
                 }
                 else
                 {
-                    Logger.Log("Received an image download callback for an image we did not request " + image.ID.ToString(),
+                    Logger.Log("Received an image download callback for an image we did not request " + assetTexture.AssetID,
                         Helpers.LogLevel.Warning, Client);
                 }
             }

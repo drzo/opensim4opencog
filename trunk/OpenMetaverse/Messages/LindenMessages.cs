@@ -1,20 +1,67 @@
-﻿using System;
+﻿/*
+ * Copyright (c) 2009, openmetaverse.org
+ * All rights reserved.
+ *
+ * - Redistribution and use in source and binary forms, with or without 
+ *   modification, are permitted provided that the following conditions are met:
+ *
+ * - Redistributions of source code must retain the above copyright notice, this
+ *   list of conditions and the following disclaimer.
+ * - Neither the name of the openmetaverse.org nor the names 
+ *   of its contributors may be used to endorse or promote products derived from
+ *   this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+using System;
+using System.Collections.Generic;
 using System.Net;
 using OpenMetaverse.StructuredData;
+using OpenMetaverse.Interfaces;
 
 namespace OpenMetaverse.Messages.Linden
 {
-    public class TeleportFinishMessage
+    #region Teleport/Region/Movement Messages
+
+    /// <summary>
+    /// Sent to the client to indicate a teleport request has completed
+    /// </summary>
+    public class TeleportFinishMessage : IMessage
     {
+        /// <summary>The <see cref="UUID"/> of the agent</summary>
         public UUID AgentID;
+        /// <summary></summary>
         public int LocationID;
+        /// <summary>The simulators handle the agent teleported to</summary>
         public ulong RegionHandle;
+        /// <summary>A Uri which contains a list of Capabilities the simulator supports</summary>
         public Uri SeedCapability;
+        /// <summary>Indicates the level of access required
+        /// to access the simulator, or the content rating, or the simulators 
+        /// map status</summary>
         public SimAccess SimAccess;
+        /// <summary>The IP Address of the simulator</summary>
         public IPAddress IP;
+        /// <summary>The UDP Port the simulator will listen for UDP traffic on</summary>
         public int Port;
+        /// <summary>Status flags indicating the state of the Agent upon arrival, Flying, etc.</summary>
         public TeleportFlags Flags;
 
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
         public OSDMap Serialize()
         {
             OSDMap map = new OSDMap(1);
@@ -27,7 +74,7 @@ namespace OpenMetaverse.Messages.Linden
             info.Add("RegionHandle", OSD.FromULong(RegionHandle));
             info.Add("SeedCapability", OSD.FromUri(SeedCapability));
             info.Add("SimAccess", OSD.FromInteger((byte)SimAccess));
-            info.Add("SimIP", OSD.FromBinary(IP.GetAddressBytes()));
+            info.Add("SimIP", MessageUtils.FromIP(IP));
             info.Add("SimPort", OSD.FromInteger(Port));
             info.Add("TeleportFlags", OSD.FromUInteger((uint)Flags));
 
@@ -38,6 +85,10 @@ namespace OpenMetaverse.Messages.Linden
             return map;
         }
 
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
         public void Deserialize(OSDMap map)
         {
             OSDArray array = (OSDArray)map["Info"];
@@ -48,19 +99,26 @@ namespace OpenMetaverse.Messages.Linden
             RegionHandle = blockMap["RegionHandle"].AsULong();
             SeedCapability = blockMap["SeedCapability"].AsUri();
             SimAccess = (SimAccess)blockMap["SimAccess"].AsInteger();
-            IP = new IPAddress(blockMap["SimIP"].AsBinary());
+            IP = MessageUtils.ToIP(blockMap["SimIP"]);
             Port = blockMap["SimPort"].AsInteger();
             Flags = (TeleportFlags)blockMap["TeleportFlags"].AsUInteger();
         }
     }
 
-    public class EstablishAgentCommunicationMessage
+    /// <summary>
+    /// Sent to the viewer when a neighboring simulator is requesting the agent make a connection to it.
+    /// </summary>
+    public class EstablishAgentCommunicationMessage : IMessage
     {
         public UUID AgentID;
         public IPAddress Address;
         public int Port;
         public Uri SeedCapability;
 
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
         public OSDMap Serialize()
         {
             OSDMap map = new OSDMap(3);
@@ -70,6 +128,10 @@ namespace OpenMetaverse.Messages.Linden
             return map;
         }
 
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
         public void Deserialize(OSDMap map)
         {
             string ipAndPort = map["sim-ip-and-port"].AsString();
@@ -82,7 +144,7 @@ namespace OpenMetaverse.Messages.Linden
         }
     }
 
-    public class CrossedRegionMessage
+    public class CrossedRegionMessage : IMessage
     {
         public Vector3 LookAt;
         public Vector3 Position;
@@ -93,6 +155,10 @@ namespace OpenMetaverse.Messages.Linden
         public IPAddress IP;
         public int Port;
 
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
         public OSDMap Serialize()
         {
             OSDMap map = new OSDMap(3);
@@ -115,7 +181,7 @@ namespace OpenMetaverse.Messages.Linden
             OSDMap regionDataMap = new OSDMap(4);
             regionDataMap["RegionHandle"] = OSD.FromULong(RegionHandle);
             regionDataMap["SeedCapability"] = OSD.FromUri(SeedCapability);
-            regionDataMap["SimIP"] = OSD.FromBinary(IP.GetAddressBytes());
+            regionDataMap["SimIP"] = MessageUtils.FromIP(IP);
             regionDataMap["SimPort"] = OSD.FromInteger(Port);
             regionDataArray.Add(regionDataMap);
             map["RegionData"] = regionDataArray;
@@ -123,6 +189,10 @@ namespace OpenMetaverse.Messages.Linden
             return map;
         }
 
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
         public void Deserialize(OSDMap map)
         {
             OSDMap infoMap = (OSDMap)((OSDArray)map["Info"])[0];
@@ -136,12 +206,12 @@ namespace OpenMetaverse.Messages.Linden
             OSDMap regionDataMap = (OSDMap)((OSDArray)map["RegionData"])[0];
             RegionHandle = regionDataMap["RegionHandle"].AsULong();
             SeedCapability = regionDataMap["SeedCapability"].AsUri();
-            IP = new IPAddress(regionDataMap["SimIP"].AsBinary());
+            IP = MessageUtils.ToIP(regionDataMap["SimIP"]);
             Port = regionDataMap["SimPort"].AsInteger();
         }
     }
 
-    public class EnableSimulatorMessage
+    public class EnableSimulatorMessage : IMessage
     {
         public class SimulatorInfoBlock
         {
@@ -152,6 +222,10 @@ namespace OpenMetaverse.Messages.Linden
 
         public SimulatorInfoBlock[] Simulators;
 
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
         public OSDMap Serialize()
         {
             OSDMap map = new OSDMap(1);
@@ -163,7 +237,7 @@ namespace OpenMetaverse.Messages.Linden
 
                 OSDMap blockMap = new OSDMap(3);
                 blockMap["Handle"] = OSD.FromULong(block.RegionHandle);
-                blockMap["IP"] = OSD.FromBinary(block.IP.GetAddressBytes());
+                blockMap["IP"] = MessageUtils.FromIP(block.IP);
                 blockMap["Port"] = OSD.FromInteger(block.Port);
                 array.Add(blockMap);
             }
@@ -172,6 +246,10 @@ namespace OpenMetaverse.Messages.Linden
             return map;
         }
 
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
         public void Deserialize(OSDMap map)
         {
             OSDArray array = (OSDArray)map["SimulatorInfo"];
@@ -183,12 +261,183 @@ namespace OpenMetaverse.Messages.Linden
 
                 SimulatorInfoBlock block = new SimulatorInfoBlock();
                 block.RegionHandle = blockMap["Handle"].AsULong();
-                block.IP = new IPAddress(blockMap["IP"].AsBinary());
+                block.IP = MessageUtils.ToIP(blockMap["IP"]);
                 block.Port = blockMap["Port"].AsInteger();
                 Simulators[i] = block;
             }
         }
     }
+
+    /// <summary>
+    /// A message sent to the client which indicates a teleport request has failed
+    /// and contains some information on why it failed
+    /// </summary>
+    public class TeleportFailedMessage : IMessage
+    {
+        /// <summary></summary>
+        public string ExtraParams;
+        /// <summary>A string key of the reason the teleport failed e.g. CouldntTPCloser
+        /// Which could be used to look up a value in a dictionary or enum</summary>
+        public string MessageKey;
+        /// <summary>The <see cref="UUID"/> of the Agent</summary>
+        public UUID AgentID;
+        /// <summary>A string human readable message containing the reason </summary>
+        /// <remarks>An example: Could not teleport closer to destination</remarks>
+        public string Reason;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(2);
+            
+            OSDMap alertInfoMap = new OSDMap(2);
+
+            alertInfoMap["ExtraParams"] = OSD.FromString(ExtraParams);
+            alertInfoMap["Message"] = OSD.FromString(MessageKey);
+            OSDArray alertArray = new OSDArray();
+            alertArray.Add(alertInfoMap);
+            map["AlertInfo"] = alertArray;
+
+            OSDMap infoMap = new OSDMap(2);
+            infoMap["AgentID"] = OSD.FromUUID(AgentID);
+            infoMap["Reason"] = OSD.FromString(Reason);
+            OSDArray infoArray = new OSDArray();
+            infoArray.Add(infoMap);
+            map["Info"] = infoArray;
+
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+
+            OSDArray alertInfoArray = (OSDArray) map["AlertInfo"];
+
+            OSDMap alertInfoMap = (OSDMap) alertInfoArray[0];
+            ExtraParams = alertInfoMap["ExtraParams"].AsString();
+            MessageKey = alertInfoMap["Message"].AsString();
+
+            OSDArray infoArray = (OSDArray) map["Info"];
+            OSDMap infoMap = (OSDMap) infoArray[0];
+            AgentID = infoMap["AgentID"].AsUUID();
+            Reason = infoMap["Reason"].AsString();
+        }
+    }
+
+    public class LandStatReplyMessage : IMessage
+    {
+        public int ReporType;
+        public int RequestFlags;
+        public int TotalObjectCount;
+
+        public class ReportDataBlock
+        {
+            public Vector3 Location;
+            public string OwnerName;
+            public float Score;
+            public UUID TaskID;
+            public uint TaskLocalID;
+            public string TaskName;
+            public float MonoScore;
+            public DateTime TimeStamp;
+        }
+
+        public ReportDataBlock[] ReportDataBlocks;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(3);
+
+            OSDMap requestDataMap = new OSDMap(3);
+            requestDataMap["ReportType"] = OSD.FromInteger(this.ReporType);
+            requestDataMap["RequestFlags"] = OSD.FromInteger(this.RequestFlags);
+            requestDataMap["TotalObjectCount"] = OSD.FromInteger(this.TotalObjectCount);
+            
+            OSDArray requestDatArray = new OSDArray();
+            requestDatArray.Add(requestDataMap);
+            map["RequestData"] = requestDatArray;
+
+            OSDArray reportDataArray = new OSDArray();
+            OSDArray dataExtendedArray = new OSDArray();
+            for (int i = 0; i < ReportDataBlocks.Length; i++)
+            {
+                OSDMap reportMap = new OSDMap(8);
+                reportMap["LocationX"] = OSD.FromReal(ReportDataBlocks[i].Location.X);
+                reportMap["LocationY"] = OSD.FromReal(ReportDataBlocks[i].Location.Y);
+                reportMap["LocationZ"] = OSD.FromReal(ReportDataBlocks[i].Location.Z);
+                reportMap["OwnerName"] = OSD.FromString(ReportDataBlocks[i].OwnerName);
+                reportMap["Score"] = OSD.FromReal(ReportDataBlocks[i].Score);
+                reportMap["TaskID"] = OSD.FromUUID(ReportDataBlocks[i].TaskID);
+                reportMap["TaskLocalID"] = OSD.FromReal(ReportDataBlocks[i].TaskLocalID);
+                reportMap["TaskName"] = OSD.FromString(ReportDataBlocks[i].TaskName);
+                reportDataArray.Add(reportMap);
+
+                OSDMap extendedMap = new OSDMap(2);
+                extendedMap["MonoScore"] = OSD.FromReal(ReportDataBlocks[i].MonoScore);
+                extendedMap["TimeStamp"] = OSD.FromDate(ReportDataBlocks[i].TimeStamp);
+                dataExtendedArray.Add(extendedMap);
+            }
+
+            map["ReportData"] = reportDataArray;
+            map["DataExtended"] = dataExtendedArray;
+
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            
+            OSDArray requestDataArray = (OSDArray)map["RequestData"];
+            OSDMap requestMap = (OSDMap)requestDataArray[0];
+            
+            this.ReporType = requestMap["ReportType"].AsInteger();
+            this.RequestFlags = requestMap["RequestFlags"].AsInteger();
+            this.TotalObjectCount = requestMap["TotalObjectCount"].AsInteger();
+
+            OSDArray dataArray = (OSDArray)map["ReportData"];
+            OSDArray dataExtendedArray = (OSDArray)map["DataExtended"];
+
+            ReportDataBlocks = new ReportDataBlock[dataArray.Count];
+            for (int i = 0; i < dataArray.Count; i++)
+            {
+                OSDMap blockMap = (OSDMap)dataArray[i];
+                OSDMap extMap = (OSDMap)dataExtendedArray[i];
+                ReportDataBlock block = new ReportDataBlock();
+                block.Location = new Vector3(
+                    (float)blockMap["LocationX"].AsReal(),
+                    (float)blockMap["LocationY"].AsReal(),
+                    (float)blockMap["LocationZ"].AsReal());
+                block.OwnerName = blockMap["OwnerName"].AsString();
+                block.Score = (float)blockMap["Score"].AsReal();
+                block.TaskID = blockMap["TaskID"].AsUUID();
+                block.TaskLocalID = blockMap["TaskLocalID"].AsUInteger();
+                block.TaskName = blockMap["TaskName"].AsString();
+                block.MonoScore = (float)extMap["MonoScore"].AsReal();
+                block.TimeStamp = Utils.UnixTimeToDateTime(extMap["TimeStamp"].AsUInteger());
+
+                ReportDataBlocks[i] = block;
+            }
+        }
+    }
+
+    #endregion
+
+    #region Parcel Messages
 
     /// <summary>
     /// Contains a list of prim owner information for a specific parcel in a simulator
@@ -199,64 +448,58 @@ namespace OpenMetaverse.Messages.Linden
     /// If agent does not have proper permission OR there are no primitives on parcel
     /// the DataBlocksExtended map will not be sent from the simulator
     /// </remarks>
-    public class ParcelObjectOwnersMessage
+    public class ParcelObjectOwnersReplyMessage : IMessage
     {
         /// <summary>
         /// Prim ownership information for a specified owner on a single parcel
         /// </summary>
-        public class PrimOwners
+        public class PrimOwner
         {
             /// <summary>The <see cref="UUID"/> of the prim owner, 
-            /// UUID.Zero if agent has no permission</summary>
+            /// UUID.Zero if agent has no permission to view prim owner information</summary>
             public UUID OwnerID;
-            /// <summary>The total number of prims on parcel owned</summary>
+            /// <summary>The total number of prims</summary>
             public int Count;
-            /// <summary>True if the Owner is a group</summary>
+            /// <summary>True if the OwnerID is a <see cref="Group"/></summary>
             public bool IsGroupOwned;
             /// <summary>True if the owner is online 
             /// <remarks>This is no longer used by the LL Simulators</remarks></summary>
             public bool OnlineStatus;
-            /// <summary>The date of the newest prim</summary>
+            /// <summary>The date the most recent prim was rezzed</summary>
             public DateTime TimeStamp;
         }
 
         /// <summary>
-        /// An Array of Datablocks containing prim owner information
+        /// An Array of <see cref="PrimOwner"/> objects
         /// </summary>
-        public PrimOwners[] DataBlocks;
+        public PrimOwner[] PrimOwnersBlock;
 
         /// <summary>
-        /// Create an OSDMap from the parcel prim owner information
+        /// Serialize the object
         /// </summary>
-        /// <returns></returns>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
         public OSDMap Serialize()
         {
-            OSDArray dataArray = new OSDArray(DataBlocks.Length);
+            OSDArray dataArray = new OSDArray(PrimOwnersBlock.Length);
             OSDArray dataExtendedArray = new OSDArray();
 
-            for (int i = 0; i < DataBlocks.Length; i++)
+            for (int i = 0; i < PrimOwnersBlock.Length; i++)
             {
                 OSDMap dataMap = new OSDMap(4);
-                dataMap["OwnerID"] = OSD.FromUUID(DataBlocks[i].OwnerID);
-                dataMap["Count"] = OSD.FromInteger(DataBlocks[i].Count);
-                dataMap["IsGroupOwned"] = OSD.FromBoolean(DataBlocks[i].IsGroupOwned);
-                dataMap["OnlineStatus"] = OSD.FromBoolean(DataBlocks[i].OnlineStatus);
+                dataMap["OwnerID"] = OSD.FromUUID(PrimOwnersBlock[i].OwnerID);
+                dataMap["Count"] = OSD.FromInteger(PrimOwnersBlock[i].Count);
+                dataMap["IsGroupOwned"] = OSD.FromBoolean(PrimOwnersBlock[i].IsGroupOwned);
+                dataMap["OnlineStatus"] = OSD.FromBoolean(PrimOwnersBlock[i].OnlineStatus);
                 dataArray.Add(dataMap);
 
-                /* If the tmestamp is null, don't create the DataExtended map, this 
-                 * is usually when the parcel contains no primitives, or the agent does not have
-                 * permissions to see ownership information */
-                if (DataBlocks[i].TimeStamp != null)
-                {
-                    OSDMap dataExtendedMap = new OSDMap(1);
-                    dataExtendedMap["TimeStamp"] = OSD.FromDate(DataBlocks[i].TimeStamp);
-                    dataExtendedArray.Add(dataExtendedMap);
-                }
+                OSDMap dataExtendedMap = new OSDMap(1);
+                dataExtendedMap["TimeStamp"] = OSD.FromDate(PrimOwnersBlock[i].TimeStamp);
+                dataExtendedArray.Add(dataExtendedMap);
             }
 
             OSDMap map = new OSDMap();
             map.Add("Data", dataArray);
-            if(dataExtendedArray.Count > 0)
+            if (dataExtendedArray.Count > 0)
                 map.Add("DataExtended", dataExtendedArray);
 
             return map;
@@ -282,12 +525,12 @@ namespace OpenMetaverse.Messages.Linden
                 dataExtendedArray = new OSDArray();
             }
 
-            DataBlocks = new PrimOwners[dataArray.Count];
+            PrimOwnersBlock = new PrimOwner[dataArray.Count];
 
             for (int i = 0; i < dataArray.Count; i++)
             {
                 OSDMap dataMap = (OSDMap)dataArray[i];
-                PrimOwners block = new PrimOwners();
+                PrimOwner block = new PrimOwner();
                 block.OwnerID = dataMap["OwnerID"].AsUUID();
                 block.Count = dataMap["Count"].AsInteger();
                 block.IsGroupOwned = dataMap["IsGroupOwned"].AsBoolean();
@@ -298,10 +541,10 @@ namespace OpenMetaverse.Messages.Linden
                 if (dataExtendedArray.Count == dataArray.Count)
                 {
                     OSDMap dataExtendedMap = (OSDMap)dataExtendedArray[i];
-                    block.TimeStamp = dataExtendedMap["TimeStamp"].AsDate();
+                    block.TimeStamp = Utils.UnixTimeToDateTime(dataExtendedMap["TimeStamp"].AsUInteger());
                 }
 
-                DataBlocks[i] = block;  
+                PrimOwnersBlock[i] = block;
             }
         }
     }
@@ -309,66 +552,140 @@ namespace OpenMetaverse.Messages.Linden
     /// <summary>
     /// The details of a single parcel in a region, also contains some regionwide globals
     /// </summary>
-    public class ParcelPropertiesMessage
+    [Serializable]
+    public class ParcelPropertiesMessage : IMessage
     {
+        /// <summary>Simulator-local ID of this parcel</summary>
         public int LocalID;
+        /// <summary>Maximum corner of the axis-aligned bounding box for this
+        /// parcel</summary>
         public Vector3 AABBMax;
+        /// <summary>Minimum corner of the axis-aligned bounding box for this
+        /// parcel</summary>
         public Vector3 AABBMin;
+        /// <summary>Total parcel land area</summary>
         public int Area;
+        /// <summary></summary>
         public uint AuctionID;
+        /// <summary>Key of authorized buyer</summary>
         public UUID AuthBuyerID;
+        /// <summary>Bitmap describing land layout in 4x4m squares across the 
+        /// entire region</summary>
         public byte[] Bitmap;
+        /// <summary></summary>
         public ParcelCategory Category;
+        /// <summary>Date land was claimed</summary>
         public DateTime ClaimDate;
+        /// <summary>Appears to always be zero</summary>
         public int ClaimPrice;
+        /// <summary>Parcel Description</summary>
         public string Desc;
+        /// <summary></summary>
         public ParcelFlags ParcelFlags;
+        /// <summary></summary>
         public UUID GroupID;
+        /// <summary>Total number of primitives owned by the parcel group on 
+        /// this parcel</summary>
         public int GroupPrims;
+        /// <summary>Whether the land is deeded to a group or not</summary>
         public bool IsGroupOwned;
+        /// <summary></summary>
         public LandingType LandingType;
+        /// <summary>Maximum number of primitives this parcel supports</summary>
         public int MaxPrims;
+        /// <summary>The Asset UUID of the Texture which when applied to a 
+        /// primitive will display the media</summary>
         public UUID MediaID;
+        /// <summary>A URL which points to any Quicktime supported media type</summary>
         public string MediaURL;
+        /// <summary>A byte, if 0x1 viewer should auto scale media to fit object</summary>
         public bool MediaAutoScale;
+        /// <summary>URL For Music Stream</summary>
         public string MusicURL;
+        /// <summary>Parcel Name</summary>
         public string Name;
+        /// <summary>Autoreturn value in minutes for others' objects</summary>
         public int OtherCleanTime;
+        /// <summary></summary>
         public int OtherCount;
+        /// <summary>Total number of other primitives on this parcel</summary>
         public int OtherPrims;
+        /// <summary>UUID of the owner of this parcel</summary>
         public UUID OwnerID;
+        /// <summary>Total number of primitives owned by the parcel owner on 
+        /// this parcel</summary>
         public int OwnerPrims;
+        /// <summary></summary>
         public float ParcelPrimBonus;
+        /// <summary>How long is pass valid for</summary>
         public float PassHours;
+        /// <summary>Price for a temporary pass</summary>
         public int PassPrice;
+        /// <summary></summary>
         public int PublicCount;
+        /// <summary></summary>
         public bool RegionDenyAnonymous;
+        /// <summary></summary>
         public bool RegionPushOverride;
+        /// <summary>This field is no longer used</summary>
         public int RentPrice;
+        /// The result of a request for parcel properties
         public ParcelResult RequestResult;
+        /// <summary>Sale price of the parcel, only useful if ForSale is set</summary>
+        /// <remarks>The SalePrice will remain the same after an ownership
+        /// transfer (sale), so it can be used to see the purchase price after
+        /// a sale if the new owner has not changed it</remarks>
         public int SalePrice;
+        /// <summary>
+        /// Number of primitives your avatar is currently
+        /// selecting and sitting on in this parcel
+        /// </summary>
         public int SelectedPrims;
+        /// <summary></summary>
         public int SelfCount;
+        /// <summary>
+        /// A number which increments by 1, starting at 0 for each ParcelProperties request. 
+        /// Can be overriden by specifying the sequenceID with the ParcelPropertiesRequest being sent. 
+        /// a Negative number indicates the action in <seealso cref="ParcelPropertiesStatus"/> has occurred. 
+        /// </summary>
         public int SequenceID;
+        /// <summary>Maximum primitives across the entire simulator</summary>
         public int SimWideMaxPrims;
+        /// <summary>Total primitives across the entire simulator</summary>
         public int SimWideTotalPrims;
+        /// <summary></summary>
         public bool SnapSelection;
+        /// <summary>Key of parcel snapshot</summary>
         public UUID SnapshotID;
+        /// <summary>Parcel ownership status</summary>
         public ParcelStatus Status;
+        /// <summary>Total number of primitives on this parcel</summary>
         public int TotalPrims;
+        /// <summary></summary>
         public Vector3 UserLocation;
+        /// <summary></summary>
         public Vector3 UserLookAt;
-
+        /// <summary>TRUE of region denies access to age unverified users</summary>
         public bool RegionDenyAgeUnverified;
-
+        /// <summary>A description of the media</summary>
         public string MediaDesc;
+        /// <summary>An Integer which represents the height of the media</summary>
         public int MediaHeight;
+        /// <summary>An integer which represents the width of the media</summary>
         public int MediaWidth;
+        /// <summary>A boolean, if true the viewer should loop the media</summary>
         public bool MediaLoop;
+        /// <summary>A string which contains the mime type of the media</summary>
         public string MediaType;
+        /// <summary>true to obscure (hide) media url</summary>
         public bool ObscureMedia;
+        /// <summary>true to obscure (hide) music url</summary>
         public bool ObscureMusic;
 
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
         public OSDMap Serialize()
         {
 
@@ -387,7 +704,8 @@ namespace OpenMetaverse.Messages.Linden
             parcelDataMap["ClaimDate"] = OSD.FromDate(ClaimDate);
             parcelDataMap["ClaimPrice"] = OSD.FromInteger(ClaimPrice);
             parcelDataMap["Desc"] = OSD.FromString(Desc);
-            parcelDataMap["ParcelFlags"] = OSD.FromLong((long)ParcelFlags); // verify this!
+            //parcelDataMap["ParcelFlags"] = OSD.FromLong((long)ParcelFlags); // verify this!
+            parcelDataMap["ParcelFlags"] = OSD.FromUInteger((uint)ParcelFlags);
             parcelDataMap["GroupID"] = OSD.FromUUID(GroupID);
             parcelDataMap["GroupPrims"] = OSD.FromInteger(GroupPrims);
             parcelDataMap["IsGroupOwned"] = OSD.FromBoolean(IsGroupOwned);
@@ -472,7 +790,7 @@ namespace OpenMetaverse.Messages.Linden
             }
             else
             {
-                ParcelFlags = (ParcelFlags)parcelDataMap["ParcelFlags"].AsInteger(); // verify this!
+                ParcelFlags = (ParcelFlags)parcelDataMap["ParcelFlags"].AsUInteger();
             }
             GroupID = parcelDataMap["GroupID"].AsUUID();
             GroupPrims = parcelDataMap["GroupPrims"].AsInteger();
@@ -510,30 +828,24 @@ namespace OpenMetaverse.Messages.Linden
             UserLocation = parcelDataMap["UserLocation"].AsVector3();
             UserLookAt = parcelDataMap["UserLookAt"].AsVector3();
 
-            OSD md = map["MediaData"];
-            OSDMap mediaDataMap;
-            if (md is OSDArray)
+            if (map.ContainsKey("MediaData")) // temporary, OpenSim doesn't send this block
             {
-                mediaDataMap = (OSDMap)((OSDArray)map["MediaData"])[0];
+                OSDMap mediaDataMap = (OSDMap) ((OSDArray) map["MediaData"])[0];
+                MediaDesc = mediaDataMap["MediaDesc"].AsString();
+                MediaHeight = mediaDataMap["MediaHeight"].AsInteger();
+                MediaWidth = mediaDataMap["MediaWidth"].AsInteger();
+                MediaLoop = mediaDataMap["MediaLoop"].AsBoolean();
+                MediaType = mediaDataMap["MediaType"].AsString();
+                ObscureMedia = mediaDataMap["ObscureMedia"].AsBoolean();
+                ObscureMusic = mediaDataMap["ObscureMusic"].AsBoolean();
             }
-            else
-            {
-                mediaDataMap = new OSDMap();
-            }
-            MediaDesc = mediaDataMap["MediaDesc"].AsString();
-            MediaHeight = mediaDataMap["MediaHeight"].AsInteger();
-            MediaWidth = mediaDataMap["MediaWidth"].AsInteger();
-            MediaLoop = mediaDataMap["MediaLoop"].AsBoolean();
-            MediaType = mediaDataMap["MediaType"].AsString();
-            ObscureMedia = mediaDataMap["ObscureMedia"].AsBoolean();
-            ObscureMusic = mediaDataMap["ObscureMusic"].AsBoolean();
 
             OSDMap ageVerificationBlockMap = (OSDMap)((OSDArray)map["AgeVerificationBlock"])[0];
             RegionDenyAgeUnverified = ageVerificationBlockMap["RegionDenyAgeUnverified"].AsBoolean();
         }
     }
 
-    public class ParcelPropertiesUpdateMessage
+    public class ParcelPropertiesUpdateMessage : IMessage
     {
         public UUID AuthBuyerID;
         public bool MediaAutoScale;
@@ -581,7 +893,7 @@ namespace OpenMetaverse.Messages.Linden
             Name = map["name"].AsString();
             ObscureMedia = map["obscure_media"].AsBoolean();
             ObscureMusic = map["obscure_music"].AsBoolean();
-            ParcelFlags = (ParcelFlags)map["parcel_flags"].AsInteger();
+            ParcelFlags = (ParcelFlags)map["parcel_flags"].AsUInteger();
             PassHours = (float)map["pass_hours"].AsReal();
             PassPrice = map["pass_price"].AsUInteger();
             SalePrice = map["sale_price"].AsUInteger();
@@ -590,6 +902,10 @@ namespace OpenMetaverse.Messages.Linden
             UserLookAt = map["user_look_at"].AsVector3();
         }
 
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
         public OSDMap Serialize()
         {
             OSDMap map = new OSDMap();
@@ -612,8 +928,7 @@ namespace OpenMetaverse.Messages.Linden
             map["name"] = OSD.FromString(Name);
             map["obscure_media"] = OSD.FromBoolean(ObscureMedia);
             map["obscure_music"] = OSD.FromBoolean(ObscureMusic);
-            // is this endian correct?
-            map["parcel_flags"] = OSD.FromInteger((int)ParcelFlags);
+            map["parcel_flags"] = OSD.FromUInteger((uint)ParcelFlags);
             map["pass_hours"] = OSD.FromReal(PassHours);
             map["pass_price"] = OSD.FromInteger(PassPrice);
             map["sale_price"] = OSD.FromInteger(SalePrice);
@@ -624,26 +939,966 @@ namespace OpenMetaverse.Messages.Linden
             return map;
         }
     }
-
-    public class ChatterboxSessionEventMessage
+    public class RemoteParcelRequestMessage : IMessage
     {
-        public bool Success;
+        public UUID ParcelID;
 
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
         public OSDMap Serialize()
         {
             OSDMap map = new OSDMap(1);
-            map["Success"] = OSD.FromBoolean(Success);
+            map["parcel_id"] = OSD.FromUUID(ParcelID);
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            ParcelID = map["parcel_id"].AsUUID();
+        }
+
+    }
+    #endregion
+
+    #region Inventory Messages
+
+    public class NewFileAgentInventoryMessage
+    {
+        public UUID FolderID;
+        public AssetType AssetType;
+        public InventoryType InventoryType;
+        public string Name;
+        public string Description;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(5);
+            map["folder_id"] = OSD.FromUUID(FolderID);
+            map["asset_type"] = OSD.FromString(Utils.AssetTypeToString(AssetType));
+            map["inventory_type"] = OSD.FromString(Utils.InventoryTypeToString(InventoryType));
+            map["name"] = OSD.FromString(Name);
+            map["description"] = OSD.FromString(Description);
+
+            return map;
+
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            FolderID = map["folder_id"].AsUUID();
+            AssetType = Utils.StringToAssetType(map["asset_type"].AsString());
+            InventoryType = Utils.StringToInventoryType(map["inventory_type"].AsString());
+            Name = map["name"].AsString();
+            Description = map["description"].AsString();
+        }
+    }
+
+    #endregion
+
+    #region Agent Messages
+
+    public class AgentGroupDataUpdateMessage : IMessage
+    {
+        public UUID AgentID;
+
+        public class GroupData
+        {
+            public bool AcceptNotices;
+            public int Contribution;
+            public UUID GroupID;
+            public UUID GroupInsigniaID;
+            public string GroupName;
+            public GroupPowers GroupPowers;
+            public bool ListInProfile;
+        }
+
+        public GroupData[] GroupDataBlock;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(3);
+
+            OSDMap agent = new OSDMap(1);
+            agent["AgentID"] = OSD.FromUUID(AgentID);
+
+            OSDArray agentArray = new OSDArray();
+            agentArray.Add(agent);
+
+            map["AgentData"] = agentArray;
+
+            OSDArray groupDataArray = new OSDArray(GroupDataBlock.Length);
+
+            for (int i = 0; i < GroupDataBlock.Length; i++)
+            {
+                OSDMap group = new OSDMap(7);
+                group["AcceptNotices"] = OSD.FromBoolean(GroupDataBlock[i].AcceptNotices);
+                group["Contribution"] = OSD.FromInteger(GroupDataBlock[i].Contribution);
+                group["GroupID"] = OSD.FromUUID(GroupDataBlock[i].GroupID);
+                group["GroupInsigniaID"] = OSD.FromUUID(GroupDataBlock[i].GroupInsigniaID);
+                group["GroupName"] = OSD.FromString(GroupDataBlock[i].GroupName);
+                group["GroupPowers"] = OSD.FromLong((long)GroupDataBlock[i].GroupPowers);
+                group["ListInProfile"] = OSD.FromBoolean(GroupDataBlock[i].ListInProfile);
+                groupDataArray.Add(group);
+            }
+
+            map["GroupData"] = groupDataArray;
 
             return map;
         }
 
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
         public void Deserialize(OSDMap map)
         {
-            Success = map["success"].AsBoolean();
+            OSDArray agentArray = (OSDArray)map["AgentData"];
+            OSDMap agentMap = (OSDMap)agentArray[0];
+            AgentID = agentMap["AgentID"].AsUUID();
+
+            OSDArray groupArray = (OSDArray)map["GroupData"];
+
+            //OSDArray newGroupDataArray = (OSDArray)map["NewGroupData"];
+
+            GroupDataBlock = new GroupData[groupArray.Count];
+
+            for (int i = 0; i < groupArray.Count; i++)
+            {
+                OSDMap groupMap = (OSDMap)groupArray[i];
+
+
+                GroupData groupData = new GroupData();
+
+                groupData.GroupID = groupMap["GroupID"].AsUUID();
+                groupData.Contribution = groupMap["Contribution"].AsInteger();
+                groupData.GroupInsigniaID = groupMap["GroupInsigniaID"].AsUUID();
+                groupData.GroupName = groupMap["GroupName"].AsString();
+                groupData.GroupPowers = (GroupPowers)groupMap["GroupPowers"].AsLong();
+                groupData.ListInProfile = groupMap["ListInProfile"].AsBoolean();
+                groupData.AcceptNotices = groupMap["AcceptNotices"].AsBoolean();
+                GroupDataBlock[i] = groupData;
+            }
         }
     }
 
-    public class ChatterBoxSessionStartMessage
+    public class UpdateAgentLanguageMessage : IMessage
+    {
+        public string Language;
+        public bool LanguagePublic;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(2);
+
+            map["language"] = OSD.FromString(Language);
+            map["language_is_public"] = OSD.FromBoolean(LanguagePublic);
+
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            LanguagePublic = map["language_is_public"].AsBoolean();
+            Language = map["language"].AsString();
+        }
+
+    }
+
+    #endregion
+
+    #region Voice Messages
+    public class RequiredVoiceVersionMessage : IMessage
+    {
+        public int MajorVersion;
+        public int MinorVersion;
+        public string RegionName;
+        public string Message = "RequiredVoiceVersion";
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(4);
+            map["major_version"] = OSD.FromInteger(MajorVersion);
+            map["minor_version"] = OSD.FromInteger(MinorVersion);
+            map["region_name"] = OSD.FromString(RegionName);
+            map["message"] = OSD.FromString(Message);
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            MajorVersion = map["major_version"].AsInteger();
+            MinorVersion = map["minor_version"].AsInteger();
+            RegionName = map["region_name"].AsString();
+            Message = map["message"].AsString();
+        }
+    }
+
+    public class ParcelVoiceInfoRequestMessage : IMessage
+    {
+        public int ParcelID;
+        public string RegionName;
+        public Uri SipChannelUri;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(3);
+            map["parcel_local_id"] = OSD.FromInteger(ParcelID);
+            map["region_name"] = OSD.FromString(RegionName);
+
+            OSDMap vcMap = new OSDMap(1);
+            vcMap["channel_uri"] = OSD.FromUri(SipChannelUri);
+
+            map["voice_credentials"] = vcMap;
+
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            ParcelID = map["parcel_local_id"].AsInteger();
+            RegionName = map["region_name"].AsString();
+
+            OSDMap vcMap = (OSDMap)map["voice_credentials"];
+            SipChannelUri = vcMap["channel_uri"].AsUri();
+        }
+    }
+
+    public class ProvisionVoiceAccountRequestMessage : IMessage
+    {
+        public string Password;
+        public string Username;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(2);
+
+            map["username"] = OSD.FromString(Username);
+            map["password"] = OSD.FromString(Password);
+
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            Username = map["username"].AsString();
+            Password = map["password"].AsString();
+        }
+    }
+
+    #endregion
+
+    #region Script/Notecards Messages
+    // upload a script to a tasks inventory
+    public class UploadScriptTaskMessage : IMessage
+    {
+        public string State; // "upload"
+        public Uri UploaderUrl;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(2);
+            map["state"] = OSD.FromString(State);
+            map["uploader"] = OSD.FromUri(UploaderUrl);
+
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            State = map["state"].AsString();
+            UploaderUrl = map["uploader"].AsUri();
+        }
+    }
+
+    public class ScriptRunningReplyMessage : IMessage
+    {
+        public UUID ItemID;
+        public bool Mono;
+        public UUID ObjectID;
+        public bool Running;
+        public string message = "ScriptRunningReply";
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(2);
+
+            OSDMap scriptMap = new OSDMap(4);
+            scriptMap["ItemID"] = OSD.FromUUID(ItemID);
+            scriptMap["Mono"] = OSD.FromBoolean(Mono);
+            scriptMap["ObjectID"] = OSD.FromUUID(ObjectID);
+            scriptMap["Running"] = OSD.FromBoolean(Running);
+
+            OSDArray scriptArray = new OSDArray(1);
+            scriptArray.Add((OSD)scriptMap);
+
+            map["Script"] = scriptArray;
+            map["message"] = OSD.FromString(message);
+
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            OSDArray scriptArray = (OSDArray)map["Script"];
+
+            OSDMap scriptMap = (OSDMap)scriptArray[0];
+
+            ItemID = scriptMap["ItemID"].AsUUID();
+            Mono = scriptMap["Mono"].AsBoolean();
+            ObjectID = scriptMap["ObjectID"].AsUUID();
+            Running = scriptMap["Running"].AsBoolean();
+            message = map["message"].AsString();
+
+        }
+    }
+
+    public class UpdateNotecardTaskInventoryMessage
+    {
+        public UUID TaskID;
+        public UUID ItemID;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(1);
+            map["task_id"] = OSD.FromUUID(TaskID);
+            map["item_id"] = OSD.FromUUID(ItemID);
+
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            TaskID = map["task_id"].AsUUID();
+            ItemID = map["item_id"].AsUUID();
+        }
+    }
+
+    // TODO: Add Test
+    public class UpdateNotecardAgentInventoryMessage : IMessage
+    {
+        public UUID ItemID;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(1);
+            map["item_id"] = OSD.FromUUID(ItemID);
+
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            ItemID = map["item_id"].AsUUID();
+        }
+    }
+
+    public class CopyInventoryFromNotecardMessage : IMessage
+    {
+        public int CallbackID;
+        public UUID FolderID;
+        public UUID ItemID;
+        public UUID NotecardID;
+        public UUID ObjectID;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(5);
+            map["callback-id"] = OSD.FromInteger(CallbackID);
+            map["folder-id"] = OSD.FromUUID(FolderID);
+            map["item-id"] = OSD.FromUUID(ItemID);
+            map["notecard-id"] = OSD.FromUUID(NotecardID);
+            map["object-id"] = OSD.FromUUID(ObjectID);
+
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            CallbackID = map["callback-id"].AsInteger();
+            FolderID = map["folder-id"].AsUUID();
+            ItemID = map["item-id"].AsUUID();
+            NotecardID = map["notecard-id"].AsUUID();
+            ObjectID = map["object-id"].AsUUID();
+        }
+    }
+
+    /// <summary>
+    /// Request sent by client to update a script inside a tasks inventory
+    /// </summary>
+    public class UpdateScriptTaskMessage : IMessage
+    {
+        public bool ScriptRunning;
+        public UUID ItemID;
+        public string Target; // mono or lsl2
+        public UUID TaskID;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(4);
+            map["is_script_running"] = OSD.FromBoolean(ScriptRunning);
+            map["item_id"] = OSD.FromUUID(ItemID);
+            map["target"] = OSD.FromString(Target);
+            map["task_id"] = OSD.FromUUID(TaskID);
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            ScriptRunning = map["is_script_running"].AsBoolean();
+            ItemID = map["item_id"].AsUUID();
+            Target = map["target"].AsString();
+            TaskID = map["task_id"].AsUUID();
+        }
+    }
+
+    public class UpdateScriptAgentMessage : IMessage
+    {
+        public UUID ItemID;
+        public string Target;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(2);
+            map["item_id"] = OSD.FromUUID(ItemID);
+            map["target"] = OSD.FromString(Target);
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            ItemID = map["item_id"].AsUUID();
+            Target = map["target"].AsString();
+        }
+
+    }
+
+    public class SendPostcardMessage : IMessage
+    {
+        public string FromEmail;
+        public string Message;
+        public string FromName;
+        public Vector3 GlobalPosition;
+        public string Subject;
+        public string ToEmail;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(6);
+            map["from"] = OSD.FromString(FromEmail);
+            map["msg"] = OSD.FromString(Message);
+            map["name"] = OSD.FromString(FromName);
+            map["pos-global"] = OSD.FromVector3(GlobalPosition);
+            map["subject"] = OSD.FromString(Subject);
+            map["to"] = OSD.FromString(ToEmail);
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            FromEmail = map["from"].AsString();
+            Message = map["msg"].AsString();
+            FromName = map["name"].AsString();
+            GlobalPosition = map["pos-global"].AsVector3();
+            Subject = map["subject"].AsString();
+            ToEmail = map["to"].AsString();
+        }
+    }
+
+    #endregion
+
+    #region Grid/Maps
+
+    public class MapLayerMessage : IMessage
+    {
+        // AgentData -> Flags
+        public int Flags;
+
+        public class LayerData
+        {
+            public UUID ImageID;
+            public int Bottom;
+            public int Left;
+            public int Right;
+            public int Top;
+        }
+
+        public LayerData[] LayerDataBlocks;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(2);
+            OSDMap agentMap = new OSDMap(1);
+            agentMap["Flags"] = OSD.FromInteger(Flags);
+            map["AgentData"] = agentMap;
+
+            OSDArray layerArray = new OSDArray(LayerDataBlocks.Length);
+
+            for (int i = 0; i < LayerDataBlocks.Length; i++)
+            {
+                OSDMap layerMap = new OSDMap(5);
+                layerMap["ImageID"] = OSD.FromUUID(LayerDataBlocks[i].ImageID);
+                layerMap["Bottom"] = OSD.FromInteger(LayerDataBlocks[i].Bottom);
+                layerMap["Left"] = OSD.FromInteger(LayerDataBlocks[i].Left);
+                layerMap["Top"] = OSD.FromInteger(LayerDataBlocks[i].Top);
+                layerMap["Right"] = OSD.FromInteger(LayerDataBlocks[i].Right);
+
+                layerArray.Add(layerMap);
+            }
+
+            map["LayerData"] = layerArray;
+
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            OSDMap agentMap = (OSDMap)map["AgentData"];
+            Flags = agentMap["Flags"].AsInteger();
+
+            OSDArray layerArray = (OSDArray)map["LayerData"];
+
+            LayerDataBlocks = new LayerData[layerArray.Count];
+
+            for (int i = 0; i < LayerDataBlocks.Length; i++)
+            {
+                OSDMap layerMap = (OSDMap)layerArray[i];
+
+                LayerData layer = new LayerData();
+                layer.ImageID = layerMap["ImageID"].AsUUID();
+                layer.Top = layerMap["Top"].AsInteger();
+                layer.Right = layerMap["Right"].AsInteger();
+                layer.Left = layerMap["Left"].AsInteger();
+                layer.Bottom = layerMap["Bottom"].AsInteger();
+
+                LayerDataBlocks[i] = layer;
+            }
+        }
+    }
+
+    #endregion
+
+    #region Session/Communication
+
+    /// <summary>
+    /// New as of 1.23 RC1, no details yet.
+    /// </summary>
+    public class ProductInfoRequestMessage : IMessage
+    {
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            
+        }
+
+    }
+
+    #region ChatSessionRequestMessage
+
+    public interface IChatSessionRequest
+    {
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        OSDMap Serialize();
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        void Deserialize(OSDMap map);
+    }
+
+    /// <summary>
+    /// A request sent from an agent to the Simulator to begin a new conference.
+    /// Contains a list of Agents to be in the conference
+    /// </summary>
+    /* VARIANT A:
+    {
+        'method':'start conference'
+        ,
+        'params':
+        [
+            u69d068f3-824f-43ca-8b9a-1542065669b9,
+            ua11dccfb-a55f-406a-bad2-f851af5979be
+        ]
+        ,
+        'session-id':u30dcb931-c2f8-469e-662d-f7c2daacffee
+    } */
+    public class ChatSessionRequestStartConference : IChatSessionRequest
+    {
+        /// <summary>A string containing the method used, for a new session (non group) this will be "start conference"</summary>
+        public string Method = "start conference";
+        /// <summary>An array containing the <see cref="UUID"/> of the agents invited to this conference</summary>
+        public UUID[] AgentsBlock;
+        /// <summary>The conferences Session ID</summary>
+        public UUID SessionID;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(3);
+            map["method"] = OSD.FromString(Method);
+            OSDArray agentsArray = new OSDArray();
+            for (int i = 0; i < AgentsBlock.Length; i++)
+            {
+                agentsArray.Add(OSD.FromUUID(AgentsBlock[i]));
+            }
+            map["params"] = agentsArray;
+            map["session-id"] = OSD.FromUUID(SessionID);
+
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            Method = map["method"].AsString();
+            OSDArray agentsArray = (OSDArray)map["params"];
+
+            AgentsBlock = new UUID[agentsArray.Count];
+
+            for (int i = 0; i < agentsArray.Count; i++)
+            {
+                AgentsBlock[i] = agentsArray[i].AsUUID();
+            }
+
+            SessionID = map["session-id"].AsUUID();
+        }
+    }
+
+    /// <summary>
+    /// A moderation request sent from a conference moderator
+    /// Contains an agent and an optional action to take
+    /// </summary>
+    /* VARIANT B:
+    {
+            'method':'mute update'
+            ,
+            'params':
+            {
+            'agent_id':u69d068f3-824f-43ca-8b9a-1542065669b9
+            ,
+            'mute_info':
+            {
+                'text':t
+            }
+        }
+        ,
+        'session-id':ufdf0ac75-73b7-0320-96a8-ddd295ba7d8c
+    } */
+    public class ChatSessionRequestMuteUpdate : IChatSessionRequest
+    {
+        /// <summary>
+        /// The Session ID
+        /// </summary>
+        public UUID SessionID;
+
+        /// <summary>
+        /// The method used to update session, currently known valid values:
+        ///  mute update
+        /// </summary>
+        public string Method = "mute update";
+
+        public UUID AgentID;
+        /// <summary>
+        /// A list containing Key/Value pairs, known valid values:
+        /// key: text value: true/false - allow/disallow specified agents ability to use text in session
+        /// key: voice value: true/false - allow/disallow specified agents ability to use voice in session
+        /// </summary>
+        public string RequestKey; // "text" or "voice"
+        public bool RequestValue;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(3);
+            map["method"] = OSD.FromString(Method);
+
+            OSDMap muteMap = new OSDMap(1);
+            muteMap[RequestKey] = OSD.FromBoolean(RequestValue);
+
+            OSDMap paramMap = new OSDMap(2);
+            paramMap["agent_id"] = OSD.FromUUID(AgentID);
+            paramMap["mute_info"] = muteMap;
+
+            map["params"] = paramMap;
+            map["session-id"] = OSD.FromUUID(SessionID);
+
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            Method = map["method"].AsString();
+            SessionID = map["session-id"].AsUUID();
+
+            OSDMap paramsMap = (OSDMap)map["params"];
+            OSDMap muteMap = (OSDMap)paramsMap["mute_info"];
+
+            AgentID = paramsMap["agent_id"].AsUUID();
+
+            if (muteMap.ContainsKey("text"))
+                RequestKey = "text";
+            else if (muteMap.ContainsKey("voice"))
+                RequestKey = "voice";
+
+            RequestValue = muteMap[RequestKey].AsBoolean();
+        }
+    }
+
+
+   /*
+    * VARIANT C
+  {
+    'method':'accept invitation'
+    ,
+    'session-id':u30867cec-7906-2ca1-400f-742ad88e4928
+  }*/
+    /// <summary>
+    /// A message sent from the agent to the simulator which tells the 
+    /// simulator we've accepted a conference invitation
+    /// </summary>
+    public class ChatSessionAcceptInvitation : IChatSessionRequest
+    {
+        public string Method = "accept invitation";
+        /// <summary>The conference SessionID</summary>
+        public UUID SessionID;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(2);
+            map["method"] = OSD.FromString(Method);
+            map["session-id"] = OSD.FromUUID(SessionID);
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            Method = map["method"].AsString();
+            SessionID = map["session-id"].AsUUID();
+        }
+    }
+
+    public class ChatSessionRequestMessage : IMessage
+    {
+        public IChatSessionRequest Request;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            return Request.Serialize();
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            if (map.ContainsKey("method") && map["method"].AsString().Equals("start conference"))
+                Request = new ChatSessionRequestStartConference();
+            else if (map.ContainsKey("method") && map["method"].AsString().Equals("mute update"))
+                Request = new ChatSessionRequestMuteUpdate();
+            else if (map.ContainsKey("method") && map["method"].AsString().Equals("accept invitation"))
+                Request = new ChatSessionAcceptInvitation();
+            else
+                Logger.Log("Unable to deserialize ChatSessionRequest: No message handler exists for method " + map["method"].AsString(), Helpers.LogLevel.Warning); 
+
+            Request.Deserialize(map);
+        }
+    }
+
+    #endregion
+
+    public class ChatterboxSessionEventReplyMessage : IMessage
+    {
+        public UUID SessionID;
+        public bool Success;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(2);
+            map["success"] = OSD.FromBoolean(Success);
+            map["session_id"] = OSD.FromUUID(SessionID); // FIXME: Verify this is correct map name
+
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            Success = map["success"].AsBoolean();
+            SessionID = map["session_id"].AsUUID();
+        }
+    }
+
+    public class ChatterBoxSessionStartReplyMessage : IMessage
     {
         public UUID SessionID;
         public UUID TempSessionID;
@@ -655,29 +1910,36 @@ namespace OpenMetaverse.Messages.Linden
         public bool VoiceEnabled;
         public bool ModeratedVoice;
 
+        /* Is Text moderation possible? */
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
         public OSDMap Serialize()
         {
-            OSDMap map = new OSDMap(4);
-            map.Add("session_id", OSD.FromUUID(SessionID));
-            map.Add("temp_session_id", OSD.FromUUID(TempSessionID));
-            map.Add("success", OSD.FromBoolean(Success));
+            OSDMap moderatedMap = new OSDMap(1);
+            moderatedMap["voice"] = OSD.FromBoolean(ModeratedVoice);
 
             OSDMap sessionMap = new OSDMap(4);
-            sessionMap.Add("type", OSD.FromInteger(Type));
-            sessionMap.Add("session_name", OSD.FromString(SessionName));
-            sessionMap.Add("voice_enabled", OSD.FromBoolean(VoiceEnabled));
+            sessionMap["type"] = OSD.FromInteger(Type);
+            sessionMap["session_name"] = OSD.FromString(SessionName);
+            sessionMap["voice_enabled"] = OSD.FromBoolean(VoiceEnabled);
+            sessionMap["moderated_mode"] = moderatedMap;
 
-
-            OSDMap moderatedMap = new OSDMap(1);
-            moderatedMap.Add("voice", OSD.FromBoolean(ModeratedVoice));
-
-            sessionMap.Add("moderated_mode", moderatedMap);
-
-            map.Add("session_info", sessionMap);
+            OSDMap map = new OSDMap(4);
+            map["session_id"] = OSD.FromUUID(SessionID);
+            map["temp_session_id"] = OSD.FromUUID(TempSessionID);
+            map["success"] = OSD.FromBoolean(Success);
+            map["session_info"] = sessionMap;
 
             return map;
         }
 
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
         public void Deserialize(OSDMap map)
         {
             SessionID = map["session_id"].AsUUID();
@@ -686,17 +1948,18 @@ namespace OpenMetaverse.Messages.Linden
 
             if (Success)
             {
-                OSDMap sessionInfoMap = (OSDMap)map["session_info"];
-                SessionName = sessionInfoMap["session_name"].AsString();
-                Type = sessionInfoMap["type"].AsInteger();
+                OSDMap sessionMap = (OSDMap)map["session_info"];
+                SessionName = sessionMap["session_name"].AsString();
+                Type = sessionMap["type"].AsInteger();
+                VoiceEnabled = sessionMap["voice_enabled"].AsBoolean();
 
-                OSDMap moderatedModeMap = (OSDMap)sessionInfoMap["moderated_mode"];
+                OSDMap moderatedModeMap = (OSDMap)sessionMap["moderated_mode"];
                 ModeratedVoice = moderatedModeMap["voice"].AsBoolean();
             }
         }
     }
 
-    public class ChatterBoxInvitationMessage
+    public class ChatterBoxInvitationMessage : IMessage
     {
         /// <summary>Key of sender</summary>
         public UUID FromAgentID;
@@ -725,127 +1988,805 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary>Context specific packed data</summary>
         public byte[] BinaryBucket;
 
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
         public OSDMap Serialize()
         {
-            throw new NotImplementedException();
+            OSDMap dataMap = new OSDMap(3);
+            dataMap["timestamp"] = OSD.FromDate(Timestamp);
+            dataMap["type"] = OSD.FromInteger((uint)Dialog);
+            dataMap["binary_bucket"] = OSD.FromBinary(BinaryBucket);
+
+            OSDMap paramsMap = new OSDMap(11);
+            paramsMap["from_id"] = OSD.FromUUID(FromAgentID);
+            paramsMap["from_name"] = OSD.FromString(FromAgentName);
+            paramsMap["to_id"] = OSD.FromUUID(ToAgentID);
+            paramsMap["parent_estate_id"] = OSD.FromInteger(ParentEstateID);
+            paramsMap["region_id"] = OSD.FromUUID(RegionID);
+            paramsMap["position"] = OSD.FromVector3(Position);
+            paramsMap["from_group"] = OSD.FromBoolean(GroupIM);
+            paramsMap["id"] = OSD.FromUUID(IMSessionID);
+            paramsMap["message"] = OSD.FromString(Message);
+            paramsMap["offline"] = OSD.FromInteger((uint)Offline);
+
+            paramsMap["data"] = dataMap;
+
+            OSDMap imMap = new OSDMap(1);
+            imMap["message_params"] = paramsMap;
+
+            OSDMap map = new OSDMap(1);
+            map["instantmessage"] = imMap;
+
+
+            return map;
         }
 
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
         public void Deserialize(OSDMap map)
         {
             OSDMap im = (OSDMap)map["instantmessage"];
             OSDMap msg = (OSDMap)im["message_params"];
             OSDMap msgdata = (OSDMap)msg["data"];
 
-            FromAgentID = map["from_id"].AsUUID();
-            FromAgentName = map["from_name"].AsString();
+            FromAgentID = msg["from_id"].AsUUID();
+            FromAgentName = msg["from_name"].AsString();
             ToAgentID = msg["to_id"].AsUUID();
             ParentEstateID = (uint)msg["parent_estate_id"].AsInteger();
             RegionID = msg["region_id"].AsUUID();
             Position = msg["position"].AsVector3();
-            Dialog = (InstantMessageDialog)msgdata["type"].AsInteger();
             GroupIM = msg["from_group"].AsBoolean();
-            IMSessionID = map["session_id"].AsUUID();
-            Timestamp = new DateTime(msgdata["timestamp"].AsInteger());
+            IMSessionID = msg["id"].AsUUID();
             Message = msg["message"].AsString();
             Offline = (InstantMessageOnline)msg["offline"].AsInteger();
+            Dialog = (InstantMessageDialog)msgdata["type"].AsInteger();
             BinaryBucket = msgdata["binary_bucket"].AsBinary();
+            Timestamp = msgdata["timestamp"].AsDate();
         }
     }
 
-    public class ModerateChatSessionsMessage
+    /// <summary>
+    /// Sent from the simulator to the viewer.
+    /// 
+    /// When an agent initially joins a session the AgentUpdatesBlock object will contain a list of session members including
+    /// a boolean indicating they can use voice chat in this session, a boolean indicating they are allowed to moderate 
+    /// this session, and lastly a string which indicates another agent is entering the session with the Transition set to "ENTER"
+    /// 
+    /// During the session lifetime updates on individuals are sent. During the update the booleans sent during the initial join are
+    /// excluded with the exception of the Transition field. This indicates a new user entering or exiting the session with
+    /// the string "ENTER" or "LEAVE" respectively.
+    /// </summary>
+    public class ChatterBoxSessionAgentListUpdatesMessage : IMessage
     {
+        // initial when agent joins session
+        // <llsd><map><key>events</key><array><map><key>body</key><map><key>agent_updates</key><map><key>32939971-a520-4b52-8ca5-6085d0e39933</key><map><key>info</key><map><key>can_voice_chat</key><boolean>1</boolean><key>is_moderator</key><boolean>1</boolean></map><key>transition</key><string>ENTER</string></map><key>ca00e3e1-0fdb-4136-8ed4-0aab739b29e8</key><map><key>info</key><map><key>can_voice_chat</key><boolean>1</boolean><key>is_moderator</key><boolean>0</boolean></map><key>transition</key><string>ENTER</string></map></map><key>session_id</key><string>be7a1def-bd8a-5043-5d5b-49e3805adf6b</string><key>updates</key><map><key>32939971-a520-4b52-8ca5-6085d0e39933</key><string>ENTER</string><key>ca00e3e1-0fdb-4136-8ed4-0aab739b29e8</key><string>ENTER</string></map></map><key>message</key><string>ChatterBoxSessionAgentListUpdates</string></map><map><key>body</key><map><key>agent_updates</key><map><key>32939971-a520-4b52-8ca5-6085d0e39933</key><map><key>info</key><map><key>can_voice_chat</key><boolean>1</boolean><key>is_moderator</key><boolean>1</boolean></map></map></map><key>session_id</key><string>be7a1def-bd8a-5043-5d5b-49e3805adf6b</string><key>updates</key><map /></map><key>message</key><string>ChatterBoxSessionAgentListUpdates</string></map></array><key>id</key><integer>5</integer></map></llsd>
+
+        // a message containing only moderator updates
+        // <llsd><map><key>events</key><array><map><key>body</key><map><key>agent_updates</key><map><key>ca00e3e1-0fdb-4136-8ed4-0aab739b29e8</key><map><key>info</key><map><key>mutes</key><map><key>text</key><boolean>1</boolean></map></map></map></map><key>session_id</key><string>be7a1def-bd8a-5043-5d5b-49e3805adf6b</string><key>updates</key><map /></map><key>message</key><string>ChatterBoxSessionAgentListUpdates</string></map></array><key>id</key><integer>7</integer></map></llsd>
+
+        public UUID SessionID;
+        public string Message = "ChatterBoxSessionAgentListUpdates"; // message
+
+        public class AgentUpdatesBlock
+        {
+            public UUID AgentID;
+
+            public bool CanVoiceChat;
+            public bool IsModerator;
+            // transition "transition" = "ENTER" or "LEAVE"
+            public string Transition;   //  TODO: switch to an enum "ENTER" or "LEAVE"
+
+            public bool MuteText;
+            public bool MuteVoice;
+        }
+
+        public AgentUpdatesBlock[] Updates;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
         public OSDMap Serialize()
         {
-            throw new NotImplementedException();
+            OSDMap map = new OSDMap();
+
+            OSDMap agent_updatesMap = new OSDMap(1);
+            for (int i = 0; i < Updates.Length; i++)
+            {
+                OSDMap mutesMap = new OSDMap(2);
+                mutesMap["text"] = OSD.FromBoolean(Updates[i].MuteText);
+                mutesMap["voice"] = OSD.FromBoolean(Updates[i].MuteVoice);
+
+                OSDMap infoMap = new OSDMap(4);
+                infoMap["can_voice_chat"] = OSD.FromBoolean((bool)Updates[i].CanVoiceChat);
+                infoMap["is_moderator"] = OSD.FromBoolean((bool)Updates[i].IsModerator);
+                infoMap["transition"] = OSD.FromString(Updates[i].Transition);
+
+                OSDMap imap = new OSDMap(1);
+                imap["info"] = infoMap;
+                imap.Add("mutes", mutesMap);
+
+                agent_updatesMap.Add(Updates[i].AgentID.ToString(), imap);
+            }
+
+            map.Add("agent_updates", agent_updatesMap);
+
+            map["session_id"] = OSD.FromUUID(SessionID);
+
+            map["message"] = OSD.FromString(Message);
+
+            return map;
         }
 
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
         public void Deserialize(OSDMap map)
         {
-            throw new NotImplementedException();
+
+            OSDMap agent_updates = (OSDMap)map["agent_updates"];
+            SessionID = map["session_id"].AsUUID();
+            Message = map["message"].AsString();
+
+            List<AgentUpdatesBlock> updatesList = new List<AgentUpdatesBlock>();
+
+            foreach (KeyValuePair<string, OSD> kvp in agent_updates)
+            {
+
+                if (kvp.Key == "updates")
+                {
+                    // This appears to be redundant and duplicated by the info block, more dumps will confirm this
+                    /* <key>32939971-a520-4b52-8ca5-6085d0e39933</key>
+                            <string>ENTER</string> */
+                }
+                else if (kvp.Key == "session_id")
+                {
+                    // I am making the assumption that each osdmap will contain the information for a 
+                    // single session. This is how the map appears to read however more dumps should be taken
+                    // to confirm this.
+                    /* <key>session_id</key>
+                            <string>984f6a1e-4ceb-6366-8d5e-a18c6819c6f7</string> */
+
+                }
+                else  // key is an agent uuid (we hope!)
+                {
+                    // should be the agents uuid as the key, and "info" as the datablock
+                    /* <key>32939971-a520-4b52-8ca5-6085d0e39933</key>
+                            <map>
+                                <key>info</key>
+                                    <map>
+                                        <key>can_voice_chat</key>
+                                            <boolean>1</boolean>
+                                        <key>is_moderator</key>
+                                            <boolean>1</boolean>
+                                    </map>
+                                <key>transition</key>
+                                    <string>ENTER</string>
+                            </map>*/
+                    AgentUpdatesBlock block = new AgentUpdatesBlock();
+                    block.AgentID = UUID.Parse(kvp.Key);
+
+                    OSDMap infoMap = (OSDMap)agent_updates[kvp.Key];
+
+                    OSDMap agentPermsMap = (OSDMap)infoMap["info"];
+
+                    block.CanVoiceChat = agentPermsMap["can_voice_chat"].AsBoolean();
+                    block.IsModerator = agentPermsMap["is_moderator"].AsBoolean();
+                    block.Transition = agentPermsMap["transition"].AsString();
+
+                    if (infoMap.ContainsKey("mutes"))
+                    {
+                        OSDMap mutesMap = (OSDMap)infoMap["mutes"];
+                        block.MuteText = mutesMap["text"].AsBoolean();
+                        block.MuteVoice = mutesMap["voice"].AsBoolean();
+                    }
+                    updatesList.Add(block);
+                }
+            }
+
+            Updates = new AgentUpdatesBlock[updatesList.Count];
+
+            for (int i = 0; i < updatesList.Count; i++)
+            {
+                AgentUpdatesBlock block = new AgentUpdatesBlock();
+                block.AgentID = updatesList[i].AgentID;
+                block.CanVoiceChat = updatesList[i].CanVoiceChat;
+                block.IsModerator = updatesList[i].IsModerator;
+                block.MuteText = updatesList[i].MuteText;
+                block.MuteVoice = updatesList[i].MuteVoice;
+                block.Transition = updatesList[i].Transition;
+                Updates[i] = block;
+            }
         }
     }
 
-    public class ChatterBoxSessionAgentListMessage
+    #endregion
+
+    #region EventQueue
+
+    public interface IEventMessage
     {
+        OSDMap Serialize();
+        void Deserialize(OSDMap map);
+    }
+
+    public class EventQueueAck : IEventMessage
+    {
+        public int AckID;
+        public bool Done;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
         public OSDMap Serialize()
         {
-            throw new NotImplementedException();
+            OSDMap map = new OSDMap();
+            map["ack"] = OSD.FromInteger(AckID);
+            map["done"] = OSD.FromBoolean(Done);
+            return map;
         }
 
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
         public void Deserialize(OSDMap map)
         {
-            throw new NotImplementedException();
+            AckID = map["ack"].AsInteger();
+            Done = map["done"].AsBoolean();
         }
     }
 
-    public class NewFileAgentInventoryMessage
+    public class EventQueueEvent : IEventMessage
     {
-        public UUID FolderID;
-        public AssetType AssetType;
-        public InventoryType InventoryType;
-        public string Name;
-        public string Description;
+        public int Sequence;
 
+        public class QueueEvent
+        {
+            public IMessage EventMessage;
+            public string MessageKey;
+        }
+        public QueueEvent[] MessageEvents;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(1);
+
+            OSDArray eventsArray = new OSDArray();
+
+            for (int i = 0; i < MessageEvents.Length; i++)
+            {
+                OSDMap eventMap = new OSDMap(2);
+                eventMap["body"] = MessageEvents[i].EventMessage.Serialize();
+                eventMap["message"] = OSD.FromString(MessageEvents[i].MessageKey);
+                eventsArray.Add(eventMap);
+            }
+
+            map["events"] = eventsArray;
+            map["id"] = OSD.FromInteger(Sequence);
+
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            Sequence = map["id"].AsInteger();
+            OSDArray arrayEvents = (OSDArray)map["events"];
+
+            MessageEvents = new QueueEvent[arrayEvents.Count];
+
+            for (int i = 0; i < arrayEvents.Count; i++)
+            {
+                OSDMap eventMap = (OSDMap)arrayEvents[i];
+                QueueEvent ev = new QueueEvent();
+
+                ev.MessageKey = eventMap["message"].AsString();
+                ev.EventMessage = MessageUtils.DecodeEvent(ev.MessageKey, (OSDMap)eventMap["body"]);
+                MessageEvents[i] = ev;
+            }
+        }
+    }
+
+        public class EventQueueGetMessage : IMessage
+        {
+            public IEventMessage Messages;
+
+            /// <summary>
+            /// Serialize the object
+            /// </summary>
+            /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+            public OSDMap Serialize()
+            {
+                return Messages.Serialize();
+            }
+
+            /// <summary>
+            /// Deserialize the message
+            /// </summary>
+            /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+            public void Deserialize(OSDMap map)
+            {
+                if (map.ContainsKey("ack"))
+                    Messages = new EventQueueAck();
+                else if (map.ContainsKey("events"))
+                    Messages = new EventQueueEvent();
+                else
+                    Logger.Log("Unable to deserialize EventQueueGetMessage: No message handler exists for event", Helpers.LogLevel.Warning);
+
+                Messages.Deserialize(map);
+            }
+        }
+    
+
+    #endregion
+
+
+    #region Stats Messages
+
+    public class ViewerStatsMessage : IMessage
+    {
+        public int AgentsInView;
+        public float AgentFPS;
+        public string AgentLanguage;
+        public float AgentMemoryUsed;
+        public float MetersTraveled;
+        public float AgentPing;
+        public int RegionsVisited;
+        public float AgentRuntime;
+        public float SimulatorFPS;
+        public DateTime AgentStartTime;
+        public string AgentVersion;
+
+        public float object_kbytes;
+        public float texture_kbytes;
+        public float world_kbytes;
+
+        public float MiscVersion;
+        public bool VertexBuffersEnabled;
+
+        public UUID SessionID;
+
+        public int StatsDropped;
+        public int StatsFailedResends;
+        public int FailuresInvalid;
+        public int FailuresOffCircuit;
+        public int FailuresResent;
+        public int FailuresSendPacket;
+
+        public int MiscInt1;
+        public int MiscInt2;
+        public string MiscString1;
+
+        public int InCompressedPackets;
+        public float InKbytes;
+        public float InPackets;
+        public float InSavings;
+
+        public int OutCompressedPackets;
+        public float OutKbytes;
+        public float OutPackets;
+        public float OutSavings;
+
+        public string SystemCPU;
+        public string SystemGPU;
+        public int SystemGPUClass;
+        public string SystemGPUVendor;
+        public string SystemGPUVersion;
+        public string SystemOS;
+        public int SystemInstalledRam;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
         public OSDMap Serialize()
         {
             OSDMap map = new OSDMap(5);
-            map["folder_id"] = OSD.FromUUID(FolderID);
-            map["asset_type"] = OSD.FromString(Utils.AssetTypeToString(AssetType));
-            map["inventory_type"] = OSD.FromString(Utils.InventoryTypeToString(InventoryType));
-            map["name"] = OSD.FromString(Name);
-            map["description"] = OSD.FromString(Description);
+            map["session_id"] = OSD.FromUUID(SessionID);
 
+            OSDMap agentMap = new OSDMap(11);
+            agentMap["agents_in_view"] = OSD.FromInteger(AgentsInView);
+            agentMap["fps"] = OSD.FromReal(AgentFPS);
+            agentMap["language"] = OSD.FromString(AgentLanguage);
+            agentMap["mem_use"] = OSD.FromReal(AgentMemoryUsed);
+            agentMap["meters_traveled"] = OSD.FromReal(MetersTraveled);
+            agentMap["ping"] = OSD.FromReal(AgentPing);
+            agentMap["regions_visited"] = OSD.FromInteger(RegionsVisited);
+            agentMap["run_time"] = OSD.FromReal(AgentRuntime);
+            agentMap["sim_fps"] = OSD.FromReal(SimulatorFPS);
+            agentMap["start_time"] = OSD.FromUInteger(Utils.DateTimeToUnixTime(AgentStartTime));
+            agentMap["version"] = OSD.FromString(AgentVersion);
+            map["agent"] = agentMap;
+
+
+            OSDMap downloadsMap = new OSDMap(3); // downloads
+            downloadsMap["object_kbytes"] = OSD.FromReal(object_kbytes);
+            downloadsMap["texture_kbytes"] = OSD.FromReal(texture_kbytes);
+            downloadsMap["world_kbytes"] = OSD.FromReal(world_kbytes);
+            map["downloads"] = downloadsMap;
+
+            OSDMap miscMap = new OSDMap(2);
+            miscMap["Version"] = OSD.FromReal(MiscVersion);
+            miscMap["Vertex Buffers Enabled"] = OSD.FromBoolean(VertexBuffersEnabled);
+            map["misc"] = miscMap;
+
+            OSDMap statsMap = new OSDMap(2);
+
+            OSDMap failuresMap = new OSDMap(6);
+            failuresMap["dropped"] = OSD.FromInteger(StatsDropped);
+            failuresMap["failed_resends"] = OSD.FromInteger(StatsFailedResends);
+            failuresMap["invalid"] = OSD.FromInteger(FailuresInvalid);
+            failuresMap["off_circuit"] = OSD.FromInteger(FailuresOffCircuit);
+            failuresMap["resent"] = OSD.FromInteger(FailuresResent);
+            failuresMap["send_packet"] = OSD.FromInteger(FailuresSendPacket);
+            statsMap["failures"] = failuresMap;
+
+            OSDMap statsMiscMap = new OSDMap(3);
+            statsMiscMap["int_1"] = OSD.FromInteger(MiscInt1);
+            statsMiscMap["int_2"] = OSD.FromInteger(MiscInt2);
+            statsMiscMap["string_1"] = OSD.FromString(MiscString1);
+            statsMap["misc"] = statsMiscMap;
+
+            OSDMap netMap = new OSDMap(3);
+
+            // in
+            OSDMap netInMap = new OSDMap(4);
+            netInMap["compressed_packets"] = OSD.FromInteger(InCompressedPackets);
+            netInMap["kbytes"] = OSD.FromReal(InKbytes);
+            netInMap["packets"] = OSD.FromReal(InPackets);
+            netInMap["savings"] = OSD.FromReal(InSavings);
+            netMap["in"] = netInMap;
+            // out
+            OSDMap netOutMap = new OSDMap(4);
+            netOutMap["compressed_packets"] = OSD.FromInteger(OutCompressedPackets);
+            netOutMap["kbytes"] = OSD.FromReal(OutKbytes);
+            netOutMap["packets"] = OSD.FromReal(OutPackets);
+            netOutMap["savings"] = OSD.FromReal(OutSavings);
+            netMap["out"] = netOutMap;
+
+            statsMap["net"] = netMap;
+
+            //system
+            OSDMap systemStatsMap = new OSDMap(7);
+            systemStatsMap["cpu"] = OSD.FromString(SystemCPU);
+            systemStatsMap["gpu"] = OSD.FromString(SystemGPU);
+            systemStatsMap["gpu_class"] = OSD.FromInteger(SystemGPUClass);
+            systemStatsMap["gpu_vendor"] = OSD.FromString(SystemGPUVendor);
+            systemStatsMap["gpu_version"] = OSD.FromString(SystemGPUVersion);
+            systemStatsMap["os"] = OSD.FromString(SystemOS);
+            systemStatsMap["ram"] = OSD.FromInteger(SystemInstalledRam);
+            map["system"] = systemStatsMap;
+
+            map["stats"] = statsMap;
             return map;
-
         }
 
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
         public void Deserialize(OSDMap map)
         {
-            FolderID = map["folder_id"].AsUUID();
-            AssetType = Utils.StringToAssetType(map["asset_type"].AsString());
-            InventoryType = Utils.StringToInventoryType(map["inventory_type"].AsString());
-            Name = map["name"].AsString();
-            Description = map["description"].AsString();
-        }
+            SessionID = map["session_id"].AsUUID();
 
+            OSDMap agentMap = (OSDMap)map["agent"];
+            AgentsInView = agentMap["agents_in_view"].AsInteger();
+            AgentFPS = (float)agentMap["fps"].AsReal();
+            AgentLanguage = agentMap["language"].AsString();
+            AgentMemoryUsed = (float)agentMap["mem_use"].AsReal();
+            MetersTraveled = agentMap["meters_traveled"].AsInteger();
+            AgentPing = (float)agentMap["ping"].AsReal();
+            RegionsVisited = agentMap["regions_visited"].AsInteger();
+            AgentRuntime = (float)agentMap["run_time"].AsReal();
+            SimulatorFPS = (float)agentMap["sim_fps"].AsReal();
+            AgentStartTime = Utils.UnixTimeToDateTime(agentMap["start_time"].AsUInteger());
+            AgentVersion = agentMap["version"].AsString();
+
+            OSDMap downloadsMap = (OSDMap)map["downloads"];
+            object_kbytes = (float)downloadsMap["object_kbytes"].AsReal();
+            texture_kbytes = (float)downloadsMap["texture_kbytes"].AsReal();
+            world_kbytes = (float)downloadsMap["world_kbytes"].AsReal();
+
+            OSDMap miscMap = (OSDMap)map["misc"];
+            MiscVersion = (float)miscMap["Version"].AsReal();
+            VertexBuffersEnabled = miscMap["Vertex Buffers Enabled"].AsBoolean();
+
+            OSDMap statsMap = (OSDMap)map["stats"];
+            OSDMap failuresMap = (OSDMap)statsMap["failures"];
+            StatsDropped = failuresMap["dropped"].AsInteger();
+            StatsFailedResends = failuresMap["failed_resends"].AsInteger();
+            FailuresInvalid = failuresMap["invalid"].AsInteger();
+            FailuresOffCircuit = failuresMap["off_circuit"].AsInteger();
+            FailuresResent = failuresMap["resent"].AsInteger();
+            FailuresSendPacket = failuresMap["send_packet"].AsInteger();
+
+            OSDMap statsMiscMap = (OSDMap)statsMap["misc"];
+            MiscInt1 = statsMiscMap["int_1"].AsInteger();
+            MiscInt2 = statsMiscMap["int_2"].AsInteger();
+            MiscString1 = statsMiscMap["string_1"].AsString();
+            OSDMap netMap = (OSDMap)statsMap["net"];
+            // in
+            OSDMap netInMap = (OSDMap)netMap["in"];
+            InCompressedPackets = netInMap["compressed_packets"].AsInteger();
+            InKbytes = netInMap["kbytes"].AsInteger();
+            InPackets = netInMap["packets"].AsInteger();
+            InSavings = netInMap["savings"].AsInteger();
+            // out
+            OSDMap netOutMap = (OSDMap)netMap["out"];
+            OutCompressedPackets = netOutMap["compressed_packets"].AsInteger();
+            OutKbytes = netOutMap["kbytes"].AsInteger();
+            OutPackets = netOutMap["packets"].AsInteger();
+            OutSavings = netOutMap["savings"].AsInteger();
+
+            //system
+            OSDMap systemStatsMap = (OSDMap)map["system"];
+            SystemCPU = systemStatsMap["cpu"].AsString();
+            SystemGPU = systemStatsMap["gpu"].AsString();
+            SystemGPUClass = systemStatsMap["gpu_class"].AsInteger();
+            SystemGPUVendor = systemStatsMap["gpu_vendor"].AsString();
+            SystemGPUVersion = systemStatsMap["gpu_version"].AsString();
+            SystemOS = systemStatsMap["os"].AsString();
+            SystemInstalledRam = systemStatsMap["ram"].AsInteger();
+        }
     }
 
-    public class UpdateNotecardAgentInventoryMessage
+    /// <summary>
+    /// 
+    /// </summary>
+    public class PlacesReplyMessage : IMessage
     {
-        public UUID ItemID;
+        public UUID AgentID;
+        public UUID QueryID;
+        public UUID TransactionID;
 
+        public class QueryData
+        {
+            public int ActualArea;
+            public int BillableArea;
+            public string Description;
+            public float Dwell;
+            public int Flags;
+            public float GlobalX;
+            public float GlobalY;
+            public float GlobalZ;
+            public string Name;
+            public UUID OwnerID;
+            public string SimName;
+            public UUID SnapShotID;
+            public string ProductSku;
+            public int Price;
+        }
+
+        public QueryData[] QueryDataBlocks;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(3);
+
+            // add the AgentData map
+            OSDMap agentIDmap = new OSDMap(2);
+            agentIDmap["AgentID"] = OSD.FromUUID(AgentID);
+            agentIDmap["QueryID"] = OSD.FromUUID(QueryID);
+
+            OSDArray agentDataArray = new OSDArray();
+            agentDataArray.Add(agentIDmap);
+            
+            map["AgentData"] = agentDataArray;
+
+            // add the QueryData map
+            OSDArray dataBlocksArray = new OSDArray(QueryDataBlocks.Length);
+            for(int i = 0; i < QueryDataBlocks.Length; i++)
+            {
+                OSDMap queryDataMap = new OSDMap(14);
+                queryDataMap["ActualArea"] = OSD.FromInteger(QueryDataBlocks[i].ActualArea);
+                queryDataMap["BillableArea"] = OSD.FromInteger(QueryDataBlocks[i].BillableArea);
+                queryDataMap["Desc"] = OSD.FromString(QueryDataBlocks[i].Description);
+                queryDataMap["Dwell"] = OSD.FromReal(QueryDataBlocks[i].Dwell);
+                queryDataMap["Flags"] = OSD.FromInteger(QueryDataBlocks[i].Flags);
+                queryDataMap["GlobalX"] = OSD.FromReal(QueryDataBlocks[i].GlobalX);
+                queryDataMap["GlobalY"] = OSD.FromReal(QueryDataBlocks[i].GlobalY);
+                queryDataMap["GlobalZ"] = OSD.FromReal(QueryDataBlocks[i].GlobalZ);
+                queryDataMap["Name"] = OSD.FromString(QueryDataBlocks[i].Name);
+                queryDataMap["OwnerID"] = OSD.FromUUID(QueryDataBlocks[i].OwnerID);
+                queryDataMap["Price"] = OSD.FromInteger(QueryDataBlocks[i].Price);
+                queryDataMap["SimName"] = OSD.FromString(QueryDataBlocks[i].SimName);
+                queryDataMap["SnapshotID"] = OSD.FromUUID(QueryDataBlocks[i].SnapShotID);
+                queryDataMap["ProductSKU"] = OSD.FromString(QueryDataBlocks[i].ProductSku);
+                dataBlocksArray.Add(queryDataMap);
+            }
+
+            map["QueryData"] = dataBlocksArray;
+
+            // add the TransactionData map
+            OSDMap transMap = new OSDMap(1);
+            transMap["TransactionID"] = OSD.FromUUID(TransactionID);
+            OSDArray transArray = new OSDArray();
+            transArray.Add(transMap);
+            map["TransactionData"] = transArray;
+
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            OSDArray agentDataArray = (OSDArray) map["AgentData"];
+
+            OSDMap agentDataMap = (OSDMap)agentDataArray[0];
+            AgentID = agentDataMap["AgentID"].AsUUID();
+            QueryID = agentDataMap["QueryID"].AsUUID();
+
+
+            OSDArray dataBlocksArray = (OSDArray) map["QueryData"];
+            QueryDataBlocks = new QueryData[dataBlocksArray.Count];
+            for(int i = 0; i < dataBlocksArray.Count; i++)
+            {
+                OSDMap dataMap = (OSDMap)dataBlocksArray[i];
+                QueryData data = new QueryData();
+                data.ActualArea = dataMap["ActualArea"].AsInteger();
+                data.BillableArea = dataMap["BillableArea"].AsInteger();
+                data.Description = dataMap["Desc"].AsString();
+                data.Dwell = (float)dataMap["Dwell"].AsReal();
+                data.Flags = dataMap["Flags"].AsInteger();
+                data.GlobalX = (float)dataMap["GlobalX"].AsReal();
+                data.GlobalY = (float)dataMap["GlobalY"].AsReal();
+                data.GlobalZ = (float)dataMap["GlobalZ"].AsReal();
+                data.Name = dataMap["Name"].AsString();
+                data.OwnerID = dataMap["OwnerID"].AsUUID();
+                data.Price = dataMap["Price"].AsInteger();
+                data.SimName = dataMap["SimName"].AsString();
+                data.SnapShotID = dataMap["SnapshotID"].AsUUID();
+                data.ProductSku = dataMap["ProductSKU"].AsString();
+                QueryDataBlocks[i] = data;
+            }
+
+            OSDArray transactionArray = (OSDArray) map["TransactionData"];
+            OSDMap transactionDataMap = (OSDMap) transactionArray[0];
+            TransactionID = transactionDataMap["TransactionID"].AsUUID();
+        }
+    }
+
+    public class UpdateAgentInformationMessage : IMessage
+    {
+        public string MaxAccess; // PG, A, or M
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
         public OSDMap Serialize()
         {
             OSDMap map = new OSDMap(1);
-            map["item_id"] = OSD.FromUUID(ItemID);
-
+            OSDMap prefsMap = new OSDMap(1);
+            prefsMap["max"] = OSD.FromString(MaxAccess);
+            map["access_prefs"] = prefsMap;
             return map;
         }
 
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
         public void Deserialize(OSDMap map)
         {
-            ItemID = map["item_id"].AsUUID();
+            OSDMap prefsMap = (OSDMap)map["access_prefs"];
+            MaxAccess = prefsMap["max"].AsString();
         }
     }
 
-    public class UpdateNotecardTaskInventoryMessage
+    [Serializable]
+    public class DirLandReplyMessage : IMessage
     {
-        public UUID TaskID;
-        public UUID ItemID;
+        public UUID AgentID;
+        public UUID QueryID;
 
+        [Serializable]
+        public class QueryReply
+        {
+            public int ActualArea;
+            public bool Auction;
+            public bool ForSale;
+            public string Name;
+            public UUID ParcelID;
+            public string ProductSku;
+            public int SalePrice;
+        }
+    
+        public QueryReply[] QueryReplies;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
         public OSDMap Serialize()
         {
-            OSDMap map = new OSDMap(1);
-            map["task_id"] = OSD.FromUUID(TaskID);
-            map["item_id"] = OSD.FromUUID(ItemID);
+            OSDMap map = new OSDMap(3);
+
+            OSDMap agentMap = new OSDMap(1);
+            agentMap["AgentID"] = OSD.FromUUID(AgentID);
+            OSDArray agentDataArray = new OSDArray(1);
+            agentDataArray.Add(agentMap);
+            map["AgentData"] = agentDataArray;
+
+            OSDMap queryMap = new OSDMap(1);
+            queryMap["QueryID"] = OSD.FromUUID(QueryID);
+            OSDArray queryDataArray = new OSDArray(1);
+            queryDataArray.Add(queryMap);
+            map["QueryData"] = queryDataArray;
+
+            OSDArray queryReplyArray = new OSDArray();
+            for (int i = 0; i < QueryReplies.Length; i++)
+            {
+                OSDMap queryReply = new OSDMap(100);
+                queryReply["ActualArea"] = OSD.FromInteger(QueryReplies[i].ActualArea);
+                queryReply["Auction"] = OSD.FromBoolean(QueryReplies[i].Auction);
+                queryReply["ForSale"] = OSD.FromBoolean(QueryReplies[i].ForSale);
+                queryReply["Name"] = OSD.FromString(QueryReplies[i].Name);
+                queryReply["ParcelID"] = OSD.FromUUID(QueryReplies[i].ParcelID);
+                queryReply["ProductSKU"] = OSD.FromString(QueryReplies[i].ProductSku);
+                queryReply["SalePrice"] = OSD.FromInteger(QueryReplies[i].SalePrice);
+
+                queryReplyArray.Add(queryReply);
+            }
+            map["QueryReplies"] = queryReplyArray;
 
             return map;
         }
 
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
         public void Deserialize(OSDMap map)
         {
-            TaskID = map["task_id"].AsUUID();
-            ItemID = map["item_id"].AsUUID();
+            OSDArray agentDataArray = (OSDArray) map["AgentData"];
+            OSDMap agentDataMap = (OSDMap)agentDataArray[0];
+            AgentID = agentDataMap["AgentID"].AsUUID();
+
+            OSDArray queryDataArray = (OSDArray) map["QueryData"];
+            OSDMap queryDataMap = (OSDMap) queryDataArray[0];
+            QueryID = queryDataMap["QueryID"].AsUUID();
+
+            OSDArray queryRepliesArray = (OSDArray) map["QueryReplies"];
+
+            QueryReplies = new QueryReply[queryRepliesArray.Count];
+            for(int i = 0; i < queryRepliesArray.Count; i++)
+            {
+                QueryReply reply = new QueryReply();
+                OSDMap replyMap = (OSDMap) queryRepliesArray[i];
+                reply.ActualArea = replyMap["ActualArea"].AsInteger();
+                reply.Auction = replyMap["Auction"].AsBoolean();
+                reply.ForSale = replyMap["ForSale"].AsBoolean();
+                reply.Name = replyMap["Name"].AsString();
+                reply.ParcelID = replyMap["ParcelID"].AsUUID();
+                reply.ProductSku = replyMap["ProductSKU"].AsString();
+                reply.SalePrice = replyMap["SalePrice"].AsInteger();
+
+                QueryReplies[i] = reply;
+            }
         }
     }
+
+    #endregion
 }

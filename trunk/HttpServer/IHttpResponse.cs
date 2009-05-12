@@ -110,6 +110,12 @@ namespace HttpServer
             void AddHeader(string name, string value);
 
             /// <summary>
+            /// Write string body data.
+            /// </summary>
+            /// <param name="data">String data to write to the body.</param>
+            void AddToBody(string data);
+
+            /// <summary>
             /// Send headers and body to the browser.
             /// </summary>
             /// <exception cref="InvalidOperationException">If content have already been sent.</exception>

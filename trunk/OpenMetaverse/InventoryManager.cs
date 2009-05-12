@@ -31,6 +31,7 @@ using System.Threading;
 using System.Text;
 using System.Runtime.Serialization;
 using OpenMetaverse.Http;
+using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse.Packets;
 
@@ -900,6 +901,21 @@ namespace OpenMetaverse
         /// <param name="assetID"></param>
         public delegate void NotecardUploadedAssetCallback(bool success, string status, UUID itemID, UUID assetID);
 
+        /// <summary>
+        /// Fired when local inventory store needs to be updated. Generally at logout to update a local cache
+        /// </summary>
+        /// <param name="itemID">the assets UUID</param>
+        /// <param name="newAssetID">The new AssetID of the item, or UUID.Zero</param>
+        public delegate void SaveAssetToInventoryCallback(UUID itemID, UUID newAssetID);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="success"></param>
+        /// <param name="status"></param>
+        /// <param name="itemID"></param>
+        /// <param name="assetID"></param>
+        public delegate void ScriptUpdatedCallback(bool success, string status, UUID itemID, UUID assetID);
         #endregion Delegates
 
         #region Events
@@ -942,6 +958,11 @@ namespace OpenMetaverse
         /// <seealso cref="InventoryManager.GetTaskInventory"/>
         /// <seealso cref="InventoryManager.RequestTaskInventory"/>
         public event TaskInventoryReplyCallback OnTaskInventoryReply;
+
+        /// <summary>
+        /// Fired when a SaveAssetToInventory packet is received, generally after the logout reply handler
+        /// </summary>
+        public event SaveAssetToInventoryCallback OnSaveAssetToInventory;
 
         #endregion Events
 
@@ -1822,7 +1843,7 @@ namespace OpenMetaverse
         }
 
         public void RequestCreateItemFromAsset(byte[] data, string name, string description, AssetType assetType,
-            InventoryType invType, UUID folderID, CapsClient.ProgressCallback progCallback, ItemCreatedFromAssetCallback callback)
+            InventoryType invType, UUID folderID, ItemCreatedFromAssetCallback callback)
         {
             if (_Client.Network.CurrentSim == null || _Client.Network.CurrentSim.Caps == null)
                 throw new Exception("NewFileAgentInventory capability is not currently available");
@@ -1840,10 +1861,10 @@ namespace OpenMetaverse
 
                 // Make the request
                 CapsClient request = new CapsClient(url);
-                request.OnComplete += new CapsClient.CompleteCallback(CreateItemFromAssetResponse);
-                request.UserData = new object[] { progCallback, callback, data };
+                request.OnComplete += CreateItemFromAssetResponse;
+                request.UserData = new object[] { callback, data, _Client.Settings.CAPS_TIMEOUT };
 
-                request.StartRequest(query);
+                request.BeginGetResponse(query, OSDFormat.Xml, _Client.Settings.CAPS_TIMEOUT);
             }
             else
             {
@@ -2044,19 +2065,46 @@ namespace OpenMetaverse
                 OSDMap query = new OSDMap();
                 query.Add("item_id", OSD.FromUUID(notecardID));
 
-                byte[] postData = StructuredData.OSDParser.SerializeLLSDXmlBytes(query);
-
                 // Make the request
                 CapsClient request = new CapsClient(url);
                 request.OnComplete += new CapsClient.CompleteCallback(UploadNotecardAssetResponse);
-                request.UserData = new object[2] { new KeyValuePair<NotecardUploadedAssetCallback, byte[]>(callback, data), notecardID };
-                request.StartRequest(postData);
+                request.UserData = new object[] { new KeyValuePair<NotecardUploadedAssetCallback, byte[]>(callback, data), notecardID };
+                request.BeginGetResponse(query, OSDFormat.Xml, _Client.Settings.CAPS_TIMEOUT);
             }
             else
             {
                 throw new Exception("UpdateNotecardAgentInventory capability is not currently available");
             }
         }
+        /// <summary>
+        /// Update an exsting script in an agents Inventory
+        /// </summary>
+        /// <param name="data">A byte[] array containing the encoded scripts contents</param>
+        /// <param name="itemID">the itemID of the script</param>
+        /// <param name="callback"></param>
+        public void RequestUpdateScriptAgentInventory(byte[] data, UUID itemID, ScriptUpdatedCallback callback)
+        {
+            Uri url = _Client.Network.CurrentSim.Caps.CapabilityURI("UpdateScriptAgentInventory");
+
+            if(url != null)
+            {
+                OSDMap query = new OSDMap();
+                query.Add("item_id", OSD.FromUUID(itemID));
+
+                CapsClient request = new CapsClient(url);
+                request.OnComplete += new CapsClient.CompleteCallback(UpdateScriptAgentInventoryResponse);
+                request.UserData = new object[2] { new KeyValuePair<ScriptUpdatedCallback, byte[]>(callback, data), itemID };
+                request.BeginGetResponse(query, OSDFormat.Xml, _Client.Settings.CAPS_TIMEOUT);
+                
+            }
+            else
+            {
+                throw new Exception("UpdateScriptAgentInventory capability is not currently available");
+            }
+
+        }
+
+
         #endregion Update
 
         #region Rez/Give
@@ -2188,6 +2236,48 @@ namespace OpenMetaverse
             _Client.Network.SendPacket(take);
         }
 
+        /// <summary>
+        /// Rez an item from inventory to its previous simulator location
+        /// </summary>
+        /// <param name="simulator"></param>
+        /// <param name="rotation"></param>
+        /// <param name="position"></param>
+        /// <param name="item"></param>
+        /// <param name="queryID"></param>
+        /// <param name="requestObjectDetails"></param>
+        /// <returns></returns>
+        public UUID RequestRestoreRezFromInventory(Simulator simulator, InventoryItem item, UUID queryID)
+        {
+            RezRestoreToWorldPacket add = new RezRestoreToWorldPacket();
+
+            add.AgentData.AgentID = _Client.Self.AgentID;
+            add.AgentData.SessionID = _Client.Self.SessionID;
+
+            add.InventoryData.ItemID = item.UUID;
+            add.InventoryData.FolderID = item.ParentUUID;
+            add.InventoryData.CreatorID = item.CreatorID;
+            add.InventoryData.OwnerID = item.OwnerID;
+            add.InventoryData.GroupID = item.GroupID;
+            add.InventoryData.BaseMask = (uint)item.Permissions.BaseMask;
+            add.InventoryData.OwnerMask = (uint)item.Permissions.OwnerMask;
+            add.InventoryData.GroupMask = (uint)item.Permissions.GroupMask;
+            add.InventoryData.EveryoneMask = (uint)item.Permissions.EveryoneMask;
+            add.InventoryData.NextOwnerMask = (uint)item.Permissions.NextOwnerMask;
+            add.InventoryData.GroupOwned = item.GroupOwned;
+            add.InventoryData.TransactionID = queryID;
+            add.InventoryData.Type = (sbyte)item.InventoryType;
+            add.InventoryData.InvType = (sbyte)item.InventoryType;
+            add.InventoryData.Flags = (uint)item.Flags;
+            add.InventoryData.SaleType = (byte)item.SaleType;
+            add.InventoryData.SalePrice = item.SalePrice;
+            add.InventoryData.Name = Utils.StringToBytes(item.Name);
+            add.InventoryData.Description = Utils.StringToBytes(item.Description);
+            add.InventoryData.CreationDate = (int)Utils.DateTimeToUnixTime(item.CreationDate);
+
+            _Client.Network.SendPacket(add, simulator);
+
+            return queryID;
+        }
 
         /// <summary>
         /// Give an inventory item to another avatar
@@ -2975,9 +3065,9 @@ namespace OpenMetaverse
         private void CreateItemFromAssetResponse(CapsClient client, OSD result, Exception error)
         {
             object[] args = (object[])client.UserData;
-            CapsClient.ProgressCallback progCallback = (CapsClient.ProgressCallback)args[0];
-            ItemCreatedFromAssetCallback callback = (ItemCreatedFromAssetCallback)args[1];
-            byte[] itemData = (byte[])args[2];
+            ItemCreatedFromAssetCallback callback = (ItemCreatedFromAssetCallback)args[0];
+            byte[] itemData = (byte[])args[1];
+            int millisecondsTimeout = (int)args[2];
 
             if (result == null)
             {
@@ -2999,10 +3089,9 @@ namespace OpenMetaverse
                 // This makes the assumption that all uploads go to CurrentSim, to avoid
                 // the problem of HttpRequestState not knowing anything about simulators
                 CapsClient upload = new CapsClient(new Uri(uploadURL));
-                upload.OnProgress += progCallback;
-                upload.OnComplete += new CapsClient.CompleteCallback(CreateItemFromAssetResponse);
-                upload.UserData = new object[] { null, callback, itemData };
-                upload.StartRequest(itemData, "application/octet-stream");
+                upload.OnComplete += CreateItemFromAssetResponse;
+                upload.UserData = new object[] { callback, itemData, millisecondsTimeout };
+                upload.BeginGetResponse(itemData, "application/octet-stream", millisecondsTimeout);
             }
             else if (status == "complete")
             {
@@ -3029,11 +3118,12 @@ namespace OpenMetaverse
 
         private void SaveAssetIntoInventoryHandler(Packet packet, Simulator simulator)
         {
-            //SaveAssetIntoInventoryPacket save = (SaveAssetIntoInventoryPacket)packet;
-
-            // FIXME: Find this item in the inventory structure and mark the parent as needing an update
-            //save.InventoryData.ItemID;
-            Logger.Log("SaveAssetIntoInventory packet received, someone write this function!", Helpers.LogLevel.Error, _Client);
+            if (OnSaveAssetToInventory != null)
+            {
+                SaveAssetIntoInventoryPacket save = (SaveAssetIntoInventoryPacket)packet;
+                try { OnSaveAssetToInventory(save.InventoryData.ItemID, save.InventoryData.NewAssetID); }
+                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, _Client, e); }
+            }
         }
 
         private void InventoryDescendentsHandler(Packet packet, Simulator simulator)
@@ -3596,7 +3686,7 @@ namespace OpenMetaverse
                 CapsClient upload = new CapsClient(new Uri(uploadURL));
                 upload.OnComplete += new CapsClient.CompleteCallback(UploadNotecardAssetResponse);
                 upload.UserData = new object[2] { kvp, (UUID)(((object[])client.UserData)[1]) };
-                upload.StartRequest(itemData, "application/octet-stream");
+                upload.BeginGetResponse(itemData, "application/octet-stream", _Client.Settings.CAPS_TIMEOUT);
             }
             else if (status == "complete")
             {
@@ -3614,6 +3704,57 @@ namespace OpenMetaverse
             else
             {
                 // Failure
+                try { callback(false, status, UUID.Zero, UUID.Zero); }
+                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, _Client, e); }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="result"></param>
+        /// <param name="error"></param>
+        private void UpdateScriptAgentInventoryResponse(CapsClient client, OSD result, Exception error)
+        {
+            KeyValuePair<ScriptUpdatedCallback, byte[]> kvp = (KeyValuePair<ScriptUpdatedCallback, byte[]>)(((object[])client.UserData)[0]);
+            ScriptUpdatedCallback callback = kvp.Key;
+            byte[] itemData = (byte[])kvp.Value;
+
+            if (result == null)
+            {
+                try { callback(false, error.Message, UUID.Zero, UUID.Zero); }
+                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, _Client, e); }
+                return;
+            }
+
+            OSDMap contents = (OSDMap)result;
+
+            string status = contents["state"].AsString();
+            if (status == "upload")
+            {
+                string uploadURL = contents["uploader"].AsString();
+
+                CapsClient upload = new CapsClient(new Uri(uploadURL));
+                upload.OnComplete += new CapsClient.CompleteCallback(UpdateScriptAgentInventoryResponse);
+                upload.UserData = new object[2] { kvp, (UUID)(((object[])client.UserData)[1]) };
+                upload.BeginGetResponse(itemData, "application/octet-stream", _Client.Settings.CAPS_TIMEOUT);
+            }
+            else if (status == "complete" && callback != null)
+            {
+                if (contents.ContainsKey("new_asset"))
+                {
+                    try { callback(true, status, (UUID)(((object[])client.UserData)[1]), contents["new_asset"].AsUUID()); }
+                    catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, _Client, e); }
+                }
+                else
+                {
+                    try { callback(false, "Failed to parse asset UUID", UUID.Zero, UUID.Zero); }
+                    catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, _Client, e); }
+                }
+            }
+            else if (callback != null)
+            {
                 try { callback(false, status, UUID.Zero, UUID.Zero); }
                 catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, _Client, e); }
             }

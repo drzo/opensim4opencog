@@ -286,7 +286,7 @@ namespace OpenMetaverse
 
                 CapsClient request = new CapsClient(url);
                 request.OnComplete += new CapsClient.CompleteCallback(MapLayerResponseHandler);
-                request.StartRequest(body);
+                request.BeginGetResponse(body, OSDFormat.Xml, Client.Settings.CAPS_TIMEOUT);
             }
         }
 
@@ -635,7 +635,7 @@ namespace OpenMetaverse
             // anyone who was not listed in the previous update
             List<UUID> newEntries = new List<UUID>();
 
-            lock (simulator.avatarPositions)
+            lock (simulator.avatarPositions.Dictionary)
             {
                 // remove stale entries
                 foreach(UUID trackedID in removedEntries)

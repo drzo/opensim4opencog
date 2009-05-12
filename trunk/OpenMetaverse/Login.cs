@@ -71,24 +71,56 @@ namespace OpenMetaverse
     /// </summary>
     public struct LoginParams
     {
+        /// <summary>The URL of the Login Server</summary>
         public string URI;
+        /// <summary>The number of milliseconds to wait before a login is considered
+        /// failed due to timeout</summary>
         public int Timeout;
+        /// <summary>The request method</summary>
+        /// <remarks>login_to_server is currently the only supported method</remarks>
         public string MethodName;
+        /// <summary>The Agents First name</summary>
         public string FirstName;
+        /// <summary>The Agents Last name</summary>
         public string LastName;
+        /// <summary>A md5 hashed password</summary>
+        /// <remarks>plaintext password will be automatically hashed</remarks>
         public string Password;
+        /// <summary>The agents starting location once logged in</summary>
+        /// <remarks>Either "last", "home", or a string encoded URI 
+        /// containing the simulator name and x/y/z coordinates e.g: uri:hooper&amp;128&amp;152&amp;17</remarks>
         public string Start;
+        /// <summary>A string containing the client software channel information</summary>
+        /// <example>Second Life Release</example>
         public string Channel;
+        /// <summary>The client software version information</summary>
+        /// <remarks>The official viewer uses: Second Life Release n.n.n.n 
+        /// where n is replaced with the current version of the viewer</remarks>
         public string Version;
+        /// <summary>A string containing the platform information the agent is running on</summary>
         public string Platform;
+        /// <summary>A string hash of the network cards Mac Address</summary>
         public string MAC;
+        /// <summary>Unknown or deprecated</summary>
         public string ViewerDigest;
+        /// <summary>A string hash of the first disk drives ID used to identify this clients uniqueness</summary>
         public string ID0;
+        /// <summary>A string containing the viewers Software, this is not directly sent to the login server but 
+        /// instead is used to generate the Version string</summary>
         public string UserAgent;
+        /// <summary>A string representing the software creator. This is not directly sent to the login server but
+        /// is used by the library to generate the Version information</summary>
         public string Author;
+        /// <summary>If true, this agent agrees to the Terms of Service of the grid its connecting to</summary>
         public string AgreeToTos;
+        /// <summary>Unknown</summary>
         public string ReadCritical;
+        /// <summary>An array of string sent to the login server to enable various options</summary>
         public string[] Options;
+
+        /// <summary>A randomly generated ID to distinguish between login attempts. This value is only used
+        /// internally in the library and is never sent over the wire</summary>
+        internal UUID LoginID;
     }
 
     public struct BuddyListEntry
@@ -99,7 +131,7 @@ namespace OpenMetaverse
     }
 
     /// <summary>
-    /// 
+    /// The decoded data returned from the login server after a successful login
     /// </summary>
     public struct LoginResponseData
     {
@@ -130,6 +162,7 @@ namespace OpenMetaverse
         public string SeedCapability;
         public BuddyListEntry[] BuddyList;
         public int SecondsSinceEpoch;
+        public string UDPBlacklist;
 
         #region Inventory
         
@@ -155,7 +188,6 @@ namespace OpenMetaverse
         public string AgentRegionAccess;
         public int AOTransition;
         public string InventoryHost;
-        public string UDPBlacklist;
 
         /// <summary>
         /// Parse LLSD Login Reply Data
@@ -265,6 +297,7 @@ namespace OpenMetaverse
                 SecureSessionID = ParseUUID("secure_session_id", reply);
                 FirstName = ParseString("first_name", reply).Trim('"');
                 LastName = ParseString("last_name", reply).Trim('"');
+                // "first_login" for brand new accounts
                 StartLocation = ParseString("start_location", reply);
                 AgentAccess = ParseString("agent_access", reply);
                 LookAt = ParseVector3("look_at", reply);
@@ -281,27 +314,33 @@ namespace OpenMetaverse
             {
                 Logger.Log("Login server returned (some) invalid data: " + e.Message, Helpers.LogLevel.Warning);
             }
+            if (!Success)
+                return;
 
             // Home
             OSDMap home = null;
-            OSD osdHome = OSDParser.DeserializeLLSDNotation(reply["home"].ToString());
-
-            if (osdHome.Type == OSDType.Map)
+            if (reply.ContainsKey("home"))
             {
-                home = (OSDMap)osdHome;
+                OSD osdHome = OSDParser.DeserializeLLSDNotation(reply["home"].ToString());
 
-                OSD homeRegion;
-                if (home.TryGetValue("region_handle", out homeRegion) && homeRegion.Type == OSDType.Array)
+                if (osdHome.Type == OSDType.Map)
                 {
-                    OSDArray homeArray = (OSDArray)homeRegion;
-                    if (homeArray.Count == 2)
-                        HomeRegion = Utils.UIntsToLong((uint)homeArray[0].AsInteger(), (uint)homeArray[1].AsInteger());
-                    else
-                        HomeRegion = 0;
-                }
+                    home = (OSDMap) osdHome;
 
-                HomePosition = ParseVector3("position", home);
-                HomeLookAt = ParseVector3("look_at", home);
+                    OSD homeRegion;
+                    if (home.TryGetValue("region_handle", out homeRegion) && homeRegion.Type == OSDType.Array)
+                    {
+                        OSDArray homeArray = (OSDArray) homeRegion;
+                        if (homeArray.Count == 2)
+                            HomeRegion = Utils.UIntsToLong((uint) homeArray[0].AsInteger(),
+                                                           (uint) homeArray[1].AsInteger());
+                        else
+                            HomeRegion = 0;
+                    }
+
+                    HomePosition = ParseVector3("position", home);
+                    HomeLookAt = ParseVector3("look_at", home);
+                }
             }
             else
             {
@@ -584,7 +623,7 @@ namespace OpenMetaverse
         {
             OSD osd;
             if (reply.TryGetValue(key, out osd))
-                return (uint)osd.AsInteger();
+                return osd.AsUInteger();
             else
                 return 0;
         }
@@ -1044,7 +1083,7 @@ namespace OpenMetaverse
         private string InternalRawLoginReply = String.Empty;
         private Dictionary<LoginResponseCallback, string[]> CallbackOptions = new Dictionary<LoginResponseCallback, string[]>();
         /// <summary>A list of packets obtained during the login process which networkmanager will log but not process</summary>
-        private List<string> UDPBlacklist = new List<string>();
+        private readonly List<string> UDPBlacklist = new List<string>();
         #endregion
 
         #region Public Methods
@@ -1062,22 +1101,26 @@ namespace OpenMetaverse
         public LoginParams DefaultLoginParams(string firstName, string lastName, string password,
             string userAgent, string userVersion)
         {
-            List<string> options = new List<string>();
+            List<string> options = new List<string>(15);
             options.Add("inventory-root");
             options.Add("inventory-skeleton");
             options.Add("inventory-lib-root");
             options.Add("inventory-lib-owner");
             options.Add("inventory-skel-lib");
+            options.Add("initial-outfit");
             options.Add("gestures");
             options.Add("event_categories");
             options.Add("event_notifications");
             options.Add("classified_categories");
             options.Add("buddy-list");
             options.Add("ui-config");
+            options.Add("tutorial_settings");
             options.Add("login-flags");
             options.Add("global-textures");
 
             LoginParams loginParams = new LoginParams();
+            if (Client == null)
+                throw new NullReferenceException("GridClient must be instantiated before calling DefaultLoginParams()");
 
             loginParams.URI = Client.Settings.LOGIN_SERVER;
             loginParams.Timeout = Client.Settings.LOGIN_TIMEOUT;
@@ -1215,6 +1258,9 @@ namespace OpenMetaverse
         private void BeginLogin()
         {
             LoginParams loginParams = CurrentContext.Value;
+            // Generate a random ID to identify this login attempt
+            loginParams.LoginID = UUID.Random();
+            CurrentContext = loginParams;
 
             #region Sanity Check loginParams
 
@@ -1315,7 +1361,7 @@ namespace OpenMetaverse
                 loginRequest.OnComplete += new CapsClient.CompleteCallback(LoginReplyLLSDHandler);
                 loginRequest.UserData = CurrentContext;
                 UpdateLoginStatus(LoginStatus.ConnectingToLogin, String.Format("Logging in as {0} {1}...", loginParams.FirstName, loginParams.LastName));
-                loginRequest.StartRequest(OSDParser.SerializeLLSDXmlBytes(loginLLSD), "application/xml+llsd");
+                loginRequest.BeginGetResponse(loginLLSD, OSDFormat.Xml, Client.Settings.CAPS_TIMEOUT);
 
                 #endregion
             }
@@ -1337,6 +1383,7 @@ namespace OpenMetaverse
                 loginXmlRpc["read_critical"] = true;
                 loginXmlRpc["viewer_digest"] = loginParams.ViewerDigest;
                 loginXmlRpc["id0"] = loginParams.ID0;
+                loginXmlRpc["last_exec_event"] = 0;
 
                 // Create the options array
                 ArrayList options = new ArrayList();
@@ -1363,13 +1410,20 @@ namespace OpenMetaverse
                     XmlRpcRequest request = new XmlRpcRequest(CurrentContext.Value.MethodName, loginArray);
 
                     // Start the request
-                    Thread requestThread = new Thread(new ThreadStart(
-                        delegate()
+                    Thread requestThread = new Thread(
+                        (ThreadStart)delegate()
                         {
-                            LoginReplyXmlRpcHandler(
-                                request.Send(CurrentContext.Value.URI, CurrentContext.Value.Timeout),
-                                loginParams);
-                        }));
+                            try
+                            {
+                                LoginReplyXmlRpcHandler(
+                                    request.Send(CurrentContext.Value.URI, CurrentContext.Value.Timeout),
+                                    loginParams);
+                            }
+                            catch (WebException e)
+                            {
+                                UpdateLoginStatus(LoginStatus.Failed, "Error opening the login server connection: " + e.Message);
+                            }
+                        });
                     requestThread.Name = "XML-RPC Login";
                     requestThread.Start();
                 }
@@ -1418,15 +1472,17 @@ namespace OpenMetaverse
             try
             {
                 reply.Parse(response.Value as Hashtable);
-                if (context.GetHashCode() != CurrentContext.Value.GetHashCode())
+                if (context.LoginID != CurrentContext.Value.LoginID)
                 {
-                    Logger.Log("Login Response does not match login request", Helpers.LogLevel.Warning);
+                    Logger.Log("Login response does not match login request. Only one login can be attempted at a time",
+                        Helpers.LogLevel.Error);
                     return;
                 }
             }
             catch (Exception e)
             {
                 UpdateLoginStatus(LoginStatus.Failed, "Error retrieving the login response from the server " + e.Message );
+                Logger.Log("Login response failure: " + e.Message + " " + e.StackTrace, Helpers.LogLevel.Debug);
                 return;
             }
 
@@ -1462,7 +1518,8 @@ namespace OpenMetaverse
                 
                 /* Add any blacklisted UDP packets to the blacklist
                  * for exclusion from packet processing */
-                if (reply.UDPBlacklist!=null) UDPBlacklist.AddRange(reply.UDPBlacklist.Split(','));
+                if(reply.UDPBlacklist != null)
+                    UDPBlacklist.AddRange(reply.UDPBlacklist.Split(','));
                 
                 // Misc:
                 //uint timestamp = (uint)reply.seconds_since_epoch;

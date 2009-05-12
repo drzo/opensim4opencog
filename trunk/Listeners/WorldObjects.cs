@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
+using OpenMetaverse.Assets;
 using OpenMetaverse.StructuredData;
 using System.Reflection;
 using OpenMetaverse.Packets;
@@ -306,7 +307,7 @@ namespace cogbot.Listeners
 
                 if (RegionMasterTexturePipeline == null)
                 {
-                    RegionMasterTexturePipeline = new TexturePipeline(client, 4);
+                    RegionMasterTexturePipeline = client.Assets;
                     //RegionMasterTexturePipeline.OnDownloadFinished += new TexturePipeline.DownloadFinishedCallback(RegionMasterTexturePipeline_OnDownloadFinished);
                     client.Settings.USE_TEXTURE_CACHE = true;
                 }
@@ -842,18 +843,30 @@ namespace cogbot.Listeners
         }
 
 
-        static TexturePipeline RegionMasterTexturePipeline;
+        static AssetManager RegionMasterTexturePipeline;
 
-        public void StartTextureDownload(UUID id)
+        public ImageDownload StartTextureDownload(UUID id)
         {
-            RegionMasterTexturePipeline.RequestTexture(id, ImageType.Normal);
+            if (RegionMasterTexturePipeline.Cache.HasImage(id))
+            {
+                return RegionMasterTexturePipeline.Cache.GetCachedImage(id);
+            }
+            lock (TexturesSkipped) if (TexturesSkipped.Contains(id)) return null;
+            RegionMasterTexturePipeline.RequestImage(id, ImageType.Normal, RegionMasterTexturePipeline_OnDownloadFinished);
+            return null;
         }
-        void RegionMasterTexturePipeline_OnDownloadFinished(UUID id, bool success)
+
+        void RegionMasterTexturePipeline_OnDownloadFinished(TextureRequestState state, AssetTexture asset)
         {
-            if (success)
+            if (state == TextureRequestState.Finished)
             {
                 // Save this texture to the hard drive
-                ImageDownload image = RegionMasterTexturePipeline.GetTextureToRender(id);
+                UUID id = asset.AssetID;
+                ImageDownload image = RegionMasterTexturePipeline.Cache.GetCachedImage(id);
+                if (image==null)
+                {
+                    Console.WriteLine("WTF?! ");
+                }
                 try
                 {
                     RegisterUUIDMaybe(id, image);
@@ -863,9 +876,10 @@ namespace cogbot.Listeners
                 {
                 }
             }
-            else
+            else if (state == TextureRequestState.NotFound || state == TextureRequestState.Timeout)
             {
-                //   WriteLine("Texture failed to download: " + id.ToString(), Helpers.LogLevel.Warning);
+                Debug("Texture failed to download: " + asset, Helpers.LogLevel.Warning);
+                lock (TexturesSkipped) TexturesSkipped.Add(asset.AssetID);
             }
         }
 
@@ -914,7 +928,7 @@ namespace cogbot.Listeners
             SimObject o = GetSimObjectFromUUID(objectID);
             if (o == null) return;
             o.OnSound(soundID, gain);
-            // client.Assets.RequestAsset(soundID, AssetType.SoundWAV, true);
+            // RegionMasterTexturePipeline.RequestAsset(soundID, AssetType.SoundWAV, true);
         }
 
         public override void Sound_OnSoundTrigger(UUID soundID, UUID ownerID, UUID objectID, UUID parentID, float gain, ulong regionHandle, Vector3 position)
@@ -2070,7 +2084,7 @@ namespace cogbot.Listeners
             }
             //            name = "unknown_anim " + id;
             //            RequestAsset(id, AssetType.Animation, true);
-            //                client.Assets.OnAssetReceived+=
+            //                RegionMasterTexturePipeline.OnAssetReceived+=
             //ImageDownload IMD = RegionMasterTexturePipeline.GetTextureToRender(id);
             //Debug(name);
             return "" + id;
@@ -2119,7 +2133,7 @@ namespace cogbot.Listeners
             lock (AssetRequests)
             {
                 if (AssetRequests.ContainsKey(id)) return;
-                UUID req = Master.client.Assets.RequestAsset(id, assetType, p);
+                UUID req = RegionMasterTexturePipeline.RequestAsset(id, assetType, p);
                 AssetRequests[id] = req;
                 AssetRequestType[req] = assetType;
             }
@@ -2988,15 +3002,14 @@ namespace cogbot.Listeners
             }
             if (ID == null)
             {
-                ID = RegionMasterTexturePipeline.GetTextureToRender(uUID);
+                ID = StartTextureDownload(uUID);
                 if (ID == null)
                 {
                     int tried = 20;
-                    RegionMasterTexturePipeline.RequestTexture(uUID, ImageType.Normal);
                     int giveUpTick = Environment.TickCount + 1 * 60000;
                     while (ID == null)
                     {
-                        ID = RegionMasterTexturePipeline.GetTextureToRender(uUID);
+                        ID = StartTextureDownload(uUID);
                         if (ID == null)
                         {
                             lock (TexturesSkipped) if (TexturesSkipped.Contains(uUID)) return null;

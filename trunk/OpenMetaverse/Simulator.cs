@@ -298,7 +298,47 @@ namespace OpenMetaverse
         /// connection to the simulator, calculated by the simulator itself
         /// and the library</summary>
         public SimStats Stats;
-
+        /// <summary>The regions Unique ID</summary>
+        public UUID RegionID = UUID.Zero;
+        /// <summary>The physical data center the simulator is located</summary>
+        /// <remarks>Known values are:
+        /// <list type="table">
+        /// <item>Dallas</item>
+        /// <item>Chandler</item>
+        /// <item>SF</item>
+        /// </list>
+        /// </remarks>
+        public string ColoLocation;
+        /// <summary>The CPU Class of the simulator</summary>
+        /// <remarks>Most full mainland/estate sims appear to be 5,
+        /// Homesteads and Openspace appear to be 501</remarks>
+        public int CPUClass;
+        /// <summary>The number of regions sharing the same CPU as this one</summary>
+        /// <remarks>"Full Sims" appear to be 1, Homesteads appear to be 4</remarks>
+        public int CPURatio;
+        /// <summary>The billing product name</summary>
+        /// <remarks>Known values are:
+        /// <list type="table">
+        /// <item>Mainland / Full Region (Sku: 023)</item>
+        /// <item>Estate / Full Region (Sku: 024)</item>
+        /// <item>Estate / Openspace (Sku: 027)</item>
+        /// <item>Estate / Homestead (Sku: 029)</item>
+        /// <item>Mainland / Homestead (Sku: 129) (Linden Owned)</item>
+        /// </list>
+        /// </remarks>
+        public string ProductName;
+        /// <summary>The billing product SKU</summary>
+        /// <remarks>Known values are:
+        /// <list type="table">
+        /// <item>023 Mainland / Full Region</item>
+        /// <item>024 Estate / Full Region</item>
+        /// <item>027 Estate / Openspace</item>
+        /// <item>029 Estate / Homestead</item>
+        /// <item>129 Mainland / Homestead (Linden Owned)</item>
+        /// </list>
+        /// </remarks>
+        public string ProductSku;
+            
         /// <summary>Provides access to two thread-safe dictionaries containing
         /// avatars and primitives found in this simulator</summary>
         //public ObjectTracker Objects = new ObjectTracker();
@@ -676,7 +716,7 @@ namespace OpenMetaverse
                         }
                     }
                 }
-                else if (packet.Header.AckList.Length > 0)
+                else if (packet.Header.AckList != null && packet.Header.AckList.Length > 0)
                 {
                     // Sanity check for ACKS appended on an unreliable packet, this is bad form
                     Logger.Log("Sending appended ACKs on an unreliable packet", Helpers.LogLevel.Warning);
@@ -689,7 +729,7 @@ namespace OpenMetaverse
                 // off it and reinsert them into the outgoing ACK queue under the 
                 // assumption that this packet will continually be rejected from the
                 // server or that the appended ACKs are possibly making the delivery fail
-                if (packet.Header.AckList.Length > 0)
+                if (packet.Header.AckList != null && packet.Header.AckList.Length > 0)
                 {
                     Logger.DebugLog(String.Format("Purging ACKs from packet #{0} ({1}) which will be resent.",
                         packet.Header.Sequence, packet.GetType()));
@@ -704,7 +744,7 @@ namespace OpenMetaverse
                     }
 
                     packet.Header.AppendedAcks = false;
-                    packet.Header.AckList = new uint[0];
+                    packet.Header.AckList = null;
                 }
             }
 

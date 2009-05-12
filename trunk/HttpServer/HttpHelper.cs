@@ -5,7 +5,7 @@ using System.Web;
 namespace HttpServer
 {
     /// <summary>
-    /// Generic helper functions for Http
+    /// Generic helper functions for HTTP
     /// </summary>
     public static class HttpHelper
     {
@@ -20,26 +20,38 @@ namespace HttpServer
         public const string HTTP11 = "HTTP/1.1";
 
         /// <summary>
-        /// An empty url
+        /// An empty URI
         /// </summary>
         public static readonly Uri EmptyUri = new Uri("http://localhost/");
 
         /// <summary>
-        /// Parses a querystring.
+        /// Parses a query string.
         /// </summary>
-        /// <param name="queryString">Querystring (url decoded)</param>
-        /// <returns>A HttpInput object if successful; otherwise HttpInput.Empty</returns>
+        /// <param name="queryString">Query string (URI encoded)</param>
+        /// <returns>A <see cref="HttpInput"/> object if successful; otherwise <see cref="HttpInput.Empty"/></returns>
+        /// <exception cref="ArgumentNullException"><c>queryString</c> is null.</exception>
+		/// <exception cref="FormatException">If string cannot be parsed.</exception>
         public static HttpInput ParseQueryString(string queryString)
         {
             if (queryString == null)
                 throw new ArgumentNullException("queryString");
-            if (queryString == String.Empty)
+            if (queryString == string.Empty)
                 return HttpInput.Empty;
+
+			HttpInput input = new HttpInput("QueryString");
+
+            queryString = queryString.TrimStart('?', '&');
+
+			// a simple value.
+			if (queryString.IndexOf("&") == -1 && !queryString.Contains("%3d") && !queryString.Contains("%3D") && !queryString.Contains("="))
+			{
+				input.Add(string.Empty, queryString);
+				return input;
+			}
 
             int state = 0;
             int startpos = 0;
             string name = null;
-            HttpInput input = new HttpInput("QueryString");
             for (int i = 0; i < queryString.Length; ++i)
             {
                 int newIndexPos;
@@ -61,9 +73,16 @@ namespace HttpServer
             }
 
             if (state == 0 && !input.GetEnumerator().MoveNext())
-                Add(input, queryString, String.Empty);
-            else if (name != null && startpos <= queryString.Length)
-                Add(input, name, queryString.Substring(startpos, queryString.Length - startpos));
+				throw new FormatException("Not a valid query string: " + queryString);
+
+            if (startpos <= queryString.Length)
+            {
+            	if (name != null)
+					Add(input, name, queryString.Substring(startpos, queryString.Length - startpos));
+				else
+					Add(input, string.Empty, queryString.Substring(startpos, queryString.Length - startpos));
+            }
+                
 
             return input;
         }
@@ -88,7 +107,7 @@ namespace HttpServer
             while (start < headerLength)
             {
                 start = CultureInfo.InvariantCulture.CompareInfo.IndexOf(header, attribute, start, CompareOptions.IgnoreCase);
-                
+
                 if ((start < 0) || ((start + attrLength) >= headerLength))
                     break;
 
@@ -132,7 +151,7 @@ namespace HttpServer
 
                 return header.Substring(start + 1, (i - start) - 1).Trim();
             }
-            
+
             i = start;
 
             while (i < headerLength)

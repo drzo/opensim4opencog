@@ -90,9 +90,9 @@ namespace HttpServer
             IEnumerable<HttpInputItem> ie = (IEnumerable<HttpInputItem>)_query;
             IEnumerable<HttpInputItem> ie2 = (IEnumerable<HttpInputItem>)_form;
 
-			List<HttpInputItem> items = new List<HttpInputItem>(ie);
-			items.AddRange(ie2);
-			return items.GetEnumerator();
+            List<HttpInputItem> items = new List<HttpInputItem>(ie);
+            items.AddRange(ie2);
+            return items.GetEnumerator();
         }
 
         #region IEnumerable Members
@@ -110,9 +110,9 @@ namespace HttpServer
             IEnumerable<HttpInputItem> ie = (IEnumerable<HttpInputItem>)_query;
             IEnumerable<HttpInputItem> ie2 = (IEnumerable<HttpInputItem>)_form;
 
-			List<HttpInputItem> items = new List<HttpInputItem>(ie);
-			items.AddRange(ie2);
-        	return items.GetEnumerator();
+            List<HttpInputItem> items = new List<HttpInputItem>(ie);
+            items.AddRange(ie2);
+            return items.GetEnumerator();
         }
 
         #endregion

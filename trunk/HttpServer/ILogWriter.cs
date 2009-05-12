@@ -142,7 +142,7 @@ namespace HttpServer
         /// <summary>
         /// Writes everything to null
         /// </summary>
-        /// <param name="source">object that wrote the logentry.</param>
+        /// <param name="source">object that wrote the log entry.</param>
         /// <param name="prio">Importance of the log message</param>
         /// <param name="message">The message.</param>
         public void Write(object source, LogPrio prio, string message)

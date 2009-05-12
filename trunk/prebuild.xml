@@ -82,21 +82,70 @@
 
       <!-- Libraries -->
 
-      <Project name="OpenMetaverseTypes" path="OpenMetaverse/Types" type="Library" rootNamespace="OpenMetaverse">
+
+      <Project name="OpenMetaverseTypes" path="OpenMetaverseTypes" type="Library" rootNamespace="OpenMetaverse">
         <Configuration name="Debug">
           <Options>
-            <OutputPath>../../bin/</OutputPath>
+            <OutputPath>../bin/</OutputPath>
           </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
-            <OutputPath>../../bin/</OutputPath>
+            <OutputPath>../bin/</OutputPath>
             <XmlDocFile>OpenMetaverseTypes.XML</XmlDocFile>
           </Options>
         </Configuration>
 
-        <ReferencePath>../../bin/</ReferencePath>
+        <ReferencePath>../bin/</ReferencePath>
         <Reference name="System"/>
+        <Files>
+          <Match pattern="*.cs" recurse="true"/>
+        </Files>
+      </Project>
+
+      <Project name="OpenMetaverse.StructuredData" path="OpenMetaverse.StructuredData" type="Library" rootNamespace="OpenMetaverse.StructuredData">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+            <XmlDocFile>OpenMetaverse.StructuredData.XML</XmlDocFile>
+          </Options>
+        </Configuration>
+
+        <ReferencePath>../bin/</ReferencePath>
+        <Reference name="System"/>
+        <Reference name="System.Xml"/>
+        <Reference name="OpenMetaverseTypes"/>
+        <Files>
+          <Match pattern="*.cs" recurse="true"/>
+        </Files>
+      </Project>
+
+      <Project name="OpenMetaverse.Http" path="OpenMetaverse.Http" type="Library" rootNamespace="OpenMetaverse.Http">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+            <XmlDocFile>OpenMetaverse.Http.XML</XmlDocFile>
+          </Options>
+        </Configuration>
+
+        <ReferencePath>../bin/</ReferencePath>
+        <Reference name="System"/>
+        <Reference name="System.Xml"/>
+        <Reference name="OpenMetaverseTypes"/>
+        <Reference name="OpenMetaverse.StructuredData"/>
+        <Reference name="HttpServer"/>
+        <Reference name="log4net"/>
+        <Reference name="Mono.Security"/>
         <Files>
           <Match pattern="*.cs" recurse="true"/>
         </Files>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2008, openmetaverse.org
+ * Copyright (c) 2007-2009, openmetaverse.org
  * All rights reserved.
  *
  * - Redistribution and use in source and binary forms, with or without 
@@ -34,6 +34,8 @@ using System.Globalization;
 using System.IO;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
+using OpenMetaverse.Interfaces;
+using OpenMetaverse.Messages.Linden;
 
 namespace OpenMetaverse
 {
@@ -690,8 +692,8 @@ namespace OpenMetaverse
         private void OutgoingPacketHandler()
         {
             OutgoingPacket outgoingPacket = null;
-            Simulator simulator = null;
-            Packet packet = null;
+            Simulator simulator;
+            
             System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
 
             while (connected)
@@ -699,8 +701,7 @@ namespace OpenMetaverse
                 if (PacketOutbox.Dequeue(100, ref outgoingPacket))
                 {
                     simulator = outgoingPacket.Simulator;
-                    packet = outgoingPacket.Packet;
-
+                    
                     // Very primitive rate limiting, keeps a fixed buffer of time between each packet
                     stopwatch.Stop();
                     if (stopwatch.ElapsedMilliseconds < 10)
@@ -783,7 +784,7 @@ namespace OpenMetaverse
                             #region ACK handling
 
                             // Handle appended ACKs
-                            if (packet.Header.AppendedAcks)
+                            if (packet.Header.AppendedAcks && packet.Header.AckList != null)
                             {
                                 lock (simulator.NeedAck)
                                 {
@@ -1094,6 +1095,15 @@ namespace OpenMetaverse
             simulator.BillableFactor = handshake.RegionInfo.BillableFactor;
             simulator.Access = (SimAccess)handshake.RegionInfo.SimAccess;
 
+
+            simulator.RegionID = handshake.RegionInfo2.RegionID;
+            simulator.ColoLocation = Utils.BytesToString(handshake.RegionInfo3.ColoName);
+            simulator.CPUClass = handshake.RegionInfo3.CPUClassID;
+            simulator.CPURatio = handshake.RegionInfo3.CPURatio;
+            simulator.ProductName = Utils.BytesToString(handshake.RegionInfo3.ProductName);
+            simulator.ProductSku = Utils.BytesToString(handshake.RegionInfo3.ProductSKU);
+            
+
             Logger.Log("Received a region handshake for " + simulator.ToString(), Helpers.LogLevel.Info, Client);
 
             // Send a RegionHandshakeReply
@@ -1108,37 +1118,23 @@ namespace OpenMetaverse
             simulator.ConnectedEvent.Set();
         }
 
-        /// <summary>
-        /// Handler for EnableSimulator packet
-        /// </summary>
-        /// <param name="capsKey">the Capabilities Key, "EnableSimulator"</param>
-        /// <param name="osd">the LLSD Encoded packet</param>
-        /// <param name="simulator">The simulator the packet was sent from</param>
-        private void EnableSimulatorHandler(string capsKey, OSD osd, Simulator simulator)
+        private void EnableSimulatorHandler(string capsKey, IMessage message, Simulator simulator)
         {
             if (!Client.Settings.MULTIPLE_SIMS) return;
-            OSDMap map = (OSDMap)osd;
-            OSDArray connectInfo = (OSDArray)map["SimulatorInfo"];
 
-            for(int i = 0; i < connectInfo.Count; i++)
+            EnableSimulatorMessage msg = (EnableSimulatorMessage)message;
+
+            for (int i = 0; i < msg.Simulators.Length; i++)
             {
-                OSDMap data = (OSDMap)connectInfo[i];
-
-                IPAddress ip = new IPAddress(data["IP"].AsBinary());
-                ushort port = (ushort)data["Port"].AsInteger();
-                byte[] bytes = data["Handle"].AsBinary();
-
-                if (BitConverter.IsLittleEndian)
-                    Array.Reverse(bytes);
-
-                ulong rh = Utils.BytesToUInt64(bytes);
+                IPAddress ip = msg.Simulators[i].IP;
+                ushort port = (ushort)msg.Simulators[i].Port;
+                ulong handle = msg.Simulators[i].RegionHandle;
 
                 IPEndPoint endPoint = new IPEndPoint(ip, port);
-                
-                // don't reconnect if we're already connected or attempting to connect
+
                 if (FindSimulator(endPoint) != null) return;
 
-                if (Connect(ip, port, rh, false, null) == null)
+                if (Connect(ip, port, handle, false, null) == null)
                 {
                     Logger.Log("Unabled to connect to new sim " + ip + ":" + port,
                         Helpers.LogLevel.Error, Client);

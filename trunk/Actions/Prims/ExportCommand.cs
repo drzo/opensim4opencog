@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using OpenMetaverse;
+using OpenMetaverse.Assets;
 using OpenMetaverse.StructuredData;
 
 namespace cogbot.Actions
@@ -17,22 +18,12 @@ namespace cogbot.Actions
 
         Dictionary<UUID, Primitive> PrimsWaiting = new Dictionary<UUID, Primitive>();
         AutoResetEvent AllPropertiesReceived = new AutoResetEvent(false);
-        bool registeredCallbacks = false;
-
-        void RegisterCallbacks()
-        {
-            if (!registeredCallbacks)
-            {
-                registeredCallbacks = true;
-                Client.Objects.OnObjectPropertiesFamily += new ObjectManager.ObjectPropertiesFamilyCallback(Objects_OnObjectPropertiesFamily);
-                Client.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
-                Client.Assets.OnImageReceived += new AssetManager.ImageReceivedCallback(Assets_OnImageReceived);
-                Client.Avatars.OnPointAt += new AvatarManager.PointAtCallback(Avatars_OnPointAt);
-            }
-        }
 
         public ExportCommand(BotClient testClient)
         {
+            testClient.Objects.OnObjectPropertiesFamily += new ObjectManager.ObjectPropertiesFamilyCallback(Objects_OnObjectPropertiesFamily);
+            testClient.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
+            testClient.Avatars.OnPointAt += new AvatarManager.PointAtCallback(Avatars_OnPointAt);
 
             Name = "export";
             Description = "Exports an object to an xml file. Usage: export uuid outputfile.xml";
@@ -51,7 +42,7 @@ namespace cogbot.Actions
             if (args.Length == 2)
             {
                 file = args[1];
-                if (!UUIDTryParse(args,0, out id))
+                if (!UUID.TryParse(args[0], out id))
                     return "Usage: export uuid outputfile.xml";
             }
             else
@@ -73,7 +64,6 @@ namespace cogbot.Actions
                 else
                     localid = exportPrim.LocalID;
 
-                RegisterCallbacks();
                 // Check for export permission first
                 Client.Objects.RequestObjectPropertiesFamily(Client.Network.CurrentSim, id);
                 GotPermissionsEvent.WaitOne(1000 * 10, false);
@@ -85,8 +75,8 @@ namespace cogbot.Actions
                 else
                 {
                     GotPermissions = false;
-                    if (Properties.OwnerID != Client.Self.AgentID && 
-                        Properties.OwnerID != Client.MasterKey && 
+                    if (Properties.OwnerID != Client.Self.AgentID &&
+                        Properties.OwnerID != Client.MasterKey &&
                         Client.Self.AgentID != Client.Self.AgentID)
                     {
                         return "That object is owned by " + Properties.OwnerID + ", we don't have permission " +
@@ -153,14 +143,17 @@ namespace cogbot.Actions
                 }
 
                 // Download all of the textures in the export list
-                Client.Assets.RequestImages(textureRequests);
+                foreach (ImageRequest request in textureRequests)
+                {
+                    Client.Assets.RequestImage(request.ImageID, request.Type, Assets_OnImageReceived);
+                }
 
                 return "XML exported, began downloading " + Textures.Count + " textures";
             }
             else
             {
-                return "Couldn't find UUID " + id.ToString() + " in the " + 
-                    Client.Network.CurrentSim.ObjectsPrimitives.Count + 
+                return "Couldn't find UUID " + id.ToString() + " in the " +
+                    Client.Network.CurrentSim.ObjectsPrimitives.Count +
                     "objects currently indexed in the current simulator";
             }
         }
@@ -169,7 +162,7 @@ namespace cogbot.Actions
         {
             // Create an array of the local IDs of all the prims we are requesting properties for
             uint[] localids = new uint[objects.Count];
-            
+
             lock (PrimsWaiting)
             {
                 PrimsWaiting.Clear();
@@ -186,38 +179,39 @@ namespace cogbot.Actions
             return AllPropertiesReceived.WaitOne(2000 + msPerRequest * objects.Count, false);
         }
 
-        private void Assets_OnImageReceived(ImageDownload image, AssetTexture asset)
+        private void Assets_OnImageReceived(TextureRequestState state, AssetTexture asset)
         {
-            if (Textures.Contains(image.ID))
+
+            if (state == TextureRequestState.Finished && Textures.Contains(asset.AssetID))
             {
                 lock (Textures)
-                    Textures.Remove(image.ID);
+                    Textures.Remove(asset.AssetID);
 
-                if (image.Success)
+                if (state == TextureRequestState.Finished)
                 {
-                    try { File.WriteAllBytes(image.ID.ToString() + ".jp2", asset.AssetData); }
+                    try { File.WriteAllBytes(asset.AssetID + ".jp2", asset.AssetData); }
                     catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client); }
 
                     if (asset.Decode())
                     {
-                        try { File.WriteAllBytes(image.ID.ToString() + ".tga", asset.Image.ExportTGA()); }
+                        try { File.WriteAllBytes(asset.AssetID + ".tga", asset.Image.ExportTGA()); }
                         catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client); }
                     }
                     else
                     {
-                        Logger.Log("Failed to decode image " + image.ID.ToString(), Helpers.LogLevel.Error, Client);
+                        Logger.Log("Failed to decode image " + asset.AssetID, Helpers.LogLevel.Error, Client);
                     }
 
-                    Logger.Log("Finished downloading image " + image.ID.ToString(), Helpers.LogLevel.Info, Client);
+                    Logger.Log("Finished downloading image " + asset.AssetID, Helpers.LogLevel.Info, Client);
                 }
                 else
                 {
-                    Logger.Log("Failed to download image " + image.ID.ToString(), Helpers.LogLevel.Warning, Client);
+                    Logger.Log("Failed to download image " + asset.AssetID + ":" + state, Helpers.LogLevel.Warning, Client);
                 }
             }
         }
 
-        void Avatars_OnPointAt(UUID sourceID, UUID targetID, Vector3d targetPos, 
+        void Avatars_OnPointAt(UUID sourceID, UUID targetID, Vector3d targetPos,
             PointAtType pointType, float duration, UUID id)
         {
             if (sourceID == Client.MasterKey)

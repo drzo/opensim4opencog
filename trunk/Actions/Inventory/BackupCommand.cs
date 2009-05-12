@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Xml;
 using System.Xml.Serialization;
 using OpenMetaverse;
+using OpenMetaverse.Assets;
 using OpenMetaverse.Packets;
 using cogbot.Actions;
 

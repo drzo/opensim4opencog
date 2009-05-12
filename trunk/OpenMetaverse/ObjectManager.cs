@@ -168,9 +168,6 @@ namespace OpenMetaverse
         /// <param name="simulator"></param>
         /// <param name="props"></param>
         public delegate void ObjectPropertiesCallback(Simulator simulator, Primitive.ObjectProperties props);
-
-        public delegate void PrimitivePropertiesCallback(Simulator simulator, Primitive prim, Primitive.ObjectProperties props);
-
         /// <summary>
         /// 
         /// </summary>
@@ -222,10 +219,12 @@ namespace OpenMetaverse
         /// on. If this is zero the avatar is not sitting on an object</param>
         public delegate void AvatarSitChanged(Simulator simulator, Avatar avatar, uint sittingOn, uint oldSeat);
 
+        public delegate void PrimitivePropertiesCallback(Simulator simulator, Primitive prim, Primitive.ObjectProperties props);
         #endregion Delegates
 
         #region Events
 
+        public event PrimitivePropertiesCallback OnPrimitiveProperties;
         /// <summary>
         /// This event will be raised for every ObjectUpdate block that 
         /// contains a prim that isn't attached to an avatar.
@@ -278,10 +277,6 @@ namespace OpenMetaverse
         /// from the simulator
         /// </summary>
         public event ObjectPropertiesCallback OnObjectProperties;
-
-
-        public event PrimitivePropertiesCallback OnPrimitiveProperties;
-
         /// <summary>
         /// Thie event will be raised when an objects properties family 
         /// information is recieved from the simulator. ObjectPropertiesFamily
@@ -336,8 +331,8 @@ namespace OpenMetaverse
 
             // If the callbacks aren't registered there's not point in doing client-side path prediction,
             // so we set it up here
-            //InterpolationTimer = new Timer(new TimerCallback(InterpolationTimer_Elapsed), null, Settings.INTERPOLATION_INTERVAL,
-              //  Settings.INTERPOLATION_INTERVAL);
+            InterpolationTimer = new Timer(new TimerCallback(InterpolationTimer_Elapsed), null, Settings.INTERPOLATION_INTERVAL,
+                Settings.INTERPOLATION_INTERVAL);
         }
 
         #region Action Methods
@@ -437,7 +432,8 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the object resides</param>
         /// <param name="localID">The objects ID which is local to the simulator the object is in</param>
-        public void SelectObject(Simulator simulator, uint localID)
+        /// <param name="automaticDeselect">Should objects be deselected immediately after selection</param>
+        public void SelectObject(Simulator simulator, uint localID, bool automaticDeselect)
         {
             ObjectSelectPacket select = new ObjectSelectPacket();
 
@@ -449,6 +445,22 @@ namespace OpenMetaverse
             select.ObjectData[0].ObjectLocalID = localID;
 
             Client.Network.SendPacket(select, simulator);
+            if (automaticDeselect)
+            {
+                DeselectObject(simulator, localID);
+            }
+        }
+
+        /// <summary>
+        /// Select a single object. This will trigger the simulator to send us back 
+        /// an ObjectProperties packet so we can get the full information for
+        /// this object
+        /// </summary>
+        /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the object resides</param>
+        /// <param name="localID">The objects ID which is local to the simulator the object is in</param>
+        public void SelectObject(Simulator simulator, uint localID)
+        {
+            SelectObject(simulator, localID, true);
         }
 
         /// <summary>
@@ -457,7 +469,8 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the objects reside</param>
         /// <param name="localIDs">An array which contains the IDs of the objects to select</param>
-        public void SelectObjects(Simulator simulator, uint[] localIDs)
+        /// <param name="automaticDeselect">Should objects be deselected immediately after selection</param>
+        public void SelectObjects(Simulator simulator, uint[] localIDs, bool automaticDeselect)
         {
             ObjectSelectPacket select = new ObjectSelectPacket();
 
@@ -473,7 +486,23 @@ namespace OpenMetaverse
             }
 
             Client.Network.SendPacket(select, simulator);
+            if (automaticDeselect)
+            {
+                DeselectObjects(simulator, localIDs);
+            }
         }
+
+        /// <summary>
+        /// Select multiple objects. This will trigger the simulator to send us
+        /// back ObjectProperties for each object
+        /// </summary>
+        /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the objects reside</param>
+        /// <param name="localIDs">An array which contains the IDs of the objects to select</param>
+        public void SelectObjects(Simulator simulator, uint[] localIDs)
+        {
+            SelectObjects(simulator, localIDs, true);
+        }
+
 
         /// <summary>
         /// Sets and object's flags (physical, temporary, phantom, casts shadow)
@@ -2255,22 +2284,13 @@ namespace OpenMetaverse
 
                     if (findPrim != null)
                     {
-                        if (OnPrimitiveProperties != null)
-                        {
-                            OnPrimitiveProperties(sim, findPrim, props);
-                        }
+                        if (OnPrimitiveProperties != null) { OnPrimitiveProperties(sim, findPrim, props); }
                         findPrim.Properties = props;
-                        //lock (sim.ObjectsPrimitives.Dictionary)
-                        //{
-                        //    if (sim.ObjectsPrimitives.Dictionary.ContainsKey(findPrim.LocalID))
-                        //    {
-                        //        if (OnPrimitiveProperties != null)
-                        //        {
-
-                        //        }
-                        //        sim.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties = props;
-                        //    }
-                        //}
+                        lock (sim.ObjectsPrimitives.Dictionary)
+                        {
+                            if (sim.ObjectsPrimitives.Dictionary.ContainsKey(findPrim.LocalID))
+                                sim.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties = props;
+                        }
                     }
                 }
 
