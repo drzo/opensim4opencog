@@ -331,8 +331,8 @@ namespace OpenMetaverse
 
             // If the callbacks aren't registered there's not point in doing client-side path prediction,
             // so we set it up here
-            InterpolationTimer = new Timer(new TimerCallback(InterpolationTimer_Elapsed), null, Settings.INTERPOLATION_INTERVAL,
-                Settings.INTERPOLATION_INTERVAL);
+            //dmiles  todo InterpolationTimer = new Timer(new TimerCallback(InterpolationTimer_Elapsed), null, Settings.INTERPOLATION_INTERVAL,
+                //Settings.INTERPOLATION_INTERVAL);
         }
 
         #region Action Methods
