@@ -17,6 +17,8 @@ namespace cogbot.Listeners
         static Thread TrackPathsThread;
 
 
+        static public int MaxMeshes = 8000;
+        static public int RealMeshes = 0;
 
         public WorldPathSystem(GridClient gc)
         {
@@ -69,10 +71,14 @@ namespace cogbot.Listeners
                 {
                     if (O.IsRegionAttached())
                     {
-                        if (O.UpdateOccupied()) realUpdates++;
+                        if (O.UpdateOccupied())
+                        {
+                            RealMeshes++;
+                            realUpdates++;
+                        }
                     }
                     occUpdate++;
-                    if (occUpdate > 8000) break;
+                    if (RealMeshes > MaxMeshes) break;
                     if (occUpdate % 100 == 0)
                     {
                         Console.Write("." + occUpdate);                             
