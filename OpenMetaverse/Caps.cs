@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2008, openmetaverse.org
+ * Copyright (c) 2007-2009, openmetaverse.org
  * All rights reserved.
  *
  * - Redistribution and use in source and binary forms, with or without 
@@ -26,9 +26,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using System.Threading;
+using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
+using OpenMetaverse.Interfaces;
 using OpenMetaverse.Http;
 
 namespace OpenMetaverse
@@ -38,16 +41,18 @@ namespace OpenMetaverse
     /// used to communicate non real-time transactions such as teleporting or
     /// group messaging
     /// </summary>
-    public class Caps
+    public partial class Caps
     {
         /// <summary>
         /// Triggered when an event is received via the EventQueueGet 
         /// capability
         /// </summary>
-        /// <param name="message">Event name</param>
-        /// <param name="body">Decoded event data</param>
+        /// <param name="capsKey">Event name</param>
+        /// <param name="message">Decoded event data</param>
         /// <param name="simulator">The simulator that generated the event</param>
-        public delegate void EventQueueCallback(string message, StructuredData.OSD body, Simulator simulator);
+        //public delegate void EventQueueCallback(string message, StructuredData.OSD body, Simulator simulator);
+
+        public delegate void EventQueueCallback(string capsKey, IMessage message, Simulator simulator);
 
         /// <summary>Reference to the simulator this system is connected to</summary>
         public Simulator Simulator;
@@ -73,7 +78,6 @@ namespace OpenMetaverse
                     return false;
             }
         }
-
 
         /// <summary>
         /// Default constructor
@@ -123,18 +127,25 @@ namespace OpenMetaverse
 
             // Create a request list
             OSDArray req = new OSDArray();
+            // This list can be updated by using the following command to obtain a current list of capabilities the official linden viewer supports:
+            // wget -q -O - http://svn.secondlife.com/svn/linden/trunk/indra/newview/llviewerregion.cpp | grep 'capabilityNames.append'  | sed 's/^[ \t]*//;s/capabilityNames.append("/req.Add("/'
             req.Add("ChatSessionRequest");
             req.Add("CopyInventoryFromNotecard");
             req.Add("DispatchRegionInfo");
             req.Add("EstateChangeInfo");
             req.Add("EventQueueGet");
-            req.Add("FetchInventoryDescendents");
+            req.Add("FetchInventory");
+            req.Add("WebFetchInventoryDescendents");
+            req.Add("FetchLib");
+            req.Add("FetchLibDescendents");
             req.Add("GroupProposalBallot");
+            req.Add("HomeLocation");
             req.Add("MapLayer");
             req.Add("MapLayerGod");
             req.Add("NewFileAgentInventory");
             req.Add("ParcelPropertiesUpdate");
             req.Add("ParcelVoiceInfoRequest");
+            req.Add("ProductInfoRequest");
             req.Add("ProvisionVoiceAccountRequest");
             req.Add("RemoteParcelRequest");
             req.Add("RequestTextureDownload");
@@ -145,19 +156,23 @@ namespace OpenMetaverse
             req.Add("SendUserReportWithScreenshot");
             req.Add("ServerReleaseNotes");
             req.Add("StartGroupProposal");
+            req.Add("UntrustedSimulatorMessage");
+            req.Add("UpdateAgentInformation");
+            req.Add("UpdateAgentLanguage");
             req.Add("UpdateGestureAgentInventory");
             req.Add("UpdateNotecardAgentInventory");
             req.Add("UpdateScriptAgent");
             req.Add("UpdateGestureTaskInventory");
             req.Add("UpdateNotecardTaskInventory");
             req.Add("UpdateScriptTask");
+            req.Add("UploadBakedTexture");
             req.Add("ViewerStartAuction");
-            req.Add("UntrustedSimulatorMessage");
             req.Add("ViewerStats");
+
 
             _SeedRequest = new CapsClient(new Uri(_SeedCapsURI));
             _SeedRequest.OnComplete += new CapsClient.CompleteCallback(SeedRequestCompleteHandler);
-            _SeedRequest.StartRequest(req);
+            _SeedRequest.BeginGetResponse(req, OSDFormat.Xml, Simulator.Client.Settings.CAPS_TIMEOUT);
         }
 
         private void SeedRequestCompleteHandler(CapsClient client, OSD result, Exception error)
@@ -181,6 +196,15 @@ namespace OpenMetaverse
                     _EventQueueCap.Start();
                 }
             }
+            else if (
+                error != null &&
+                error is WebException &&
+                ((WebException)error).Response != null &&
+                ((HttpWebResponse)((WebException)error).Response).StatusCode == HttpStatusCode.NotFound)
+            {
+                // 404 error
+                Logger.Log("Seed capability returned a 404, capability system is aborting", Helpers.LogLevel.Error);
+            }
             else
             {
                 // The initial CAPS connection failed, try again
@@ -193,12 +217,47 @@ namespace OpenMetaverse
             Simulator.Client.Network.RaiseConnectedEvent(Simulator);
         }
 
+        /// <summary>
+        /// Process any incoming events, check to see if we have a message created for the event, 
+        /// </summary>
+        /// <param name="eventName"></param>
+        /// <param name="body"></param>
         private void EventQueueEventHandler(string eventName, OSDMap body)
         {
-            if (Simulator.Client.Settings.SYNC_PACKETCALLBACKS)
-                Simulator.Client.Network.CapsEvents.RaiseEvent(eventName, body, Simulator);
+            IMessage message = Messages.MessageUtils.DecodeEvent(eventName, body);
+            if (message != null)
+            {
+                if (Simulator.Client.Settings.SYNC_PACKETCALLBACKS)
+                    Simulator.Client.Network.CapsEvents.RaiseEvent(eventName, message, Simulator);
+                else
+                    Simulator.Client.Network.CapsEvents.BeginRaiseEvent(eventName, message, Simulator);
+            }
             else
-                Simulator.Client.Network.CapsEvents.BeginRaiseEvent(eventName, body, Simulator);
+            {
+                Logger.Log("No Message handler exists for event " + eventName + ". Unable to decode. Will try Generic Handler next", Helpers.LogLevel.Warning);
+                Logger.Log("Please report this information to http://jira.openmv.org/: \n" + body, Helpers.LogLevel.Debug);
+
+                // try generic decoder next which takes a caps event and tries to match it to an existing packet
+                if (body.Type == OSDType.Map)
+                {
+                    OSDMap map = (OSDMap)body;
+                    Packet packet = Packet.BuildPacket(eventName, map);
+                    if (packet != null)
+                    {
+                        NetworkManager.IncomingPacket incomingPacket;
+                        incomingPacket.Simulator = Simulator;
+                        incomingPacket.Packet = packet;
+
+                        Logger.DebugLog("Serializing " + packet.Type.ToString() + " capability with generic handler", Simulator.Client);
+
+                        Simulator.Client.Network.PacketInbox.Enqueue(incomingPacket);
+                    }
+                    else
+                    {
+                        Logger.Log("No Packet or Message handler exists for " + eventName, Helpers.LogLevel.Warning);
+                    }
+                }
+            }
         }
     }
 }

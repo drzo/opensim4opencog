@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
-using System.Reflection; //using OpenMetaverse;
+using System.Reflection;
+using OpenMetaverse.Assets;
+
+//using OpenMetaverse;
 // older LibOMV
 //using TeleportFlags = OpenMetaverse.AgentManager.TeleportFlags;
 //using TeleportStatus = OpenMetaverse.AgentManager.TeleportStatus;
@@ -471,10 +474,10 @@ namespace cogbot.Listeners
 
         public virtual void Assets_OnImageReceived(ImageDownload image, AssetTexture asset) { OnEvent("On-Image-Received", paramNamesOnImageReceived, paramTypesOnImageReceived, image, asset); }
 
-        static public readonly string[] paramNamesOnImageReceiveProgress = new string[] { "image", "lastPacket", "recieved", "total" };
-        static public readonly Type[] paramTypesOnImageReceiveProgress = new Type[] { typeof(UUID), typeof(int), typeof(int), typeof(int) };
+        static public readonly string[] paramNamesOnImageReceiveProgress = new string[] { "image", "recieved", "total" };
+        static public readonly Type[] paramTypesOnImageReceiveProgress = new Type[] { typeof(UUID),  typeof(int), typeof(int) };
 
-        public virtual void Assets_OnImageReceiveProgress(UUID image, int lastPacket, int recieved, int total) { OnEvent("On-Image-Receive-Progress", paramNamesOnImageReceiveProgress, paramTypesOnImageReceiveProgress, image, lastPacket, recieved, total); }
+        public virtual void Assets_OnImageReceiveProgress(UUID image, int recieved, int total) { OnEvent("On-Image-Receive-Progress", paramNamesOnImageReceiveProgress, paramTypesOnImageReceiveProgress, image,  recieved, total); }
 
         static public readonly string[] paramNamesOnAssetUploaded = new string[] { "upload" };
         static public readonly Type[] paramTypesOnAssetUploaded = new Type[] { typeof(AssetUpload) };
@@ -680,8 +683,8 @@ namespace cogbot.Listeners
             client.Assets.OnXferReceived += Assets_OnXferReceived;
             if (TextForm.DownloadTextures)
             {
-                client.Assets.OnImageReceived += Assets_OnImageReceived;
-                client.Assets.OnImageReceiveProgress += Assets_OnImageReceiveProgress;
+               //todo client.Assets.OnImageReceived += Assets_OnImageReceived;
+                client.Assets.OnImageRecieveProgress += Assets_OnImageReceiveProgress;
             }
             client.Assets.OnAssetUploaded += Assets_OnAssetUploaded;
             client.Assets.OnUploadProgress += Assets_OnUploadProgress;
@@ -797,8 +800,8 @@ namespace cogbot.Listeners
             client.Groups.OnGroupNoticesList -= Groups_OnGroupNoticesList;
             client.Assets.OnAssetReceived -= Assets_OnAssetReceived;
             client.Assets.OnXferReceived -= Assets_OnXferReceived;
-            client.Assets.OnImageReceived -= Assets_OnImageReceived;
-            client.Assets.OnImageReceiveProgress -= Assets_OnImageReceiveProgress;
+            //todo client.Assets.OnImageReceived -= Assets_OnImageReceived;
+            client.Assets.OnImageRecieveProgress -= Assets_OnImageReceiveProgress;
             client.Assets.OnAssetUploaded -= Assets_OnAssetUploaded;
             client.Assets.OnUploadProgress -= Assets_OnUploadProgress;
             client.Appearance.OnAgentWearables -= Appearance_OnAgentWearables;

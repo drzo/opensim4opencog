@@ -4,6 +4,7 @@ using OpenMetaverse;
 using System.Threading;
 using System.Reflection;
 using cogbot.Listeners;
+using OpenMetaverse.Assets;
 
 namespace cogbot.TheOpenSims
 {
@@ -70,7 +71,6 @@ namespace cogbot.TheOpenSims
             ClientSelf.AnimationStop(anim, true);
         }
     }
-
     public class SimAnimation
     {
         static Dictionary<UUID, string> animationName = new Dictionary<UUID, string>();
@@ -147,6 +147,7 @@ namespace cogbot.TheOpenSims
                 animationName[uUID] = s;
         }
     }
+#if PORTIT
 
     /// <summary>
     /// Asset request download handler, allows a configurable number of download slots
@@ -456,8 +457,8 @@ namespace cogbot.TheOpenSims
                 }
                 else
                 {
-                    Logger.Log(String.Format("Download of texture {0} failed. NotFound={1}", image.ID, image.NotFound),
-                        Helpers.LogLevel.Warning);
+                   // Logger.Log(String.Format("Download of texture {0} failed. NotFound={1}", image.ID, image.NotFound),
+                     //   Helpers.LogLevel.Warning);
                 }
 
                 // Let any subscribers know about it
@@ -472,4 +473,5 @@ namespace cogbot.TheOpenSims
                 OnDownloadProgress(image, recieved, total);
         }
     }
+#endif
 }

@@ -1,270 +1,415 @@
 using System;
-using System.IO;
 using System.Net;
-using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading;
 
 namespace HttpServer
 {
     /// <summary>
-    /// HTTP Listener waits for HTTP connections and provide us with <see cref="HttpListenerContext"/>s using the
-    /// <see cref="RequestHandler"/> delegate.
+    /// Delegate for handling incoming HTTP requests
     /// </summary>
-    public class HttpListener
-    {
-        private readonly IPAddress _address;
-        private readonly X509Certificate _certificate;
-        private readonly X509Certificate _rootCA;
-        private readonly bool _requireClientCerts;
-        private readonly int _port;
-        private readonly SslProtocols _sslProtocol = SslProtocols.Tls;
-        private ClientDisconnectedHandler _disconnectHandler;
-        private TcpListener _listener;
-        private ILogWriter _logWriter = NullLogWriter.Instance;
-        private RequestReceivedHandler _requestHandler;
-        private bool _useTraceLogs;
-        private int _pendingAccepts;
-        private readonly ManualResetEvent _shutdownEvent = new ManualResetEvent(false);
-        private bool _shutdown;
+    /// <param name="context">Client context</param>
+    /// <param name="request">HTTP request</param>
+    /// <param name="response">HTTP response</param>
+    /// <returns>True to send the response and close the connection, false to leave the connection open</returns>
+    public delegate bool HttpRequestCallback(IHttpClientContext context, IHttpRequest request, IHttpResponse response);
 
+    /// <summary>
+    /// New implementation of the HTTP listener.
+    /// </summary>
+    /// <remarks>
+    /// Use the <c>Create</c> methods to create a default listener.
+    /// </remarks>
+    public class HttpListener : HttpListenerBase
+    {
         /// <summary>
-        /// A client has been accepted, but not handled, by the listener.
+        /// A client have been accepted, but not handled, by the listener.
         /// </summary>
         public event EventHandler<ClientAcceptedEventArgs> Accepted = delegate{};
 
+        HttpRequestHandler[] _requestHandlers = new HttpRequestHandler[0];
+        HttpRequestCallback _notFoundHandler;
+        RequestQueue _requestQueue;
+        int _backLog = 10;
+
+        #region Properties
+
         /// <summary>
-        /// Listen for regular HTTP connections
+        /// Number of connections that can wait to be accepted by the server.
+        /// </summary>
+        /// <remarks>Default is 10.</remarks>
+        public int BackLog
+        {
+            get { return _backLog; }
+            set { _backLog = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets maximum number of allowed simultaneous requests.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This property is useful in busy systems. The HTTP server
+        /// will start queuing new requests if this limit is hit, instead
+        /// of trying to process all incoming requests directly.
+        /// </para>
+        /// <para>
+        /// The default number if allowed simultaneous requests are 10.
+        /// </para>
+        /// </remarks>
+        public int MaxRequestCount
+        {
+            get { return _requestQueue.MaxRequestCount; }
+            set { _requestQueue.MaxRequestCount = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets maximum number of requests queuing to be handled.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The WebServer will start turning requests away if response code
+        /// <see cref="HttpStatusCode.ServiceUnavailable"/> to indicate that the server
+        /// is too busy to be able to handle the request.
+        /// </para>
+        /// </remarks>
+        public int MaxQueueSize
+        {
+            get { return _requestQueue.MaxQueueSize; }
+            set { _requestQueue.MaxQueueSize = value; }
+        }
+
+        #endregion Properties
+
+        #region Constructors / Create
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HttpListener"/> class.
         /// </summary>
         /// <param name="address">IP Address to accept connections on</param>
         /// <param name="port">TCP Port to listen on, default HTTP port is 80.</param>
+        /// <param name="factory">Factory used to create <see cref="IHttpClientContext"/>es.</param>
         /// <exception cref="ArgumentNullException"><c>address</c> is null.</exception>
         /// <exception cref="ArgumentException">Port must be a positive number.</exception>
-        public HttpListener(IPAddress address, int port)
+        HttpListener(IPAddress address, int port, IHttpContextFactory factory)
+            : base(address, port, factory)
         {
-            Check.Require(address, "address");
-            Check.Between(1, UInt16.MaxValue, port, "port");
-
-            _address = address;
-            _port = port;
+            Init();
         }
 
         /// <summary>
-        /// Launch HttpListener in SSL mode
+        /// Initializes a new instance of the <see cref="HttpListener"/> class.
         /// </summary>
-        /// <param name="address">IP Address to accept connections on</param>
-        /// <param name="port">TCP Port to listen on, default HTTPS port is 443</param>
+        /// <param name="address">The address.</param>
+        /// <param name="port">The port.</param>
+        /// <param name="factory">The factory.</param>
+        /// <param name="certificate">The certificate.</param>
+        HttpListener(IPAddress address, int port, IHttpContextFactory factory, X509Certificate certificate)
+            : base(address, port, factory, certificate)
+        {
+            Init();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HttpListener"/> class.
+        /// </summary>
+        /// <param name="address">The address.</param>
+        /// <param name="port">The port.</param>
+        /// <param name="factory">The factory.</param>
+        /// <param name="certificate">The certificate.</param>
+        /// <param name="protocol">The protocol.</param>
+        /// <param name="requireClientCerts">True if client SSL certificates are required, otherwise false</param>
+        HttpListener(IPAddress address, int port, IHttpContextFactory factory, X509Certificate certificate, SslProtocols protocol,
+            bool requireClientCerts)
+            : base(address, port, factory, certificate, protocol, requireClientCerts)
+        {
+            Init();
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="HttpListener"/> instance with default factories.
+        /// </summary>
+        /// <param name="log">Logging engine for the server. Use NullLogWriter.Instance to disable</param>
+        /// <param name="address">Address that the listener should accept connections on.</param>
+        /// <param name="port">Port that listener should accept connections on.</param>
+		/// <returns>Created HTTP listener.</returns>
+        public static HttpListener Create(ILogWriter log, IPAddress address, int port)
+        {
+            RequestParserFactory requestFactory = new RequestParserFactory();
+            HttpContextFactory factory = new HttpContextFactory(log, 16384, requestFactory, null);
+            HttpListener listener = new HttpListener(address, port, factory);
+            listener._logWriter = log;
+            return listener;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="HttpListener"/> instance with default factories.
+        /// </summary>
+        /// <param name="log">Logging engine for the server. Use NullLogWriter.Instance to disable</param>
+        /// <param name="address">Address that the listener should accept connections on.</param>
+        /// <param name="port">Port that listener should accept connections on.</param>
         /// <param name="certificate">Certificate to use</param>
-        /// <param name="rootCA">Certificate for the root certificate authority that signed the server
-        /// certificate and/or any client certificates</param>
+		/// <returns>Created HTTP listener.</returns>
+        public static HttpListener Create(ILogWriter log, IPAddress address, int port, X509Certificate certificate)
+        {
+            RequestParserFactory requestFactory = new RequestParserFactory();
+            HttpContextFactory factory = new HttpContextFactory(log, 16384, requestFactory, null);
+            HttpListener listener = new HttpListener(address, port, factory, certificate);
+            listener._logWriter = log;
+            return listener;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="HttpListener"/> instance with default factories.
+        /// </summary>
+        /// <param name="log">Logging engine for the server. Use NullLogWriter.Instance to disable</param>
+        /// <param name="address">Address that the listener should accept connections on.</param>
+        /// <param name="port">Port that listener should accept connections on.</param>
+        /// <param name="certificate">Certificate to use</param>
+        /// <param name="rootCA">Root certificate that incoming client certificates have been signed with</param>
         /// <param name="protocol">which HTTPS protocol to use, default is TLS.</param>
-        /// <param name="requireClientCerts">True to require client SSL certificates, otherwise false</param>
-        public HttpListener(IPAddress address, int port, X509Certificate certificate, X509Certificate rootCA,
-            SslProtocols protocol, bool requireClientCerts)
-            : this(address, port)
+        /// <returns>Created HTTP listener.</returns>
+        /// <param name="requireClientCerts">True if client SSL certificates are required, otherwise false</param>
+        public static HttpListener Create(ILogWriter log, IPAddress address, int port, X509Certificate certificate,
+            X509Certificate rootCA, SslProtocols protocol, bool requireClientCerts)
         {
-            Check.Require(certificate, "certificate");
-            Check.Require(rootCA, "rootCA");
+            RequestParserFactory requestFactory = new RequestParserFactory();
+            HttpContextFactory factory = new HttpContextFactory(log, 16384, requestFactory, rootCA);
+            HttpListener listener = new HttpListener(address, port, factory, certificate, protocol, requireClientCerts);
+            listener._logWriter = log;
+            return listener;
+        }
 
-            _certificate = certificate;
-            _rootCA = rootCA;
-            _sslProtocol = protocol;
-            _requireClientCerts = requireClientCerts;
+        #endregion Constructors / Create
+
+        public override void Stop()
+        {
+            base.Stop();
+            _requestQueue.Stop();
         }
 
         /// <summary>
-        /// Invoked when a client disconnects
+        /// Add a request handler
         /// </summary>
-        public ClientDisconnectedHandler DisconnectHandler
+        /// <param name="method">HTTP verb to match, or null to skip verb matching</param>
+        /// <param name="contentType">Content-Type header to match, or null to skip Content-Type matching</param>
+        /// <param name="path">Request URI path regular expression to match, or null to skip URI path matching</param>
+        /// <param name="callback">Callback to fire when an incoming request matches the given pattern</param>
+        public void AddHandler(string method, string contentType, string path, HttpRequestCallback callback)
         {
-            get { return _disconnectHandler; }
-            set { _disconnectHandler = value; }
+            HttpRequestSignature signature = new HttpRequestSignature();
+            signature.Method = method;
+            signature.ContentType = contentType;
+            signature.Path = path;
+            AddHandler(new HttpRequestHandler(signature, callback));
         }
 
         /// <summary>
-        /// Gives you a chance to receive log entries for all internals of the HTTP library.
+        /// Add a request handler
         /// </summary>
-        /// <remarks>
-        /// You may not switch log writer after starting the listener.
-        /// </remarks>
-        public ILogWriter LogWriter
+        /// <param name="handler">Request handler to add</param>
+        public void AddHandler(HttpRequestHandler handler)
         {
-            get { return _logWriter; }
-            set
-            {
-                _logWriter = value ?? NullLogWriter.Instance;
-                if (_certificate != null)
-                    _logWriter.Write(this, LogPrio.Info, String.Format("HTTPS({0}) listening on {1}:{2}",
-                        _sslProtocol, _address, _port));
-                else
-                    _logWriter.Write(this, LogPrio.Info, String.Format("HTTP listening on {0}:{1}",
-                        _address, _port));
-            }
+            HttpRequestHandler[] newHandlers = new HttpRequestHandler[_requestHandlers.Length + 1];
+
+            for (int i = 0; i < _requestHandlers.Length; i++)
+                newHandlers[i] = _requestHandlers[i];
+            newHandlers[_requestHandlers.Length] = handler;
+
+            // CLR guarantees this is an atomic operation
+            _requestHandlers = newHandlers;
         }
 
         /// <summary>
-        /// This handler will be invoked each time a new connection is accepted.
+        /// Remove a request handler
         /// </summary>
-        /// <exception cref="ArgumentNullException"><c>value</c> is null.</exception>
-        public RequestReceivedHandler RequestHandler
+        /// <param name="handler">Request handler to remove</param>
+        public void RemoveHandler(HttpRequestHandler handler)
         {
-            get { return _requestHandler; }
-            set
-            {
-                if (value == null)
-                {
-                    _logWriter.Write(this, LogPrio.Info, "Attempted to set RequestHandler to null");
-                    return;
-                }
-
-                _requestHandler = value;
-            }
-        }
-
-        /// <summary>
-        /// True if we should turn on trace logs.
-        /// </summary>
-        public bool UseTraceLogs
-        {
-            get { return _useTraceLogs; }
-            set { _useTraceLogs = value; }
-        }
-
-
-        /// <exception cref="Exception"><c>Exception</c>.</exception>
-        private void OnAccept(IAsyncResult ar)
-        {
-            Socket socket = null;
+            HttpRequestHandler[] newHandlers = new HttpRequestHandler[_requestHandlers.Length - 1];
 
             try
             {
-                int count = Interlocked.Decrement(ref _pendingAccepts);
-                if (_shutdown)
+                int j = 0;
+                for (int i = 0; i < _requestHandlers.Length; i++)
+                    if (!_requestHandlers[i].Signature.ExactlyEquals(handler.Signature))
+                        newHandlers[j++] = handler;
+
+                // CLR guarantees this is an atomic operation
+                _requestHandlers = newHandlers;
+            }
+            catch (IndexOutOfRangeException)
+            {
+            }
+        }
+
+        /// <summary>
+        /// Set a callback to override the default 404 (Not Found) response
+        /// </summary>
+        /// <param name="callback">Callback that will be fired when an unhandled
+        /// request is received, or null to reset to the default handler</param>
+        public void Set404Handler(HttpRequestCallback callback)
+        {
+            _notFoundHandler = callback;
+        }
+
+        protected void Init()
+        {
+            RequestReceived += RequestHandler;
+
+            if (_requestQueue == null)
+                _requestQueue = new RequestQueue(ProcessRequestWrapper);
+            _requestQueue.Start();
+        }
+
+        /// <summary>
+        /// Can be used to create filtering of new connections.
+        /// </summary>
+        /// <param name="socket">Accepted socket</param>
+        /// <returns>
+        /// true if connection can be accepted; otherwise false.
+        /// </returns>
+        protected override bool OnAcceptingSocket(Socket socket)
+        {
+            ClientAcceptedEventArgs args = new ClientAcceptedEventArgs(socket);
+            Accepted(this, args);
+            return !args.Revoked;
+        }
+
+        void RequestHandler(object sender, RequestEventArgs e)
+        {
+            IHttpClientContext context = (IHttpClientContext)sender;
+            IHttpRequest request = e.Request;
+            if (_requestQueue.ShouldQueue)
+            {
+                _requestQueue.Enqueue(context, request);
+                return;
+            }
+
+            ProcessRequestWrapper(context, request);
+
+            // no need to lock, if all threads are busy,
+            // someone is bound to trigger the thread correctly =)
+            _requestQueue.Trigger();
+        }
+
+        void ProcessRequestWrapper(IHttpClientContext context, IHttpRequest request)
+        {
+            _requestQueue.CurrentRequestCount += 1;
+            ProcessRequest(context, request);
+            _requestQueue.CurrentRequestCount -= 1;
+        }
+
+        void ProcessRequest(IHttpClientContext context, IHttpRequest request)
+        {
+            LogWriter.Write(this, LogPrio.Trace, "Processing request...");
+
+            IHttpResponse response = request.CreateResponse(context);
+            try
+            {
+                // load cookies if they exist.
+                RequestCookies cookies = request.Headers["cookie"] != null
+                                             ? new RequestCookies(request.Headers["cookie"])
+                                             : new RequestCookies(string.Empty);
+                request.SetCookies(cookies);
+
+                // Create a request signature
+                HttpRequestSignature signature = new HttpRequestSignature(request);
+
+                // Look for a signature match in our handlers
+                bool found = false;
+                for (int i = 0; i < _requestHandlers.Length; i++)
                 {
-                     if (count == 0)
-                         _shutdownEvent.Set();
-                    return;
+                    HttpRequestHandler handler = _requestHandlers[i];
+
+                    if (signature == handler.Signature)
+                    {
+                        FireRequestCallback(context, request, response, handler.Callback);
+                        found = true;
+                        break;
+                    }
                 }
 
-                Interlocked.Increment(ref _pendingAccepts);
-                _listener.BeginAcceptSocket(OnAccept, null);
-                socket = _listener.EndAcceptSocket(ar);
-
-                ClientAcceptedEventArgs args = new ClientAcceptedEventArgs(socket);
-                Accepted(this, args);
-                if (args.Revoked)
+                if (!found)
                 {
-                    _logWriter.Write(this, LogPrio.Debug, "Socket was revoked by event handler.");
-                    socket.Close();
-                    return;
+                    // No registered handler matched this request's signature
+                    if (_notFoundHandler != null)
+                    {
+                        FireRequestCallback(context, request, response, _notFoundHandler);
+                    }
+                    else
+                    {
+                        // Send a default 404 response
+                        try
+                        {
+                            response.Status = HttpStatusCode.NotFound;
+                            response.Reason = String.Format("No request handler registered for Method=\"{0}\", Content-Type=\"{1}\", Path=\"{2}\"",
+                                signature.Method, signature.ContentType, signature.Path);
+                            string notFoundResponse = "<html><head><title>Page Not Found</title></head><body><h3>" + response.Reason + "</h3></body></html>";
+                            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(notFoundResponse);
+                            response.Body.Write(buffer, 0, buffer.Length);
+                            response.Send();
+                        }
+                        catch (Exception) { }
+                    }
                 }
-
-                //_logWriter.Write(this, LogPrio.Debug, "Accepted connection from: " + socket.RemoteEndPoint);
-
-                NetworkStream stream = new NetworkStream(socket, true);
-                IPEndPoint remoteEndPoint = (IPEndPoint)socket.RemoteEndPoint;
-
-                if (_certificate != null)
-                    CreateSecureContext(stream, remoteEndPoint);
-                else
-                    new HttpClientContextImp(false, remoteEndPoint, _requestHandler, _disconnectHandler, stream,
-                                             LogWriter);
             }
             catch (Exception err)
             {
-                // we can't really do anything but close the connection
-                if (socket != null)
-                    socket.Close();
+                ThrowException(err);
 
-                if (ExceptionThrown == null)
+                bool errorResponse = true;
+
+                Exception e = err;
+                while (e != null)
+                {
+                    if (e is SocketException)
+                    {
+                        errorResponse = false;
+                        break;
+                    }
+
+                    e = e.InnerException;
+                }
+
+                if (errorResponse)
+                {
+                    try
+                    {
 #if DEBUG
-                    throw;
+                        context.Respond(HttpHelper.HTTP11, HttpStatusCode.InternalServerError, "Internal server error", err.ToString(), "text/plain");
 #else
-                   _logWriter.Write(this, LogPrio.Error, err.Message);
+					    context.Respond(HttpHelper.HTTP10, HttpStatusCode.InternalServerError, "Internal server error");
 #endif
-
-                if (ExceptionThrown != null)
-                    ExceptionThrown(this, err);
+                    }
+                    catch (Exception err2)
+                    {
+                        LogWriter.Write(this, LogPrio.Fatal, "Failed to respond on message with Internal Server Error: " + err2);
+                    }
+                }
             }
+
+            request.Clear();
+            LogWriter.Write(this, LogPrio.Trace, "...done processing request.");
         }
 
-        private bool ValidateClientCertificate(
-              object sender,
-              X509Certificate certificate,
-              X509Chain chain,
-              SslPolicyErrors sslPolicyErrors)
+        void FireRequestCallback(IHttpClientContext client, IHttpRequest request, IHttpResponse response, HttpRequestCallback callback)
         {
-            // Search through the certificate chain looking for our root CA
-            for (int i = 0; i < chain.ChainElements.Count; i++)
-            {
-                if (chain.ChainElements[i].Certificate.Equals(_rootCA))
-                    return true;
-            }
+            bool closeConnection = true;
 
-            return false;
-        }
+            try { closeConnection = callback(client, request, response); }
+            catch (Exception ex) { LogWriter.Write(this, LogPrio.Error, "Exception in HTTP handler: " + ex); }
 
-        private void CreateSecureContext(Stream stream, IPEndPoint remoteEndPoint)
-        {
-            SslStream sslStream = new SslStream(stream, false, ValidateClientCertificate);
-            try
+            if (closeConnection)
             {
-                sslStream.AuthenticateAsServer(_certificate, _requireClientCerts, _sslProtocol, false); //todo: this may fail
-                new HttpClientContextImp(true, remoteEndPoint, _requestHandler, _disconnectHandler, sslStream, LogWriter);
-            }
-            catch (IOException err)
-            {
-                if (UseTraceLogs)
-                    _logWriter.Write(this, LogPrio.Trace, err.Message);
-            }
-            catch (ObjectDisposedException err)
-            {
-                if (UseTraceLogs)
-                    _logWriter.Write(this, LogPrio.Trace, err.Message);
+                try { response.Send(); }
+                catch (Exception ex)
+                {
+                    LogWriter.Write(this, LogPrio.Error, String.Format("Failed to send HTTP response for request to {0}: {1}",
+                        request.Uri, ex.Message));
+                }
             }
         }
-
-        /// <summary>
-        /// Start listen for new connections
-        /// </summary>
-        /// <param name="backlog">Number of connections that can stand in a queue to be accepted.</param>
-        /// <exception cref="InvalidOperationException">If <see cref="RequestHandler"/> have not been set.</exception>
-        public void Start(int backlog)
-        {
-            if (_requestHandler == null)
-                throw new InvalidOperationException("RequestHandler must be set before starting listener.");
-
-            if (_listener == null)
-            {
-                _listener = new TcpListener(_address, _port);
-                _listener.Start(backlog);
-            }
-            Interlocked.Increment(ref _pendingAccepts);
-            _listener.BeginAcceptSocket(OnAccept, null);
-        }
-
-        /// <summary>
-        /// Stop the listener
-        /// </summary>
-        /// <exception cref="SocketException"></exception>
-        public void Stop()
-        {
-            _shutdown = true;
-            _listener.Stop();
-            if (!_shutdownEvent.WaitOne())
-                _logWriter.Write(this, LogPrio.Error, "Failed to shutdown listener properly.");
-            _listener = null;
-        }
-
-        /// <summary>
-        /// Receives unhandled exceptions from the listening threads.
-        /// </summary>
-        /// <remarks>
-        /// Exceptions will be thrown during debug mode if this event is not used,
-        /// exceptions will be printed to console and suppressed during release mode.
-        /// </remarks>
-        public event ExceptionHandler ExceptionThrown;
     }
 }

@@ -1,35 +1,35 @@
 using System;
 using System.Collections.Specialized;
 using System.IO;
+using System.Net;
 using System.Text;
 using HttpServer.Exceptions;
 using HttpServer.FormDecoders;
 
 namespace HttpServer
 {
-
     /// <summary>
-    /// Contains serverside http request information.
+    /// Contains server side HTTP request information.
     /// </summary>
-    public interface IHttpRequest : ICloneable
+    public interface IHttpRequest
     {
         /// <summary>
-        /// Have all body content bytes been received?
-        /// </summary>
-        bool BodyIsComplete { get; }
-
-        /// <summary>
-        /// Kind of types accepted by the client.
+        /// Gets kind of types accepted by the client.
         /// </summary>
         string[] AcceptTypes { get; }
 
         /// <summary>
-        /// Submitted body contents
+        /// Gets or sets body stream.
         /// </summary>
         Stream Body { get; set; }
 
         /// <summary>
-        /// Kind of connection used for the session.
+        /// Gets whether the body is complete.
+        /// </summary>
+        bool BodyIsComplete { get; }
+
+        /// <summary>
+        /// Gets or sets kind of connection used for the session.
         /// </summary>
         ConnectionType Connection { get; set; }
 
@@ -39,43 +39,73 @@ namespace HttpServer
         Encoding ContentEncoding { get; }
 
         /// <summary>
-        /// Number of bytes in the body
+        /// Gets or sets number of bytes in the body.
         /// </summary>
         int ContentLength { get; set; }
 
         /// <summary>
-        /// Headers sent by the client. All names are in lower case.
+        /// Gets cookies that was sent with the request.
+        /// </summary>
+        RequestCookies Cookies { get; }
+
+        /// <summary>
+        /// Gets form parameters.
+        /// </summary>
+        HttpForm Form { get; }
+
+        /// <summary>
+        /// Gets headers sent by the client.
         /// </summary>
         NameValueCollection Headers { get; }
 
         /// <summary>
-        /// Version of http. 
-        /// Probably HttpHelper.HTTP10 or HttpHelper.HTTP11
+        /// Gets or sets version of HTTP protocol that's used. 
         /// </summary>
+        /// <remarks>
+        /// Probably <see cref="HttpHelper.HTTP10"/> or <see cref="HttpHelper.HTTP11"/>.
+        /// </remarks>
         /// <seealso cref="HttpHelper"/>
         string HttpVersion { get; set; }
 
         /// <summary>
-        /// Requested method, always upper case.
+        /// Gets whether the request was made by Ajax (Asynchronous JavaScript)
         /// </summary>
+        bool IsAjax { get; }
+
+        /// <summary>
+        /// Gets or sets requested method.
+        /// </summary>
+        /// <remarks>
+        /// Will always be in upper case.
+        /// </remarks>
         /// <see cref="Method"/>
         string Method { get; set; }
 
         /// <summary>
-        /// Variables sent in the query string
+        /// Gets parameter from <see cref="QueryString"/> or <see cref="Form"/>.
+        /// </summary>
+        HttpParam Param { get; }
+
+        /// <summary>
+        /// Gets variables sent in the query string
         /// </summary>
         HttpInput QueryString { get; }
 
         /// <summary>
-        /// Requested URI (url)
+        /// Gets or sets requested URI.
         /// </summary>
         Uri Uri { get; set; }
 
         /// <summary>
-        /// Uri absolute path splitted into parts.
+        /// Remote client's IP address and port
+        /// </summary>
+        IPEndPoint RemoteEndPoint { get; }
+
+        /// <summary>
+        /// Gets URI absolute path divided into parts.
         /// </summary>
         /// <example>
-        /// // uri is: http://gauffin.com/code/tiny/
+        /// // URI is: http://gauffin.com/code/tiny/
         /// Console.WriteLine(request.UriParts[0]); // result: code
         /// Console.WriteLine(request.UriParts[1]); // result: tiny
         /// </example>
@@ -87,23 +117,39 @@ namespace HttpServer
         string[] UriParts { get; }
 
         /// <summary>
-        /// Check's both QueryString and Form after the parameter.
+        /// Gets or sets path and query.
         /// </summary>
-        HttpParam Param { get; }
+        /// <see cref="Uri"/>
+        /// <remarks>
+        /// Are only used during request parsing. Cannot be set after "Host" header have been
+        /// added.
+        /// </remarks>
+        string UriPath { get; set; }
 
         /// <summary>
-        /// Form parameters.
+        /// Called during parsing of a <see cref="IHttpRequest"/>.
         /// </summary>
-        HttpForm Form { get; }
+        /// <param name="name">Name of the header, should not be URL encoded</param>
+        /// <param name="value">Value of the header, should not be URL encoded</param>
+        /// <exception cref="BadRequestException">If a header is incorrect.</exception>
+        void AddHeader(string name, string value);
 
-        /// <summary>Returns true if the request was made by Ajax (Asyncronous Javascript)</summary>
-        bool IsAjax { get; }
+        /// <summary>
+        /// Add bytes to the body
+        /// </summary>
+        /// <param name="bytes">buffer to read bytes from</param>
+        /// <param name="offset">where to start read</param>
+        /// <param name="length">number of bytes to read</param>
+        /// <returns>Number of bytes actually read (same as length unless we got all body bytes).</returns>
+        /// <exception cref="InvalidOperationException">If body is not writable</exception>
+        /// <exception cref="ArgumentNullException"><c>bytes</c> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><c>offset</c> is out of range.</exception>
+        int AddToBody(byte[] bytes, int offset, int length);
 
-        /// <summary>Returns set cookies for the request</summary>
-        RequestCookies Cookies { get; }
-
-        /// <summary>Returns the requesting client's IP address and port</summary>
-        System.Net.IPEndPoint RemoteEndPoint { get; }
+        /// <summary>
+        /// Clear everything in the request
+        /// </summary>
+        void Clear();
 
         /// <summary>
         /// Decode body into a form.
@@ -119,28 +165,11 @@ namespace HttpServer
         /// <param name="cookies">The cookies.</param>
         void SetCookies(RequestCookies cookies);
 
-        /// <summary>
-        /// Called during parsing of a IHttpRequest.
-        /// </summary>
-        /// <param name="name">Name of the header, should not be url encoded</param>
-        /// <param name="value">Value of the header, should not be url encoded</param>
-        /// <exception cref="BadRequestException">If a header is incorrect.</exception>
-        void AddHeader(string name, string value);
-
-        /// <summary>
-        /// Add bytes to the body
-        /// </summary>
-        /// <param name="bytes">buffer to read bytes from</param>
-        /// <param name="offset">where to start read</param>
-        /// <param name="length">number of bytes to read</param>
-        /// <returns>Number of bytes actually read (same as length unless we got all body bytes).</returns>
-        /// <exception cref="ArgumentException"></exception>
-        /// <exception cref="InvalidOperationException">If body is not writable</exception>
-        int AddToBody(byte[] bytes, int offset, int length);
-
-        /// <summary>
-        /// Clear everything in the request
-        /// </summary>
-        void Clear();
+		/// <summary>
+		/// Create a response object.
+		/// </summary>
+		/// <param name="context">Context for the connected client.</param>
+		/// <returns>A new <see cref="IHttpResponse"/>.</returns>
+		IHttpResponse CreateResponse(IHttpClientContext context);
     }
 }

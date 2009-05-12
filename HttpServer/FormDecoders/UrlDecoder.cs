@@ -16,9 +16,9 @@ namespace HttpServer.FormDecoders
         /// </summary>
         /// <param name="stream">Stream containing the content</param>
         /// <param name="contentType">Content type (with any additional info like boundry). Content type is always supplied in lower case</param>
-        /// <param name="encoding">Stream enconding</param>
+        /// <param name="encoding">Stream encoding</param>
         /// <returns>
-        /// A http form, or null if content could not be parsed.
+        /// A HTTP form, or null if content could not be parsed.
         /// </returns>
         /// <exception cref="InvalidDataException">If contents in the stream is not valid input data.</exception>
 		public HttpForm Decode(Stream stream, string contentType, Encoding encoding)

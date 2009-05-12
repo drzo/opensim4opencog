@@ -1,26 +1,26 @@
 /*
- * Copyright (c) 2006-2008, openmetaverse.org
+ * Copyright (c) 2007-2009, openmetaverse.org
  * All rights reserved.
  *
- * - Redistribution and use in source and binary forms, with or without
+ * - Redistribution and use in source and binary forms, with or without 
  *   modification, are permitted provided that the following conditions are met:
  *
  * - Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- * - Neither the name of the openmetaverse.org nor the names
+ * - Neither the name of the openmetaverse.org nor the names 
  *   of its contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
@@ -33,6 +33,8 @@ using System.Reflection;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse.Http;
 using OpenMetaverse.Packets;
+using OpenMetaverse.Interfaces;
+using OpenMetaverse.Messages.Linden;
 
 namespace OpenMetaverse
 {
@@ -963,7 +965,7 @@ namespace OpenMetaverse
 
         #endregion Events
 
-        /// <summary>Reference to the GridClient object</summary>
+        /// <summary>Reference to the GridClient instance</summary>
         public readonly GridClient Client;
         /// <summary>Used for movement and camera tracking</summary>
         public readonly AgentMovement Movement;
@@ -971,9 +973,7 @@ namespace OpenMetaverse
         /// check the current movement status such as walking, hovering, aiming,
         /// etc. by checking for system animations in the Animations class</summary>
         public InternalDictionary<UUID, int> SignaledAnimations = new InternalDictionary<UUID, int>();
-        /// <summary>
-        /// Dictionary containing current Group Chat sessions and members
-        /// </summary>
+        /// <summary>Dictionary containing current Group Chat sessions and members</summary>
         public InternalDictionary<UUID, List<ChatSessionMember>> GroupChatSessions = new InternalDictionary<UUID, List<ChatSessionMember>>();
 
         #region Properties
@@ -1165,9 +1165,11 @@ namespace OpenMetaverse
             Client.Network.RegisterCallback(PacketType.TeleportStart, callback);
             Client.Network.RegisterCallback(PacketType.TeleportProgress, callback);
             Client.Network.RegisterCallback(PacketType.TeleportFailed, callback);
-            Client.Network.RegisterEventCallback("TeleportFinish", new Caps.EventQueueCallback(TeleportFinishEventHandler));
             Client.Network.RegisterCallback(PacketType.TeleportCancel, callback);
             Client.Network.RegisterCallback(PacketType.TeleportLocal, callback);
+            // these come in via the EventQueue
+            Client.Network.RegisterEventCallback("TeleportFailed", new Caps.EventQueueCallback(TeleportFailedEventHandler));
+            Client.Network.RegisterEventCallback("TeleportFinish", new Caps.EventQueueCallback(TeleportFinishEventHandler));
 
             // Instant message callback
             Client.Network.RegisterCallback(PacketType.ImprovedInstantMessage, new NetworkManager.PacketCallback(InstantMessageHandler));
@@ -1193,14 +1195,15 @@ namespace OpenMetaverse
             Client.Network.RegisterCallback(PacketType.MeanCollisionAlert, new NetworkManager.PacketCallback(MeanCollisionAlertHandler));
             // Region Crossing
             Client.Network.RegisterCallback(PacketType.CrossedRegion, new NetworkManager.PacketCallback(CrossedRegionHandler));
+            Client.Network.RegisterEventCallback("CrossedRegion", new Caps.EventQueueCallback(CrossedRegionEventHandler));
             // CAPS callbacks
             Client.Network.RegisterEventCallback("EstablishAgentCommunication", new Caps.EventQueueCallback(EstablishAgentCommunicationEventHandler));
             // Incoming Group Chat
-            Client.Network.RegisterEventCallback("ChatterBoxInvitation", new Caps.EventQueueCallback(ChatterBoxInvitationHandler));
+            Client.Network.RegisterEventCallback("ChatterBoxInvitation", new Caps.EventQueueCallback(ChatterBoxInvitationEventHandler));
             // Outgoing Group Chat Reply
-            Client.Network.RegisterEventCallback("ChatterBoxSessionEventReply", new Caps.EventQueueCallback(ChatterBoxSessionEventHandler));
-            Client.Network.RegisterEventCallback("ChatterBoxSessionStartReply", new Caps.EventQueueCallback(ChatterBoxSessionStartReplyHandler));
-            Client.Network.RegisterEventCallback("ChatterBoxSessionAgentListUpdates", new Caps.EventQueueCallback(ChatterBoxSessionAgentListReplyHandler));
+            Client.Network.RegisterEventCallback("ChatterBoxSessionEventReply", new Caps.EventQueueCallback(ChatterBoxSessionEventReplyEventHandler));
+            Client.Network.RegisterEventCallback("ChatterBoxSessionStartReply", new Caps.EventQueueCallback(ChatterBoxSessionStartReplyEventHandler));
+            Client.Network.RegisterEventCallback("ChatterBoxSessionAgentListUpdates", new Caps.EventQueueCallback(ChatterBoxSessionAgentListUpdatesEventHandler));
             // Login
             Client.Network.RegisterLoginResponseCallback(new NetworkManager.LoginResponseCallback(Network_OnLoginResponse));
             // Alert Messages
@@ -1211,18 +1214,17 @@ namespace OpenMetaverse
             Client.Network.RegisterCallback(PacketType.CameraConstraint, new NetworkManager.PacketCallback(CameraConstraintHandler));
             Client.Network.RegisterCallback(PacketType.ScriptSensorReply, new NetworkManager.PacketCallback(ScriptSensorReplyHandler));
             Client.Network.RegisterCallback(PacketType.AvatarSitResponse, new NetworkManager.PacketCallback(AvatarSitResponseHandler));
-
         }
 
         #region Chat and instant messages
 
         /// <summary>
-        /// Send a chat message
+        /// Send a text message from the Agent to the Simulator
         /// </summary>
-        /// <param name="message">The Message you're sending out.</param>
-        /// <param name="channel">Channel number (0 would be default 'Say' message, other numbers 
-        /// denote the equivalent of /# in normal client).</param>
-        /// <param name="type">Chat Type, see above.</param>
+        /// <param name="message">A <see cref="string"/> containing the message</param>
+        /// <param name="channel">The channel to send the message on, 0 is the public channel. Channels above 0
+        /// can be used however only scripts listening on the specified channel will see the message</param>
+        /// <param name="type">Denotes the type of message being sent, shout, whisper, etc.</param>
         public void Chat(string message, int channel, ChatType type)
         {
             ChatFromViewerPacket chat = new ChatFromViewerPacket();
@@ -1235,7 +1237,9 @@ namespace OpenMetaverse
             Client.Network.SendPacket(chat);
         }
 
-        /// <summary>Requests missed/offline messages</summary>
+        /// <summary>
+        /// Request any instant messages sent while the client was offline to be resent.
+        /// </summary>
         public void RetrieveInstantMessages()
         {
             RetrieveInstantMessagesPacket p = new RetrieveInstantMessagesPacket();
@@ -1245,10 +1249,10 @@ namespace OpenMetaverse
         }
 
         /// <summary>
-        /// Send an Instant Message
+        /// Send an Instant Message to another Avatar
         /// </summary>
-        /// <param name="target">Target of the Instant Message</param>
-        /// <param name="message">Text message being sent</param>
+        /// <param name="target">The recipients <see cref="UUID"/></param>
+        /// <param name="message">A <see cref="string"/> containing the message to send</param>
         public void InstantMessage(UUID target, string message)
         {
             InstantMessage(Name, target, message, AgentID.Equals(target) ? AgentID : target ^ AgentID,
@@ -1257,10 +1261,10 @@ namespace OpenMetaverse
         }
 
         /// <summary>
-        /// Send an Instant Message
+        /// Send an Instant Message to an existing group chat or conference chat
         /// </summary>
-        /// <param name="target">Target of the Instant Message</param>
-        /// <param name="message">Text message being sent</param>
+        /// <param name="target">The recipients <see cref="UUID"/></param>
+        /// <param name="message">A <see cref="string"/> containing the message to send</param>
         /// <param name="imSessionID">IM session ID (to differentiate between IM windows)</param>
         public void InstantMessage(UUID target, string message, UUID imSessionID)
         {
@@ -1363,12 +1367,11 @@ namespace OpenMetaverse
         }
 
         /// <summary>
-        /// Send an Instant Message to a group
+        /// Send an Instant Message to a group the agent is a member of
         /// </summary>
         /// <param name="fromName">The name this IM will show up as being from</param>
         /// <param name="groupID"><seealso cref="UUID"/> of the group to send message to</param>
         /// <param name="message">Text message being sent</param>
-        /// <remarks>This does not appear to function with groups the agent is not in</remarks>
         public void InstantMessageGroup(string fromName, UUID groupID, string message)
         {
             lock (GroupChatSessions.Dictionary)
@@ -1422,11 +1425,12 @@ namespace OpenMetaverse
 
             Client.Network.SendPacket(im);
         }
+
         /// <summary>
-        /// Request self terminates group chat. This will stop Group IM's from showing up
-        /// until session is rejoined or expires.
+        /// Exit a group chat session. This will stop further Group chat messages
+        /// from being sent until session is rejoined.
         /// </summary>
-        /// <param name="groupID"><seealso cref="UUID"/> of Group to leave</param>
+        /// <param name="groupID"><seealso cref="UUID"/> of Group chat session to leave</param>
         public void RequestLeaveGroupChat(UUID groupID)
         {
             ImprovedInstantMessagePacket im = new ImprovedInstantMessagePacket();
@@ -1483,14 +1487,11 @@ namespace OpenMetaverse
 
             if (url != null)
             {
-                OSDMap req = new OSDMap();
-                req.Add("method", OSD.FromString("accept invitation"));
-                req.Add("session-id", OSD.FromUUID(session_id));
-
-                byte[] postData = StructuredData.OSDParser.SerializeLLSDXmlBytes(req);
+                ChatSessionAcceptInvitation acceptInvite = new ChatSessionAcceptInvitation();
+                acceptInvite.SessionID = session_id;
 
                 CapsClient request = new CapsClient(url);
-                request.StartRequest(postData);
+                request.BeginGetResponse(acceptInvite.Serialize(), OSDFormat.Xml, Client.Settings.CAPS_TIMEOUT);
             }
             else
             {
@@ -1500,11 +1501,11 @@ namespace OpenMetaverse
        }
 
        /// <summary>
-       /// Start a friends confrence
+       /// Start a friends conference
        /// </summary>
-       /// <param name="participants"><seealso cref="UUID"/> List of UUIDs to start a confrence with</param>
-       /// <param name="tmp_session_id"><seealso cref="UUID"/>a Unique UUID that will be returned in the OnJoinedGroupChat callback></param>
-       public void StartIMConfrence(List <UUID> participants,UUID tmp_session_id)
+       /// <param name="participants"><seealso cref="UUID"/> List of UUIDs to start a conference with</param>
+       /// <param name="tmp_session_id">the temportary session ID returned in the <see cref="OnJoinedGroupChat"/> callback></param>
+       public void StartIMConference(List <UUID> participants,UUID tmp_session_id)
        {
            if (Client.Network.CurrentSim == null || Client.Network.CurrentSim.Caps == null)
                throw new Exception("ChatSessionRequest capability is not currently available");
@@ -1513,19 +1514,16 @@ namespace OpenMetaverse
 
             if (url != null)
             {
-                OSDMap req = new OSDMap();
-                req.Add("method", OSD.FromString("start conference"));
-                OSDArray members = new OSDArray();
-                foreach(UUID participant in participants)
-                    members.Add(OSD.FromUUID(participant));
+                ChatSessionRequestStartConference startConference = new ChatSessionRequestStartConference();
 
-                req.Add("params",members);
-                req.Add("session-id", OSD.FromUUID(tmp_session_id));
+                startConference.AgentsBlock = new UUID[participants.Count];
+                for (int i = 0; i < participants.Count; i++)
+                    startConference.AgentsBlock[i] = participants[i];
 
-                byte[] postData = StructuredData.OSDParser.SerializeLLSDXmlBytes(req);
+                startConference.SessionID = tmp_session_id;
 
                 CapsClient request = new CapsClient(url);
-                request.StartRequest(postData);
+                request.BeginGetResponse(startConference.Serialize(), OSDFormat.Xml, Client.Settings.CAPS_TIMEOUT);
             }
             else
             {
@@ -2816,21 +2814,19 @@ namespace OpenMetaverse
             }
         }
 
-        private void EstablishAgentCommunicationEventHandler(string message, OSD osd, Simulator simulator)
+        private void EstablishAgentCommunicationEventHandler(string capsKey, IMessage message, Simulator simulator)
         {
-            StructuredData.OSDMap body = (StructuredData.OSDMap)osd;
+            EstablishAgentCommunicationMessage msg = (EstablishAgentCommunicationMessage)message;
 
-
-            if (Client.Settings.MULTIPLE_SIMS && body.ContainsKey("sim-ip-and-port"))
+            if (Client.Settings.MULTIPLE_SIMS)
             {
-                string ipAndPort = body["sim-ip-and-port"].AsString();
-                string[] pieces = ipAndPort.Split(':');
-                IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse(pieces[0]), Convert.ToInt32(pieces[1]));
+                
+                IPEndPoint endPoint = new IPEndPoint(msg.Address, msg.Port);
                 Simulator sim = Client.Network.FindSimulator(endPoint);
 
                 if (sim == null)
                 {
-                    Logger.Log("Got EstablishAgentCommunication for unknown sim " + ipAndPort,
+                    Logger.Log("Got EstablishAgentCommunication for unknown sim " + msg.Address + ":" + msg.Port,
                         Helpers.LogLevel.Error, Client);
 
                     // FIXME: Should we use this opportunity to connect to the simulator?
@@ -2840,39 +2836,50 @@ namespace OpenMetaverse
                     Logger.Log("Got EstablishAgentCommunication for " + sim.ToString(),
                         Helpers.LogLevel.Info, Client);
 
-                    sim.SetSeedCaps(body["seed-capability"].AsString());
+                    sim.SetSeedCaps(msg.SeedCapability.ToString());
                 }
             }
         }
 
         /// <summary>
+        /// Process TeleportFailed message sent via EventQueue, informs agent its last teleport has failed and why.
+        /// </summary>
+        /// <param name="messageKey">The Message Key</param>
+        /// <param name="message">An IMessage object Deserialized from the recieved message event</param>
+        /// <param name="simulator">The simulator originating the event message</param>
+        public void TeleportFailedEventHandler(string messageKey, IMessage message, Simulator simulator)
+        {
+            TeleportFailedMessage msg = (TeleportFailedMessage) message;
+
+            TeleportFailedPacket failedPacket = new TeleportFailedPacket();
+            failedPacket.Info.AgentID = msg.AgentID;
+            failedPacket.Info.Reason = Utils.StringToBytes(msg.Reason);
+            
+            TeleportHandler(failedPacket, simulator);
+        }
+
+        /// <summary>
         /// Process TeleportFinish from Event Queue and pass it onto our TeleportHandler
         /// </summary>
-        /// <param name="message"></param>
-        /// <param name="osd"></param>
-        /// <param name="simulator"></param>
-        private void TeleportFinishEventHandler(string message, OSD osd, Simulator simulator)
+        /// <param name="capsKey">The message system key for this event</param>
+        /// <param name="message">IMessage object containing decoded data from OSD</param>
+        /// <param name="simulator">The simulator originating the event message</param>
+        private void TeleportFinishEventHandler(string capsKey, IMessage message, Simulator simulator)
         {
-            
-            OSDMap map = (OSDMap)osd;
-            OSDArray array = (OSDArray)map["Info"];
-            for (int i = 0; i < array.Count; i++)
-            {
-                TeleportFinishPacket p = new TeleportFinishPacket();
-                OSDMap data = (OSDMap)array[i];
-                p.Info.AgentID = data["AgentID"].AsUUID();
-                p.Info.LocationID = Utils.BytesToUInt(data["LocationID"].AsBinary());
-                p.Info.RegionHandle = Utils.BytesToUInt64(data["RegionHandle"].AsBinary());
-                p.Info.SeedCapability = data["SeedCapability"].AsBinary();
-                p.Info.SimAccess = (byte)data["SimAccess"].AsInteger();
-                p.Info.SimIP = Utils.BytesToUInt(data["SimIP"].AsBinary());
-                p.Info.SimPort = (ushort)data["SimPort"].AsInteger();
-                p.Info.TeleportFlags = Utils.BytesToUInt(data["TeleportFlags"].AsBinary());
+            TeleportFinishMessage msg = (TeleportFinishMessage)message;
 
-                // pass the packet onto the teleport handler
-                TeleportHandler(p, simulator);
+            TeleportFinishPacket p = new TeleportFinishPacket();
+            p.Info.AgentID = msg.AgentID;
+            p.Info.LocationID = (uint)msg.LocationID;
+            p.Info.RegionHandle = msg.RegionHandle;
+            p.Info.SeedCapability = Utils.StringToBytes(msg.SeedCapability.ToString()); // FIXME: Check This
+            p.Info.SimAccess = (byte)msg.SimAccess;
+            p.Info.SimIP = Utils.IPToUInt(msg.IP);
+            p.Info.SimPort = (ushort)msg.Port;
+            p.Info.TeleportFlags = (uint)msg.Flags;
 
-            }
+            // pass the packet onto the teleport handler
+            TeleportHandler(p, simulator);
         }
 
         /// <summary>
@@ -3086,10 +3093,50 @@ namespace OpenMetaverse
             fullName = null;
         }
 
+
+
+        /// <summary>
+        /// Crossed region handler for message that comes across the EventQueue. Sent to an agent
+        /// when the agent crosses a sim border into a new region.
+        /// </summary>
+        /// <param name="capsKey">The message key</param>
+        /// <param name="message">the IMessage object containing the deserialized data sent from the simulator</param>
+        /// <param name="simulator">The <see cref="Simulator"/> which originated the packet</param>
+        private void CrossedRegionEventHandler(string capsKey, IMessage message, Simulator simulator)
+        {
+            CrossedRegionMessage crossed = (CrossedRegionMessage) message;
+
+            IPEndPoint endPoint = new IPEndPoint(crossed.IP, crossed.Port);
+
+            Logger.DebugLog("Crossed in to new region area, attempting to connect to " + endPoint.ToString(), Client);
+
+            Simulator oldSim = Client.Network.CurrentSim;
+            Simulator newSim = Client.Network.Connect(endPoint, crossed.RegionHandle, true, crossed.SeedCapability.ToString());
+
+            if (newSim != null)
+            {
+                Logger.Log("Finished crossing over in to region " + newSim.ToString(), Helpers.LogLevel.Info, Client);
+
+                if (OnRegionCrossed != null)
+                {
+                    try { OnRegionCrossed(oldSim, newSim); }
+                    catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                }
+            }
+            else
+            {
+                // The old simulator will (poorly) handle our movement still, so the connection isn't
+                // completely shot yet
+                Logger.Log("Failed to connect to new region " + endPoint.ToString() + " after crossing over",
+                    Helpers.LogLevel.Warning, Client);
+            }
+        }
+
         /// <summary>
         /// Allows agent to cross over (walk, fly, vehicle) in to neighboring
         /// simulators
         /// </summary>
+        /// <remarks>This packet is now being sent via the EventQueue</remarks>
         private void CrossedRegionHandler(Packet packet, Simulator sim)
         {
             CrossedRegionPacket crossing = (CrossedRegionPacket)packet;
@@ -3124,14 +3171,15 @@ namespace OpenMetaverse
         /// Group Chat event handler
         /// </summary>
         /// <param name="capsKey">The capability Key</param>
-        /// <param name="osd"></param>
+        /// <param name="message">IMessage object containing decoded data from OSD</param>
         /// <param name="simulator"></param>
-        private void ChatterBoxSessionEventHandler(string capsKey, OSD osd, Simulator simulator)
+        private void ChatterBoxSessionEventReplyEventHandler(string capsKey, IMessage message, Simulator simulator)
         {
-            OSDMap map = (OSDMap)osd;
-            if (map["success"].AsBoolean() != true)
+            ChatterboxSessionEventReplyMessage msg = (ChatterboxSessionEventReplyMessage)message;
+            
+            if(!msg.Success)
             {
-                Logger.Log("Attempt to send group chat to non-existant session for group " + map["session_id"].AsString(),
+                Logger.Log("Attempt to send group chat to non-existant session for group " + msg.SessionID,
                     Helpers.LogLevel.Info, Client);
             }
         }
@@ -3140,32 +3188,15 @@ namespace OpenMetaverse
         /// Response from request to join a group chat
         /// </summary>
         /// <param name="capsKey"></param>
-        /// <param name="osd"></param>
+        /// <param name="message">IMessage object containing decoded data from OSD</param>
         /// <param name="simulator"></param>
-        private void ChatterBoxSessionStartReplyHandler(string capsKey, OSD osd, Simulator simulator)
+        private void ChatterBoxSessionStartReplyEventHandler(string capsKey, IMessage message, Simulator simulator)
         {
-            OSDMap map = (OSDMap)osd;
-            UUID sessionID = map["session_id"].AsUUID();
-            UUID tmpSessionID = map["temp_session_id"].AsUUID();
-            
-            string sessionName = String.Empty;
-
-            bool success = map["success"].AsBoolean();
-
-            if (success)
-            {
-                OSDMap sessionInfo = (OSDMap)map["session_info"];
-                sessionName = sessionInfo["session_name"].AsString();
-                
-                /* Parameters we do not currently use for anything */
-                // sessionInfo["type"].AsInteger();
-                // sessionInfo["voice_enabled"}.AsBoolean();
-                // sessionInfo["moderated_mode"] -> ["voice"].AsBoolean()
-            }
-
             if (OnGroupChatJoin != null)
             {
-                try { OnGroupChatJoin(sessionID, sessionName, tmpSessionID, success); }
+                ChatterBoxSessionStartReplyMessage msg = (ChatterBoxSessionStartReplyMessage)message;
+
+                try { OnGroupChatJoin(msg.SessionID, msg.SessionName, msg.TempSessionID, msg.Success); }
                 catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
             }
         }
@@ -3174,73 +3205,47 @@ namespace OpenMetaverse
         /// Someone joined or left group chat
         /// </summary>
         /// <param name="capsKey"></param>
-        /// <param name="osd"></param>
+        /// <param name="message">IMessage object containing decoded data from OSD</param>
         /// <param name="simulator"></param>
-        private void ChatterBoxSessionAgentListReplyHandler(string capsKey, OSD osd, Simulator simulator)
+        private void ChatterBoxSessionAgentListUpdatesEventHandler(string capsKey, IMessage message, Simulator simulator)
         {
-            // parse the SD 
-            OSDMap map = (OSDMap)osd;
+            ChatterBoxSessionAgentListUpdatesMessage msg = (ChatterBoxSessionAgentListUpdatesMessage)message;
 
-            // verify sessions exists, if not add it
-            UUID sessionID;
-            if (map.ContainsKey("session_id"))
+            lock (GroupChatSessions)
+                if (!GroupChatSessions.ContainsKey(msg.SessionID))
+                    GroupChatSessions.Add(msg.SessionID, new List<ChatSessionMember>());
+
+            for (int i = 0; i < msg.Updates.Length; i++)
             {
-                sessionID = map["session_id"].AsUUID();
-                lock (GroupChatSessions)
-                    if (!GroupChatSessions.ContainsKey(sessionID))
-                        GroupChatSessions.Add(sessionID, new List<ChatSessionMember>());
-            }
-            else
-            {
-                return;
-            }
-
-
-            //string errormsg = map["error"].AsString();
-            //SDMap updates = (SDMap)map["updates"];
-
-            // Handle any agent data updates
-            OSDMap agent_updates = (OSDMap)map["agent_updates"];
-
-            foreach (KeyValuePair<string, OSD> kvp in agent_updates)
-            {
-                UUID agent_key = UUID.Parse(kvp.Key);
-                OSDMap record = (OSDMap)kvp.Value;
-
-                // handle joins/parts first
-                if (record.ContainsKey("transition"))
+                ChatSessionMember fndMbr;
+                lock (GroupChatSessions.Dictionary)
                 {
-                    // find existing record if any
-                    ChatSessionMember fndMbr;
-                    lock (GroupChatSessions.Dictionary)
+                    fndMbr = GroupChatSessions[msg.SessionID].Find(delegate(ChatSessionMember member)
                     {
-                        fndMbr = GroupChatSessions[sessionID].Find(delegate(ChatSessionMember member)
-                           {
-                               return member.AvatarKey == agent_key;
-                           });
-                    }
+                        return member.AvatarKey == msg.Updates[i].AgentID;
+                    });
+                }
 
-                    // handle joins
-                    if (record["transition"].AsString().Equals("ENTER"))
+                if (msg.Updates[i].Transition != null)
+                {
+                    if (msg.Updates[i].Transition.Equals("ENTER"))
                     {
                         if (fndMbr.AvatarKey == UUID.Zero)
                         {
                             fndMbr = new ChatSessionMember();
-                            fndMbr.AvatarKey = agent_key;
+                            fndMbr.AvatarKey = msg.Updates[i].AgentID;
 
                             lock (GroupChatSessions.Dictionary)
                                 GroupChatSessions[sessionID].Add(fndMbr);
 
                             if (OnChatSessionMemberAdded != null)
                             {
-                                try { OnChatSessionMemberAdded(sessionID, agent_key); }
+                                try { OnChatSessionMemberAdded(sessionID, fndMbr.AvatarKey); }
                                 catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
                             }
                         }
-
                     }
-                    // handle parts
-                    else if (record["transition"].AsString().Equals("LEAVE"))
+                    else if (msg.Updates[i].Transition.Equals("LEAVE"))
                     {
                         if (fndMbr.AvatarKey != UUID.Zero)
                             lock (GroupChatSessions.Dictionary)
@@ -3248,143 +3253,74 @@ namespace OpenMetaverse
 
                         if (OnChatSessionMemberLeft != null)
                         {
-                            try { OnChatSessionMemberLeft(sessionID, agent_key); }
+                            try { OnChatSessionMemberLeft(sessionID, msg.Updates[i].AgentID); }
                             catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
                         }
 
-                        if (agent_key == Client.Self.AgentID)
+                        if (msg.Updates[i].AgentID == Client.Self.AgentID)
                         {
                             try { OnGroupChatLeft(sessionID); }
                             catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
                         }
-
-                        // no need to process anything else in this record
-                        continue;
-                    }
-                    // this should only fire if LL adds a new transition but doesn't tell anyone
-                    else
-                    {
-                        Logger.Log("Unknown transition action " + record["transition"], Helpers.LogLevel.Warning, Client);
                     }
                 }
 
-
-                // Handle any updates
-                
-                // search for member to update
-                ChatSessionMember update_member = GroupChatSessions.Dictionary[sessionID].Find(delegate(ChatSessionMember m)
+                // handle updates
+                ChatSessionMember update_member = GroupChatSessions.Dictionary[msg.SessionID].Find(delegate(ChatSessionMember m)
                 {
-                    return m.AvatarKey == agent_key;
+                    return m.AvatarKey == msg.Updates[i].AgentID;
                 });
 
-                OSDMap record_info = (OSDMap)record["info"];
+                
+                update_member.MuteText = msg.Updates[i].MuteText;
+                update_member.MuteVoice = msg.Updates[i].MuteVoice;
 
-                lock (GroupChatSessions.Dictionary)
-                {
-
-                    if (record_info.ContainsKey("mutes"))
-                    {
-                        OSDMap mutes = (OSDMap)record_info["mutes"];
-                        foreach (KeyValuePair<string, OSD> muteEntry in mutes)
-                        {
-                            if (muteEntry.Key == "text")
-                            {
-                                update_member.MuteText = muteEntry.Value.AsBoolean();
-                            }
-                            else if (muteEntry.Key == "voice")
-                            {
-                                update_member.MuteVoice = muteEntry.Value.AsBoolean();
-                            }
-                        }
-                    }
-
-                    if (record_info.ContainsKey("can_voice_chat"))
-                    {
-                        update_member.CanVoiceChat = record_info["can_voice_chat"].AsBoolean();
-                    }
-
-                    if (record_info.ContainsKey("is_moderator"))
-                    {
-                        update_member.IsModerator = record_info["is_moderator"].AsBoolean();
-                    }
-                }
+                update_member.CanVoiceChat = msg.Updates[i].CanVoiceChat;
+                update_member.IsModerator = msg.Updates[i].IsModerator;
 
                 // replace existing member record
                 lock (GroupChatSessions.Dictionary)
                 {
-                    int found = GroupChatSessions.Dictionary[sessionID].FindIndex(delegate(ChatSessionMember m)
+                    int found = GroupChatSessions.Dictionary[msg.SessionID].FindIndex(delegate(ChatSessionMember m)
                     {
-                        return m.AvatarKey == agent_key;
+                        return m.AvatarKey == msg.Updates[i].AgentID;
                     });
 
                     if (found >= 0)
-                        GroupChatSessions.Dictionary[sessionID][found] = update_member;
+                        GroupChatSessions.Dictionary[msg.SessionID][found] = update_member;
                 }
-
             }
-
-            
-            //foreach (KeyValuePair<string, SD> kvp in updates)
-            //{
-            //    if (kvp.Value.Equals("ENTER"))
-            //    {
-            //        lock (GroupChatSessions.Dictionary)
-            //        {
-            //            if (!GroupChatSessions.Dictionary[sessionID].Contains((UUID)kvp.Key))
-            //                GroupChatSessions.Dictionary[sessionID].Add((UUID)kvp.Key);
-            //        }
-            //    }
-            //    else if (kvp.Value.Equals("LEAVE"))
-            //    {
-            //        lock (GroupChatSessions.Dictionary)
-            //        {
-            //            if (GroupChatSessions.Dictionary[sessionID].Contains((UUID)kvp.Key))
-            //                GroupChatSessions.Dictionary[sessionID].Remove((UUID)kvp.Key);
-
-            //            // we left session, remove from dictionary
-            //            if (kvp.Key.Equals(Client.Self.id) && OnGroupChatLeft != null)
-            //            {
-            //                GroupChatSessions.Dictionary.Remove(sessionID);
-            //                OnGroupChatLeft(sessionID);
-            //            }
-            //        }
-            //    }
-            //}
         }
 
         /// <summary>
-        /// Group Chat Request
+        /// Handle a group chat Invitation
         /// </summary>
         /// <param name="capsKey">Caps Key</param>
-        /// <param name="osd">SD Map containing invitation</param>
+        /// <param name="message">IMessage object containing decoded data from OSD</param>
         /// <param name="simulator">Originating Simulator</param>
-        private void ChatterBoxInvitationHandler(string capsKey, OSD osd, Simulator simulator)
+        private void ChatterBoxInvitationEventHandler(string capsKey, IMessage message, Simulator simulator)
         {
             if (OnInstantMessage != null)
             {
-                OSDMap map = (OSDMap)osd;
-                OSDMap im = (OSDMap)map["instantmessage"];
-                //SDMap agent = (SDMap)im["agent_params"];
-                OSDMap msg = (OSDMap)im["message_params"];
-                OSDMap msgdata = (OSDMap)msg["data"];
+                ChatterBoxInvitationMessage msg = (ChatterBoxInvitationMessage)message;
 
-                InstantMessage message = new InstantMessage();
+                InstantMessage im = new InstantMessage();
 
-                message.FromAgentID = map["from_id"].AsUUID();
-                message.FromAgentName = map["from_name"].AsString();
-                message.ToAgentID = msg["to_id"].AsUUID();
-                message.ParentEstateID = (uint)msg["parent_estate_id"].AsInteger();
-                message.RegionID = msg["region_id"].AsUUID();
-                message.Position = ((OSDArray)msg["position"]).AsVector3();
-                message.Dialog = (InstantMessageDialog)msgdata["type"].AsInteger();
-                message.GroupIM = msg["from_group"].AsBoolean();
-                message.IMSessionID = map["session_id"].AsUUID();
-                message.Timestamp = new DateTime(msgdata["timestamp"].AsInteger());
-                message.Message = msg["message"].AsString();
-                message.Offline = (InstantMessageOnline)msg["offline"].AsInteger();
-                message.BinaryBucket = msgdata["binary_bucket"].AsBinary();
+                im.FromAgentID = msg.FromAgentID;
+                im.FromAgentName = msg.FromAgentName;
+                im.ToAgentID = msg.ToAgentID;
+                im.ParentEstateID = (uint)msg.ParentEstateID;
+                im.RegionID = msg.RegionID;
+                im.Position = msg.Position;
+                im.Dialog = msg.Dialog;
+                im.GroupIM = msg.GroupIM;
+                im.IMSessionID = msg.IMSessionID;
+                im.Timestamp = msg.Timestamp;
+                im.Message = msg.Message;
+                im.Offline = msg.Offline;
+                im.BinaryBucket = msg.BinaryBucket;
 
-                try { OnInstantMessage(message, simulator); }
+                try { OnInstantMessage(im, simulator); }
                 catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
             }
         }
@@ -3395,8 +3331,9 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="sessionID">the <see cref="UUID"/> of the session to moderate, for group chats this will be the groups UUID</param>
         /// <param name="memberID">the <see cref="UUID"/> of the avatar to moderate</param>
-        /// <param name="moderateText">true to moderate (silence user), false to allow avatar to speak</param>
-        public void ModerateChatSessions(UUID sessionID, UUID memberID, bool moderateText)
+        /// <param name="key">Either "voice" to moderate users voice, or "text" to moderate users text session</param>
+        /// <param name="moderate">true to moderate (silence user), false to allow avatar to speak</param>
+        public void ModerateChatSessions(UUID sessionID, UUID memberID, string key, bool moderate)
         {
             if (Client.Network.CurrentSim == null || Client.Network.CurrentSim.Caps == null)
                 throw new Exception("ChatSessionRequest capability is not currently available");
@@ -3405,24 +3342,15 @@ namespace OpenMetaverse
 
             if (url != null)
             {
-                OSDMap req = new OSDMap();
-                req.Add("method", OSD.FromString("mute update"));
-                
-                OSDMap mute_info = new OSDMap();
-                mute_info.Add("text", OSD.FromBoolean(moderateText));
+                ChatSessionRequestMuteUpdate req = new ChatSessionRequestMuteUpdate();
 
-                OSDMap parameters = new OSDMap();
-                parameters["agent_id"] = OSD.FromUUID(memberID);
-                parameters["mute_info"] = mute_info;
-
-                req["params"] = parameters;
-                
-                req.Add("session-id", OSD.FromUUID(sessionID));
-                
-                byte[] postData = StructuredData.OSDParser.SerializeLLSDXmlBytes(req);
+                req.RequestKey = key;
+                req.RequestValue = moderate;
+                req.SessionID = sessionID;
+                req.AgentID = memberID;
 
                 CapsClient request = new CapsClient(url);
-                request.StartRequest(postData);
+                request.BeginGetResponse(req.Serialize(), OSDFormat.Xml, Client.Settings.CAPS_TIMEOUT);
             }
             else
             {

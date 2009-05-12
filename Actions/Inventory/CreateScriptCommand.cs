@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using OpenMetaverse;
+using OpenMetaverse.Assets;
 using OpenMetaverse.Http;
 using System.Threading;
 using System.Windows.Forms;
@@ -9,6 +10,7 @@ using Logger = OpenMetaverse.Logger;
 
 namespace cogbot.Actions
 {
+#if PORTIT
     public class CreateScriptCommand : Command
     {
         Exception problem;
@@ -114,4 +116,5 @@ namespace cogbot.Actions
            return  ast.AssetData;
         }
     }
+#endif
 }

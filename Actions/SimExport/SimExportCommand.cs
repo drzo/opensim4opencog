@@ -12,6 +12,7 @@ using OpenMetaverse;
 // taken initially from http://openmetaverse.org/svn/omf/libopenmetaverse/trunk/Programs/SimExport -r2392
 namespace cogbot.Actions.SimExport
 {
+#if PORTIT
     public class SimExportCommand : cogbot.Actions.Command
     {
         public SimExportCommand(BotClient Client)
@@ -72,7 +73,7 @@ namespace cogbot.Actions.SimExport
             running = true;
 
             //CurrentClient = new GridClient();
-            texturePipeline = new TexturePipeline(client, 10);
+            texturePipeline = new TexturePipeline(client);
             texturePipeline.OnDownloadFinished += new TexturePipeline.DownloadFinishedCallback(texturePipeline_OnDownloadFinished);
             
             //Settings.LOG_LEVEL = Helpers.LogLevel.Info;
@@ -525,4 +526,5 @@ namespace cogbot.Actions.SimExport
             }
         }
     }
+#endif
 }

@@ -2,45 +2,88 @@ using System;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
-using System.Reflection;
 using System.Text;
-using HttpServer.FormDecoders;
 using HttpServer.Exceptions;
+using HttpServer.FormDecoders;
 
 namespace HttpServer
 {
     /// <summary>
-    /// Contains serverside http request information.
+    /// Contains server side HTTP request information.
     /// </summary>
     internal class HttpRequest : IHttpRequest
     {
         /// <summary>
-        /// Chars used to split an url path into multiple parts.
+        /// Chars used to split an URL path into multiple parts.
         /// </summary>
-        public static readonly char[] UriSplitters = new char[] { '/' };
+        public static readonly char[] UriSplitters = new char[] {'/'};
+
+        internal IPEndPoint _remoteEndPoint;
 
         private readonly NameValueCollection _headers = new NameValueCollection();
         private readonly HttpParam _param = new HttpParam(HttpInput.Empty, HttpInput.Empty);
-        private bool _secure;
-        private string[] _acceptTypes;
         private Stream _body = new MemoryStream();
         private int _bodyBytesLeft;
         private ConnectionType _connection = ConnectionType.Close;
         private int _contentLength;
-        private RequestCookies _cookies;
         private HttpForm _form = HttpForm.EmptyForm;
         private string _httpVersion = string.Empty;
-        private bool _isAjax;
         private string _method = string.Empty;
         private HttpInput _queryString = HttpInput.Empty;
         private Uri _uri = HttpHelper.EmptyUri;
-        private string[] _uriParts;
         private string _uriPath;
-        private bool _respondTo100Continue = true;
-        internal IPEndPoint _remoteEndPoint;
 
         /// <summary>
-        /// Have all body content bytes been received?
+        /// Gets or sets a value indicating whether this <see cref="HttpRequest"/> is secure.
+        /// </summary>
+        public bool Secure { get; internal set; }
+
+        /// <summary>
+        /// Path and query (will be merged with the host header) and put in Uri
+        /// </summary>
+        /// <see cref="Uri"/>
+        public string UriPath
+        {
+            get { return _uriPath; }
+            set
+            {
+                _uriPath = value;
+                int pos = _uriPath.IndexOf('?');
+                if (pos != -1)
+                {
+                    _queryString = HttpHelper.ParseQueryString(_uriPath.Substring(pos + 1));
+                    _param.SetQueryString(_queryString);
+                    string path = _uriPath.Substring(0, pos);
+                    _uriPath = System.Web.HttpUtility.UrlDecode(path) + "?" + _uriPath.Substring(pos + 1);
+                    UriParts = value.Substring(0, pos).Split(UriSplitters, StringSplitOptions.RemoveEmptyEntries);
+                }
+                else
+                {
+                    _uriPath = System.Web.HttpUtility.UrlDecode(_uriPath);
+                    UriParts = value.Split(UriSplitters, StringSplitOptions.RemoveEmptyEntries);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Assign a form.
+        /// </summary>
+        /// <param name="form"></param>
+        internal void AssignForm(HttpForm form)
+        {
+            _form = form;
+        }
+
+        internal static bool ShouldReplyTo100Continue(IHttpRequest request)
+        {
+            string expectHeader = request.Headers["expect"];
+            return expectHeader != null && expectHeader.Contains("100-continue");
+        }
+
+        #region IHttpRequest Members
+
+        /// <summary>
+        /// Gets whether the body is complete.
         /// </summary>
         public bool BodyIsComplete
         {
@@ -48,15 +91,12 @@ namespace HttpServer
         }
 
         /// <summary>
-        /// Kind of types accepted by the client.
+        /// Gets kind of types accepted by the client.
         /// </summary>
-        public string[] AcceptTypes
-        {
-            get { return _acceptTypes; }
-        }
+        public string[] AcceptTypes { get; private set; }
 
         /// <summary>
-        /// Submitted body contents
+        /// Gets or sets body stream.
         /// </summary>
         public Stream Body
         {
@@ -65,7 +105,7 @@ namespace HttpServer
         }
 
         /// <summary>
-        /// Kind of connection used for the session.
+        /// Gets or sets kind of connection used for the session.
         /// </summary>
         public ConnectionType Connection
         {
@@ -86,7 +126,7 @@ namespace HttpServer
                 if (contentType != null)
                 {
                     string charset = HttpHelper.ParseHeaderAttribute(contentType, "charset");
-                    
+
                     try { encoding = Encoding.GetEncoding(charset); }
                     catch (ArgumentException) { }
                 }
@@ -96,7 +136,7 @@ namespace HttpServer
         }
 
         /// <summary>
-        /// Number of bytes in the body
+        /// Gets or sets number of bytes in the body.
         /// </summary>
         public int ContentLength
         {
@@ -109,7 +149,7 @@ namespace HttpServer
         }
 
         /// <summary>
-        /// Headers sent by the client. All names are in lower case.
+        /// Gets headers sent by the client.
         /// </summary>
         public NameValueCollection Headers
         {
@@ -117,9 +157,11 @@ namespace HttpServer
         }
 
         /// <summary>
-        /// Version of http. 
-        /// Probably HttpHelper.HTTP10 or HttpHelper.HTTP11
+        /// Gets or sets version of HTTP protocol that's used.
         /// </summary>
+        /// <remarks>
+        /// Probably <see cref="HttpHelper.HTTP10"/> or <see cref="HttpHelper.HTTP11"/>.
+        /// </remarks>
         /// <seealso cref="HttpHelper"/>
         public string HttpVersion
         {
@@ -127,10 +169,15 @@ namespace HttpServer
             set { _httpVersion = value; }
         }
 
+
         /// <summary>
-        /// Requested method, always upper case.
+        /// Gets or sets requested method.
         /// </summary>
-        /// <see cref="Method"/>
+        /// <value></value>
+        /// <remarks>
+        /// Will always be in upper case.
+        /// </remarks>
+        /// <see cref="HttpServer.Method"/>
         public string Method
         {
             get { return _method; }
@@ -138,24 +185,24 @@ namespace HttpServer
         }
 
         /// <summary>
-        /// Variables sent in the query string
+        /// Gets variables sent in the query string
         /// </summary>
         public HttpInput QueryString
         {
             get { return _queryString; }
         }
 
+
         /// <summary>
-        /// Requested URI (url)
+        /// Gets or sets requested URI.
         /// </summary>
-        /// <seealso cref="UriPath"/>
         public Uri Uri
         {
             get { return _uri; }
             set
             {
                 _uri = value ?? HttpHelper.EmptyUri;
-                _uriParts = _uri.AbsolutePath.Split(UriSplitters, StringSplitOptions.RemoveEmptyEntries);
+                UriParts = _uri.AbsolutePath.Split(UriSplitters, StringSplitOptions.RemoveEmptyEntries);
             }
         }
 
@@ -165,20 +212,6 @@ namespace HttpServer
         public IPEndPoint RemoteEndPoint
         {
             get { return _remoteEndPoint; }
-        }
-
-        internal bool ShouldReplyTo100Continue()
-        {
-            string expectHeader = _headers["expect"];
-            if (expectHeader != null && expectHeader.Contains("100-continue"))
-            {
-                if (_respondTo100Continue)
-                {
-                    _respondTo100Continue = false;
-                    return true;
-                }
-            }
-            return false;
         }
 
         /// <summary>
@@ -194,35 +227,10 @@ namespace HttpServer
         /// the second part is method name and the third part is Id property.
         /// </remarks>
         /// <seealso cref="Uri"/>
-        public string[] UriParts
-        {
-            get { return _uriParts; }
-        }
+        public string[] UriParts { get; private set; }
 
         /// <summary>
-        /// Path and query (will be merged with the host header) and put in Uri
-        /// </summary>
-        /// <see cref="Uri"/>
-        public string UriPath
-        {
-            get { return _uriPath; }
-            set
-            {
-                _uriPath = value;
-                int pos = _uriPath.IndexOf('?');
-                if (pos != -1)
-                {
-                    _queryString = HttpHelper.ParseQueryString(_uriPath.Substring(pos + 1));
-                    _param.SetQueryString(_queryString);
-                    _uriParts = value.Substring(0, pos).Split(UriSplitters, StringSplitOptions.RemoveEmptyEntries);
-                }
-                else
-                    _uriParts = value.Split(UriSplitters, StringSplitOptions.RemoveEmptyEntries);
-            }
-        }
-
-        /// <summary>
-        /// Check's both QueryString and Form after the parameter.
+        /// Gets parameter from <see cref="QueryString"/> or <see cref="Form"/>.
         /// </summary>
         public HttpParam Param
         {
@@ -230,7 +238,7 @@ namespace HttpServer
         }
 
         /// <summary>
-        /// Form parameters.
+        /// Gets form parameters.
         /// </summary>
         public HttpForm Form
         {
@@ -238,80 +246,14 @@ namespace HttpServer
         }
 
         /// <summary>
-        /// Assign a form.
+        /// Gets whether the request was made by Ajax (Asynchronous JavaScript)
         /// </summary>
-        /// <param name="form"></param>
-        internal void AssignForm(HttpForm form)
-        {
-            _form = form;
-        }
-
-        /// <summary>Returns true if the request was made by Ajax (Asyncronous Javascript)</summary>
-        public bool IsAjax
-        {
-            get { return _isAjax; }
-        }
-
-        /// <summary>Returns set cookies for the request</summary>
-        public RequestCookies Cookies
-        {
-            get { return _cookies; }
-        }
+        public bool IsAjax { get; private set; }
 
         /// <summary>
-        /// Current request is sent over secure protocol
+        /// Gets cookies that was sent with the request.
         /// </summary>
-        public bool Secure
-        {
-            get { return _secure; }
-            internal set { _secure = value; }
-        }
-
-        #region ICloneable Members
-
-        ///<summary>
-        ///Creates a new object that is a copy of the current instance.
-        ///</summary>
-        ///
-        ///<returns>
-        ///A new object that is a copy of this instance.
-        ///</returns>
-        ///<filterpriority>2</filterpriority>
-        public object Clone()
-        {
-            // this method was mainly created for testing.
-            // dont use it that much...
-            HttpRequest request = new HttpRequest();
-            request.Method = _method;
-            if (_acceptTypes != null)
-            {
-                request._acceptTypes = new string[_acceptTypes.Length];
-                _acceptTypes.CopyTo(request._acceptTypes, 0);
-            }
-            request._httpVersion = _httpVersion;
-            request._queryString = _queryString;
-            request.Uri = _uri;
-            
-            byte[] buffer = new byte[_body.Length];
-            _body.Read(buffer, 0, (int)_body.Length);
-            request.Body = new MemoryStream();
-            request.Body.Write(buffer, 0, buffer.Length);
-            request.Body.Seek(0, SeekOrigin.Begin);
-            request.Body.Flush();
-
-            request._headers.Clear();
-            foreach (string key in _headers)
-            {
-                string[] values = _headers.GetValues(key);
-                if (values != null)
-                    foreach (string value in values)
-                        request.AddHeader(key, value);
-            }
-            Clear();
-            return request;
-        }
-
-        #endregion
+        public RequestCookies Cookies { get; private set; }
 
         /// <summary>
         /// Decode body into a form.
@@ -335,45 +277,54 @@ namespace HttpServer
         ///<param name="cookies">the cookies</param>
         public void SetCookies(RequestCookies cookies)
         {
-            _cookies = cookies;
+            Cookies = cookies;
         }
 
-        /// <summary>
-        /// Called during parsing of a IHttpRequest.
+    	/// <summary>
+    	/// Create a response object.
+    	/// </summary>
+    	/// <returns>A new <see cref="IHttpResponse"/>.</returns>
+    	public IHttpResponse CreateResponse(IHttpClientContext context)
+    	{
+    		return new HttpResponse(context, this);
+    	}
+
+    	/// <summary>
+        /// Called during parsing of a <see cref="IHttpRequest"/>.
         /// </summary>
-        /// <param name="name">Name of the header, should not be url encoded</param>
-        /// <param name="value">Value of the header, should not be url encoded</param>
+        /// <param name="name">Name of the header, should not be URL encoded</param>
+        /// <param name="value">Value of the header, should not be URL encoded</param>
         /// <exception cref="BadRequestException">If a header is incorrect.</exception>
         public void AddHeader(string name, string value)
         {
             if (string.IsNullOrEmpty(name))
                 throw new BadRequestException("Invalid header name: " + name ?? "<null>");
             if (string.IsNullOrEmpty(value))
-                throw new BadRequestException("Header '" + name + "' do not contain a value.");
+                throw new BadRequestException("Header '" + name + "' does not contain a value.");
 
             switch (name.ToLower())
             {
                 case "http_x_requested_with":
                 case "x-requested-with":
                     if (string.Compare(value, "XMLHttpRequest", true) == 0)
-                        _isAjax = true;
+                        IsAjax = true;
                     break;
                 case "accept":
-                    _acceptTypes = value.Split(',');
-                    for (int i = 0; i < _acceptTypes.Length; ++i)
-                        _acceptTypes[i] = _acceptTypes[i].Trim();
+                    AcceptTypes = value.Split(',');
+                    for (int i = 0; i < AcceptTypes.Length; ++i)
+                        AcceptTypes[i] = AcceptTypes[i].Trim();
                     break;
                 case "content-length":
                     int t;
                     if (!int.TryParse(value, out t))
                         throw new BadRequestException("Invalid content length.");
                     ContentLength = t;
-                    break; //todo: mayby throw an exception
+                    break;
                 case "host":
                     try
                     {
                         _uri = new Uri(Secure ? "https://" : "http://" + value + _uriPath);
-                        _uriParts = _uri.AbsolutePath.Split(UriSplitters, StringSplitOptions.RemoveEmptyEntries);
+                        UriParts = _uri.AbsolutePath.Split(UriSplitters, StringSplitOptions.RemoveEmptyEntries);
                     }
                     catch (UriFormatException err)
                     {
@@ -388,11 +339,9 @@ namespace HttpServer
                     else
                         throw new BadRequestException("Unknown 'Connection' header type.");
                     break;
-
-                default:
-                    _headers.Add(name, value);
-                    break;
             }
+
+            _headers.Add(name, value);
         }
 
         /// <summary>
@@ -402,8 +351,9 @@ namespace HttpServer
         /// <param name="offset">where to start read</param>
         /// <param name="length">number of bytes to read</param>
         /// <returns>Number of bytes actually read (same as length unless we got all body bytes).</returns>
-        /// <exception cref="ArgumentException"></exception>
         /// <exception cref="InvalidOperationException">If body is not writable</exception>
+        /// <exception cref="ArgumentNullException"><c>bytes</c> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><c>offset</c> is out of range.</exception>
         public int AddToBody(byte[] bytes, int offset, int length)
         {
             if (bytes == null)
@@ -431,8 +381,8 @@ namespace HttpServer
         /// </summary>
         public void Clear()
         {
-			_body.Dispose();
-        	_body = new MemoryStream();
+            _body.Dispose();
+            _body = new MemoryStream();
             _contentLength = 0;
             _method = string.Empty;
             _uri = HttpHelper.EmptyUri;
@@ -440,8 +390,10 @@ namespace HttpServer
             _bodyBytesLeft = 0;
             _headers.Clear();
             _connection = ConnectionType.Close;
-        	_isAjax = false;
+            IsAjax = false;
             _form.Clear();
         }
+
+        #endregion
     }
 }
