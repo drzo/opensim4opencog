@@ -487,7 +487,7 @@ namespace cogbot.TheOpenSims
             _CurrentRegion = SimRegion.GetRegion(sim);
            // PathStore = GetSimRegion();
             //WorldSystem.EnsureSelected(prim.ParentID,sim);
-            if (Prim.Sculpt != null)
+            if (WorldObjects.MaintainCollisions && Prim.Sculpt != null)
             {
                 objectSystem.StartTextureDownload(Prim.Sculpt.SculptTexture);
             }

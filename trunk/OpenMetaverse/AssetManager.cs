@@ -1274,6 +1274,5 @@ namespace OpenMetaverse
         }
 
         #endregion Xfer Callbacks
-
     }
 }

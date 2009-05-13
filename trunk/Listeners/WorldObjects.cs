@@ -1,23 +1,19 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
-using OpenMetaverse;
-using OpenMetaverse.Assets;
-using OpenMetaverse.StructuredData;
-using System.Reflection;
-using OpenMetaverse.Packets;
-using cogbot.TheOpenSims;
 using System.Threading;
 using cogbot.Actions;
+using cogbot.TheOpenSims;
+using OpenMetaverse;
+using OpenMetaverse.Assets;
+using OpenMetaverse.Packets;
+using OpenMetaverse.StructuredData;
 using PathSystem3D.Navigation;
-using System.Windows.Forms;
-using PathSystem3D; //using libsecondlife;
 
 namespace cogbot.Listeners
 {
     public delegate float ObjectHeuristic(SimObject prim);
 
-    public class WorldObjects : DebugAllEvents
+    public partial class WorldObjects : DebugAllEvents
     {
         public static bool CanUseSit = true;
         public static bool CanPhantomize = false;
@@ -26,9 +22,10 @@ namespace cogbot.Listeners
         public static bool MaintainEffects = false;
         public static bool MaintainSounds = false;
         public static bool MaintainAttachments = false;
-        public static bool MaintainCollisions = true;
+        public static bool MaintainCollisions = false;
         public static bool SimplifyBoxes = false;  // true takes longer startup but speeds up runtime path finding
-        
+        readonly static List<ThreadStart> ShutdownHooks = new List<ThreadStart>();
+
 
 
         public static implicit operator GridClient(WorldObjects m)
@@ -541,9 +538,9 @@ namespace cogbot.Listeners
                     Debug("+++++++++++++++Making {0} {1}", prim, ((Avatar)prim).Name);
                     if (prim.ID == UUID.Zero)
                     {
-                        Debug("  - - -#$%#$%#$%% - ------- - Wierd Avatar " + prim);
+                        Debug("  - - -#$%#$%#$%% - ------- - Weird Avatar " + prim);
                         BlockUntilPrimValid(prim, simulator);
-                        Debug("  - - -#$%#$%#$%% - ------- - Unwird Avatar " + prim);
+                        Debug("  - - -#$%#$%#$%% - ------- - Unweird Avatar " + prim);
                     }
                     obj0 = new SimAvatarImpl((Avatar)prim, this, simulator);
                     lock (SimAvatars) SimAvatars.Add((SimAvatar)obj0);
@@ -834,7 +831,6 @@ namespace cogbot.Listeners
         On-Image-Received
              image: "{OpenMetaverse.ImageDownload,PacketCount=33,Codec=J2C,NotFound=False,Simulator=OpenSim Test (71.197.210.170:9000),PacketsSeen=System.Collections.Generic.SortedList`2[System.UInt16,System.UInt16],ImageType=Normal,DiscardLevel=-1,Priority=1013000,ID=728dd7fa-a688-432d-a4f7-4263b1f97395,Size=33345,AssetData=System.Byte[],Transferred=33345,Success=True,AssetType=Texture}"
              asset: "{OpenMetaverse.AssetTexture,Image=,LayerInfo=,Components=0,AssetData=System.Byte[],Temporary=False}"
-            41031 [9] DEBUG - Worker 3 Downloaded texture 728dd7fa-a688-432d-a4f7-4263b1f97395
          */
         public override void Assets_OnImageReceived(ImageDownload image, AssetTexture asset)
         {
@@ -860,20 +856,16 @@ namespace cogbot.Listeners
         {
             if (state == TextureRequestState.Finished)
             {
-                // Save this texture to the hard drive
                 UUID id = asset.AssetID;
                 ImageDownload image = RegionMasterTexturePipeline.Cache.GetCachedImage(id);
-                if (image==null)
+                if (image == null)
                 {
-                    Console.WriteLine("WTF?! ");
+                    Console.WriteLine("AssetTexture is null?! " + id);
                 }
-                try
+                else
                 {
                     RegisterUUIDMaybe(id, image);
                     //lock (uuidTextures) uuidTextures[id] = image;
-                }
-                catch (Exception)
-                {
                 }
             }
             else if (state == TextureRequestState.NotFound || state == TextureRequestState.Timeout)
@@ -963,10 +955,7 @@ namespace cogbot.Listeners
             if (!MaintainSounds) return;
             RequestAsset(soundID, AssetType.Sound, true);
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(() =>
-                {
-                    OnObjectSound(objectID, soundID, gain);
-                });
+                UpdateQueue.Enqueue(() => OnObjectSound(objectID, soundID, gain));
             //SendNewEvent("On-Attach-Sound", soundID, ownerID, objectID, gain, flags);
             //base.Sound_OnAttachSound(soundID, ownerID, objectID, gain, flags);
         }
@@ -1389,6 +1378,16 @@ namespace cogbot.Listeners
         public void Objects_OnPrimitiveProperties(Simulator simulator, Primitive prim, Primitive.ObjectProperties props)
         {
 
+            if (ScriptHolder == null && prim.ParentID != 0 && prim.ParentID == client.Self.LocalID)
+            {
+                if ("ScriptHolder" == props.Name)
+                {
+                    Debug("!!!!!XOXOX!!! Found our ScriptHolder " + prim);
+                    ScriptHolder = prim;
+                    ScriptHolderAttached = true;
+                    ScriptHolderAttachWaiting.Set();
+                }
+            }
             CheckConnected(simulator);
             NeverSelect(prim.LocalID, simulator);
 
@@ -1421,6 +1420,10 @@ namespace cogbot.Listeners
 
         public override void Objects_OnNewAttachment(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
         {
+            if (ScriptHolder == null && prim.ParentID != 0 && prim.ParentID == client.Self.LocalID)
+            {
+                EnsureSelected(prim.LocalID,simulator);
+            }
             if (!MaintainAttachments) return;
             Objects_OnNewPrim(simulator, prim, regionHandle, timeDilation);
             lock (UpdateQueue) UpdateQueue.Enqueue(() => GetSimObject(prim, simulator).IsAttachment = true);
@@ -3177,8 +3180,7 @@ namespace cogbot.Listeners
             client.Objects.SetRotation(simulator, LocalID, rot);
             client.Objects.SetFlags(LocalID, false, true, true, false);
             return newPrim;
-        }
-
+        }     
 
         public override void Self_OnChat(string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourceType, string fromName, UUID id, UUID ownerid, Vector3 position)
         {
