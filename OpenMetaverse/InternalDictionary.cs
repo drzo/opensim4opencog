@@ -44,7 +44,6 @@ namespace OpenMetaverse
         /// modify or enumerate the contents of this dictionary without locking
         /// on this member</summary>
         public Dictionary<TKey, TValue> Dictionary;
-        //todo libomv makes internal not public
 
         /// <summary>
         /// Gets the number of Key/Value pairs contained in the <seealso cref="T:InternalDictionary"/>

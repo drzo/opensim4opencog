@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using OpenMetaverse;
+using System.Diagnostics;
 
 namespace cogbot.Actions
 {
@@ -9,47 +10,45 @@ namespace cogbot.Actions
         public CreateScriptCommand(BotClient testClient)
         {
             Name = "createscript";
-            Description = "Creates a script from a local text file.";
+            Description = "Creates a script in your inventory from a local .lsl file.";
             Category = CommandCategory.Inventory;
-        }
-
-        void OnNoteUpdate(bool success, string status, UUID itemID, UUID assetID)
-        {
-            if (success)
-                WriteLine("Script successfully uploaded, ItemID {0} AssetID {1}", itemID, assetID);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
             if (args.Length < 1)
-                return "Usage: createscript filename.txt";
+                return "Usage: createscript filename.lsl";
 
             string file = String.Empty;
             for (int ct = 0; ct < args.Length; ct++)
-                file = file + args[ct] + " ";
+                file = String.Format("{0}{1} ", file, args[ct]);
             file = file.TrimEnd();
 
             WriteLine("Filename: {0}", file);
             if (!File.Exists(file))
                 return String.Format("Filename '{0}' does not exist", file);
 
-            System.IO.StreamReader reader = new StreamReader(file);
-            string body = reader.ReadToEnd();
 
             // FIXME: Upload the script asset first. When that completes, call RequestCreateItem
             try
             {
-                string desc = String.Format("{0} created by OpenMetaverse BotClient {1}", file, DateTime.Now);
-                // create the asset
-
-                Client.Inventory.RequestCreateItem(Client.Inventory.FindFolderForType(AssetType.LSLText),
-                    file, desc, AssetType.LSLText, UUID.Random(), InventoryType.LSL, PermissionMask.All,
+                using (StreamReader reader = new StreamReader(file))
+                {
+                    string body = reader.ReadToEnd();
+                    string desc = String.Format("{0} created by OpenMetaverse BotClient {1}", file, DateTime.Now);
+                    // create the asset
+                    Client.Inventory.RequestCreateItem(Client.Inventory.FindFolderForType(AssetType.LSLText), file, desc, AssetType.LSLText, UUID.Random(), InventoryType.LSL, PermissionMask.All,
                     delegate(bool success, InventoryItem item)
                     {
-                        if (success) // upload the asset
-                            Client.Inventory.RequestUpdateScriptAgentInventory(CreateScriptAsset(body), item.UUID, new InventoryManager.ScriptUpdatedCallback(OnNoteUpdate));
-                    }
-                );
+                        if (success)
+                            // upload the asset
+                            Client.Inventory.RequestUpdateScriptAgentInventory(EncodeScript(body), item.UUID, false, new InventoryManager.ScriptUpdatedCallback(delegate(bool success1, string status, UUID itemid, UUID assetid)
+                            {
+                                if (success1)
+                                    WriteLine("Script successfully uploaded, ItemID {0} AssetID {1}", itemid, assetid);
+                            }));
+                    });
+                }
                 return "Done";
 
             }
@@ -62,24 +61,12 @@ namespace cogbot.Actions
         /// <summary>
         /// </summary>
         /// <param name="body"></param>
-        public static byte[] CreateScriptAsset(string body)
+        public static byte[] EncodeScript(string body)
         {
-            // Format the string body into Linden text
-            string lindenText = "";/* "Linden text version 1\n";
-            lindenText += "{\n";
-            lindenText += "LLEmbeddedItems version 1\n";
-            lindenText += "{\n";
-            lindenText += "count 0\n";
-            lindenText += "}\n";
-            lindenText += "Text length " + body.Length + "\n";*/
-            lindenText += body;
-            //lindenText += "}\n";
-
-            // Assume this is a string, add 1 for the null terminator
-            byte[] stringBytes = System.Text.Encoding.UTF8.GetBytes(lindenText);
+            // Assume this is a string, add 1 for the null terminator ?
+            byte[] stringBytes = System.Text.Encoding.UTF8.GetBytes(body);
             byte[] assetData = new byte[stringBytes.Length]; //+ 1];
             Array.Copy(stringBytes, 0, assetData, 0, stringBytes.Length);
-
             return assetData;
         }
     }
