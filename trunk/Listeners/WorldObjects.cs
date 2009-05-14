@@ -177,6 +177,7 @@ namespace cogbot.Listeners
                     // Viewer effect callback
                     client.Network.RegisterCallback(PacketType.ViewerEffect, new NetworkManager.PacketCallback(ViewerEffectHandler));
                     // raises these events already
+                    client.Inventory.OnScriptRunning += Inventory_OnScriptRunning;
                     client.Avatars.OnPointAt -= Avatars_OnPointAt;
                     client.Avatars.OnLookAt -= Avatars_OnLookAt;
                     client.Avatars.OnEffect -= Avatars_OnEffect;

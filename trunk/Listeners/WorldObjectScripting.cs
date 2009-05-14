@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 
 namespace cogbot.Listeners
@@ -12,8 +13,7 @@ namespace cogbot.Listeners
         public static bool ScriptHolderPrecreated = true;
         private Primitive ScriptHolder = null;
         private bool ScriptHolderAttached = false;
-        private InventoryItem ScriptHolderItem = null;
-        private readonly AutoResetEvent ScriptHolderAttachWaiting = new AutoResetEvent(true);
+        private readonly AutoResetEvent ScriptHolderAttachWaiting = new AutoResetEvent(false);
 
 
         public override void Self_OnScriptControlChange(ScriptControlChange controls, bool pass, bool take)
@@ -31,6 +31,11 @@ namespace cogbot.Listeners
             base.Inventory_OnTaskInventoryReply(itemID, serial, assetFilename);
         }
 
+        public void Inventory_OnScriptRunning(UUID objectID0, UUID sctriptID, bool isMono, bool isRunning)
+        {
+            Console.WriteLine("On-Script-Running ObjectID: {0} ItemID: {1} IsMono: {2} IsRunning: {3}", objectID0, sctriptID, isMono, isRunning);
+        }
+
         /// <summary>
         /// eval (thisClient.WorldSystem.GetScriptHolder "ScriptHolder")
         /// eval (thisClient.WorldSystem.ExecuteLSL "llOwnerSay(llGetObjectName());")
@@ -38,64 +43,107 @@ namespace cogbot.Listeners
         /// <param name="s"></param>
         public void ExecuteLSL(String s)
         {
-            LoadLSL(String.Format("default {{ state_entry() {{ {0} }} }}", s));
+            LoadLSL(String.Format("default {{ state_entry() {{ {0}  llRemoveInventory(llGetScriptName()); }} }}", s), false);
         }
 
-
- 
-
         readonly static List<InventoryItem> TempScripts = new List<InventoryItem>();
-        public void LoadLSL(string script)
+        public void LoadLSL(string script, bool daemonize)
         {
-
             InventoryItem scriptItem = null;
+            string newVariablename = null;
             lock (TempScripts)
             {
-                scriptItem = NewInventoryScript(script, "tempScript" + TempScripts.Count);
+                newVariablename = "tempScript" + TempScripts.Count;
+                scriptItem = NewInventoryScript(script, newVariablename);
                 TempScripts.Add(scriptItem);
             }
-            ScriptHolderItem = GetInventoryObject("ScriptHolder");
-            if (ScriptHolder==null)
-            {
-                ScriptHolder = GetScriptHolder("ScriptHolder");
-            }
+
+            ScriptHolder = GetScriptHolder("ScriptHolder");
 
             // we save this to clean out the object later of running scripts
             ShutdownHooks.Add(() =>
                                   {
                                       Simulator sim = GetSimulator(ScriptHolder.RegionHandle);
-                                      client.Inventory.RemoveItem(scriptItem.UUID);
-                                      List<InventoryBase> ibs = client.Inventory.GetTaskInventory(ScriptHolder.ID, 
-                                          ScriptHolder.LocalID, 10000);
+                                      List<InventoryBase> ibs = client.Inventory.GetTaskInventory(ScriptHolder.ID,
+                                                                                                  ScriptHolder.LocalID,
+                                                                                                  10000);
                                       foreach (InventoryBase ib in ibs)
                                       {
-                                          if (ib.Name.StartsWith("tempScript"))
+                                          if (!(ib is InventoryItem)) continue; // skip folders
+                                          if (ib.Name == newVariablename)
                                           {
-                                              client.Inventory.RemoveTaskInventory(ScriptHolder.LocalID, ib.UUID, sim);
+                                              if (GetScriptRunning(ScriptHolder.ID, ib.UUID))
+                                              {
+                                                  SetScriptRunning(ScriptHolder.ID, ib.UUID, false);
+                                                  Console.WriteLine(String.Format("{0}",GetScriptRunning(ScriptHolder.ID,ib.UUID)));
+                                              }
+                                              break;
                                           }
+                                          client.Inventory.RemoveTaskInventory(ScriptHolder.LocalID, ib.UUID, sim);
                                       }
                                   }
                 );
 
 
             // eval (thisClient.WorldSystem.ExecuteLSL "llOwnerSay(llGetObjectName());")
-            UUID Transaction = client.Inventory.CopyScriptToTask(ScriptHolder.LocalID, scriptItem,true);
-            Thread.Sleep(5000);
-            client.Inventory.SetScriptRunning(ScriptHolder.ID, scriptItem.AssetUUID, true);
-            return;
-            Thread.Sleep(5000);
-            if (ScriptHolderAttached)
+            using (AutoResetEvent LocalReset = new AutoResetEvent(false))
             {
-                client.Appearance.Detach(ScriptHolder.ID);
+                InventoryManager.TaskInventoryReplyCallback callback
+                    = (UUID itemID, short serial, string assetFilename) =>
+                    {
+                        if (itemID == ScriptHolder.ID)
+                        {
+                            LocalReset.Set();
+                        }
+                    };
+                client.Inventory.OnTaskInventoryReply += callback;
+                client.Inventory.CopyScriptToTask(ScriptHolder.LocalID, scriptItem, true);
+                LocalReset.WaitOne(10000, true);
+                client.Inventory.OnTaskInventoryReply -= callback;
             }
-            client.Appearance.Attach(ScriptHolderItem.UUID, ScriptHolderItem.OwnerID,
-                         ScriptHolderItem.Name, ScriptHolderItem.Description,
-                         ScriptHolderItem.Permissions,
-                         ScriptHolderItem.Flags,
-                         AttachmentPoint.HUDTop);
-            //client.Appearance.Detach(prim.LocalID);
-            //todo clean these up afterwards? or is this too soon?
-            //client.Inventory.RemoveItem(scriptItem.UUID);
+            // remove the arifact in agent inventory
+            client.Inventory.RemoveItem(scriptItem.UUID);
+        }
+
+        public void SetScriptRunning(UUID objectID, UUID itemID, bool enableScript)
+        {
+            using (AutoResetEvent LocalReset = new AutoResetEvent(false))
+            {
+                InventoryManager.ScriptRunningCallback callback
+                    = ((UUID objectID0, UUID sctriptID, bool isMono, bool isRunning) =>
+                    {
+                        if (objectID0 == objectID)
+                        {
+                            LocalReset.Set();
+                        }
+                    });
+                client.Inventory.OnScriptRunning += callback;
+                client.Inventory.SetScriptRunning(objectID, itemID, enableScript);
+                LocalReset.WaitOne(10000, true);
+                client.Inventory.OnScriptRunning -= callback;
+            }
+        }
+
+        public bool GetScriptRunning(UUID objectID, UUID itemID)
+        {
+            bool wasRunning = false;
+            using (AutoResetEvent LocalReset = new AutoResetEvent(false))
+            {
+                InventoryManager.ScriptRunningCallback callback
+                    = ((UUID objectID0, UUID sctriptID, bool isMono, bool isRunning) =>
+                    {
+                        if (objectID0 == objectID && sctriptID == itemID)
+                        {
+                            wasRunning = isRunning;
+                            LocalReset.Set();
+                        }
+                    });
+                client.Inventory.OnScriptRunning += callback;
+                client.Inventory.GetScriptRunning(objectID, itemID);
+                LocalReset.WaitOne(10000, true);
+                client.Inventory.OnScriptRunning -= callback;
+            }
+            return wasRunning;
         }
 
         public Primitive GetScriptHolder(string primName)
@@ -105,8 +153,8 @@ namespace cogbot.Listeners
             {
                 if (ScriptHolder != null) return ScriptHolder;
 
-                ScriptHolderItem = GetInventoryObject(primName);
                 ScriptHolderAttachWaiting.Reset();
+                InventoryItem ScriptHolderItem = GetInventoryObject(primName);
                 if (!ScriptHolderAttached)
                 {
                     if (ScriptHolderItem != null)
@@ -181,40 +229,33 @@ namespace cogbot.Listeners
 
         public override void Inventory_OnTaskItemReceived(UUID itemID, UUID folderID, UUID creatorID, UUID assetID, InventoryType type)
         {
-            if (type != InventoryType.LSL)
-            {
-                base.Inventory_OnTaskItemReceived(itemID, folderID, creatorID, assetID, type);
-                return;
-            }
-            ScriptHolderUploadWait.Set();
+            base.Inventory_OnTaskItemReceived(itemID, folderID, creatorID, assetID, type);
         }
 
-        private AutoResetEvent ScriptHolderUploadWait = new AutoResetEvent(false);
         private UUID WaitingForTransaction = UUID.Zero;
+
 
         // eval (thisClient.WorldSystem.ExecuteLSL "llSay(llGetObjectName());")
         public InventoryItem NewInventoryScript(string body, string name)
         {
-            lock (ScriptHolderUploadWait)
+            InventoryItem created = null;
+            try
             {
-                InventoryItem created = null;
+
                 // FIXME: Upload the script asset first. When that completes, call RequestCreateItem
-                try
+                using (AutoResetEvent LocalReset = new AutoResetEvent(false))
                 {
                     string desc = String.Format("{0} created by OpenMetaverse Cogbot {1}", name, DateTime.Now);
                     // create the asset
-                    ScriptHolderUploadWait.Reset();
                     WaitingForTransaction = UUID.Random();
                     client.Inventory.RequestCreateItem(client.Inventory.FindFolderForType(AssetType.LSLText), name, desc, AssetType.LSLText, WaitingForTransaction, InventoryType.LSL, WearableType.Shape, PermissionMask.All,
                         (bool success, InventoryItem item) =>
                         {
+                            LocalReset.Set();
                             if (success) // Save the folder Item
                             {
-                                if (item == null)
-                                {
-                                    Debug("ITem was null??!!!");
-                                }
                                 created = item;
+                                Debug("RequestCreateItem Successful, Name {0} Data {1} Created {2}", name, body, item);
                             }
                             else
                             {
@@ -222,36 +263,34 @@ namespace cogbot.Listeners
                             }
                         }
                         );
-                    if (ScriptHolderUploadWait.WaitOne(30000, true))
+                    LocalReset.WaitOne(10000, true);
+                    // upload the asset
+                    using (AutoResetEvent UpdateEvent = new AutoResetEvent(false))
                     {
-                        // upload the asset
-                        AutoResetEvent UpdateEvent = new AutoResetEvent(false);
                         client.Inventory.RequestUpdateScriptAgentInventory(Utils.StringToBytes(body), created.UUID, false,
-                            (success1, status, itemid, assetid) =>
-                            {
-                                UpdateEvent.Set();
-                                if (!success1)
-                                {
-                                    Debug("Update error for {0} {1}", name, status);
-                                    return;
-                                }
-                                Debug("Script successfully uploaded, ItemID {0} AssetID {1} Created {2}", itemid, assetid, created);
-                            });
+                               (success1, status, itemid, assetid) =>
+                               {
+                                   UpdateEvent.Set();
+                                   if (!success1)
+                                   {
+                                       Debug("Update error for {0} {1}", name, status);
+                                       return;
+                                   }
+                                   Debug("Script successfully uploaded, ItemID {0} AssetID {1} Created {2}", itemid, assetid, created);
+                               });
 
                         if (UpdateEvent.WaitOne(30000, true))
                         {
                             return created;
                         }
-
                     }
                 }
-
-                catch (System.Exception e)
-                {
-                    Logger.Log(e.ToString(), Helpers.LogLevel.Error, client);
-                }
-                return created;
             }
+            catch (System.Exception e)
+            {
+                Logger.Log(e.ToString(), Helpers.LogLevel.Error, client);
+            }
+            return created;
         }
     }
 
