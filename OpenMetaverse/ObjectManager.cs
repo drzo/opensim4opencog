@@ -220,11 +220,16 @@ namespace OpenMetaverse
         public delegate void AvatarSitChanged(Simulator simulator, Avatar avatar, uint sittingOn, uint oldSeat);
 
         public delegate void PrimitivePropertiesCallback(Simulator simulator, Primitive prim, Primitive.ObjectProperties props);
+
+        public delegate void PrimitiveUpdateCallback(
+            Simulator simulator, Primitive prim, ObjectUpdate props, ulong regionHandle, ushort timeDilation);
         #endregion Delegates
 
         #region Events
 
-        public event PrimitivePropertiesCallback OnPrimitiveProperties;
+        public event PrimitivePropertiesCallback OnPrimitiveProperties;        
+        public event PrimitiveUpdateCallback OnPrimitiveUpdate;
+        
         /// <summary>
         /// This event will be raised for every ObjectUpdate block that 
         /// contains a prim that isn't attached to an avatar.
@@ -1839,6 +1844,9 @@ namespace OpenMetaverse
                     Primitive obj = (update.Avatar) ?
                         (Primitive)GetAvatar(simulator, update.LocalID, UUID.Zero) :
                         (Primitive)GetPrimitive(simulator, update.LocalID, UUID.Zero);
+
+                    if (OnPrimitiveUpdate != null) { OnPrimitiveUpdate(simulator, obj, update, terse.RegionData.RegionHandle, terse.RegionData.TimeDilation); }
+
 
                     #region Update Client.Self
                     if (update.LocalID == Client.Self.localID)

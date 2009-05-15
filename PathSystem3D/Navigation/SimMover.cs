@@ -27,6 +27,7 @@ namespace PathSystem3D.Navigation
          
          */
         void OpenNearbyClosedPassages();
+        void ThreadJump();
     }
 
     public enum SimMoverState : byte
@@ -140,6 +141,9 @@ namespace PathSystem3D.Navigation
                             at++;
                             continue;
                         }
+                        {
+                         Mover.ThreadJump();
+                        }
                         Vector3 l3 = SimPathStore.GlobalToLocal(v3);
                         BlockTowardsVector(l3);
                         Debug("!MoveTo: {0} ", DistanceVectorString(v3));
@@ -247,39 +251,65 @@ namespace PathSystem3D.Navigation
         readonly static List<MoveToPassable> PathBreakAways = new List<MoveToPassable>();
         public Vector3 MoveToPassableArround(Vector3 start)
         {
-            //return start;
             if (!UseTurnAvoid)
             {
                 UseTurnAvoid = !UseTurnAvoid;
                 return start;
             }
-            if (PathBreakAways.Count > 0)
-            {
-                if (PathBreakAwayNumber > PathBreakAways.Count)
-                {
-                    PathBreakAwayNumber = 0;
-                }
-                else
-                {
-                    PathBreakAwayNumber++;
-                }
-                return PathBreakAways[PathBreakAwayNumber](start);
-            }
-
             UseTurnAvoid = !UseTurnAvoid;
+
+            Mover.OpenNearbyClosedPassages();
+            if (PathBreakAways.Count == 0)
+            {
+                PathBreakAways.Add(StarBreakaway);
+                PathBreakAways.Add(StarJumpBreakaway);
+            }
+            PathBreakAwayNumber++;
+            if (PathBreakAwayNumber >= PathBreakAways.Count)
+            {
+                PathBreakAwayNumber = 0;
+            }
+            return PathBreakAways[PathBreakAwayNumber](start);
+        }
+
+        private Vector3 StarBreakaway(Vector3 start)
+        {
             double A45 = 45f / SimPathStore.RAD2DEG;
-            Debug("Random avoidance");
+            Debug("StarBreakaway avoidance");
             for (double angle = A45; angle < SimPathStore.PI2; angle += A45)
             {
                 Vector3 next = ZAngleVector(angle + TurnAvoid) * 2 + start;
                 {
-                    Vector3d v3d = PathStore.LocalToGlobal(start);
+                    Vector3d v3d = PathStore.LocalToGlobal(next);
                     if (MoveTo(v3d, 1, 2))
                     {
                         TurnAvoid += angle;  // update for next use
                         if (TurnAvoid > SimPathStore.PI2)
                             TurnAvoid -= SimPathStore.PI2;
                         return next;
+                    }
+                }
+            }
+            return start;
+        }
+
+        private Vector3 StarJumpBreakaway(Vector3 start)
+        {
+            double A45 = 45f / SimPathStore.RAD2DEG;
+            Debug("StarJumpBreakaway avoidance");
+            for (double angle = A45; angle < SimPathStore.PI2; angle += A45)
+            {
+                Vector3 next = ZAngleVector(angle + TurnAvoid) * 2 + start;
+                {
+                    Vector3d v3d = PathStore.LocalToGlobal(next);
+                    Mover.ThreadJump();
+                    v3d.Z = Mover.GetSimPosition().Z;
+                    if (Mover.MoveTo(v3d, 1, 1))
+                    {
+                        TurnAvoid += angle;  // update for next use
+                        if (TurnAvoid > SimPathStore.PI2)
+                            TurnAvoid -= SimPathStore.PI2;
+                        return start;
                     }
                 }
             }
@@ -377,6 +407,11 @@ namespace PathSystem3D.Navigation
 
         public override void OpenNearbyClosedPassages()
         {
+            Vector3 v3 = GetSimPosition();
+            byte b = PathStore.GetNodeQuality(v3, MoverPlane);
+            if (b < 200) b += 100;
+            if (b > 254) b = 254;
+            PathStore.SetNodeQuality(v3, b, MoverPlane);
             base.OpenNearbyClosedPassages();
         }
 
