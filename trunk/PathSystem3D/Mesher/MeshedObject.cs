@@ -189,9 +189,13 @@ namespace PathSystem3D.Mesher
         protected void RemoveCollisions(SimPathStore simPathStore)
         {
             if (simPathStore != PathStore) return;
-            Box3Fill changed = new Box3Fill(true);
-            RemoveFromWaypoints(changed);
-            simPathStore.Refresh(changed);            
+            if (PathStore == null) IsSolid = false;
+            else
+            {
+                Box3Fill changed = new Box3Fill(true);
+                RemoveFromWaypoints(changed);
+                simPathStore.Refresh(changed);            
+            }
         }
 
 

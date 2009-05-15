@@ -401,20 +401,16 @@ namespace PathSystem3D.Navigation
             if (bumps > 0)
                 return SimPathStore.BLOCKED_YELLOW;
 
+            if (b > 200) return --b;
+
             CollisionIndex c = cI[x, y];
             if (c != null)
             {
                 return c.GetOccupiedValue(GLevel, ZLevel);
             }
 
-
-
-            if (b == SimPathStore.BLOCKED)
-                return SimPathStore.MAYBE_BLOCKED;
-
+            if (b > 10) return --b;
             return SimPathStore.INITIALLY;
-
-            //return b;
         }
 
         internal void EnsureUpdated()

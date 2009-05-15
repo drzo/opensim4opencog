@@ -22,7 +22,7 @@ namespace cogbot.Listeners
         public static bool MaintainEffects = false;
         public static bool MaintainSounds = false;
         public static bool MaintainAttachments = false;
-        public static bool MaintainCollisions = false;
+        public static bool MaintainCollisions = true;
         public static bool SimplifyBoxes = false;  // true takes longer startup but speeds up runtime path finding
         readonly static List<ThreadStart> ShutdownHooks = new List<ThreadStart>();
 
@@ -99,7 +99,10 @@ namespace cogbot.Listeners
                     //client.Grid.RequestMapItems(simulator.Handle,OpenMetaverse.GridItemType.Classified,GridLayerType.Terrain);
 
                     client.Objects.OnPrimitiveProperties += Objects_OnPrimitiveProperties;
+                    client.Objects.OnPrimitiveUpdate += Objects_OnPrimitiveUpdate;
+
                     RegisterAll();
+                    client.Objects.OnObjectUpdated -= Objects_OnObjectUpdated;
                     MasteringRegions.Add(simulator.Handle);
                     RequestGridInfos(simulator.Handle);
                 }
@@ -613,11 +616,11 @@ namespace cogbot.Listeners
                             {
                                 O.ResetPrim(prim);
                             }
-                            if (Settings.LOG_LEVEL != Helpers.LogLevel.Info) Debug("Prim with differnt region handle " + prim);
+                            if (Settings.LOG_LEVEL != Helpers.LogLevel.Info) Debug("Prim with different region handle " + prim);
                         }
                         else
                         {
-                            if (Settings.LOG_LEVEL != Helpers.LogLevel.Info) Debug("Child with differnt region handle " + prim);
+                            if (Settings.LOG_LEVEL != Helpers.LogLevel.Info) Debug("Child with different region handle " + prim);
                         }
                         return O;
                     }
@@ -997,7 +1000,6 @@ namespace cogbot.Listeners
 
         public override void Avatars_OnAvatarAnimation(UUID avatarID, InternalDictionary<UUID, int> anims)
         {
-            if (!MaintainAnims) return;
             lock (UpdateQueue) UpdateQueue.Enqueue(() =>
             {
                 SimAvatar avatar = (SimAvatar)GetSimObjectFromUUID(avatarID);
@@ -1042,17 +1044,21 @@ namespace cogbot.Listeners
 
         public override void Objects_OnObjectKilled(Simulator simulator, uint objectID)
         {
+            // had to move this out of the closure because the Primitive is gone later
+            Primitive p = GetPrimitive(objectID, simulator);
+            if (p == null)
+            {
+                //   base.Objects_OnObjectKilled(simulator, objectID);
+                return;
+            }
+            SimObject O = GetSimObjectFromPrimUUID(p);
             lock (UpdateQueue)
                 UpdateQueue.Enqueue(() =>
                                         {
-
-                                            Primitive p = GetPrimitive(objectID, simulator);
-                                            if (p == null)
-                                            {
-                                                //   base.Objects_OnObjectKilled(simulator, objectID);
-                                                return;
-                                            }
-                                            SimObject O = GetSimObject(p, simulator);
+                                            if (O == null)
+                                                O = GetSimObjectFromPrimUUID(p);
+                                           // if (O == null)
+                                           //     O = GetSimObject(p, simulator);
                                             if (O == null)
                                             {
                                                 SendNewEvent("on-prim-killed", p);
@@ -1071,6 +1077,16 @@ namespace cogbot.Listeners
                                                         }
                                                     lock (SimObjects) SimObjects.Remove(O);
 
+                                                }
+                                            } else
+                                            {
+                                                if (simulator == O.GetSimulator())
+                                                {
+                                                    Debug("Killing Avatar: " + O);
+                                                    O.IsKilled = true;
+                                                } else
+                                                {
+                                                    Debug("NOT Killing Avatar: " + O);
                                                 }
                                             }
                                         });
@@ -1440,7 +1456,10 @@ namespace cogbot.Listeners
         {
             //lock (Objects_OnNewAvatarLock)
             {
-                GetSimObject(avatar, simulator).ResetPrim(avatar);
+                SimObject AV = GetSimObject(avatar, simulator);
+                AV.IsKilled = false;
+                AV.ResetPrim(avatar);
+
             }
             Objects_OnNewAvatar1(simulator, avatar, regionHandle, timeDilation);
         }
@@ -1471,6 +1490,45 @@ namespace cogbot.Listeners
             }
         }
 
+        private void Objects_OnPrimitiveUpdate(Simulator simulator, Primitive av, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
+        {
+            if (av == null || av.ID == UUID.Zero) return; // too early
+            SimObject AV = null;
+            Object Obj;
+            lock (uuidTypeObject) if (uuidTypeObject.TryGetValue(av.ID, out Obj))
+                {
+                    AV = (SimObject)Obj;
+                }
+                else
+                {
+                    //AV = GetSimObject(av, simulator);
+                }
+            if (AV != null)
+            {
+                ulong rh = AV.Prim.RegionHandle;
+                if (!SimRegion.OutOfRegion(update.Position))
+                {
+                    if (rh != regionHandle)
+                    {
+                        AV.ResetRegion(regionHandle);
+                    }
+                    AV.ResetPrim(av);
+                }
+
+                if (av.ParentID == 0 && !SimRegion.OutOfRegion(update.Position))
+                {
+                    if (update.Avatar)
+                    {
+                        SimRegion.GetRegion(simulator).UpdateTraveled(av.ID, av.Position, av.Rotation);
+                        return;
+                    }
+                }
+            }
+            if (!MaintainObjectUpdates) return;
+            lock (UpdateQueue) UpdateQueue.Enqueue(() => Objects_OnObjectUpdated1(simulator, update, regionHandle, timeDilation));
+
+        }
+
         public override void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
         {
             /// return;
@@ -1484,39 +1542,7 @@ namespace cogbot.Listeners
             //all things if (update.Avatar)
 
             Primitive av = GetPrimitive(update.LocalID, simulator);
-            if (av == null || av.ID == UUID.Zero) return; // too early
-            SimObject AV = null;
-            Object Obj;
-            lock (uuidTypeObject) if (uuidTypeObject.TryGetValue(av.ID, out Obj))
-                {
-                    AV = (SimObject)Obj;
-                }
-                else
-                {
-                    //AV = GetSimObject(av, simulator);
-                }
-            if (AV == null) return; // still too early
-            ulong rh = AV.Prim.RegionHandle;
-            if (!SimRegion.OutOfRegion(update.Position))
-            {
-                if (rh != regionHandle)
-                {
-                    AV.ResetRegion(regionHandle);
-                }
-                AV.ResetPrim(av);
-            }
-
-            if (av.ParentID == 0 && !SimRegion.OutOfRegion(update.Position))
-            {
-                if (update.Avatar)
-                {
-                    SimRegion.GetRegion(simulator).UpdateTraveled(av.ID, av.Position, av.Rotation);
-                    return;
-                }
-            }
-
-            if (!MaintainObjectUpdates) return;
-            lock (UpdateQueue) UpdateQueue.Enqueue(() => Objects_OnObjectUpdated1(simulator, update, regionHandle, timeDilation));
+            Objects_OnPrimitiveUpdate(simulator, av, update, regionHandle, timeDilation);
         }
 
         public void Objects_OnObjectUpdated1(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)

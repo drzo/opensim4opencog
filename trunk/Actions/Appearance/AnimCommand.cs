@@ -2,6 +2,7 @@ using System;
 using OpenMetaverse;
 using System.Collections.Generic;
 using System.Threading;
+using cogbot.TheOpenSims;
 
 namespace cogbot.Actions
 {
@@ -11,7 +12,7 @@ namespace cogbot.Actions
         {
             TheBotClient = testClient;
             Name = "anim";
-            Description = "Do a amination or gesture.  Usage:  anim [1-10] aminname";
+            Description = "Do a animation or gesture.  Usage:  anim [seconds] HOVER [seconds] 23423423423-4234234234-234234234-23423423  +CLAP -JUMP STAND";
             Category = CommandCategory.Appearance;
         }
        
@@ -21,7 +22,17 @@ namespace cogbot.Actions
             {
                 ICollection<string> list = cogbot.TheOpenSims.SimAnimation.GetAnimationList();
                 WriteLine(TheBotClient.argsListString(list));
-               return "Usage:  anim [seconds] HOVER [seconds] 23423423423-4234234234-234234234-23423423  +CLAP -JUMP STAND";
+                Dictionary<UUID, int> anims = WorldSystem.TheSimAvatar.GetCurrentAnims();
+                string alist = String.Empty;
+                foreach (UUID id in anims.Keys)
+                {
+                    alist += WorldSystem.GetAnimationName(id);
+                    alist += " ";
+                    alist += anims[id];
+                    alist += Environment.NewLine;
+                }
+                WriteLine("Currently: {0}", alist);
+                return "Usage: anim [seconds] HOVER [seconds] 23423423423-4234234234-234234234-23423423  +CLAP -JUMP STAND";
            }
             int time = 1300; //should be long enough for most animations
             List<KeyValuePair<UUID, int>> amins = new List<KeyValuePair<UUID, int>>();

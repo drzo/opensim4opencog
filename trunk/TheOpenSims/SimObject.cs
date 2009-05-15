@@ -19,6 +19,10 @@ namespace cogbot.TheOpenSims
 
         #region SimMover Members
 
+        public virtual void ThreadJump()
+        {
+            
+        }
 
         public virtual void StopMoving()
         {
@@ -430,16 +434,15 @@ namespace cogbot.TheOpenSims
         bool MadeNonPhysical = false;
         bool MadePhantom = false;
         bool needUpdate = true;
-        bool WasKilled;
+        protected bool WasKilled;
 
-        public bool IsKilled
+        public virtual bool IsKilled
         {
             // get { return WasKilled; }
             set
             {
                 if (!WasKilled)  //already
                 {
-                    WasKilled = value;
                     List<SimObject> AttachedChildren = GetChildren();
                     lock (AttachedChildren) foreach (SimObject C in AttachedChildren)
                         {
@@ -447,6 +450,7 @@ namespace cogbot.TheOpenSims
                         }
                     RemoveCollisions();
                 }
+                WasKilled = value;
             }
         }
 
@@ -1217,7 +1221,7 @@ namespace cogbot.TheOpenSims
             {
                 _Prim = prim;
                 ResetRegion(prim.RegionHandle);
-                Debug("two differnt prims {0} {1}", prim, Prim);
+                Debug("two different prims {0} {1}", prim, Prim);
             }
            // throw new Exception("The method or operation is not implemented.");
         }
@@ -1228,8 +1232,8 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public void OpenNearbyClosedPassages()
-        {
+        public virtual void OpenNearbyClosedPassages()
+        {            
             SimObjectType DOOR = SimTypeSystem.DOOR;
             // look for closed doors
 

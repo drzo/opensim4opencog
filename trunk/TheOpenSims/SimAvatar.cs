@@ -15,6 +15,45 @@ namespace cogbot.TheOpenSims
     public class SimAvatarImpl : SimObjectImpl, SimMover, cogbot.TheOpenSims.SimAvatar
     {
 
+        public override bool IsKilled
+        {
+            // get { return WasKilled; }
+            set
+            {
+                if (!WasKilled)  //already
+                {
+                    List<SimObject> AttachedChildren = GetChildren();
+                    lock (AttachedChildren) foreach (SimObject C in AttachedChildren)
+                        {
+                            C.IsKilled = true;
+                        }
+                   // RemoveCollisions();
+                }
+                WasKilled = value;
+            }
+        }
+
+
+        public override void ThreadJump()
+        {
+            // all the anims here are mainly so we can see what the bot is doing
+            (new Thread(() => 
+                WithAnim(Animations.SHRUG, () =>
+                {
+                    Client.Self.Fly(false);
+                    Client.Self.AnimationStart(Animations.WORRY, true);
+                    Thread.Sleep(10);
+                    Client.Self.Jump(true);
+                    Thread.Sleep(500);
+                    Client.Self.Jump(false);
+                    Client.Self.AnimationStop(Animations.WORRY, true);
+                }))).Start();
+        }
+        public override void OpenNearbyClosedPassages()
+        {
+            WithAnim(Animations.AFRAID, base.OpenNearbyClosedPassages);            
+        }
+
         public float GetZHeading()
         {
             Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(GetSimRotation()));
@@ -455,6 +494,7 @@ namespace cogbot.TheOpenSims
             List<SimObject> useObjects = new List<SimObject>();
             foreach (SimObject O in GetKnownObjects())
             {
+                if (!O.IsRegionAttached()) continue;
                 if (O.Distance(this) > maxXYDistance) continue;
                 if (Math.Abs(O.GetWorldPosition().Z - myZ) > maxZDist) continue;
                 useObjects.Add(O);
@@ -711,6 +751,7 @@ namespace cogbot.TheOpenSims
                         Client.Settings.SEND_AGENT_UPDATES = true;
                         ClientSelf.AnimationStart(Animations.STANDUP, true);
                         if (CanUseSit) ClientSelf.Stand();
+                        StopAllAnimations();
                     }
                     finally
                     {
@@ -718,6 +759,24 @@ namespace cogbot.TheOpenSims
                     }
                 }
             };
+        }
+
+        private void StopAllAnimations()
+        {
+            Dictionary<UUID, bool> animations = new Dictionary<UUID, bool>();
+            foreach (UUID animation in ExpectedCurrentAnims.Keys)
+            {
+                animations[animation] = false;
+            }
+            foreach (UUID animation in AddedAnims.Keys)
+            {
+                animations[animation] = false;
+            }
+            foreach (UUID animation in RemovedAnims.Keys)
+            {
+                animations[animation] = false;
+            }
+            Client.Self.Animate(animations,true);
         }
 
         public ThreadStart WithGrabAt(SimObject obj, ThreadStart closure)
@@ -909,6 +968,7 @@ namespace cogbot.TheOpenSims
             lock (TrackerLoopLock)
             {
                 ApproachPosition = null;
+                lastDistance = float.MaxValue;
                 ApproachVector3D = Vector3d.Zero;
             }
             AgentManager ClientSelf = Client.Self;
@@ -922,7 +982,7 @@ namespace cogbot.TheOpenSims
             ClientMovement.FastAt = false;
             ClientMovement.FastLeft = false;
             ClientMovement.FastUp = false;
-            // ClientMovement.FinishAnim = true;
+            ClientMovement.FinishAnim = true;
             //  ClientMovement. Fly = false;
             ClientMovement.LButtonDown = false;
             ClientMovement.LButtonUp = false;
@@ -985,6 +1045,8 @@ namespace cogbot.TheOpenSims
 
         readonly object TrackerLoopLock = new object();
 
+        bool IsBlocked = false;
+        double lastDistance = float.MaxValue;
         void TrackerLoop()
         {
             Boolean stopNext = false;
@@ -1001,6 +1063,7 @@ namespace cogbot.TheOpenSims
                     {
                         if (ApproachPosition == null)
                         {
+                            lastDistance = float.MaxValue;
                             Thread.Sleep(100);
                             continue;
                         }
@@ -1029,7 +1092,7 @@ namespace cogbot.TheOpenSims
                     // Like water areas
                     bool swimming = WaterHeight > selfZ;
 
-                    if (UpDown > .5f)
+                    if (UpDown > 5f)
                     {
                         targetPosition.Z = realTargetZ;// selfZ + 0.2f; // incline upward
                         if (!ClientMovement.Fly)
@@ -1062,6 +1125,14 @@ namespace cogbot.TheOpenSims
                     double curXYDist = Vector3d.Distance(worldPosition, new Vector3d(targetPosition.X, targetPosition.Y, selfZ));
 
                     double curDist = Vector3d.Distance(worldPosition, targetPosition);
+                    IsBlocked = false;
+                    if (lastDistance <= curDist)
+                    {
+                        if (Prim.Velocity==Vector3.Zero)
+                            IsBlocked = true;
+                    }
+                    lastDistance = curDist;
+
 
                     if (swimming)
                     {
@@ -1227,23 +1298,52 @@ namespace cogbot.TheOpenSims
         /// <returns></returns>
         public override bool MoveTo(Vector3d finalTarget, double maxDistance, float maxSeconds)
         {
+            int blockCount = 0;
+            IsBlocked = false;
             double currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
-            if (currentDist < maxDistance) return true;
+           // if (currentDist < maxDistance) return true;
             lock (TrackerLoopLock)
             {
                 //  SimWaypoint P = SimWaypointImpl.CreateGlobal(finalTarget);
                 SetMoveTarget(finalTarget);
                 ApproachDistance = maxDistance;
             }
+            bool IsKnownMoving = false;
             double lastDistance = currentDist;
             long endTick = Environment.TickCount +(int)(maxSeconds * 1000);
             while (Environment.TickCount < endTick)
             {
                 currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
+                if (!IsKnownMoving) {if (Prim.Velocity != Vector3.Zero) IsKnownMoving = true;}
+                else
+                {
+                    if (currentDist < maxDistance) return true;
+                    if (Prim.Velocity == Vector3.Zero)
+                    {
+                        Console.Write("!");
+                        if (IsBlocked)
+                        {
+                            blockCount++;
+                            if (blockCount > 2)
+                            {
+                                StopMoving();
+                                Debug("BLOCKED!");
+                                return false;
+                            }
+                        }
+                    }
+
+                }
                 if (currentDist > lastDistance )
                 {
-                   // Console.Write("=");
+                    // Console.Write("=");
+                    if (currentDist < maxDistance) return true;
                     StopMoving();
+                    if (IsBlocked)
+                    {
+                        Console.Write("=");
+                        return false;
+                    }
                     return true;
                 }
                 if (currentDist > maxDistance)
@@ -1287,10 +1387,12 @@ namespace cogbot.TheOpenSims
             {
                 ApproachVector3D = Vector3d.Zero;
                 ApproachPosition = null;
+                lastDistance = float.MaxValue;
                 return;
             }
             if (ApproachPosition != target)
             {
+                lastDistance = float.MaxValue;
                 SetMoveTarget(target.GetWorldPosition());
             }
         }
@@ -1395,10 +1497,6 @@ namespace cogbot.TheOpenSims
             return false;
         }
 
-        #region SimAvatar Members
-
-
-        #endregion
 
         #region SimAvatar Members
 
@@ -1406,6 +1504,10 @@ namespace cogbot.TheOpenSims
         readonly Dictionary<UUID, int> RemovedAnims = new Dictionary<UUID, int>();
         readonly Dictionary<UUID, int> AddedAnims = new Dictionary<UUID, int>();
 
+        public Dictionary<UUID, int> GetCurrentAnims()
+        {
+            return ExpectedCurrentAnims;
+        }
 
         //public UUID CurrentAmin = UUID.Zero;
         /// <summary>
@@ -1414,6 +1516,7 @@ namespace cogbot.TheOpenSims
         /// <param name="anims"></param>
         public void OnAvatarAnimations(InternalDictionary<UUID, int> anims)
         {
+            bool SendAnimEvent = WorldObjects.MaintainAnims;
             //if (!theAvatar.Name.Contains("rael")) return;
             lock (ExpectedCurrentAnims)
             {
@@ -1468,9 +1571,9 @@ namespace cogbot.TheOpenSims
                         }
                         if (oldAnimNumber > newAnimNumber)
                         {
-                            Debug("error");
+                            Debug("error oldAnimNumber > newAnimNumber");
                         }
-                        else
+                   //     else
                         {
                             if (oldAnimNumber + 1 != newAnimNumber)
                             {
@@ -1507,7 +1610,7 @@ namespace cogbot.TheOpenSims
                 }
                 foreach (UUID key in RemovedThisEvent)
                 {
-                    WorldSystem.SendNewEvent("On-Stop-Animation", this, key, GetHeading());
+                    if (SendAnimEvent) WorldSystem.SendNewEvent("On-Stop-Animation", this, key, GetHeading());
                 }
 
                 for (int seq = leastCurrentSequence; seq <= mostCurrentSequence; seq++)
@@ -1518,7 +1621,7 @@ namespace cogbot.TheOpenSims
                         {
                             if (seq == RemovedAnims[uuid])
                             {
-                                WorldSystem.SendNewEvent("On-Finished-Animation", this, uuid, GetWorldPosition(), GetHeading());
+                                if (SendAnimEvent) WorldSystem.SendNewEvent("On-Finished-Animation", this, uuid, GetWorldPosition(), GetHeading());
                                 shownRemoved.Add(uuid);
                                 //ExpectedCurrentAnims.Remove(uuid);
                             }
@@ -1530,7 +1633,7 @@ namespace cogbot.TheOpenSims
                         {
                             if (seq == AddedAnims[uuid])
                             {
-                                WorldSystem.SendNewEvent("On-Start-Animation", this, uuid, GetHeading());
+                                if (SendAnimEvent) WorldSystem.SendNewEvent("On-Start-Animation", this, uuid, GetHeading());
                                 ExpectedCurrentAnims[uuid] = seq;
                                 showAdded.Add(uuid);
                                 //RemovedAnims[uuid] = mostCurrentSequence + 1;
@@ -1573,6 +1676,7 @@ namespace cogbot.TheOpenSims
             //SendNewEvent("On-Avatar-Animation", avatar, names);
         }
         #endregion
+
     }
 
     public interface SimAvatar : SimObject, SimMover
@@ -1623,6 +1727,8 @@ namespace cogbot.TheOpenSims
         void SetMoveTarget(SimPosition followAvatar);
 
         void OnAvatarAnimations(InternalDictionary<UUID, int> anims);
+
+        Dictionary<UUID, int> GetCurrentAnims();
     }
 }
 
