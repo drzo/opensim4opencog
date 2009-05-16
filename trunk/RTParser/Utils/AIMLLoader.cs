@@ -255,7 +255,7 @@ namespace RTParser.Utils
             string normalizedThat = "*";
             string normalizedTopic = "*";
 
-            if ((this.bot.TrustAIML)&(!isUserInput))
+            if ((this.bot.TrustAIML) & (!isUserInput))
             {
                 normalizedPattern = pattern.Trim();
                 normalizedThat = that.Trim();
@@ -263,7 +263,20 @@ namespace RTParser.Utils
             }
             else
             {
-                normalizedPattern = this.Normalize(pattern, isUserInput).Trim();
+                if (true)
+                {
+
+                    normalizedPattern = pattern.Trim();
+                    string normalizedPattern0 = this.Normalize(pattern, isUserInput).Trim();
+                    if (normalizedPattern!=normalizedPattern0)
+                    {
+                        Console.WriteLine(String.Format(";; RTParser *not* transforming '{0}' to '{1}'", normalizedPattern, normalizedPattern0));                        
+                    }
+                }
+                else
+                {
+                    normalizedPattern = this.Normalize(pattern, isUserInput).Trim();
+                }
                 normalizedThat = this.Normalize(that, isUserInput).Trim();
                 normalizedTopic = this.Normalize(topicName, isUserInput).Trim();
             }

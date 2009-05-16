@@ -11,6 +11,7 @@ using System.Net.Mail;
 
 using RTParser.Utils;
 using org.opencyc.api;
+using org.opencyc.cycobject;
 
 namespace RTParser
 {
@@ -1094,20 +1095,31 @@ The AIMLbot program.
         {
             get
             {
-                if (cycAccess==null)
+                if (cycAccess == null || cycAccess.isClosed())
                 {
-                    cycAccess = new CycAccess();
+                    cycAccess = new CycAccess("CycServer",3600);
+                    //if (cycAccess.isClosed()) cycAccess.persistentConnection = true;
                 }
+                
                 return cycAccess;
             }
             set { cycAccess = value; }
         }
         public string EvalSubL(string cmd, string filter)
         {
-            string result = String.Format("(EVAL-SUBL {0})", cmd);
-            if (!String.IsNullOrEmpty(filter) && filter == "paraphrase")
+            string result = "(EVAL-SUBL " + cmd + ")";
+            try
             {
-                return this.Paraphrase(result);
+                Object oresult = GetCycAccess.converseList("(list " + cmd + ")").first();
+                result = ""+oresult;
+                if (!String.IsNullOrEmpty(filter) && filter == "paraphrase")
+                {
+                    return this.Paraphrase(result);
+                }
+            }
+            catch (Exception e)
+            {
+                result += "" + e;
             }
             return result;
         }
@@ -1137,5 +1149,18 @@ The AIMLbot program.
         }
 
         #endregion
+
+        internal string SystemExecute(string cmd, string langu)
+        {
+            if (String.IsNullOrEmpty(langu))
+            {
+                langu = "bot";  
+            }
+            string s = "<The system tag should be doing '" + cmd + "' lang=" + langu + ">";
+            writeToLog(s);
+            if (langu == "subl") return EvalSubL(cmd, null);
+            return s;
+            
+        }
     }
 }
