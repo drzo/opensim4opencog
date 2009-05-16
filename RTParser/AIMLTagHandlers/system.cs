@@ -30,8 +30,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            this.bot.writeToLog("The system tag is not implemented in this bot");
-            return string.Empty;
+            return this.bot.SystemExecute(Recurse(),GetAttribValue("lang"));
         }
     }
 }
