@@ -1,21 +1,29 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
-using OpenMetaverse;
-using cogbot.Listeners;
-using System.Threading;
-using PathSystem3D.Navigation;
-using PathSystem3D.Navigation.Debug;
-using PathSystem3D.Mesher;
 using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
-using PathSystem3D;
+using cogbot.Listeners;
+using OpenMetaverse;
+using org.opencyc.cycobject;
+using PathSystem3D.Mesher;
+using PathSystem3D.Navigation;
 
 namespace cogbot.TheOpenSims
 {
     //TheSims-like object
     public class SimObjectImpl : SimPosition, BotMentalAspect, SimMover, cogbot.TheOpenSims.SimObject, MeshableObject
     {
+
+        private CycFort fort;
+        public CycFort GetCycFort()
+        {
+            if (fort == null)
+            {
+                fort = TextForm.Cyclifier.FindOrCreateCycFort(this);
+            }
+            return fort;
+        }
 
         #region SimMover Members
 

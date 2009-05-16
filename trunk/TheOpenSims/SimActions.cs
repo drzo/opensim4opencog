@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Collections;
+using org.opencyc.cycobject;
 using Vector3 = OpenMetaverse.Vector3;
 using UUID = OpenMetaverse.UUID;
 
@@ -11,6 +12,8 @@ namespace cogbot.TheOpenSims
 
     abstract public class SimUsage : BotMentalAspect
     {
+        public abstract CycFort GetCycFort();
+
         public String UsageName;
 
         public SimUsage(string name)
@@ -45,7 +48,7 @@ namespace cogbot.TheOpenSims
 
         public override string ToString()
         {
-            return GetType().Name + "::" + UsageName;
+            return String.Format("{0}::{1}", GetType().Name, UsageName);
         }
 
         public abstract float RateIt(BotNeeds current);
@@ -87,6 +90,16 @@ namespace cogbot.TheOpenSims
     {
         public SimTypeUsage TypeUsage;
         public SimObject Target;
+
+        private CycFort fort;
+        override public CycFort GetCycFort()
+        {
+            if (fort == null)
+            {
+                fort = TextForm.Cyclifier.FindOrCreateCycFort(this);
+            }
+            return fort;
+        }
 
         public override string ToString()
         {
@@ -204,6 +217,16 @@ namespace cogbot.TheOpenSims
     // most object have use that advertises ChangePromise but actually calls ChangeActual
     public class SimTypeUsage : SimUsage
     {
+        private CycFort fort;
+        public override CycFort GetCycFort()
+        {
+            if (fort == null)
+            {
+                fort = TextForm.Cyclifier.FindOrCreateCycFort(this);
+            }
+            return fort;
+        }
+
         public SimTypeUsage(String name):base(name)
         {
             if (name == "Passable")
@@ -294,6 +317,16 @@ namespace cogbot.TheOpenSims
 
     public class BotObjectAction : BotAction
     {
+        private CycFort fort;
+        public override CycFort GetCycFort()
+        {
+            if (fort == null)
+            {
+                fort = TextForm.Cyclifier.FindOrCreateCycFort(this);
+            }
+            return fort;
+        }
+
         public override Vector3 GetUsePostion()
         {
             return TargetUse.GetUsePosition();
@@ -327,6 +360,16 @@ namespace cogbot.TheOpenSims
 
     public class BotSocialAction : BotAction
     {
+        private CycFort fort;
+        public override CycFort GetCycFort()
+        {
+            if (fort == null)
+            {
+                fort = TextForm.Cyclifier.FindOrCreateCycFort(this);
+            }
+            return fort;
+        }
+
         public override Vector3 GetUsePostion()
         {
             return Victem.GetSimPosition();

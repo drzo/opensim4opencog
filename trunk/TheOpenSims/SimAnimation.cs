@@ -5,6 +5,7 @@ using System.Threading;
 using System.Reflection;
 using cogbot.Listeners;
 using OpenMetaverse.Assets;
+using org.opencyc.cycobject;
 
 namespace cogbot.TheOpenSims
 {
@@ -71,7 +72,7 @@ namespace cogbot.TheOpenSims
             ClientSelf.AnimationStop(anim, true);
         }
     }
-    public class SimAnimation
+    public class SimAnimation: BotMentalAspect
     {
         static Dictionary<UUID, string> animationName = new Dictionary<UUID, string>();
         static Dictionary<string, UUID> nameAnimation = new Dictionary<string, UUID>();
@@ -146,6 +147,20 @@ namespace cogbot.TheOpenSims
             if (!animationName.ContainsKey(uUID))
                 animationName[uUID] = s;
         }
+
+        #region BotMentalAspect Members
+
+        private CycFort fort;
+        public CycFort GetCycFort()
+        {
+            if (fort == null)
+            {
+                fort = TextForm.Cyclifier.FindOrCreateCycFort(this);
+            }
+            return fort;
+        }
+
+        #endregion
     }
 #if PORTIT
 
