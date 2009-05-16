@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Net.Mail;
 
 using RTParser.Utils;
+using org.opencyc.api;
 
 namespace RTParser
 {
@@ -1085,6 +1086,22 @@ The AIMLbot program.
         }
         #endregion
 
+        #region CYC Interaction
+
+
+        public CycAccess cycAccess;
+        public org.opencyc.api.CycAccess GetCycAccess
+        {
+            get
+            {
+                if (cycAccess==null)
+                {
+                    cycAccess = new CycAccess();
+                }
+                return cycAccess;
+            }
+            set { cycAccess = value; }
+        }
         public string EvalSubL(string cmd, string filter)
         {
             string result = String.Format("(EVAL-SUBL {0})", cmd);
@@ -1113,9 +1130,12 @@ The AIMLbot program.
             return true;
         }
 
-        internal string Paraphrase(string result)
+        internal string Paraphrase(string text)
         {
-            return String.Format("(PARAPHRASE {0})", result);
+            if (!text.StartsWith("#")) text = String.Format("'{0}", text);
+            return EvalSubL(String.Format("(generate-phrase {0})", text), null);
         }
+
+        #endregion
     }
 }
