@@ -2,7 +2,7 @@ using System;
 using System.Xml;
 using System.Text;
 
-namespace AIMLbot.AIMLTagHandlers
+namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
     /// The atomic version of the gender element is a shortcut for:
@@ -25,7 +25,7 @@ namespace AIMLbot.AIMLTagHandlers
     /// fact that most AIML has been written in English. However, the decision about whether to 
     /// transform gender of other words is left up to the implementation.
     /// </summary>
-    public class gender : AIMLbot.Utils.AIMLTagHandler
+    public class gender : RTParser.Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -36,11 +36,11 @@ namespace AIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public gender(AIMLbot.Bot bot,
-                        AIMLbot.User user,
-                        AIMLbot.Utils.SubQuery query,
-                        AIMLbot.Request request,
-                        AIMLbot.Result result,
+        public gender(RTParser.Bot bot,
+                        RTParser.User user,
+                        RTParser.Utils.SubQuery query,
+                        RTParser.Request request,
+                        RTParser.Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -50,18 +50,18 @@ namespace AIMLbot.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "gender")
             {
-                if (this.templateNode.InnerText.Length > 0)
+                if (templateNodeInnerText.Length > 0)
                 {
                     // non atomic version of the node
-                    return AIMLbot.Normalize.ApplySubstitutions.Substitute(this.bot, this.bot.GenderSubstitutions, this.templateNode.InnerText);
+                    return RTParser.Normalize.ApplySubstitutions.Substitute(this.bot, this.bot.GenderSubstitutions, templateNodeInnerText);
                 }
                 else
                 {
                     // atomic version of the node
                     XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
                     star recursiveStar = new star(this.bot, this.user, this.query, this.request, this.result, starNode);
-                    this.templateNode.InnerText = recursiveStar.Transform();
-                    if (this.templateNode.InnerText.Length > 0)
+                    templateNodeInnerText = recursiveStar.Transform();
+                    if (templateNodeInnerText.Length > 0)
                     {
                         return this.ProcessChange();
                     }

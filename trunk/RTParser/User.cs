@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace AIMLbot
+namespace RTParser
 {
     /// <summary>
     /// Encapsulates information and history of a user who has interacted with the bot
@@ -19,7 +19,7 @@ namespace AIMLbot
         /// <summary>
         /// The bot this user is using
         /// </summary>
-        public AIMLbot.Bot bot;
+        public RTParser.Bot bot;
 
         /// <summary>
         /// The GUID that identifies this user to the bot
@@ -48,7 +48,7 @@ namespace AIMLbot
 		/// <summary>
 		/// the predicates associated with this particular user
 		/// </summary>
-        public AIMLbot.Utils.SettingsDictionary Predicates;
+        public RTParser.Utils.SettingsDictionary Predicates;
 
         /// <summary>
         /// The most recent result to be returned by the bot
@@ -77,13 +77,13 @@ namespace AIMLbot
         /// </summary>
         /// <param name="UserID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-		public User(string UserID, AIMLbot.Bot bot)
+		public User(string UserID, RTParser.Bot bot)
 		{
             if (UserID.Length > 0)
             {
                 this.id = UserID;
                 this.bot = bot;
-                this.Predicates = new AIMLbot.Utils.SettingsDictionary(this.bot);
+                this.Predicates = new RTParser.Utils.SettingsDictionary(this.bot);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
                 this.Predicates.addSetting("topic", "*");
             }

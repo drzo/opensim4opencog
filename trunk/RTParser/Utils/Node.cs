@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 
-namespace AIMLbot.Utils
+namespace RTParser.Utils
 {
     /// <summary>
     /// Encapsulates a node in the graphmaster tree structure
@@ -105,9 +105,25 @@ namespace AIMLbot.Utils
 
         #region Evaluate Node
 
+        public string evaluate(string path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard)
+        {
+            // first call the pre-existing evaluate  that was renamed to evaluate0
+            String temp = evaluate0(path, query, request, matchstate, wildcard);
+            if (temp == String.Empty || FailsGuards(temp))
+            {
+                return String.Empty;
+            }
+            return temp;
+        }
+
+        private bool FailsGuards(string temp)
+        {
+            Console.WriteLine("Passes " + temp);
+            return false;
+        }
 
         /// <summary>
-        /// Navigates this node (and recusively into child nodes) for a match to the path passed as an argument
+        /// Navigates this node (and recursively into child nodes) for a match to the path passed as an argument
         /// whilst processing the referenced request
         /// </summary>
         /// <param name="path">The normalized path derived from the user's input</param>
@@ -116,7 +132,7 @@ namespace AIMLbot.Utils
         /// <param name="matchstate">The part of the input path the node represents</param>
         /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
         /// <returns>The template to process to generate the output</returns>
-        public string evaluate(string path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard)
+        private string evaluate0(string path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard)
         {
             // check for timeout
             if (request.StartedOn.AddMilliseconds(request.bot.TimeOut) < DateTime.Now)

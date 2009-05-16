@@ -1,6 +1,6 @@
 using System;
 
-namespace AIMLbot.Utils
+namespace RTParser.Utils
 {
     /// <summary>
     /// Used to determine the gender of things

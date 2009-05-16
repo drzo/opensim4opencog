@@ -1,19 +1,16 @@
 using System;
+using System.Collections.Generic;
 using System.Xml;
 using System.Text;
 
 namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
-    /// The lowercase element tells the AIML interpreter to render the contents of the element 
-    /// in lowercase, as defined (if defined) by the locale indicated by the specified language
-    /// (if specified). 
-    /// 
-    /// If no character in this string has a different lowercase version, based on the Unicode 
-    /// standard, then the original string is returned. 
+    /// &lt;cycretract&gt; simple way to retract a CycL statement
     /// </summary>
-    public class lowercase : RTParser.Utils.AIMLTagHandler
+    public class cycretract : RTParser.Utils.AIMLTagHandler
     {
+        public cycretract(){}
         /// <summary>
         /// Ctor
         /// </summary>
@@ -23,7 +20,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public lowercase(RTParser.Bot bot,
+        public cycretract(RTParser.Bot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -35,9 +32,12 @@ namespace RTParser.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "lowercase")
-            {
-                return templateNodeInnerText.ToLower(this.bot.Locale);
+            if (this.templateNode.Name.ToLower() == "cycretract")
+            {                
+                if (templateNodeInnerText.Length > 0)
+                {
+                    return this.bot.EvalSubL(String.Format("(cyc-retract {0})", Recurse()),null);
+                }
             }
             return string.Empty;
         }

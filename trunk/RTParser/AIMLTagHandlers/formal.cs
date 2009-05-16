@@ -2,7 +2,7 @@ using System;
 using System.Xml;
 using System.Text;
 
-namespace AIMLbot.AIMLTagHandlers
+namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
     /// The formal element tells the AIML interpreter to render the contents of the element 
@@ -13,7 +13,7 @@ namespace AIMLbot.AIMLTagHandlers
     /// If no character in this string has a different uppercase version, based on the Unicode 
     /// standard, then the original string is returned.
     /// </summary>
-    public class formal : AIMLbot.Utils.AIMLTagHandler
+    public class formal : RTParser.Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -24,11 +24,11 @@ namespace AIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public formal(AIMLbot.Bot bot,
-                        AIMLbot.User user,
-                        AIMLbot.Utils.SubQuery query,
-                        AIMLbot.Request request,
-                        AIMLbot.Result result,
+        public formal(RTParser.Bot bot,
+                        RTParser.User user,
+                        RTParser.Utils.SubQuery query,
+                        RTParser.Request request,
+                        RTParser.Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -39,9 +39,9 @@ namespace AIMLbot.AIMLTagHandlers
             if (this.templateNode.Name.ToLower() == "formal")
             {
                 StringBuilder result = new StringBuilder();
-                if (this.templateNode.InnerText.Length > 0)
+                if (templateNodeInnerText.Length > 0)
                 {
-                    string[] words = this.templateNode.InnerText.ToLower().Split();
+                    string[] words = templateNodeInnerText.ToLower().Split();
                     foreach (string word in words)
                     {
                         string newWord = word.Substring(0, 1);

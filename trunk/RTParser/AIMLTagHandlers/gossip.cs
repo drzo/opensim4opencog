@@ -2,7 +2,7 @@ using System;
 using System.Xml;
 using System.Text;
 
-namespace AIMLbot.AIMLTagHandlers
+namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
     /// The gossip element instructs the AIML interpreter to capture the result of processing the 
@@ -12,7 +12,7 @@ namespace AIMLbot.AIMLTagHandlers
     /// 
     /// The gossip element does not have any attributes. It may contain any AIML template elements.
     /// </summary>
-    public class gossip : AIMLbot.Utils.AIMLTagHandler
+    public class gossip : RTParser.Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -23,11 +23,11 @@ namespace AIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public gossip(AIMLbot.Bot bot,
-                        AIMLbot.User user,
-                        AIMLbot.Utils.SubQuery query,
-                        AIMLbot.Request request,
-                        AIMLbot.Result result,
+        public gossip(RTParser.Bot bot,
+                        RTParser.User user,
+                        RTParser.Utils.SubQuery query,
+                        RTParser.Request request,
+                        RTParser.Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -38,9 +38,9 @@ namespace AIMLbot.AIMLTagHandlers
             if (this.templateNode.Name.ToLower() == "gossip")
             {
                 // gossip is merely logged by the bot and written to log files
-                if (this.templateNode.InnerText.Length > 0)
+                if (templateNodeInnerText.Length > 0)
                 {
-                    this.bot.writeToLog("GOSSIP from user: "+this.user.UserID+", '"+this.templateNode.InnerText+"'");
+                    this.bot.writeToLog(string.Format("GOSSIP from user: {0}, '{1}'", this.user.UserID, templateNodeInnerText));
                 }
             }
             return string.Empty;

@@ -9,9 +9,9 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Reflection;
 using System.Net.Mail;
 
-using AIMLbot.Utils;
+using RTParser.Utils;
 
-namespace AIMLbot
+namespace RTParser
 {
     /// <summary>
     /// Encapsulates a bot. If no settings.xml file is found or referenced the bot will try to
@@ -296,7 +296,7 @@ namespace AIMLbot
         /// <summary>
         /// The "brain" of the bot
         /// </summary>
-        public AIMLbot.Utils.Node Graphmaster;
+        public RTParser.Utils.Node Graphmaster;
 
         /// <summary>
         /// If set to false the input from AIML files will undergo the same normalization process that
@@ -368,7 +368,8 @@ namespace AIMLbot
             this.Substitutions = new SettingsDictionary(this);
             this.DefaultPredicates = new SettingsDictionary(this);
             this.CustomTags = new Dictionary<string, TagHandler>();
-            this.Graphmaster = new AIMLbot.Utils.Node(); 
+            this.Graphmaster = new RTParser.Utils.Node();
+            loadCustomTagHandlers("RTParser.dll");
         }
 
         /// <summary>
@@ -644,7 +645,7 @@ namespace AIMLbot
             {
                 // Normalize the input
                 AIMLLoader loader = new AIMLLoader(this);
-                AIMLbot.Normalize.SplitIntoSentences splitter = new AIMLbot.Normalize.SplitIntoSentences(this);
+                RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
                 string[] rawSentences = splitter.Transform(request.rawInput);
                 foreach (string sentence in rawSentences)
                 {
@@ -677,6 +678,7 @@ namespace AIMLbot
                         }
                         catch (Exception e)
                         {
+                            Console.WriteLine(""+e);
                             if (this.WillCallHome)
                             {
                                 this.phoneHome(e.Message, request);
@@ -824,6 +826,33 @@ namespace AIMLbot
                         case "version":
                             tagHandler = new AIMLTagHandlers.version(this, user, query, request, result, node);
                             break;
+                        case "cycsystem":
+                            tagHandler = new AIMLTagHandlers.cycsystem(this, user, query, request, result, node);
+                            break;
+                        case "cycretract":
+                            tagHandler = new AIMLTagHandlers.cycretract(this, user, query, request, result, node);
+                            break;
+                        case "cycassert":
+                            tagHandler = new AIMLTagHandlers.cycassert(this, user, query, request, result, node);
+                            break;
+                        case "cycterm":
+                            tagHandler = new AIMLTagHandlers.cycterm(this, user, query, request, result, node);
+                            break;
+                        case "cycquery":
+                            tagHandler = new AIMLTagHandlers.cycquery(this, user, query, request, result, node);
+                            break;
+                        case "cyccondition":
+                            tagHandler = new AIMLTagHandlers.cyccondition(this, user, query, request, result, node);
+                            break;
+                        case "cycphrase":
+                            tagHandler = new AIMLTagHandlers.cycphrase(this, user, query, request, result, node);
+                            break;
+                        case "guard":
+                            tagHandler = new AIMLTagHandlers.guard(this, user, query, request, result, node);
+                            break;
+                        case "cycrandom":
+                            tagHandler = new AIMLTagHandlers.cycrandom(this, user, query, request, result, node);
+                            break;
                         default:
                             tagHandler = null;
                             break;
@@ -853,7 +882,7 @@ namespace AIMLbot
                     else
                     {
                         string resultNodeInnerXML = tagHandler.Transform();
-                        XmlNode resultNode = AIMLTagHandler.getNode("<node>" + resultNodeInnerXML + "</node>");
+                        XmlNode resultNode = AIMLTagHandler.getNode(String.Format("<node>{0}</node>", resultNodeInnerXML));
                         if (resultNode.HasChildNodes)
                         {
                             StringBuilder recursiveResult = new StringBuilder();
@@ -1056,9 +1085,37 @@ The AIMLbot program.
         }
         #endregion
 
-        public string EvalSubL(string cmd)
+        public string EvalSubL(string cmd, string filter)
         {
-            return "(EVAL-SUBL "+cmd+")";
+            string result = String.Format("(EVAL-SUBL {0})", cmd);
+            if (!String.IsNullOrEmpty(filter) && filter == "paraphrase")
+            {
+                return this.Paraphrase(result);
+            }
+            return result;
+        }
+
+        internal string processNodeInside(XmlNode templateNode, SubQuery query, Request request, Result result, User user)
+        {
+            return processNode(templateNode, query, request, result, user);
+        }
+
+        internal bool IsaFilter(string term, string filter)
+        {
+            if (term.Length < 0) return false;
+            if (term == "NIL") return false;
+            if (filter.Length > 0)
+            {
+                if (filter == "NIL") return true;
+                if (this.EvalSubL(String.Format("(fi-ask '(#$isa {0} #${1}) #$EverythingPSC)", term, filter),null) == "NIL")
+                    return false;
+            }
+            return true;
+        }
+
+        internal string Paraphrase(string result)
+        {
+            return String.Format("(PARAPHRASE {0})", result);
         }
     }
 }

@@ -2,14 +2,21 @@ using System;
 using System.Text;
 using System.Xml;
 
-namespace AIMLbot.Utils 
+namespace RTParser.Utils
 {
     /// <summary>
     /// The template for all classes that handle the AIML tags found within template nodes of a
     /// category.
     /// </summary>
     abstract public class AIMLTagHandler : TextTransformer
-    { 
+    {
+
+        protected string templateNodeInnerText
+        {
+            get { return templateNode.InnerText; }
+            set { templateNode.InnerText = value; }
+        }
+
         /// <summary>
         /// Ctor
         /// </summary>
@@ -19,12 +26,13 @@ namespace AIMLbot.Utils
         /// <param name="request">The request itself</param>
         /// <param name="result">The result to be passed back to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public AIMLTagHandler   (   AIMLbot.Bot bot, 
-                                    AIMLbot.User user, 
-                                    AIMLbot.Utils.SubQuery query,
-                                    AIMLbot.Request request, 
-                                    AIMLbot.Result result, 
-                                    XmlNode templateNode) :base(bot,templateNode.OuterXml)
+        public AIMLTagHandler(RTParser.Bot bot,
+                                    RTParser.User user,
+                                    RTParser.Utils.SubQuery query,
+                                    RTParser.Request request,
+                                    RTParser.Result result,
+                                    XmlNode templateNode)
+            : base(bot, templateNode.OuterXml)
         {
             this.user = user;
             this.query = query;
@@ -49,27 +57,36 @@ namespace AIMLbot.Utils
         /// <summary>
         /// A representation of the user who made the request
         /// </summary>
-        public AIMLbot.User user;
+        public RTParser.User user;
 
         /// <summary>
         /// The query that produced this node containing the wildcard matches
         /// </summary>
-        public AIMLbot.Utils.SubQuery query;
+        public RTParser.Utils.SubQuery query;
 
         /// <summary>
         /// A representation of the input into the bot made by the user
         /// </summary>
-        public AIMLbot.Request request;
+        public RTParser.Request request;
 
         /// <summary>
         /// A representation of the result to be returned to the user
         /// </summary>
-        public AIMLbot.Result result;
+        public RTParser.Result result;
 
         /// <summary>
         /// The template node to be processed by the class
         /// </summary>
         public XmlNode templateNode;
+
+        protected string Recurse()
+        {
+            string before = this.templateNode.InnerText;
+            if (true) return before;
+            XmlNode templateNode = AIMLTagHandler.getNode(before);
+            string outputSentence = bot.processNodeInside(templateNode, query, request, result, request.user);
+            return outputSentence;
+        }
 
         #region Helper methods
 
@@ -84,6 +101,17 @@ namespace AIMLbot.Utils
             temp.LoadXml(outerXML);
             return temp.FirstChild;
         }
+
         #endregion
+
+        protected string GetAttribValue(string attribName)
+        {
+            attribName = attribName.ToLower();
+            foreach (XmlAttribute attrib in this.templateNode.Attributes)
+            {
+                if (attrib.Name.ToLower() == attribName) return attrib.Value;
+            }
+            return null;
+        }
     }
 }

@@ -2,7 +2,7 @@ using System;
 using System.Xml;
 using System.Text;
 
-namespace AIMLbot.AIMLTagHandlers
+namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
     /// The uppercase element tells the AIML interpreter to render the contents of the element
@@ -12,7 +12,7 @@ namespace AIMLbot.AIMLTagHandlers
     /// If no character in this string has a different uppercase version, based on the Unicode 
     /// standard, then the original string is returned. 
     /// </summary>
-    public class uppercase : AIMLbot.Utils.AIMLTagHandler
+    public class uppercase : RTParser.Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -23,11 +23,11 @@ namespace AIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public uppercase(AIMLbot.Bot bot,
-                        AIMLbot.User user,
-                        AIMLbot.Utils.SubQuery query,
-                        AIMLbot.Request request,
-                        AIMLbot.Result result,
+        public uppercase(RTParser.Bot bot,
+                        RTParser.User user,
+                        RTParser.Utils.SubQuery query,
+                        RTParser.Request request,
+                        RTParser.Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -37,7 +37,7 @@ namespace AIMLbot.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "uppercase")
             {
-                return this.templateNode.InnerText.ToUpper(this.bot.Locale);
+                return templateNodeInnerText.ToUpper(this.bot.Locale);
             }
             return string.Empty;
         }

@@ -2,7 +2,7 @@ using System;
 using System.Xml;
 using System.Text;
 
-namespace AIMLbot.AIMLTagHandlers
+namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
     /// The think element instructs the AIML interpreter to perform all usual processing of its 
@@ -10,7 +10,7 @@ namespace AIMLbot.AIMLTagHandlers
     /// 
     /// The think element has no attributes. It may contain any AIML template elements.
     /// </summary>
-    public class think : AIMLbot.Utils.AIMLTagHandler
+    public class think : RTParser.Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -21,11 +21,11 @@ namespace AIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public think(AIMLbot.Bot bot,
-                        AIMLbot.User user,
-                        AIMLbot.Utils.SubQuery query,
-                        AIMLbot.Request request,
-                        AIMLbot.Result result,
+        public think(RTParser.Bot bot,
+                        RTParser.User user,
+                        RTParser.Utils.SubQuery query,
+                        RTParser.Request request,
+                        RTParser.Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {

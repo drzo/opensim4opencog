@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace AIMLbot.Utils
+namespace RTParser.Utils
 {
     /// <summary>
     /// A container class for holding wildcard matches encountered during an individual path's 

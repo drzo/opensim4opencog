@@ -2,17 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace AIMLbot.Normalize
+namespace RTParser.Normalize
 {
     /// <summary>
     /// Normalizes the input text into upper case
     /// </summary>
-    public class MakeCaseInsensitive : AIMLbot.Utils.TextTransformer
+    public class MakeCaseInsensitive : RTParser.Utils.TextTransformer
     {
-        public MakeCaseInsensitive(AIMLbot.Bot bot, string inputString) : base(bot, inputString)
+        public MakeCaseInsensitive(RTParser.Bot bot, string inputString) : base(bot, inputString)
         { }
 
-        public MakeCaseInsensitive(AIMLbot.Bot bot) : base(bot) 
+        public MakeCaseInsensitive(RTParser.Bot bot) : base(bot) 
         { }
 
         protected override string ProcessChange()

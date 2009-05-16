@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace AIMLbot
+namespace RTParser
 {
     /// <summary>
     /// Encapsulates all sorts of information about a request to the bot for processing

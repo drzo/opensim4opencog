@@ -3,7 +3,7 @@ using System.Xml;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace AIMLbot.AIMLTagHandlers
+namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
     /// The sentence element tells the AIML interpreter to render the contents of the element 
@@ -15,7 +15,7 @@ namespace AIMLbot.AIMLTagHandlers
     /// If no character in this string has a different uppercase version, based on the Unicode 
     /// standard, then the original string is returned. 
     /// </summary>
-    public class sentence : AIMLbot.Utils.AIMLTagHandler
+    public class sentence : RTParser.Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -26,11 +26,11 @@ namespace AIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public sentence(AIMLbot.Bot bot,
-                        AIMLbot.User user,
-                        AIMLbot.Utils.SubQuery query,
-                        AIMLbot.Request request,
-                        AIMLbot.Result result,
+        public sentence(RTParser.Bot bot,
+                        RTParser.User user,
+                        RTParser.Utils.SubQuery query,
+                        RTParser.Request request,
+                        RTParser.Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -40,10 +40,10 @@ namespace AIMLbot.AIMLTagHandlers
         {
             if(this.templateNode.Name.ToLower()=="sentence")
             {
-                if (this.templateNode.InnerText.Length > 0)
+                if (templateNodeInnerText.Length > 0)
                 {
                     StringBuilder result = new StringBuilder();
-                    char[] letters = this.templateNode.InnerText.Trim().ToCharArray();
+                    char[] letters = templateNodeInnerText.Trim().ToCharArray();
                     bool doChange = true;
                     for (int i = 0; i < letters.Length; i++)
                     {
@@ -79,8 +79,8 @@ namespace AIMLbot.AIMLTagHandlers
                     // atomic version of the node
                     XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
                     star recursiveStar = new star(this.bot, this.user, this.query, this.request, this.result, starNode);
-                    this.templateNode.InnerText = recursiveStar.Transform();
-                    if (this.templateNode.InnerText.Length > 0)
+                    templateNodeInnerText = recursiveStar.Transform();
+                    if (templateNodeInnerText.Length > 0)
                     {
                         return this.ProcessChange();
                     }

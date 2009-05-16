@@ -4,7 +4,7 @@ using System.Xml;
 using System.IO;
 using System.Text;
 
-namespace AIMLbot.Utils
+namespace RTParser.Utils
 {
     /// <summary>
     /// A utility class for loading AIML files from disk into the graphmaster structure that 
@@ -16,14 +16,14 @@ namespace AIMLbot.Utils
         /// <summary>
         /// The bot whose brain is being processed
         /// </summary>
-        private AIMLbot.Bot bot;
+        private RTParser.Bot bot;
         #endregion
 
         /// <summary>
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot whose brain is being processed</param>
-        public AIMLLoader(AIMLbot.Bot bot)
+        public AIMLLoader(RTParser.Bot bot)
         {
             this.bot = bot;
         }
@@ -314,8 +314,8 @@ namespace AIMLbot.Utils
             StringBuilder result = new StringBuilder();
 
             // objects for normalization of the input
-            Normalize.ApplySubstitutions substitutor = new AIMLbot.Normalize.ApplySubstitutions(this.bot);
-            Normalize.StripIllegalCharacters stripper = new AIMLbot.Normalize.StripIllegalCharacters(this.bot);
+            Normalize.ApplySubstitutions substitutor = new RTParser.Normalize.ApplySubstitutions(this.bot);
+            Normalize.StripIllegalCharacters stripper = new RTParser.Normalize.StripIllegalCharacters(this.bot);
 
             string substitutedInput = substitutor.Transform(input);
             // split the pattern into it's component words

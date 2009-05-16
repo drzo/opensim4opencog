@@ -2,7 +2,7 @@ using System;
 using System.Text;
 using System.Xml;
 
-namespace AIMLbot.AIMLTagHandlers
+namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
     /// The star element indicates that an AIML interpreter should substitute the value "captured" 
@@ -19,7 +19,7 @@ namespace AIMLbot.AIMLTagHandlers
     /// 
     /// The star element does not have any content. 
     /// </summary>
-    public class star : AIMLbot.Utils.AIMLTagHandler
+    public class star : RTParser.Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -30,11 +30,11 @@ namespace AIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public star(AIMLbot.Bot bot,
-                        AIMLbot.User user,
-                        AIMLbot.Utils.SubQuery query,
-                        AIMLbot.Request request,
-                        AIMLbot.Result result,
+        public star(RTParser.Bot bot,
+                        RTParser.User user,
+                        RTParser.Utils.SubQuery query,
+                        RTParser.Request request,
+                        RTParser.Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
