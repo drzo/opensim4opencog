@@ -36,16 +36,10 @@ namespace RTParser.AIMLTagHandlers
             {
                 if (templateNodeInnerText.Length > 0)
                 {
-                    return lookup(Recurse());
+                    return this.bot.Paraphrase(Recurse());
                 }
             }
             return string.Empty;
         }
-
-        private string lookup(string text)
-        {
-            return bot.EvalSubL("(generate-phrase '" + text + ")",null);
-        }
-
     }
 }

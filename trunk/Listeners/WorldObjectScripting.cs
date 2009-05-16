@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using AIMLbot;
+using RTParser;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
