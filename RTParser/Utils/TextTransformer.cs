@@ -1,6 +1,6 @@
 using System;
 
-namespace AIMLbot.Utils
+namespace RTParser.Utils
 {
     /// <summary>
     /// Encapsulates all the required methods and attributes for any text transformation.
@@ -22,7 +22,7 @@ namespace AIMLbot.Utils
         /// <summary>
         /// The bot that this transformation is connected with
         /// </summary>
-        public AIMLbot.Bot bot;
+        public RTParser.Bot bot;
 
         /// <summary>
         /// The input string to be transformed in some way
@@ -47,7 +47,7 @@ namespace AIMLbot.Utils
         /// </summary>
         /// <param name="bot">The bot this transformer is a part of</param>
         /// <param name="inputString">The input string to be transformed</param>
-        public TextTransformer(AIMLbot.Bot bot, string inputString)
+        public TextTransformer(RTParser.Bot bot, string inputString)
         {
             this.bot = bot;
             this.inputString = inputString;
@@ -57,7 +57,7 @@ namespace AIMLbot.Utils
         /// ctor
         /// </summary>
         /// <param name="bot">The bot this transformer is a part of</param>
-        public TextTransformer(AIMLbot.Bot bot)
+        public TextTransformer(RTParser.Bot bot)
         {
             this.bot = bot;
             this.inputString = string.Empty;

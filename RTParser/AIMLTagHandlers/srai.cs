@@ -2,7 +2,7 @@ using System;
 using System.Xml;
 using System.Text;
 
-namespace AIMLbot.AIMLTagHandlers
+namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
     /// The srai element instructs the AIML interpreter to pass the result of processing the contents 
@@ -13,7 +13,7 @@ namespace AIMLbot.AIMLTagHandlers
     /// As with all AIML elements, nested forms should be parsed from inside out, so embedded srais are 
     /// perfectly acceptable. 
     /// </summary>
-    public class srai : AIMLbot.Utils.AIMLTagHandler
+    public class srai : RTParser.Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -24,11 +24,11 @@ namespace AIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public srai(AIMLbot.Bot bot,
-                        AIMLbot.User user,
-                        AIMLbot.Utils.SubQuery query,
-                        AIMLbot.Request request,
-                        AIMLbot.Result result,
+        public srai(RTParser.Bot bot,
+                        RTParser.User user,
+                        RTParser.Utils.SubQuery query,
+                        RTParser.Request request,
+                        RTParser.Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -38,9 +38,9 @@ namespace AIMLbot.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "srai")
             {
-                if (this.templateNode.InnerText.Length > 0)
+                if (templateNodeInnerText.Length > 0)
                 {
-                    Request subRequest = new Request(this.templateNode.InnerText, this.user, this.bot);
+                    Request subRequest = new Request(templateNodeInnerText, this.user, this.bot);
                     subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
                     Result subQuery = this.bot.Chat(subRequest);
                     this.request.hasTimedOut = subRequest.hasTimedOut;

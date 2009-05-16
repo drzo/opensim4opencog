@@ -1,20 +1,16 @@
 using System;
+using System.Collections.Generic;
 using System.Xml;
 using System.Text;
 
 namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
-    /// The lowercase element tells the AIML interpreter to render the contents of the element 
-    /// in lowercase, as defined (if defined) by the locale indicated by the specified language
-    /// (if specified). 
-    /// 
-    /// If no character in this string has a different lowercase version, based on the Unicode 
-    /// standard, then the original string is returned. 
+    /// &lt;guard&gt; translates a Cyc symbol into an English word/phrase
     /// </summary>
-    public class lowercase : RTParser.Utils.AIMLTagHandler
+    public class guard : RTParser.Utils.AIMLTagHandler
     {
-        /// <summary>
+        /// <summary>                    s
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot involved in this request</param>
@@ -23,7 +19,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public lowercase(RTParser.Bot bot,
+        public guard(RTParser.Bot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -33,13 +29,18 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
+
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "lowercase")
+            if (this.templateNode.Name.ToLower() == "guard")
             {
-                return templateNodeInnerText.ToLower(this.bot.Locale);
+                if (templateNodeInnerText.Length > 0)
+                {
+                    return string.Format("(Guarded {0})", Recurse());                    
+                }
             }
             return string.Empty;
         }
+
     }
 }

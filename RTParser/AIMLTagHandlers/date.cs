@@ -2,7 +2,7 @@ using System;
 using System.Xml;
 using System.Text;
 
-namespace AIMLbot.AIMLTagHandlers
+namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
     /// The date element tells the AIML interpreter that it should substitute the system local 
@@ -10,7 +10,7 @@ namespace AIMLbot.AIMLTagHandlers
     /// 
     /// The date element does not have any content. 
     /// </summary>
-    public class date : AIMLbot.Utils.AIMLTagHandler
+    public class date : RTParser.Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -21,11 +21,11 @@ namespace AIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public date(AIMLbot.Bot bot,
-                        AIMLbot.User user,
-                        AIMLbot.Utils.SubQuery query,
-                        AIMLbot.Request request,
-                        AIMLbot.Result result,
+        public date(RTParser.Bot bot,
+                        RTParser.User user,
+                        RTParser.Utils.SubQuery query,
+                        RTParser.Request request,
+                        RTParser.Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {

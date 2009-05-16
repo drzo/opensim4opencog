@@ -1,20 +1,16 @@
 using System;
+using System.Collections.Generic;
 using System.Xml;
 using System.Text;
 
 namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
-    /// The lowercase element tells the AIML interpreter to render the contents of the element 
-    /// in lowercase, as defined (if defined) by the locale indicated by the specified language
-    /// (if specified). 
-    /// 
-    /// If no character in this string has a different lowercase version, based on the Unicode 
-    /// standard, then the original string is returned. 
+    /// &lt;cycphrase&gt; translates a Cyc symbol into an English word/phrase
     /// </summary>
-    public class lowercase : RTParser.Utils.AIMLTagHandler
+    public class cycphrase : RTParser.Utils.AIMLTagHandler
     {
-        /// <summary>
+        /// <summary>                    s
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot involved in this request</param>
@@ -23,7 +19,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public lowercase(RTParser.Bot bot,
+        public cycphrase(RTParser.Bot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -33,13 +29,23 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
+
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "lowercase")
+            if (this.templateNode.Name.ToLower() == "cycphrase")
             {
-                return templateNodeInnerText.ToLower(this.bot.Locale);
+                if (templateNodeInnerText.Length > 0)
+                {
+                    return lookup(Recurse());
+                }
             }
             return string.Empty;
         }
+
+        private string lookup(string text)
+        {
+            return bot.EvalSubL("(generate-phrase '" + text + ")",null);
+        }
+
     }
 }

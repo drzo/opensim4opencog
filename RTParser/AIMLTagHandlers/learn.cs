@@ -3,13 +3,13 @@ using System.Xml;
 using System.Text;
 using System.IO;
 
-namespace AIMLbot.AIMLTagHandlers
+namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
     /// The learn element instructs the AIML interpreter to retrieve a resource specified by a URI, 
     /// and to process its AIML object contents.
     /// </summary>
-    public class learn : AIMLbot.Utils.AIMLTagHandler
+    public class learn : RTParser.Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -20,11 +20,11 @@ namespace AIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public learn(AIMLbot.Bot bot,
-                        AIMLbot.User user,
-                        AIMLbot.Utils.SubQuery query,
-                        AIMLbot.Request request,
-                        AIMLbot.Result result,
+        public learn(RTParser.Bot bot,
+                        RTParser.User user,
+                        RTParser.Utils.SubQuery query,
+                        RTParser.Request request,
+                        RTParser.Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -36,9 +36,9 @@ namespace AIMLbot.AIMLTagHandlers
             {
                 // currently only AIML files in the local filesystem can be referenced
                 // ToDo: Network HTTP and web service based learning
-                if (this.templateNode.InnerText.Length > 0)
+                if (templateNodeInnerText.Length > 0)
                 {
-                    string path = this.templateNode.InnerText;
+                    string path = templateNodeInnerText;
                     FileInfo fi = new FileInfo(path);
                     if (fi.Exists)
                     {

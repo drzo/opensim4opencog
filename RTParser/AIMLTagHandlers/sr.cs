@@ -2,7 +2,7 @@ using System;
 using System.Xml;
 using System.Text;
 
-namespace AIMLbot.AIMLTagHandlers
+namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
     /// The sr element is a shortcut for: 
@@ -11,7 +11,7 @@ namespace AIMLbot.AIMLTagHandlers
     /// 
     /// The atomic sr does not have any content. 
     /// </summary>
-    public class sr : AIMLbot.Utils.AIMLTagHandler
+    public class sr : RTParser.Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -22,11 +22,11 @@ namespace AIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public sr(AIMLbot.Bot bot,
-                        AIMLbot.User user,
-                        AIMLbot.Utils.SubQuery query,
-                        AIMLbot.Request request,
-                        AIMLbot.Result result,
+        public sr(RTParser.Bot bot,
+                        RTParser.User user,
+                        RTParser.Utils.SubQuery query,
+                        RTParser.Request request,
+                        RTParser.Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -40,7 +40,7 @@ namespace AIMLbot.AIMLTagHandlers
                 star recursiveStar = new star(this.bot, this.user, this.query, this.request, this.result, starNode);
                 string starContent = recursiveStar.Transform();
 
-                XmlNode sraiNode = AIMLbot.Utils.AIMLTagHandler.getNode("<srai>"+starContent+"</srai>");
+                XmlNode sraiNode = RTParser.Utils.AIMLTagHandler.getNode(String.Format("<srai>{0}</srai>", starContent));
                 srai sraiHandler = new srai(this.bot, this.user, this.query, this.request, this.result, sraiNode);
                 return sraiHandler.Transform();
             }

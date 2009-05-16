@@ -2,7 +2,7 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 
-namespace AIMLbot.Normalize
+namespace RTParser.Normalize
 {
     /// <summary>
     /// Splits the raw input into its constituent sentences. Split using the tokens found in 
@@ -13,7 +13,7 @@ namespace AIMLbot.Normalize
         /// <summary>
         /// The bot this sentence splitter is associated with
         /// </summary>
-        private AIMLbot.Bot bot;
+        private RTParser.Bot bot;
 
         /// <summary>
         /// The raw input string
@@ -25,7 +25,7 @@ namespace AIMLbot.Normalize
         /// </summary>
         /// <param name="bot">The bot this sentence splitter is associated with</param>
         /// <param name="inputString">The raw input string to be processed</param>
-        public SplitIntoSentences(AIMLbot.Bot bot, string inputString)
+        public SplitIntoSentences(RTParser.Bot bot, string inputString)
         {
             this.bot = bot;
             this.inputString = inputString;
@@ -35,7 +35,7 @@ namespace AIMLbot.Normalize
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot this sentence splitter is associated with</param>
-        public SplitIntoSentences(AIMLbot.Bot bot)
+        public SplitIntoSentences(RTParser.Bot bot)
         {
             this.bot = bot;
         }

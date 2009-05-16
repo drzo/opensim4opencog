@@ -2,7 +2,7 @@ using System;
 using System.Xml;
 using System.Text;
 
-namespace AIMLbot.AIMLTagHandlers
+namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
     /// The set element instructs the AIML interpreter to set the value of a predicate to the result 
@@ -21,7 +21,7 @@ namespace AIMLbot.AIMLTagHandlers
     /// 
     /// A set element may contain any AIML template elements.
     /// </summary>
-    public class set : AIMLbot.Utils.AIMLTagHandler
+    public class set : RTParser.Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -32,11 +32,11 @@ namespace AIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public set(AIMLbot.Bot bot,
-                        AIMLbot.User user,
-                        AIMLbot.Utils.SubQuery query,
-                        AIMLbot.Request request,
-                        AIMLbot.Result result,
+        public set(RTParser.Bot bot,
+                        RTParser.User user,
+                        RTParser.Utils.SubQuery query,
+                        RTParser.Request request,
+                        RTParser.Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -52,9 +52,9 @@ namespace AIMLbot.AIMLTagHandlers
                     {
                         if (this.templateNode.Attributes[0].Name.ToLower() == "name")
                         {
-                            if (this.templateNode.InnerText.Length > 0)
+                            if (templateNodeInnerText.Length > 0)
                             {
-                                this.user.Predicates.addSetting(this.templateNode.Attributes[0].Value, this.templateNode.InnerText);
+                                this.user.Predicates.addSetting(this.templateNode.Attributes[0].Value, templateNodeInnerText);
                                 return this.user.Predicates.grabSetting(this.templateNode.Attributes[0].Value);
                             }
                             else
