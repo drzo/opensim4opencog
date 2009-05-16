@@ -7,11 +7,22 @@ using DotLisp;
 using System.Collections;
 using System.IO;
 using System.Text.RegularExpressions;
+using org.opencyc.cycobject;
 
 namespace cogbot.TheOpenSims
 {
     public class SimObjectType : BotMentalAspect
     {
+
+        private CycFort fort;
+        public CycFort GetCycFort()
+        {
+            if (fort == null)
+            {
+                fort = TextForm.Cyclifier.FindOrCreateCycFort(this);
+            }
+            return fort;
+        }
 
         // Attachments
         public List<string> AcceptsChild = new List<string>(); // types that can attach to it

@@ -27,7 +27,6 @@ namespace cogbot.Listeners
         readonly static List<ThreadStart> ShutdownHooks = new List<ThreadStart>();
 
 
-
         public static implicit operator GridClient(WorldObjects m)
         {
             return m.client.gridClient;
@@ -340,8 +339,10 @@ namespace cogbot.Listeners
                 //WorldMaster(false);
                 //RegisterAll();
                 SimPaths = new WorldPathSystem(this);
+                InitConsoleBot();
             }
         }
+
         static void Lagometer()
         {
             while (true)
@@ -349,10 +350,7 @@ namespace cogbot.Listeners
                 int tick = Environment.TickCount;
                 lock (UpdateQueue)
                 {
-                    UpdateQueue.Enqueue(() =>
-                                            {
-                                                Console.WriteLine("\nUpdate lag " + (Environment.TickCount - tick) + "ms");
-                                            });
+                    UpdateQueue.Enqueue(() => Console.WriteLine("\nUpdate lag {0}ms" ,(Environment.TickCount - tick)));
                 }
                 Thread.Sleep(30000);
             }
@@ -3218,7 +3216,8 @@ namespace cogbot.Listeners
 
         public override void Self_OnInstantMessage(InstantMessage im, Simulator simulator)
         {
-            lock (UpdateQueue) UpdateQueue.Enqueue(() => { SendNewEvent("on-instantmessage", im.FromAgentName, im.Message, im.ToAgentID, im.Offline, im.IMSessionID, im.GroupIM, im.Position, im.Dialog, im.ParentEstateID); client.ExecuteCommand(im.Message); });
+            lock (UpdateQueue) UpdateQueue.Enqueue(() => { SendNewEvent("on-instantmessage", im.FromAgentName, im.Message, im.ToAgentID, im.Offline, im.IMSessionID, im.GroupIM, im.Position, im.Dialog, im.ParentEstateID); 
+                client.ExecuteCommand(im.Message); });
         }
 
         public override void Self_OnScriptQuestion(Simulator simulator, UUID taskID, UUID itemID, string objectName, string objectOwner, ScriptPermission questions)

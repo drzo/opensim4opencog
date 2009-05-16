@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using OpenMetaverse;
 using cogbot.Listeners;
 using System.Threading;
+using org.opencyc.cycobject;
 using PathSystem3D.Navigation;
 using System.Collections;
 using PathSystem3D;
@@ -14,7 +15,6 @@ namespace cogbot.TheOpenSims
 
     public class SimAvatarImpl : SimObjectImpl, SimMover, cogbot.TheOpenSims.SimAvatar
     {
-
         public override bool IsKilled
         {
             // get { return WasKilled; }

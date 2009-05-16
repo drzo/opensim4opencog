@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using cogbot.DotCYC;
 using OpenMetaverse; //using libsecondlife;
 //using OpenMetaverseTypes;
 
@@ -34,6 +35,8 @@ namespace cogbot
 
     public partial class TextForm : Form
     {
+        public static SimCyclifier Cyclifier;
+
         public static bool DownloadTextures = false;
         public static int nextTcpPort = 5555;
         static public TextForm SingleInstance = null;
@@ -161,6 +164,7 @@ namespace cogbot
                     evalLispString("(progn " + config.startupLisp + ")");
                 }
             })).Start();
+            if (Cyclifier==null) Cyclifier = new SimCyclifier(this);
         }
 
         public void RegisterBotSystemCommands(Assembly assembly)

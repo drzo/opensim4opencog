@@ -7,12 +7,15 @@ using OpenMetaverse;
 using System.IO;
 using DotLisp;
 using System.Collections;
+using org.opencyc.cycobject;
 
 namespace cogbot.TheOpenSims
 {
     // Mental Aspects
     public interface BotMentalAspect
     {
+        CycFort GetCycFort();
+
         //public BotMentalAspect(string s)
         //{
         //    AspectName = s;

@@ -420,6 +420,30 @@
   </Project>
 
 
+    <Project name="RTParser" path="RTParser" type="Library">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+            <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
+          <OutputPath>../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../bin/</ReferencePath>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="System.Web" localCopy="false"/>
+      <Files>
+          <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="AssemblyInfo.cs"/><Exclude name="Program.cs"/></Match>
+          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+      </Files>
+  </Project>
+
    <Project name="cogbot" path="." type="Exe">
       <Configuration name="Debug">
         <Options>
@@ -453,6 +477,7 @@
       <Reference name="System.Web" localCopy="false"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="ABCL.Net.dll" localCopy="false"/>
+       <Reference name="RTParser" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
         <!--   
@@ -476,8 +501,10 @@
           <Match path="DotCYC" pattern="CycConnectionForm.resx" recurse="false" subType="Settings"  buildAction="EmbeddedResource"/>
           <Match path="DotCYC" pattern="CycConnectionForm.cs" recurse="false" subType="Form"/>
           <Match path="DotCYC" pattern="CycConnectionForm.Designer.cs" recurse="false"  subType="Form"/>
+          <Match path="DotCYC" pattern="*.cs" recurse="false"/>
           <Match path="ScriptEngines" pattern="*.cs" recurse="true"/>
           <Match path="TheOpenSims" pattern="*.cs" recurse="true"/>
+        <!--  <Match path="RTParser" pattern="*.cs" recurse="true"><Exclude name="AssemblyInfo.cs"/></Match>-->
          <!-- <Match path="Simian" pattern="*.cs" recurse="true">
               <Exclude name="AssemblyInfo.cs"/>
               <Exclude name="Options.cs"/>

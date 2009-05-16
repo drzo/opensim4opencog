@@ -19,7 +19,7 @@ namespace cogbot.DotCYC
     public partial class CycConnectionForm : Form
     {
     //  WinformREPL.REPLForm replForm = null;
-        private CycAccess m_cycAccess = null;
+        static private CycAccess m_cycAccess = null;
         public CycAccess cycAccess
         {
             get
