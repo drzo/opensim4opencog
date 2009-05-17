@@ -12,7 +12,7 @@ namespace RTParser
         /// <summary>
         /// The bot that is providing the answer
         /// </summary>
-        public Bot bot;
+        public RTPBot bot;
 
         /// <summary>
         /// The user for whom this is a result
@@ -119,7 +119,7 @@ namespace RTParser
         /// <param name="user">The user for whom this is a result</param>
         /// <param name="bot">The bot providing the result</param>
         /// <param name="request">The request that originated this result</param>
-        public Result(User user, Bot bot, Request request)
+        public Result(User user, RTPBot bot, Request request)
         {
             this.user = user;
             this.bot = bot;

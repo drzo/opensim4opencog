@@ -16,20 +16,20 @@ using org.opencyc.cycobject;
 namespace RTParser
 {
     /// <summary>
-    /// Encapsulates a bot. If no settings.xml file is found or referenced the bot will try to
+    /// Encapsulates a Proccessor. If no settings.xml file is found or referenced the Proccessor will try to
     /// default to safe settings.
     /// </summary>
-    public class Bot
+    public class RTPBot
     {
         #region Attributes
 
         /// <summary>
-        /// A dictionary object that looks after all the settings associated with this bot
+        /// A dictionary object that looks after all the settings associated with this Proccessor
         /// </summary>
         public SettingsDictionary GlobalSettings;
 
         /// <summary>
-        /// A dictionary of all the gender based substitutions used by this bot
+        /// A dictionary of all the gender based substitutions used by this Proccessor
         /// </summary>
         public SettingsDictionary GenderSubstitutions;
 
@@ -88,12 +88,12 @@ namespace RTParser
         }
 
         /// <summary>
-        /// Flag to show if the bot is willing to accept user input
+        /// Flag to show if the Proccessor is willing to accept user input
         /// </summary>
         public bool isAcceptingUserInput = true;
 
         /// <summary>
-        /// The message to show if a user tries to use the bot whilst it is set to not process user input
+        /// The message to show if a user tries to use the Proccessor whilst it is set to not process user input
         /// </summary>
         private string NotAcceptingUserInputMessage
         {
@@ -126,7 +126,7 @@ namespace RTParser
         }
 
         /// <summary>
-        /// The locale of the bot as a CultureInfo object
+        /// The locale of the Proccessor as a CultureInfo object
         /// </summary>
         public CultureInfo Locale
         {
@@ -186,7 +186,7 @@ namespace RTParser
         }
 
         /// <summary>
-        /// Flag to denote if the bot is writing messages to its logs
+        /// Flag to denote if the Proccessor is writing messages to its logs
         /// </summary>
         public bool IsLogging
         {
@@ -205,7 +205,7 @@ namespace RTParser
         }
 
         /// <summary>
-        /// Flag to denote if the bot will email the botmaster using the AdminEmail setting should an error
+        /// Flag to denote if the Proccessor will email the botmaster using the AdminEmail setting should an error
         /// occur
         /// </summary>
         public bool WillCallHome
@@ -225,12 +225,12 @@ namespace RTParser
         }
 
         /// <summary>
-        /// When the Bot was initialised
+        /// When the RTPBot was initialised
         /// </summary>
         public DateTime StartedOn = DateTime.Now;
 
         /// <summary>
-        /// The supposed sex of the bot
+        /// The supposed sex of the Proccessor
         /// </summary>
         public Gender Sex
         {
@@ -291,25 +291,25 @@ namespace RTParser
         }
 
         /// <summary>
-        /// The number of categories this bot has in its graphmaster "brain"
+        /// The number of categories this Proccessor has in its graphmaster "brain"
         /// </summary>
         public int Size;
 
         /// <summary>
-        /// The "brain" of the bot
+        /// The "brain" of the Proccessor
         /// </summary>
         public RTParser.Utils.Node Graphmaster;
 
         /// <summary>
         /// If set to false the input from AIML files will undergo the same normalization process that
-        /// user input goes through. If true the bot will assume the AIML is correct. Defaults to true.
+        /// user input goes through. If true the Proccessor will assume the AIML is correct. Defaults to true.
         /// </summary>
         public bool TrustAIML=true;
 
         /// <summary>
         /// The maximum number of characters a "that" element of a path is allowed to be. Anything above
         /// this length will cause "that" to be "*". This is to avoid having the graphmaster process
-        /// huge "that" elements in the path that might have been caused by the bot reporting third party
+        /// huge "that" elements in the path that might have been caused by the Proccessor reporting third party
         /// data.
         /// </summary>
         public int MaxThatSize = 256;
@@ -331,7 +331,7 @@ namespace RTParser
         /// <summary>
         /// Ctor
         /// </summary>
-        public Bot()
+        public RTPBot()
         {
             this.setup();  
         }
@@ -339,7 +339,7 @@ namespace RTParser
         #region Settings methods
 
         /// <summary>
-        /// Loads AIML from .aiml files into the graphmaster "brain" of the bot
+        /// Loads AIML from .aiml files into the graphmaster "brain" of the Proccessor
         /// </summary>
         public void loadAIMLFromFiles()
         {
@@ -348,7 +348,7 @@ namespace RTParser
         }
 
         /// <summary>
-        /// Allows the bot to load a new XML version of some AIML
+        /// Allows the Proccessor to load a new XML version of some AIML
         /// </summary>
         /// <param name="newAIML">The XML document containing the AIML</param>
         /// <param name="filename">The originator of the XML document</param>
@@ -505,26 +505,26 @@ namespace RTParser
             }
             if (!this.GlobalSettings.containsSettingCalled("notacceptinguserinputmessage"))
             {
-                this.GlobalSettings.addSetting("notacceptinguserinputmessage", "This bot is currently set to not accept user input.");
+                this.GlobalSettings.addSetting("notacceptinguserinputmessage", "This Proccessor is currently set to not accept user input.");
             }
             if (!this.GlobalSettings.containsSettingCalled("stripperregex"))
             {
                 this.GlobalSettings.addSetting("stripperregex", "[^0-9a-zA-Z]");
             }
 
-            // Load the dictionaries for this Bot from the various configuration files
+            // Load the dictionaries for this RTPBot from the various configuration files
             this.Person2Substitutions.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("person2substitutionsfile")));
             this.PersonSubstitutions.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("personsubstitutionsfile")));
             this.GenderSubstitutions.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("gendersubstitutionsfile")));
             this.DefaultPredicates.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("defaultpredicates")));
             this.Substitutions.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("substitutionsfile")));
 
-            // Grab the splitters for this bot
+            // Grab the splitters for this Proccessor
             this.loadSplitters(Path.Combine(this.PathToConfigFiles,this.GlobalSettings.grabSetting("splittersfile")));
         }
 
         /// <summary>
-        /// Loads the splitters for this bot from the supplied config file (or sets up some safe defaults)
+        /// Loads the splitters for this Proccessor from the supplied config file (or sets up some safe defaults)
         /// </summary>
         /// <param name="pathToSplitters">Path to the config file</param>
         private void loadSplitters(string pathToSplitters)
@@ -558,7 +558,7 @@ namespace RTParser
                 // we don't have any splitters, so lets make do with these...
                 this.Splitters.Add(".");
                 this.Splitters.Add("!");
-                this.Splitters.Add("?");
+                //this.Splitters.Add("?");
                 this.Splitters.Add(";");
             }
         }
@@ -572,7 +572,7 @@ namespace RTParser
         public string LastLogMessage=string.Empty;
 
         /// <summary>
-        /// Writes a (timestamped) message to the bot's log.
+        /// Writes a (timestamped) message to the Proccessor's log.
         /// 
         /// Log files have the form of yyyyMMdd.log.
         /// </summary>
@@ -635,7 +635,7 @@ namespace RTParser
         }
 
         /// <summary>
-        /// Given a request containing user input, produces a result from the bot
+        /// Given a request containing user input, produces a result from the Proccessor
         /// </summary>
         /// <param name="request">the request from the user</param>
         /// <returns>the result to be output to the user</returns>
@@ -663,6 +663,9 @@ namespace RTParser
                     query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                     result.SubQueries.Add(query);
                 }
+
+                //todo pick and chose the qeuries
+                Console.WriteLine("Found " + result.SubQueries.Count + " queries");
 
                 // process the templates into appropriate output
                 foreach (SubQuery query in result.SubQueries)
@@ -703,7 +706,7 @@ namespace RTParser
         }
 
         /// <summary>
-        /// Recursively evaluates the template nodes returned from the bot
+        /// Recursively evaluates the template nodes returned from the Proccessor
         /// </summary>
         /// <param name="node">the node to evaluate</param>
         /// <param name="query">the query that produced this node</param>
@@ -714,9 +717,9 @@ namespace RTParser
         private string processNode(XmlNode node, SubQuery query, Request request, Result result, User user)
         {
             // check for timeout (to avoid infinite loops)
-            if (request.StartedOn.AddMilliseconds(request.bot.TimeOut) < DateTime.Now)
+            if (request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
             {
-                request.bot.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" + request.rawInput + "\" processing template: \""+query.Template+"\"");
+                request.Proccessor.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" + request.rawInput + "\" processing template: \""+query.Template+"\"");
                 request.hasTimedOut = true;
                 return string.Empty;
             }
@@ -931,7 +934,7 @@ namespace RTParser
                     newCustomTag.request = request;
                     newCustomTag.result = result;
                     newCustomTag.templateNode = node;
-                    newCustomTag.bot = this;
+                    newCustomTag.Proc = this;
                     return newCustomTag;
                 }
             }
@@ -947,7 +950,7 @@ namespace RTParser
 
         /// <summary>
         /// Saves the graphmaster node (and children) to a binary file to avoid processing the AIML each time the 
-        /// bot starts
+        /// Proccessor starts
         /// </summary>
         /// <param name="path">the path to the file for saving</param>
         public void saveToBinaryFile(string path)
@@ -1028,7 +1031,7 @@ namespace RTParser
         #region Phone Home
         /// <summary>
         /// Attempts to send an email to the botmaster at the AdminEmail address setting with error messages
-        /// resulting from a query to the bot
+        /// resulting from a query to the Proccessor
         /// </summary>
         /// <param name="errorMessage">the resulting error message</param>
         /// <param name="request">the request object that encapsulates all sorts of useful information</param>
@@ -1038,9 +1041,9 @@ namespace RTParser
             msg.Subject = "WARNING! AIMLBot has encountered a problem...";
             string message = @"Dear Botmaster,
 
-This is an automatically generated email to report errors with your bot.
+This is an automatically generated email to report errors with your Proccessor.
 
-At *TIME* the bot encountered the following error:
+At *TIME* the Proccessor encountered the following error:
 
 ""*MESSAGE*""
 
@@ -1110,8 +1113,15 @@ The AIMLbot program.
             string result = "(EVAL-SUBL " + cmd + ")";
             try
             {
+                Console.Write(result);
+                Console.Out.Flush();
                 Object oresult = GetCycAccess.converseList("(list " + cmd + ")").first();
-                result = ""+oresult;
+                Console.WriteLine( " => " + oresult);
+                result = "" + oresult;
+                if (oresult is CycObject)
+                {
+                    result = ((CycObject)oresult).cyclifyWithEscapeChars();                    
+                }
                 if (!String.IsNullOrEmpty(filter) && filter == "paraphrase")
                 {
                     return this.Paraphrase(result);
@@ -1119,7 +1129,9 @@ The AIMLbot program.
             }
             catch (Exception e)
             {
-                result += "" + e;
+                Console.WriteLine(""+e);
+                Console.Out.Flush();
+                return null;
             }
             return result;
         }
@@ -1136,7 +1148,7 @@ The AIMLbot program.
             if (filter.Length > 0)
             {
                 if (filter == "NIL") return true;
-                if (this.EvalSubL(String.Format("(fi-ask '(#$isa {0} #${1}) #$EverythingPSC)", term, filter),null) == "NIL")
+                if (this.EvalSubL(String.Format("(fi-ask '(#$isa {0} {1}) #$EverythingPSC)", term, Cyclify(filter)),null) == "NIL")
                     return false;
             }
             return true;
@@ -1144,7 +1156,11 @@ The AIMLbot program.
 
         internal string Paraphrase(string text)
         {
-            if (!text.StartsWith("#")) text = String.Format("'{0}", text);
+            text = Cyclify(text);
+            if (!text.StartsWith("#"))
+            {   //todo is a list then?
+                text = String.Format("'{0}", text);
+            }
             return EvalSubL(String.Format("(generate-phrase {0})", text), null);
         }
 
@@ -1154,13 +1170,20 @@ The AIMLbot program.
         {
             if (String.IsNullOrEmpty(langu))
             {
-                langu = "bot";  
+                langu = "Proccessor";  
             }
             string s = "<The system tag should be doing '" + cmd + "' lang=" + langu + ">";
             writeToLog(s);
             if (langu == "subl") return EvalSubL(cmd, null);
             return s;
             
+        }
+
+        internal string Cyclify(string mt)
+        {
+            mt = mt.Trim();
+            if (mt.StartsWith("(") || mt.StartsWith("#$")) return mt;
+            return "#$" + mt;
         }
     }
 }

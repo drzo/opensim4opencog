@@ -20,9 +20,9 @@ namespace RTParser.Utils
         protected string inputString;
 
         /// <summary>
-        /// The bot that this transformation is connected with
+        /// The Proc that this transformation is connected with
         /// </summary>
-        public RTParser.Bot bot;
+        public RTParser.RTPBot Proc;
 
         /// <summary>
         /// The input string to be transformed in some way
@@ -47,9 +47,9 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="bot">The bot this transformer is a part of</param>
         /// <param name="inputString">The input string to be transformed</param>
-        public TextTransformer(RTParser.Bot bot, string inputString)
+        public TextTransformer(RTParser.RTPBot bot, string inputString)
         {
-            this.bot = bot;
+            this.Proc = bot;
             this.inputString = inputString;
         }
 
@@ -57,9 +57,9 @@ namespace RTParser.Utils
         /// ctor
         /// </summary>
         /// <param name="bot">The bot this transformer is a part of</param>
-        public TextTransformer(RTParser.Bot bot)
+        public TextTransformer(RTParser.RTPBot bot)
         {
-            this.bot = bot;
+            this.Proc = bot;
             this.inputString = string.Empty;
         }
 
@@ -68,7 +68,7 @@ namespace RTParser.Utils
         /// </summary>
         public TextTransformer()
         {
-            this.bot = null;
+            this.Proc = null;
             this.inputString = string.Empty;
         }
 

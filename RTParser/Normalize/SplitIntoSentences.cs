@@ -13,7 +13,7 @@ namespace RTParser.Normalize
         /// <summary>
         /// The bot this sentence splitter is associated with
         /// </summary>
-        private RTParser.Bot bot;
+        private RTParser.RTPBot bot;
 
         /// <summary>
         /// The raw input string
@@ -25,7 +25,7 @@ namespace RTParser.Normalize
         /// </summary>
         /// <param name="bot">The bot this sentence splitter is associated with</param>
         /// <param name="inputString">The raw input string to be processed</param>
-        public SplitIntoSentences(RTParser.Bot bot, string inputString)
+        public SplitIntoSentences(RTParser.RTPBot bot, string inputString)
         {
             this.bot = bot;
             this.inputString = inputString;
@@ -35,7 +35,7 @@ namespace RTParser.Normalize
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot this sentence splitter is associated with</param>
-        public SplitIntoSentences(RTParser.Bot bot)
+        public SplitIntoSentences(RTParser.RTPBot bot)
         {
             this.bot = bot;
         }

@@ -8,34 +8,34 @@ namespace RTParser.Utils
 {
     /// <summary>
     /// A utility class for loading AIML files from disk into the graphmaster structure that 
-    /// forms an AIML bot's "brain"
+    /// forms an AIML RProcessor's "brain"
     /// </summary>
     public class AIMLLoader
     {
         #region Attributes
         /// <summary>
-        /// The bot whose brain is being processed
+        /// The RProcessor whose brain is being processed
         /// </summary>
-        private RTParser.Bot bot;
+        private RTParser.RTPBot RProcessor;
         #endregion
 
         /// <summary>
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot whose brain is being processed</param>
-        public AIMLLoader(RTParser.Bot bot)
+        public AIMLLoader(RTParser.RTPBot bot)
         {
-            this.bot = bot;
+            this.RProcessor = bot;
         }
 
         #region Methods
 
         /// <summary>
-        /// Loads the AIML from files found in the bot's AIMLpath into the bot's brain
+        /// Loads the AIML from files found in the RProcessor's AIMLpath into the RProcessor's brain
         /// </summary>
         public void loadAIML()
         {
-            this.loadAIML(this.bot.PathToAIML);
+            this.loadAIML(this.RProcessor.PathToAIML);
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace RTParser.Utils
             if (Directory.Exists(path))
             {
                 // process the AIML
-                this.bot.writeToLog("Starting to process AIML files found in the directory " + path);
+                this.RProcessor.writeToLog("Starting to process AIML files found in the directory " + path);
 
                 string[] fileEntries = Directory.GetFiles(path, "*.aiml");
                 if (fileEntries.Length > 0)
@@ -56,7 +56,7 @@ namespace RTParser.Utils
                     {
                         this.loadAIMLFile(filename);
                     }
-                    this.bot.writeToLog("Finished processing the AIML files. " + Convert.ToString(this.bot.Size) + " categories processed.");
+                    this.RProcessor.writeToLog("Finished processing the AIML files. " + Convert.ToString(this.RProcessor.Size) + " categories processed.");
                 }
                 else
                 {
@@ -76,7 +76,7 @@ namespace RTParser.Utils
         /// <param name="filename">The name of the file to process</param>
         public void loadAIMLFile(string filename)
         {
-            this.bot.writeToLog("Processing AIML file: " + filename);
+            this.RProcessor.writeToLog("Processing AIML file: " + filename);
             
             // load the document
             XmlDocument doc = new XmlDocument();
@@ -173,18 +173,18 @@ namespace RTParser.Utils
             {
                 try
                 {
-                    this.bot.Graphmaster.addCategory(categoryPath, template.OuterXml, filename);
+                    this.RProcessor.Graphmaster.addCategory(categoryPath, template.OuterXml, filename);
                     // keep count of the number of categories that have been processed
-                    this.bot.Size++;
+                    this.RProcessor.Size++;
                 }
                 catch
                 {
-                    this.bot.writeToLog("ERROR! Failed to load a new category into the graphmaster where the path = " + categoryPath + " and template = " + template.OuterXml + " produced by a category in the file: " + filename);
+                    this.RProcessor.writeToLog("ERROR! Failed to load a new category into the graphmaster where the path = " + categoryPath + " and template = " + template.OuterXml + " produced by a category in the file: " + filename);
                 }
             }
             else
             {
-                this.bot.writeToLog("WARNING! Attempted to load a new category with an empty pattern where the path = " + categoryPath + " and template = " + template.OuterXml + " produced by a category in the file: " + filename);
+                this.RProcessor.writeToLog("WARNING! Attempted to load a new category with an empty pattern where the path = " + categoryPath + " and template = " + template.OuterXml + " produced by a category in the file: " + filename);
             }
         }
 
@@ -255,7 +255,7 @@ namespace RTParser.Utils
             string normalizedThat = "*";
             string normalizedTopic = "*";
 
-            if ((this.bot.TrustAIML) & (!isUserInput))
+            if ((this.RProcessor.TrustAIML) & (!isUserInput))
             {
                 normalizedPattern = pattern.Trim();
                 normalizedThat = that.Trim();
@@ -263,20 +263,7 @@ namespace RTParser.Utils
             }
             else
             {
-                if (true)
-                {
-
-                    normalizedPattern = pattern.Trim();
-                    string normalizedPattern0 = this.Normalize(pattern, isUserInput).Trim();
-                    if (normalizedPattern!=normalizedPattern0)
-                    {
-                        Console.WriteLine(String.Format(";; RTParser *not* transforming '{0}' to '{1}'", normalizedPattern, normalizedPattern0));                        
-                    }
-                }
-                else
-                {
-                    normalizedPattern = this.Normalize(pattern, isUserInput).Trim();
-                }
+                normalizedPattern = this.Normalize(pattern, isUserInput).Trim();
                 normalizedThat = this.Normalize(that, isUserInput).Trim();
                 normalizedTopic = this.Normalize(topicName, isUserInput).Trim();
             }
@@ -295,7 +282,7 @@ namespace RTParser.Utils
 
                 // This check is in place to avoid huge "that" elements having to be processed by the 
                 // graphmaster. 
-                if (normalizedThat.Length > this.bot.MaxThatSize)
+                if (normalizedThat.Length > this.RProcessor.MaxThatSize)
                 {
                     normalizedThat = "*";
                 }
@@ -324,11 +311,23 @@ namespace RTParser.Utils
         /// <returns>The normalized string</returns>
         public string Normalize(string input, bool isUserInput)
         {
+            if (isUserInput && false)
+            {
+
+                String normalizedPattern = input.Trim();
+                while (normalizedPattern.EndsWith("?"))
+                {
+                    normalizedPattern = normalizedPattern.Substring(0, normalizedPattern.Length - 1).Trim();
+                }
+
+                return normalizedPattern;
+            }
+
             StringBuilder result = new StringBuilder();
 
             // objects for normalization of the input
-            Normalize.ApplySubstitutions substitutor = new RTParser.Normalize.ApplySubstitutions(this.bot);
-            Normalize.StripIllegalCharacters stripper = new RTParser.Normalize.StripIllegalCharacters(this.bot);
+            Normalize.ApplySubstitutions substitutor = new RTParser.Normalize.ApplySubstitutions(this.RProcessor);
+            Normalize.StripIllegalCharacters stripper = new RTParser.Normalize.StripIllegalCharacters(this.RProcessor);
 
             string substitutedInput = substitutor.Transform(input);
             // split the pattern into it's component words

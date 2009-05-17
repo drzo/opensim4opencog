@@ -37,6 +37,11 @@ namespace RTParser.Utils
         /// will contain the block of text that the user has inputted that is matched by the wildcard.
         /// </summary>
         public List<string> TopicStar = new List<string>();
+
+        
+        public bool GuardFailed;
+
+
         #endregion
 
         /// <summary>

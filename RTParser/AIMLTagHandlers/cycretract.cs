@@ -20,7 +20,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public cycretract(RTParser.Bot bot,
+        public cycretract(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -36,7 +36,7 @@ namespace RTParser.AIMLTagHandlers
             {                
                 if (templateNodeInnerText.Length > 0)
                 {
-                    return this.bot.EvalSubL(String.Format("(cyc-retract {0})", Recurse()),null);
+                    return this.Proc.EvalSubL(String.Format("(cyc-retract {0})", Recurse()),null);
                 }
             }
             return string.Empty;

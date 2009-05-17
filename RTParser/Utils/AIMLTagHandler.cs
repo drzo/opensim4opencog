@@ -26,7 +26,7 @@ namespace RTParser.Utils
         /// <param name="request">The request itself</param>
         /// <param name="result">The result to be passed back to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public AIMLTagHandler(RTParser.Bot bot,
+        public AIMLTagHandler(RTParser.RTPBot bot,
                                     RTParser.User user,
                                     RTParser.Utils.SubQuery query,
                                     RTParser.Request request,
@@ -65,7 +65,7 @@ namespace RTParser.Utils
         public RTParser.Utils.SubQuery query;
 
         /// <summary>
-        /// A representation of the input into the bot made by the user
+        /// A representation of the input into the Proc made by the user
         /// </summary>
         public RTParser.Request request;
 
@@ -84,7 +84,7 @@ namespace RTParser.Utils
             string before = this.templateNode.InnerText;
             if (true) return before;
             XmlNode templateNode = AIMLTagHandler.getNode(before);
-            string outputSentence = bot.processNodeInside(templateNode, query, request, result, request.user);
+            string outputSentence = Proc.processNodeInside(templateNode, query, request, result, request.user);
             return outputSentence;
         }
 
@@ -104,14 +104,14 @@ namespace RTParser.Utils
 
         #endregion
 
-        protected string GetAttribValue(string attribName)
+        protected string GetAttribValue(string attribName,string defaultIfEmpty)
         {
             attribName = attribName.ToLower();
             foreach (XmlAttribute attrib in this.templateNode.Attributes)
             {
                 if (attrib.Name.ToLower() == attribName) return attrib.Value;
             }
-            return null;
+            return defaultIfEmpty;
         }
     }
 }

@@ -19,7 +19,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public guard(RTParser.Bot bot,
+        public guard(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -27,6 +27,7 @@ namespace RTParser.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
+            this.isRecursive = false;
         }
 
 
@@ -36,7 +37,13 @@ namespace RTParser.AIMLTagHandlers
             {
                 if (templateNodeInnerText.Length > 0)
                 {
-                    return string.Format("(Guarded {0})", Recurse());                    
+                    this.query.GuardFailed = false;
+
+                    string result = this.Proc.SystemExecute(Recurse(), GetAttribValue("lang", "subl"));
+                    if (String.IsNullOrEmpty(result) || result == "NIL")
+                    {
+                        this.query.GuardFailed = true;
+                    }
                 }
             }
             return string.Empty;

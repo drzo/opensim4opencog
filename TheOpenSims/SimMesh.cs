@@ -425,7 +425,7 @@ namespace cogbot.TheOpenSims
                     break;
             }
             if (idata == null) return null;
-            sculptMesh = new SculptMesh((System.Drawing.Bitmap)idata, sculptType, (int)64, false, sculptDataIn.mirror, sculptDataIn.invert);
+            sculptMesh = new SculptMesh((System.Drawing.Bitmap)idata, sculptType, (int)64, false, sculptDataIn.Mirror, sculptDataIn.Invert);
 
             idata.Dispose();
 

@@ -24,7 +24,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public srai(RTParser.Bot bot,
+        public srai(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -40,9 +40,9 @@ namespace RTParser.AIMLTagHandlers
             {
                 if (templateNodeInnerText.Length > 0)
                 {
-                    Request subRequest = new Request(templateNodeInnerText, this.user, this.bot);
+                    Request subRequest = new Request(templateNodeInnerText, this.user, this.Proc);
                     subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
-                    Result subQuery = this.bot.Chat(subRequest);
+                    Result subQuery = this.Proc.Chat(subRequest);
                     this.request.hasTimedOut = subRequest.hasTimedOut;
                     return subQuery.Output;
                 }

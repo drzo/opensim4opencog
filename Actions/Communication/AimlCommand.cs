@@ -26,14 +26,14 @@ namespace cogbot.Listeners
     }
     public partial class WorldObjects : DebugAllEvents
     {
-        public Bot MyBot;
+        public RTPBot MyBot;
         private User MyUser;
         readonly static Dictionary<string, User> BotUsers = new Dictionary<string, User>();
         void InitConsoleBot()
         {
             try
             {
-                MyBot = new Bot();
+                MyBot = new RTPBot();
                 MyBot.loadSettings();
                 MyUser = new User("AIMLInterp", MyBot);
                 MyBot.isAcceptingUserInput = false;
@@ -45,7 +45,7 @@ namespace cogbot.Listeners
                 {
                     Console.Write("You: ");
                     string input = Console.ReadLine();
-                    Console.WriteLine("Bot: " + AIMLInterp(input, MyUser));
+                    Console.WriteLine("RTPBot: " + AIMLInterp(input, MyUser));
                 }
             }
             catch (Exception)

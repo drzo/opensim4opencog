@@ -23,7 +23,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public lowercase(RTParser.Bot bot,
+        public lowercase(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -37,7 +37,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "lowercase")
             {
-                return templateNodeInnerText.ToLower(this.bot.Locale);
+                return templateNodeInnerText.ToLower(this.Proc.Locale);
             }
             return string.Empty;
         }
