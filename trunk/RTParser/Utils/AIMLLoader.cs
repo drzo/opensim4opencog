@@ -54,7 +54,13 @@ namespace RTParser.Utils
                 {
                     foreach (string filename in fileEntries)
                     {
-                        this.loadAIMLFile(filename);
+                        try
+                        {
+                            this.loadAIMLFile(filename);
+                        } catch(Exception ee)
+                        {
+                            Console.WriteLine("" + ee);
+                        }
                     }
                     this.RProcessor.writeToLog("Finished processing the AIML files. " + Convert.ToString(this.RProcessor.Size) + " categories processed.");
                 }
