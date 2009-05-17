@@ -227,7 +227,8 @@ namespace RTParser.Utils
             }
             else
             {
-                return string.Empty;
+                if (bot.GlobalSettings == this) return String.Empty;
+                return bot.GetBotSetting(name);
             }
         }
 

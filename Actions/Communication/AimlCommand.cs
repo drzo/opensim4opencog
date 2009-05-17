@@ -82,15 +82,24 @@ namespace cogbot.Listeners
             {
                 myUser = BotUsers[fromname];
             }
-            // hardcode to be changed
-            if (message.Contains("chat on")) myUser.RespondToChat = true;
-            else if (message.Contains("chat off")) myUser.RespondToChat = false;
-            if (!myUser.RespondToChat) return;
+            // todo hard coded to be changed
+            if (message.Contains("chat on"))
+            {
+                myUser.RespondToChat = true;
+                return;
+            }
+            if (message.Contains("chat off"))
+            {
+                myUser.RespondToChat = false;
+                return;
+            }
+     
             string resp = AIMLInterp(message, myUser);
-            long timeDiff = Environment.TickCount - myUser.LastResponseGivenTime;
-            if (timeDiff < (60000 / myUser.MaxRespondToChatPerMinute)) return;   //too early
+            if (Environment.TickCount - myUser.LastResponseGivenTime < (60000 / myUser.MaxRespondToChatPerMinute))
+                return;   //too early to respond.. but still listened
+            if (!myUser.RespondToChat) return;
             client.Self.Chat(resp, 0, ChatType.Normal);
-            myUser.MaxRespondToChatPerMinute = Environment.TickCount;
+            myUser.LastResponseGivenTime = Environment.TickCount;
         }
 
         public string AIMLInterp(string input)
