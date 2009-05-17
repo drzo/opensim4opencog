@@ -39,7 +39,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     this.query.GuardFailed = false;
 
-                    string result = this.Proc.SystemExecute(Recurse(), GetAttribValue("lang", "subl"));
+                    string result = this.Proc.SystemExecute(Recurse(), GetAttribValue("lang", "subl"), user);
                     if (String.IsNullOrEmpty(result) || result == "NIL")
                     {
                         this.query.GuardFailed = true;

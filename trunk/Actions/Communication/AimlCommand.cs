@@ -26,6 +26,12 @@ namespace cogbot.Listeners
     }
     public partial class WorldObjects : DebugAllEvents
     {
+
+        object BotExecHandler(string cmd, User user)
+        {
+            return client.ExecuteCommand(cmd);
+        }
+
         public RTPBot MyBot;
         private User MyUser;
         readonly static Dictionary<string, User> BotUsers = new Dictionary<string, User>();
@@ -34,6 +40,7 @@ namespace cogbot.Listeners
             try
             {
                 MyBot = new RTPBot();
+                MyBot.AddExcuteHandler("bot", BotExecHandler);
                 MyBot.loadSettings();
                 MyUser = new User("AIMLInterp", MyBot);
                 MyBot.isAcceptingUserInput = false;
@@ -53,7 +60,11 @@ namespace cogbot.Listeners
             }
         }
 
-
+        /// <summary>
+        ///  false = wont respond to user until they say something like "turn chat on" 
+        ///  See next function to change the keywords
+        /// </summary>
+        static public bool RespondToChatByDefaultAllUsers = false;
         private void AIML_OnChat(string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourcetype, string fromname, UUID id, UUID ownerid, Vector3 position)
         {
 
@@ -65,13 +76,21 @@ namespace cogbot.Listeners
                 myUser = new User(fromname, MyBot);
                 AIMLInterp("My name is " + fromname, myUser);
                 BotUsers[fromname] = myUser;
+                myUser.RespondToChat = RespondToChatByDefaultAllUsers;
             }
             else
             {
                 myUser = BotUsers[fromname];
             }
+            // hardcode to be changed
+            if (message.Contains("chat on")) myUser.RespondToChat = true;
+            else if (message.Contains("chat off")) myUser.RespondToChat = false;
+            if (!myUser.RespondToChat) return;
             string resp = AIMLInterp(message, myUser);
+            long timeDiff = Environment.TickCount - myUser.LastResponseGivenTime;
+            if (timeDiff < (60000 / myUser.MaxRespondToChatPerMinute)) return;   //too early
             client.Self.Chat(resp, 0, ChatType.Normal);
+            myUser.MaxRespondToChatPerMinute = Environment.TickCount;
         }
 
         public string AIMLInterp(string input)

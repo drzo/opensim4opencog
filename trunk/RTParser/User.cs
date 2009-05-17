@@ -11,6 +11,10 @@ namespace RTParser
     {
         #region Attributes
 
+        public int LastResponseGivenTime = Environment.TickCount;
+        public bool RespondToChat = true;
+        public int MaxRespondToChatPerMinute = 10;
+
         /// <summary>
         /// The local instance of the GUID that identifies this user to the bot
         /// </summary>
