@@ -22,14 +22,12 @@
 <category><pattern>CUSTOM TAG CYCRANDOMP *</pattern><template><cycrandom filter="paraphrase"><star/></cycrandom></template></category>
 <category><pattern>CUSTOM TAG CYCRANDOM *</pattern><template><cycrandom><star/></cycrandom></template></category>
 <category><pattern>CUSTOM TAG SYSTEM *</pattern><template><system><star/></system></template></category>
-<category><pattern>CUSTOM TAG GET *</pattern>
-  <template>GET found <star index="1"/> to be <get><star index="1"/></get></template></category>
-<!--
- <category><pattern>CUSTOM TAG SET _ *</pattern>
-       <template>GET found <star index="1"/> to be <get><star index="1"/></get>
-           So Setting <star index="1"/> to  <star index="2"/>
-       <think><set name="<star index='1'/>"><star index='2'/></set></think> </template></category>
--->
+
+<!-- testing get/set -->
+<category><pattern>CUSTOM TAG GET *</pattern><template>GET found <star index="1"/> to be <get><star index="1"/></get></template></category>
+<category><pattern>CUSTOM TAG SET _ *</pattern>
+ <template>Setting <star index="1"/> was <get><star index="1"/></get>
+   setting to <set><star index="1"/> <star index="2"/></set>.</template></category>
 
 <!-- testing guard -->
 <category><pattern>CUSTOM TAG GUARDTF</pattern><template>guard1 <guard>NIL</guard></template></category>

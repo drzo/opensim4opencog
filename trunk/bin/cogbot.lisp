@@ -1,6 +1,9 @@
 ; Note: to find event generators in C# code look for
 ;   enqueueLispTask("(on
 
+(def False false)
+(def True true)
+
 (def (create-botclient &opt (first "") (last "") (pass "") (simurl ""))
     (clientManager.CreateBotClient first last pass simurl))
 

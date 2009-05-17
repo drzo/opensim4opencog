@@ -11,6 +11,9 @@
 <!-- simbot command -->
 <category><pattern>WANDER ARROUND</pattern><template><think><system>simbot start</system></think>Ok, I am on my own now wandering.</template></category>
 
+<!-- dotlisp command -->
+<category><pattern>DOTLISP *</pattern><template><system lang="lisp"><star/></system></template></category>
+
 </aiml>
 
 

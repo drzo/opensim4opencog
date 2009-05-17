@@ -306,7 +306,7 @@ namespace RTParser
         /// If set to false the input from AIML files will undergo the same normalization process that
         /// user input goes through. If true the Proccessor will assume the AIML is correct. Defaults to true.
         /// </summary>
-        public bool TrustAIML=true;
+        public bool TrustAIML = true;
 
         /// <summary>
         /// The maximum number of characters a "that" element of a path is allowed to be. Anything above
@@ -650,7 +650,7 @@ namespace RTParser
                 // Normalize the input
                 AIMLLoader loader = new AIMLLoader(this);
                 RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
-                string[] rawSentences = splitter.Transform(request.rawInput);
+                string[] rawSentences = new string[] { request.rawInput };//splitter.Transform(request.rawInput);
                 foreach (string sentence in rawSentences)
                 {
                     result.InputSentences.Add(sentence);
@@ -666,7 +666,7 @@ namespace RTParser
                     result.SubQueries.Add(query);
                 }
 
-                //todo pick and chose the qeuries
+                //todo pick and chose the queries
                 Console.WriteLine("Found " + result.SubQueries.Count + " queries");
 
                 // process the templates into appropriate output
@@ -1180,7 +1180,15 @@ The AIMLbot program.
             if (ExecuteHandlers.ContainsKey(langu))
             {
                 handler = ExecuteHandlers[langu];
-                return "" + handler(cmd, user);
+                try
+                {
+                    return "" + handler(cmd, user);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("" + e);
+                    return String.Empty;
+                }
             }
             if (langu == "subl") return EvalSubL(cmd, null);
             return s;

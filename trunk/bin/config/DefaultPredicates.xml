@@ -43,4 +43,5 @@
   <item name="thought" value="unknown" />
   <item name="want" value="unknown" />
   <item name="we" value="unknown" />
+  <item name="cycself" value="#$Cyc"/>
 </root>
