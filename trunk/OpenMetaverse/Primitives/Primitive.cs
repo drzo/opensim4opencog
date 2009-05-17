@@ -900,7 +900,7 @@ namespace OpenMetaverse
                     byte TypeByte = data[pos + 16];
                     mirror = ((TypeByte & 128) != 0);
                     invert = ((TypeByte & 64) != 0);
-                    Type = (SculptType)TypeByte;
+                    Type = (SculptType)(TypeByte & 7);
                 }
                 else
                 {
