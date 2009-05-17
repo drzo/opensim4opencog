@@ -15,6 +15,8 @@ using org.opencyc.cycobject;
 
 namespace RTParser
 {
+    public delegate object SystemExecHandler(string cmd, User user);
+
     /// <summary>
     /// Encapsulates a Proccessor. If no settings.xml file is found or referenced the Proccessor will try to
     /// default to safe settings.
@@ -1166,14 +1168,20 @@ The AIMLbot program.
 
         #endregion
 
-        internal string SystemExecute(string cmd, string langu)
+        internal string SystemExecute(string cmd, string langu, User user)
         {
             if (String.IsNullOrEmpty(langu))
             {
-                langu = "Proccessor";  
+                langu = "bot";  
             }
             string s = "<The system tag should be doing '" + cmd + "' lang=" + langu + ">";
             writeToLog(s);
+            SystemExecHandler handler = null;
+            if (ExecuteHandlers.ContainsKey(langu))
+            {
+                handler = ExecuteHandlers[langu];
+                return "" + handler(cmd, user);
+            }
             if (langu == "subl") return EvalSubL(cmd, null);
             return s;
             
@@ -1184,6 +1192,12 @@ The AIMLbot program.
             mt = mt.Trim();
             if (mt.StartsWith("(") || mt.StartsWith("#$")) return mt;
             return "#$" + mt;
+        }
+
+        static readonly Dictionary<string,SystemExecHandler> ExecuteHandlers = new Dictionary<string, SystemExecHandler>();
+        public void AddExcuteHandler(string lang, SystemExecHandler handler)
+        {
+            ExecuteHandlers[lang] = handler;
         }
     }
 }

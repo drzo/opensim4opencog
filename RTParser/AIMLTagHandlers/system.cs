@@ -30,7 +30,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            return this.Proc.SystemExecute(Recurse(),GetAttribValue("lang","Proc"));
+            return this.Proc.SystemExecute(Recurse(),GetAttribValue("lang","bot"),user);
         }
     }
 }
