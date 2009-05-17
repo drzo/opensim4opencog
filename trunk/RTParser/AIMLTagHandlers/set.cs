@@ -46,24 +46,36 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "set")
             {
-                if (this.Proc.GlobalSettings.Count > 0)
+                string name = GetAttribValue("name", null);
+                if (name != null)
                 {
-                    if (this.templateNode.Attributes.Count == 1)
+                    if (templateNodeInnerText.Length > 0)
                     {
-                        if (this.templateNode.Attributes[0].Name.ToLower() == "name")
+                        this.user.Predicates.addSetting(name, templateNodeInnerText);
+                        return this.user.Predicates.grabSetting(name);
+                    }
+                    else
+                    {
+                        // remove the predicate
+                        this.user.Predicates.removeSetting(name);
+                        return string.Empty;
+                    }
+                }
+                else  //recursive form like <set>name value string</set>
+                {
+                    string nv = Recurse();
+                    string[] fsp = nv.Split(new char[] { ' ', '\n', '\t', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (fsp.Length > 0)
+                    {
+                        if (fsp.Length == 1)
                         {
-                            if (templateNodeInnerText.Length > 0)
-                            {
-                                this.user.Predicates.addSetting(this.templateNode.Attributes[0].Value, templateNodeInnerText);
-                                return this.user.Predicates.grabSetting(this.templateNode.Attributes[0].Value);
-                            }
-                            else
-                            {
-                                // remove the predicate
-                                this.user.Predicates.removeSetting(this.templateNode.Attributes[0].Value);
-                                return string.Empty;
-                            }
+                            this.user.Predicates.removeSetting(fsp[0]);
+                            return String.Empty;
                         }
+                        String joined = String.Join(" ", fsp, 1, fsp.Length - 1);
+                        name = fsp[0];
+                        this.user.Predicates.addSetting(name, joined);
+                        return this.user.Predicates.grabSetting(name);
                     }
                 }
             }
