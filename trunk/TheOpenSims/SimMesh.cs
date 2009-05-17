@@ -269,6 +269,7 @@ namespace cogbot.TheOpenSims
 
 
         static Dictionary<UUID, SculptMesh> SculptedMeshes = new Dictionary<UUID, SculptMesh>();
+        private static bool MaintainSculptPool = false;
 #if COLLIDER_ODE
         private PrimitiveBaseShape pbs;
 #endif
@@ -284,8 +285,8 @@ namespace cogbot.TheOpenSims
                 if (!SculptedMeshes.TryGetValue(Id, out SM))
                 {
                     byte[] bytes = WorldObjects.Master.TextureBytesFormUUID(SD.SculptTexture);
-                    SM = ToSculptMesh(bytes, primitive.Sculpt.Type);
-                    SculptedMeshes[Id] = SM;
+                    SM = ToSculptMesh(bytes, primitive.Sculpt);
+                    if (MaintainSculptPool) SculptedMeshes[Id] = SM;
                     //  SM.DumpRaw(".", primitive.ID.ToString(), "sculptMesh" + primitive.LocalID);
                 }
                 if (SM != null)
@@ -375,7 +376,7 @@ namespace cogbot.TheOpenSims
         }
 
         // partly from OpenSim.Region.Physics.Meshing
-        public static SculptMesh ToSculptMesh(byte[] sculptData, OpenMetaverse.SculptType sculptTypeIn)//( Vector3 size, Quaternion Rotation)
+        public static SculptMesh ToSculptMesh(byte[] sculptData, Primitive.SculptData sculptDataIn)//( Vector3 size, Quaternion Rotation)
         {
             SculptMesh sculptMesh;
             if (sculptData == null || sculptData.Length == 0)
@@ -407,7 +408,7 @@ namespace cogbot.TheOpenSims
 
             SculptMesh.SculptType sculptType;
 
-            switch (sculptTypeIn)
+            switch (sculptDataIn.Type)
             {
                 case OpenMetaverse.SculptType.Cylinder:
                     sculptType = SculptMesh.SculptType.cylinder;
@@ -424,7 +425,7 @@ namespace cogbot.TheOpenSims
                     break;
             }
             if (idata == null) return null;
-            sculptMesh = new SculptMesh((System.Drawing.Bitmap)idata, sculptType, (int)64, false);
+            sculptMesh = new SculptMesh((System.Drawing.Bitmap)idata, sculptType, (int)64, false, sculptDataIn.mirror, sculptDataIn.invert);
 
             idata.Dispose();
 
