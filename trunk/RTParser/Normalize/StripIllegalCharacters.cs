@@ -10,16 +10,16 @@ namespace RTParser.Normalize
     /// </summary>
     public class StripIllegalCharacters : RTParser.Utils.TextTransformer
     {
-        public StripIllegalCharacters(RTParser.Bot bot, string inputString) : base(bot, inputString)
+        public StripIllegalCharacters(RTParser.RTPBot bot, string inputString) : base(bot, inputString)
         { }
 
-        public StripIllegalCharacters(RTParser.Bot bot)
+        public StripIllegalCharacters(RTParser.RTPBot bot)
             : base(bot) 
         { }
 
         protected override string ProcessChange()
         {
-            return this.bot.Strippers.Replace(this.inputString, " ");
+            return this.Proc.Strippers.Replace(this.inputString, " ");
         }
     }
 }

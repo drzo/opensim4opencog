@@ -19,7 +19,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the query</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public cycquery(RTParser.Bot bot,
+        public cycquery(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -33,10 +33,12 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "cycquery")
             {
-                string filter = base.GetAttribValue("filter");
+                string filter = GetAttribValue("filter", null);
+                string varname = base.GetAttribValue("varname", "?REPLY");
+                string mt = GetAttribValue("mt", "EverythingPSC");
                 if (templateNodeInnerText.Length > 0)
                 {
-                    return this.bot.EvalSubL(String.Format("(fi-ask '{0} #$EverythingPSC)", Recurse()),filter);
+                    return this.Proc.EvalSubL(String.Format("(ask-template '{0} {1} {2})",varname, Recurse(), Proc.Cyclify(mt)), filter);
                 }
             }
             return string.Empty;

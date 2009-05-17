@@ -21,7 +21,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public size(RTParser.Bot bot,
+        public size(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -35,7 +35,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "size")
             {
-                return Convert.ToString(this.bot.Size);
+                return Convert.ToString(this.Proc.Size);
             }
             return string.Empty;
         }

@@ -11,6 +11,27 @@
 <category><pattern>CUSTOM TAG FORTUNE</pattern><template><fortunecookie/></template></category>
 <category><pattern>CUSTOM TAG PIG LATIN *</pattern><template><piglatin><star/></piglatin></template></category>
 <category><pattern>CUSTOM TAG NEWS</pattern><template><news/></template></category>
+<category><pattern>CUSTOM TAG CYCQUERY *</pattern><template><cycquery><star/></cycquery></template></category>
+<category><pattern>CUSTOM TAG CYCTERM *</pattern><template><cycterm><star/></cycterm></template></category>
+<category><pattern>CUSTOM TAG CYCPHRASE *</pattern><template><cycphrase><star/></cycphrase></template></category>
+<category><pattern>CUSTOM TAG CYCASSERT *</pattern><template><cycassert><star/></cycassert></template></category>
+<category><pattern>CUSTOM TAG CYCRETRACT *</pattern><template><cycretract><star/></cycretract></template></category>
+<category><pattern>CUSTOM TAG GUARD *</pattern><template><guard><star/></guard></template></category>
+<category><pattern>CUSTOM TAG CYCRANDOMP *</pattern><template><cycrandom filter="paraphrase"><star/></cycrandom></template></category>
+<category><pattern>CUSTOM TAG CYCRANDOM *</pattern><template><cycrandom><star/></cycrandom></template></category>
+
+
+<category><pattern>CUSTOM TAG GUARD1 *</pattern><template>guard1 <guard>(cnot <star/>)</guard></template></category>
+<category><pattern>CUSTOM TAG GUARD1 *</pattern><template>guard2 <guard><star/></guard></template></category>
+
+<category><pattern>CUSTOM TAG GUARDTF</pattern><template>guard1 <guard>NIL</guard></template></category>
+<category><pattern>CUSTOM TAG GUARDTF</pattern><template>guard2 <guard>T</guard></template></category>
+<category><pattern>CUSTOM TAG GUARDTF</pattern><template>guard3 <guard>T</guard></template></category>
+<category><pattern>CUSTOM TAG GUARDTF</pattern><template>guard4 <guard>NIL</guard></template></category>
+
+<category><pattern>WHAT DOG DO YOU KNOW ABOUT</pattern><template>I know about <cycrandom filter="paraphrase"> (ask-template '?REPLY '(#$isa ?REPLY #$Dog) #$EverythingPSC) </cycrandom></template></category>
+<category><pattern>ONE OF CYC *</pattern><template>I know about <cycrandom filter="paraphrase"> (ask-template '?REPLY '(#$isa ?REPLY <cycterm><star/></cycterm>) #$EverythingPSC) </cycrandom></template></category>
+
   <category>
     <pattern>CUSTOM TAG CYCSYSTEM *</pattern>
     <template>
@@ -19,14 +40,7 @@
       </cycsystem>
     </template>
   </category>
-  <category>
-    <pattern>CUSTOM TAG CYCRETRACT *</pattern>
-    <template>
-      <cycretract>
-        <star/>
-      </cycretract>
-    </template>
-  </category>
+
   <category>
 	<pattern>AM I A *</pattern>
 	<guard>(#$isa #$TheUser <cycterm><star index="1"/></cycterm>)</guard>
@@ -435,6 +449,8 @@
 		</random>
 	</template>
 </category>
+
+<category><pattern>SRAITEST *</pattern><template><srai><star/></srai></template></category>  
 
 <category>
 	<pattern>I AM FROM * </pattern>

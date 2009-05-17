@@ -10,11 +10,11 @@ namespace RTParser.Normalize
     /// </summary>
     public class ApplySubstitutions : RTParser.Utils.TextTransformer
     {
-        public ApplySubstitutions(RTParser.Bot bot, string inputString)
+        public ApplySubstitutions(RTParser.RTPBot bot, string inputString)
             : base(bot, inputString)
         { }
 
-        public ApplySubstitutions(RTParser.Bot bot)
+        public ApplySubstitutions(RTParser.RTPBot bot)
             : base(bot)
         { }
 
@@ -37,7 +37,7 @@ namespace RTParser.Normalize
 
         protected override string ProcessChange()
         {
-            return ApplySubstitutions.Substitute(this.bot, this.bot.Substitutions, this.inputString);
+            return ApplySubstitutions.Substitute(this.Proc, this.Proc.Substitutions, this.inputString);
         }
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace RTParser.Normalize
         /// <param name="dictionary">The dictionary containing the substitutions</param>
         /// <param name="target">the target string to which the substitutions are to be applied</param>
         /// <returns>The processed string</returns>
-        public static string Substitute(RTParser.Bot bot, RTParser.Utils.SettingsDictionary dictionary, string target)
+        public static string Substitute(RTParser.RTPBot bot, RTParser.Utils.SettingsDictionary dictionary, string target)
         {
             string marker = ApplySubstitutions.getMarker(5);
             string result = target;

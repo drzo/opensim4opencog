@@ -36,7 +36,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public person2(RTParser.Bot bot,
+        public person2(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -53,13 +53,13 @@ namespace RTParser.AIMLTagHandlers
                 if (templateNodeInnerText.Length > 0)
                 {
                     // non atomic version of the node
-                    return RTParser.Normalize.ApplySubstitutions.Substitute(this.bot, this.bot.Person2Substitutions, templateNodeInnerText);
+                    return RTParser.Normalize.ApplySubstitutions.Substitute(this.Proc, this.Proc.Person2Substitutions, templateNodeInnerText);
                 }
                 else
                 {
                     // atomic version of the node
                     XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
-                    star recursiveStar = new star(this.bot, this.user, this.query, this.request, this.result, starNode);
+                    star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
                     templateNodeInnerText = recursiveStar.Transform();
                     if (templateNodeInnerText.Length > 0)
                     {

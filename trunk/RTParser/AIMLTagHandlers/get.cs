@@ -31,7 +31,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public get(RTParser.Bot bot,
+        public get(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -45,7 +45,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "get")
             {
-                if (this.bot.GlobalSettings.Count > 0)
+                if (this.Proc.GlobalSettings.Count > 0)
                 {
                     if (this.templateNode.Attributes.Count == 1)
                     {

@@ -21,7 +21,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public cycrandom(RTParser.Bot bot,
+        public cycrandom(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -29,17 +29,21 @@ namespace RTParser.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
-            this.isRecursive = false;
+          //  this.isRecursive = false;
         }
 
         protected override string ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "cycrandom")
             {
-                string filter = base.GetAttribValue("filter");
+                string filter = base.GetAttribValue("filter", null);
                 if (templateNodeInnerText.Length > 0)
                 {
-                    return this.bot.EvalSubL(String.Format("(clet ((list (fi-ask '{0} #$EverythingPSC))) (nth (random (length list)) list))", base.Recurse()),filter);
+                    return
+                        this.Proc.EvalSubL(
+                            String.Format(
+                                "(clet ((list {0})) (nth (random (length list)) list))",
+                                base.Recurse()), filter);
                 }
             }
             return string.Empty;

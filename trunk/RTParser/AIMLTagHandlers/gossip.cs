@@ -23,7 +23,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public gossip(RTParser.Bot bot,
+        public gossip(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -37,10 +37,10 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "gossip")
             {
-                // gossip is merely logged by the bot and written to log files
+                // gossip is merely logged by the Proc and written to log files
                 if (templateNodeInnerText.Length > 0)
                 {
-                    this.bot.writeToLog(string.Format("GOSSIP from user: {0}, '{1}'", this.user.UserID, templateNodeInnerText));
+                    this.Proc.writeToLog(string.Format("GOSSIP from user: {0}, '{1}'", this.user.UserID, templateNodeInnerText));
                 }
             }
             return string.Empty;

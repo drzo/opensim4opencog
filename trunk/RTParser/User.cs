@@ -19,7 +19,7 @@ namespace RTParser
         /// <summary>
         /// The bot this user is using
         /// </summary>
-        public RTParser.Bot bot;
+        public RTParser.RTPBot bot;
 
         /// <summary>
         /// The GUID that identifies this user to the bot
@@ -77,7 +77,7 @@ namespace RTParser
         /// </summary>
         /// <param name="UserID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-		public User(string UserID, RTParser.Bot bot)
+		public User(string UserID, RTParser.RTPBot bot)
 		{
             if (UserID.Length > 0)
             {

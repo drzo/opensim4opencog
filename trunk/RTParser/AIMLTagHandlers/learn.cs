@@ -20,7 +20,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public learn(RTParser.Bot bot,
+        public learn(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -46,11 +46,11 @@ namespace RTParser.AIMLTagHandlers
                         try
                         {
                             doc.Load(path);
-                            this.bot.loadAIMLFromXML(doc, path);
+                            this.Proc.loadAIMLFromXML(doc, path);
                         }
                         catch
                         {
-                            this.bot.writeToLog("ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: " + path);
+                            this.Proc.writeToLog("ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: " + path);
                         }
                     }
                 }

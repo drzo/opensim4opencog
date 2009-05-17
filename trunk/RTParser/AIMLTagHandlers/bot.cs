@@ -20,13 +20,13 @@ namespace RTParser.AIMLTagHandlers
         /// <summary>
         /// Ctor
         /// </summary>
-        /// <param name="bot">The bot involved in this request</param>
+        /// <param name="Proc">The Proc involved in this request</param>
         /// <param name="user">The user making the request</param>
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public bot(RTParser.Bot bot,
+        public bot(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -38,14 +38,14 @@ namespace RTParser.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "bot")
+            if (this.templateNode.Name.ToLower() == "Proc")
             {
                 if (this.templateNode.Attributes.Count == 1)
                 {
                     if (this.templateNode.Attributes[0].Name.ToLower() == "name")
                     {
                         string key = this.templateNode.Attributes["name"].Value;
-                        return (string)this.bot.GlobalSettings.grabSetting(key);
+                        return (string)this.Proc.GlobalSettings.grabSetting(key);
                     }
                 }
             }

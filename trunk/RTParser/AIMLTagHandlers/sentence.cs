@@ -26,7 +26,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public sentence(RTParser.Bot bot,
+        public sentence(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -48,7 +48,7 @@ namespace RTParser.AIMLTagHandlers
                     for (int i = 0; i < letters.Length; i++)
                     {
                         string letterAsString = Convert.ToString(letters[i]);
-                        if (this.bot.Splitters.Contains(letterAsString))
+                        if (this.Proc.Splitters.Contains(letterAsString))
                         {
                             doChange = true;
                         }
@@ -59,12 +59,12 @@ namespace RTParser.AIMLTagHandlers
                         {
                             if (doChange)
                             {
-                                result.Append(letterAsString.ToUpper(this.bot.Locale));
+                                result.Append(letterAsString.ToUpper(this.Proc.Locale));
                                 doChange = false;
                             }
                             else
                             {
-                                result.Append(letterAsString.ToLower(this.bot.Locale));
+                                result.Append(letterAsString.ToLower(this.Proc.Locale));
                             }
                         }
                         else
@@ -78,7 +78,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     // atomic version of the node
                     XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
-                    star recursiveStar = new star(this.bot, this.user, this.query, this.request, this.result, starNode);
+                    star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
                     templateNodeInnerText = recursiveStar.Transform();
                     if (templateNodeInnerText.Length > 0)
                     {

@@ -28,7 +28,7 @@ namespace RTParser.Utils
         /// <summary>
         /// The bot this dictionary is associated with
         /// </summary>
-        protected RTParser.Bot bot;
+        protected RTParser.RTPBot bot;
 
         /// <summary>
         /// The number of items in the dictionary
@@ -74,7 +74,7 @@ namespace RTParser.Utils
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot for whom this is a settings dictionary</param>
-        public SettingsDictionary(RTParser.Bot bot)
+        public SettingsDictionary(RTParser.RTPBot bot)
         {
             this.bot = bot;
         }

@@ -107,19 +107,22 @@ namespace RTParser.Utils
 
         public string evaluate(string path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard)
         {
+            // are we in failure?
+            if (query.GuardFailed) return String.Empty;
             // first call the pre-existing evaluate  that was renamed to evaluate0
             String temp = evaluate0(path, query, request, matchstate, wildcard);
-            if (temp == String.Empty || FailsGuards(temp))
+            if (temp == String.Empty)
             {
                 return String.Empty;
             }
+            if (!temp.Contains("<guard>")) return temp;
+            Console.WriteLine(String.Format("CHECKIN GUARDS {0}", temp));
+            if (query.GuardFailed)
+            {
+                Console.WriteLine(String.Format("Failing {0}", temp));
+                return String.Empty;
+            }
             return temp;
-        }
-
-        private bool FailsGuards(string temp)
-        {
-            Console.WriteLine("Passes " + temp);
-            return false;
         }
 
         /// <summary>
@@ -135,9 +138,9 @@ namespace RTParser.Utils
         private string evaluate0(string path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard)
         {
             // check for timeout
-            if (request.StartedOn.AddMilliseconds(request.bot.TimeOut) < DateTime.Now)
+            if (request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
             {
-                request.bot.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" + request.rawInput + "\"");
+                request.Proccessor.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" + request.rawInput + "\"");
                 request.hasTimedOut = true;
                 return string.Empty;
             }

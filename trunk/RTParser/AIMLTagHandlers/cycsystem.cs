@@ -16,7 +16,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public cycsystem(RTParser.Bot bot,
+        public cycsystem(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -30,10 +30,10 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "cycsystem")
             {
-                string filter = base.GetAttribValue("filter");
+                string filter = base.GetAttribValue("filter", null);
                 if (templateNodeInnerText.Length > 0)
                 {
-                    string result = this.bot.EvalSubL(Recurse(),filter);
+                    string result = this.Proc.EvalSubL(Recurse(),filter);
                     return result;
                 }
             }

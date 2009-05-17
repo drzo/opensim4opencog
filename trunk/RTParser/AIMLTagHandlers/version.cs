@@ -21,7 +21,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public version(RTParser.Bot bot,
+        public version(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -35,7 +35,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "version")
             {
-                return this.bot.GlobalSettings.grabSetting("version");
+                return this.Proc.GlobalSettings.grabSetting("version");
             }
             return string.Empty;
         }
