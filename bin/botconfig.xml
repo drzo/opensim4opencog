@@ -9,8 +9,7 @@
   <password>myBotPassword</password>
   <simURL>http://opensim:9000/</simURL>
   <startupLisp>
-     (create-botclient "Nephrael" "Rae" "tek123" "https://login.agni.lindenlab.com/cgi-bin/login.cgi")
-     '(create-botclient "My" "Bot" )     
+      (create-botclient "My" "Bot" )
      ' (create-botclient "Second" "Bot" "nonDefaultPassword" "http://71.197.210.170:9000/")
      ' (create-botclient "Third" "Bot" )
      ' (create-botclient "Fourth" "Bot" )
