@@ -19,6 +19,9 @@
 <category><pattern>CUSTOM TAG GUARD *</pattern><template><guard><star/></guard></template></category>
 <category><pattern>CUSTOM TAG CYCRANDOMP *</pattern><template><cycrandom filter="paraphrase"><star/></cycrandom></template></category>
 <category><pattern>CUSTOM TAG CYCRANDOM *</pattern><template><cycrandom><star/></cycrandom></template></category>
+<category><pattern>CUSTOM TAG SYSTEM *</pattern><template><system><star/></system></template></category>
+
+<category><pattern>FOLLOW ME *</pattern><template><system>follow "<get name="name"/>"</system></template></category>
 
 
 <category><pattern>CUSTOM TAG GUARD1 *</pattern><template>guard1 <guard>(cnot <star/>)</guard></template></category>

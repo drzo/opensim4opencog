@@ -11,7 +11,7 @@ namespace RTParser
     {
         #region Attributes
 
-        public int LastResponseGivenTime = Environment.TickCount;
+        public int LastResponseGivenTime = 0;
         public bool RespondToChat = true;
         public int MaxRespondToChatPerMinute = 10;
 

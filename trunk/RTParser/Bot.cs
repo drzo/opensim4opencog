@@ -8,7 +8,7 @@ using System.Text;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Reflection;
 using System.Net.Mail;
-
+using RTParser.Normalize;
 using RTParser.Utils;
 using org.opencyc.api;
 using org.opencyc.cycobject;
@@ -1199,5 +1199,17 @@ The AIMLbot program.
         {
             ExecuteHandlers[lang] = handler;
         }
+
+
+        /// <summary>
+        /// Returns the value of a setting given the name of the setting
+        /// </summary>
+        /// <param name="name">the name of the setting whose value we're interested in</param>
+        /// <returns>the value of the setting</returns>
+        public string GetBotSetting(string name)
+        {
+            return (string) GlobalSettings.grabSetting(name);
+        }
+
     }
 }
