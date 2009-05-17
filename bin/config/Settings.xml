@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <root>
-  <item name="aimldirectory" value="aiml"/>
+    <item name="aimldirectory" value="aiml"/>
   <item name="configdirectory" value="config"/>
   <item name="logdirectory" value="logs"/>
   <item name="splittersfile" value="Splitters.xml"/>
@@ -72,4 +72,5 @@
   <item name="ethics" value="I take an objectivist outlook"/>
   <item name="emotions" value="I don't have emotions"/>
   <item name="feelings" value="I don't have feelings"/>
+  <item name="cycself" value="#$Cyc"/>
 </root>

@@ -4,6 +4,7 @@ using RTParser;
 using cogbot.Actions;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
+using OpenMetaverse.Utilities;
 
 
 namespace cogbot.Listeners
@@ -32,8 +33,23 @@ namespace cogbot.Listeners
             return client.ExecuteCommand(cmd);
         }
 
+        object LispExecHandler(string cmd, User user)
+        {
+            User prev = MyUser;
+            try
+            {
+                MyUser = user;
+                return client.evalLispString(cmd);
+            }
+            finally
+            {
+                MyUser = prev;
+
+            }
+        }
+
         public RTPBot MyBot;
-        private User MyUser;
+        public User MyUser;
         readonly static Dictionary<string, User> BotUsers = new Dictionary<string, User>();
         void InitConsoleBot()
         {
@@ -41,6 +57,7 @@ namespace cogbot.Listeners
             {
                 MyBot = new RTPBot();
                 MyBot.AddExcuteHandler("bot", BotExecHandler);
+                MyBot.AddExcuteHandler("lisp", LispExecHandler);
                 MyBot.loadSettings();
                 MyUser = new User("AIMLInterp", MyBot);
                 MyBot.isAcceptingUserInput = false;
@@ -55,8 +72,9 @@ namespace cogbot.Listeners
                     Console.WriteLine("RTPBot: " + AIMLInterp(input, MyUser));
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Console.WriteLine("" + e);
             }
         }
 
@@ -75,6 +93,7 @@ namespace cogbot.Listeners
             {
                 myUser = new User(fromname, MyBot);
                 AIMLInterp("My name is " + fromname, myUser);
+                myUser.Predicates.addSetting("name",fromname);
                 BotUsers[fromname] = myUser;
                 myUser.RespondToChat = RespondToChatByDefaultAllUsers;
             }
@@ -95,10 +114,15 @@ namespace cogbot.Listeners
             }
      
             string resp = AIMLInterp(message, myUser);
+            if (String.IsNullOrEmpty(resp)) return;
             if (Environment.TickCount - myUser.LastResponseGivenTime < (60000 / myUser.MaxRespondToChatPerMinute))
                 return;   //too early to respond.. but still listened
-            if (!myUser.RespondToChat) return;
-            client.Self.Chat(resp, 0, ChatType.Normal);
+            if (!myUser.RespondToChat)
+            {
+                output("AIML_OnChat Reply is quietly: " + resp);
+                return;
+            }
+            Realism.Chat(client, resp, type, 6);
             myUser.LastResponseGivenTime = Environment.TickCount;
         }
 

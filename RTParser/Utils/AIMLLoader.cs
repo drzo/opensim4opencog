@@ -17,6 +17,11 @@ namespace RTParser.Utils
         /// The RProcessor whose brain is being processed
         /// </summary>
         private RTParser.RTPBot RProcessor;
+
+        /// <summary>
+        /// Allow all chars in RawUserInput
+        /// </summary>
+        public bool RawUserInput = true;
         #endregion
 
         /// <summary>
@@ -261,7 +266,7 @@ namespace RTParser.Utils
             string normalizedThat = "*";
             string normalizedTopic = "*";
 
-            if ((this.RProcessor.TrustAIML) & (!isUserInput))
+            if ((this.RProcessor.TrustAIML) & (!isUserInput || RawUserInput))
             {
                 normalizedPattern = pattern.Trim();
                 normalizedThat = that.Trim();
