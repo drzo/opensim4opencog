@@ -311,16 +311,14 @@ namespace RTParser.Utils
         /// <returns>The normalized string</returns>
         public string Normalize(string input, bool isUserInput)
         {
+            input = input.Trim();
+            while (input.EndsWith("?"))
+            {
+                input = input.Substring(0, input.Length - 1).Trim();
+            }
             if (isUserInput && false)
             {
-
-                String normalizedPattern = input.Trim();
-                while (normalizedPattern.EndsWith("?"))
-                {
-                    normalizedPattern = normalizedPattern.Substring(0, normalizedPattern.Length - 1).Trim();
-                }
-
-                return normalizedPattern;
+                return input;
             }
 
             StringBuilder result = new StringBuilder();
