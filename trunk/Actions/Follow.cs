@@ -21,12 +21,15 @@ namespace cogbot.Actions
         }
 
 
-        public override void acceptInput(string verb, Parser args)
+        public override void acceptInput(string verb, Parser pargs)
         {
             // base.acceptInput(verb, args);
+            string[] args = pargs.tokens;
+            UUID primID;
             if (verb == "follow")
             {
-                string name = args.objectPhrase;
+
+                string name = pargs.objectPhrase;
                 if (String.IsNullOrEmpty(name.Trim())) name = "avatar";
                 Primitive avatar;
                 if (WorldSystem.tryGetPrim(name, out avatar))
