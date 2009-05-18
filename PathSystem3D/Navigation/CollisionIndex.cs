@@ -81,26 +81,26 @@ namespace PathSystem3D.Navigation
         //    return GetZLevelFree(LastPlane) == GetGroundLevel();
         //}
 
-        public bool IsUnderWater(float low,float high)
+        public bool IsUnderWater(float low, float high)
         {
-            return GetZLevel(low,high) < PathStore.WaterHeight;
+            return GetZLevel(low, high) < PathStore.WaterHeight;
         }
 
-        public bool IsFlyZone(float low,float high)
+        public bool IsFlyZone(float low, float high)
         {
-            return IsUnderWater(low,high) || IsMidAir(low,high);
+            return IsUnderWater(low, high) || IsMidAir(low, high);
         }
 
-        public byte GetOccupiedValue(float low,float high)
+        public byte GetOccupiedValue(float low, float high)
         {
             int b = SimPathStore.INITIALLY + OccupiedCount * 1 + IsSolid * 2;
             if (b > 190) return 190;
             return (byte)b;
         }
 
-        private bool IsMidAir(float low,float high)
+        private bool IsMidAir(float low, float high)
         {
-            float zlevel = GetZLevel(low,high);
+            float zlevel = GetZLevel(low, high);
             return low > zlevel;
         }
 
@@ -117,7 +117,7 @@ namespace PathSystem3D.Navigation
             {
                 if (!InnerBoxesSimplified)
                 {
-                    if (InnerBoxes.Count<100) InnerBoxes = Box3Fill.Simplify(InnerBoxes);
+                    if (InnerBoxes.Count < 100) InnerBoxes = Box3Fill.Simplify(InnerBoxes);
                     InnerBoxesSimplified = true;
                 }
                 foreach (CollisionObject B in InnerBoxes)
@@ -171,7 +171,7 @@ namespace PathSystem3D.Navigation
         }
 
         public void TaintMatrix()
-        {            
+        {
             _GroundLevelCache = float.MinValue;
         }
 
@@ -223,7 +223,7 @@ namespace PathSystem3D.Navigation
                 float GL = GetGroundLevel();
                 bool found = false;
                 if (above < GL) above = GL;
-               // IEnumerable<CollisionObject> objs = GetOccupied(above, high);
+                // IEnumerable<CollisionObject> objs = GetOccupied(above, high);
                 while (above < high)
                 {
                     if (SomethingBetween(above, above + CapsuleZ, objs, out newMaxZ))
@@ -245,8 +245,8 @@ namespace PathSystem3D.Navigation
             return above;
         }
 
-        public bool OpenCapsuleAbove(float low, float high,float capsuleSize, out float above)
-        {    
+        public bool OpenCapsuleAbove(float low, float high, float capsuleSize, out float above)
+        {
             above = low;
             IEnumerable<CollisionObject> objs = GetOccupied(low, high);
             while (above < high)
@@ -267,13 +267,13 @@ namespace PathSystem3D.Navigation
                 {
                     above += 0.1f;
                 }
-             
+
             }
             return false;
         }
 
 
-        public bool OpenCapsuleBelow(float high,float low, float capsuleSize, out float below)
+        public bool OpenCapsuleBelow(float high, float low, float capsuleSize, out float below)
         {
             below = high;
             IEnumerable<CollisionObject> objs = GetOccupied(low, high);
@@ -315,7 +315,7 @@ namespace PathSystem3D.Navigation
                         IEnumerable<Box3Fill> mini = simObject.InnerBoxes;
                         foreach (var o in mini)
                         {
-                            if (o.IsInsideXY(x,y))
+                            if (o.IsInsideXY(x, y))
                                 lock (InnerBoxes)
                                 {
                                     InnerBoxesSimplified = false;
@@ -368,17 +368,17 @@ namespace PathSystem3D.Navigation
         {
             string S = "";
 
-            float low = cp.MinZ-10f;
-            float high = cp.MaxZ+10f;
+            float low = cp.MinZ - 10f;
+            float high = cp.MaxZ + 10f;
 
             if (OccupiedCount > 0)
             {
-                IEnumerable<CollisionObject> objs = GetOccupied(low,high);
+                IEnumerable<CollisionObject> objs = GetOccupied(low, high);
                 lock (objs)
                 {
                     foreach (CollisionObject O in objs)
                     {
-                        S += ""+O;//.ToBoxString(_LocalPos.X, _LocalPos.Y, low, high);
+                        S += "" + O;//.ToBoxString(_LocalPos.X, _LocalPos.Y, low, high);
                         S += Environment.NewLine;
                     }
                 }
@@ -391,7 +391,7 @@ namespace PathSystem3D.Navigation
             float low = cp.MinZ;
             float high = cp.MaxZ;
             string S = String.Format("{0}/{1} GLevel={2}", PX, PY, GetGroundLevel());
-            S += String.Format(" HLevel={0}", cp.HeightMap[PX,PY]);
+            S += String.Format(" HLevel={0}", cp.HeightMap[PX, PY]);
             if (IsUnderWater(low, high)) S += String.Format(" UnderWater={0}", PathStore.WaterHeight);
             if (IsFlyZone(low, high)) S += String.Format(" FlyZone={0}", low);
             S += String.Format(" LastGL={0}-{1}", low, high);
@@ -539,7 +539,7 @@ namespace PathSystem3D.Navigation
             return _MeshedObjectIndexs;
         }
 
-       // public bool IsTimerTicking = false;
+        // public bool IsTimerTicking = false;
         public void SetNodeQualityTimer(CollisionPlane CP, int value, List<ThreadStart> undo)
         {
             byte oldValue = GetMatrix(CP);
@@ -609,29 +609,32 @@ namespace PathSystem3D.Navigation
         internal bool IsPortal(CollisionPlane collisionPlane)
         {
             IEnumerable<CollisionObject> mis = GetOccupied(collisionPlane.MinZ, collisionPlane.MaxZ);
-            foreach (var o in mis)
-            {
-                string s = o.ToString().ToLower();
+            lock (mis)
+                foreach (object o in mis)
                 {
-                    if (s.Contains("stair")) return true;
-                    if (s.Contains("ramp")) return true;
-                    if (s.Contains("brigde")) return true;
-                    if (s.Contains(" path ")) return true;
+                    string s = o.ToString().ToLower();
+                    {
+                        if (s.Contains("stair")) return true;
+                        if (s.Contains("ramp")) return true;
+                        if (s.Contains("brigde")) return true;
+                        if (s.Contains(" path ")) return true;
+                    }
                 }
-            }
             return false;
         }
 
-        internal System.Drawing.Color DebugColor(CollisionPlane CP)
+        internal System.Drawing.Color DebugColor(CollisionPlane collisionPlane)
         {
-            foreach (var O in GetOccupied(CP.MinZ, CP.MaxZ))
-            {
-                if (O is IMeshedObject)
+            IEnumerable<CollisionObject> mis = GetOccupied(collisionPlane.MinZ, collisionPlane.MaxZ);
+            lock (mis)
+                foreach (object O in mis)
                 {
-                    Color c = ((IMeshedObject)O).DebugColor();
-                    if (c != Color.Empty) return c;
+                    if (O is IMeshedObject)
+                    {
+                        Color c = ((IMeshedObject)O).DebugColor();
+                        if (c != Color.Empty) return c;
+                    }
                 }
-            }
             return Color.Empty;
         }
     }
