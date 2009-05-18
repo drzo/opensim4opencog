@@ -116,7 +116,7 @@ namespace cogbot.TheOpenSims
             Target = target;
         }
 
-        public void InvokeReal(SimAvatar TheBot)
+        public void InvokeReal(SimActor TheBot)
         {
    
             String use = TypeUsage.UsageName;
@@ -131,7 +131,7 @@ namespace cogbot.TheOpenSims
             // IF UseAnim was specified
             if (!String.IsNullOrEmpty(TypeUsage.UseAnim))
             {
-                UUID animID = TheBot.FindAnimUUID(TypeUsage.UseAnim);
+                UUID animID = SimAnimation.GetAnimationUUID(TypeUsage.UseAnim);
                 if (animID != UUID.Zero)
                 {
                     closure = TheBot.WithAnim(animID, closure);
@@ -142,7 +142,7 @@ namespace cogbot.TheOpenSims
             if (!animFound)
             {
                 //ELSE look for Verb coverage for an anim
-                UUID animID = TheBot.FindAnimUUID(use);
+                UUID animID = SimAnimation.GetAnimationUUID(use);
                 if (animID != UUID.Zero)
                     closure = TheBot.WithAnim(animID, closure);
             }
@@ -193,7 +193,7 @@ namespace cogbot.TheOpenSims
             TheBot.Debug(TheBot + " " + ToString() + "\n\t " +
                 TheBot.DistanceVectorString(Target)
                 + "=> " + difNeeds.ShowNonZeroNeeds());
-            TheBot.ExecuteLisp(this, TypeUsage.LispScript);
+            if (TheBot is SimActor) ((SimActor)TheBot).ExecuteLisp(this, TypeUsage.LispScript);
             Thread.Sleep(TypeUsage.totalTimeMS);
         }
 
@@ -352,7 +352,7 @@ namespace cogbot.TheOpenSims
 
         public override void InvokeReal()
         {
-            TargetUse.InvokeReal(TheBot);
+            TargetUse.InvokeReal((SimActor)TheBot);
         }
 
 
@@ -402,6 +402,7 @@ namespace cogbot.TheOpenSims
 
         public override void InvokeReal()
         {
+            SimActor TheBot = (SimActor)this.TheBot;
             TimeRemaining = rand.Next(1, 3); // one to tree cycles
             while (TimeRemaining-- > 0)
             {

@@ -100,13 +100,13 @@ namespace cogbot.Actions
             {
                 if (args[0] == "on")
                 {
-                    SimAvatar avatar = GetSimAvatar();
+                    SimActor avatar = GetSimAvatar();
                     return "Turned on " + avatar;
                 }
 
                 if (args[0] == "start")
                 {
-                    SimAvatar avatar = GetSimAvatar();
+                    SimActor avatar = GetSimAvatar();
                     avatar.StartThinking();
                     return "Started Thinking " + avatar;
                 }
@@ -119,7 +119,7 @@ namespace cogbot.Actions
 
                 if (args[0] == "think")
                 {
-                    SimAvatar avatar = GetSimAvatar();
+                    SimActor avatar = GetSimAvatar();
                     if (avatar.IsThinking())
                     {
                         avatar.PauseThinking();
@@ -139,14 +139,14 @@ namespace cogbot.Actions
 
                 if (args[0] == "stop")
                 {
-                    SimAvatar avatar = GetSimAvatar();
+                    SimActor avatar = GetSimAvatar();
                     avatar.PauseThinking();
                     return "Stopped " + avatar;
                 }
                 else if (args[0] == "off")
                 {
                     //    if (BRM == null) return "the bot was off";
-                    SimAvatar avatar = GetSimAvatar();
+                    SimActor avatar = GetSimAvatar();
                     avatar.PauseThinking();
                     //   BRM = null;
                     return "Stopped " + avatar;
@@ -162,7 +162,7 @@ namespace cogbot.Actions
             return usageString;
         }
 
-        private SimAvatar GetSimAvatar()
+        private SimActor GetSimAvatar()
         {
             return WorldSystem.TheSimAvatar;
 
