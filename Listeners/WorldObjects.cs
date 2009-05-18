@@ -47,7 +47,7 @@ namespace cogbot.Listeners
         public override void Parcels_OnSimParcelsDownloaded(Simulator simulator,
                                                             InternalDictionary<int, Parcel> simParcels, int[,] parcelMap)
         {
-            base.Parcels_OnSimParcelsDownloaded(simulator, simParcels, parcelMap);
+            //base.Parcels_OnSimParcelsDownloaded(simulator, simParcels, parcelMap);
         }
 
         public override void Network_OnConnected(object sender)
@@ -3296,7 +3296,25 @@ namespace cogbot.Listeners
             lock (UpdateQueue)
                 UpdateQueue.Enqueue(
                     () =>
-                    SendNewEvent("On-Script-Question", simulator, taskID, itemID, objectName, objectOwner, questions));
+                        {
+                            /*
+                                TaskID: 552f9165-0dd8-9124-f9bb-20fa3cb18382
+                                ItemID: 8fe015cb-bf46-5e1c-8975-f2cbca4762d9
+                                Questions: 16
+                                ObjectName: DanceBall
+                                ObjectOwner: Serena Vale
+                             */
+ 
+                            SendNewEvent("On-Script-Question", simulator, taskID, itemID, objectName, objectOwner,
+                                         questions);
+                            /*
+                                 TaskID: 552f9165-0dd8-9124-f9bb-20fa3cb18382
+                                 ItemID: 8fe015cb-bf46-5e1c-8975-f2cbca4762d9
+                                 Questions: 16
+                             */
+                            client.Self.ScriptQuestionReply(simulator, itemID, taskID, questions);
+                        }
+                    );
         }
 
         public override void Self_OnScriptDialog(string message, string objectName, UUID imageID, UUID objectID,
