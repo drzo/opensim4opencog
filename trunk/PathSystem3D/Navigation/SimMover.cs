@@ -418,7 +418,7 @@ namespace PathSystem3D.Navigation
         public SimCollisionPlaneMover(SimMover mover, SimPosition finalGoal, double finalDistance) :
             base(mover, finalGoal, finalDistance)
         {
-            float startZ = mover.GetSimPosition().Z;
+            float startZ = CalcStartZ(mover.GetSimPosition().Z, finalGoal.GetSimPosition().Z);
             double diff = MoverPlane.MinZ - startZ;
 
             MoverPlane.MinZ = startZ;
@@ -427,6 +427,14 @@ namespace PathSystem3D.Navigation
             {
                 MoverPlane.HeightMapNeedsUpdate = true;
             }
+        }
+
+        static float CalcStartZ(float start, float end)
+        {
+            if (start <= end) return start;
+            float dlower = start - end;
+            if (dlower<=3) return end;
+            return start - 2;
         }
         public static Dictionary<SimMover, CollisionPlane> MoverPlanes = new Dictionary<SimMover, CollisionPlane>();
 
