@@ -33,19 +33,17 @@ namespace RTParser.AIMLTagHandlers
         protected override string ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "cycterm")
-            {
-                if (templateNodeInnerText.Length > 0)
-                {
-                    string filter = base.GetAttribValue("filter", null);
-                    if (filter == null) filter = base.GetAttribValue("isa", "Thing");
-                    return lookup(Recurse(), filter);
-                }
+            {                    
+                string filter = base.GetAttribValue("filter", GetAttribValue("isa", "Thing"));
+                return lookup(Recurse(), filter);
             }
             return string.Empty;
         }
 
         private string lookup(string text,string filter)
         {
+            if (!Proc.CycEnabled)
+                return String.Format("\"{0}\"", text);
             string term;
             string ptext = text.Substring(0, 1).ToUpper() + text.Substring(1);
             if(lookupCycTerm("(fi-ask '(#$denotation #$%s-TheWord ?TEXT ?TYPE ?CYCOBJECT) #$EverythingPSC)", ptext, filter,out term)
