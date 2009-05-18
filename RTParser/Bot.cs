@@ -1112,7 +1112,7 @@ The AIMLbot program.
         {
             get
             {
-                if (cycAccess == null || cycAccess.isClosed())
+                if (UseCyc && (cycAccess == null || cycAccess.isClosed()))
                 {
                     try
                     {
@@ -1120,7 +1120,7 @@ The AIMLbot program.
                         cycAccess.converseInt("(+ 1 1)");
                         cycAccess.createIndividual("AimlContextMt",
                                                     "#$AimlContextMt contains storage location in OpenCyc for AIML variables",
-                                                    "UniversalVocabularyMt","DataMicrotheory");
+                                                    "UniversalVocabularyMt", "DataMicrotheory");
                     }
                     catch (Exception e)
                     {
@@ -1128,7 +1128,7 @@ The AIMLbot program.
                     }
                     //if (cycAccess.isClosed()) cycAccess.persistentConnection = true;
                 }
-                
+
                 return cycAccess;
             }
             set { cycAccess = value; }
