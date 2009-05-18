@@ -22,12 +22,12 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            if (args.Length != 1)
+            if (args.Length < 1)
                 return "Usage: dumpoutfit [avatar-uuid]";
 
             UUID target;
 
-            if (!UUID.TryParse(args[0], out target))
+            if (!UUIDTryParse(args, 0 , out target))
                 return "Usage: dumpoutfit [avatar-uuid]";
 
             lock (Client.Network.Simulators)

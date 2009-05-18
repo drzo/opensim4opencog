@@ -16,10 +16,10 @@ namespace cogbot.Actions
         {
             UUID primID;
 
-            if (args.Length != 1)
+            if (args.Length < 1)
                 return "Usage: priminfo [prim-uuid]";
 
-            if (UUIDTryParse(String.Join(" ",args), out primID))
+            if (UUIDTryParse(args, 0, out primID))
             {
                 Primitive target = Client.Network.CurrentSim.ObjectsPrimitives.Find(
                     delegate(Primitive prim) { return prim.ID == primID; }

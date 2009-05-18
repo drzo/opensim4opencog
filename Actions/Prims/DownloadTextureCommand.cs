@@ -25,7 +25,7 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            if (args.Length != 1 && args.Length != 2)
+            if (args.Length < 1)
                 return "Usage: downloadtexture [texture-uuid] [discardlevel]";
 
             TextureID = UUID.Zero;

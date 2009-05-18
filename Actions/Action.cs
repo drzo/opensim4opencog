@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
-using OpenMetaverse; //using libsecondlife;
+using OpenMetaverse;
 
 
 namespace cogbot.Actions
@@ -41,7 +39,8 @@ namespace cogbot.Actions
         }
         public bool UUIDTryParse(string p, out UUID target)
         {
-            if (p.Contains("-") && UUID.TryParse(p,out target)) return true;
+            if (p.Contains("-") && UUID.TryParse(p, out target)) return true;
+            if (p.Contains("-") && UUID.TryParse(p.Split(new char[] { ' ' })[0], out target)) return true;
             Primitive prim;
             if (WorldSystem.tryGetPrim(p,out prim)) {
                 target = prim.ID;

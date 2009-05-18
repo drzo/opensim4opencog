@@ -24,7 +24,7 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            if (args.Length != 1)
+            if (args.Length < 1)
                 return "Usage: textures [on/off]";
 
             if (args[0].ToLower() == "on")
