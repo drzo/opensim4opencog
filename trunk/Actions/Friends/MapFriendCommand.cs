@@ -19,12 +19,12 @@ namespace cogbot.Actions
         }
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            if (args.Length != 1)
+            if (args.Length < 1)
                 return Description;
 
             UUID targetID;
 
-            if (!UUIDTryParse(args,0, out targetID))
+            if (!UUIDTryParse(args, 0, out targetID))
                 return Description;
 
             StringBuilder sb = new StringBuilder();

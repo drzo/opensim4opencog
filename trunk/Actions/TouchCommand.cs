@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using OpenMetaverse;
-using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
@@ -19,7 +15,7 @@ namespace cogbot.Actions
 		{
             UUID target;
 
-            if (args.Length != 1)
+            if (args.Length < 1)
                 return "Usage: touch UUID";
             
             if (UUIDTryParse(args,0, out target))

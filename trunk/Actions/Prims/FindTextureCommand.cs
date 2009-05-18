@@ -18,7 +18,7 @@ namespace cogbot.Actions
             int faceIndex;
             UUID textureID;
 
-            if (args.Length != 2)
+            if (args.Length < 2)
                 return "Usage: findtexture [face-index] [texture-uuid]";
 
             if (Int32.TryParse(args[0], out faceIndex) &&

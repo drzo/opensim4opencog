@@ -29,7 +29,7 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
-            if (args.Length != 1)
+            if (args.Length < 1)
                 return Description;
 
             UUID targetID;
@@ -47,14 +47,9 @@ namespace cogbot.Actions
                 Client.Avatars.OnAvatarPicks += new AvatarManager.AvatarPicksCallback(Avatars_OnAvatarPicks);
                 Client.Avatars.OnPickInfo += new AvatarManager.PickInfoCallback(Avatars_OnPickInfo);
             }           
-            try
-            {
-                targetID = new UUID(args[0]);
-            }
-            catch (Exception)
-            {
-                return Description;
-            }
+
+			if (!UUIDTryParse(args,0, out targetID))
+				return Description;
 
             // Request all of the packets that make up an avatar profile
             Client.Avatars.RequestAvatarProperties(targetID);
