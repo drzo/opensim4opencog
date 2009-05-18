@@ -1096,13 +1096,25 @@ The AIMLbot program.
 
 
         public CycAccess cycAccess;
+        private bool UseCyc = true;
         public org.opencyc.api.CycAccess GetCycAccess
         {
             get
             {
                 if (cycAccess == null || cycAccess.isClosed())
                 {
-                    cycAccess = new CycAccess("CycServer",3600);
+                    try
+                    {
+                        cycAccess = new CycAccess("CycServer", 3600);
+                        cycAccess.converseInt("(+ 1 1)");
+                        cycAccess.createIndividual("AimlContextMt",
+                                                    "#$AimlContextMt contains storage location in OpenCyc for AIML variables",
+                                                    "UniversalVocabularyMt","DataMicrotheory");
+                    }
+                    catch (Exception e)
+                    {
+                        UseCyc = false;
+                    }
                     //if (cycAccess.isClosed()) cycAccess.persistentConnection = true;
                 }
                 
@@ -1113,11 +1125,13 @@ The AIMLbot program.
         public string EvalSubL(string cmd, string filter)
         {
             string result = "(EVAL-SUBL " + cmd + ")";
+            CycAccess access = GetCycAccess;
+            if (!UseCyc) return result;
             try
             {
                 Console.Write(result);
                 Console.Out.Flush();
-                Object oresult = GetCycAccess.converseList("(list " + cmd + ")").first();
+                Object oresult = access.converseList("(list " + cmd + ")").first();
                 Console.WriteLine( " => " + oresult);
                 result = "" + oresult;
                 if (oresult is CycObject)

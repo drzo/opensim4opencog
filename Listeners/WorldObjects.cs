@@ -184,6 +184,7 @@ namespace cogbot.Listeners
                     client.Avatars.OnLookAt -= Avatars_OnLookAt;
                     client.Avatars.OnEffect -= Avatars_OnEffect;
                     client.Self.OnCameraConstraint -= Self_OnCameraConstraint;
+                    client.Settings.PIPELINE_REQUEST_TIMEOUT = 60000;
                 }
             }
         }
@@ -2369,7 +2370,7 @@ namespace cogbot.Listeners
             {
                 prim = GetPrimitive(uuid, null);
                 if (prim != null) return true;
-            }
+            } 
             if (name.ToLower().StartsWith("primid"))
             {
                 if (name.Length > 6)

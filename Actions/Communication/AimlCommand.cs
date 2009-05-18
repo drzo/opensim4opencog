@@ -118,8 +118,11 @@ namespace cogbot.Listeners
                                 string resp = AIMLInterp(message, myUser);
                                 if (String.IsNullOrEmpty(resp)) return;
                                 if (Environment.TickCount - myUser.LastResponseGivenTime <
-                                    (60000/myUser.MaxRespondToChatPerMinute))
+                                    (60000 / myUser.MaxRespondToChatPerMinute))
+                                {
+                                    output("AIML_OnChat Reply is too fast: " + resp);
                                     return; //too early to respond.. but still listened
+                                }
                                 if (!myUser.RespondToChat)
                                 {
                                     output("AIML_OnChat Reply is quietly: " + resp);

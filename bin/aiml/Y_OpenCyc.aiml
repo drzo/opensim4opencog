@@ -87,7 +87,7 @@
 			<li>Hey <star index="1"/></li>
 			<li>Hi  <star index="1"/><star index="1"/>.</li>
 		</random>
-		<think><cycassert>(#$nameString #$TheUser "<star index="1"/>") #$EverythingPSC </cycassert> </think>
+		<think><cycassert>(#$nameString #$TheUser "<star index="1"/>") <get name="assertmt" default="#$AimlContextMt"/> </cycassert> </think>
 	</template>
 </category>
 
@@ -288,7 +288,7 @@
 	<pattern>I AM *</pattern>
 	<guard>(#$isa <cycterm><star index="1"/></cycterm> #$Thing)</guard>
 	<template>
-		<think><cycassert>(#$isa #$TheUser <cycterm><star index="1"/></cycterm>) #$EverythingPSC </cycassert> </think>
+		<think><cycassert>(#$isa #$TheUser <cycterm><star index="1"/></cycterm>) <get name="assertmt" default="#$AimlContextMt"/> </cycassert> </think>
 	</template>
 </category>
 
@@ -415,7 +415,7 @@
 	<pattern>I AM FROM * </pattern>
 	<guard>(#$isa <cycterm filter="Location" ><star index="1"/></cycterm> #$Location)</guard>
 	<template>
-		<think><cycassert>(#$objectFoundInLocation #$TheUser <cycterm filter="Location" ><star index="1"/></cycterm> ) #$EverythingPSC )</cycassert></think> I will remember you are from <star index="1"/>.
+		<think><cycassert>(#$objectFoundInLocation #$TheUser <cycterm filter="Location" ><star index="1"/></cycterm> ) <get name="assertmt" default="#$AimlContextMt"/> )</cycassert></think> I will remember you are from <star index="1"/>.
 	</template>
 </category>
 
@@ -424,7 +424,7 @@
 	<pattern>I AM GOING TO * </pattern>
 	<guard>(#$isa <cycterm filter="Location" ><star index="1"/></cycterm> #$Location)</guard>
 	<template>
-		<think><cycassert>(#$objectFoundInLocation #$TheUser <cycterm filter="Location" ><star index="1"/></cycterm> ) #$EverythingPSC )</cycassert></think> I will remember can be found at <star index="1"/>.
+		<think><cycassert>(#$objectFoundInLocation #$TheUser <cycterm filter="Location" ><star index="1"/></cycterm> ) <get name="assertmt" default="#$AimlContextMt"/> )</cycassert></think> I will remember can be found at <star index="1"/>.
 	</template>
 </category>
 
@@ -433,7 +433,7 @@
 	<pattern>I AM IN * </pattern>
 	<guard>(#$isa <cycterm filter="Location" ><star index="1"/></cycterm> #$Location)</guard>
 	<template>
-		<think><cycassert>(#$objectFoundInLocation #$TheUser <cycterm filter="Location" ><star index="1"/></cycterm> ) #$EverythingPSC )</cycassert></think> I will remember can be found at <star index="1"/>.
+		<think><cycassert>(#$objectFoundInLocation #$TheUser <cycterm filter="Location" ><star index="1"/></cycterm> ) <get name="assertmt" default="#$AimlContextMt"/> )</cycassert></think> I will remember can be found at <star index="1"/>.
 	</template>
 </category>
 

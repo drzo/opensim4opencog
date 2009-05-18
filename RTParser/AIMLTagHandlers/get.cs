@@ -46,7 +46,10 @@ namespace RTParser.AIMLTagHandlers
             if (this.templateNode.Name.ToLower() == "get")
             {
                 string name = GetAttribValue("name", templateNodeInnerText);
-                return this.user.Predicates.grabSetting(name);
+                string defaultVal = GetAttribValue("default", String.Empty);
+                string result = this.user.Predicates.grabSetting(name);
+                if (!String.IsNullOrEmpty(result)) return result;
+                return defaultVal;
             }
             return string.Empty;
         }
