@@ -854,6 +854,9 @@ namespace RTParser
                         case "cycphrase":
                             tagHandler = new AIMLTagHandlers.cycphrase(this, user, query, request, result, node);
                             break;
+                        case "cycparaphrase":
+                            tagHandler = new AIMLTagHandlers.cycphrase(this, user, query, request, result, node);
+                            break;
                         case "guard":
                             tagHandler = new AIMLTagHandlers.guard(this, user, query, request, result, node);
                             break;
@@ -1095,9 +1098,17 @@ The AIMLbot program.
         #region CYC Interaction
 
 
-        public CycAccess cycAccess;
+        private CycAccess cycAccess;
+        public bool CycEnabled
+        {
+            get
+            {
+                cycAccess = GetCycAccess;
+                return UseCyc;
+            }
+        }
         private bool UseCyc = true;
-        public org.opencyc.api.CycAccess GetCycAccess
+        public CycAccess GetCycAccess
         {
             get
             {

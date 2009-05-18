@@ -32,7 +32,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "cycphrase")
+           // if (this.templateNode.Name.ToLower() == "cycphrase")
             {
                 if (templateNodeInnerText.Length > 0)
                 {
