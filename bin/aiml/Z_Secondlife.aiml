@@ -6,7 +6,7 @@
 <category><pattern>FOLLOW ME *</pattern><template><think><system>follow "<get name="name"/>"</system></think>Ok, I am following you <get name="name"/></template></category>
 <category><pattern>FOLLOW NO ONE *</pattern><template><think><system>stop-following</system></think>Ok, I am on my own now.</template></category>
 <category><pattern>STOP FOLLOWING *</pattern><template><think><system>stop-following</system></think>Ok, I am on my own now.</template></category>
-<category><pattern>WHAT ARE YOU DOING</pattern><template><think><system lang="lisp">stop-following</system></think>Ok, I am on my own now.</template></category>
+<category><pattern>WHAT ARE YOU DOING</pattern><template><system lang="lisp">thisClient.WorldSystem.TheSimAvatar.CurrentAction</system></template></category>
 
 <!-- simbot command -->
 <category><pattern>WANDER ARROUND</pattern><template><think><system>simbot start</system></think>Ok, I am on my own now wandering.</template></category>

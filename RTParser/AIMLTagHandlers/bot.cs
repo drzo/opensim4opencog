@@ -38,16 +38,9 @@ namespace RTParser.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "Proc")
+            if (this.templateNode.Name.ToLower() == "bot")
             {
-                if (this.templateNode.Attributes.Count == 1)
-                {
-                    if (this.templateNode.Attributes[0].Name.ToLower() == "name")
-                    {
-                        string key = this.templateNode.Attributes["name"].Value;
-                        return (string)this.Proc.GlobalSettings.grabSetting(key);
-                    }
-                }
+                return (string) this.Proc.GlobalSettings.grabSetting(GetAttribValue("name", templateNodeInnerText));
             }
             return string.Empty;
         }

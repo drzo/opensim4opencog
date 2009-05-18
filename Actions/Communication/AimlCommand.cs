@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using RTParser;
 using cogbot.Actions;
 using cogbot.TheOpenSims;
@@ -93,7 +94,7 @@ namespace cogbot.Listeners
             {
                 myUser = new User(fromname, MyBot);
                 AIMLInterp("My name is " + fromname, myUser);
-                myUser.Predicates.addSetting("name",fromname);
+                myUser.Predicates.addSetting("name", fromname);
                 BotUsers[fromname] = myUser;
                 myUser.RespondToChat = RespondToChatByDefaultAllUsers;
             }
@@ -112,18 +113,21 @@ namespace cogbot.Listeners
                 myUser.RespondToChat = false;
                 return;
             }
-     
-            string resp = AIMLInterp(message, myUser);
-            if (String.IsNullOrEmpty(resp)) return;
-            if (Environment.TickCount - myUser.LastResponseGivenTime < (60000 / myUser.MaxRespondToChatPerMinute))
-                return;   //too early to respond.. but still listened
-            if (!myUser.RespondToChat)
-            {
-                output("AIML_OnChat Reply is quietly: " + resp);
-                return;
-            }
-            Realism.Chat(client, resp, type, 6);
-            myUser.LastResponseGivenTime = Environment.TickCount;
+            (new Thread(() => // this can be long running
+                            {
+                                string resp = AIMLInterp(message, myUser);
+                                if (String.IsNullOrEmpty(resp)) return;
+                                if (Environment.TickCount - myUser.LastResponseGivenTime <
+                                    (60000/myUser.MaxRespondToChatPerMinute))
+                                    return; //too early to respond.. but still listened
+                                if (!myUser.RespondToChat)
+                                {
+                                    output("AIML_OnChat Reply is quietly: " + resp);
+                                    return;
+                                }
+                                Realism.Chat(client, resp, type, 6);
+                                myUser.LastResponseGivenTime = Environment.TickCount;
+                            })).Start();
         }
 
         public string AIMLInterp(string input)

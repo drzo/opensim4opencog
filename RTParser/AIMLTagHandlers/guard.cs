@@ -43,7 +43,10 @@ namespace RTParser.AIMLTagHandlers
                     if (String.IsNullOrEmpty(result) || result == "NIL")
                     {
                         this.query.GuardFailed = true;
+                        return string.Empty;
                     }
+                    return result;
+
                 }
             }
             return string.Empty;

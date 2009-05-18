@@ -12,12 +12,14 @@ namespace cogbot.DotCYC
 {
     public class SimCyclifier
     {
+        public static bool UseCyc = false;
         readonly private CycAccess cycAccess;
         readonly private CycFort vocabMt;
         readonly private CycFort assertMt;
         readonly private CycFort simObjectFort;
         public SimCyclifier(TextForm tf)
         {
+            if (!UseCyc) return;
             if (tf.cycConnection == null) tf.cycConnection = new CycConnectionForm();
             cycAccess = tf.cycConnection.getCycAccess();
             assertMt = createIndividual("SimDataMt", "#$DataMicrotheory for the simulator", "UniversalVocabularyMt",
