@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using OpenMetaverse;
-using PathSystem3D.Navigation;
-using cogbot.Listeners;
-using PathSystem3D.Mesher;
-using System.Threading;
-using cogbot.ScriptEngines;
 using System.Drawing;
+using System.Threading;
+using cogbot.Listeners;
+using cogbot.ScriptEngines;
+using OpenMetaverse;
+using PathSystem3D.Mesher;
+using PathSystem3D.Navigation;
 
 namespace cogbot.TheOpenSims
 {
@@ -14,9 +14,14 @@ namespace cogbot.TheOpenSims
     {
         C = 0,
         N = 1,
-        NE, E, SE, S, SW, W, NW
+        NE,
+        E,
+        SE,
+        S,
+        SW,
+        W,
+        NW
     }
-
 
 
     /// <summary>
@@ -24,12 +29,59 @@ namespace cogbot.TheOpenSims
     /// </summary>
     public class SimRegion
     {
+        private static Dictionary<ulong, SimRegion> _CurrentRegions = new Dictionary<ulong, SimRegion>();
+        private static Vector2 vC = new Vector2(0, 0); // NW
+        private static Vector2 vE = new Vector2(1, 0); // NW
+
+        private static Vector2 // C
+                               vN = new Vector2(0, 1),
+                               // N
+                               vNE = new Vector2(1, 1); // NW
+
+        private static Vector2 // SE
+            vNW = new Vector2(-1, 1); // NW
+
+        private static Vector2 // SE
+                               vS = new Vector2(0, -1); // NW
+
+        private static Vector2 vSE = new Vector2(1, -1); // NW
+
+        private static Vector2 // S
+                               vSW = new Vector2(-1, -1),
+                               // SW
+                               vW = new Vector2(-1, 0); // NW
+
+        public static Vector2[] XYOf = {vC, vN, vNE, vE, vSE, vS, vSW, vW, vNW};
+        private readonly float MAXY = 256f;
+        public readonly ulong RegionHandle;
+        private GridRegion _GridInfo;
+        private Vector2 _GridLoc = Vector2.Zero;
+        private List<Simulator> _Simulators = new List<Simulator>();
+        public float AverageHieght = 21.5f;
+        private GridClient Client;
+        private int GetGroundLevelTried = 0;
+        private bool GridInfoKnown = false;
+        private SimPathStore PathStore;
+        private AutoResetEvent regionEvent = new AutoResetEvent(false);
+
+        public SimRegion(ulong Handle)
+            //: base(null, default(Vector2), default(Vector3d), default(Vector3))
+        {
+            RegionHandle = Handle;
+            // RegionName = gridRegionName;
+            //WorldSystem = worldSystem;
+            //Debug("++++++++++++++++++++++++++Created region: ");
+            PathStore = SimPathStore.GetPathStore(GetGridLocation());
+            PathStore.SetGroundLevel(GetGroundLevel);
+            // if (PathStore.RegionName
+            //new SimPathStore("region" + Handle + ".serz", GetGridLocation(), GetWorldPosition(), new Vector3(256, 256, float.MaxValue));
+        }
 
         public static List<SimRegion> CurrentRegions
         {
             get
             {
-                List<SimRegion> sims = new List<SimRegion>();
+                var sims = new List<SimRegion>();
                 lock (_CurrentRegions)
                 {
                     foreach (SimRegion R in _CurrentRegions.Values)
@@ -41,6 +93,137 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        ///readonly public List<SimPathStore> PathStores = new List<SimPathStore>();
+        public SimRegion N
+        {
+            get { return GetOffsetRegion(vN); }
+            set { SetRegionOffset(vN, value); }
+        }
+
+        public SimRegion E
+        {
+            get { return GetOffsetRegion(vE); }
+            set { SetRegionOffset(vE, value); }
+        }
+
+        public SimRegion S
+        {
+            get { return GetOffsetRegion(vS); }
+            set { SetRegionOffset(vS, value); }
+        }
+
+        public SimRegion W
+        {
+            get { return GetOffsetRegion(vW); }
+            set { SetRegionOffset(vW, value); }
+        }
+
+        public GridRegion GridInfo
+        {
+            get
+            {
+                if (GridInfoKnown) return _GridInfo;
+                if (!String.IsNullOrEmpty(PathStore.RegionName))
+                {
+                    regionEvent.Reset();
+                    GridManager.GridRegionCallback callback =
+                        delegate(GridRegion gridRegion)
+                            {
+                                if (gridRegion.RegionHandle == RegionHandle)
+                                    regionEvent.Set();
+                            };
+                    Client.Grid.OnGridRegion += callback;
+                    Client.Grid.RequestMapRegion(PathStore.RegionName, GridLayerType.Objects);
+                    regionEvent.WaitOne(Client.Settings.MAP_REQUEST_TIMEOUT, false);
+                    Client.Grid.OnGridRegion -= callback;
+                }
+                return _GridInfo;
+            }
+            set
+            {
+                GridInfoKnown = true;
+                _GridInfo = value;
+                if (value.WaterHeight != 0)
+                {
+                    PathStore.WaterHeight = value.WaterHeight;
+                    Console.WriteLine("{0} WaterHeight = {1}", value.Name, PathStore.WaterHeight);
+                }
+                PathStore.RegionName = _GridInfo.Name;
+                regionEvent.Set();
+                //  Client.Grid.RequestMapRegion(PathStore.RegionName, GridLayerType.Terrain);
+            }
+        }
+
+        /// <summary>
+        ///Getter gets the best simulator and the setter adds the simulator to the known collection
+        /// </summary>
+        public Simulator TheSimulator
+        {
+            get
+            {
+                Simulator best = null;
+                lock (_Simulators)
+                {
+                    if (_Simulators.Count == 0) return _Simulators[0];
+                    foreach (Simulator S in _Simulators)
+                    {
+                        if (!S.Connected)
+                        {
+                            if (best != null) continue;
+                        }
+                        if (!S.IsRunning)
+                        {
+                            if (best != null) continue;
+                        }
+                        if (!S.Client.Settings.OBJECT_TRACKING)
+                        {
+                            if (best != null) continue;
+                        }
+                        best = S;
+                    }
+                }
+                return best;
+            }
+            set
+            {
+                if (value == null) return;
+                lock (_Simulators)
+                    if (!_Simulators.Contains(value))
+                    {
+                        _Simulators.Add(value);
+                        PathStore.WaterHeight = value.WaterHeight;
+                        _GridInfo.WaterHeight = (byte) value.WaterHeight;
+                        Console.WriteLine("{0} SimWaterHeight = {1}", value.Name, PathStore.WaterHeight);
+                    }
+                Simulator simulator = TheSimulator;
+                if (simulator == value) return;
+                SetMaster((GridClient) value.Client);
+            }
+        }
+
+        public string RegionName
+        {
+            get
+            {
+                if (PathStore.RegionName == null)
+                {
+                    Simulator sim = TheSimulator;
+                    if (sim != null && !String.IsNullOrEmpty(sim.Name))
+                        PathStore.RegionName = sim.Name;
+                }
+                if (!String.IsNullOrEmpty(_GridInfo.Name))
+                {
+                    PathStore.RegionName = _GridInfo.Name;
+                }
+                if (PathStore.RegionName != null) return PathStore.RegionName;
+                return "region" + RegionHandle;
+            }
+            set
+            {
+                _GridInfo.Name = value;
+                PathStore.RegionName = value;
+            }
+        }
 
         public SimPathStore GetPathStore3D(Vector3 v3)
         {
@@ -59,25 +242,6 @@ namespace cogbot.TheOpenSims
         {
             PathStore.RecomputeMatrix();
         }
-
-        //public static implicit operator SimRegion(SimPathStore m)
-        //{
-        //    return m.GetPathStore();
-        //}
-
-        readonly float MAXY = 256f;
-
-        static Vector2 vC = new Vector2(0, 0), // C
-               vN = new Vector2(0, 1), // N
-               vNE = new Vector2(1, 1), // NE
-               vE = new Vector2(1, 0),  // E
-               vSE = new Vector2(1, -1), // SE
-               vS = new Vector2(0, -1), // S
-               vSW = new Vector2(-1, -1), // SW
-               vW = new Vector2(-1, 0), // W
-               vNW = new Vector2(-1, 1); // NW
-
-        public static Vector2[] XYOf = { vC, vN, vNE, vE, vSE, vS, vSW, vW, vNW };
 
         public static SimRegion GetRegion(Vector3d pos)
         {
@@ -107,10 +271,10 @@ namespace cogbot.TheOpenSims
         /// <returns>A 64-bit region handle that can be used to teleport to</returns>
         public static ulong GlobalPosToRegionHandle(float globalX, float globalY, out float localX, out float localY)
         {
-            uint x = ((uint)globalX / 256) * 256;
-            uint y = ((uint)globalY / 256) * 256;
-            localX = globalX - (float)x;
-            localY = globalY - (float)y;
+            uint x = ((uint) globalX/256)*256;
+            uint y = ((uint) globalY/256)*256;
+            localX = globalX - (float) x;
+            localY = globalY - (float) y;
             return Utils.UIntsToLong(x, y);
         }
 
@@ -120,8 +284,8 @@ namespace cogbot.TheOpenSims
             uint x = Round256(gloabl.X);
             uint y = Round256(gloabl.Y);
             Vector3 local;
-            local.X = (float)gloabl.X - x;
-            local.Y = (float)gloabl.Y - y;
+            local.X = (float) gloabl.X - x;
+            local.Y = (float) gloabl.Y - y;
             if (local.X >= 256)
             {
                 local.X -= 256f;
@@ -133,7 +297,7 @@ namespace cogbot.TheOpenSims
                 y++;
             }
             SimRegion R = GetRegion(Utils.UIntsToLong(x, y));
-            local.Z = (float)gloabl.Z;
+            local.Z = (float) gloabl.Z;
             try
             {
                 return R.GetWaypointOf(local);
@@ -157,18 +321,16 @@ namespace cogbot.TheOpenSims
             {
                 Debug("GlobalToWaypoint? " + pos);
             }
-            return new Vector3((float)pos.X - Round256(pos.X), (float)pos.Y - Round256(pos.Y), (float)pos.Z);
+            return new Vector3((float) pos.X - Round256(pos.X), (float) pos.Y - Round256(pos.Y), (float) pos.Z);
         }
 
         public static uint Round256(double global)
         {
-            return ((uint)global / 256) * 256;
+            return ((uint) global/256)*256;
         }
 
 
-        static Dictionary<ulong, SimRegion> _CurrentRegions = new Dictionary<ulong, SimRegion>();
-
-        static public SimRegion GetRegion(ulong id)
+        public static SimRegion GetRegion(ulong id)
         {
             if (id == 0)
             {
@@ -183,29 +345,27 @@ namespace cogbot.TheOpenSims
                 _CurrentRegions[id] = R;
                 return R;
             }
-
         }
 
-        Vector2 _GridLoc = Vector2.Zero;
         public Vector2 GetGridLocation()
         {
             if (_GridLoc == Vector2.Zero)
             {
                 uint regionX = 0, regionY = 0;
                 Utils.LongToUInts(RegionHandle, out regionX, out regionY);
-                _GridLoc = new Vector2((float)(regionX / 256), (float)(regionY / 256));
+                _GridLoc = new Vector2((float) (regionX/256), (float) (regionY/256));
             }
             return _GridLoc;
         }
 
-        static public SimRegion GetRegion(string simname)
+        public static SimRegion GetRegion(string simname)
         {
             foreach (SimRegion R in CurrentRegions)
                 if (R.RegionName.Contains(simname)) return R;
             return null;
         }
 
-        static public SimRegion GetRegion(Simulator sim)
+        public static SimRegion GetRegion(Simulator sim)
         {
             if (sim == null) return null;
             ulong Handle = sim.Handle;
@@ -214,29 +374,6 @@ namespace cogbot.TheOpenSims
             return R;
         }
 
-
-        ///readonly public List<SimPathStore> PathStores = new List<SimPathStore>();
-
-        public SimRegion N
-        {
-            get { return GetOffsetRegion(vN); }
-            set { SetRegionOffset(vN, value); }
-        }
-        public SimRegion E
-        {
-            get { return GetOffsetRegion(vE); }
-            set { SetRegionOffset(vE, value); }
-        }
-        public SimRegion S
-        {
-            get { return GetOffsetRegion(vS); }
-            set { SetRegionOffset(vS, value); }
-        }
-        public SimRegion W
-        {
-            get { return GetOffsetRegion(vW); }
-            set { SetRegionOffset(vW, value); }
-        }
 
         public void SetRegionOffset(Vector2 v2, SimRegion value)
         {
@@ -248,7 +385,7 @@ namespace cogbot.TheOpenSims
             return GetRegion(GetGridLocation() + v2);
         }
 
-        static void SetRegion(ulong h, SimRegion value)
+        private static void SetRegion(ulong h, SimRegion value)
         {
             if (_CurrentRegions.ContainsKey(h))
             {
@@ -267,7 +404,7 @@ namespace cogbot.TheOpenSims
 
         public static ulong HandleOf(Vector2 v2)
         {
-            return Utils.UIntsToLong((uint)v2.X * 256, (uint)v2.Y * 256);
+            return Utils.UIntsToLong((uint) v2.X*256, (uint) v2.Y*256);
         }
 
         public Vector3d LocalToGlobal(Vector3 objectLoc)
@@ -275,58 +412,17 @@ namespace cogbot.TheOpenSims
             return PathStore.LocalToGlobal(objectLoc);
         }
 
-        AutoResetEvent regionEvent = new AutoResetEvent(false);
-        bool GridInfoKnown = false;
-        GridRegion _GridInfo;
-        GridClient Client;
-        public GridRegion GridInfo
+        public float[] ResizeTerrain512Interpolation(float[] heightMap, int m_regionWidth, int m_regionHeight)
         {
-            get
-            {
-                if (GridInfoKnown) return _GridInfo;
-                if (!String.IsNullOrEmpty(PathStore.RegionName))
-                {
-                    regionEvent.Reset();
-                    OpenMetaverse.GridManager.GridRegionCallback callback =
-                        delegate(GridRegion gridRegion)
-                        {
-                            if (gridRegion.RegionHandle == RegionHandle)
-                                regionEvent.Set();
-                        };
-                    Client.Grid.OnGridRegion += callback;
-                    Client.Grid.RequestMapRegion(PathStore.RegionName, GridLayerType.Objects);
-                    regionEvent.WaitOne(Client.Settings.MAP_REQUEST_TIMEOUT, false);
-                    Client.Grid.OnGridRegion -= callback;
-
-                }
-                return _GridInfo;
-            }
-            set
-            {           
-                GridInfoKnown = true;
-                _GridInfo = value;
-                if (value.WaterHeight != 0)
-                {
-                    PathStore.WaterHeight = value.WaterHeight;                    
-                    Console.WriteLine("{0} WaterHeight = {1}", value.Name, PathStore.WaterHeight);                    
-                }
-                PathStore.RegionName = _GridInfo.Name;
-                regionEvent.Set();
-              //  Client.Grid.RequestMapRegion(PathStore.RegionName, GridLayerType.Terrain);
-            }
-        }
-
-        public float[] ResizeTerrain512Interpolation(float[] heightMap,int m_regionWidth,int m_regionHeight)
-        {
-            float[] returnarr = new float[262144];
-            float[,] resultarr = new float[m_regionWidth, m_regionHeight];
+            var returnarr = new float[262144];
+            var resultarr = new float[m_regionWidth,m_regionHeight];
 
             // Filling out the array into it's multi-dimentional components
             for (int y = 0; y < m_regionHeight; y++)
             {
                 for (int x = 0; x < m_regionWidth; x++)
                 {
-                    resultarr[y, x] = heightMap[y * m_regionWidth + x];
+                    resultarr[y, x] = heightMap[y*m_regionWidth + x];
                 }
             }
 
@@ -389,12 +485,12 @@ namespace cogbot.TheOpenSims
             // 4th #
             // on single loop.
 
-            float[,] resultarr2 = new float[512, 512];
+            var resultarr2 = new float[512,512];
             for (int y = 0; y < m_regionHeight; y++)
             {
                 for (int x = 0; x < m_regionWidth; x++)
                 {
-                    resultarr2[y * 2, x * 2] = resultarr[y, x];
+                    resultarr2[y*2, x*2] = resultarr[y, x];
 
                     if (y < m_regionHeight)
                     {
@@ -402,17 +498,17 @@ namespace cogbot.TheOpenSims
                         {
                             if (x + 1 < m_regionWidth)
                             {
-                                resultarr2[(y * 2) + 1, x * 2] = ((resultarr[y, x] + resultarr[y + 1, x] +
-                                                               resultarr[y, x + 1] + resultarr[y + 1, x + 1]) / 4);
+                                resultarr2[(y*2) + 1, x*2] = ((resultarr[y, x] + resultarr[y + 1, x] +
+                                                               resultarr[y, x + 1] + resultarr[y + 1, x + 1])/4);
                             }
                             else
                             {
-                                resultarr2[(y * 2) + 1, x * 2] = ((resultarr[y, x] + resultarr[y + 1, x]) / 2);
+                                resultarr2[(y*2) + 1, x*2] = ((resultarr[y, x] + resultarr[y + 1, x])/2);
                             }
                         }
                         else
                         {
-                            resultarr2[(y * 2) + 1, x * 2] = resultarr[y, x];
+                            resultarr2[(y*2) + 1, x*2] = resultarr[y, x];
                         }
                     }
                     if (x < m_regionWidth)
@@ -421,29 +517,29 @@ namespace cogbot.TheOpenSims
                         {
                             if (y + 1 < m_regionHeight)
                             {
-                                resultarr2[y * 2, (x * 2) + 1] = ((resultarr[y, x] + resultarr[y + 1, x] +
-                                                               resultarr[y, x + 1] + resultarr[y + 1, x + 1]) / 4);
+                                resultarr2[y*2, (x*2) + 1] = ((resultarr[y, x] + resultarr[y + 1, x] +
+                                                               resultarr[y, x + 1] + resultarr[y + 1, x + 1])/4);
                             }
                             else
                             {
-                                resultarr2[y * 2, (x * 2) + 1] = ((resultarr[y, x] + resultarr[y, x + 1]) / 2);
+                                resultarr2[y*2, (x*2) + 1] = ((resultarr[y, x] + resultarr[y, x + 1])/2);
                             }
                         }
                         else
                         {
-                            resultarr2[y * 2, (x * 2) + 1] = resultarr[y, x];
+                            resultarr2[y*2, (x*2) + 1] = resultarr[y, x];
                         }
                     }
                     if (x < m_regionWidth && y < m_regionHeight)
                     {
                         if ((x + 1 < m_regionWidth) && (y + 1 < m_regionHeight))
                         {
-                            resultarr2[(y * 2) + 1, (x * 2) + 1] = ((resultarr[y, x] + resultarr[y + 1, x] +
-                                                                 resultarr[y, x + 1] + resultarr[y + 1, x + 1]) / 4);
+                            resultarr2[(y*2) + 1, (x*2) + 1] = ((resultarr[y, x] + resultarr[y + 1, x] +
+                                                                 resultarr[y, x + 1] + resultarr[y + 1, x + 1])/4);
                         }
                         else
                         {
-                            resultarr2[(y * 2) + 1, (x * 2) + 1] = resultarr[y, x];
+                            resultarr2[(y*2) + 1, (x*2) + 1] = resultarr[y, x];
                         }
                     }
                 }
@@ -456,14 +552,14 @@ namespace cogbot.TheOpenSims
                 {
                     if (Single.IsNaN(resultarr2[y, x]) || Single.IsInfinity(resultarr2[y, x]))
                     {
-                        Logger.Log("[PHYSICS]: Non finite heightfield element detected.  Setting it to 0",Helpers.LogLevel.Warning);
+                        Logger.Log("[PHYSICS]: Non finite heightfield element detected.  Setting it to 0",
+                                   Helpers.LogLevel.Warning);
                         resultarr2[y, x] = 0;
                     }
 
                     if (resultarr2[y, x] <= 0)
                     {
                         returnarr[i] = 0.0000001f;
-
                     }
                     else
                         returnarr[i] = resultarr2[y, x];
@@ -475,105 +571,23 @@ namespace cogbot.TheOpenSims
             return returnarr;
         }
 
-        List<Simulator> _Simulators = new List<Simulator>();
-
-        /// <summary>
-        ///Getter gets the best simulator and the setter adds the simulator to the known collection
-        /// </summary>
-        public Simulator TheSimulator
-        {
-            get
-            {
-                Simulator best = null;
-                lock (_Simulators)
-                {
-                    if (_Simulators.Count == 0) return _Simulators[0];
-                    foreach (Simulator S in _Simulators)
-                    {
-                        if (!S.Connected)
-                        {
-                            if (best != null) continue;
-                        }
-                        if (!S.IsRunning)
-                        {
-                            if (best != null) continue;
-                        }
-                        if (!S.Client.Settings.OBJECT_TRACKING)
-                        {
-                            if (best != null) continue;
-                        }
-                        best = S;
-                    }
-                }
-                return best;
-            }
-            set
-            {
-                if (value == null) return;
-                lock (_Simulators)
-                    if (!_Simulators.Contains(value))
-                    {
-                        _Simulators.Add(value);
-                        PathStore.WaterHeight = value.WaterHeight;
-                        _GridInfo.WaterHeight = (byte)value.WaterHeight;
-                        Console.WriteLine("{0} SimWaterHeight = {1}", value.Name, PathStore.WaterHeight);
-                    }
-                Simulator simulator = TheSimulator;
-                if (simulator == value) return;
-                SetMaster((GridClient)value.Client);
-            }
-        }
-
-        public string RegionName
-        {
-            get
-            {
-                if (PathStore.RegionName == null)
-                {
-                    Simulator sim = TheSimulator;
-                    if (sim != null && !String.IsNullOrEmpty(sim.Name))
-                        PathStore.RegionName = sim.Name;
-                }
-                if (!String.IsNullOrEmpty(_GridInfo.Name))
-                {
-                    PathStore.RegionName = _GridInfo.Name;
-                }
-                if (PathStore.RegionName != null) return PathStore.RegionName;
-                return "region" + RegionHandle;
-            }
-            set { _GridInfo.Name = value; PathStore.RegionName = value; }
-        }
-
-        readonly public ulong RegionHandle;
-        public SimRegion(ulong Handle)
-            //: base(null, default(Vector2), default(Vector3d), default(Vector3))
-        {
-            RegionHandle = Handle;
-            // RegionName = gridRegionName;
-            //WorldSystem = worldSystem;
-            //Debug("++++++++++++++++++++++++++Created region: ");
-            PathStore = SimPathStore.GetPathStore(GetGridLocation());
-            PathStore.SetGroundLevel(this.GetGroundLevel);
-           // if (PathStore.RegionName
-            //new SimPathStore("region" + Handle + ".serz", GetGridLocation(), GetWorldPosition(), new Vector3(256, 256, float.MaxValue));
-        }
-
         public void SetNodeQualityTimer(Vector3 vector3, int value, int seconds)
         {
             SimPathStore PathStore = GetPathStore(vector3);
             Point P = PathStore.ToPoint(vector3);
             CollisionIndex WP = PathStore.GetCollisionIndex(P.X, P.Y);
 
-            List<ThreadStart> undo = new List<ThreadStart>();
+            var undo = new List<ThreadStart>();
             WP.SetNodeQualityTimer(PathStore.GetCollisionPlane(vector3.Z), value, undo);
-            if (undo.Count > 0) new Thread(() =>
-            {
-                Thread.Sleep(seconds * 1000);
-                foreach (ThreadStart u in undo)
-                {
-                    u();
-                }
-            }).Start();
+            if (undo.Count > 0)
+                new Thread(() =>
+                               {
+                                   Thread.Sleep(seconds*1000);
+                                   foreach (ThreadStart u in undo)
+                                   {
+                                       u();
+                                   }
+                               }).Start();
         }
 
         public float WaterHeight()
@@ -606,8 +620,6 @@ namespace cogbot.TheOpenSims
             return PathStore.GetWaypointOf(v3);
         }
 
-        #region SimPosition Members
-
         /// <summary>
         /// The middle of the Region
         /// </summary>
@@ -626,7 +638,6 @@ namespace cogbot.TheOpenSims
         //{
         //    return GetUsableLocalPositionOf(GetSimPosition(), GetSizeDistance());
         //}
-
         public float GetSizeDistance()
         {
             return 128f;
@@ -648,7 +659,6 @@ namespace cogbot.TheOpenSims
         //{
         //    return PathStore.LocalOuterEdge(startLocal, endPosOther, o nextathStroe);
         //}
-
 
 
         //public static List<Vector3d> GetPath(Vector3d globalStart, Vector3d globalEnd, double endFudge, out bool OnlyStart)
@@ -853,22 +863,21 @@ namespace cogbot.TheOpenSims
         //    }
         //}
 
-        #endregion
+        
 
-        public float AverageHieght = 21.5f;
 
-        //float SimZLevel(float vx, float vy)
-        //{
-        //    return PathStore.SimLevel(vx,vy);          
-        //}
-
-        int GetGroundLevelTried = 0;
         public float GetGroundLevel(float x, float y)
         {
+            Parcel P = GetParcel(x, y);
+            if (!ParcelAllowsEntry(P, Client.Self.AgentID))
+            {
+                return P.AABBMax.Z;
+            }
+
             if (Client != null && x >= 0 && x < 256 && y >= 0 && y < 256)
             {
                 float height;
-                while(!Client.Terrain.TerrainHeightAtPoint(RegionHandle, (int)x, (int)y, out height))
+                while (!Client.Terrain.TerrainHeightAtPoint(RegionHandle, (int) x, (int) y, out height))
                 {
                     if (GetGroundLevelTried > 20)
                     {
@@ -886,7 +895,9 @@ namespace cogbot.TheOpenSims
                     Thread.Sleep(1000);
                     if (GetGroundLevelTried > 10)
                     {
-                        if (Settings.LOG_LEVEL != Helpers.LogLevel.None) Console.WriteLine("BADDDDD Height " + x + " " + y + " waiting " + AverageHieght + " sim " + RegionName);
+                        if (Settings.LOG_LEVEL != Helpers.LogLevel.None)
+                            Console.WriteLine("BADDDDD Height " + x + " " + y + " waiting " + AverageHieght + " sim " +
+                                              RegionName);
                         return AverageHieght;
                     }
                 }
@@ -897,7 +908,40 @@ namespace cogbot.TheOpenSims
             return AverageHieght;
         }
 
-        static void Debug(string p, params object[] args)
+        static bool ParcelAllowsEntry(Parcel P, UUID uUID)
+        {
+
+            if ((P.Flags & ParcelFlags.UseAccessList) != 0)
+            {
+                foreach (var af in P.AccessWhiteList)
+                {
+                    if (af.AgentID == uUID)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            if ((P.Flags & ParcelFlags.UseAccessGroup) != 0)
+            {
+                if (P.GroupID == uUID) return true;
+                return false;
+            }
+            if ((P.Flags & ParcelFlags.UseBanList) != 0)
+            {
+                foreach (var af in P.AccessBlackList)
+                {
+                    if (af.AgentID == uUID)
+                    {
+                        return false;
+                    }
+                }                
+                return true;
+            }
+            return true;
+        }
+
+        private static void Debug(string p, params object[] args)
         {
             if (Settings.LOG_LEVEL == Helpers.LogLevel.Debug)
                 Console.WriteLine(p, args);
@@ -923,7 +967,7 @@ namespace cogbot.TheOpenSims
         {
             if (Client == gridClient) return;
             Client = gridClient;
-            Debug("SetMaster {0}" , GridInfo.Name);
+            Debug("SetMaster {0}", GridInfo.Name);
             EnsureClientEvents(Client);
         }
 
@@ -951,32 +995,21 @@ namespace cogbot.TheOpenSims
             PathStore.BlockRange(x, y, sx, sy, z);
         }
 
-        #region SimPosition Members
-
-
         public Vector3d GetWorldPosition()
         {
             return LocalToGlobal(GetSimPosition());
         }
-
-        #endregion
-
-        #region SimPosition Members
-
 
         public SimRegion GetSimRegion()
         {
             return this;
         }
 
-        #endregion
-
         public override string ToString()
         {
             Simulator sim = TheSimulator;
             if (sim != null) return sim.ToString();
             return "sim " + RegionName;
-
         }
 
         /// <summary>
@@ -985,10 +1018,10 @@ namespace cogbot.TheOpenSims
         /// <param name="zAngleFromFace"></param>
         /// <param name="distance"></param>
         /// <returns></returns>
-        static public Vector3 GetLocalLeftPos(SimPosition pos, int zAngleFromFace, double distance)
+        public static Vector3 GetLocalLeftPos(SimPosition pos, int zAngleFromFace, double distance)
         {
             double RAD_TO_DEG = 57.29577951f;
-            double Pi2 = (double)(Math.PI * 2.0);
+            var Pi2 = (double) (Math.PI*2.0);
 
             while (zAngleFromFace > 360)
             {
@@ -999,7 +1032,7 @@ namespace cogbot.TheOpenSims
                 zAngleFromFace += 360;
             }
 
-            double radAngle = zAngleFromFace / RAD_TO_DEG;
+            double radAngle = zAngleFromFace/RAD_TO_DEG;
             Quaternion rot = pos.GetSimRotation();
             Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(rot));
             double rz = Math.Atan2(v3.Y, v3.X);
@@ -1015,9 +1048,9 @@ namespace cogbot.TheOpenSims
                 az -= Pi2;
             }
 
-            float xmul = (float)Math.Cos(az);
-            float ymul = (float)Math.Sin(az);
-            Vector3 diff = new Vector3(xmul, ymul, 0) * (float)distance;
+            var xmul = (float) Math.Cos(az);
+            var ymul = (float) Math.Sin(az);
+            Vector3 diff = new Vector3(xmul, ymul, 0)*(float) distance;
 
             Vector3 result = pos.GetSimPosition() + diff;
 
@@ -1052,10 +1085,10 @@ namespace cogbot.TheOpenSims
         /// <param name="zAngleFromFace"></param>
         /// <param name="distance"></param>
         /// <returns></returns>
-        static public Vector3d GetGlobalLeftPos(SimPosition pos, int zAngleFromFace, double distance)
+        public static Vector3d GetGlobalLeftPos(SimPosition pos, int zAngleFromFace, double distance)
         {
             double RAD_TO_DEG = 57.29577951f;
-            double Pi2 = (double)(Math.PI * 2.0);
+            var Pi2 = (double) (Math.PI*2.0);
 
             while (zAngleFromFace > 360)
             {
@@ -1066,11 +1099,11 @@ namespace cogbot.TheOpenSims
                 zAngleFromFace += 360;
             }
 
-            double radAngle = zAngleFromFace / RAD_TO_DEG;
+            double radAngle = zAngleFromFace/RAD_TO_DEG;
             Quaternion rot = pos.GetSimRotation();
             Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(rot));
             double rz = Math.Atan2(v3.Y, v3.X);
-            
+
             double az = rz + radAngle;
 
             while (az < 0)
@@ -1082,9 +1115,9 @@ namespace cogbot.TheOpenSims
                 az -= Pi2;
             }
 
-            double xmul = (double)Math.Cos(az);
-            double ymul = (double)Math.Sin(az);
-            Vector3d diff = new Vector3d(xmul, ymul, 0) * distance;
+            var xmul = (double) Math.Cos(az);
+            var ymul = (double) Math.Sin(az);
+            Vector3d diff = new Vector3d(xmul, ymul, 0)*distance;
 
             Vector3d result = pos.GetWorldPosition() + diff;
 
@@ -1094,6 +1127,24 @@ namespace cogbot.TheOpenSims
                     Client.Self.Movement.Camera.AtAxis, Client.Self.Movement.Camera.LeftAxis, Client.Self.Movement.Camera.UpAxis,
                     Client.Self.Movement.BodyRotation, Client.Self.Movement.HeadRotation, Client.Self.Movement.Camera.Far, AgentFlags.None,
                     AgentState.None, true);*/
+        }
+
+        public bool GetParcelDeny(Vector3 v3)
+        {
+            Parcel P = GetParcel((int) v3.X, (int) v3.Y);
+            return !ParcelAllowsEntry(P, Client.Self.AgentID);
+        }
+
+        public Parcel GetParcel(float x, float y)
+        {
+            Simulator sim = TheSimulator;
+            int local =  sim.ParcelMap[(byte)x / 4, (byte)y / 4];
+            Parcel parcel;
+            InternalDictionary<int, Parcel> PD = sim.Parcels;
+            //if (local == 0) return parcel;
+            if (PD.TryGetValue(local, out parcel))
+                return parcel;
+            return parcel;
         }
 
         //ISceneProvider SceneProvider = new SceneManager();
@@ -1129,7 +1180,8 @@ namespace cogbot.TheOpenSims
         {
             Simulator master = TheSimulator;
             string sdebug = "ConnectionInfo: " + RegionName + "\n " + ScriptEventListener.argString(GridInfo);
-            lock (_Simulators) foreach (Simulator S in _Simulators)
+            lock (_Simulators)
+                foreach (Simulator S in _Simulators)
                 {
                     sdebug += "\n  " + ((S == master) ? "*" : " ");
                     sdebug += "" + S;
@@ -1140,7 +1192,6 @@ namespace cogbot.TheOpenSims
             return sdebug;
         }
 
-        SimPathStore PathStore;
         internal SimPathStore GetPathStore(Vector3 vector3)
         {
             return PathStore;
@@ -1178,23 +1229,22 @@ namespace cogbot.TheOpenSims
             if (OutOfRegion(next)) return true;
             SimPathStore PathStore = GetPathStore(next);
             CollisionPlane CP = PathStore.GetCollisionPlane(next.Z);
-            return PathStore.IsPassable(next,CP);
+            return PathStore.IsPassable(next, CP);
         }
 
         public void UpdateTraveled(UUID uUID, Vector3 vector3, Quaternion quaternion)
         {
-            GetPathStore(vector3).UpdateTraveled(uUID,vector3,quaternion);
+            GetPathStore(vector3).UpdateTraveled(uUID, vector3, quaternion);
         }
 
         internal void Refresh(Box3Fill changed)
         {
-           // throw new NotImplementedException();
+            // throw new NotImplementedException();
         }
-      
+
         internal bool AddCollisions(SimMesh C)
         {
             return C.UpdateOccupied(PathStore);
         }
-
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
+using cogbot.ScriptEngines;
 using OpenMetaverse;
 using DotLisp;
 using System.Collections;
@@ -31,6 +32,7 @@ namespace cogbot.TheOpenSims
         // Clasification
         public List<Regex> Match = new List<Regex>();  // regexpr match
         public List<Regex> NoMatch = new List<Regex>(); // wont be if one of these matches
+        public List<Object> CodeMatch = new List<Object>();  // regexpr match
 
         // Defines Side-effects to change Prim in SL
         public string SitName = null;
@@ -399,9 +401,9 @@ namespace cogbot.TheOpenSims
         static List<SimObjectType> objectTypes = new List<SimObjectType>();
 
         //the scripting language might supply a number as a parameter in a foriegn method call, so when i iterate thru the method signatures.. i have to recognise which ones are claiming to accept a numeric argument
-        static public List<SimObjectType> GuessSimObjectTypes(Primitive.ObjectProperties props)
+        static public List<SimObjectType> GuessSimObjectTypes(Primitive.ObjectProperties props, SimObject obj)
         {
-            List<SimObjectType> possibles = new List<SimObjectType>();
+            List<SimObjectType> possibles = obj.ObjectType.SuperType;
             if (props != null)
             {
                 string objName = " " + props.Name.ToLower() + " | " + props.Description.ToLower() + " ";
@@ -415,6 +417,21 @@ namespace cogbot.TheOpenSims
                             if (smatch.IsMatch(objName))
                             {
                                 goto nextOType;
+                            }
+                        }
+                        foreach (Object smatch in otype.CodeMatch)
+                        {
+                            // CodeMatch
+                            if (IsCodeMatch(obj, smatch))
+                            {
+                                if (!possibles.Contains(otype))
+                                {
+                                    possibles.Add(otype);
+                                    goto nextOType; 
+                                }
+                            } else                                
+                            {
+                                possibles.Remove(otype); 
                             }
                         }
                         foreach (Regex smatch in otype.Match)
@@ -446,6 +463,22 @@ namespace cogbot.TheOpenSims
                 }
             }
             return possibles;
+        }
+
+        private static bool IsCodeMatch(SimObject obj, object smatch)
+        {
+            ScriptInterpreter interp = GetScriptInterpreter();
+            interp.Intern("this", obj);
+            string res = interp.Str(interp.Eval(smatch));
+            if (res.ToLower().StartsWith("t")) return true;
+            return false;
+        }
+
+        private static ScriptInterpreter ScriptInterpreter0 = null;
+        private static ScriptInterpreter GetScriptInterpreter()
+        {
+            if (ScriptInterpreter0 == null) ScriptInterpreter0 = ScriptManager.LoadScriptInterpreter("lisp");
+            return ScriptInterpreter0;
         }
 
         public static bool MatchString(string objName, string smatch)

@@ -239,7 +239,7 @@ namespace cogbot.TheOpenSims
         // protected SimRegion PathStore;
         public Box3Fill OuterBox
         {
-            get { return Mesh.OuterBox; }
+            get { return _Mesh.OuterBox; }
         }
 
         public virtual void ResetRegion(ulong regionHandle)
@@ -441,7 +441,7 @@ namespace cogbot.TheOpenSims
         //    get { return base.Prim; }
         //    set { Prim = value; }
         //}
-        public readonly SimObjectType ObjectType;
+        public SimObjectType ObjectType { get; private set; }
         public WorldObjects WorldSystem;
         private bool MadeNonPhysical = false;
         private bool MadePhantom = false;
@@ -651,11 +651,12 @@ namespace cogbot.TheOpenSims
                 ObjectType.SitName = objectProperties.SitName;
                 ObjectType.TouchName = objectProperties.TouchName;
                 needUpdate = false;
+                // Prim.Properties = objectProperties;
             }
             try
             {
                 //  Parent;
-                AddSuperTypes(SimTypeSystem.GuessSimObjectTypes(objectProperties));
+                AddSuperTypes(SimTypeSystem.GuessSimObjectTypes(objectProperties, this));
             }
             catch (Exception e)
             {
@@ -1179,13 +1180,17 @@ namespace cogbot.TheOpenSims
 
         public float BottemArea()
         {
-            if (OuterBox.MaxX == float.MinValue)
+            if (_Mesh != null)
             {
-                return Prim.Scale.X*Prim.Scale.Y;
+                if (OuterBox.MaxX != float.MinValue)
+                {
+                    float bottemX = OuterBox.MaxX - OuterBox.MinX;
+                    float bottemY = OuterBox.MaxY - OuterBox.MinY;
+                    return bottemX * bottemY;
+                }
+
             }
-            float bottemX = OuterBox.MaxX - OuterBox.MinX;
-            float bottemY = OuterBox.MaxY - OuterBox.MinY;
-            return bottemX*bottemY;
+            return Prim.Scale.X * Prim.Scale.Y;
         }
 
         public SimRegion _CurrentRegion;
@@ -1530,6 +1535,7 @@ namespace cogbot.TheOpenSims
         bool SetObjectPosition(Vector3d globalPos);
         bool SetObjectRotation(Quaternion localPos);
         string SitName { get; }
+        SimObjectType ObjectType { get; }
         void SortByDistance(List<SimObject> sortme);
         string SuperTypeString();
         void TeleportTo(SimRegion R, Vector3 local);

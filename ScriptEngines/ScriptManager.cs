@@ -13,18 +13,21 @@ namespace cogbot.ScriptEngines
         /// <returns></returns>
         public static ScriptInterpreter LoadScriptInterpreter(string type)
         {
-            type = type.ToLower();
-            if (type.StartsWith("dotlisp"))
+            if (type != null)
             {
-                return new DotLispInterpreter();
-            }
-            if (type.StartsWith("cyc"))
-            {
-                return new CycInterpreter();
-            }
-            if (type.StartsWith("abcl"))
-            {
-                return new ABCLInterpreter();
+                type = type.ToLower();
+                if (type.StartsWith("dotlisp"))
+                {
+                    return new DotLispInterpreter();
+                }
+                if (type.StartsWith("cyc"))
+                {
+                    return new CycInterpreter();
+                }
+                if (type.StartsWith("abcl"))
+                {
+                    return new ABCLInterpreter();
+                }
             }
             //default
             return new DotLispInterpreter();
