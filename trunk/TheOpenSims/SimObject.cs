@@ -237,14 +237,14 @@ namespace cogbot.TheOpenSims
             return true;
         }
 
-        public bool SetObjectRotation(Quaternion localPos)
+        public virtual bool SetObjectRotation(Quaternion localPos)
         {
             if (!IsRoot)
             {
                 Quaternion start = GetSimRotation();
-                Quaternion offset = localPos/start;
+                Quaternion offset = localPos / start;
                 SimObject p = Parent;
-                return p.SetObjectRotation(p.GetSimRotation()*offset);
+                return p.SetObjectRotation(p.GetSimRotation() * offset);
             }
             WorldSystem.SetObjectRotation(Prim, localPos);
             return true;

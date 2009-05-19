@@ -384,12 +384,12 @@ namespace cogbot.TheOpenSims
             fName = fName.ToLower();
             UUID uid = UUID.Parse(id);
             SimAnimation anim = FindOrCreateAnimation(uid);
-            WorldObjects.RegisterUUID(uid, anim);
             anim.Name = fName;
-            byte[] bytes;
-            string usedName;
+            WorldObjects.RegisterUUID(uid, anim);
             if (Directory.Exists("bvh_files/"))
             {
+                byte[] bytes;
+                string usedName;
                 if (BytesFromFile(fName, out bytes, out usedName))
                 {
                     anim.BVHData = bytes;
