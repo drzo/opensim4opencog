@@ -1,4 +1,5 @@
 using System;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 
 namespace cogbot.Actions
@@ -17,7 +18,13 @@ namespace cogbot.Actions
             UUID primID;
 
             if (args.Length < 1)
-                return "Usage: priminfo [prim-uuid]";
+            {
+                foreach (SimObject O in WorldSystem.TheSimAvatar.GetNearByObjects(10, true))
+                {
+                    WriteLine("\n " + WorldSystem.describePrim(O.Prim));
+                }
+                return "Done.";
+            }
 
             if (UUIDTryParse(args, 0, out primID))
             {
@@ -31,8 +38,7 @@ namespace cogbot.Actions
 
                 if (target != null)
                 {
-                    decscribePrim(target);
-
+                    WriteLine("\n " + WorldSystem.describePrim(target));
                     return "Done.";
                 }
                 else
@@ -46,34 +52,5 @@ namespace cogbot.Actions
             }
         }
 
-        private void decscribePrim(Primitive target)
-        {
-            WriteLine("PrimInfo: " + target.ToString());
-            WriteLine(" Type: " + WorldSystem.GetPrimTypeName(target));
-            WriteLine(" Light: " + target.Light);
-
-            if (target.ParticleSys.CRC != 0)
-                WriteLine("Particles: " + target.ParticleSys);
-
-            WriteLine(" TextureEntry:");
-            if (target.Textures != null)
-            {
-                WriteLine(String.Format("  Default texure: {0}",
-                    target.Textures.DefaultTexture.TextureID.ToString()));
-
-                for (int i = 0; i < target.Textures.FaceTextures.Length; i++)
-                {
-                    if (target.Textures.FaceTextures[i] != null)
-                    {
-                        WriteLine(String.Format("  Face {0}: {1}", i,
-                            target.Textures.FaceTextures[i].TextureID.ToString()));
-                    }
-                }
-            }
-            else
-            {
-                Logger.Log("decscribePrim null", Helpers.LogLevel.Info, Client);
-            }
-        }
     }
 }

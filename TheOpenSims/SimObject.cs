@@ -16,6 +16,20 @@ namespace cogbot.TheOpenSims
     {
         private CycFort fort;
 
+        public float GetCubicMeters()
+        {
+            return GetSimScale().Length();
+        }
+
+        public SimObject GetGroupLeader()
+        {
+            if (!IsRoot) return Parent.GetGroupLeader();
+            List<SimObject> e = GetNearByObjects(GetSizeDistance()+1, false);
+            e.Add(this);
+            e.Sort(CompareSize);
+            return e[0];
+        }
+
         public CycFort GetCycFort()
         {
             if (fort == null)
@@ -656,7 +670,7 @@ namespace cogbot.TheOpenSims
             try
             {
                 //  Parent;
-                AddSuperTypes(SimTypeSystem.GuessSimObjectTypes(objectProperties, this));
+                SimTypeSystem.GuessSimObjectTypes(objectProperties, this);
             }
             catch (Exception e)
             {
@@ -1101,6 +1115,11 @@ namespace cogbot.TheOpenSims
             return (int) (Distance(p1) - Distance(p2));
         }
 
+        static int CompareSize(SimObject p1, SimObject p2)
+        {
+            return (int)(p1.GetSizeDistance() * p1.GetCubicMeters() - p2.GetSizeDistance() * p2.GetCubicMeters());
+        }
+
         public int CompareDistance(Vector3d v1, Vector3d v2)
         {
             Vector3d rp = GetWorldPosition();
@@ -1452,28 +1471,28 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        private bool IsUsableCachedKnown, IsUsableCachedTrue;
+        private bool IsUseableCachedKnown, IsUseableCachedTrue;
 
-        public bool IsUsable
+        public bool IsUseable
         {
             get
             {
-                if (!IsUsableCachedKnown)
+                if (!IsUseableCachedKnown)
                 {
-                    IsUsable = IsSitDefined || IsSitDefined || IsTypeOf(SimTypeSystem.USEABLE) != null;
+                    IsUseable = IsSitDefined || IsSitDefined || IsTypeOf(SimTypeSystem.USEABLE) != null;
                 }
-                return IsUsableCachedTrue;
+                return IsUseableCachedTrue;
             }
             set
             {
-                IsUsableCachedKnown = true;
-                IsUsableCachedTrue = value;
+                IsUseableCachedKnown = true;
+                IsUseableCachedTrue = value;
             }
         }
 
         internal Color DebugColor()
         {
-            if (IsUsable) return Color.Green;
+            if (IsUseable) return Color.Green;
             return Color.Empty;
         }
     }
@@ -1514,6 +1533,7 @@ namespace cogbot.TheOpenSims
         bool IsPhysical { get; set; }
         bool IsAttachment { get; set; }
         bool IsRoot { get; }
+        bool IsUseable { get; }
         bool IsSculpted { get; }
         bool IsSitDefined { get; }
         bool IsTouchDefined { get; }
@@ -1559,5 +1579,11 @@ namespace cogbot.TheOpenSims
         void OnSound(UUID soundID, float gain);
 
         void OnEffect(string effectType, object t, object p, float duration, UUID id);
+
+        SimObject GetGroupLeader();
+
+        float GetCubicMeters();
+
+        List<SimObject> GetNearByObjects(double maxDistance, bool rootOnly);
     }
 }

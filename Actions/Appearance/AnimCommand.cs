@@ -20,7 +20,7 @@ namespace cogbot.Actions
         {
             if (args.Length < 1)
             {
-                ICollection<string> list = cogbot.TheOpenSims.SimAnimation.GetAnimationList();
+                ICollection<string> list = WorldSystem.SimAnimationSystem.GetAnimationList();
                 WriteLine(TheBotClient.argsListString(list));
                 Dictionary<UUID, int> anims = WorldSystem.TheSimAvatar.GetCurrentAnims();
                 string alist = String.Empty;

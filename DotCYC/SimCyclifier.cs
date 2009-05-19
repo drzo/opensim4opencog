@@ -75,7 +75,7 @@ namespace cogbot.DotCYC
             return constant;
         }
 
-        internal CycFort FindOrCreateCycFort(SimAnimation simAnimation)
+        internal CycFort FindOrCreateCycFort(SimAnimationStore.SimAnimation simAnimation)
         {
             throw new NotImplementedException();
         }

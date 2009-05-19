@@ -72,7 +72,7 @@ namespace cogbot.TheOpenSims
         public SimObjectType IsSubType(SimObjectType superType)
         {
             if (superType == this) return this;
-            foreach (SimObjectType st in SuperType)
+            lock (SuperType) foreach (SimObjectType st in SuperType)
             {
                 if (st == superType) return st;
                 if (st.SuperType.Contains(superType)) return st;
@@ -87,7 +87,7 @@ namespace cogbot.TheOpenSims
         {
             if (cons != null) return cons.ToString();
             String str = ToString() + "[";
-            SuperType.ForEach(delegate(SimObjectType item)
+            lock (SuperType) SuperType.ForEach(delegate(SimObjectType item)
             {
                 str += item.ToString() + " ";
             });
@@ -100,15 +100,17 @@ namespace cogbot.TheOpenSims
 
             List<SimTypeUsage> usages = new List<SimTypeUsage>();
 
+            lock (SuperType)
 
-            foreach (SimObjectType type in SuperType)
-            {
-                SimTypeUsage find = type.FindObjectUsage(usename);
-                if (find != null)
+                foreach (SimObjectType type in SuperType)
                 {
-                    usages.Add(find);
+                    SimTypeUsage find = type.FindObjectUsage(usename);
+                    if (find != null)
+                    {
+                        usages.Add(find);
+                    }
                 }
-            }
+
             if (UsageAffect.ContainsKey(usename))
                 usages.Add(UsageAffect[usename]);
 
@@ -217,10 +219,10 @@ namespace cogbot.TheOpenSims
                     SimObjectType test = SimTypeSystem.FindObjectType(arg);
                     if (test == null)
                     {
-                        throw new Exception("unkown supertype " + arg + " for " + type);
+                        throw new Exception("unknown super type " + arg + " for " + type);
                     }
                     AddSuperType(test);
-                    //Not all types need to be by defualt usage types - was cousing problems
+                    //Not all types need to be by default usage types - was causing problems
                     // use types are fined by "Verb"
                     // usage = type.CreateObjectUsage(arg);
                     continue;
@@ -242,7 +244,7 @@ namespace cogbot.TheOpenSims
                 if (s == "Verb")
                 {
                     String arg = parseStr[i++].ToString();
-                    // TODO make suree creation order inernalizes correctly
+                    // TODO make sure creation order internalizes correctly
                     SimObjectType superType = SimTypeSystem.CreateObjectUse(arg,new object[0]);
                     AddSuperType(superType);
                     usage = type.CreateObjectUsage(arg);
@@ -315,7 +317,7 @@ namespace cogbot.TheOpenSims
         {
             if (list.Contains(this)) return;
             list.Add(this);
-            foreach (SimObjectType T in SuperType.ToArray())
+            lock (SuperType) foreach (SimObjectType T in SuperType.ToArray())
             {
                 T.AddAllTypes(list);
             }
@@ -353,7 +355,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                return SuperType.Count > 0;
+                lock (SuperType) return SuperType.Count > 0;
             }
         }
     }
@@ -404,7 +406,7 @@ namespace cogbot.TheOpenSims
         static public List<SimObjectType> GuessSimObjectTypes(Primitive.ObjectProperties props, SimObject obj)
         {
             List<SimObjectType> possibles = obj.ObjectType.SuperType;
-            if (props != null)
+            lock (possibles) if (props != null)
             {
                 string objName = " " + props.Name.ToLower() + " | " + props.Description.ToLower() + " ";
 

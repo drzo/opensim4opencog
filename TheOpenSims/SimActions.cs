@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Collections;
+using cogbot.Listeners;
 using org.opencyc.cycobject;
 using Vector3 = OpenMetaverse.Vector3;
 using UUID = OpenMetaverse.UUID;
@@ -131,7 +132,7 @@ namespace cogbot.TheOpenSims
             // IF UseAnim was specified
             if (!String.IsNullOrEmpty(TypeUsage.UseAnim))
             {
-                UUID animID = SimAnimation.GetAnimationUUID(TypeUsage.UseAnim);
+                UUID animID = WorldObjects.Master.SimAnimationSystem.GetAnimationUUID(TypeUsage.UseAnim);
                 if (animID != UUID.Zero)
                 {
                     closure = TheBot.WithAnim(animID, closure);
@@ -142,7 +143,7 @@ namespace cogbot.TheOpenSims
             if (!animFound)
             {
                 //ELSE look for Verb coverage for an anim
-                UUID animID = SimAnimation.GetAnimationUUID(use);
+                UUID animID = WorldObjects.Master.SimAnimationSystem.GetAnimationUUID(use);
                 if (animID != UUID.Zero)
                     closure = TheBot.WithAnim(animID, closure);
             }

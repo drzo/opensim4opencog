@@ -573,14 +573,28 @@ namespace RTParser
         /// </summary>
         public string LastLogMessage=string.Empty;
 
+        public OutputDelegate outputDelegate;
+        public delegate void OutputDelegate(string str);
+
         /// <summary>
-        /// Writes a (timestamped) message to the Proccessor's log.
+        /// Writes a (timestamped) message to the Processor's log.
         /// 
         /// Log files have the form of yyyyMMdd.log.
         /// </summary>
         /// <param name="message">The message to log</param>
         public void writeToLog(string message)
         {
+
+            if (outputDelegate != null)
+            {
+                try
+                {
+                    outputDelegate(message);
+                }
+                catch (Exception)
+                {
+                }
+            }
             this.LastLogMessage = message;
             if (this.IsLogging)
             {
