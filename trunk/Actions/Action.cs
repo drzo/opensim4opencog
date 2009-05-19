@@ -46,7 +46,7 @@ namespace cogbot.Actions
                 target = prim.ID;
                 if (target != UUID.Zero) return true;
             }
-            target = cogbot.TheOpenSims.SimAnimation.GetAnimationUUID(p);
+            target = WorldSystem.GetAnimationUUID(p);
             if (target != UUID.Zero) return true;
             return false;
         }

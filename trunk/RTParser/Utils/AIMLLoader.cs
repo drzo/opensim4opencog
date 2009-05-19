@@ -65,6 +65,7 @@ namespace RTParser.Utils
                         } catch(Exception ee)
                         {
                             Console.WriteLine("" + ee);
+                            RProcessor.writeToLog("Error in loadAIMLFile " + ee);
                         }
                     }
                     this.RProcessor.writeToLog("Finished processing the AIML files. " + Convert.ToString(this.RProcessor.Size) + " categories processed.");

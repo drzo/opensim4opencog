@@ -64,6 +64,7 @@ namespace cogbot.Listeners
                 MyBot.isAcceptingUserInput = false;
                 MyBot.loadAIMLFromFiles();
                 MyBot.isAcceptingUserInput = true;
+                MyBot.outputDelegate = output;
                 // wont get here unless there was no problem
                 client.Self.OnChat += AIML_OnChat;
                 while (false)

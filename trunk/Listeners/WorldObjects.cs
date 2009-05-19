@@ -19,13 +19,14 @@ namespace cogbot.Listeners
         public static bool CanPhantomize = false;
         public static bool MaintainObjectUpdates = false;
         public static bool MaintainAnims = false;
+        public static bool MaintainAnimsInFolders = false;
         public static bool MaintainEffects = false;
         public static bool MaintainSounds = false;
         public static bool MaintainAttachments = false;
         public static bool MaintainCollisions = true;
         public static bool SimplifyBoxes = false; // true takes longer startup but speeds up runtime path finding
         private static readonly List<ThreadStart> ShutdownHooks = new List<ThreadStart>();
-
+        public SimAnimationStore SimAnimationSystem;
 
         public static implicit operator GridClient(WorldObjects m)
         {
@@ -356,6 +357,7 @@ namespace cogbot.Listeners
                 //WorldMaster(false);
                 //RegisterAll();
                 SimPaths = new WorldPathSystem(this);
+                SimAnimationSystem = new SimAnimationStore(client);
                 InitConsoleBot();
             }
         }
@@ -799,35 +801,9 @@ namespace cogbot.Listeners
                     } //19,
                     /// <summary>Animation</summary>
                 case AssetType.Animation:
-                    {
-                        string s = SimAnimation.GetAnimationName(asset.AssetID);
-                        if (!String.IsNullOrEmpty(s)) return;
-                        AssetAnimation anim = (AssetAnimation) asset;
-                        BinBVHAnimationReader bvh = new BinBVHAnimationReader(asset.AssetData);
-                        s = bvh.ExpressionName;
-                        if (String.IsNullOrEmpty(s))
-                        {
-                            s = "BVH Data: ";
-                            binBVHJoint[] joints = bvh.joints;
-                            foreach (binBVHJoint j in joints)
-                            {
-                                if (j.positionkeys.Length != 0 || j.rotationkeys.Length != 0)
-                                {
-                                    s += " " + j.Name + "=" + j.positionkeys;
-                                }
-                            }
-                            return;
-                        }
-                        else
-                        {
-                            SimAnimation.SetAnimationName(asset.AssetID, s);
-                            RegisterUUID(asset.AssetID, s);
-                            return;
-                        }
-                        Debug(s);
-                        //                        RegisterUUID(asset.AssetID, s);
-                        break;
-                    } //20,
+                    SimAnimationSystem.OnAnimDownloaded(uUID,(AssetAnimation)asset);
+                    //20,
+                    break;
                     /// <summary>Sequence of animations, sounds, chat, and pauses</summary>
                 case AssetType.Gesture:
                     {
@@ -1194,7 +1170,7 @@ namespace cogbot.Listeners
                 //    color = Color4.Black;
                 //}
 
-                // Each ViewerEffect type uses it's own custom binary format for additional data. Fun eh?
+                // Each ViewerEffect type uses it's own custom binary format for additional BVHData. Fun eh?
                 switch (type)
                 {
                     case EffectType.Beam:
@@ -1983,7 +1959,7 @@ namespace cogbot.Listeners
             //base.Terrain_OnLandPatch(simulator, x, y, width, null);
 
             //throw new NotImplementedException();
-            //   SendNewEvent("On-Land-Patch", x, y, width, data);
+            //   SendNewEvent("On-Land-Patch", x, y, width, BVHData);
             //            output("TextForm Terrain_OnLandPatch: "+simulator.ToString()+"/"+x.ToString()+"/"+y.ToString()+" w="+width.ToString());
         }
 
@@ -2164,7 +2140,7 @@ namespace cogbot.Listeners
 
         public string GetAnimationName(UUID id)
         {
-            string name = SimAnimation.GetAnimationName(id);
+            string name = SimAnimationSystem.GetAnimationName(id);
             if (name != null) return name;
             lock (uuidTypeObject)
             {
@@ -2512,13 +2488,35 @@ namespace cogbot.Listeners
             return retVal;
         }
 
-        public string describePrim(Primitive prim)
+        public string describePrim(Primitive target)
         {
-            SimObject simObject = GetSimObject(prim);
+            SimObject simObject = GetSimObject(target);
             string str = simObject.ToString();
             str += " " + TheSimAvatar.DistanceVectorString(simObject);
-            if (prim.Properties != null && prim.Properties.SalePrice != 0)
-                str += " Sale: L" + prim.Properties.SalePrice;
+            if (target.Properties != null && target.Properties.SalePrice != 0)
+                str += " Sale: L" + target.Properties.SalePrice;
+            //str += "\nPrimInfo: " + target.ToString());
+            //str += "\n Type: " + GetPrimTypeName(target));
+            str += "\n GroupLeader: " + simObject.GetGroupLeader();
+            str += "\n Light: " + target.Light;
+            if (target.ParticleSys.CRC != 0)
+                str += "\nParticles: " + target.ParticleSys;
+
+            str += "\n TextureEntry:";
+            if (target.Textures != null)
+            {
+                str += "\n" + (String.Format("  Default texture: {0}",
+                                             target.Textures.DefaultTexture.TextureID.ToString()));
+
+                for (int i = 0; i < target.Textures.FaceTextures.Length; i++)
+                {
+                    if (target.Textures.FaceTextures[i] != null)
+                    {
+                        str += "\n" + (String.Format("  Face {0}: {1}", i,
+                                                     target.Textures.FaceTextures[i].TextureID.ToString()));
+                    }
+                }
+            }
             return str; // output(str);
         }
 
@@ -2968,7 +2966,7 @@ namespace cogbot.Listeners
 
         public UUID GetAnimationUUID(string a)
         {
-            return SimAnimation.GetAnimationUUID(a);
+            return SimAnimationSystem.GetAnimationUUID(a);
         }
 
         public SimWaypoint GetWaypoint(Vector3d gloabl)
