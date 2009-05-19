@@ -354,14 +354,17 @@ namespace cogbot.TheOpenSims
                     //WorldObjects.RegisterUUID(uid, fName);
                     //                  nameAnim[fName] = uid;
                 }
-                foreach (string files in Directory.GetFiles("bvh_files/"))
+                if (Directory.Exists("bvh_files/"))
                 {
-                    byte[] bs = File.ReadAllBytes(files);
-                    string name = Path.GetFileNameWithoutExtension(Path.GetFileName(files)).ToLower();
-                    if (nameAnim.ContainsKey(name)) continue;
-                    Console.WriteLine("Anim w/o UUID " + name);
-                    SimAnimation anim = new SimAnimation(UUID.Zero, name);
-                    nameAnim[name] = anim;
+                    foreach (string files in Directory.GetFiles("bvh_files/"))
+                    {
+                        byte[] bs = File.ReadAllBytes(files);
+                        string name = Path.GetFileNameWithoutExtension(Path.GetFileName(files)).ToLower();
+                        if (nameAnim.ContainsKey(name)) continue;
+                        Console.WriteLine("Anim w/o UUID " + name);
+                        SimAnimation anim = new SimAnimation(UUID.Zero, name);
+                        nameAnim[name] = anim;
+                    }
                 }
 
                 foreach (SimAnimation A in SimAnimations)
@@ -381,18 +384,21 @@ namespace cogbot.TheOpenSims
             fName = fName.ToLower();
             UUID uid = UUID.Parse(id);
             SimAnimation anim = FindOrCreateAnimation(uid);
-            WorldObjects.RegisterUUID(uid,anim);
+            WorldObjects.RegisterUUID(uid, anim);
             anim.Name = fName;
             byte[] bytes;
             string usedName;
-            if (BytesFromFile(fName, out bytes, out usedName))
+            if (Directory.Exists("bvh_files/"))
             {
-                anim.BVHData = bytes;
-                anim.Name = usedName;
-            }
-            else
-            {
-                Console.WriteLine("Anim w/o BVH " + fName + " " + uid);
+                if (BytesFromFile(fName, out bytes, out usedName))
+                {
+                    anim.BVHData = bytes;
+                    anim.Name = usedName;
+                }
+                else
+                {
+                    Console.WriteLine("Anim w/o BVH " + fName + " " + uid);
+                }
             }
         }
 
