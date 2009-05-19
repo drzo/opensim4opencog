@@ -1056,7 +1056,7 @@ namespace cogbot.Listeners
                                             //     O = GetSimObject(p, simulator);
                                             if (O == null)
                                             {
-                                                SendNewEvent("on-prim-killed", p);
+                                              //  SendNewEvent("on-prim-killed", p);
                                                 return;
                                             }
                                             if (Settings.LOG_LEVEL != Helpers.LogLevel.Info)
@@ -2197,6 +2197,11 @@ namespace cogbot.Listeners
         public static void RequestAsset(UUID id, AssetType assetType, bool p)
         {
             if (id == UUID.Zero) return;
+            if (assetType == AssetType.Animation)
+            {
+                
+                if (Master.SimAnimationSystem.GetAnimationName(id)!=null) return;
+            }
             lock (AssetRequests)
             {
                 if (AssetRequests.ContainsKey(id)) return;
@@ -2490,14 +2495,23 @@ namespace cogbot.Listeners
 
         public string describePrim(Primitive target)
         {
+            if (target == null) return "null";
             SimObject simObject = GetSimObject(target);
-            string str = simObject.ToString();
-            str += " " + TheSimAvatar.DistanceVectorString(simObject);
+            string str = string.Empty;
+            if (simObject != null)
+            {
+                str += simObject.ToString();
+                str += String.Format(" {0}", TheSimAvatar.DistanceVectorString(simObject));
+                str += String.Format("\n GroupLeader: {0}", simObject.GetGroupLeader());
+            }
+            else
+            {
+                str += target;
+            }
             if (target.Properties != null && target.Properties.SalePrice != 0)
                 str += " Sale: L" + target.Properties.SalePrice;
             //str += "\nPrimInfo: " + target.ToString());
             //str += "\n Type: " + GetPrimTypeName(target));
-            str += "\n GroupLeader: " + simObject.GetGroupLeader();
             str += "\n Light: " + target.Light;
             if (target.ParticleSys.CRC != 0)
                 str += "\nParticles: " + target.ParticleSys;
@@ -2505,8 +2519,9 @@ namespace cogbot.Listeners
             str += "\n TextureEntry:";
             if (target.Textures != null)
             {
-                str += "\n" + (String.Format("  Default texture: {0}",
-                                             target.Textures.DefaultTexture.TextureID.ToString()));
+                if (target.Textures.DefaultTexture != null)
+                    str += "\n" + (String.Format("  Default texture: {0}",
+                                                 target.Textures.DefaultTexture.TextureID.ToString()));
 
                 for (int i = 0; i < target.Textures.FaceTextures.Length; i++)
                 {

@@ -334,7 +334,7 @@ namespace cogbot.TheOpenSims
 
         public override Simulator GetSimulator()
         {
-            if (Client!=null && Client.Self.AgentID == Prim.ID) return Client.Network.CurrentSim;
+           // if (Client!=null && Client.Self.AgentID == Prim.ID) return Client.Network.CurrentSim;
             return GetSimRegion().TheSimulator;
         }
 
@@ -784,7 +784,7 @@ namespace cogbot.TheOpenSims
 
         public void TalkTo(SimAvatar avatar, BotMentalAspect talkAbout)
         {
-            ///  TODO find a better text represantation (a thought bubble maybe?)
+            ///  TODO find a better text representation (a thought bubble maybe?)
             TalkTo(avatar, "" + talkAbout);
         }
 
@@ -1122,7 +1122,7 @@ namespace cogbot.TheOpenSims
             while (true)
             {
                 Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
-                Client.Self.Movement.AutoResetControls = true;
+                Client.Self.Movement.AutoResetControls = false;
                 Vector3d targetPosition = ApproachVector3D;
                 lock (TrackerLoopLock)
                 {
@@ -1352,6 +1352,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
+
         /// <summary>
         ///  
         /// </summary>
@@ -1505,6 +1506,19 @@ namespace cogbot.TheOpenSims
 
         private Thread ApproachThread; /// = new Thread(TrackerLoop);
 
+        public override bool SetObjectRotation(Quaternion localPos)
+        {
+            if (!IsRoot)
+            {
+                Quaternion start = GetSimRotation();
+                Quaternion offset = localPos / start;
+                SimObject p = Parent;
+                return p.SetObjectRotation(p.GetSimRotation() * offset);
+            }
+            WorldSystem.SetObjectRotation(Prim, localPos);
+            return true;
+        }
+
         public override bool TurnToward(Vector3 target)
         {
             bool changed = false;
@@ -1635,7 +1649,7 @@ namespace cogbot.TheOpenSims
                                           }
                                           if (oldAnimNumber > newAnimNumber)
                                           {
-                                              Debug("error oldAnimNumber > newAnimNumber");
+                                            //  Debug("error oldAnimNumber > newAnimNumber");
                                           }
                                           ///      else
                                           {
@@ -1747,9 +1761,9 @@ namespace cogbot.TheOpenSims
 
     public class MoveToLocation : BotAction
     {
-        private SimPosition Target;
+        readonly private SimPosition Target;
         readonly static BotNeeds ProposedChanges = new BotNeeds(0.0f);
-        public MoveToLocation(SimAvatarImpl impl, SimPosition position) : base("MoveTo " + impl+ " -> "+impl.DistanceVectorString(position))
+        public MoveToLocation(SimAvatar impl, SimPosition position) : base("MoveTo " + impl+ " -> "+impl.DistanceVectorString(position))
         {
             TheBot = impl;
             Target = position;
@@ -1786,6 +1800,7 @@ namespace cogbot.TheOpenSims
         void ExecuteLisp(SimObjectUsage botObjectAction, object lisp);
         SimObject StandUp();
         void StartThinking();
+        //void StopMoving();
         void TalkTo(SimAvatar avatar, BotMentalAspect talkAbout);
         void TalkTo(SimAvatar avatar, string talkAbout);
         void Think();
@@ -1806,7 +1821,7 @@ namespace cogbot.TheOpenSims
     }
 
 
-    public interface SimAvatar : SimObject, SimMover
+    public interface SimAvatar : SimObject, PathSystem3D.Navigation.SimMover
     {
         void RemoveObject(SimObject O);
         int CompareObjects(SimObject act1, SimObject act2);
@@ -1823,6 +1838,7 @@ namespace cogbot.TheOpenSims
         BotNeeds CurrentNeeds { get; }
         Avatar theAvatar { get; }
         bool IsSitting { get; }
+        float ZHeading { get; }
         void OnAvatarAnimations(InternalDictionary<UUID, int> anims);
 
         Dictionary<UUID, int> GetCurrentAnims();
