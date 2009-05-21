@@ -11,6 +11,11 @@ namespace RTParser.Utils
     [Serializable]
     public class Node
     {
+        private Node Parent;
+        public Node(Node P)
+        {
+            Parent = P;            
+        }
         #region Attributes
 
         /// <summary>
@@ -44,6 +49,8 @@ namespace RTParser.Utils
         /// </summary>
         public string word=string.Empty;
 
+        private XmlNode GuardText;
+
         #endregion
 
         #region Methods
@@ -56,7 +63,7 @@ namespace RTParser.Utils
         /// <param name="path">the path for the category</param>
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        public void addCategory(string path, string template, string filename)
+        public void addCategory(string path, string template, XmlNode guard, string filename)
         {
             if (template.Length == 0)
             {
@@ -67,6 +74,7 @@ namespace RTParser.Utils
             if (path.Trim().Length == 0)
             {
                 this.template = template;
+                this.GuardText = guard;
                 this.filename = filename;
                 return;
             }
@@ -90,19 +98,20 @@ namespace RTParser.Utils
             if (this.children.ContainsKey(firstWord))
             {
                 Node childNode = this.children[firstWord];
-                childNode.addCategory(newPath, template, filename);
+                childNode.addCategory(newPath, template, guard, filename);
             }
             else
             {
-                Node childNode = new Node();
+                Node childNode = new Node(this);
                 childNode.word = firstWord;
-                childNode.addCategory(newPath, template, filename);
+                childNode.addCategory(newPath, template, guard, filename);
                 this.children.Add(childNode.word, childNode);
             }
         }
 
         #endregion
 
+        public static bool AlwaysFail = true;
         #region Evaluate Node
 
         public string evaluate(string path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard)
@@ -110,20 +119,70 @@ namespace RTParser.Utils
             // are we in failure?
             if (query.GuardFailed) return String.Empty;
             // first call the pre-existing evaluate  that was renamed to evaluate0
-            String temp = evaluate0(path, query, request, matchstate, wildcard);
-            if (temp == String.Empty)
+            // String temp = evaluate0(path, query, request, matchstate, wildcard);
+            if (this.GuardText!=null)
             {
-                return String.Empty;
+                string preserve = query.Template;
+                try
+                {
+	                
+	                Result result = new Result(request.user, request.Proccessor, request);
+	                XmlNode templateNode = AIMLTagHandler.getNode(GuardText.OuterXml);
+	                query.Template = GuardText.OuterXml;
+	                string outputSentence = request.Proccessor.processNode(templateNode, query, request, result, request.user);
+	                bool failed = outputSentence == null || outputSentence == "NIL";
+	                if (failed)
+	                {
+	                    Console.WriteLine("failing guard " + GuardText.InnerXml + " for " + this);
+	                    Node next = GetNextNode();
+	                    if (next!=null)
+	                    {
+	                        // return next.evaluate(path, query, request, matchstate, wildcard);
+	                    }
+	                    return String.Empty;
+	                }
+                    // success
+                    return evaluate0(path, query, request, matchstate, wildcard); ;
+                }
+                catch (System.Exception ex)
+                {
+                    Console.WriteLine("" + ex);
+                    return String.Empty; //fail
+                }
+                finally
+                {
+                    query.Template = preserve;
+                }
             }
-            if (!temp.Contains("<guard>")) return temp;
-            Console.WriteLine(String.Format("CHECKIN GUARDS {0}", temp));
-            if (query.GuardFailed)
-            {
-                Console.WriteLine(String.Format("Failing {0}", temp));
-                return String.Empty;
-            }
-            return temp;
+            return evaluate0(path, query, request, matchstate, wildcard); ;
         }
+
+        public Node GetNextNode()
+        {
+            if (Parent==null) return null;
+            bool useNext = false;
+            foreach (KeyValuePair<string, Node> v in Parent.children)
+            {
+                if (useNext) return v.Value;
+                if (v.Value==this)
+                {
+                    useNext = true;
+                }
+            }
+            if (useNext)
+            {
+           //     Console.WriteLine(String.Format("Last key {0}", ToString()));
+                return Parent.GetNextNode();
+            }
+            return null;
+        }
+
+        public override string ToString()
+        {
+            if (Parent != null) return String.Format("{0} {1}", Parent, word);
+            return word;
+        }
+
 
         /// <summary>
         /// Navigates this node (and recursively into child nodes) for a match to the path passed as an argument

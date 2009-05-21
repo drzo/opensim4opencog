@@ -40,7 +40,7 @@ namespace RTParser.Utils
 
         
         public bool GuardFailed;
-
+        public List<string> GuardStar = new List<string>();
 
         #endregion
 

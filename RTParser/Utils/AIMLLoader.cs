@@ -168,6 +168,7 @@ namespace RTParser.Utils
             // reference and check the required nodes
             XmlNode pattern = this.FindNode("pattern", node);
             XmlNode template = this.FindNode("template", node);
+            XmlNode guard = this.FindNode("guard", node);
 
             if (object.Equals(null, pattern))
             {
@@ -185,7 +186,7 @@ namespace RTParser.Utils
             {
                 try
                 {
-                    this.RProcessor.Graphmaster.addCategory(categoryPath, template.OuterXml, filename);
+                    this.RProcessor.Graphmaster.addCategory(categoryPath, template.OuterXml, guard, filename);
                     // keep count of the number of categories that have been processed
                     this.RProcessor.Size++;
                 }
