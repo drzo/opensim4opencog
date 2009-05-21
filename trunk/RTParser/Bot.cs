@@ -372,7 +372,7 @@ namespace RTParser
             this.Substitutions = new SettingsDictionary(this);
             this.DefaultPredicates = new SettingsDictionary(this);
             this.CustomTags = new Dictionary<string, TagHandler>();
-            this.Graphmaster = new RTParser.Utils.Node();
+            this.Graphmaster = new RTParser.Utils.Node(null);
             loadCustomTagHandlers("RTParser.dll");
         }
 
@@ -686,27 +686,8 @@ namespace RTParser
                 // process the templates into appropriate output
                 foreach (SubQuery query in result.SubQueries)
                 {
-                    if (query.Template.Length > 0)
-                    {
-                        try
-                        {
-                            XmlNode templateNode = AIMLTagHandler.getNode(query.Template);
-                            string outputSentence = this.processNode(templateNode, query, request, result, request.user);
-                            if (outputSentence.Length > 0)
-                            {
-                                result.OutputSentences.Add(outputSentence);
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(""+e);
-                            if (this.WillCallHome)
-                            {
-                                this.phoneHome(e.Message, request);
-                            }
-                            this.writeToLog("WARNING! A problem was encountered when trying to process the input: " + request.rawInput + " with the template: \"" + query.Template + "\"");
-                        }
-                    }
+                    processTemplate(query, request, result);
+
                 }
             }
             else
@@ -721,6 +702,30 @@ namespace RTParser
             return result;
         }
 
+        private void processTemplate(SubQuery query, Request request, Result result)
+        {
+            if (query.Template.Length > 0)
+            {
+                try
+                {
+                    XmlNode templateNode = AIMLTagHandler.getNode(query.Template);
+                    string outputSentence = this.processNode(templateNode, query, request, result, request.user);
+                    if (outputSentence.Length > 0)
+                    {
+                        result.OutputSentences.Add(outputSentence);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("" + e);
+                    if (this.WillCallHome)
+                    {
+                        this.phoneHome(e.Message, request);
+                    }
+                    this.writeToLog("WARNING! A problem was encountered when trying to process the input: " + request.rawInput + " with the template: \"" + query.Template + "\"");
+                }
+            }
+        }
         /// <summary>
         /// Recursively evaluates the template nodes returned from the Proccessor
         /// </summary>
@@ -730,7 +735,7 @@ namespace RTParser
         /// <param name="result">the result to be sent to the user</param>
         /// <param name="user">the user who originated the request</param>
         /// <returns>the output string</returns>
-        private string processNode(XmlNode node, SubQuery query, Request request, Result result, User user)
+        public string processNode(XmlNode node, SubQuery query, Request request, Result result, User user)
         {
             // check for timeout (to avoid infinite loops)
             if (request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
@@ -1158,10 +1163,19 @@ The AIMLbot program.
                 Console.Out.Flush();
                 Object oresult = access.converseList("(list " + cmd + ")").first();
                 Console.WriteLine( " => " + oresult);
-                result = "" + oresult;
-                if (oresult is CycObject)
+                while (oresult is CycList)
                 {
-                    result = ((CycObject)oresult).cyclifyWithEscapeChars();                    
+                    CycList lresuult = (CycList) oresult;
+                                        
+                    if (lresuult.first() is CycVariable)
+                        oresult = lresuult.rest();
+                    else
+                        oresult = lresuult.first();
+                }
+                result = "" + oresult;
+                if (oresult is CycFort)
+                {
+                    result = ((CycObject)oresult).cyclifyWithEscapeChars();
                 }
                 if (!String.IsNullOrEmpty(filter) && filter == "paraphrase")
                 {
@@ -1189,7 +1203,7 @@ The AIMLbot program.
             if (filter.Length > 0)
             {
                 if (filter == "NIL") return true;
-                if (this.EvalSubL(String.Format("(fi-ask '(#$isa {0} {1}) #$EverythingPSC)", term, Cyclify(filter)),null) == "NIL")
+                if (this.EvalSubL(String.Format("(ask-template 'T '(#$isa {0} {1}) #$EverythingPSC)", term, Cyclify(filter)),null) == "NIL")
                     return false;
             }
             return true;
@@ -1198,11 +1212,19 @@ The AIMLbot program.
         internal string Paraphrase(string text)
         {
             text = Cyclify(text);
-            if (!text.StartsWith("#"))
+            if (text.StartsWith("("))
             {   //todo is a list then?
                 text = String.Format("'{0}", text);
             }
-            return EvalSubL(String.Format("(generate-phrase {0})", text), null);
+            return text;
+            try
+            {
+	            return EvalSubL(String.Format("(generate-phrase {0})", text), null);
+            }
+            catch (System.Exception ex)
+            {
+                return text;
+            }
         }
 
         #endregion
@@ -1237,6 +1259,11 @@ The AIMLbot program.
         internal string Cyclify(string mt)
         {
             mt = mt.Trim();
+            if (mt.Length == 0) return mt;
+            if (System.Char.IsLetter(mt.ToCharArray()[0])) return "#$"+mt;
+            return mt;
+
+            if (System.Char.IsDigit(mt.ToCharArray()[0])) return mt;
             if (mt.StartsWith("(") || mt.StartsWith("#$")) return mt;
             return "#$" + mt;
         }

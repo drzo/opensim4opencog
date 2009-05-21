@@ -9,6 +9,11 @@ namespace RTParser
     /// </summary>
     public class Result
     {
+
+        public Result()
+        {
+            
+        }
         /// <summary>
         /// The bot that is providing the answer
         /// </summary>
