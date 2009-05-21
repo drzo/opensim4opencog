@@ -879,9 +879,16 @@ namespace RTParser
                         case "guard":
                             tagHandler = new AIMLTagHandlers.guard(this, user, query, request, result, node);
                             break;
+                        case "guardstar":
+                            tagHandler = new AIMLTagHandlers.guardstar(this, user, query, request, result, node);
+                            break;
                         case "cycrandom":
                             tagHandler = new AIMLTagHandlers.cycrandom(this, user, query, request, result, node);
                             break;
+                        case "space":
+                            tagHandler = new AIMLTagHandlers.space(this, user, query, request, result, node);
+                            break;
+
                         default:
                             tagHandler = null;
                             break;
@@ -1173,7 +1180,7 @@ The AIMLbot program.
                         oresult = lresuult.first();
                 }
                 result = "" + oresult;
-                if (oresult is CycFort)
+                if (oresult is CycObject)
                 {
                     result = ((CycObject)oresult).cyclifyWithEscapeChars();
                 }
@@ -1216,7 +1223,7 @@ The AIMLbot program.
             {   //todo is a list then?
                 text = String.Format("'{0}", text);
             }
-            return text;
+            //return text;
             try
             {
 	            return EvalSubL(String.Format("(generate-phrase {0})", text), null);

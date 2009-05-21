@@ -61,6 +61,7 @@ namespace RTParser.AIMLTagHandlers
                                 index--;
                                 if ((index >= 0) & (index < this.query.InputStar.Count))
                                 {
+                                    index = this.query.InputStar.Count - 1 - index;
                                     return (string)this.query.InputStar[index];
                                 }
                                 else
