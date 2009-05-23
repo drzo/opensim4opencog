@@ -2611,25 +2611,30 @@ namespace OpenMetaverse
         /// <param name="localID"></param>
         /// <param name="fullID"></param>
         /// <returns></returns>
+        readonly private object _GetObjectLock = new object();
         protected Primitive GetPrimitive(Simulator simulator, uint localID, UUID fullID)
         {
             if (Client.Settings.OBJECT_TRACKING)
             {
                 Primitive prim;
 
-                if (simulator.ObjectsPrimitives.TryGetValue(localID, out prim))
+                lock (_GetObjectLock)
                 {
-                    return prim;
-                }
-                else
-                {
-                    prim = new Primitive();
-                    prim.LocalID = localID;
-                    prim.ID = fullID;
-                    lock (simulator.ObjectsPrimitives.Dictionary)
-                        simulator.ObjectsPrimitives.Dictionary[localID] = prim;
+                    if (simulator.ObjectsPrimitives.TryGetValue(localID, out prim))
+                    {
+                        return prim;
+                    }
+                    else
+                    {
+                        prim = new Primitive();
+                        prim.LocalID = localID;
+                        prim.ID = fullID;
+                        prim.RegionHandle = simulator.Handle;
+                        lock (simulator.ObjectsPrimitives.Dictionary)
+                            simulator.ObjectsPrimitives.Dictionary[localID] = prim;
 
-                    return prim;
+                        return prim;
+                    }
                 }
             }
             else
@@ -2645,25 +2650,30 @@ namespace OpenMetaverse
         /// <param name="localID"></param>
         /// <param name="fullID"></param>
         /// <returns></returns>
+        readonly private object _GetAvatarLock = new object();
         protected Avatar GetAvatar(Simulator simulator, uint localID, UUID fullID)
         {
             if (Client.Settings.AVATAR_TRACKING)
             {
                 Avatar avatar;
 
-                if (simulator.ObjectsAvatars.TryGetValue(localID, out avatar))
+                lock (_GetAvatarLock)
                 {
-                    return avatar;
-                }
-                else
-                {
-                    avatar = new Avatar();
-                    avatar.LocalID = localID;
-                    avatar.ID = fullID;
-                    lock (simulator.ObjectsAvatars.Dictionary)
-                        simulator.ObjectsAvatars.Dictionary[localID] = avatar;
+                    if (simulator.ObjectsAvatars.TryGetValue(localID, out avatar))
+                    {
+                        return avatar;
+                    }
+                    else
+                    {
+                        avatar = new Avatar();
+                        avatar.LocalID = localID;
+                        avatar.ID = fullID;
+                        avatar.RegionHandle = simulator.Handle;
+                        lock (simulator.ObjectsAvatars.Dictionary)
+                            simulator.ObjectsAvatars.Dictionary[localID] = avatar;
 
-                    return avatar;
+                        return avatar;
+                    }
                 }
             }
             else
