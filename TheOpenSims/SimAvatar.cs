@@ -362,42 +362,43 @@ namespace cogbot.TheOpenSims
             ///         return Client.Self.GlobalPosition;
 
             /// }
-            return GetSimRegion().LocalToGlobal(GetSimPosition());
+            return base.GetWorldPosition();
+            //return GetSimRegion().LocalToGlobal(GetSimPosition());
         }
 
-        private SimRegion _CurrentRegion;
         public override SimRegion GetSimRegion()
         {
-            if (Prim == null)
-            {
-                if (_CurrentRegion == null)
-                    if (IsControllable)
-                    {
-                        _CurrentRegion = SimRegion.GetRegion(Client.Network.CurrentSim);
-                    }
-                return _CurrentRegion;
-            }
+            return base.GetSimRegion();            
+            //if (Prim == null)
+            //{
+            //    if (_CurrentRegion == null)
+            //        if (IsControllable)
+            //        {
+            //            _CurrentRegion = SimRegion.GetRegion(Client.Network.CurrentSim);
+            //        }
+            //    return _CurrentRegion;
+            //}
 
-            if (Prim.RegionHandle == 0)
-            {
-                Console.WriteLine("Don't know the region for " + this);
-            }
+            //if (Prim.RegionHandle == 0)
+            //{
+            //    Console.WriteLine("Don't know the region for " + this);
+            //}
 
-            if (_CurrentRegion == null)
-            {
-                if (Prim.RegionHandle==0)
-                {
-                    Console.WriteLine("Dont know the region for " + this);
-                }
-                _CurrentRegion = SimRegion.GetRegion(Prim.RegionHandle);
-                Debug("out of date _CurrentRegion ");
-            }
-            if (theAvatar.RegionHandle != _CurrentRegion.RegionHandle)
-            {
-                /// Debug("out of date RegionHandle ");
-                /// _CurrentRegion = null;
-            }
-            return _CurrentRegion;
+            //if (_CurrentRegion == null)
+            //{
+            //    if (Prim.RegionHandle==0)
+            //    {
+            //        Console.WriteLine("Dont know the region for " + this);
+            //    }
+            //    _CurrentRegion = SimRegion.GetRegion(Prim.RegionHandle);
+            //    Debug("out of date _CurrentRegion ");
+            //}
+            //if (theAvatar.RegionHandle != _CurrentRegion.RegionHandle)
+            //{
+            //    /// Debug("out of date RegionHandle ");
+            //    /// _CurrentRegion = null;
+            //}
+            //return _CurrentRegion;
         }
 
 
@@ -410,10 +411,10 @@ namespace cogbot.TheOpenSims
             }
             /// lock (Prim)
             {
-                if (theAvatar.RegionHandle != _CurrentRegion.RegionHandle)
-                {
-                    Debug("out of date RegionHandle ");
-                }
+                //if (theAvatar.RegionHandle != _CurrentRegion.RegionHandle)
+                //{
+                //    Debug("out of date RegionHandle ");
+                //}
                 return base.GetSimRotation();
             }
         }
@@ -442,11 +443,11 @@ namespace cogbot.TheOpenSims
                 ScanNewObjects(2, SightRange);
                 CurrentNeeds.AddFrom(OneMinute);
                 CurrentNeeds.SetRange(0.0F, 100.0F);
-                SimPosition to = WorldObjects.Master.m_TheSimAvatar;
-                if (to != null)
-                {
-                    Console.WriteLine("Aging: " + this + " " + to.DistanceVectorString(this));
-                }
+                //SimPosition to = WorldObjects.Master.m_TheSimAvatar;
+                //if (to != null)
+                //{
+                //    Console.WriteLine("Aging: " + this + " " + to.DistanceVectorString(this));
+                //}
                 Thread.Sleep(60000); ///  one minute
 
                 ///  Debug(CurrentNeeds.ToString());
@@ -749,12 +750,16 @@ namespace cogbot.TheOpenSims
         ///  
         /// </summary>
         /// <param name="regionHandle"></param>
-        public override void ResetRegion(ulong regionHandle, Simulator simu)
+        public override void ResetRegion(ulong regionHandle)
         {
-            KnownSimObjects.Clear();
-            TodoBotActions.Clear();
-            GetKnownObjects();
-            base.ResetRegion(regionHandle, simu);
+            bool changed = (regionHandle != RegionHandle);
+            base.ResetRegion(regionHandle);
+            if (changed)
+            {
+                KnownSimObjects.Clear();
+                TodoBotActions.Clear();
+                GetKnownObjects();
+            }
         }
 
 

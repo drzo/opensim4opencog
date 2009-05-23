@@ -442,7 +442,12 @@ namespace cogbot.TheOpenSims
         public ICollection<string> GetAnimationList()
         {
             FillAnimationNames();
-            return nameAnim.Keys;
+            List<String> names = new List<String>();
+            foreach (var list in SimAnimations)
+            {
+                names.Add(list.Name); 
+            }
+            return names;
         }
 
         public String GetAnimationName(UUID uuid)
