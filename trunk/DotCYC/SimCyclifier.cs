@@ -27,7 +27,7 @@ namespace cogbot.DotCYC
             vocabMt = createIndividual("SimVocabMt", "#$VocabularyMicrotheory for the simulator", "UniversalVocabularyMt",
                                                   "VocabularyMicrotheory");
             simObjectFort = createIndividual("SimObject", "#$SpatiallyDisjointObjectType for the simulator", "SimVocabMt", "Collection");
-            cycAccess.assertIsa(simObjectFort, foc("SpatiallyDisjointObjectType"));            
+            cycAccess.assertIsa(simObjectFort, foc("SpatiallyDisjointObjectType"));
             cycAccess.assertGenls(
                 createIndividual("SimAvatar", "#$Agent-Generic for the simulator", "SimVocabMt", "Collection"),
                 simObjectFort);
@@ -35,12 +35,12 @@ namespace cogbot.DotCYC
 
         }
 
-        private CycFort createIndividual(string term, string comment, string mt, string type)
+        public CycFort createIndividual(string term, string comment, string mt, string type)
         {
             return cycAccess.createIndividual(term, comment, mt, type);
 
         }
-        private CycFort createIndividual(string term, string comment, string type)
+        public CycFort createIndividual(string term, string comment, string type)
         {
             return createIndividual(term, comment, "SimVocabMt", type);
 
@@ -57,7 +57,7 @@ namespace cogbot.DotCYC
             }
             else
             {
-                type = "SimObject";                
+                type = "SimObject";
             }
 
             string cname = name + "-" + id;
@@ -68,34 +68,34 @@ namespace cogbot.DotCYC
             //System.Guid g = new System.Guid();
             ////CUID cycid = CUID.nameUUIDFromBytes(ba);
             CycFort constant = cycAccess.find(name);
-            if (constant==null)
+            if (constant == null)
             {
-                constant = cycAccess.createIndividual(cname, "" + obj, "SimVocabMt", type);                
+                constant = cycAccess.createIndividual(cname, "" + obj, "SimVocabMt", type);
             }
             return constant;
         }
 
-        internal CycFort FindOrCreateCycFort(SimAnimationStore.SimAnimation simAnimation)
+        public CycFort FindOrCreateCycFort(SimAnimationStore.SimAnimation simAnimation)
         {
             throw new NotImplementedException();
         }
 
-        internal CycFort FindOrCreateCycFort(SimObjectType simObjectType)
+        public CycFort FindOrCreateCycFort(SimObjectType simObjectType)
         {
             throw new NotImplementedException();
         }
 
-        internal CycFort FindOrCreateCycFort(SimObjectEvent simObjectEvent)
+        public CycFort FindOrCreateCycFort(SimObjectEvent simObjectEvent)
         {
             throw new NotImplementedException();
         }
 
-        internal CycFort FindOrCreateCycFort(Vector3 simObjectEvent, SimRegion region)
+        public CycFort FindOrCreateCycFort(Vector3 simObjectEvent, SimRegion region)
         {
             return new CycNart(makeCycList(foc("PointIn3DCoordinateSystemFn"), FindOrCreateCycFort(region), simObjectEvent.X, simObjectEvent.Y, simObjectEvent.Z));
         }
 
-        private static CycList makeCycList(params object[] argsObject)
+        public static CycList makeCycList(params object[] argsObject)
         {
             CycList list = new CycList(argsObject.Length);
             int i = 0;
@@ -106,17 +106,17 @@ namespace cogbot.DotCYC
             return list;
         }
 
-        private CycFort foc(string p)
+        public CycFort foc(string p)
         {
             return cycAccess.findOrCreate(p);
         }
 
-        internal CycFort FindOrCreateCycFort(SimRegion region)
+        public CycFort FindOrCreateCycFort(SimRegion region)
         {
             return createIndividual(region.RegionName, "SimRegion " + region, "GeographicalPlace-3D");
         }
 
-        internal CycFort FindOrCreateCycFort(Vector3d simObjectEvent)
+        public CycFort FindOrCreateCycFort(Vector3d simObjectEvent)
         {
             return FindOrCreateCycFort(SimRegion.GlobalToLocal(simObjectEvent), SimRegion.GetRegion(simObjectEvent));
         }
@@ -126,17 +126,22 @@ namespace cogbot.DotCYC
             throw new NotImplementedException();
         }
 
-        internal CycFort FindOrCreateCycFort(BotObjectAction botObjectAction)
+        public CycFort FindOrCreateCycFort(BotObjectAction botObjectAction)
         {
             throw new NotImplementedException();
         }
 
-        internal CycFort FindOrCreateCycFort(SimTypeUsage simTypeUsage)
+        public CycFort FindOrCreateCycFort(SimTypeUsage simTypeUsage)
         {
             throw new NotImplementedException();
         }
 
-        internal CycFort FindOrCreateCycFort(SimObjectUsage simObjectUsage)
+        public CycFort FindOrCreateCycFort(SimObjectUsage simObjectUsage)
+        {
+            throw new NotImplementedException();
+        }
+
+        public CycFort FindOrCreateCycFort(MoveToLocation moveToLocation)
         {
             throw new NotImplementedException();
         }

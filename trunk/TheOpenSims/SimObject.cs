@@ -256,16 +256,16 @@ namespace cogbot.TheOpenSims
             get { return _Mesh.OuterBox; }
         }
 
-        public virtual void ResetRegion(ulong regionHandle)
+        public virtual void ResetRegion(ulong regionHandle, Simulator simus)
         {
             //lock (Prim)
-            if (regionHandle != 0)
-            {
-                _CurrentRegion = SimRegion.GetRegion(regionHandle);
-                //  Prim.RegionHandle = regionHandle;
-                //  Debug("Changing regions " + this);
-                // PathStore = GetSimRegion();
-            }
+            //if (regionHandle != 0)
+            //{
+            //    _CurrentRegion = SimRegion.GetRegion(regionHandle);
+            //    //  Prim.RegionHandle = regionHandle;
+            //    //  Debug("Changing regions " + this);
+            //    // PathStore = GetSimRegion();
+            //}
         }
 
         /// <summary>
@@ -444,11 +444,12 @@ namespace cogbot.TheOpenSims
         }
 
         // the prim in Secondlife
-        private Primitive _Prim;
+        protected Primitive _Prim0;
 
         public Primitive Prim
         {
-            get { return _Prim; }
+            get { return _Prim0; }
+            set { _Prim0 = value; }
         }
 
         //{
@@ -511,11 +512,11 @@ namespace cogbot.TheOpenSims
             //: base(prim.ID.ToString())
             // : base(prim, SimRegion.SceneProviderFromSimulator(sim))
         {
-            _Prim = prim;
+            Prim = prim;
             WorldSystem = objectSystem;
             ObjectType = SimTypeSystem.CreateInstanceType(prim.ID.ToString());
             UpdateProperties(Prim.Properties);
-            _CurrentRegion = SimRegion.GetRegion(sim);
+            //_CurrentRegion = SimRegion.GetRegion(sim);
             // PathStore = GetSimRegion();
             //WorldSystem.EnsureSelected(prim.ParentID,sim);
             if (WorldObjects.MaintainCollisions && Prim.Sculpt != null)
@@ -872,6 +873,7 @@ namespace cogbot.TheOpenSims
         public bool IsRegionAttached()
         {
             if (WasKilled) return false;
+            if (Prim.RegionHandle == 0) return false;
             if (IsRoot) return true;
             if (_Parent == null)
             {
@@ -953,7 +955,7 @@ namespace cogbot.TheOpenSims
             return thisPos;
         }
 
-        private Primitive GetParentPrim(Primitive thisPrim)
+        protected Primitive GetParentPrim(Primitive thisPrim)
         {
             Primitive outerPrim;
             if (thisPrim == Prim && _Parent != null) return _Parent.Prim;
@@ -1212,18 +1214,11 @@ namespace cogbot.TheOpenSims
             return Prim.Scale.X * Prim.Scale.Y;
         }
 
-        public SimRegion _CurrentRegion;
+        //public SimRegion _CurrentRegion;
 
         public virtual SimRegion GetSimRegion()
         {
-            //lock (Prim)
-            {
-                if (_CurrentRegion == null)
-                {
-                    _CurrentRegion = SimRegion.GetRegion(Prim.RegionHandle);
-                }
-                return _CurrentRegion;
-            }
+            return SimRegion.GetRegion(Prim.RegionHandle);
         }
 
         public Vector3d GetGlobalLeftPos(int angle, double Dist)
@@ -1249,12 +1244,12 @@ namespace cogbot.TheOpenSims
         //    return ToString();
         //}
 
-        public void ResetPrim(Primitive prim)
+        public void ResetPrim(Primitive prim, Simulator sim)
         {
-            if (prim != _Prim)
+            if (prim != Prim)
             {
-                _Prim = prim;
-                ResetRegion(prim.RegionHandle);
+                Prim = prim;
+                ResetRegion(prim.RegionHandle, sim);
                 Debug("two different prims {0} {1}", prim, Prim);
             }
             // throw new Exception("The method or operation is not implemented.");
@@ -1546,8 +1541,8 @@ namespace cogbot.TheOpenSims
         SimMesh Mesh { get; }
         SimObject Parent { get; }
         double RateIt(BotNeeds needs);
-        void ResetPrim(Primitive prim);
-        void ResetRegion(ulong regionHandle);
+        void ResetPrim(Primitive prim, Simulator sim);
+        void ResetRegion(ulong regionHandle, Simulator sim);
         bool RestoreEnterable(SimMover actor);
         void SendUpdate(int ms);
         void SetMoveTarget(SimPosition target);

@@ -21,9 +21,9 @@ namespace cogbot.TheOpenSims
             {
                 if (!WasKilled) /// already
                 {
-                    List<SimObject> AttachedChildren = GetChildren();
-                    lock (AttachedChildren)
-                        foreach (SimObject C in AttachedChildren)
+                    List<SimObject> AttachedChildren0 = GetChildren();
+                    lock (AttachedChildren0)
+                        foreach (SimObject C in AttachedChildren0)
                         {
                             C.IsKilled = true;
                         }
@@ -206,9 +206,11 @@ namespace cogbot.TheOpenSims
             {
                 AspectName += objectSystem.client + "_Avatar_" + slAvatar.LocalID;
             }
-            avatarHeartbeatThread = new Thread(Aging);
-            avatarHeartbeatThread.Name = String.Format("AvatarHeartbeatThread for {0}", AspectName);
-            avatarHeartbeatThread.Priority = ThreadPriority.Lowest;
+            avatarHeartbeatThread = new Thread(Aging)
+                                        {
+                                            Name = String.Format("AvatarHeartbeatThread for {0}", AspectName),
+                                            Priority = ThreadPriority.Lowest
+                                        };
             avatarHeartbeatThread.Start();
             MakeEnterable(this);
         }
@@ -300,7 +302,7 @@ namespace cogbot.TheOpenSims
         {
             if (avatarThinkerThread == null)
             {
-                avatarThinkerThread = new Thread(Think) {Name = "AvatarThinkerThread for " + Client};
+                avatarThinkerThread = new Thread(Think) { Name = String.Format("AvatarThinkerThread for {0}", Client) };
                 if (IsControllable)
                 {
                     ///  only think for ourselves
@@ -340,12 +342,15 @@ namespace cogbot.TheOpenSims
 
         public override Vector3 GetSimPosition()
         {
-            /// if (Client.Self.AgentID == Prim.ID)
-            /// {
-            ///     if (Client.Settings.OBJECT_TRACKING)
-            ///         return Client.Self.SimPosition;
-            ///     if (theAvatar.ParentID == 0) return theAvatar.Position;
-            /// }
+            if (Client!=null && Client.Self.AgentID == Prim.ID)
+            {
+                if (Client.Settings.OBJECT_TRACKING)
+                    return Client.Self.SimPosition;
+            }
+            if (theAvatar.ParentID == 0)
+            {
+                return theAvatar.Position;
+            }
             return base.GetSimPosition();
         }
 
@@ -360,6 +365,7 @@ namespace cogbot.TheOpenSims
             return GetSimRegion().LocalToGlobal(GetSimPosition());
         }
 
+        private SimRegion _CurrentRegion;
         public override SimRegion GetSimRegion()
         {
             if (Prim == null)
@@ -372,8 +378,17 @@ namespace cogbot.TheOpenSims
                 return _CurrentRegion;
             }
 
+            if (Prim.RegionHandle == 0)
+            {
+                Console.WriteLine("Don't know the region for " + this);
+            }
+
             if (_CurrentRegion == null)
             {
+                if (Prim.RegionHandle==0)
+                {
+                    Console.WriteLine("Dont know the region for " + this);
+                }
                 _CurrentRegion = SimRegion.GetRegion(Prim.RegionHandle);
                 Debug("out of date _CurrentRegion ");
             }
@@ -427,7 +442,13 @@ namespace cogbot.TheOpenSims
                 ScanNewObjects(2, SightRange);
                 CurrentNeeds.AddFrom(OneMinute);
                 CurrentNeeds.SetRange(0.0F, 100.0F);
+                SimPosition to = WorldObjects.Master.m_TheSimAvatar;
+                if (to != null)
+                {
+                    Console.WriteLine("Aging: " + this + " " + to.DistanceVectorString(this));
+                }
                 Thread.Sleep(60000); ///  one minute
+
                 ///  Debug(CurrentNeeds.ToString());
             }
         }
@@ -728,12 +749,12 @@ namespace cogbot.TheOpenSims
         ///  
         /// </summary>
         /// <param name="regionHandle"></param>
-        public override void ResetRegion(ulong regionHandle)
+        public override void ResetRegion(ulong regionHandle, Simulator simu)
         {
             KnownSimObjects.Clear();
             TodoBotActions.Clear();
             GetKnownObjects();
-            base.ResetRegion(regionHandle);
+            base.ResetRegion(regionHandle, simu);
         }
 
 
@@ -1198,6 +1219,16 @@ namespace cogbot.TheOpenSims
                     {
                         if (Prim.Velocity == Vector3.Zero)
                             IsBlocked = true;
+                        if (ApproachPosition!=null)
+                        {
+                            // follower should pass by.. but on way point navigation would be ok
+                            ClientMovement.Stop = true;
+                            ClientMovement.FinishAnim = true;
+                            SendUpdate(100);
+                            ClientMovement.Stop = false;
+                            lastDistance = curDist;
+                            continue;
+                        }
                     }
                     lastDistance = curDist;
 
@@ -1277,21 +1308,12 @@ namespace cogbot.TheOpenSims
                     ///     }
                     /// }
 
-
-                    if (ApproachVector3D == Vector3d.Zero)
-                    {
-                        if (ApproachPosition == null)
-                        {
-                            continue;
-                        }
-                    }
-
                     ///  Far away
                     if (curXYDist > ApproachDistance)
                     {
                         ClientMovement.Stop = false;
                         ClientMovement.FinishAnim = false;
-                        /// TurnToward(targetPosition);
+                        TurnToward(targetPosition);
                         ///  getting close though
                         if (curDist < (ApproachDistance*1.25))
                         {

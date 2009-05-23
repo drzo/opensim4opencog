@@ -411,7 +411,7 @@ namespace cogbot.Listeners
         private static Thread TrackUpdatesThread;
         private static Thread TrackUpdateLagThread;
 
-        public static bool DoCatchUp = false;
+        public static bool DoCatchUp = true;
         private static Timer InterpolationTimer;
 
         private static void TrackUpdates()
@@ -433,7 +433,7 @@ namespace cogbot.Listeners
                     }
                     if (queuedUpdatesCount > 0)
                     {
-                        //todo Debug("Start Processing Updates: " + queuedUpdatesCount);
+                        //todo          Debug("Start Processing Updates: " + queuedUpdatesCount);
 
                         while (queuedUpdatesCount > 0)
                         {
@@ -446,7 +446,7 @@ namespace cogbot.Listeners
                             U();
                             didUpdate++;
                         }
-                        //todo Debug("Done processing Updates: " + didUpdate);
+                        //todo      Debug("Done processing Updates: " + didUpdate);
                     }
 
                     if (DoCatchUp)
@@ -518,7 +518,22 @@ namespace cogbot.Listeners
             List<Primitive> primsCatchup;
             lock (simulator.ObjectsPrimitives.Dictionary)
                 primsCatchup = new List<Primitive>(simulator.ObjectsPrimitives.Dictionary.Values);
-            foreach (Primitive item in primsCatchup) GetSimObject(item, simulator);
+            lock (simulator.ObjectsAvatars.Dictionary)
+            {
+                simulator.ObjectsAvatars.ForEach(a => primsCatchup.Add(a));
+            }
+            bool known = false;
+            foreach (Primitive item in primsCatchup)
+            {
+                if (item.ID != UUID.Zero)
+                {
+             //       lock (uuidTypeObject)
+               //         known = uuidTypeObject.ContainsKey(item.ID);
+                 //   if (!known)
+                    if (item.ParentID == 0 && !SimRegion.OutOfRegion(item.Position))
+                        GetSimObject(item, simulator);
+                }
+            }
         }
 
 
@@ -630,7 +645,7 @@ namespace cogbot.Listeners
                         {
                             if (!SimRegion.OutOfRegion(prim.Position))
                             {
-                                O.ResetPrim(prim);
+                                O.ResetPrim(prim, null);
                             }
                             if (Settings.LOG_LEVEL != Helpers.LogLevel.Info)
                                 Debug("Prim with different region handle " + prim);
@@ -1360,7 +1375,7 @@ namespace cogbot.Listeners
 
             if (prim.ID != UUID.Zero)
             {
-                GetSimObject(prim, simulator).ResetPrim(prim);
+                GetSimObject(prim, simulator).ResetPrim(prim,simulator);
                 if (MaintainObjectUpdates)
                     LastObjectUpdate[prim.ID] = updatFromPrim(prim);
             }
@@ -1479,7 +1494,7 @@ namespace cogbot.Listeners
             {
                 SimObject AV = GetSimObject(avatar, simulator);
                 AV.IsKilled = false;
-                AV.ResetPrim(avatar);
+                AV.ResetPrim(avatar, simulator);
             }
             Objects_OnNewAvatar1(simulator, avatar, regionHandle, timeDilation);
         }
@@ -1532,9 +1547,9 @@ namespace cogbot.Listeners
                 {
                     if (rh != regionHandle)
                     {
-                        AV.ResetRegion(regionHandle);
+                        AV.ResetRegion(regionHandle, simulator);
                     }
-                    AV.ResetPrim(av);
+                    AV.ResetPrim(av, simulator);
                 }
 
                 if (av.ParentID == 0 && !SimRegion.OutOfRegion(update.Position))
