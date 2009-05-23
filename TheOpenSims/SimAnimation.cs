@@ -31,13 +31,12 @@ namespace cogbot.TheOpenSims
 
         public override string ToString()
         {
-            return "AnimLoop " + anim + " of " + ClientSelf;
+            return String.Format("AnimLoop {0} of {1}", anim, ClientSelf);
         }
 
         public void Start()
         {
-            animLoop = new Thread(new ThreadStart(LoopAnim));
-            animLoop.Name = "Thread for " + ToString();
+            animLoop = new Thread(LoopAnim) {Name = string.Format("Thread for {0}", ToString())};
             animLoop.Start();
         }
 
@@ -49,9 +48,9 @@ namespace cogbot.TheOpenSims
                 while (repeat)
                 {
                     // some anims will only last a short time so we have to 
-                    // remind the server we still want to be ussing it 
+                    // remind the server we still want to be using it 
                     // like Laugh .. lasts for about .9 seconds
-                    //12000 is a estimate avage
+                    //12000 is a estimate average
                     Thread.Sleep(3200);
                     ClientSelf.AnimationStop(anim, true);
                     ClientSelf.AnimationStart(anim, true);
@@ -121,7 +120,7 @@ namespace cogbot.TheOpenSims
         internal void OnAnimDownloaded(UUID uUID, AssetAnimation asset)
         {
             SimAnimation A = FindOrCreateAnimation(uUID);
-            A.BVHData = asset.AssetData;
+            A.BvhData = asset.AssetData;
 
 
 
@@ -199,15 +198,15 @@ namespace cogbot.TheOpenSims
                 AnimMap("angry", "avatar_angry_tantrum");
                 /*
                  * need UUIDS for
-                        customize.bvh
-                        customize_done.bvh
-                        express_disdain.bvh
-                        express_frown.bvh
-                        express_kiss.bvh
-                        express_open_mouth.bvh
-                        express_smile.bvh
-                        express_tongue_out.bvh
-                        express_toothsmile.bvh
+                        customize.animation
+                        customize_done.animation
+                        express_disdain.animation
+                        express_frown.animation
+                        express_kiss.animation
+                        express_open_mouth.animation
+                        express_smile.animation
+                        express_tongue_out.animation
+                        express_toothsmile.animation
                  */
                 AnimUUID("AIM_L_BOW", "46bb4359-de38-4ed8-6a22-f1f52fe8f506");
                 AnimUUID("AIM_R_BAZOOKA", "b5b4a67d-0aee-30d2-72cd-77b333e932ef");
@@ -369,7 +368,7 @@ namespace cogbot.TheOpenSims
 
                 foreach (SimAnimation A in SimAnimations)
                 {
-                 //  if (A.IsIncomplete())  Console.WriteLine("Animation: " + A.ToString());
+                   if (A.IsIncomplete())  Console.WriteLine("Animation: " + A.ToString());
                 }
             }
         }
@@ -392,7 +391,7 @@ namespace cogbot.TheOpenSims
                 string usedName;
                 if (BytesFromFile(fName, out bytes, out usedName))
                 {
-                    anim.BVHData = bytes;
+                    anim.BvhData = bytes;
                     anim.Name = usedName;
                 }
                 else
@@ -405,29 +404,29 @@ namespace cogbot.TheOpenSims
         public static bool BytesFromFile(string fName, out byte[] bytes,out string usedName)
         {
             usedName = fName;
-            if (File.Exists("bvh_files/" + usedName + ".bvh"))
+            if (File.Exists("bvh_files/" + usedName + ".animation"))
             {
-                bytes = File.ReadAllBytes("bvh_files/" + usedName + ".bvh");
+                bytes = File.ReadAllBytes("bvh_files/" + usedName + ".animation");
                 return true;
             }
             usedName = "avatar_" + fName;
-            if (File.Exists("bvh_files/" + usedName + ".bvh"))
+            if (File.Exists("bvh_files/" + usedName + ".animation"))
             {
-                bytes = File.ReadAllBytes("bvh_files/" + usedName + ".bvh");
+                bytes = File.ReadAllBytes("bvh_files/" + usedName + ".animation");
                 return true;
             }
             usedName = "avatar_express_" + fName;
-            if (File.Exists("bvh_files/" + usedName + ".bvh"))
+            if (File.Exists("bvh_files/" + usedName + ".animation"))
             {
-                bytes = File.ReadAllBytes("bvh_files/" + usedName + ".bvh");
+                bytes = File.ReadAllBytes("bvh_files/" + usedName + ".animation");
                 return true;
             }
             if (nameNameMap.ContainsKey(fName))
             {
                 usedName = nameNameMap[fName];
-                if (File.Exists("bvh_files/" + usedName + ".bvh"))
+                if (File.Exists("bvh_files/" + usedName + ".animation"))
                 {
-                    bytes = File.ReadAllBytes("bvh_files/" + usedName + ".bvh");
+                    bytes = File.ReadAllBytes("bvh_files/" + usedName + ".animation");
                     return true;
                 }
             }
@@ -552,7 +551,7 @@ namespace cogbot.TheOpenSims
                         //item.ParentUUID = Client.AnimationFolder; // FindFolderForType(item.AssetType);
                         //item.CreationDate = new DateTime();
                         BinBVHAnimationReader bvh = Reader;
-                        if (bvh.ExpressionName!=null)
+                        if (bvh!=null && bvh.ExpressionName != null)
                         {
                             string n = bvh.ExpressionName;
                             _Name.Add(n);
@@ -573,7 +572,7 @@ namespace cogbot.TheOpenSims
             }
            
             public byte[] _BvhData;
-            public byte[] BVHData
+            public byte[] BvhData
             {
                 get
                 {
@@ -600,7 +599,14 @@ namespace cogbot.TheOpenSims
                     if (_BvhData != value)
                         return;
                     _BvhData = value;
-                    _reader = new BinBVHAnimationReader(BVHData);
+                    try
+                    {
+                        _reader = new BinBVHAnimationReader(BvhData);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        BvhData = null;                    	
+                    }
                 }
             }
             public BinBVHAnimationReader _reader;
@@ -612,10 +618,10 @@ namespace cogbot.TheOpenSims
                     {
                         try
                         {
-                            _reader = new BinBVHAnimationReader(BVHData);
+                            _reader = new BinBVHAnimationReader(BvhData);
                         } catch (Exception e)
                         {
-                            BVHData = null; 
+                            _BvhData = null; 
                         }
                     }
                     return _reader;
@@ -660,7 +666,7 @@ namespace cogbot.TheOpenSims
 
             internal bool IsIncomplete()
             {
-                return _reader == null || AnimationIDs.Count == 0 || _Name.Count == 0;
+                return Reader == null || AnimationIDs.Count == 0 || _Name.Count == 0;
             }
         }
  
@@ -693,7 +699,7 @@ namespace cogbot.TheOpenSims
 
         /// <summary>Fired when a texture download completes</summary>
         public event DownloadFinishedCallback OnDownloadFinished;
-        /// <summary>Fired when some texture BVHData is received</summary>
+        /// <summary>Fired when some texture BvhData is received</summary>
         public event DownloadProgressCallback OnDownloadProgress;
 
         public int CurrentCount { get { return currentRequests.Count; } }
