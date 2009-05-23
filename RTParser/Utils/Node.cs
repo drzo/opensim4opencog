@@ -37,7 +37,7 @@ namespace RTParser.Utils
         /// <summary>
         /// The template (if any) associated with this node
         /// </summary>
-        public string template = string.Empty;
+        public List<Template> template = null;//string.Empty;
 
         /// <summary>
         /// The AIML source for the category that defines the template
@@ -49,7 +49,7 @@ namespace RTParser.Utils
         /// </summary>
         public string word=string.Empty;
 
-        private XmlNode GuardText;
+        //private XmlNode GuardText;
 
         #endregion
 
@@ -73,8 +73,9 @@ namespace RTParser.Utils
             // check we're not at the leaf node
             if (path.Trim().Length == 0)
             {
-                this.template = template;
-                this.GuardText = guard;
+                if (this.template == null) this.template = new List<Template>();
+                this.template.Insert(0, new Template(template, guard));
+                //this.GuardText = guard;
                 this.filename = filename;
                 return;
             }
@@ -114,46 +115,45 @@ namespace RTParser.Utils
         public static bool AlwaysFail = true;
         #region Evaluate Node
 
-        public string evaluate(string path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard)
+        public List<Template> evaluate(string path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard)
         {
-            // are we in failure?
-            if (query.GuardFailed) return String.Empty;
-            // first call the pre-existing evaluate  that was renamed to evaluate0
-            // String temp = evaluate0(path, query, request, matchstate, wildcard);
-            if (this.GuardText!=null)
-            {
-                string preserve = query.Template;
-                try
-                {
+            //// are we in failure?
+            //// first call the pre-existing evaluate  that was renamed to evaluate0
+            //// String temp = evaluate0(path, query, request, matchstate, wildcard);
+            //if (this.GuardText!=null)
+            //{
+            //    string preserve = query.Template;
+            //    try
+            //    {
 	                
-	                Result result = new Result(request.user, request.Proccessor, request);
-	                XmlNode templateNode = AIMLTagHandler.getNode(GuardText.OuterXml);
-	                query.Template = GuardText.OuterXml;
-	                string outputSentence = request.Proccessor.processNode(templateNode, query, request, result, request.user);
-	                bool failed = outputSentence == null || outputSentence == "NIL";
-	                if (failed)
-	                {
-	                    Console.WriteLine("failing guard " + GuardText.InnerXml + " for " + this);
-	                    Node next = GetNextNode();
-	                    if (next!=null)
-	                    {
-	                        // return next.evaluate(path, query, request, matchstate, wildcard);
-	                    }
-	                    return String.Empty;
-	                }
-                    // success
-                    return evaluate0(path, query, request, matchstate, wildcard); ;
-                }
-                catch (System.Exception ex)
-                {
-                    Console.WriteLine("" + ex);
-                    return String.Empty; //fail
-                }
-                finally
-                {
-                    query.Template = preserve;
-                }
-            }
+            //        Result result = new Result(request.user, request.Proccessor, request);
+            //        XmlNode templateNode = AIMLTagHandler.getNode(GuardText.OuterXml);
+            //        query.Template = GuardText.OuterXml;
+            //        string outputSentence = request.Proccessor.processNode(templateNode, query, request, result, request.user);
+            //        bool failed = outputSentence == null || outputSentence == "NIL";
+            //        if (failed)
+            //        {
+            //            Console.WriteLine("failing guard " + GuardText.InnerXml + " for " + this);
+            //            Node next = GetNextNode();
+            //            if (next!=null)
+            //            {
+            //                // return next.evaluate(path, query, request, matchstate, wildcard);
+            //            }
+            //            return String.Empty;
+            //        }
+            //        // success
+            //        return evaluate0(path, query, request, matchstate, wildcard); ;
+            //    }
+            //    catch (System.Exception ex)
+            //    {
+            //        Console.WriteLine("" + ex);
+            //        return null;// String.Empty; //fail
+            //    }
+            //    finally
+            //    {
+            //        query.Template = preserve;
+            //    }
+            //}
             return evaluate0(path, query, request, matchstate, wildcard); ;
         }
 
@@ -194,14 +194,14 @@ namespace RTParser.Utils
         /// <param name="matchstate">The part of the input path the node represents</param>
         /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
         /// <returns>The template to process to generate the output</returns>
-        private string evaluate0(string path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard)
+        private List<Template> evaluate0(string path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard)
         {
             // check for timeout
             if (request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
             {
                 request.Proccessor.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" + request.rawInput + "\"");
                 request.hasTimedOut = true;
-                return string.Empty;
+                return null;// string.Empty;
             }
 
             // so we still have time!
@@ -247,11 +247,11 @@ namespace RTParser.Utils
                 this.storeWildCard(splitPath[0],newWildcard);
                 
                 // move down into the identified branch of the GraphMaster structure
-                string result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);
+                List<Template> result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);
 
                 // and if we get a result from the branch process the wildcard matches and return 
                 // the result
-                if (result.Length>0)
+                if (result!=null && result.Count>0)
                 {
                     if (newWildcard.Length > 0)
                     {
@@ -298,9 +298,9 @@ namespace RTParser.Utils
                 // move down into the identified branch of the GraphMaster structure using the new
                 // matchstate
                 StringBuilder newWildcard = new StringBuilder();
-                string result = childNode.evaluate(newPath, query, request, newMatchstate,newWildcard);
+                List<Template> result = childNode.evaluate(newPath, query, request, newMatchstate, newWildcard);
                 // and if we get a result from the child return it
-                if (result.Length > 0)
+                if (result != null && result.Count > 0)
                 {
                     if (newWildcard.Length > 0)
                     {
@@ -338,9 +338,9 @@ namespace RTParser.Utils
                 StringBuilder newWildcard = new StringBuilder();
                 this.storeWildCard(splitPath[0], newWildcard);
 
-                string result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);
+                List<Template> result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);
                 // and if we get a result from the branch process and return it
-                if (result.Length > 0)
+                if (result!=null && result.Count > 0)
                 {
                     if (newWildcard.Length > 0)
                     {
@@ -378,7 +378,7 @@ namespace RTParser.Utils
             // AIML files have been set up to include a "* <that> * <topic> *" catch-all this
             // state won't be reached. Remember to empty the surplus to requirements wildcard matches
             wildcard = new StringBuilder();
-            return string.Empty;
+            return null;// string.Empty;
         }
 
         /// <summary>

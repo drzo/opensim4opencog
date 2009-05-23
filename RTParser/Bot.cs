@@ -704,25 +704,68 @@ namespace RTParser
 
         private void processTemplate(SubQuery query, Request request, Result result)
         {
-            if (query.Template.Length > 0)
+            if (query.Template != null && query.Template.Count > 0)
             {
-                try
+                foreach (Template s in query.Template)
                 {
-                    XmlNode templateNode = AIMLTagHandler.getNode(query.Template);
-                    string outputSentence = this.processNode(templateNode, query, request, result, request.user);
-                    if (outputSentence.Length > 0)
+
+                    try
                     {
-                        result.OutputSentences.Add(outputSentence);
+                        //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
+                        string output = s.Output;
+                        bool usedGuard = false;
+                        if (s.Guard != null)
+                        {
+                            usedGuard = true;
+                            output = output.Trim();
+                            if (output.StartsWith("<template>"))
+                            {
+                                output = "<template>" + s.Guard.InnerXml + "GUARDBOM " + output.Substring(10);
+                            }
+
+                        }
+                        XmlNode templateNode = AIMLTagHandler.getNode(output);
+                        string outputSentence = this.processNode(templateNode, query, request, result, request.user);
+                        int f = outputSentence.IndexOf("GUARDBOM");
+                        if (f < 0)
+                        {
+                            if (outputSentence.Length > 0)
+                            {
+                                result.OutputSentences.Add(outputSentence);
+                            }
+                        }
+                        else
+                        {
+                            try
+                           {
+	                           string left = outputSentence.Substring(0, f);
+	                            string ss = EvalSubL("(cyc-query '" + left + " #$EverythingPSC)", null);
+	                            if (ss == null) continue;
+	                            ss = ss.Trim();
+	                            if (ss == "" || ss == "NIL") continue;
+	                            outputSentence = outputSentence.Substring(f + 9);
+	                            if (outputSentence.Length > 0)
+	                            {
+	                                result.OutputSentences.Add(outputSentence);
+	                                break;
+	                            }
+                           }
+                           catch (System.Exception ex)
+                           {
+                               continue;
+                           }
+                        }
                     }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("" + e);
-                    if (this.WillCallHome)
+                    catch (Exception e)
                     {
-                        this.phoneHome(e.Message, request);
+                        Console.WriteLine("" + e);
+                        if (this.WillCallHome)
+                        {
+                            this.phoneHome(e.Message, request);
+                        }
+                        this.writeToLog("WARNING! A problem was encountered when trying to process the input: " +
+                                        request.rawInput + " with the template: \"" + query.Template + "\"");
                     }
-                    this.writeToLog("WARNING! A problem was encountered when trying to process the input: " + request.rawInput + " with the template: \"" + query.Template + "\"");
                 }
             }
         }
@@ -1173,11 +1216,19 @@ The AIMLbot program.
                 while (oresult is CycList)
                 {
                     CycList lresuult = (CycList) oresult;
-                                        
-                    if (lresuult.first() is CycVariable)
-                        oresult = lresuult.rest();
+
+
+
+                    if (lresuult.first() is CycSymbol)
+                    {
+                        oresult = lresuult; //lresuult.rest();
+                        break;
+                    }
                     else
-                        oresult = lresuult.first();
+                        if (lresuult.first() is CycVariable)
+                            oresult = lresuult.rest();
+                        else
+                            oresult = lresuult.first();
                 }
                 result = "" + oresult;
                 if (oresult is CycObject)
