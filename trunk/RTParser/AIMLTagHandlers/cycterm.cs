@@ -27,6 +27,7 @@ namespace RTParser.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
+            //isRecursive = false;
         }
 
 
@@ -35,8 +36,13 @@ namespace RTParser.AIMLTagHandlers
             if (this.templateNode.Name.ToLower() == "cycterm")
             {                    
                 string filter = base.GetAttribValue("filter", GetAttribValue("isa", "Thing"));
+                string r = Recurse();
                 string term;
-                if (lookup(Recurse(), filter, out term)) return term;
+                if (lookup(r, filter, out term))
+                {
+                    return term;
+                }
+                return string.Empty;
             }
             return string.Empty;
         }
@@ -53,25 +59,28 @@ namespace RTParser.AIMLTagHandlers
                 term = text;
                 return false;
             }
+            filter = Proc.Cyclify(filter);
             string ptext = text.Substring(0, 1).ToUpper() + text.Substring(1);
             if(false
-            || lookupCycTerm("(cyc-query '(#$nameString ?CYCOBJECT \"%s\") #$EverythingPSC)", text, filter, out term)
-            || lookupCycTerm("(cyc-query '(#$denotation #$%s-TheWord ?TEXT ?TYPE ?CYCOBJECT) #$EverythingPSC)", ptext, filter, out term)
-            || lookupCycTerm("(cyc-query '(#$denotationRelatedTo #$%s-TheWord ?TEXT ?TYPE ?CYCOBJECT) #$EverythingPSC)", ptext, filter,out term)
-            || lookupCycTerm("(cyc-query '(#$initialismString ?CYCOBJECT \"%s\") #$EverythingPSC)", text, filter,out term)
-            || lookupCycTerm("(cyc-query '(#$abbreviationString-PN ?CYCOBJECT \"%s\") #$EverythingPSC)", text, filter,out term)
-            || lookupCycTerm("(cyc-query '(#$preferredNameString ?CYCOBJECT \"%s\") #$EverythingPSC)", text, filter,out term)
-            || lookupCycTerm("(cyc-query '(#$countryName-LongForm ?CYCOBJECT \"%s\") #$EverythingPSC)", text, filter,out term)
-            || lookupCycTerm("(cyc-query '(#$countryName-ShortForm ?CYCOBJECT \"%s\") #$EverythingPSC)", text, filter,out term)
-            || lookupCycTerm("(cyc-query '(#$acronymString ?CYCOBJECT \"%s\") #$EverythingPSC)", text, filter,out term)
-            || lookupCycTerm("(cyc-query '(#$scientificName ?CYCOBJECT \"%s\") #$EverythingPSC)", text, filter,out term)
-            || lookupCycTerm("(cyc-query '(#$termStrings ?CYCOBJECT \"%s\") #$EverythingPSC)", text, filter,out term)
-            || lookupCycTerm("(cyc-query '(#$termStrings-GuessedFromName ?CYCOBJECT \"%s\") #$EverythingPSC)", text, filter,out term)
-            || lookupCycTerm("(cyc-query '(#$prettyName ?CYCOBJECT \"%s\") #$EverythingPSC)", text, filter,out term)
-            || lookupCycTerm("(cyc-query '(#$nicknames ?CYCOBJECT \"%s\") #$EverythingPSC)", text, filter,out term)
-            || lookupCycTerm("(cyc-query '(#$preferredTermStrings ?CYCOBJECT \"%s\") #$EverythingPSC)", text, filter,out term)
-            || lookupCycTerm("(cyc-query '(#$preferredGenUnit ?CYCOBJECT ?POS #$%s-TheWord ) #$EverythingPSC)", ptext, filter,out term)
-            || lookupCycTerm("(cyc-query '(#$and (#$wordStrings ?WORD \"%s\") (#$or (#$denotation ?WORD ?TEXT ?TYPE ?CYCOBJECT) (#$denotationRelatedTo ?WORD ?TEXT ?TYPE ?CYCOBJECT) )) #$EverythingPSC)", text, filter,out term))            
+            || lookupCycTerm("(#$nameString ?CYCOBJECT \"%s\")", text, filter, out term)
+            || lookupCycTerm("(#$denotation #$%s-TheWord ?TEXT ?TYPE ?CYCOBJECT)", ptext, filter, out term)
+            || lookupCycTerm("(#$denotationRelatedTo #$%s-TheWord ?TEXT ?TYPE ?CYCOBJECT)", ptext, filter,out term)
+            || lookupCycTerm("(#$initialismString ?CYCOBJECT \"%s\")", text, filter,out term)
+            || lookupCycTerm("(#$abbreviationString-PN ?CYCOBJECT \"%s\")", text, filter,out term)
+            || lookupCycTerm("(#$preferredNameString ?CYCOBJECT \"%s\")", text, filter,out term)
+            || lookupCycTerm("(#$countryName-LongForm ?CYCOBJECT \"%s\")", text, filter,out term)
+            || lookupCycTerm("(#$countryName-ShortForm ?CYCOBJECT \"%s\")", text, filter,out term)
+            || lookupCycTerm("(#$acronymString ?CYCOBJECT \"%s\")", text, filter,out term)
+            || lookupCycTerm("(#$scientificName ?CYCOBJECT \"%s\")", text, filter,out term)
+            || lookupCycTerm("(#$termStrings ?CYCOBJECT \"%s\")", text, filter,out term)
+            || lookupCycTerm("(#$termStrings-GuessedFromName ?CYCOBJECT \"%s\")", text, filter,out term)
+            || lookupCycTerm("(#$prettyString ?CYCOBJECT \"%s\")", text, filter,out term)
+            || lookupCycTerm("(#$nicknames ?CYCOBJECT \"%s\")", text, filter,out term)
+            || lookupCycTerm("(#$preferredTermStrings ?CYCOBJECT \"%s\")", text, filter, out term)
+            || lookupCycTerm("(#$and (#$isa ?P #$ProperNamePredicate-Strict)(?P ?CYCOBJECT \"%s\"))", text, filter, out term)
+            || lookupCycTerm("(#$and (#$isa ?P #$ProperNamePredicate-General)(?P ?CYCOBJECT \"%s\"))", text, filter, out term)
+            || lookupCycTerm("(#$preferredGenUnit ?CYCOBJECT ?POS #$%s-TheWord )", ptext, filter, out term)
+            || lookupCycTerm("(#$and (#$wordStrings ?WORD \"%s\") (#$or (#$denotation ?WORD ?TEXT ?TYPE ?CYCOBJECT) (#$denotationRelatedTo ?WORD ?TEXT ?TYPE ?CYCOBJECT) ))", text, filter,out term))            
                 return true;
             term = this.Proc.EvalSubL(String.Format("(car (fi-complete \"{0}\"))", text),null);
             // Followed by asking Cyc to guess at the word using (fi-complete \”%s\”)
@@ -90,6 +99,14 @@ namespace RTParser.AIMLTagHandlers
                     return true;
                 }
             }
+            term = this.Proc.EvalSubL(String.Format("(car (denots-of-string \"{0}\"))", text), null);
+            if (!String.IsNullOrEmpty(term) && term.ToUpper() != "NIL")
+            {
+                if (this.Proc.IsaFilter(term, filter))
+                {
+                    return true;
+                }
+            }
             // and if that fails returns a string of using #$\”%s\”
             term = string.Format("#${0}", text);
             return false;
@@ -99,10 +116,18 @@ namespace RTParser.AIMLTagHandlers
 
         private bool lookupCycTerm(string template, string text,string filter, out string term)
         {
-            template = template.Replace("%s", text);
-            term = this.Proc.EvalSubL(String.Format("(cdr (assoc '?CYCOBJECT (nth 0 {0})))", template), null);
+            template = template.Replace("%s", text);            
+            try
+            {
+	            term = this.Proc.EvalSubL(String.Format("(cdr (assoc '?CYCOBJECT (nth 0 (cyc-query '(#$and {0} (#$isa ?CYCOBJECT {1})) #$EverythingPSC )) )))", template,filter), null);
+            }
+            catch (System.Exception ex)
+            {
+                term = null;
+                return false;
+            }
             if (String.IsNullOrEmpty(term) || term.ToUpper() == "NIL") return false;
-            return this.Proc.IsaFilter(term,filter);
+            return true;
         }
     }
 }

@@ -78,15 +78,39 @@ namespace RTParser.Utils
         /// The template node to be processed by the class
         /// </summary>
         public XmlNode templateNode;
-
         protected string Recurse()
         {
-            string before = this.templateNode.InnerText;
-            if (true) return before;
-            XmlNode templateNode = AIMLTagHandler.getNode(before);
-            string outputSentence = Proc.processNodeInside(templateNode, query, request, result, request.user);
-            return outputSentence;
+            StringBuilder templateResult = new StringBuilder();
+            if (this.templateNode.HasChildNodes)
+            {
+                // recursively check
+                foreach (XmlNode childNode in this.templateNode.ChildNodes)
+                {
+                    if (childNode.NodeType == XmlNodeType.Text)
+                    {
+                        templateResult.Append(childNode.InnerXml);
+                    }
+                    else
+                    {
+                        string found = Proc.processNode(childNode, query, request, result, user);
+                        if (found == null || found.Trim() == "" || found.Trim() == "NIL")
+                        {
+                            return String.Empty;
+                        }
+                        templateResult.Append(found);
+                    }
+                }
+                templateNodeInnerText = templateResult.ToString();
+                return templateNodeInnerText;
+            }
+            else
+            {
+                string before = this.templateNode.InnerXml;               
+                return before;                
+            }
+
         }
+
 
         #region Helper methods
 

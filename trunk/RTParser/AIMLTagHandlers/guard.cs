@@ -41,58 +41,18 @@ namespace RTParser.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
+           // this.isRecursive = false;
         }
 
         protected override string ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "guard")
             {
-                if (this.templateNode.Attributes.Count == 0)
+                templateNodeInnerText = Recurse();
+                if (templateNodeInnerText.Length > 0)
                 {
-                    return this.user.getThat();
-                }
-                else if (this.templateNode.Attributes.Count == 1)
-                {
-                    if (this.templateNode.Attributes[0].Name.ToLower() == "index")
-                    {
-                        if (this.templateNode.Attributes[0].Value.Length > 0)
-                        {
-                            try
-                            {
-                                // see if there is a split
-                                string[] dimensions = this.templateNode.Attributes[0].Value.Split(",".ToCharArray());
-                                if (dimensions.Length == 2)
-                                {
-                                    int result = Convert.ToInt32(dimensions[0].Trim());
-                                    int sentence = Convert.ToInt32(dimensions[1].Trim());
-                                    if ((result > 0) & (sentence > 0))
-                                    {
-                                        return this.user.getThat(result - 1, sentence - 1);
-                                    }
-                                    else
-                                    {
-                                        this.Proc.writeToLog("ERROR! An input tag with a bady formed index (" + this.templateNode.Attributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
-                                    }
-                                }
-                                else
-                                {
-                                    int result = Convert.ToInt32(this.templateNode.Attributes[0].Value.Trim());
-                                    if (result > 0)
-                                    {
-                                        return this.user.getThat(result - 1);
-                                    }
-                                    else
-                                    {
-                                        this.Proc.writeToLog("ERROR! An input tag with a bady formed index (" + this.templateNode.Attributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                this.Proc.writeToLog("ERROR! An input tag with a bady formed index (" + this.templateNode.Attributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
-                            }
-                        }
-                    }
+                    string res = Proc.EvalSubL(templateNodeInnerText, null);
+                    return res;
                 }
             }
             return string.Empty;
