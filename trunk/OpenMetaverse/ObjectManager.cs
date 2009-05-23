@@ -2631,7 +2631,7 @@ namespace OpenMetaverse
                         prim.ID = fullID;
                         prim.RegionHandle = simulator.Handle;
                         lock (simulator.ObjectsPrimitives.Dictionary)
-                            simulator.ObjectsPrimitives.Dictionary[localID] = prim;
+                            simulator.ObjectsPrimitives.Dictionary.Add(localID, prim);
 
                         return prim;
                     }
@@ -2670,7 +2670,7 @@ namespace OpenMetaverse
                         avatar.ID = fullID;
                         avatar.RegionHandle = simulator.Handle;
                         lock (simulator.ObjectsAvatars.Dictionary)
-                            simulator.ObjectsAvatars.Dictionary[localID] = avatar;
+                            simulator.ObjectsAvatars.Dictionary.Add(localID, avatar);
 
                         return avatar;
                     }

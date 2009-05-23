@@ -1542,13 +1542,8 @@ namespace cogbot.Listeners
                 }
             if (AV != null)
             {
-                ulong rh = AV.Prim.RegionHandle;
                 if (!SimRegion.OutOfRegion(update.Position))
                 {
-                    if (rh != regionHandle)
-                    {
-                        AV.ResetRegion(regionHandle, simulator);
-                    }
                     AV.ResetPrim(av, simulator);
                 }
 

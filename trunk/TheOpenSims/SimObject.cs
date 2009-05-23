@@ -14,6 +14,8 @@ namespace cogbot.TheOpenSims
     //TheSims-like object
     public class SimObjectImpl : SimPosition, BotMentalAspect, SimMover, SimObject, MeshableObject
     {
+
+        public ulong RegionHandle { get; set; }
         private CycFort fort;
 
         public float GetCubicMeters()
@@ -256,16 +258,45 @@ namespace cogbot.TheOpenSims
             get { return _Mesh.OuterBox; }
         }
 
-        public virtual void ResetRegion(ulong regionHandle, Simulator simus)
+        readonly private List<Primitive> primRefs = new List<Primitive>();
+        public void ResetPrim(Primitive prim, Simulator sim)
         {
-            //lock (Prim)
-            //if (regionHandle != 0)
-            //{
-            //    _CurrentRegion = SimRegion.GetRegion(regionHandle);
-            //    //  Prim.RegionHandle = regionHandle;
-            //    //  Debug("Changing regions " + this);
-            //    // PathStore = GetSimRegion();
-            //}
+            if (prim.RegionHandle != _Prim0.RegionHandle || !Object.ReferenceEquals(prim, _Prim0))
+            {
+                lock (primRefs)
+                {
+                    bool found = false;
+                    foreach (Primitive av in primRefs)
+                    {
+                        if (Object.ReferenceEquals(av, prim) && av.RegionHandle == prim.RegionHandle)
+                        {
+                            found = true;
+                        }
+                    }
+                    if (!found)
+                    {
+                        primRefs.Add(prim);
+                    }
+                }
+                //Console.WriteLine("\ntwo different prims {0}", prim);
+                _Prim0 = prim;
+                ResetRegion(prim.RegionHandle);
+            }
+        }
+
+        public virtual void ResetRegion(ulong regionHandle)
+        {
+            RegionHandle = regionHandle;
+            if (_Prim0.RegionHandle != regionHandle)
+            {
+                lock (primRefs)
+                {
+                    foreach (Primitive av in primRefs)
+                    {
+                        if (av.RegionHandle == regionHandle) _Prim0 = av;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -448,8 +479,15 @@ namespace cogbot.TheOpenSims
 
         public Primitive Prim
         {
-            get { return _Prim0; }
-            set { _Prim0 = value; }
+            get
+            {
+                if (_Prim0.RegionHandle != RegionHandle)
+                {
+                    ResetRegion(RegionHandle);
+                }
+                return _Prim0;
+            }
+           // set { _Prim0 = value; }
         }
 
         //{
@@ -470,9 +508,9 @@ namespace cogbot.TheOpenSims
             {
                 if (!WasKilled) //already
                 {
-                    List<SimObject> AttachedChildren = GetChildren();
-                    lock (AttachedChildren)
-                        foreach (SimObject C in AttachedChildren)
+                    List<SimObject> AttachedChildren0 = GetChildren();
+                    lock (AttachedChildren0)
+                        foreach (SimObject C in AttachedChildren0)
                         {
                             C.IsKilled = true;
                         }
@@ -512,7 +550,9 @@ namespace cogbot.TheOpenSims
             //: base(prim.ID.ToString())
             // : base(prim, SimRegion.SceneProviderFromSimulator(sim))
         {
-            Prim = prim;
+            RegionHandle = prim.RegionHandle;
+            _Prim0 = prim;
+            primRefs.Add(prim);
             WorldSystem = objectSystem;
             ObjectType = SimTypeSystem.CreateInstanceType(prim.ID.ToString());
             UpdateProperties(Prim.Properties);
@@ -568,7 +608,7 @@ namespace cogbot.TheOpenSims
             {
                 if (!IsTyped)
                 {
-// borrow from child?
+                    // borrow from child?
                     // UpdateProperties(simObject.thePrim.Properties);
                 }
             }
@@ -1076,7 +1116,10 @@ namespace cogbot.TheOpenSims
 
         public virtual Vector3d GetWorldPosition()
         {
-            return GetSimRegion().LocalToGlobal(GetSimPosition());
+            Vector3 objectLoc = GetSimPosition();
+            uint regionX = 0, regionY = 0;
+            Utils.LongToUInts(RegionHandle, out regionX, out regionY);
+            return new Vector3d(regionX + objectLoc.X, regionY + objectLoc.Y, objectLoc.Z);
         }
 
         //static ListAsSet<ISimObject> CopyObjects(List<ISimObject> objects)
@@ -1218,7 +1261,7 @@ namespace cogbot.TheOpenSims
 
         public virtual SimRegion GetSimRegion()
         {
-            return SimRegion.GetRegion(Prim.RegionHandle);
+            return SimRegion.GetRegion(RegionHandle);
         }
 
         public Vector3d GetGlobalLeftPos(int angle, double Dist)
@@ -1244,16 +1287,6 @@ namespace cogbot.TheOpenSims
         //    return ToString();
         //}
 
-        public void ResetPrim(Primitive prim, Simulator sim)
-        {
-            if (prim != Prim)
-            {
-                Prim = prim;
-                ResetRegion(prim.RegionHandle, sim);
-                Debug("two different prims {0} {1}", prim, Prim);
-            }
-            // throw new Exception("The method or operation is not implemented.");
-        }
 
         public bool IsInside(Vector3 L)
         {
@@ -1478,6 +1511,7 @@ namespace cogbot.TheOpenSims
                 }
                 return IsUseableCachedTrue;
             }
+
             set
             {
                 IsUseableCachedKnown = true;
@@ -1542,7 +1576,7 @@ namespace cogbot.TheOpenSims
         SimObject Parent { get; }
         double RateIt(BotNeeds needs);
         void ResetPrim(Primitive prim, Simulator sim);
-        void ResetRegion(ulong regionHandle, Simulator sim);
+        void ResetRegion(ulong regionHandle);
         bool RestoreEnterable(SimMover actor);
         void SendUpdate(int ms);
         void SetMoveTarget(SimPosition target);
@@ -1551,6 +1585,7 @@ namespace cogbot.TheOpenSims
         bool SetObjectRotation(Quaternion localPos);
         string SitName { get; }
         SimObjectType ObjectType { get; }
+        ulong RegionHandle { get; }
         void SortByDistance(List<SimObject> sortme);
         string SuperTypeString();
         void TeleportTo(SimRegion R, Vector3 local);

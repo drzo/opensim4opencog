@@ -1246,5 +1246,12 @@ namespace cogbot.TheOpenSims
         {
             return C.UpdateOccupied(PathStore);
         }
+
+        public static Vector3d GetGlobalFromLocal(ulong handle, Vector3 objectLoc)
+        {
+            uint regionX = 0, regionY = 0;
+            Utils.LongToUInts(handle, out regionX, out regionY);
+            return new Vector3d(regionX + objectLoc.X, regionY + objectLoc.Y, objectLoc.Z);
+        }
     }
 }
