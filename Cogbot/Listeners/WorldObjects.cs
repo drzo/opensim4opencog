@@ -25,7 +25,11 @@ namespace cogbot.Listeners
         public static bool MaintainCollisions = true;
         public static bool SimplifyBoxes = false; // true takes longer startup but speeds up runtime path finding
         private static readonly List<ThreadStart> ShutdownHooks = new List<ThreadStart>();
-        public SimAnimationStore SimAnimationSystem;
+        static public SimAnimationStore _SimAnimationSystem;
+        public SimAnimationStore SimAnimationSystem
+        {
+            get { return _SimAnimationSystem; }
+        }
 
         public static implicit operator GridClient(WorldObjects m)
         {
@@ -42,7 +46,8 @@ namespace cogbot.Listeners
         }
 
 
-        public WorldPathSystem SimPaths { get; private set; }
+        private static WorldPathSystem _SimPaths;
+        public WorldPathSystem SimPaths { get { return _SimPaths; } }
 
         public override void Parcels_OnSimParcelsDownloaded(Simulator simulator,
                                                             InternalDictionary<int, Parcel> simParcels, int[,] parcelMap)
@@ -103,12 +108,6 @@ namespace cogbot.Listeners
                     client.Grid.RequestMapRegion(simulator.Name, GridLayerType.Terrain);
                     //client.Grid.RequestMapRegion(simulator.Name, GridLayerType.LandForSale);
                     //client.Grid.RequestMapItems(simulator.Handle,OpenMetaverse.GridItemType.Classified,GridLayerType.Terrain);
-
-                    client.Objects.OnPrimitiveProperties += Objects_OnPrimitiveProperties;
-                    client.Objects.OnPrimitiveUpdate += Objects_OnPrimitiveUpdate;
-
-                    RegisterAll();
-                    client.Objects.OnObjectUpdated -= Objects_OnObjectUpdated;
                     MasteringRegions.Add(simulator.Handle);
                     RequestGridInfos(simulator.Handle);
                 }
@@ -120,7 +119,6 @@ namespace cogbot.Listeners
                     {
                         SetWorldMaster(false);
                         Debug("------UNREGISTERING------" + client);
-                        UnregisterAll();
                     }
                 }
             }
@@ -190,13 +188,17 @@ namespace cogbot.Listeners
                     client.Network.RegisterCallback(PacketType.ViewerEffect,
                                                     new NetworkManager.PacketCallback(ViewerEffectHandler));
                     // raises these events already
-                    client.Inventory.OnScriptRunning += Inventory_OnScriptRunning;
                     client.Avatars.OnPointAt -= Avatars_OnPointAt;
                     client.Avatars.OnLookAt -= Avatars_OnLookAt;
                     client.Avatars.OnEffect -= Avatars_OnEffect;
                     client.Assets.OnUploadProgress -= Assets_OnUploadProgress;// On-Upload-Progress
                     client.Self.OnCameraConstraint -= Self_OnCameraConstraint;
                     client.Settings.PIPELINE_REQUEST_TIMEOUT = 60000;
+
+                    client.Objects.OnPrimitiveProperties += Objects_OnPrimitiveProperties;
+                    client.Objects.OnPrimitiveUpdate += Objects_OnPrimitiveUpdate;
+                    client.Objects.OnObjectUpdated -= Objects_OnObjectUpdated;
+
                 }
             }
         }
@@ -209,6 +211,10 @@ namespace cogbot.Listeners
                 {
                     RegisterAllOnce = false;
                     base.UnregisterAll();
+                    client.Objects.OnPrimitiveProperties -= Objects_OnPrimitiveProperties;
+                    client.Objects.OnPrimitiveUpdate -= Objects_OnPrimitiveUpdate;
+                    client.Objects.OnObjectUpdated -= Objects_OnObjectUpdated;
+
                 }
             }
         }
@@ -240,9 +246,18 @@ namespace cogbot.Listeners
                 if (isMaster) Master = this;
                 if (MasteringRegions.Count > 0 && !isMaster) throw new ArgumentException("Cant unmaster!");
 
+                client.Settings.ALWAYS_DECODE_OBJECTS = isMaster;
+                client.Settings.ALWAYS_REQUEST_OBJECTS = isMaster;
+                client.Settings.ALWAYS_REQUEST_PARCEL_ACL = isMaster;
+                client.Settings.ALWAYS_REQUEST_PARCEL_DWELL = isMaster;
+                client.Settings.STORE_LAND_PATCHES = isMaster;
+                client.Settings.OBJECT_TRACKING = isMaster;
+                client.Settings.PARCEL_TRACKING = isMaster;
+
                 // client.Settings.OBJECT_TRACKING = isMaster;
 
                 if (isMaster) RegisterAll();
+                else UnregisterAll();
             }
         }
 
@@ -308,7 +323,7 @@ namespace cogbot.Listeners
                 client.Settings.AVATAR_TRACKING = true;
                 client.Settings.THROTTLE_OUTGOING_PACKETS = false;
                 client.Settings.MULTIPLE_SIMS = true;
-                client.Settings.SIMULATOR_TIMEOUT = 30 * 60000;
+                client.Settings.SIMULATOR_TIMEOUT = 300 * 6000;
                 client.Settings.SEND_AGENT_UPDATES = true;
 
                 client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
@@ -316,6 +331,7 @@ namespace cogbot.Listeners
                 client.Self.Movement.UpdateInterval = 0;
 
                 client.Network.OnSimConnected += Network_OnSimConnectedHook;
+                client.Inventory.OnScriptRunning += Inventory_OnScriptRunning;
 
 
                 burstStartTime = DateTime.Now;
@@ -325,40 +341,43 @@ namespace cogbot.Listeners
                 numberedAvatars = new List<string>();
 
 
-                if (RegionMasterTexturePipeline == null)
+                if (Master == this)
                 {
-                    RegionMasterTexturePipeline = client.Assets;
-                    //RegionMasterTexturePipeline.OnDownloadFinished += new TexturePipeline.DownloadFinishedCallback(RegionMasterTexturePipeline_OnDownloadFinished);
-                    client.Settings.USE_TEXTURE_CACHE = true;
-                }
-                else
-                {
-                    //client.Settings.USE_TEXTURE_CACHE = false;
-                }
+                    if (RegionMasterTexturePipeline == null)
+                    {
+                        RegionMasterTexturePipeline = client.Assets;
+                        //RegionMasterTexturePipeline.OnDownloadFinished += new TexturePipeline.DownloadFinishedCallback(RegionMasterTexturePipeline_OnDownloadFinished);
+                        client.Settings.USE_TEXTURE_CACHE = true;
+                    }
+                    else
+                    {
+                        //client.Settings.USE_TEXTURE_CACHE = false;
+                    }
 
-                {
-                    //BotWorld = this;
-                    SimTypeSystem.LoadDefaultTypes();
+                    {
+                        //BotWorld = this;
+                        SimTypeSystem.LoadDefaultTypes();
+                    }
+                    if (TrackUpdatesThread == null)
+                    {
+                        TrackUpdatesThread = new Thread(TrackUpdates);
+                        TrackUpdatesThread.Name = "Track Updates/Properties";
+                        //TrackPathsThread.Priority = ThreadPriority.Lowest;
+                        TrackUpdatesThread.Start();
+                    }
+                    if (TrackUpdateLagThread == null)
+                    {
+                        TrackUpdateLagThread = new Thread(Lagometer);
+                        TrackUpdateLagThread.Name = "Lagometer thread";
+                        TrackUpdateLagThread.Priority = ThreadPriority.Lowest;
+                        TrackUpdateLagThread.Start();
+                    }
+                    InterpolationTimer = new Timer(ReallyEnsureSelected_Thread, null, 1000, 1000);
+                    _SimPaths = new WorldPathSystem(this);
+                    _SimAnimationSystem = new SimAnimationStore(client);
                 }
-                if (TrackUpdatesThread == null)
-                {
-                    TrackUpdatesThread = new Thread(TrackUpdates);
-                    TrackUpdatesThread.Name = "Track Updates/Properties";
-                    //TrackPathsThread.Priority = ThreadPriority.Lowest;
-                    TrackUpdatesThread.Start();
-                }
-                if (TrackUpdateLagThread == null)
-                {
-                    TrackUpdateLagThread = new Thread(Lagometer);
-                    TrackUpdateLagThread.Name = "Lagometer thread";
-                    TrackUpdateLagThread.Priority = ThreadPriority.Lowest;
-                    TrackUpdateLagThread.Start();
-                }
-                InterpolationTimer = new Timer(ReallyEnsureSelected_Thread, null, 1000, 1000);
                 //SetWorldMaster(false);
                 //RegisterAll();
-                SimPaths = new WorldPathSystem(this);
-                SimAnimationSystem = new SimAnimationStore(client);
                 InitConsoleBot();
             }
         }
@@ -2352,6 +2371,7 @@ namespace cogbot.Listeners
 
         public void SendNewEvent(string eventName, params object[] args)
         {
+            if (!IsRegionMaster) return;
             //	Debug(eventName + " " + client.argsListString(args));
             String evtStr = eventName.ToString();
             if (evtStr == "on-object-position")

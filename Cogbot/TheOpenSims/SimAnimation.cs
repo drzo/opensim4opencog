@@ -357,6 +357,7 @@ namespace cogbot.TheOpenSims
                 {
                     foreach (string files in Directory.GetFiles("bvh_files/"))
                     {
+                        if (!files.EndsWith("animation")) continue;
                         byte[] bs = File.ReadAllBytes(files);
                         string name = Path.GetFileNameWithoutExtension(Path.GetFileName(files)).ToLower();
                         if (nameAnim.ContainsKey(name)) continue;
