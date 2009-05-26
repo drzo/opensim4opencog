@@ -6,7 +6,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class ParcelInfoCommand : Command
+    public class ParcelInfoCommand : Command, RegionMasterCommand
     {
         private AutoResetEvent ParcelsDownloaded = new AutoResetEvent(false);
 

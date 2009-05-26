@@ -19,7 +19,7 @@ namespace PathSystem3D.Navigation
     {
 
         public const float CapsuleZ = 1.99f;
-        public const float MaxBump = 0.50f;
+        public const float MaxBump = 0.30f;
 
         //public Point Point;
 
@@ -282,7 +282,7 @@ namespace PathSystem3D.Navigation
                 float newMaxZ;
                 if (SomethingBetween(below, below + capsuleSize, objs, out newMaxZ))
                 {
-                    below -= 0.2f;
+                    below -= 0.1f;
                 }
                 else
                 {

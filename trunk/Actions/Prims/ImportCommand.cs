@@ -7,7 +7,7 @@ using OpenMetaverse.StructuredData;
 
 namespace cogbot.Actions
 {
-    public class ImportCommand : Command
+    public class ImportCommand : Command,RegionMasterCommand
     {
         private enum ImporterState
         {

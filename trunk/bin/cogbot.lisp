@@ -4,8 +4,8 @@
 (def False false)
 (def True true)
 
-(def (create-botclient &opt (first "") (last "") (pass "") (simurl ""))
-    (clientManager.CreateBotClient first last pass simurl))
+(def (create-botclient &opt (first "") (last "") (pass "") (simurl "") (start ""))
+    (clientManager.CreateBotClient first last pass simurl start))
 
 (def (create-httpserver port &opt (botname ""))
     (clientManager.CreateHttpServer port botname))

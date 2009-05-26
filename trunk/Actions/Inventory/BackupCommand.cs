@@ -39,7 +39,7 @@ namespace cogbot.Actions
         }
     }
 
-    public class BackupCommand : Command
+    public class BackupCommand : Command , RegionMasterCommand
     {
         /// <summary>Maximum number of transfer requests to send to the server</summary>
         private const int MAX_TRANSFERS = 10;

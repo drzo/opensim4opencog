@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class HelpCommand: Command
+    public class HelpCommand: Command ,SystemApplicationCommand
     {
         public HelpCommand(BotClient testClient)
 		{

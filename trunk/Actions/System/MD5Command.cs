@@ -3,7 +3,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class MD5Command : Command
+    public class MD5Command : Command, SystemApplicationCommand
     {
         public MD5Command(BotClient testClient)
         {

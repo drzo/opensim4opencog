@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class LogoutCommand : Command
+    public class LogoutCommand : Command, BotSystemCommand
     {
         public LogoutCommand(BotClient testClient)
         {

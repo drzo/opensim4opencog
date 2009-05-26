@@ -471,21 +471,24 @@ namespace cogbot.TheOpenSims
 
             IList<BotAction> acts = GetPossibleActions(MaxThinkAboutDistance, MaxSupportedZChange);
 
-            if (acts.Count > 0)
+            lock (acts)
             {
-                act = (BotAction) FindBestUsage(acts);
-                acts.Remove(act);
+                if (acts.Count > 0)
+                {
+                    act = (BotAction) FindBestUsage(acts);
+                    acts.Remove(act);
+                }
+                if (act == null)
+                {
+                    Vector3d v3d =
+                        GetSimRegion().LocalToGlobal(new Vector3(MyRandom.Next(250) + 5, MyRandom.Next(250) + 5,
+                                                                 GetSimPosition().Z));
+                    Debug("MoveToLocation: " + DistanceVectorString(v3d));
+                    SimPosition WP = SimWaypointImpl.CreateGlobal(v3d);
+                    act = new MoveToLocation(this, WP);
+                }
+                return act;
             }
-            if (act == null)
-            {
-                Vector3d v3d =
-                    GetSimRegion().LocalToGlobal(new Vector3(MyRandom.Next(250) + 5, MyRandom.Next(250) + 5,
-                                                             GetSimPosition().Z));
-                Debug("MoveToLocation: " + DistanceVectorString(v3d));
-                SimPosition WP = SimWaypointImpl.CreateGlobal(v3d);
-                act = new MoveToLocation(this, WP);
-            }
-            return act;
         }
 
         public SimUsage FindBestUsage(IEnumerable acts)
@@ -493,16 +496,21 @@ namespace cogbot.TheOpenSims
             SimUsage bestAct = null;
             if (acts != null)
             {
-                IEnumerator enumer = acts.GetEnumerator();
-                double bestRate = double.MinValue;
-                while (enumer.MoveNext())
+                lock (acts)
                 {
-                    SimUsage b = (SimUsage) enumer.Current;
-                    double brate = b.RateIt(CurrentNeeds);
-                    if (brate > bestRate)
                     {
-                        bestAct = b;
-                        bestRate = brate;
+                        IEnumerator enumer = acts.GetEnumerator();
+                        double bestRate = double.MinValue;
+                        while (enumer.MoveNext())
+                        {
+                            SimUsage b = (SimUsage) enumer.Current;
+                            double brate = b.RateIt(CurrentNeeds);
+                            if (brate > bestRate)
+                            {
+                                bestAct = b;
+                                bestRate = brate;
+                            }
+                        }
                     }
                 }
             }
@@ -582,7 +590,7 @@ namespace cogbot.TheOpenSims
 
 
             List<BotAction> acts = new List<BotAction>();
-            foreach (BotAction obj in ObservedBotActions)
+            lock (ObservedBotActions) foreach (BotAction obj in ObservedBotActions)
             {
                 acts.Add(obj);
             }
@@ -592,7 +600,7 @@ namespace cogbot.TheOpenSims
                 foreach (SimObjectUsage objuse in obj.GetUsages())
                 {
                     acts.Add(new BotObjectAction(this, objuse));
-                    foreach (SimTypeUsage puse in KnownTypeUsages)
+                    lock (KnownTypeUsages) foreach (SimTypeUsage puse in KnownTypeUsages)
                     {
                         /// acts.Add( new BotObjectAction(this, puse, obj));
                     }

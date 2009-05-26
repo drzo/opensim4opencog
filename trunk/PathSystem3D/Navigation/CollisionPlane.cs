@@ -356,8 +356,8 @@ namespace PathSystem3D.Navigation
         //    set { ByteMatrix[x, y] = value; }
         //}
 
-        private float _globalBumpConstraint = 0.5f;
-        private float BumpConstraintPurple =  0.4f;
+        private float _globalBumpConstraint = CollisionIndex.MaxBump;
+        private float BumpConstraintPurple =  0.2f;
 
         public byte DefaultCollisionValue(int x, int y, float BumpConstraint, float[,] GroundPlane, byte b, float[,] Heights, CollisionIndex[,] cI)
         {
@@ -722,7 +722,7 @@ namespace PathSystem3D.Navigation
 
         internal void SetDefaultConstraints()
         {
-            GlobalBumpConstraint = CollisionIndex.MaxBump;// 0.6f;
+            GlobalBumpConstraint = CollisionIndex.MaxBump;// 0.6f; //0.3f
         }
 
 

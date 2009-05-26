@@ -4,7 +4,7 @@ using System.Text;
 
 namespace cogbot.Actions
 {
-    class Login : Action
+    class Login : Action,BotSystemCommand
     {
         protected string firstName = "Eelke";
 		protected string lastName = "Forder";
@@ -45,6 +45,10 @@ namespace cogbot.Actions
                 if (tokens.Length > 3)
                 {
                     Client.BotLoginParams.URI = tokens[3];
+                }
+                if (tokens.Length > 4)
+                {
+                    Client.BotLoginParams.Start = tokens[4];
                 }
                 if (!Client.Network.Connected && !Client.Network.LoginMessage.StartsWith("Logging"))
                 {

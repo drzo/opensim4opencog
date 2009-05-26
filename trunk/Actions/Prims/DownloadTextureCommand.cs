@@ -7,7 +7,7 @@ using OpenMetaverse.Assets;
 namespace cogbot.Actions
 {
 
-    public class DownloadTextureCommand : Command
+    public class DownloadTextureCommand : Command, RegionMasterCommand
     {
         UUID TextureID;
         AutoResetEvent DownloadHandle = new AutoResetEvent(false);

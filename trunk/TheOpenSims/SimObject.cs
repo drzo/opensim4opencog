@@ -20,7 +20,8 @@ namespace cogbot.TheOpenSims
 
         public float GetCubicMeters()
         {
-            return GetSimScale().Length();
+            Vector3 v3 = GetSimScale();
+            return v3.X*v3.Y*v3.Z;
         }
 
         public SimObject GetGroupLeader()
@@ -259,7 +260,7 @@ namespace cogbot.TheOpenSims
         }
 
         readonly private List<Primitive> primRefs = new List<Primitive>();
-        public void ResetPrim(Primitive prim, Simulator sim)
+        public void ResetPrim(Primitive prim, BotClient bc, Simulator sim)
         {
             if (prim.RegionHandle != _Prim0.RegionHandle || !Object.ReferenceEquals(prim, _Prim0))
             {
@@ -276,9 +277,9 @@ namespace cogbot.TheOpenSims
                     if (!found)
                     {
                         primRefs.Add(prim);
+                        Console.WriteLine("\n Different prims {0}", prim);
                     }
                 }
-                //Console.WriteLine("\ntwo different prims {0}", prim);
                 _Prim0 = prim;
                 ResetRegion(prim.RegionHandle);
             }
@@ -913,19 +914,27 @@ namespace cogbot.TheOpenSims
         public bool IsRegionAttached()
         {
             if (WasKilled) return false;
-            if (Prim.RegionHandle == 0) return false;
+            if (_Prim0.RegionHandle == 0)
+            {
+                return false;
+            }
             if (IsRoot) return true;
             if (_Parent == null)
             {
                 Simulator simu = GetSimulator();
+                if (simu == null) return false;
                 Primitive pUse = WorldSystem.GetPrimitive(Prim.ParentID, simu);
                 if (pUse == null)
                 {
                     WorldSystem.EnsureSelected(Prim.ParentID, simu);
                     return false;
                 }
+                _Parent = Parent;
             }
-            _Parent = Parent;
+            if (_Parent == this)
+            {
+                return false;
+            }
             return _Parent != null && _Parent.IsRegionAttached();
         }
 
@@ -1575,7 +1584,7 @@ namespace cogbot.TheOpenSims
         SimMesh Mesh { get; }
         SimObject Parent { get; }
         double RateIt(BotNeeds needs);
-        void ResetPrim(Primitive prim, Simulator sim);
+        void ResetPrim(Primitive prim, BotClient bc, Simulator sim);
         void ResetRegion(ulong regionHandle);
         bool RestoreEnterable(SimMover actor);
         void SendUpdate(int ms);

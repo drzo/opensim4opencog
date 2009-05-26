@@ -428,8 +428,9 @@ namespace OpenMetaverse
             {
                 string[] path = (string[])_folder;
 
-                folder = Client.Inventory.FindObjectByPath(
-                    Client.Inventory.Store.RootFolder.UUID, Client.Self.AgentID, String.Join("/", path), 1000 * 20);
+                if (Client.Inventory.Store == null) return false;
+                { folder = Client.Inventory.FindObjectByPath(
+                    Client.Inventory.Store.RootFolder.UUID, Client.Self.AgentID, String.Join("/", path), 1000 * 20);}
 
                 if (folder == UUID.Zero)
                 {
@@ -841,7 +842,7 @@ namespace OpenMetaverse
         private void AgentWearablesUpdateHandler(Packet packet, Simulator simulator)
         {
             // Lock to prevent a race condition with multiple AgentWearables packets
-            lock (WearablesRequestEvent)
+            //lock (WearablesRequestEvent)
             {
                 AgentWearablesUpdatePacket update = (AgentWearablesUpdatePacket)packet;
 

@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class SetMasterKeyCommand : Command
+    public class SetMasterKeyCommand : Command,BotSystemCommand
     {
         public DateTime Created = DateTime.Now;
 

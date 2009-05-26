@@ -17,7 +17,7 @@ namespace cogbot.Listeners
         static Thread TrackPathsThread;
 
 
-        static public int MaxMeshes = 8000;
+        static public int MaxMeshes = 18000;
         static public int RealMeshes = 0;
 
         public WorldPathSystem(GridClient gc)

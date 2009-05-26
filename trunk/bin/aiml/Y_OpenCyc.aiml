@@ -229,11 +229,10 @@
 </category>
 
 <category>
-	<pattern>WHAT IS THE * OF *</pattern>
-	<guard>(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm><space/><cycterm><star index="2"/></cycterm> ?REPLY)</guard>
+	<pattern>WHAT IS THE _ OF *</pattern>
+	<guard>( <cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/> <cycterm><star index="2"/></cycterm> ?REPLY)</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/><cycterm><star index="2"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines the <cycterm filter="BinaryPredicate"><star index="1"/></cycterm> of <cycterm><star index="2"/></cycterm>.
-
+	    I believe <cycsystem filter="paraphrase">(cyc-query '(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/><cycterm><star index="2"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines the <star index="1"/> of <star index="2"/>.
 	</template>
 </category>
 
@@ -259,8 +258,7 @@
 	<pattern>WHO IS THE * OF *</pattern>
 	<guard>(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/><cycterm><star index="2"/></cycterm> ?REPLY)</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/><cycterm><star index="2"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines the <cycterm filter="BinaryPredicate"><star index="1"/></cycterm> of <cycterm><star index="2"/></cycterm>.
-
+		I believe <cycsystem filter="paraphrase">(cyc-query '(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/> <cycterm><star index="2"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines the <star index="1"/> of <star index="2"/>.
 	</template>
 </category>
 
@@ -683,7 +681,6 @@
 	<guard>(#$or (#$isa  <cycterm><star index="1"/></cycterm> ?REPLY)(#$genls <cycterm><star index="1"/></cycterm> ?REPLY))</guard>
 	<template>
 		I believe one thing <star index="1"/>is  <cycrandom>(cyc-query '(#$or (#$isa  <cycterm><star index="1"/></cycterm> ?REPLY)(#$genls <cycterm><star index="1"/></cycterm> ?REPLY)) #$EverythingPSC)</cycrandom>.
-
 	</template>
 </category>
 

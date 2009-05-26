@@ -6,7 +6,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class ExportParticlesCommand : Command
+    public class ExportParticlesCommand : Command, RegionMasterCommand
     {
         public ExportParticlesCommand(BotClient testClient)
         {

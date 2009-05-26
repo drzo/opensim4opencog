@@ -36,7 +36,7 @@ namespace cogbot.Actions
         }
     }
 
-    class SimTypeCommand : Command, BotSystemCommand
+    class SimTypeCommand : Command, SystemApplicationCommand
     {
         public SimTypeCommand(BotClient Client)
         {

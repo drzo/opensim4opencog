@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class ChangePermsCommand : Command
+    public class ChangePermsCommand : Command, RegionMasterCommand
     {
         AutoResetEvent GotPermissionsEvent = new AutoResetEvent(false);
         UUID SelectedObject = UUID.Zero;
