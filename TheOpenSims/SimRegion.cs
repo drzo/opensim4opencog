@@ -30,23 +30,23 @@ namespace cogbot.TheOpenSims
     public class SimRegion
     {
         private static Dictionary<ulong, SimRegion> _CurrentRegions = new Dictionary<ulong, SimRegion>();
-        private static Vector2 vC = new Vector2(0, 0); // NW
-        private static Vector2 vE = new Vector2(1, 0); // NW
+        readonly private static Vector2 vC = new Vector2(0, 0); // NW
+        readonly private static Vector2 vE = new Vector2(1, 0); // NW
 
-        private static Vector2 // C
+        readonly private static Vector2 // C
                                vN = new Vector2(0, 1),
                                // N
                                vNE = new Vector2(1, 1); // NW
 
-        private static Vector2 // SE
+        readonly private static Vector2 // SE
             vNW = new Vector2(-1, 1); // NW
 
-        private static Vector2 // SE
+        readonly private static Vector2 // SE
                                vS = new Vector2(0, -1); // NW
 
-        private static Vector2 vSE = new Vector2(1, -1); // NW
+        readonly private static Vector2 vSE = new Vector2(1, -1); // NW
 
-        private static Vector2 // S
+        readonly private static Vector2 // S
                                vSW = new Vector2(-1, -1),
                                // SW
                                vW = new Vector2(-1, 0); // NW
@@ -56,17 +56,17 @@ namespace cogbot.TheOpenSims
         public readonly ulong RegionHandle;
         private GridRegion _GridInfo;
         private Vector2 _GridLoc = Vector2.Zero;
-        private List<Simulator> _Simulators = new List<Simulator>();
+        readonly private List<Simulator> _Simulators = new List<Simulator>();
         public float AverageHieght = 21.5f;
         private GridClient Client;
         private int GetGroundLevelTried = 0;
         private bool GridInfoKnown = false;
-        private SimPathStore PathStore;
-        private AutoResetEvent regionEvent = new AutoResetEvent(false);
+        readonly private SimPathStore PathStore;
+        readonly private AutoResetEvent regionEvent = new AutoResetEvent(false);
 
-        public SimRegion(ulong Handle)
+        private SimRegion(ulong Handle)
             //: base(null, default(Vector2), default(Vector3d), default(Vector3))
-        {
+        {           
             RegionHandle = Handle;
             // RegionName = gridRegionName;
             //WorldSystem = worldSystem;
@@ -161,17 +161,19 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                Simulator best = null;
                 lock (_Simulators)
                 {
-                    if (_Simulators.Count == 0) return _Simulators[0];
-                    foreach (Simulator S in _Simulators)
+                    int sc = _Simulators.Count;
+                    if (sc == 0) return null;
+                    if (sc == 1) return _Simulators[0];
+                    Simulator best = null;
+                    foreach (Simulator sim0 in _Simulators)
                     {
-                        if (!S.Connected)
+                        if (!sim0.Connected)
                         {
                             if (best != null) continue;
                         }
-                        if (!S.IsRunning)
+                        if (!sim0.IsRunning)
                         {
                             if (best != null) continue;
                         }
@@ -179,10 +181,10 @@ namespace cogbot.TheOpenSims
                         {
                             if (best != null) continue;
                         }
-                        best = S;
+                        best = sim0;
                     }
+                    return best;
                 }
-                return best;
             }
             set
             {
@@ -341,6 +343,10 @@ namespace cogbot.TheOpenSims
                 SimRegion R;
                 if (_CurrentRegions.TryGetValue(id, out R))
                     return R;
+                if (_CurrentRegions.Count > 10)
+                {
+                 //   return null;  
+                }
                 R = new SimRegion(id);
                 _CurrentRegions[id] = R;
                 return R;

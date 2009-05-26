@@ -175,7 +175,7 @@ namespace cogbot
                 {
                     if (t.IsSubclassOf(typeof(Command)))
                     {
-                        if (!typeof(BotSystemCommand).IsAssignableFrom(t)) continue;
+                        if (!typeof(SystemApplicationCommand).IsAssignableFrom(t)) continue;
                         ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
                         try
                         {
@@ -551,7 +551,7 @@ namespace cogbot
         }
         static public Dictionary<string, BotClient> BotByName = new Dictionary<string, BotClient>();
         public BotClient lastBotClient = null;
-        public BotClient CreateBotClient(string first, string last, string passwd, string simurl)
+        public BotClient CreateBotClient(string first, string last, string passwd, string simurl, string location)
         {
             BotClient bc = new BotClient(this);
             if (!String.IsNullOrEmpty(first))
@@ -570,6 +570,11 @@ namespace cogbot
             {
                 bc.BotLoginParams.URI = simurl;
             }
+            if (String.IsNullOrEmpty(location))
+            {
+                location = "last";
+            }
+            bc.BotLoginParams.Start = location;
             bc.Network.OnLogin += new NetworkManager.LoginCallback(delegate(LoginStatus login, string message) {
                 if (login == LoginStatus.Success)
                 {

@@ -4,15 +4,30 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public interface BotMasterCommand
+    /// <summary>
+    /// An interface for commands is only invoked on Region mastering bots
+    /// Such as terrain uploads and simulator info (10 bots doing the command at once will create problems)
+    /// Non region master bots are thinner clients and usually not fit for object tracking
+    /// </summary>
+    public interface RegionMasterCommand
     {
     }
+    /// <summary>
+    /// An interface for commands that do not target any specific bots
+    ///  Such as pathsystem maintainance or application commands
+    /// </summary>
+    public interface SystemApplicationCommand
+    {
+    }
+
+    /// <summary>
+    /// An interface for commands that do not require a connected grid client
+    /// such as Login or settings but still targets each bot individually
+    /// </summary>
     public interface BotSystemCommand
     {
     }
-    public interface BotGridClientCommand
-    {
-    }
+
     abstract public class Action
     {
         /// <summary>
@@ -77,6 +92,14 @@ namespace cogbot.Actions
             set
             {
                 m_Client = value;
+            }
+        }
+
+        public static TextForm ClientManager
+        {
+            get
+            {
+                return TextForm.SingleInstance;
             }
         }
 

@@ -17,6 +17,44 @@ namespace cogbot.Listeners
         private readonly AutoResetEvent ScriptHolderAttachWaiting = new AutoResetEvent(false);
 
 
+        public override void Self_OnScriptQuestion(Simulator simulator, UUID taskID, UUID itemID, string objectName,
+                                                   string objectOwner, ScriptPermission questions)
+        {
+            lock (UpdateQueue)
+                UpdateQueue.Enqueue(
+                    () =>
+                    {
+                        /*
+                            TaskID: 552f9165-0dd8-9124-f9bb-20fa3cb18382
+                            ItemID: 8fe015cb-bf46-5e1c-8975-f2cbca4762d9
+                            Questions: 16
+                            ObjectName: DanceBall
+                            ObjectOwner: Serena Vale
+                         */
+
+                        SendNewEvent("On-Script-Question", simulator, taskID, itemID, objectName, objectOwner,
+                                     questions);
+                        /*
+                             TaskID: 552f9165-0dd8-9124-f9bb-20fa3cb18382
+                             ItemID: 8fe015cb-bf46-5e1c-8975-f2cbca4762d9
+                             Questions: 16
+                         */
+                        client.Self.ScriptQuestionReply(simulator, itemID, taskID, questions);
+                    }
+                    );
+        }
+
+        public override void Self_OnScriptDialog(string message, string objectName, UUID imageID, UUID objectID,
+                                                 string firstName, string lastName, int chatChannel,
+                                                 List<string> buttons)
+        {
+            lock (UpdateQueue)
+                UpdateQueue.Enqueue(
+                    () =>
+                    SendNewEvent("On-Script-Dialog", message, objectName, imageID, objectID, firstName, lastName,
+                                 chatChannel, buttons));
+        }
+
         public override void Self_OnScriptControlChange(ScriptControlChange controls, bool pass, bool take)
         {
             base.Self_OnScriptControlChange(controls, pass, take);

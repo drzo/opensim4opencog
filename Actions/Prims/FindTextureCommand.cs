@@ -3,7 +3,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class FindTextureCommand : Command
+    public class FindTextureCommand : Command, RegionMasterCommand
     {
         public FindTextureCommand(BotClient testClient)
         {

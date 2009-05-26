@@ -84,6 +84,18 @@ namespace OpenMetaverse.Assets
         /// <returns>true if the asset data was decoded successfully</returns>
         public override bool Decode()
         {
+            try
+            {
+                return Decode0();
+            }
+            catch (Exception)
+            {
+
+                return true;
+            }        
+        }
+        private bool Decode0()
+        {
             int version = -1;
             Permissions = new Permissions();
             string data = Utils.BytesToString(AssetData);

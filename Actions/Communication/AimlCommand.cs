@@ -17,11 +17,26 @@ namespace cogbot.Listeners
         {
             Name = "aiml";
             Description = "Usage: aiml [...text]..";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.Communication;
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
+            if (args.Length == 0) return "Usage: aiml [[on|off]|text]";
+            string s = args[0].ToLower();
+            if (s == "on")
+            {
+                WorldSystem.RespondToChatByDefaultAllUsers = true;
+                WorldSystem.SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), true);
+                return "WorldObjects.RespondToChatByDefaultAllUsers = true;";
+            }
+            else
+                if (s == "off")
+                {
+                    WorldSystem.RespondToChatByDefaultAllUsers = false;
+                    WorldSystem.SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), false);
+                    return "WorldObjects.RespondToChatByDefaultAllUsers = false;";
+                }
             string joined = String.Join(" ", args);
             return WorldSystem.AIMLInterp(joined);
         }
@@ -51,7 +66,7 @@ namespace cogbot.Listeners
 
         public RTPBot MyBot;
         public User MyUser;
-        readonly static Dictionary<string, User> BotUsers = new Dictionary<string, User>();
+        readonly Dictionary<string, User> BotUsers = new Dictionary<string, User>();
         void InitConsoleBot()
         {
             try
@@ -80,11 +95,23 @@ namespace cogbot.Listeners
             }
         }
 
+        public void SetChatOnOff(string username, bool value)
+        {
+            lock (BotUsers)
+            {
+                foreach (var u in BotUsers.Values)
+                {
+                    if (u.UserID.Contains(username) || username.Contains(u.UserID))
+                        u.RespondToChat = value;
+                }
+            }
+        }
+
         /// <summary>
         ///  false = wont respond to user until they say something like "turn chat on" 
         ///  See next function to change the keywords
         /// </summary>
-        static public bool RespondToChatByDefaultAllUsers = false;
+        public bool RespondToChatByDefaultAllUsers = false;
         private void AIML_OnChat(string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourcetype, string fromname, UUID id, UUID ownerid, Vector3 position)
         {
 

@@ -67,7 +67,7 @@ namespace cogbot.Actions.Movement
     //    }
     //}
 
-    class connections : cogbot.Actions.Command, BotSystemCommand
+    class connections : cogbot.Actions.Command, SystemApplicationCommand
     {
         public connections(BotClient client)
         {
@@ -97,7 +97,7 @@ namespace cogbot.Actions.Movement
         }
     }
 
-    class srdebug : cogbot.Actions.Command, BotSystemCommand
+    class srdebug : cogbot.Actions.Command, SystemApplicationCommand
     {
         public srdebug(BotClient client)
         {
@@ -113,7 +113,7 @@ namespace cogbot.Actions.Movement
             return "ran " + Name;
         }
     }
-    class pfdebug : cogbot.Actions.Command, BotSystemCommand
+    class pfdebug : cogbot.Actions.Command, SystemApplicationCommand
     {
         public pfdebug(BotClient client)
         {
@@ -202,6 +202,10 @@ namespace cogbot.Actions.Movement
 
         public override string Execute(string[] args, UUID fromAgentID)
         {
+            if (args.Length==0)
+            {
+                
+            }
             IEnumerable<SimObject> objs = WorldSystem.GetAllSimObjects(String.Join(" ", args));
             foreach (SimObject o in objs)
             {

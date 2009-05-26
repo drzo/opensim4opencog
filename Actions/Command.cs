@@ -26,6 +26,7 @@ namespace cogbot.Actions
 
     public abstract class Command : cogbot.Actions.Action, IComparable
     {
+
        // GridClient Client;
         public override string makeHelpString()
         {

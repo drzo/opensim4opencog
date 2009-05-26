@@ -499,8 +499,12 @@ namespace PathSystem3D.Navigation
                 PreXp = route.Count == 1 && G < 11f;
                 while (route.Count == 1 && G < 11f)
                 {
-                    G += 0.5f;
-                    if (Works > G) G = Works;
+                    if (G < 0.5) G += 0.1f;
+                    else
+                    {
+                        G += 0.5f;
+                        if (Works > G) G = Works;
+                    }
 
                     MoverPlane.GlobalBumpConstraint = G;
                     route = SimPathStore.GetPath(MoverPlane, v3d, globalEnd, distance, out OnlyStart);

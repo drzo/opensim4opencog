@@ -11,7 +11,7 @@ namespace cogbot.Actions
     /// 
     /// Can only be used by the Estate Owner
     /// </summary>
-    public class DownloadTerrainCommand : Command
+    public class DownloadTerrainCommand : Command, RegionMasterCommand
     {
         /// <summary>
         /// Create a Synchronization event object

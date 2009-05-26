@@ -5,10 +5,11 @@ using OpenMetaverse.Assets;
 
 namespace cogbot.Actions
 {
-    public class TexturesCommand : Command
+    public class TexturesCommand : Command, RegionMasterCommand
     {
         Dictionary<UUID, UUID> alreadyRequested = new Dictionary<UUID, UUID>();
         bool enabled = false;
+        private bool registered = false;
 
         public TexturesCommand(BotClient testClient)
         {
@@ -18,8 +19,6 @@ namespace cogbot.Actions
             Description = "Turns automatic texture downloading on or off. Usage: textures [on/off]";
             Category = CommandCategory.Objects;
 
-            testClient.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
-            testClient.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
         }
 
         public override string Execute(string[] args, UUID fromAgentID)
@@ -29,6 +28,12 @@ namespace cogbot.Actions
 
             if (args[0].ToLower() == "on")
             {
+                if (!registered)
+                {
+                    registered = true;
+                    Client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
+                    Client.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);                    
+                }
                 Client.ClientManager.GetTextures = enabled = true;
                 return "Texture downloading is on";
             }

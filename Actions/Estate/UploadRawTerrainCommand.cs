@@ -5,7 +5,7 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 namespace cogbot.Actions
 {
-    public class UploadRawTerrainCommand : Command
+    public class UploadRawTerrainCommand : Command, RegionMasterCommand
     {
         System.Threading.AutoResetEvent WaitForUploadComplete = new System.Threading.AutoResetEvent(false);
 

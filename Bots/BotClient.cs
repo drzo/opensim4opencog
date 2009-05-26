@@ -86,7 +86,8 @@ namespace cogbot
             //    TextForm.simulator.Start();
             //    Settings.LOG_LEVEL = Helpers.LogLevel.Info;
             //}
-            Network.Login(BotLoginParams.FirstName, BotLoginParams.LastName, BotLoginParams.Password, "OnRez", "UNR");
+            Network.Login(BotLoginParams.FirstName, BotLoginParams.LastName,
+                          BotLoginParams.Password, "OnRez", BotLoginParams.Start, "UNR");
         }
 
         readonly int thisTcpPort;
@@ -999,8 +1000,7 @@ namespace cogbot
 			{
 				try {
 					if (t.IsSubclassOf(typeof(Command))) {
-                        if (typeof(BotSystemCommand).IsAssignableFrom(t)) continue;
-                        if (typeof(BotGridClientCommand).IsAssignableFrom(t)) continue;
+                        if (typeof(SystemApplicationCommand).IsAssignableFrom(t)) continue;
 						ConstructorInfo info = t.GetConstructor(new Type[]{ typeof(BotClient)});
 						try {
 							Command command = (Command)info.Invoke(new object[]{ this});
@@ -1117,10 +1117,15 @@ namespace cogbot
                 string verb = text.Split(null)[0];
                 if (Commands != null && Commands.ContainsKey(verb))
                 {
+                    Action act = Commands[verb];
+                    if (act is RegionMasterCommand)
+                    {
+                      if (!WorldSystem.IsRegionMaster) return false;
+                    }
                     if (text.Length > verb.Length)
-                        Commands[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1));
+                        act.acceptInputWrapper(verb, text.Substring(verb.Length + 1));
                     else
-                        Commands[verb].acceptInputWrapper(verb, "");
+                        act.acceptInputWrapper(verb, "");
                     return true;
                 }
                 else

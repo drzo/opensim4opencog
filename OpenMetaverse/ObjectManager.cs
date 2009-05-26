@@ -1614,9 +1614,17 @@ namespace OpenMetaverse
                         prim.PrimData = data;
 
                         // Textures, texture animations, particle system, and extra params
-                        prim.Textures = new Primitive.TextureEntry(block.TextureEntry, 0,
-                            block.TextureEntry.Length);
+                        try
+                        {
+                            prim.Textures = new Primitive.TextureEntry(block.TextureEntry, 0,
+                        block.TextureEntry.Length);
 
+                        }
+                        catch (Exception)
+                        {
+                            
+                            //throw;
+                        }
                         prim.TextureAnim = new Primitive.TextureAnimation(block.TextureAnim, 0);
                         prim.ParticleSys = new Primitive.ParticleSystem(block.PSBlock, 0);
                         prim.SetExtraParamsFromBytes(block.ExtraParams, 0);

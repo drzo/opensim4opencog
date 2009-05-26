@@ -61,9 +61,10 @@ namespace cogbot.ScriptEngines
                 if (taskInterperter.Eof(codeTree))
                     return null;
             }
-            catch
+            catch(Exception e)
             {
-                throw;
+                Console.WriteLine(""+e);
+                return null;
             }
             return codeTree;
         }

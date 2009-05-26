@@ -1,5 +1,6 @@
 using System.Collections.Specialized;
 using System.Text.RegularExpressions;
+using System;
 
 namespace CommandLine.Utility
 {
@@ -9,7 +10,7 @@ namespace CommandLine.Utility
     public class Arguments
     {
         // Variables
-        private StringDictionary Parameters;
+        private readonly StringDictionary Parameters;
 
         // Constructor
         public Arguments(string[] Args)
