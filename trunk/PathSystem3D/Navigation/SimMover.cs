@@ -251,6 +251,7 @@ namespace PathSystem3D.Navigation
         readonly static List<MoveToPassable> PathBreakAways = new List<MoveToPassable>();
         public Vector3 MoveToPassableArround(Vector3 start)
         {
+            Mover.OpenNearbyClosedPassages();
             if (!UseTurnAvoid)
             {
                 UseTurnAvoid = !UseTurnAvoid;
@@ -258,7 +259,7 @@ namespace PathSystem3D.Navigation
             }
             UseTurnAvoid = !UseTurnAvoid;
 
-            Mover.OpenNearbyClosedPassages();
+          
             if (PathBreakAways.Count == 0)
             {
                 PathBreakAways.Add(StarBreakaway);

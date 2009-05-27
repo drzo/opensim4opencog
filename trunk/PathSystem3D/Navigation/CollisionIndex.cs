@@ -112,25 +112,30 @@ namespace PathSystem3D.Navigation
         {
             bool found = false;
             maxZ = low;
-
-            lock (InnerBoxes)
+            List<CollisionObject> meshes = ShadowList;
+            // this outer lock is to prevent AddOccupied from getting lost
+            lock (meshes)
             {
-                if (!InnerBoxesSimplified)
+                lock (InnerBoxes)
                 {
-                    if (InnerBoxes.Count < 100) InnerBoxes = Box3Fill.Simplify(InnerBoxes);
-                    InnerBoxesSimplified = true;
-                }
-                foreach (CollisionObject B in InnerBoxes)
-                {
-                    if (B.IsZInside(low, high))
+                    if (!InnerBoxesSimplified)
                     {
-                        found = true;
-                        if (B.MaxZ > maxZ) maxZ = B.MaxZ;
+                        if (InnerBoxes.Count < 100) InnerBoxes = Box3Fill.Simplify(InnerBoxes);
+                        InnerBoxesSimplified = true;
                     }
+                    // this second lock is because we may have replaced the reference during simplification
+                    lock (InnerBoxes)
+                        foreach (CollisionObject B in InnerBoxes)
+                        {
+                            if (B.IsZInside(low, high))
+                            {
+                                found = true;
+                                if (B.MaxZ > maxZ) maxZ = B.MaxZ;
+                            }
+                        }
                 }
+                return found;
             }
-            return found;
-
         }
 #endif
         internal bool SomethingBetween(float low, float high, IEnumerable OccupiedListObject, out float maxZ)
@@ -313,7 +318,7 @@ namespace PathSystem3D.Navigation
                         IsSolid++;
 #if USE_MINIAABB
                         IEnumerable<Box3Fill> mini = simObject.InnerBoxes;
-                        foreach (var o in mini)
+                        lock (mini) foreach (var o in mini)
                         {
                             if (o.IsInsideXY(x, y))
                                 lock (InnerBoxes)
