@@ -40,7 +40,7 @@ namespace cogbot.TheOpenSims
             (new Thread(() =>
                         WithAnim(Animations.SHRUG, () =>
                                                        {
-                                                           Client.Self.Fly(false);
+                                                           //Client.Self.Fly(false);
                                                            Client.Self.AnimationStart(Animations.WORRY, true);
                                                            Thread.Sleep(10);
                                                            Client.Self.Jump(true);
