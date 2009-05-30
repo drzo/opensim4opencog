@@ -16,6 +16,7 @@ namespace cogbot.Listeners
         private bool ScriptHolderAttached = false;
         private readonly AutoResetEvent ScriptHolderAttachWaiting = new AutoResetEvent(false);
 
+        public static bool AcceptOffersAnimationsObjects = true;
 
         public override void Self_OnScriptQuestion(Simulator simulator, UUID taskID, UUID itemID, string objectName,
                                                    string objectOwner, ScriptPermission questions)
@@ -39,7 +40,8 @@ namespace cogbot.Listeners
                              ItemID: 8fe015cb-bf46-5e1c-8975-f2cbca4762d9
                              Questions: 16
                          */
-                        client.Self.ScriptQuestionReply(simulator, itemID, taskID, questions);
+                        if (AcceptOffersAnimationsObjects)
+                            client.Self.ScriptQuestionReply(simulator, itemID, taskID, questions);
                     }
                     );
         }
@@ -51,8 +53,18 @@ namespace cogbot.Listeners
             lock (UpdateQueue)
                 UpdateQueue.Enqueue(
                     () =>
-                    SendNewEvent("On-Script-Dialog", message, objectName, imageID, objectID, firstName, lastName,
-                                 chatChannel, buttons));
+                        {
+                            SendNewEvent("On-Script-Dialog", message, objectName, imageID, objectID, firstName,
+                                         lastName,
+                                         chatChannel, buttons);
+                            if (AcceptOffersAnimationsObjects && buttons.Count>0)
+                            {
+                                const int buttonIndex = 0;
+                                string buttonlabel = buttons[buttonIndex];
+                                client.Self.ReplyToScriptDialog(chatChannel, buttonIndex, buttonlabel, objectID);
+                            }
+                        }
+                    );
         }
 
         public override void Self_OnScriptControlChange(ScriptControlChange controls, bool pass, bool take)

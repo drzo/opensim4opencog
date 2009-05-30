@@ -37,9 +37,10 @@ namespace cogbot.Actions
                     SimObject followAvatar = WorldSystem.GetSimObject(avatar);
                     String str = "" + Client + " start to follow " + followAvatar + ".";
                     WriteLine(str);
+                    SimActor me = WorldSystem.TheSimAvatar;
+
                     // The thread that accepts the Client and awaits messages
-                    WorldSystem.TheSimAvatar.SetMoveTarget(followAvatar);
-                    WorldSystem.TheSimAvatar.ApproachPosition = followAvatar;
+                    me.CurrentAction = new FollowerAction(me, followAvatar);
                 }
                 else
                 {
@@ -52,7 +53,7 @@ namespace cogbot.Actions
 
                 WriteLine("You stop following " + WorldSystem.TheSimAvatar.ApproachPosition + ".");
 
-                WorldSystem.TheSimAvatar.SetMoveTarget(null);
+                WorldSystem.TheSimAvatar.SetMoveTarget(null,10);
                 WorldSystem.TheSimAvatar.StopMoving();
             }
             else

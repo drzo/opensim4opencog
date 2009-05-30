@@ -10,41 +10,23 @@ namespace HttpServer
     /// and URL path. URL path matching supports the * wildcard character
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("{method} {path} Content-Type: {contentType}")]
-    public struct HttpRequestSignature : IEquatable<HttpRequestSignature>
+    public sealed class HttpRequestSignature : IEquatable<HttpRequestSignature>
     {
         private string method;
         private string contentType;
         private string path;
 
-        /// <summary>HTTP method</summary>
-        public string Method
+        /// <summary>
+        /// Builds an HttpRequestSignature from passed in parameters
+        /// </summary>
+        /// <param name="method">HTTP method to match, or null to skip</param>
+        /// <param name="contentType">HTTP Content-Type header to match, or null to skip</param>
+        /// <param name="path">Regular expression to match against the relative URL path and query</param>
+        public HttpRequestSignature(string method, string contentType, string path)
         {
-            get { return method; }
-            set
-            {
-                if (!String.IsNullOrEmpty(value)) method = value.ToUpper();
-                else method = String.Empty;
-            }
-        }
-        /// <summary>HTTP Content-Type</summary>
-        public string ContentType
-        {
-            get { return contentType; }
-            set
-            {
-                if (!String.IsNullOrEmpty(value)) contentType = value.ToLower();
-                else contentType = String.Empty;
-            }
-        }
-        /// <summary>Relative URL path</summary>
-        public string Path
-        {
-            get { return path; }
-            set
-            {
-                if (!String.IsNullOrEmpty(value)) path = value;
-                else path = String.Empty;
-            }
+            this.method = (method != null) ? method.ToUpperInvariant() : String.Empty;
+            this.contentType = (contentType != null) ? contentType.ToLowerInvariant() : String.Empty;
+            this.path = path ?? String.Empty;
         }
 
         /// <summary>
@@ -53,11 +35,10 @@ namespace HttpServer
         /// <param name="request">Incoming request to build the signature from</param>
         public HttpRequestSignature(IHttpRequest request)
         {
-            method = contentType = path = String.Empty;
-
-            Method = request.Method;
-            ContentType = request.Headers["content-type"];
-            Path = request.Uri.PathAndQuery;
+            this.method = request.Method.ToUpperInvariant();
+            this.contentType = request.Headers.Get("content-type");
+            this.contentType = (this.contentType != null) ? this.contentType.ToLowerInvariant() : String.Empty;
+            this.path = request.Uri.PathAndQuery;
         }
 
         /// <summary>
@@ -68,10 +49,9 @@ namespace HttpServer
         /// otherwise false</returns>
         public bool ExactlyEquals(HttpRequestSignature signature)
         {
-            return (
-                ((method == null && signature.Method == null) || (method != null && method.Equals(signature.Method))) &&
-                ((contentType == null && signature.ContentType == null) || (contentType != null && contentType.Equals(signature.ContentType))) &&
-                ((path == null && signature.Path == null) || (path != null && path.Equals(signature.Path))));
+            return method.Equals(signature.method) &&
+                contentType.Equals(signature.contentType) &&
+                path.Equals(signature.path);
         }
 
         /// <summary>
@@ -97,7 +77,7 @@ namespace HttpServer
         /// false</returns>
         public bool Equals(HttpRequestSignature pattern)
         {
-            return (this == pattern);
+            return (pattern != null && this == pattern);
         }
 
         /// <summary>
@@ -106,10 +86,7 @@ namespace HttpServer
         /// <returns>Hash code for this signature</returns>
         public override int GetHashCode()
         {
-            int hash = (method != null) ? method.GetHashCode() : 0;
-            hash ^= (contentType != null) ? contentType.GetHashCode() : 0;
-            hash ^= (path != null) ? path.GetHashCode() : 0;
-            return hash;
+            return method.GetHashCode() ^ contentType.GetHashCode() ^ path.GetHashCode();
         }
 
         /// <summary>
@@ -124,14 +101,10 @@ namespace HttpServer
         /// false</returns>
         public static bool operator ==(HttpRequestSignature request, HttpRequestSignature pattern)
         {
-            bool methodMatch = (String.IsNullOrEmpty(pattern.Method) || request.Method.Equals(pattern.Method));
-            bool contentTypeMatch = (String.IsNullOrEmpty(pattern.ContentType) || request.ContentType.Equals(pattern.ContentType));
-            bool pathMatch = true;
-
-            if (methodMatch && contentTypeMatch && !String.IsNullOrEmpty(pattern.Path))
-                pathMatch = Regex.IsMatch(request.Path, pattern.Path, RegexOptions.IgnoreCase);
-
-            return (methodMatch && contentTypeMatch && pathMatch);
+            return
+                (String.IsNullOrEmpty(pattern.method) || request.method == pattern.method) &&
+                (String.IsNullOrEmpty(pattern.contentType) || request.contentType == pattern.contentType) &&
+                (String.IsNullOrEmpty(pattern.path) || Regex.IsMatch(request.path, pattern.path, RegexOptions.IgnoreCase | RegexOptions.Compiled));
         }
 
         /// <summary>

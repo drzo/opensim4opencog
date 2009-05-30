@@ -7,22 +7,30 @@ namespace HttpServer
     /// requests) and a callback for handling the request
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("{Signature}")]
-    public struct HttpRequestHandler : IEquatable<HttpRequestHandler>
+    public sealed class HttpRequestHandler : IEquatable<HttpRequestHandler>
     {
         /// <summary>Signature pattern to match against incoming requests</summary>
         public HttpRequestSignature Signature;
         /// <summary>Callback for handling requests that match the signature</summary>
         public HttpRequestCallback Callback;
+        /// <summary>If true, the IHttpResponse will be sent to the client after
+        /// the callback completes. Otherwise, the connection will be left open 
+        /// and the user is responsible for closing the connection later</summary>
+        public bool SendResponseAfterCallback;
 
         /// <summary>
         /// Default constructor
         /// </summary>
         /// <param name="signature">Signature pattern for matching against incoming requests</param>
         /// <param name="callback">Callback for handling the request</param>
-        public HttpRequestHandler(HttpRequestSignature signature, HttpRequestCallback callback)
+        /// <param name="sendResponseAfterCallback">If true, the IHttpResponse will be sent 
+        /// to the client after the callback completes. Otherwise, the connection will be left
+        /// open and the user is responsible for closing the connection later</param>
+        public HttpRequestHandler(HttpRequestSignature signature, HttpRequestCallback callback, bool sendResponseAfterCallback)
         {
             Signature = signature;
             Callback = callback;
+            SendResponseAfterCallback = sendResponseAfterCallback;
         }
 
         /// <summary>
@@ -42,7 +50,7 @@ namespace HttpServer
         /// <returns>True if the given object is equal to this object, otherwise false</returns>
         public bool Equals(HttpRequestHandler handler)
         {
-            return this.Signature == handler.Signature;
+            return handler != null && this.Signature == handler.Signature;
         }
 
         /// <summary>
@@ -52,6 +60,21 @@ namespace HttpServer
         public override int GetHashCode()
         {
             return Signature.GetHashCode();
+        }
+
+        public static bool operator==(HttpRequestHandler left, HttpRequestHandler right)
+        {
+            if ((object)left == null)
+                return (object)right == null;
+            else if ((object)right == null)
+                return false;
+            else
+                return left.Signature == right.Signature;
+        }
+
+        public static bool operator !=(HttpRequestHandler left, HttpRequestHandler right)
+        {
+            return !(left == right);
         }
     }
 }

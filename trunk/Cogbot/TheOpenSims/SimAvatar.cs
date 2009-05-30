@@ -167,10 +167,25 @@ namespace cogbot.TheOpenSims
         /// </summary>
         public readonly Dictionary<SimObjectType, BotNeeds> Assumptions = new Dictionary<SimObjectType, BotNeeds>();
 
+        private BotAction _currentAction;
+
         /// <summary>
         ///  Current action 
-        /// </summary>
-        public BotAction CurrentAction;
+        /// </summary>       
+        public BotAction CurrentAction
+        {
+            get { return _currentAction; }
+            set
+            {
+                if (Object.ReferenceEquals(_currentAction, value)) return;
+                if (_currentAction != null) _currentAction.Abort();
+                _currentAction = value;
+                if (value != null)
+                {
+                    UseAspect(value);
+                }
+            }
+        }
 
         /// <summary>
         ///  When seeking out objects for use
@@ -1482,7 +1497,7 @@ namespace cogbot.TheOpenSims
             Client.Self.Teleport(R.RegionName, local);
         }
 
-        public override void SetMoveTarget(SimPosition target)
+        public override void SetMoveTarget(SimPosition target, double maxDist)
         {
             if (target == null)
             {
@@ -1495,6 +1510,7 @@ namespace cogbot.TheOpenSims
             {
                 lastDistance = float.MaxValue;
                 SetMoveTarget(target.GetWorldPosition());
+                ApproachDistance = maxDist;
             }
         }
 
@@ -1794,41 +1810,11 @@ namespace cogbot.TheOpenSims
         #endregion
     }
 
-    public class MoveToLocation : BotAction
-    {
-        readonly private SimPosition Target;
-        readonly static BotNeeds ProposedChanges = new BotNeeds(0.0f);
-        public MoveToLocation(SimAvatar impl, SimPosition position) : base("MoveTo " + impl+ " -> "+impl.DistanceVectorString(position))
-        {
-            TheBot = impl;
-            Target = position;
-        }
-
-        public override BotNeeds ProposedChange()
-        {
-            return ProposedChanges;
-        }
-
-        public override void InvokeReal()       
-        {
-            TheBot.GotoTarget(Target);
-        }
-
-        public override Vector3 GetUsePostion()
-        {
-            return Target.GetSimPosition();
-        }
-
-        public override org.opencyc.cycobject.CycFort GetCycFort()
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     public interface SimActor : SimAvatar, SimMover
     {
         new SimPosition ApproachPosition { get; set; }
         double Approach(SimObject obj, double maxDistance);
+        cogbot.TheOpenSims.BotAction CurrentAction { get; set; }
         void Do(SimTypeUsage use, SimObject someObject);
         void DoBestUse(SimObject someObject);
         void Eat(SimObject target);

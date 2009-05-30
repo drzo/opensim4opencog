@@ -52,7 +52,7 @@ namespace HttpServer
         /// <param name="remoteEndPoint">client that connected.</param>
         /// <param name="stream">Stream used for communication</param>
         /// <param name="parserFactory">Used to create a <see cref="IHttpRequestParser"/>.</param>
-        /// <param name="bufferSize">Size of buffer to use when reading data. Must be at least 1024 bytes.</param>
+        /// <param name="bufferSize">Size of buffer to use when reading data. Must be at least 4096 bytes.</param>
         /// <exception cref="SocketException">If <see cref="Socket.BeginReceive(byte[],int,int,SocketFlags,AsyncCallback,object)"/> fails</exception>
         /// <exception cref="ArgumentException">Stream must be writable and readable.</exception>
         public HttpClientContextImp(bool secured, IPEndPoint remoteEndPoint, Stream stream, IRequestParserFactory parserFactory,
@@ -62,7 +62,7 @@ namespace HttpServer
             Check.NotEmpty(remoteEndPoint.Address.ToString(), "remoteEndPoint.Address");
             Check.Require(stream, "stream");
             Check.Require(parserFactory, "parser");
-            Check.Min(1024, bufferSize, "bufferSize");
+            Check.Min(4096, bufferSize, "bufferSize");
 
             if (!stream.CanWrite || !stream.CanRead)
                 throw new ArgumentException("Stream must be writable and readable.");

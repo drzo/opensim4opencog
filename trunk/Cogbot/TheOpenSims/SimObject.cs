@@ -66,7 +66,7 @@ namespace cogbot.TheOpenSims
             if (currentDist < maxDistance) return true;
             {
                 SimWaypoint P = SimWaypointImpl.CreateGlobal(finalTarget);
-                SetMoveTarget(P);
+                SetMoveTarget(P, (float) maxDistance);
             }
             for (int i = 0; i < maxSeconds; i++)
             {
@@ -110,7 +110,7 @@ namespace cogbot.TheOpenSims
             Thread.Sleep(ms);
         }
 
-        public virtual void SetMoveTarget(SimPosition target)
+        public virtual void SetMoveTarget(SimPosition target, double maxDistance)
         {
             //SimRegion R = target.GetSimRegion();
             //if (R != GetSimRegion())
@@ -143,16 +143,17 @@ namespace cogbot.TheOpenSims
                 throw Error("GotoTarget !IsControllable");
             }
 
+            float maxDist = pos.GetSizeDistance();
             for (int i = 0; i < 8; i++)
             {
-                bool result = FollowPathTo(pos, pos.GetSizeDistance());
+                bool result = FollowPathTo(pos, maxDist);
                 if (result)
                 {
-                    SetMoveTarget(pos);
+                    SetMoveTarget(pos,maxDist);
                     return true;
                 }
             }
-            return FollowPathTo(pos, pos.GetSizeDistance());
+            return FollowPathTo(pos, maxDist);
         }
 
         public virtual bool IsControllable
@@ -838,22 +839,21 @@ namespace cogbot.TheOpenSims
                     try
                     {
                         _TOSRTING += "" + PrimData.PCode;
-                        ;
                     }
                     catch (Exception e)
                     {
                     }
                 }
-                _TOSRTING += " " + ID + " ";
+                _TOSRTING += String.Format(" {0} ", ID);
                 if (Prim.Properties != null)
                 {
                     if (!String.IsNullOrEmpty(Prim.Properties.Name))
-                        _TOSRTING += Prim.Properties.Name + " ";
+                        _TOSRTING += String.Format("{0} ", Prim.Properties.Name);
                     if (!String.IsNullOrEmpty(Prim.Properties.Description))
-                        _TOSRTING += " | " + Prim.Properties.Description + " ";
+                        _TOSRTING += String.Format(" | {0} ", Prim.Properties.Description);
                 }
                 if (!String.IsNullOrEmpty(Prim.Text))
-                    _TOSRTING += " | " + Prim.Text + " ";
+                    _TOSRTING += String.Format(" | {0} ", Prim.Text);
                 uint ParentId = Prim.ParentID;
                 if (ParentId != 0)
                 {
@@ -1006,21 +1006,20 @@ namespace cogbot.TheOpenSims
 
         protected Primitive GetParentPrim(Primitive thisPrim)
         {
-            Primitive outerPrim;
-            if (thisPrim == Prim && _Parent != null) return _Parent.Prim;
-            uint theLPrimParentID = thisPrim.ParentID;
-            Simulator simu = GetSimulator();
-            outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
-            if (outerPrim == null)
+            Primitive outerPrim = null;
+            while (outerPrim == null)
             {
-                if (_Parent != null) return _Parent.Prim;
+                if (thisPrim == Prim && _Parent != null) return _Parent.Prim;
+                uint theLPrimParentID = thisPrim.ParentID;
+                Simulator simu = GetSimulator();
+                outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
+                if (outerPrim == null)
                 {
                     Thread.Sleep(100);
                     if (IsRegionAttached()) ;
                     outerPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
                 }
             }
-            if (thisPrim == Prim && _Parent != null) return _Parent.Prim;
             return outerPrim;
         }
 
@@ -1588,7 +1587,7 @@ namespace cogbot.TheOpenSims
         void ResetRegion(ulong regionHandle);
         bool RestoreEnterable(SimMover actor);
         void SendUpdate(int ms);
-        void SetMoveTarget(SimPosition target);
+        void SetMoveTarget(SimPosition target, double maxDist);
         bool SetObjectPosition(Vector3 localPos);
         bool SetObjectPosition(Vector3d globalPos);
         bool SetObjectRotation(Quaternion localPos);

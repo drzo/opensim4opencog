@@ -5,6 +5,7 @@ using System.Threading;
 using System.Collections;
 using cogbot.Listeners;
 using org.opencyc.cycobject;
+using PathSystem3D.Navigation;
 using Vector3 = OpenMetaverse.Vector3;
 using UUID = OpenMetaverse.UUID;
 
@@ -85,6 +86,106 @@ namespace cogbot.TheOpenSims
 
         public abstract Vector3 GetUsePostion();
 
+
+        public virtual void Abort()
+        {
+        }
+    }
+
+    public class MoveToLocation : BotAction
+    {
+        readonly private SimPosition Target;
+        readonly static BotNeeds ProposedChanges = new BotNeeds(0.0f);
+        public MoveToLocation(SimAvatar impl, SimPosition position)
+            : base("MoveTo " + impl + " -> " + impl.DistanceVectorString(position))
+        {
+            TheBot = impl;
+            Target = position;
+        }
+
+        public override BotNeeds ProposedChange()
+        {
+            return ProposedChanges;
+        }
+
+        public override void InvokeReal()
+        {
+            TheBot.GotoTarget(Target);
+        }
+
+        public override Vector3 GetUsePostion()
+        {
+            return Target.GetSimPosition();
+        }
+
+        public override org.opencyc.cycobject.CycFort GetCycFort()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class FollowerAction : BotAction
+    {
+        readonly private SimPosition Target;
+        readonly static BotNeeds ProposedChanges = new BotNeeds(0.0f);
+        readonly private float maxDistance;
+        readonly private Thread FollowThread;
+        private bool KeepFollowing = true;
+
+        public FollowerAction(SimAvatar impl, SimPosition position)
+            : base("Follow " + impl + " -> " + impl.DistanceVectorString(position))
+        {
+            TheBot = impl;
+            maxDistance = 4;// position.GetSizeDistance();
+            Target = position;
+            FollowThread = new Thread(FollowLoop);
+        }         
+
+        public override BotNeeds ProposedChange()
+        {
+            return ProposedChanges;
+        }
+
+        public override void InvokeReal()
+        {
+            FollowThread.Start();
+        }
+
+        public void FollowLoop()
+        {
+            while (KeepFollowing)
+            {
+                TheBot.TurnToward(Target);
+                TheBot.StopMoving();
+                TheBot.SetMoveTarget(Target,maxDistance);
+                Thread.Sleep(4000);
+                TheBot.StopMoving();
+                TheBot.TurnToward(Target);
+                if (TheBot.Distance(Target) > maxDistance + 1)
+                    TheBot.GotoTarget(Target);
+            }
+        }
+        public override void Abort()
+        {
+            KeepFollowing = false;
+            try
+            {
+                FollowThread.Abort();
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        public override Vector3 GetUsePostion()
+        {
+            return Target.GetSimPosition();
+        }
+
+        public override org.opencyc.cycobject.CycFort GetCycFort()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class SimObjectUsage : SimUsage

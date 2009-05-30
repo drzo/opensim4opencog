@@ -191,7 +191,7 @@ namespace cogbot
             Settings.LOGOUT_TIMEOUT = 16 * 1000;
             Settings.SIMULATOR_TIMEOUT = 5 * 60000;
             Settings.SEND_PINGS = false;
-            Settings.USE_LLSD_LOGIN = true;
+            //Settings.USE_LLSD_LOGIN = true;
             ////Settings.MULTIPLE_SIMS = false;
 
 			VoiceManager = new VoiceManager(gridClient);

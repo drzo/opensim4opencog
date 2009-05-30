@@ -345,6 +345,42 @@
       </Files>
   </Project>
 
+    <!--
+    <Project name="Simian" path="Simian" type="Exe" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../bin/</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="System.Core"/>
+      <Reference name="System.Drawing"/>
+      <Reference name="System.ServiceProcess"/>
+      <Reference name="System.Xml"/>
+      <Reference name="ExtensionLoader"/>
+      <Reference name="Mono.Security"/>
+      <Reference name="log4net"/>
+      <Reference name="HttpServer"/>
+      <Reference name="OpenMetaverse"/>
+      <Reference name="OpenMetaverseTypes"/>
+      <Reference name="OpenMetaverse.StructuredData"/>
+      <Reference name="OpenMetaverse.Http"/>
+      <Reference name="Tools"/>
+      <Reference name="XMLRPC"/>
+
+      <Files>
+        <Match pattern="*.cs" recurse="true"/>
+      </Files>
+    </Project>
+  -->
+
 
  <Project name="Cogbot" path="Cogbot" type="Exe">
        <Configuration name="Debug">

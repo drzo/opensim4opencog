@@ -160,6 +160,14 @@ namespace HttpServer
         void DecodeBody(FormDecoderProvider providers);
 
         /// <summary>
+        /// Create a byte array from the body contents.
+        /// </summary>
+        /// <returns>Byte array containing the body contents</returns>
+        /// <exception cref="InvalidOperationException">If body is still being transferred or request is
+        /// not using the POST or PUT verbs</exception>
+        byte[] GetBody();
+
+        /// <summary>
         /// Sets the cookies.
         /// </summary>
         /// <param name="cookies">The cookies.</param>
