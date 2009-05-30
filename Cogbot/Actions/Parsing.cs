@@ -93,6 +93,7 @@ namespace cogbot.Actions
             {
                 newstring[ci] = args[p];
                 p++;
+                ci++;
             }
             return newstring;
         }

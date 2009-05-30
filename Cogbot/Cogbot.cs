@@ -16,6 +16,8 @@ namespace cogbot
         [STAThread]
         static void Main()
         {
+            SoundFlags flags = SoundFlags.SyncSlave | SoundFlags.Loop;
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 

@@ -104,7 +104,8 @@ namespace cogbot.Listeners
             {
                 client.Settings.USE_LLSD_LOGIN = true;
             } //else
-            //   client.Settings.USE_LLSD_LOGIN = false;
+            
+            client.Settings.USE_LLSD_LOGIN = false;
             lock (WorldObjectsMasterLock)
             {
                 if (Master == null) Master = this;
@@ -118,13 +119,15 @@ namespace cogbot.Listeners
                 //objectHeuristics.Add(new ObjectHeuristic(nameLengthHeuristic));
                 objectHeuristics.Add(new ObjectHeuristic(boringNamesHeuristic));
 
-                //client.Settings.ENABLE_CAPS = false;
+                client.Settings.ENABLE_CAPS = true;
                 client.Settings.ENABLE_SIMSTATS = true;
                 client.Settings.AVATAR_TRACKING = true;
                 client.Settings.THROTTLE_OUTGOING_PACKETS = false;
                 client.Settings.MULTIPLE_SIMS = true;
-                client.Settings.SIMULATOR_TIMEOUT = 300*6000;
+                client.Settings.SIMULATOR_TIMEOUT = 30*60000;
                 client.Settings.SEND_AGENT_UPDATES = true;
+
+                client.Settings.SEND_PINGS = false;
 
                 client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
                 client.Self.Movement.AutoResetControls = false;
@@ -767,7 +770,7 @@ namespace cogbot.Listeners
         }
 
 
-        public override void Sound_OnAttachSound(UUID soundID, UUID ownerID, UUID objectID, float gain, byte flags)
+        public override void Sound_OnAttachSound(UUID soundID, UUID ownerID, UUID objectID, float gain, SoundFlags flags)
         {
             if (!MaintainSounds) return;
             RequestAsset(soundID, AssetType.Sound, true);

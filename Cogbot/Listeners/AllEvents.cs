@@ -573,7 +573,7 @@ namespace cogbot.Listeners
         static public readonly string[] paramNamesOnAttachSound = new string[] { "soundID", "ownerID", "objectID", "gain", "flags" };
         static public readonly Type[] paramTypesOnAttachSound = new Type[] { typeof(UUID), typeof(UUID), typeof(UUID), typeof(float), typeof(byte) };
 
-        public virtual void Sound_OnAttachSound(UUID soundID, UUID ownerID, UUID objectID, float gain, byte flags) { OnEvent("On-Attach-Sound", paramNamesOnAttachSound, paramTypesOnAttachSound, soundID, ownerID, objectID, gain, flags); }
+        public virtual void Sound_OnAttachSound(UUID soundID, UUID ownerID, UUID objectID, float gain, SoundFlags flags) { OnEvent("On-Attach-Sound", paramNamesOnAttachSound, paramTypesOnAttachSound, soundID, ownerID, objectID, gain, flags); }
 
         static public readonly string[] paramNamesOnAttachSoundGainChange = new string[] { "objectID", "gain" };
         static public readonly Type[] paramTypesOnAttachSoundGainChange = new Type[] { typeof(UUID), typeof(float) };

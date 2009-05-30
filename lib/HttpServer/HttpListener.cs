@@ -1,8 +1,15 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+
+#if VISUAL_STUDIO
+using ReaderWriterLockImpl = System.Threading.ReaderWriterLockSlim;
+#else
+using ReaderWriterLockImpl = HttpServer.ReaderWriterLockSlim;
+#endif
 
 namespace HttpServer
 {
@@ -12,8 +19,7 @@ namespace HttpServer
     /// <param name="context">Client context</param>
     /// <param name="request">HTTP request</param>
     /// <param name="response">HTTP response</param>
-    /// <returns>True to send the response and close the connection, false to leave the connection open</returns>
-    public delegate bool HttpRequestCallback(IHttpClientContext context, IHttpRequest request, IHttpResponse response);
+    public delegate void HttpRequestCallback(IHttpClientContext context, IHttpRequest request, IHttpResponse response);
 
     /// <summary>
     /// New implementation of the HTTP listener.
@@ -29,9 +35,10 @@ namespace HttpServer
         public event EventHandler<ClientAcceptedEventArgs> Accepted = delegate{};
 
         HttpRequestHandler[] _requestHandlers = new HttpRequestHandler[0];
-        HttpRequestCallback _notFoundHandler;
+        HttpRequestHandler _notFoundHandler;
         RequestQueue _requestQueue;
         int _backLog = 10;
+        ReaderWriterLockImpl rwHandlersLock = new ReaderWriterLockImpl();
 
         #region Properties
 
@@ -196,13 +203,27 @@ namespace HttpServer
         /// <param name="contentType">Content-Type header to match, or null to skip Content-Type matching</param>
         /// <param name="path">Request URI path regular expression to match, or null to skip URI path matching</param>
         /// <param name="callback">Callback to fire when an incoming request matches the given pattern</param>
+        /// <remarks>Using this overload, the response will automatically be sent when the callback completes</remarks>
         public void AddHandler(string method, string contentType, string path, HttpRequestCallback callback)
         {
-            HttpRequestSignature signature = new HttpRequestSignature();
-            signature.Method = method;
-            signature.ContentType = contentType;
-            signature.Path = path;
-            AddHandler(new HttpRequestHandler(signature, callback));
+            HttpRequestSignature signature = new HttpRequestSignature(method, contentType, path);
+            AddHandler(new HttpRequestHandler(signature, callback, true));
+        }
+
+        /// <summary>
+        /// Add a request handler
+        /// </summary>
+        /// <param name="method">HTTP verb to match, or null to skip verb matching</param>
+        /// <param name="contentType">Content-Type header to match, or null to skip Content-Type matching</param>
+        /// <param name="path">Request URI path regular expression to match, or null to skip URI path matching</param>
+        /// <param name="sendResponseAfterCallback">If true, the IHttpResponse will be sent to the client after
+        /// the callback completes. Otherwise, the connection will be left open and the user is responsible for
+        /// closing the connection later</param>
+        /// <param name="callback">Callback to fire when an incoming request matches the given pattern</param>
+        public void AddHandler(string method, string contentType, string path, bool sendResponseAfterCallback, HttpRequestCallback callback)
+        {
+            HttpRequestSignature signature = new HttpRequestSignature(method, contentType, path);
+            AddHandler(new HttpRequestHandler(signature, callback, sendResponseAfterCallback));
         }
 
         /// <summary>
@@ -211,14 +232,19 @@ namespace HttpServer
         /// <param name="handler">Request handler to add</param>
         public void AddHandler(HttpRequestHandler handler)
         {
-            HttpRequestHandler[] newHandlers = new HttpRequestHandler[_requestHandlers.Length + 1];
+            rwHandlersLock.EnterWriteLock();
 
-            for (int i = 0; i < _requestHandlers.Length; i++)
-                newHandlers[i] = _requestHandlers[i];
-            newHandlers[_requestHandlers.Length] = handler;
+            try
+            {
+                HttpRequestHandler[] newHandlers = new HttpRequestHandler[_requestHandlers.Length + 1];
 
-            // CLR guarantees this is an atomic operation
-            _requestHandlers = newHandlers;
+                for (int i = 0; i < _requestHandlers.Length; i++)
+                    newHandlers[i] = _requestHandlers[i];
+                newHandlers[_requestHandlers.Length] = handler;
+
+                _requestHandlers = newHandlers;
+            }
+            finally { rwHandlersLock.ExitWriteLock(); }
         }
 
         /// <summary>
@@ -227,21 +253,20 @@ namespace HttpServer
         /// <param name="handler">Request handler to remove</param>
         public void RemoveHandler(HttpRequestHandler handler)
         {
-            HttpRequestHandler[] newHandlers = new HttpRequestHandler[_requestHandlers.Length - 1];
+            rwHandlersLock.EnterWriteLock();
 
             try
             {
+                HttpRequestHandler[] newHandlers = new HttpRequestHandler[_requestHandlers.Length - 1];
+
                 int j = 0;
                 for (int i = 0; i < _requestHandlers.Length; i++)
                     if (!_requestHandlers[i].Signature.ExactlyEquals(handler.Signature))
                         newHandlers[j++] = handler;
 
-                // CLR guarantees this is an atomic operation
                 _requestHandlers = newHandlers;
             }
-            catch (IndexOutOfRangeException)
-            {
-            }
+            finally { rwHandlersLock.ExitWriteLock(); }
         }
 
         /// <summary>
@@ -251,12 +276,13 @@ namespace HttpServer
         /// request is received, or null to reset to the default handler</param>
         public void Set404Handler(HttpRequestCallback callback)
         {
-            _notFoundHandler = callback;
+            _notFoundHandler = new HttpRequestHandler(null, callback, true);
         }
 
         protected void Init()
         {
             RequestReceived += RequestHandler;
+            _notFoundHandler = new HttpRequestHandler(null, Default404Handler, true);
 
             if (_requestQueue == null)
                 _requestQueue = new RequestQueue(ProcessRequestWrapper);
@@ -306,102 +332,59 @@ namespace HttpServer
             LogWriter.Write(this, LogPrio.Trace, "Processing request...");
 
             IHttpResponse response = request.CreateResponse(context);
+
+            // Load cookies if they exist
+            RequestCookies cookies = request.Headers["cookie"] != null
+                                         ? new RequestCookies(request.Headers["cookie"])
+                                         : new RequestCookies(String.Empty);
+            request.SetCookies(cookies);
+
+            // Create a request signature
+            HttpRequestSignature signature = new HttpRequestSignature(request);
+
+            // Look for a signature match in our handlers
+            HttpRequestHandler foundHandler = null;
+
+            bool doLock = !rwHandlersLock.IsReadLockHeld;
+            if (doLock) rwHandlersLock.EnterReadLock();
+
             try
             {
-                // load cookies if they exist.
-                RequestCookies cookies = request.Headers["cookie"] != null
-                                             ? new RequestCookies(request.Headers["cookie"])
-                                             : new RequestCookies(string.Empty);
-                request.SetCookies(cookies);
-
-                // Create a request signature
-                HttpRequestSignature signature = new HttpRequestSignature(request);
-
-                // Look for a signature match in our handlers
-                bool found = false;
                 for (int i = 0; i < _requestHandlers.Length; i++)
                 {
                     HttpRequestHandler handler = _requestHandlers[i];
 
                     if (signature == handler.Signature)
                     {
-                        FireRequestCallback(context, request, response, handler.Callback);
-                        found = true;
+                        foundHandler = handler;
                         break;
                     }
                 }
-
-                if (!found)
-                {
-                    // No registered handler matched this request's signature
-                    if (_notFoundHandler != null)
-                    {
-                        FireRequestCallback(context, request, response, _notFoundHandler);
-                    }
-                    else
-                    {
-                        // Send a default 404 response
-                        try
-                        {
-                            response.Status = HttpStatusCode.NotFound;
-                            response.Reason = String.Format("No request handler registered for Method=\"{0}\", Content-Type=\"{1}\", Path=\"{2}\"",
-                                signature.Method, signature.ContentType, signature.Path);
-                            string notFoundResponse = "<html><head><title>Page Not Found</title></head><body><h3>" + response.Reason + "</h3></body></html>";
-                            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(notFoundResponse);
-                            response.Body.Write(buffer, 0, buffer.Length);
-                            response.Send();
-                        }
-                        catch (Exception) { }
-                    }
-                }
             }
-            catch (Exception err)
-            {
-                ThrowException(err);
+            finally { if (doLock) rwHandlersLock.ExitReadLock(); }
 
-                bool errorResponse = true;
+            if (foundHandler != null)
+                FireRequestCallback(context, request, response, foundHandler);
+            else
+                FireRequestCallback(context, request, response, _notFoundHandler);
 
-                Exception e = err;
-                while (e != null)
-                {
-                    if (e is SocketException)
-                    {
-                        errorResponse = false;
-                        break;
-                    }
-
-                    e = e.InnerException;
-                }
-
-                if (errorResponse)
-                {
-                    try
-                    {
-#if DEBUG
-                        context.Respond(HttpHelper.HTTP11, HttpStatusCode.InternalServerError, "Internal server error", err.ToString(), "text/plain");
-#else
-					    context.Respond(HttpHelper.HTTP10, HttpStatusCode.InternalServerError, "Internal server error");
-#endif
-                    }
-                    catch (Exception err2)
-                    {
-                        LogWriter.Write(this, LogPrio.Fatal, "Failed to respond on message with Internal Server Error: " + err2);
-                    }
-                }
-            }
-
-            request.Clear();
             LogWriter.Write(this, LogPrio.Trace, "...done processing request.");
         }
 
-        void FireRequestCallback(IHttpClientContext client, IHttpRequest request, IHttpResponse response, HttpRequestCallback callback)
+        void FireRequestCallback(IHttpClientContext client, IHttpRequest request, IHttpResponse response, HttpRequestHandler handler)
         {
-            bool closeConnection = true;
+            try
+            {
+                handler.Callback(client, request, response);
+            }
+            catch (Exception ex)
+            {
+                LogWriter.Write(this, LogPrio.Error, "Exception in HTTP handler: " + ex);
+                response.Status = HttpStatusCode.InternalServerError;
+                response.Send();
+            }
 
-            try { closeConnection = callback(client, request, response); }
-            catch (Exception ex) { LogWriter.Write(this, LogPrio.Error, "Exception in HTTP handler: " + ex); }
-
-            if (closeConnection)
+            if (handler.SendResponseAfterCallback && !response.Sent)
             {
                 try { response.Send(); }
                 catch (Exception ex)
@@ -410,6 +393,16 @@ namespace HttpServer
                         request.Uri, ex.Message));
                 }
             }
+
+            request.Clear();
+        }
+
+        void Default404Handler(IHttpClientContext client, IHttpRequest request, IHttpResponse response)
+        {
+            response.Status = HttpStatusCode.NotFound;
+            string notFoundResponse = "<html><head><title>Page Not Found</title></head><body><h3>" + response.Reason + "</h3></body></html>";
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(notFoundResponse);
+            response.Body.Write(buffer, 0, buffer.Length);
         }
     }
 }

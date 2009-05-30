@@ -264,11 +264,55 @@ namespace HttpServer
         public void DecodeBody(FormDecoderProvider providers)
         {
             if (_bodyBytesLeft > 0)
-                throw new InvalidOperationException("Body have not yet been completed.");
+                throw new InvalidOperationException("Body transfer has not yet been completed.");
 
             _form = providers.Decode(_headers["content-type"], _body, Encoding.UTF8);
             if (_form != HttpInput.Empty)
                 _param.SetForm(_form);
+        }
+
+        /// <summary>
+        /// Create a byte array from the body contents.
+        /// </summary>
+        /// <returns>Byte array containing the body contents</returns>
+        /// <exception cref="InvalidOperationException">If body is still being transferred or request is
+        /// not using the POST or PUT verbs</exception>
+        public byte[] GetBody()
+        {
+            string method = _method.ToUpper();
+
+            if (method != "POST" && method != "PUT")
+                throw new InvalidOperationException("Invalid method: " + _method);
+            if (_bodyBytesLeft > 0)
+                throw new InvalidOperationException("Body transfer has not yet been completed.");
+
+            // If Content-Length is set we create a buffer of the exact size, otherwise
+            // a MemoryStream is used to receive the response
+            bool nolength = (_contentLength <= 0);
+            int size = (nolength) ? 8192 : _contentLength;
+            MemoryStream ms = (nolength) ? new MemoryStream() : null;
+            byte[] buffer = new byte[size];
+
+            int bytesRead = 0;
+            int offset = 0;
+
+            while ((bytesRead = _body.Read(buffer, offset, size)) != 0)
+            {
+                if (nolength)
+                {
+                    ms.Write(buffer, 0, bytesRead);
+                }
+                else
+                {
+                    offset += bytesRead;
+                    size -= bytesRead;
+                }
+            }
+
+            if (nolength)
+                return ms.ToArray();
+            else
+                return buffer;
         }
 
         ///<summary>
