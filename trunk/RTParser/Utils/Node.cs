@@ -63,9 +63,9 @@ namespace RTParser.Utils
         /// <param name="path">the path for the category</param>
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        public void addCategory(string path, string template, XmlNode guard, string filename)
+        public void addCategoryTag(string path, XmlNode template, XmlNode guard, string filename)
         {
-            if (template.Length == 0)
+            if (template==null)
             {
                 throw new XmlException("The category with a pattern: " + path + " found in file: " + filename + " has an empty template tag. ABORTING");
             }
@@ -86,6 +86,13 @@ namespace RTParser.Utils
             // split the input into its component words
             string[] words = path.Trim().Split(" ".ToCharArray());
 
+            if (words[0].Contains("COMEHERE"))
+            {
+                if (!words[0].Contains("<t"))
+                {
+
+                }
+            }
             // get the first word (to form the key for the child nodemapper)
             string firstWord = Normalize.MakeCaseInsensitive.TransformInput(words[0]);
 
@@ -99,13 +106,13 @@ namespace RTParser.Utils
             if (this.children.ContainsKey(firstWord))
             {
                 Node childNode = this.children[firstWord];
-                childNode.addCategory(newPath, template, guard, filename);
+                childNode.addCategoryTag(newPath, template, guard, filename);
             }
             else
             {
                 Node childNode = new Node(this);
                 childNode.word = firstWord;
-                childNode.addCategory(newPath, template, guard, filename);
+                childNode.addCategoryTag(newPath, template, guard, filename);
                 this.children.Add(childNode.word, childNode);
             }
         }
