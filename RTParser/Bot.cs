@@ -712,7 +712,7 @@ namespace RTParser
                     try
                     {
                         //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
-                        string output = s.Output;
+                        string output = s.Output.OuterXml;
                         bool usedGuard = false;
                         if (s.Guard != null)
                         {

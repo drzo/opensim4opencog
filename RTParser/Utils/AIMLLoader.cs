@@ -181,14 +181,14 @@ namespace RTParser.Utils
                     throw new XmlException("Missing template tag in the node with pattern: " + pattern.InnerText + " found in " + filename);
                 }
 
-                string categoryPath = this.generatePath(pattern, node, topicName, false);
+                string categoryPath = this.generatePath00(pattern, node, topicName, false);
 
                 // o.k., add the processed AIML to the GraphMaster structure
                 if (categoryPath.Length > 0)
                 {
                     try
                     {
-                        this.RProcessor.Graphmaster.addCategory(categoryPath, template.OuterXml, guard, filename);
+                        this.RProcessor.Graphmaster.addCategoryTag(categoryPath, template, guard, filename);
                         // keep count of the number of categories that have been processed
                         this.RProcessor.Size++;
                     }
@@ -212,7 +212,7 @@ namespace RTParser.Utils
         /// <param name="isUserInput">marks the path to be created as originating from user input - so
         /// normalize out the * and _ wildcards used by AIML</param>
         /// <returns>The appropriately processed path</returns>
-        private string generatePath(XmlNode pattern, XmlNode node, string topicName, bool isUserInput)
+        private string generatePath00(XmlNode pattern, XmlNode node, string topicName, bool isUserInput)
         {
             // get the nodes that we need
             XmlNode that = this.FindNode("that", node);
@@ -225,7 +225,7 @@ namespace RTParser.Utils
             }
             else
             {
-                patternText = pattern.InnerText;
+                patternText = pattern.InnerXml;
             }
             if (!object.Equals(null, that))
             {
