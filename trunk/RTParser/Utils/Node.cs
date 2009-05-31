@@ -84,7 +84,7 @@ namespace RTParser.Utils
             // be fully mapped within the GraphMaster structure.
 
             // split the input into its component words
-            Unifiable[] words = path.Trim().Split(" ".ToCharArray());
+            Unifiable[] words = path./*Trim().*/Split();//" ".ToCharArray());
 
             if (words[0].Contains("COMEHERE"))
             {
@@ -122,7 +122,7 @@ namespace RTParser.Utils
         public static bool AlwaysFail = true;
         #region Evaluate Node
 
-        public List<Template> evaluate(Unifiable path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard)
+        public List<Template> evaluate(Unifiable path, SubQuery query, Request request, MatchState matchstate, UUnifiable wildcard)
         {
             //// are we in failure?
             //// first call the pre-existing evaluate  that was renamed to evaluate0
@@ -201,7 +201,7 @@ namespace RTParser.Utils
         /// <param name="matchstate">The part of the input path the node represents</param>
         /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
         /// <returns>The template to process to generate the output</returns>
-        private List<Template> evaluate0(Unifiable path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard)
+        private List<Template> evaluate0(Unifiable path, SubQuery query, Request request, MatchState matchstate, UUnifiable wildcard)
         {
             // check for timeout
             if (request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
@@ -235,7 +235,7 @@ namespace RTParser.Utils
             }
 
             // otherwise split the input into it's component words
-            Unifiable[] splitPath = path.Split(" \r\n\t".ToCharArray());
+            Unifiable[] splitPath = path.Split();
 
             // get the first word of the sentence
             Unifiable firstWord = Normalize.MakeCaseInsensitive.TransformInput(splitPath[0]);
@@ -250,7 +250,7 @@ namespace RTParser.Utils
                 Node childNode = (Node)this.children["_"];
 
                 // add the next word to the wildcard match 
-                StringBuilder newWildcard = new StringBuilder();
+                UUnifiable newWildcard = new UUnifiable();
                 this.storeWildCard(splitPath[0],newWildcard);
                 
                 // move down into the identified branch of the GraphMaster structure
@@ -266,15 +266,15 @@ namespace RTParser.Utils
                         switch (matchstate)
                         {
                             case MatchState.UserInput:
-                                query.InputStar.Add(newWildcard.ToString());
+                                query.InputStar.Add(newWildcard.Frozen());
                                 // added due to this match being the end of the line
                                 newWildcard.Remove(0, newWildcard.Length);
                                 break;
                             case MatchState.That:
-                                query.ThatStar.Add(newWildcard.ToString());
+                                query.ThatStar.Add(newWildcard.Frozen());
                                 break;
                             case MatchState.Topic:
-                                query.TopicStar.Add(newWildcard.ToString());
+                                query.TopicStar.Add(newWildcard.Frozen());
                                 break;
                         }
                     }
@@ -304,7 +304,7 @@ namespace RTParser.Utils
                 Node childNode = (Node)this.children[firstWord];
                 // move down into the identified branch of the GraphMaster structure using the new
                 // matchstate
-                StringBuilder newWildcard = new StringBuilder();
+                UUnifiable newWildcard = new UUnifiable();
                 List<Template> result = childNode.evaluate(newPath, query, request, newMatchstate, newWildcard);
                 // and if we get a result from the child return it
                 if (result != null && result.Count > 0)
@@ -316,15 +316,15 @@ namespace RTParser.Utils
                         switch (matchstate)
                         {
                             case MatchState.UserInput:
-                                query.InputStar.Add(newWildcard.ToString());
+                                query.InputStar.Add(newWildcard.Frozen());
                                 newWildcard.Remove(0, newWildcard.Length);
                                 break;
                             case MatchState.That:
-                                query.ThatStar.Add(newWildcard.ToString());
+                                query.ThatStar.Add(newWildcard.Frozen());
                                 newWildcard.Remove(0, newWildcard.Length);
                                 break;
                             case MatchState.Topic:
-                                query.TopicStar.Add(newWildcard.ToString());
+                                query.TopicStar.Add(newWildcard.Frozen());
                                 newWildcard.Remove(0, newWildcard.Length);
                                 break;
                         }
@@ -342,7 +342,7 @@ namespace RTParser.Utils
                 Node childNode = (Node)this.children["*"];
 
                 // add the next word to the wildcard match 
-                StringBuilder newWildcard = new StringBuilder();
+                UUnifiable newWildcard = new UUnifiable();
                 this.storeWildCard(splitPath[0], newWildcard);
 
                 List<Template> result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);
@@ -355,15 +355,15 @@ namespace RTParser.Utils
                         switch (matchstate)
                         {
                             case MatchState.UserInput:
-                                query.InputStar.Add(newWildcard.ToString());
+                                query.InputStar.Add(newWildcard.Frozen());
                                 // added due to this match being the end of the line
                                 newWildcard.Remove(0, newWildcard.Length);
                                 break;
                             case MatchState.That:
-                                query.ThatStar.Add(newWildcard.ToString());
+                                query.ThatStar.Add(newWildcard.Frozen());
                                 break;
                             case MatchState.Topic:
-                                query.TopicStar.Add(newWildcard.ToString());
+                                query.TopicStar.Add(newWildcard.Frozen());
                                 break;
                         }
                     }
@@ -375,7 +375,7 @@ namespace RTParser.Utils
             // a "_", the sFirstWord text, or "*" as a means of denoting a child node. However, 
             // if this node is itself representing a wildcard then the search continues to be
             // valid if we proceed with the tail.
-            if ((this.word == "_") || (this.word == "*"))
+            if (this.word.IsWildCard())
             {
                 this.storeWildCard(splitPath[0], wildcard);
                 return this.evaluate(newPath, query, request, matchstate, wildcard);
@@ -384,7 +384,7 @@ namespace RTParser.Utils
             // If we get here then we're at a dead end so return an empty Unifiable. Hopefully, if the
             // AIML files have been set up to include a "* <that> * <topic> *" catch-all this
             // state won't be reached. Remember to empty the surplus to requirements wildcard matches
-            wildcard = new StringBuilder();
+            wildcard = new UUnifiable();
             return null;// Unifiable.Empty;
         }
 
@@ -393,7 +393,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="word">The word matched by the wildcard</param>
         /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
-        private void storeWildCard(Unifiable word, StringBuilder wildcard)
+        private void storeWildCard(Unifiable word, UUnifiable wildcard)
         {
             if (wildcard.Length > 0)
             {

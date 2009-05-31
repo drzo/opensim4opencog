@@ -393,7 +393,7 @@ namespace RTParser
         /// <param name="pathToSettings">Path to the settings xml file</param>
         public void loadSettings(Unifiable pathToSettings)
         {
-            this.GlobalSettings.loadSettings(pathToSettings);
+            this.GlobalSettings.loadSettings(pathToSettings.AsString());
 
             // Checks for some important default settings
             if (!this.GlobalSettings.containsSettingCalled("version"))
@@ -676,7 +676,7 @@ namespace RTParser
                 foreach (Unifiable path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path);
-                    query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
+                    query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new UUnifiable());
                     result.SubQueries.Add(query);
                 }
 
@@ -792,7 +792,7 @@ namespace RTParser
             Unifiable tagName = node.Name.ToLower();
             if (tagName == "template")
             {
-                StringBuilder templateResult = new StringBuilder();
+                UUnifiable templateResult = new UUnifiable();
                 if (node.HasChildNodes)
                 {
                     // recursively check
@@ -801,7 +801,7 @@ namespace RTParser
                         templateResult.Append(this.processNode(childNode, query, request, result, user));
                     }
                 }
-                return templateResult.ToString();
+                return templateResult;//.ToString();
             }
             else
             {
@@ -964,7 +964,7 @@ namespace RTParser
                         XmlNode resultNode = AIMLTagHandler.getNode(String.Format("<node>{0}</node>", resultNodeInnerXML));
                         if (resultNode.HasChildNodes)
                         {
-                            StringBuilder recursiveResult = new StringBuilder();
+                            UUnifiable recursiveResult = new UUnifiable();
                             // recursively check
                             foreach (XmlNode childNode in resultNode.ChildNodes)
                             {
@@ -1062,7 +1062,7 @@ namespace RTParser
         /// Loads any custom tag handlers found in the dll referenced in the argument
         /// </summary>
         /// <param name="pathToDLL">the path to the dll containing the custom tag handling code</param>
-        public void loadCustomTagHandlers(Unifiable pathToDLL)
+        public void loadCustomTagHandlers(string pathToDLL)
         {
             Assembly tagDLL = Assembly.LoadFrom(pathToDLL);
             Type[] tagDLLTypes = tagDLL.GetTypes();
@@ -1141,7 +1141,7 @@ The AIMLbot program.
             message = message.Replace("*MESSAGE*", errorMessage);
             message = message.Replace("*RAWINPUT*", request.rawInput);
             message = message.Replace("*USER*", request.user.UserID);
-            StringBuilder paths = new StringBuilder();
+            UUnifiable paths = new UUnifiable();
             foreach(Unifiable path in request.result.NormalizedPaths)
             {
                 paths.Append(path+Environment.NewLine);

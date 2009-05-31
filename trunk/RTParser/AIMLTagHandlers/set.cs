@@ -64,7 +64,8 @@ namespace RTParser.AIMLTagHandlers
                 else  //recursive form like <set>name value Unifiable</set>
                 {
                     Unifiable nv = Recurse();
-                    Unifiable[] fsp = nv.Split(new char[] { ' ', '\n', '\t', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+                    Unifiable[] fsp = nv.Split();//
+                    //new char[] { ' ', '\n', '\t', '\r' }, StringSplitOptions.RemoveEmptyEntries);
                     if (fsp.Length > 0)
                     {
                         if (fsp.Length == 1)
