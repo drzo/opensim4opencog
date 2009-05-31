@@ -277,7 +277,7 @@ namespace RTParser.Utils
         public Unifiable generatePath(Unifiable pattern, Unifiable that, Unifiable topicName, bool isUserInput)
         {
             // to hold the normalized path to be entered into the graphmaster
-            StringBuilder normalizedPath = new StringBuilder();
+            UUnifiable normalizedPath = new UUnifiable();
             Unifiable normalizedPattern = Unifiable.Empty;
             Unifiable normalizedThat = "*";
             Unifiable normalizedTopic = "*";
@@ -327,7 +327,7 @@ namespace RTParser.Utils
                 normalizedPath.Append(" <topic> ");
                 normalizedPath.Append(normalizedTopic);
 
-                return normalizedPath.ToString();
+                return normalizedPath;//.Frozen();
             }
             else
             {
@@ -354,7 +354,7 @@ namespace RTParser.Utils
                 return input;
             }
 
-            StringBuilder result = new StringBuilder();
+            UUnifiable result = new UUnifiable();
 
             // objects for normalization of the input
             Normalize.ApplySubstitutions substitutor = new RTParser.Normalize.ApplySubstitutions(this.RProcessor);
@@ -362,7 +362,7 @@ namespace RTParser.Utils
 
             Unifiable substitutedInput = substitutor.Transform(input);
             // split the pattern into it's component words
-            Unifiable[] substitutedWords = substitutedInput.Split(" \r\n\t".ToCharArray());
+            Unifiable[] substitutedWords = substitutedInput.Split();
 
             // Normalize all words unless they're the AIML wildcards "*" and "_" during AIML loading
             foreach (Unifiable word in substitutedWords)

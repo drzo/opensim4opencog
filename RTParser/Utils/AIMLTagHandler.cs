@@ -80,7 +80,7 @@ namespace RTParser.Utils
         public XmlNode templateNode;
         protected Unifiable Recurse()
         {
-            StringBuilder templateResult = new StringBuilder();
+            UUnifiable templateResult = new UUnifiable();
             if (this.templateNode.HasChildNodes)
             {
                 // recursively check
