@@ -89,7 +89,7 @@ namespace RTParser
                 this.bot = bot;
                 this.Predicates = new RTParser.Utils.SettingsDictionary(this.bot);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
-                this.Predicates.addSetting("topic", "*");
+                this.Predicates.addSetting("topic", Unifiable.STAR);
             }
             else
             {

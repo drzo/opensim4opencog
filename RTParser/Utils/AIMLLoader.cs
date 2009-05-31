@@ -47,7 +47,7 @@ namespace RTParser.Utils
         /// Loads the AIML from files found in the path
         /// </summary>
         /// <param name="path"></param>
-        public void loadAIML(Unifiable path)
+        public void loadAIML(string path)
         {
             if (Directory.Exists(path))
             {
@@ -57,7 +57,7 @@ namespace RTParser.Utils
                 string[] fileEntries = Directory.GetFiles(path, "*.aiml");
                 if (fileEntries.Length > 0)
                 {
-                    foreach (Unifiable filename in fileEntries)
+                    foreach (string filename in fileEntries)
                     {
                         try
                         {
@@ -86,7 +86,7 @@ namespace RTParser.Utils
         /// graphmaster
         /// </summary>
         /// <param name="filename">The name of the file to process</param>
-        public void loadAIMLFile(Unifiable filename)
+        public void loadAIMLFile(string filename)
         {
             this.RProcessor.writeToLog("Processing AIML file: " + filename);
             
@@ -101,7 +101,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="doc">The XML document containing the AIML</param>
         /// <param name="filename">Where the XML document originated</param>
-        public void loadAIMLFromXML(XmlDocument doc, Unifiable filename)
+        public void loadAIMLFromXML(XmlDocument doc, string filename)
         {
             // Get a list of the nodes that are children of the <aiml> tag
             // these nodes should only be either <topic> or <category>
@@ -128,7 +128,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="node">the "topic" node</param>
         /// <param name="filename">the file from which this node is taken</param>
-        private void processTopic(XmlNode node, Unifiable filename)
+        private void processTopic(XmlNode node, string filename)
         {
             // find the name of the topic or set to default "*"
             Unifiable topicName="*";
@@ -152,9 +152,9 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="node">the XML node containing the category</param>
         /// <param name="filename">the file from which this category was taken</param>
-        private void processCategory(XmlNode node, Unifiable filename)
+        private void processCategory(XmlNode node, string filename)
         {
-            this.processCategory(node, "*", filename);
+            this.processCategory(node, Unifiable.UNIV_STAR, filename);
         }
 
         /// <summary>
@@ -163,11 +163,11 @@ namespace RTParser.Utils
         /// <param name="node">the XML node containing the category</param>
         /// <param name="topicName">the topic to be used</param>
         /// <param name="filename">the file from which this category was taken</param>
-        private void processCategory(XmlNode node, Unifiable topicName, Unifiable filename)
+        private void processCategory(XmlNode node, Unifiable topicName, string filename)
         {
             // reference and check the required nodes
             List<XmlNode> patterns = this.FindNodes("pattern", node);
-            foreach (var pattern in patterns)
+            foreach (XmlNode pattern in patterns)
             {
                 XmlNode template = this.FindNode("template", node);
                 XmlNode guard = this.FindNode("guard", node);
@@ -218,14 +218,14 @@ namespace RTParser.Utils
             XmlNode that = this.FindNode("that", node);
 
             Unifiable patternText;
-            Unifiable thatText = "*";
+            Unifiable thatText = Unifiable.UNIV_STAR;
             if (object.Equals(null, pattern))
             {
                 patternText = Unifiable.Empty;
             }
             else
             {
-                patternText = pattern.InnerXml;
+                patternText = Unifiable.CreateFromObject(pattern);//.InnerXml;
             }
             if (!object.Equals(null, that))
             {
@@ -241,7 +241,7 @@ namespace RTParser.Utils
         /// <param name="name">The name of the node</param>
         /// <param name="node">The node whose children need searching</param>
         /// <returns>The node (or null)</returns>
-        private XmlNode FindNode(Unifiable name, XmlNode node)
+        private XmlNode FindNode(string name, XmlNode node)
         {
             foreach(XmlNode child in node.ChildNodes)
             {
@@ -252,7 +252,7 @@ namespace RTParser.Utils
             }
             return null;
         }
-        private List<XmlNode> FindNodes(Unifiable name, XmlNode node)
+        private List<XmlNode> FindNodes(string name, XmlNode node)
         {
             List<XmlNode> nodes = new List<XmlNode>();
             foreach (XmlNode child in node.ChildNodes)
@@ -279,8 +279,8 @@ namespace RTParser.Utils
             // to hold the normalized path to be entered into the graphmaster
             UUnifiable normalizedPath = new UUnifiable();
             Unifiable normalizedPattern = Unifiable.Empty;
-            Unifiable normalizedThat = "*";
-            Unifiable normalizedTopic = "*";
+            Unifiable normalizedThat = Unifiable.UNIV_STAR;
+            Unifiable normalizedTopic = Unifiable.UNIV_STAR;
 
             if ((this.RProcessor.TrustAIML) & (!isUserInput || RawUserInput))
             {

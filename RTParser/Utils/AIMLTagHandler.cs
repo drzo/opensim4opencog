@@ -95,12 +95,12 @@ namespace RTParser.Utils
                         Unifiable found = Proc.processNode(childNode, query, request, result, user);
                         if (Unifiable.IsNull(found) || found.Trim() == "" || found.Trim() == "NIL")
                         {
-                            return String.Empty;
+                            return Unifiable.Empty;
                         }
                         templateResult.Append(found);
                     }
                 }
-                templateNodeInnerText = templateResult.ToString();
+                templateNodeInnerText = templateResult;//.ToString();
                 return templateNodeInnerText;
             }
             else
@@ -128,7 +128,7 @@ namespace RTParser.Utils
 
         #endregion
 
-        protected Unifiable GetAttribValue(Unifiable attribName,Unifiable defaultIfEmpty)
+        protected Unifiable GetAttribValue(string attribName,Unifiable defaultIfEmpty)
         {
             attribName = attribName.ToLower();
             foreach (XmlAttribute attrib in this.templateNode.Attributes)

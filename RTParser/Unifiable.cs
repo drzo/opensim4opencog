@@ -1,16 +1,38 @@
 using System;
 using System.Globalization;
 using System.Xml;
+using RTParser.AIMLTagHandlers;
 
 namespace RTParser
 {
 
     public class Unifiable
     {
-        public static Unifiable Empty
+        public static UUnifiable Empty = new UUnifiable()
+                                 //{
+                                 //    public override void Append(Unifiable p)
+                                 //    {
+                                 //        if (str == "")
+                                 //            str = p.AsString();
+                                 //        else
+                                 //        {
+                                 //            str += " ";
+                                 //            str += p.AsString();
+                                 //        }
+                                 //    }
+                                 //} 
+                                 ;
+
+                                            
+        public static Unifiable STAR = new Unifiable("*");
+        public static Unifiable UNIV_STAR
         {
-            get { return ""; }
+            get
+            {
+                return new Unifiable("*");
+            }
         }
+
 
         public static implicit operator string(Unifiable value)
         {
@@ -27,7 +49,7 @@ namespace RTParser
             return new Unifiable(value);
         }
 
-        internal static Unifiable Join(string p, Unifiable[] fsp, int p_3, int p_4)
+        public static Unifiable Join(string p, Unifiable[] fsp, int p_3, int p_4)
         {
             return string.Join(p, FromArrayOf(fsp), p_3, p_4);
         }
@@ -114,7 +136,14 @@ namespace RTParser
 
         public int Length
         {
-            get { return str.Length; }
+            get
+            {
+                if (str == null)
+                {
+                    return 0;
+                }
+                return str.Length;
+            }
         }
 
 
@@ -131,6 +160,8 @@ namespace RTParser
 
         public Unifiable Trim()
         {
+            string str2 = str.Trim();
+            if (str2==str) return this;
             return str.Trim();
         }
 
@@ -139,14 +170,14 @@ namespace RTParser
             return str;
         }
 
-        internal Unifiable ToLower()
+        public virtual Unifiable ToLower()
         {
             return str.ToLower();
         }
 
         public Unifiable ToUpper()
         {
-            return str.ToUpper();
+            return Create(str.ToUpper());
         }
 
         public Unifiable Substring(int i, int ii)
@@ -154,7 +185,7 @@ namespace RTParser
             return str.Substring(i, ii);
         }
 
-        internal char[] ToCharArray()
+        public virtual char[] ToCharArray()
         {
             return str.ToCharArray();
         }
@@ -191,24 +222,24 @@ namespace RTParser
             return str.GetHashCode();
         }
 
-        internal Unifiable Substring(int p)
+        public virtual Unifiable Substring(int p)
         {
             return str.Substring(p);
         }
 
-        internal int IndexOf(string p)
+        public virtual int IndexOf(string p)
         {
             return str.IndexOf(p);
         }
 
 
-        internal Unifiable[] Split(Unifiable[] tokens, StringSplitOptions stringSplitOptions)
+        public virtual Unifiable[] Split(Unifiable[] tokens, StringSplitOptions stringSplitOptions)
         {
             return arrayOf(str.Split(FromArrayOf(tokens), stringSplitOptions));
         }
 
 
-        //internal Unifiable[] Split(char[] p)
+        //public virtual Unifiable[] Split(char[] p)
         //{
         //    return arrayOf(str.Split(p));
         //}
@@ -218,17 +249,17 @@ namespace RTParser
             return str.Contains(p);
         }
 
-        internal string ToLower(CultureInfo cultureInfo)
+        public virtual string ToLower(CultureInfo cultureInfo)
         {
             return str.ToLower(cultureInfo);
         }
 
-        internal string ToUpper(CultureInfo cultureInfo)
+        public virtual string ToUpper(CultureInfo cultureInfo)
         {
             return str.ToUpper(cultureInfo);
         }
 
-        internal Unifiable TrimEnd()
+        public virtual Unifiable TrimEnd()
         {
             return str.TrimEnd();
         }
@@ -238,12 +269,12 @@ namespace RTParser
             return str.TrimStart();
         }
 
-        static internal bool IsTrue(Unifiable v)
+        static public bool IsTrue(Unifiable v)
         {
             return !IsFalse(v);
         }
 
-        internal bool IsWildCard()
+        public virtual bool IsWildCard()
         {
             return (str == "*" || str == "_");
         }
@@ -260,19 +291,20 @@ namespace RTParser
             return str == that;
         }
 
-        internal static bool IsFalse(Unifiable tf)
+        public static bool IsFalse(Unifiable tf)
         {
             if (Object.ReferenceEquals(tf, null)) return true;
             string found = tf.AsString();
             return found.Trim() == "" || found.Trim() == "NIL";
         }
 
-        internal static bool IsNull(Unifiable name)
+        public static bool IsNull(Object name)
         {
-            return Object.ReferenceEquals(name, null) || name.str == null;
+            if (Object.ReferenceEquals(name, null)) return true;
+            return (name is Unifiable && ((Unifiable) name).str == null);
         }
 
-        internal string GetSettingName()
+        public virtual string GetSettingName()
         {
             return str;
         }
@@ -285,6 +317,17 @@ namespace RTParser
         {
             return u.str + more.AsString();
         }
+
+        public static Unifiable Create(string p)
+        {
+            return new Unifiable(p);
+        }
+
+        internal static Unifiable CreateFromObject(XmlNode pattern)
+        {
+           // TODO
+            return new Unifiable(pattern.InnerXml);
+        }
     }
 
     public class UUnifiable : Unifiable
@@ -292,7 +335,7 @@ namespace RTParser
 
         public UUnifiable()
         {
-            str = Unifiable.Empty;
+            str = "";
         }
 
         public static Unifiable operator +(UUnifiable u, string more)
@@ -304,7 +347,7 @@ namespace RTParser
             return u.str + more.AsString();
         }
 
-        internal void Append(Unifiable p)
+        public virtual void Append(Unifiable p)
         {
             if (str == "")
                 str = p.AsString();
@@ -315,7 +358,7 @@ namespace RTParser
             }
         }
 
-        internal void Remove(int p, int c)
+        public virtual void Remove(int p, int c)
         {
             str = str.Remove(p, c);
         }
@@ -325,7 +368,7 @@ namespace RTParser
             return str;
         }
 
-        internal Unifiable Frozen()
+        public virtual Unifiable Frozen()
         {
             return str;
         }

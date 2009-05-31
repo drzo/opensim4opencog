@@ -71,7 +71,7 @@ namespace RTParser.AIMLTagHandlers
                         if (fsp.Length == 1)
                         {
                             this.user.Predicates.removeSetting(fsp[0]);
-                            return String.Empty;
+                            return Unifiable.Empty;
                         }
                         String joined = Unifiable.Join(" ", fsp, 1, fsp.Length - 1);
                         name = fsp[0];

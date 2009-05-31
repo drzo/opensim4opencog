@@ -46,7 +46,7 @@ namespace RTParser.AIMLTagHandlers
             if (this.templateNode.Name.ToLower() == "get")
             {
                 Unifiable name = GetAttribValue("name", templateNodeInnerText);
-                Unifiable defaultVal = GetAttribValue("default", String.Empty);
+                Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
                 Unifiable result = this.user.Predicates.grabSetting(name);
                 if (!String.IsNullOrEmpty(result)) return result;
                 return defaultVal;
