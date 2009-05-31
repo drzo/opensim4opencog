@@ -29,19 +29,19 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "cycquery")
             {
-                string filter = GetAttribValue("filter", null);
-                string varname = base.GetAttribValue("varname", "?REPLY");
-                string mt = GetAttribValue("mt", "EverythingPSC");
+                Unifiable filter = GetAttribValue("filter", null);
+                Unifiable varname = base.GetAttribValue("varname", "?REPLY");
+                Unifiable mt = GetAttribValue("mt", "EverythingPSC");
                 if (templateNodeInnerText.Length > 0)
                 {
                     return this.Proc.EvalSubL(String.Format("(ask-template '{0} {1} {2})",varname, Recurse(), Proc.Cyclify(mt)), filter);
                 }
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

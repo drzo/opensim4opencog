@@ -23,7 +23,7 @@ namespace RTParser.AIMLTagHandlers
     /// predicate, and a required attribute "value", which contains a simple pattern expression. 
     ///
     /// If the contents of the value attribute match the value of the predicate specified by name, then 
-    /// the AIML interpreter should return the contents of the cyccondition. If not, the empty string "" 
+    /// the AIML interpreter should return the contents of the cyccondition. If not, the empty Unifiable "" 
     /// should be returned.
     /// 
     /// Single-predicate Condition 
@@ -113,7 +113,7 @@ namespace RTParser.AIMLTagHandlers
             this.isRecursive = false;
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "cyccondition")
             {
@@ -121,8 +121,8 @@ namespace RTParser.AIMLTagHandlers
 
                 if (this.templateNode.Attributes.Count == 2) // block
                 {
-                    string name = "";
-                    string value = "";
+                    Unifiable name = "";
+                    Unifiable value = "";
 
                     if (this.templateNode.Attributes[0].Name == "name")
                     {
@@ -144,7 +144,7 @@ namespace RTParser.AIMLTagHandlers
 
                     if ((name.Length > 0) & (value.Length > 0))
                     {
-                        string actualValue = this.user.Predicates.grabSetting(name);
+                        Unifiable actualValue = this.user.Predicates.grabSetting(name);
                         Regex matcher = new Regex(value.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
                         if (matcher.IsMatch(actualValue))
                         {
@@ -156,7 +156,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     if (this.templateNode.Attributes[0].Name == "name")
                     {
-                        string name = this.templateNode.Attributes[0].Value;
+                        Unifiable name = this.templateNode.Attributes[0].Value;
                         foreach (XmlNode childLINode in this.templateNode.ChildNodes)
                         {
                             if (childLINode.Name.ToLower() == "li")
@@ -165,7 +165,7 @@ namespace RTParser.AIMLTagHandlers
                                 {
                                     if (childLINode.Attributes[0].Name.ToLower() == "value")
                                     {
-                                        string actualValue = this.user.Predicates.grabSetting(name);
+                                        Unifiable actualValue = this.user.Predicates.grabSetting(name);
                                         Regex matcher = new Regex(childLINode.Attributes[0].Value.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
                                         if (matcher.IsMatch(actualValue))
                                         {
@@ -189,8 +189,8 @@ namespace RTParser.AIMLTagHandlers
                         {
                             if (childLINode.Attributes.Count == 2)
                             {
-                                string name = "";
-                                string value = "";
+                                Unifiable name = "";
+                                Unifiable value = "";
                                 if (childLINode.Attributes[0].Name == "name")
                                 {
                                     name = childLINode.Attributes[0].Value;
@@ -211,7 +211,7 @@ namespace RTParser.AIMLTagHandlers
 
                                 if ((name.Length > 0) & (value.Length > 0))
                                 {
-                                    string actualValue = this.user.Predicates.grabSetting(name);
+                                    Unifiable actualValue = this.user.Predicates.grabSetting(name);
                                     Regex matcher = new Regex(value.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
                                     if (matcher.IsMatch(actualValue))
                                     {
@@ -227,7 +227,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                 }
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

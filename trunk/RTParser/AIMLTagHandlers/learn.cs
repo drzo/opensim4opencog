@@ -30,7 +30,7 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "learn")
             {
@@ -38,7 +38,7 @@ namespace RTParser.AIMLTagHandlers
                 // ToDo: Network HTTP and web service based learning
                 if (templateNodeInnerText.Length > 0)
                 {
-                    string path = templateNodeInnerText;
+                    Unifiable path = templateNodeInnerText;
                     FileInfo fi = new FileInfo(path);
                     if (fi.Exists)
                     {
@@ -55,7 +55,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                 }
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

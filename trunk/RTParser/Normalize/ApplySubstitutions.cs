@@ -10,7 +10,7 @@ namespace RTParser.Normalize
     /// </summary>
     public class ApplySubstitutions : RTParser.Utils.TextTransformer
     {
-        public ApplySubstitutions(RTParser.RTPBot bot, string inputString)
+        public ApplySubstitutions(RTParser.RTPBot bot, Unifiable inputString)
             : base(bot, inputString)
         { }
 
@@ -19,11 +19,11 @@ namespace RTParser.Normalize
         { }
 
         /// <summary>
-        /// Produces a random "marker" string that tags text that is already the result of a substitution
+        /// Produces a random "marker" Unifiable that tags text that is already the result of a substitution
         /// </summary>
         /// <param name="len">The length of the marker</param>
         /// <returns>the resulting marker</returns>
-        private static string getMarker(int len)
+        private static Unifiable getMarker(int len)
         {
             char[] chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
             StringBuilder result = new StringBuilder();
@@ -35,29 +35,29 @@ namespace RTParser.Normalize
             return result.ToString();
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             return ApplySubstitutions.Substitute(this.Proc, this.Proc.Substitutions, this.inputString);
         }
 
         /// <summary>
         /// Static helper that applies replacements from the passed dictionary object to the 
-        /// target string
+        /// target Unifiable
         /// </summary>
         /// <param name="bot">The bot for whom this is being processed</param>
         /// <param name="dictionary">The dictionary containing the substitutions</param>
-        /// <param name="target">the target string to which the substitutions are to be applied</param>
-        /// <returns>The processed string</returns>
-        public static string Substitute(RTParser.RTPBot bot, RTParser.Utils.SettingsDictionary dictionary, string target)
+        /// <param name="target">the target Unifiable to which the substitutions are to be applied</param>
+        /// <returns>The processed Unifiable</returns>
+        public static Unifiable Substitute(RTParser.RTPBot bot, RTParser.Utils.SettingsDictionary dictionary, Unifiable target)
         {
-            string marker = ApplySubstitutions.getMarker(5);
-            string result = target;
-            foreach (string pattern in dictionary.SettingNames)
+            Unifiable marker = ApplySubstitutions.getMarker(5);
+            Unifiable result = target;
+            foreach (Unifiable pattern in dictionary.SettingNames)
             {
-                string p2 = ApplySubstitutions.makeRegexSafe(pattern);
-                //string match = "\\b"+@p2.Trim().Replace(" ","\\s*")+"\\b";
-                string match = "\\b" + p2.TrimEnd().TrimStart() + "\\b";
-                string replacement = marker+dictionary.grabSetting(pattern).Trim()+marker;
+                Unifiable p2 = ApplySubstitutions.makeRegexSafe(pattern);
+                //Unifiable match = "\\b"+@p2.Trim().Replace(" ","\\s*")+"\\b";
+                Unifiable match = "\\b" + p2.TrimEnd().TrimStart() + "\\b";
+                Unifiable replacement = marker+dictionary.grabSetting(pattern).Trim()+marker;
                 result = Regex.Replace(result, match, replacement, RegexOptions.IgnoreCase);
             }
 
@@ -70,9 +70,9 @@ namespace RTParser.Normalize
         /// </summary>
         /// <param name="input">The raw input</param>
         /// <returns>the safe version</returns>
-        private static string makeRegexSafe(string input)
+        private static Unifiable makeRegexSafe(Unifiable input)
         {
-            string result = input.Replace("\\","");
+            Unifiable result = input.Replace("\\","");
             result = result.Replace(")", "\\)");
             result = result.Replace("(", "\\(");
             result = result.Replace(".", "\\.");

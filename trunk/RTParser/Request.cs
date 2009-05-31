@@ -13,7 +13,7 @@ namespace RTParser
         /// <summary>
         /// The raw input from the user
         /// </summary>
-        public string rawInput;
+        public Unifiable rawInput;
 
         /// <summary>
         /// The time at which this request was created within the system
@@ -48,7 +48,7 @@ namespace RTParser
         /// <param name="rawInput">The raw input from the user</param>
         /// <param name="user">The user who made the request</param>
         /// <param name="bot">The bot to which this is a request</param>
-        public Request(string rawInput, User user, RTPBot bot)
+        public Request(Unifiable rawInput, User user, RTPBot bot)
         {
             this.rawInput = rawInput;
             this.user = user;

@@ -47,7 +47,7 @@ namespace RTParser.Utils
         /// Loads the AIML from files found in the path
         /// </summary>
         /// <param name="path"></param>
-        public void loadAIML(string path)
+        public void loadAIML(Unifiable path)
         {
             if (Directory.Exists(path))
             {
@@ -57,7 +57,7 @@ namespace RTParser.Utils
                 string[] fileEntries = Directory.GetFiles(path, "*.aiml");
                 if (fileEntries.Length > 0)
                 {
-                    foreach (string filename in fileEntries)
+                    foreach (Unifiable filename in fileEntries)
                     {
                         try
                         {
@@ -86,7 +86,7 @@ namespace RTParser.Utils
         /// graphmaster
         /// </summary>
         /// <param name="filename">The name of the file to process</param>
-        public void loadAIMLFile(string filename)
+        public void loadAIMLFile(Unifiable filename)
         {
             this.RProcessor.writeToLog("Processing AIML file: " + filename);
             
@@ -101,7 +101,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="doc">The XML document containing the AIML</param>
         /// <param name="filename">Where the XML document originated</param>
-        public void loadAIMLFromXML(XmlDocument doc, string filename)
+        public void loadAIMLFromXML(XmlDocument doc, Unifiable filename)
         {
             // Get a list of the nodes that are children of the <aiml> tag
             // these nodes should only be either <topic> or <category>
@@ -128,10 +128,10 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="node">the "topic" node</param>
         /// <param name="filename">the file from which this node is taken</param>
-        private void processTopic(XmlNode node, string filename)
+        private void processTopic(XmlNode node, Unifiable filename)
         {
             // find the name of the topic or set to default "*"
-            string topicName="*";
+            Unifiable topicName="*";
             if((node.Attributes.Count==1)&(node.Attributes[0].Name=="name"))
             {
                 topicName = node.Attributes["name"].Value;
@@ -152,7 +152,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="node">the XML node containing the category</param>
         /// <param name="filename">the file from which this category was taken</param>
-        private void processCategory(XmlNode node, string filename)
+        private void processCategory(XmlNode node, Unifiable filename)
         {
             this.processCategory(node, "*", filename);
         }
@@ -163,7 +163,7 @@ namespace RTParser.Utils
         /// <param name="node">the XML node containing the category</param>
         /// <param name="topicName">the topic to be used</param>
         /// <param name="filename">the file from which this category was taken</param>
-        private void processCategory(XmlNode node, string topicName, string filename)
+        private void processCategory(XmlNode node, Unifiable topicName, Unifiable filename)
         {
             // reference and check the required nodes
             List<XmlNode> patterns = this.FindNodes("pattern", node);
@@ -181,7 +181,7 @@ namespace RTParser.Utils
                     throw new XmlException("Missing template tag in the node with pattern: " + pattern.InnerText + " found in " + filename);
                 }
 
-                string categoryPath = this.generatePath00(pattern, node, topicName, false);
+                Unifiable categoryPath = this.generatePath00(pattern, node, topicName, false);
 
                 // o.k., add the processed AIML to the GraphMaster structure
                 if (categoryPath.Length > 0)
@@ -212,16 +212,16 @@ namespace RTParser.Utils
         /// <param name="isUserInput">marks the path to be created as originating from user input - so
         /// normalize out the * and _ wildcards used by AIML</param>
         /// <returns>The appropriately processed path</returns>
-        private string generatePath00(XmlNode pattern, XmlNode node, string topicName, bool isUserInput)
+        private Unifiable generatePath00(XmlNode pattern, XmlNode node, Unifiable topicName, bool isUserInput)
         {
             // get the nodes that we need
             XmlNode that = this.FindNode("that", node);
 
-            string patternText;
-            string thatText = "*";
+            Unifiable patternText;
+            Unifiable thatText = "*";
             if (object.Equals(null, pattern))
             {
-                patternText = string.Empty;
+                patternText = Unifiable.Empty;
             }
             else
             {
@@ -241,7 +241,7 @@ namespace RTParser.Utils
         /// <param name="name">The name of the node</param>
         /// <param name="node">The node whose children need searching</param>
         /// <returns>The node (or null)</returns>
-        private XmlNode FindNode(string name, XmlNode node)
+        private XmlNode FindNode(Unifiable name, XmlNode node)
         {
             foreach(XmlNode child in node.ChildNodes)
             {
@@ -252,7 +252,7 @@ namespace RTParser.Utils
             }
             return null;
         }
-        private List<XmlNode> FindNodes(string name, XmlNode node)
+        private List<XmlNode> FindNodes(Unifiable name, XmlNode node)
         {
             List<XmlNode> nodes = new List<XmlNode>();
             foreach (XmlNode child in node.ChildNodes)
@@ -274,13 +274,13 @@ namespace RTParser.Utils
         /// <param name="isUserInput">marks the path to be created as originating from user input - so
         /// normalize out the * and _ wildcards used by AIML</param>
         /// <returns>The appropriately processed path</returns>
-        public string generatePath(string pattern, string that, string topicName, bool isUserInput)
+        public Unifiable generatePath(Unifiable pattern, Unifiable that, Unifiable topicName, bool isUserInput)
         {
             // to hold the normalized path to be entered into the graphmaster
             StringBuilder normalizedPath = new StringBuilder();
-            string normalizedPattern = string.Empty;
-            string normalizedThat = "*";
-            string normalizedTopic = "*";
+            Unifiable normalizedPattern = Unifiable.Empty;
+            Unifiable normalizedThat = "*";
+            Unifiable normalizedTopic = "*";
 
             if ((this.RProcessor.TrustAIML) & (!isUserInput || RawUserInput))
             {
@@ -331,18 +331,18 @@ namespace RTParser.Utils
             }
             else
             {
-                return string.Empty;
+                return Unifiable.Empty;
             }
         }
 
         /// <summary>
         /// Given an input, provide a normalized output
         /// </summary>
-        /// <param name="input">The string to be normalized</param>
-        /// <param name="isUserInput">True if the string being normalized is part of the user input path - 
+        /// <param name="input">The Unifiable to be normalized</param>
+        /// <param name="isUserInput">True if the Unifiable being normalized is part of the user input path - 
         /// flags that we need to normalize out * and _ chars</param>
-        /// <returns>The normalized string</returns>
-        public string Normalize(string input, bool isUserInput)
+        /// <returns>The normalized Unifiable</returns>
+        public Unifiable Normalize(Unifiable input, bool isUserInput)
         {
             input = input.Trim();
             while (input.EndsWith("?"))
@@ -360,14 +360,14 @@ namespace RTParser.Utils
             Normalize.ApplySubstitutions substitutor = new RTParser.Normalize.ApplySubstitutions(this.RProcessor);
             Normalize.StripIllegalCharacters stripper = new RTParser.Normalize.StripIllegalCharacters(this.RProcessor);
 
-            string substitutedInput = substitutor.Transform(input);
+            Unifiable substitutedInput = substitutor.Transform(input);
             // split the pattern into it's component words
-            string[] substitutedWords = substitutedInput.Split(" \r\n\t".ToCharArray());
+            Unifiable[] substitutedWords = substitutedInput.Split(" \r\n\t".ToCharArray());
 
             // Normalize all words unless they're the AIML wildcards "*" and "_" during AIML loading
-            foreach (string word in substitutedWords)
+            foreach (Unifiable word in substitutedWords)
             {
-                string normalizedWord;
+                Unifiable normalizedWord;
                 if (isUserInput)
                 {
                     normalizedWord = stripper.Transform(word);

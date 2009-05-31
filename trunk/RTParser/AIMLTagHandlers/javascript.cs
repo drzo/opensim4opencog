@@ -28,10 +28,10 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             this.Proc.writeToLog("The javascript tag is not implemented in this Proc");
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

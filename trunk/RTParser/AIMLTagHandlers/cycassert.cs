@@ -29,7 +29,7 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "cycassert")
             {                
@@ -38,7 +38,7 @@ namespace RTParser.AIMLTagHandlers
                     return this.Proc.EvalSubL(String.Format("(cyc-assert '{0})", Recurse()),null);
                 }
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

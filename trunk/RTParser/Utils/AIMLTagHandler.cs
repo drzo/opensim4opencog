@@ -11,7 +11,7 @@ namespace RTParser.Utils
     abstract public class AIMLTagHandler : TextTransformer
     {
 
-        protected string templateNodeInnerText
+        protected Unifiable templateNodeInnerText
         {
             get { return templateNode.InnerText; }
             set { templateNode.InnerText = value; }
@@ -78,7 +78,7 @@ namespace RTParser.Utils
         /// The template node to be processed by the class
         /// </summary>
         public XmlNode templateNode;
-        protected string Recurse()
+        protected Unifiable Recurse()
         {
             StringBuilder templateResult = new StringBuilder();
             if (this.templateNode.HasChildNodes)
@@ -92,8 +92,8 @@ namespace RTParser.Utils
                     }
                     else
                     {
-                        string found = Proc.processNode(childNode, query, request, result, user);
-                        if (found == null || found.Trim() == "" || found.Trim() == "NIL")
+                        Unifiable found = Proc.processNode(childNode, query, request, result, user);
+                        if (Unifiable.IsNull(found) || found.Trim() == "" || found.Trim() == "NIL")
                         {
                             return String.Empty;
                         }
@@ -105,7 +105,7 @@ namespace RTParser.Utils
             }
             else
             {
-                string before = this.templateNode.InnerXml;               
+                Unifiable before = this.templateNode.InnerXml;               
                 return before;                
             }
 
@@ -115,11 +115,11 @@ namespace RTParser.Utils
         #region Helper methods
 
         /// <summary>
-        /// Helper method that turns the passed string into an XML node
+        /// Helper method that turns the passed Unifiable into an XML node
         /// </summary>
-        /// <param name="outerXML">the string to XMLize</param>
+        /// <param name="outerXML">the Unifiable to XMLize</param>
         /// <returns>The XML node</returns>
-        public static XmlNode getNode(string outerXML)
+        public static XmlNode getNode(Unifiable outerXML)
         {
             XmlDocument temp = new XmlDocument();
             temp.LoadXml(outerXML);
@@ -128,7 +128,7 @@ namespace RTParser.Utils
 
         #endregion
 
-        protected string GetAttribValue(string attribName,string defaultIfEmpty)
+        protected Unifiable GetAttribValue(Unifiable attribName,Unifiable defaultIfEmpty)
         {
             attribName = attribName.ToLower();
             foreach (XmlAttribute attrib in this.templateNode.Attributes)

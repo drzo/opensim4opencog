@@ -13,24 +13,24 @@ namespace RTParser.Utils
         /// <summary>
         /// The assembly this class is found in
         /// </summary>
-        public string AssemblyName;
+        public Unifiable AssemblyName;
 
         /// <summary>
         /// The class name for the assembly
         /// </summary>
-        public string ClassName;
+        public Unifiable ClassName;
 
         /// <summary>
         /// The name of the tag this class will deal with
         /// </summary>
-        public string TagName;
+        public Unifiable TagName;
 
         /// <summary>
         /// Provides an instantiation of the class represented by this tag-handler
         /// </summary>
         /// <param name="Assemblies">All the assemblies the bot knows about</param>
         /// <returns>The instantiated class</returns>
-        public AIMLTagHandler Instantiate(Dictionary<string, Assembly> Assemblies)
+        public AIMLTagHandler Instantiate(Dictionary<Unifiable, Assembly> Assemblies)
         {
             if (Assemblies.ContainsKey(this.AssemblyName))
             {

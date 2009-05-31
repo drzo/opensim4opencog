@@ -32,7 +32,7 @@ namespace RTParser
         /// <summary>
         /// The raw input from the user
         /// </summary>
-        public string RawInput
+        public Unifiable RawInput
         {
             get
             {
@@ -43,7 +43,7 @@ namespace RTParser
         /// <summary>
         /// The normalized sentence(s) (paths) fed into the graphmaster
         /// </summary>
-        public List<string> NormalizedPaths = new List<string>();
+        public List<Unifiable> NormalizedPaths = new List<Unifiable>();
 
         /// <summary>
         /// The amount of time the request took to process
@@ -53,7 +53,7 @@ namespace RTParser
         /// <summary>
         /// The result from the bot with logging and checking
         /// </summary>
-        public string Output
+        public Unifiable Output
         {
             get
             {
@@ -70,12 +70,12 @@ namespace RTParser
                     else
                     {
                         StringBuilder paths = new StringBuilder();
-                        foreach (string pattern in this.NormalizedPaths)
+                        foreach (Unifiable pattern in this.NormalizedPaths)
                         {
                             paths.Append(pattern + Environment.NewLine);
                         }
                         this.bot.writeToLog("The bot could not find any response for the input: " + this.RawInput + " with the path(s): " + Environment.NewLine + paths.ToString() + " from the user with an id: " + this.user.UserID);
-                        return string.Empty;
+                        return Unifiable.Empty;
                     }
                 }
             }
@@ -84,14 +84,14 @@ namespace RTParser
         /// <summary>
         /// Returns the raw sentences without any logging 
         /// </summary>
-        public string RawOutput
+        public Unifiable RawOutput
         {
             get
             {
                 StringBuilder result = new StringBuilder();
-                foreach (string sentence in OutputSentences)
+                foreach (Unifiable sentence in OutputSentences)
                 {
-                    string sentenceForOutput = sentence.Trim();
+                    Unifiable sentenceForOutput = sentence.Trim();
                     if (!this.checkEndsAsSentence(sentenceForOutput))
                     {
                         sentenceForOutput += ".";
@@ -111,12 +111,12 @@ namespace RTParser
         /// <summary>
         /// The individual sentences produced by the bot that form the complete response
         /// </summary>
-        public List<string> OutputSentences = new List<string>();
+        public List<Unifiable> OutputSentences = new List<Unifiable>();
 
         /// <summary>
         /// The individual sentences that constitute the raw input from the user
         /// </summary>
-        public List<string> InputSentences = new List<string>();
+        public List<Unifiable> InputSentences = new List<Unifiable>();
 
         /// <summary>
         /// Ctor
@@ -146,9 +146,9 @@ namespace RTParser
         /// </summary>
         /// <param name="sentence">the sentence to check</param>
         /// <returns>True if ends with an appropriate sentence splitter</returns>
-        private bool checkEndsAsSentence(string sentence)
+        private bool checkEndsAsSentence(Unifiable sentence)
         {
-            foreach (string splitter in this.bot.Splitters)
+            foreach (Unifiable splitter in this.bot.Splitters)
             {
                 if (sentence.Trim().EndsWith(splitter))
                 {

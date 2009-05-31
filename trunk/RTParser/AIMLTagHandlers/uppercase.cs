@@ -9,8 +9,8 @@ namespace RTParser.AIMLTagHandlers
     /// in uppercase, as defined (if defined) by the locale indicated by the specified language
     /// if specified).
     /// 
-    /// If no character in this string has a different uppercase version, based on the Unicode 
-    /// standard, then the original string is returned. 
+    /// If no character in this Unifiable has a different uppercase version, based on the Unicode 
+    /// standard, then the original Unifiable is returned. 
     /// </summary>
     public class uppercase : RTParser.Utils.AIMLTagHandler
     {
@@ -33,13 +33,13 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "uppercase")
             {
                 return templateNodeInnerText.ToUpper(this.Proc.Locale);
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

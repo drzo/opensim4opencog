@@ -35,7 +35,7 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "topicstar")
             {
@@ -43,7 +43,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     if (this.query.TopicStar.Count > 0)
                     {
-                        return (string)this.query.TopicStar[0];
+                        return (Unifiable)this.query.TopicStar[0];
                     }
                     else
                     {
@@ -63,7 +63,7 @@ namespace RTParser.AIMLTagHandlers
                                 {
                                     if (result > 0)
                                     {
-                                        return (string)this.query.TopicStar[result - 1];
+                                        return (Unifiable)this.query.TopicStar[result - 1];
                                     }
                                     else
                                     {
@@ -83,7 +83,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                 }
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

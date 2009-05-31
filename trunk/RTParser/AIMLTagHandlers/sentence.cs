@@ -9,11 +9,11 @@ namespace RTParser.AIMLTagHandlers
     /// The sentence element tells the AIML interpreter to render the contents of the element 
     /// such that the first letter of each sentence is in uppercase, as defined (if defined) by 
     /// the locale indicated by the specified language (if specified). Sentences are interpreted 
-    /// as strings whose last character is the period or full-stop character .. If the string does 
-    /// not contain a ., then the entire string is treated as a sentence.
+    /// as strings whose last character is the period or full-stop character .. If the Unifiable does 
+    /// not contain a ., then the entire Unifiable is treated as a sentence.
     /// 
-    /// If no character in this string has a different uppercase version, based on the Unicode 
-    /// standard, then the original string is returned. 
+    /// If no character in this Unifiable has a different uppercase version, based on the Unicode 
+    /// standard, then the original Unifiable is returned. 
     /// </summary>
     public class sentence : RTParser.Utils.AIMLTagHandler
     {
@@ -36,7 +36,7 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if(this.templateNode.Name.ToLower()=="sentence")
             {
@@ -47,7 +47,7 @@ namespace RTParser.AIMLTagHandlers
                     bool doChange = true;
                     for (int i = 0; i < letters.Length; i++)
                     {
-                        string letterAsString = Convert.ToString(letters[i]);
+                        Unifiable letterAsString = Convert.ToString(letters[i]);
                         if (this.Proc.Splitters.Contains(letterAsString))
                         {
                             doChange = true;
@@ -86,12 +86,12 @@ namespace RTParser.AIMLTagHandlers
                     }
                     else
                     {
-                        return string.Empty;
+                        return Unifiable.Empty;
                     }
                 }
             }
 
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

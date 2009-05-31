@@ -30,7 +30,7 @@ namespace RTParser.AIMLTagHandlers
         }
 
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
            // if (this.templateNode.Name.ToLower() == "cycphrase")
             {
@@ -39,7 +39,7 @@ namespace RTParser.AIMLTagHandlers
                     return this.Proc.Paraphrase(Recurse());
                 }
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

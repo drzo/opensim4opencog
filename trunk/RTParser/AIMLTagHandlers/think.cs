@@ -31,9 +31,9 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

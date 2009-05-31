@@ -26,18 +26,18 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "cycsystem")
             {
-                string filter = base.GetAttribValue("filter", null);
+                Unifiable filter = base.GetAttribValue("filter", null);
                 if (templateNodeInnerText.Length > 0)
                 {
-                    string result = this.Proc.EvalSubL(Recurse(),filter);
+                    Unifiable result = this.Proc.EvalSubL(Recurse(),filter);
                     return result;
                 }
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

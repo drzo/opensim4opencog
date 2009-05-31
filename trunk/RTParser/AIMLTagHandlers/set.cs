@@ -42,12 +42,12 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "set")
             {
-                string name = GetAttribValue("name", null);
-                if (name != null)
+                Unifiable name = GetAttribValue("name", null);
+                if (!Unifiable.IsNull(name))
                 {
                     if (templateNodeInnerText.Length > 0)
                     {
@@ -58,13 +58,13 @@ namespace RTParser.AIMLTagHandlers
                     {
                         // remove the predicate
                         this.user.Predicates.removeSetting(name);
-                        return string.Empty;
+                        return Unifiable.Empty;
                     }
                 }
-                else  //recursive form like <set>name value string</set>
+                else  //recursive form like <set>name value Unifiable</set>
                 {
-                    string nv = Recurse();
-                    string[] fsp = nv.Split(new char[] { ' ', '\n', '\t', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+                    Unifiable nv = Recurse();
+                    Unifiable[] fsp = nv.Split(new char[] { ' ', '\n', '\t', '\r' }, StringSplitOptions.RemoveEmptyEntries);
                     if (fsp.Length > 0)
                     {
                         if (fsp.Length == 1)
@@ -72,14 +72,14 @@ namespace RTParser.AIMLTagHandlers
                             this.user.Predicates.removeSetting(fsp[0]);
                             return String.Empty;
                         }
-                        String joined = String.Join(" ", fsp, 1, fsp.Length - 1);
+                        String joined = Unifiable.Join(" ", fsp, 1, fsp.Length - 1);
                         name = fsp[0];
                         this.user.Predicates.addSetting(name, joined);
                         return this.user.Predicates.grabSetting(name);
                     }
                 }
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

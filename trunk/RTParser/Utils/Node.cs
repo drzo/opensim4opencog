@@ -21,7 +21,7 @@ namespace RTParser.Utils
         /// <summary>
         /// Contains the child nodes of this node
         /// </summary>
-        private Dictionary<string, Node> children = new Dictionary<string, Node>();
+        private Dictionary<Unifiable, Node> children = new Dictionary<Unifiable, Node>();
 
         /// <summary>
         /// The number of direct children (non-recursive) of this node
@@ -37,17 +37,17 @@ namespace RTParser.Utils
         /// <summary>
         /// The template (if any) associated with this node
         /// </summary>
-        public List<Template> template = null;//string.Empty;
+        public List<Template> template = null;//Unifiable.Empty;
 
         /// <summary>
         /// The AIML source for the category that defines the template
         /// </summary>
-        public string filename = string.Empty;
+        public Unifiable filename = Unifiable.Empty;
 
         /// <summary>
         /// The word that identifies this node to it's parent node
         /// </summary>
-        public string word=string.Empty;
+        public Unifiable word=Unifiable.Empty;
 
         //private XmlNode GuardText;
 
@@ -63,7 +63,7 @@ namespace RTParser.Utils
         /// <param name="path">the path for the category</param>
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        public void addCategoryTag(string path, XmlNode template, XmlNode guard, string filename)
+        public void addCategoryTag(Unifiable path, XmlNode template, XmlNode guard, Unifiable filename)
         {
             if (template==null)
             {
@@ -84,7 +84,7 @@ namespace RTParser.Utils
             // be fully mapped within the GraphMaster structure.
 
             // split the input into its component words
-            string[] words = path.Trim().Split(" ".ToCharArray());
+            Unifiable[] words = path.Trim().Split(" ".ToCharArray());
 
             if (words[0].Contains("COMEHERE"))
             {
@@ -94,11 +94,11 @@ namespace RTParser.Utils
                 }
             }
             // get the first word (to form the key for the child nodemapper)
-            string firstWord = Normalize.MakeCaseInsensitive.TransformInput(words[0]);
+            Unifiable firstWord = Normalize.MakeCaseInsensitive.TransformInput(words[0]);
 
             // concatenate the rest of the sentence into a suffix (to act as the
             // path argument in the child nodemapper)
-            string newPath = path.Substring(firstWord.Length, path.Length - firstWord.Length).Trim();
+            Unifiable newPath = path.Substring(firstWord.Length, path.Length - firstWord.Length).Trim();
 
             // o.k. check we don't already have a child with the key from this sentence
             // if we do then pass the handling of this sentence down the branch to the 
@@ -122,21 +122,21 @@ namespace RTParser.Utils
         public static bool AlwaysFail = true;
         #region Evaluate Node
 
-        public List<Template> evaluate(string path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard)
+        public List<Template> evaluate(Unifiable path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard)
         {
             //// are we in failure?
             //// first call the pre-existing evaluate  that was renamed to evaluate0
             //// String temp = evaluate0(path, query, request, matchstate, wildcard);
             //if (this.GuardText!=null)
             //{
-            //    string preserve = query.Template;
+            //    Unifiable preserve = query.Template;
             //    try
             //    {
 	                
             //        Result result = new Result(request.user, request.Proccessor, request);
             //        XmlNode templateNode = AIMLTagHandler.getNode(GuardText.OuterXml);
             //        query.Template = GuardText.OuterXml;
-            //        string outputSentence = request.Proccessor.processNode(templateNode, query, request, result, request.user);
+            //        Unifiable outputSentence = request.Proccessor.processNode(templateNode, query, request, result, request.user);
             //        bool failed = outputSentence == null || outputSentence == "NIL";
             //        if (failed)
             //        {
@@ -168,7 +168,7 @@ namespace RTParser.Utils
         {
             if (Parent==null) return null;
             bool useNext = false;
-            foreach (KeyValuePair<string, Node> v in Parent.children)
+            foreach (KeyValuePair<Unifiable, Node> v in Parent.children)
             {
                 if (useNext) return v.Value;
                 if (v.Value==this)
@@ -201,14 +201,14 @@ namespace RTParser.Utils
         /// <param name="matchstate">The part of the input path the node represents</param>
         /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
         /// <returns>The template to process to generate the output</returns>
-        private List<Template> evaluate0(string path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard)
+        private List<Template> evaluate0(Unifiable path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard)
         {
             // check for timeout
             if (request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
             {
                 request.Proccessor.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" + request.rawInput + "\"");
                 request.hasTimedOut = true;
-                return null;// string.Empty;
+                return null;// Unifiable.Empty;
             }
 
             // so we still have time!
@@ -235,13 +235,13 @@ namespace RTParser.Utils
             }
 
             // otherwise split the input into it's component words
-            string[] splitPath = path.Split(" \r\n\t".ToCharArray());
+            Unifiable[] splitPath = path.Split(" \r\n\t".ToCharArray());
 
             // get the first word of the sentence
-            string firstWord = Normalize.MakeCaseInsensitive.TransformInput(splitPath[0]);
+            Unifiable firstWord = Normalize.MakeCaseInsensitive.TransformInput(splitPath[0]);
 
             // and concatenate the rest of the input into a new path for child nodes
-            string newPath = path.Substring(firstWord.Length, path.Length - firstWord.Length);
+            Unifiable newPath = path.Substring(firstWord.Length, path.Length - firstWord.Length);
 
             // first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
@@ -381,11 +381,11 @@ namespace RTParser.Utils
                 return this.evaluate(newPath, query, request, matchstate, wildcard);
             }
 
-            // If we get here then we're at a dead end so return an empty string. Hopefully, if the
+            // If we get here then we're at a dead end so return an empty Unifiable. Hopefully, if the
             // AIML files have been set up to include a "* <that> * <topic> *" catch-all this
             // state won't be reached. Remember to empty the surplus to requirements wildcard matches
             wildcard = new StringBuilder();
-            return null;// string.Empty;
+            return null;// Unifiable.Empty;
         }
 
         /// <summary>
@@ -393,7 +393,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="word">The word matched by the wildcard</param>
         /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
-        private void storeWildCard(string word, StringBuilder wildcard)
+        private void storeWildCard(Unifiable word, StringBuilder wildcard)
         {
             if (wildcard.Length > 0)
             {

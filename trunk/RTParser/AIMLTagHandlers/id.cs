@@ -32,13 +32,13 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "id")
             {
                 return this.user.UserID;
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

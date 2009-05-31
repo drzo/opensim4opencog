@@ -40,7 +40,7 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "star")
             {
@@ -49,7 +49,7 @@ namespace RTParser.AIMLTagHandlers
                     if (this.templateNode.Attributes.Count == 0)
                     {
                         // return the first (latest) star in the List<>
-                        return (string)this.query.InputStar[0];
+                        return (Unifiable)this.query.InputStar[0];
                     }
                     else if (this.templateNode.Attributes.Count == 1)
                     {
@@ -62,7 +62,7 @@ namespace RTParser.AIMLTagHandlers
                                 if ((index >= 0) & (index < this.query.InputStar.Count))
                                 {
                                     index = this.query.InputStar.Count - 1 - index;
-                                    return (string)this.query.InputStar[index];
+                                    return (Unifiable)this.query.InputStar[index];
                                 }
                                 else
                                 {
@@ -81,7 +81,7 @@ namespace RTParser.AIMLTagHandlers
                     this.Proc.writeToLog("A star tag tried to reference an empty InputStar collection when processing the input: "+this.request.rawInput);
                 }
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

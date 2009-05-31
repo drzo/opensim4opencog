@@ -17,13 +17,13 @@ namespace RTParser.Utils
         /// <summary>
         /// Holds a dictionary of settings
         /// </summary>
-        private Dictionary<string, string> settingsHash = new Dictionary<string, string>();
+        private Dictionary<Unifiable, Unifiable> settingsHash = new Dictionary<Unifiable, Unifiable>();
 
         /// <summary>
         /// Contains an ordered collection of all the keys (unfortunately Dictionary<,>s are
         /// not ordered)
         /// </summary>
-        private List<string> orderedKeys = new List<string>();
+        private List<Unifiable> orderedKeys = new List<Unifiable>();
 
         /// <summary>
         /// The bot this dictionary is associated with
@@ -53,13 +53,13 @@ namespace RTParser.Utils
                 result.AppendChild(dec);
                 XmlNode root = result.CreateNode(XmlNodeType.Element, "root", "");
                 result.AppendChild(root);
-                foreach (string key in this.orderedKeys)
+                foreach (Unifiable key in this.orderedKeys)
                 {
                     XmlNode item = result.CreateNode(XmlNodeType.Element, "item", "");
                     XmlAttribute name = result.CreateAttribute("name");
                     name.Value = key;
                     XmlAttribute value = result.CreateAttribute( "value");
-                    value.Value = (string)this.settingsHash[key];
+                    value.Value = (Unifiable)this.settingsHash[key];
                     item.Attributes.Append(name);
                     item.Attributes.Append(value);
                     root.AppendChild(item);
@@ -92,7 +92,7 @@ namespace RTParser.Utils
         /// <item name="name" value="value"/>
         /// </summary>
         /// <param name="pathToSettings">The file containing the settings</param>
-        public void loadSettings(string pathToSettings)
+        public void loadSettings(Unifiable pathToSettings)
         {
             if (pathToSettings.Length > 0)
             {
@@ -139,8 +139,8 @@ namespace RTParser.Utils
                 {
                     if ((myNode.Attributes[0].Name == "name") & (myNode.Attributes[1].Name == "value"))
                     {
-                        string name = myNode.Attributes["name"].Value;
-                        string value = myNode.Attributes["value"].Value;
+                        Unifiable name = myNode.Attributes["name"].Value;
+                        Unifiable value = myNode.Attributes["value"].Value;
                         if (name.Length > 0)
                         {
                             this.addSetting(name, value);
@@ -151,14 +151,14 @@ namespace RTParser.Utils
         }
 
         /// <summary>
-        /// Adds a bespoke setting to the Settings class (accessed via the grabSettings(string name)
+        /// Adds a bespoke setting to the Settings class (accessed via the grabSettings(Unifiable name)
         /// method.
         /// </summary>
         /// <param name="name">The name of the new setting</param>
         /// <param name="value">The value associated with this setting</param>
-        public void addSetting(string name, string value)
+        public void addSetting(Unifiable name, Unifiable value)
         {
-            string key = MakeCaseInsensitive.TransformInput(name);
+            Unifiable key = MakeCaseInsensitive.TransformInput(name);
             if (key.Length > 0)
             {
                 this.removeSetting(key);
@@ -171,9 +171,9 @@ namespace RTParser.Utils
         /// Removes the named setting from this class
         /// </summary>
         /// <param name="name">The name of the setting to remove</param>
-        public void removeSetting(string name)
+        public void removeSetting(Unifiable name)
         {
-            string normalizedName = MakeCaseInsensitive.TransformInput(name);
+            Unifiable normalizedName = MakeCaseInsensitive.TransformInput(name);
             this.orderedKeys.Remove(normalizedName);
             this.removeFromHash(normalizedName);
         }
@@ -182,9 +182,9 @@ namespace RTParser.Utils
         /// Removes a named setting from the Dictionary<,>
         /// </summary>
         /// <param name="name">the key for the Dictionary<,></param>
-        private void removeFromHash(string name)
+        private void removeFromHash(Unifiable name)
         {
-            string normalizedName = MakeCaseInsensitive.TransformInput(name);
+            Unifiable normalizedName = MakeCaseInsensitive.TransformInput(name);
             this.settingsHash.Remove(normalizedName);
         }
 
@@ -194,9 +194,9 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="name">the name of the setting</param>
         /// <param name="value">the new value</param>
-        public void updateSetting(string name, string value)
+        public void updateSetting(Unifiable name, Unifiable value)
         {
-            string key = MakeCaseInsensitive.TransformInput(name);
+            Unifiable key = MakeCaseInsensitive.TransformInput(name);
             if (this.orderedKeys.Contains(key))
             {
                 this.removeFromHash(key);
@@ -218,12 +218,12 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="name">the name of the setting whose value we're interested in</param>
         /// <returns>the value of the setting</returns>
-        public string grabSetting(string name)
+        public Unifiable grabSetting(Unifiable name)
         {
-            string normalizedName = MakeCaseInsensitive.TransformInput(name);
+            Unifiable normalizedName = MakeCaseInsensitive.TransformInput(name);
             if (this.containsSettingCalled(normalizedName))
             {
-                return (string)this.settingsHash[normalizedName];
+                return (Unifiable)this.settingsHash[normalizedName];
             }
             else
             {
@@ -237,9 +237,9 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="name">The setting name to check</param>
         /// <returns>Existential truth value</returns>
-        public bool containsSettingCalled(string name)
+        public bool containsSettingCalled(Unifiable name)
         {
-            string normalizedName = MakeCaseInsensitive.TransformInput(name);
+            Unifiable normalizedName = MakeCaseInsensitive.TransformInput(name);
             if (normalizedName.Length > 0)
             {
                 return this.orderedKeys.Contains(normalizedName);
@@ -254,11 +254,11 @@ namespace RTParser.Utils
         /// Returns a collection of the names of all the settings defined in the dictionary
         /// </summary>
         /// <returns>A collection of the names of all the settings defined in the dictionary</returns>
-        public string[] SettingNames
+        public Unifiable[] SettingNames
         {
             get
             {
-                string[] result = new string[this.orderedKeys.Count];
+                Unifiable[] result = new Unifiable[this.orderedKeys.Count];
                 this.orderedKeys.CopyTo(result, 0);
                 return result;
             }
@@ -270,7 +270,7 @@ namespace RTParser.Utils
         /// <param name="target">The target to recieve the values from this SettingsDictionary</param>
         public void Clone(SettingsDictionary target)
         {
-            foreach (string key in this.orderedKeys)
+            foreach (Unifiable key in this.orderedKeys)
             {
                 target.addSetting(key, this.grabSetting(key));
             }
