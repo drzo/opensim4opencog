@@ -43,7 +43,7 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "input")
             {
@@ -95,7 +95,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                 }
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

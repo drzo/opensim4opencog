@@ -32,7 +32,7 @@ namespace RTParser.AIMLTagHandlers
             this.isRecursive = false;
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "random")
             {
@@ -55,7 +55,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                 }
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

@@ -7,7 +7,7 @@ namespace RTParser.AIMLTagHandlers
     /// <summary>
     /// The get element tells the AIML interpreter that it should substitute the contents of a 
     /// predicate, if that predicate has a value defined. If the predicate has no value defined, 
-    /// the AIML interpreter should substitute the empty string "". 
+    /// the AIML interpreter should substitute the empty Unifiable "". 
     /// 
     /// The AIML interpreter implementation may optionally provide a mechanism that allows the 
     /// AIML author to designate default values for certain predicates (see [9.3.]). 
@@ -41,17 +41,17 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "get")
             {
-                string name = GetAttribValue("name", templateNodeInnerText);
-                string defaultVal = GetAttribValue("default", String.Empty);
-                string result = this.user.Predicates.grabSetting(name);
+                Unifiable name = GetAttribValue("name", templateNodeInnerText);
+                Unifiable defaultVal = GetAttribValue("default", String.Empty);
+                Unifiable result = this.user.Predicates.grabSetting(name);
                 if (!String.IsNullOrEmpty(result)) return result;
                 return defaultVal;
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

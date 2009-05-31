@@ -38,7 +38,7 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "thatstar")
             {
@@ -46,7 +46,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     if (this.query.ThatStar.Count > 0)
                     {
-                        return (string)this.query.ThatStar[0];
+                        return (Unifiable)this.query.ThatStar[0];
                     }
                     else
                     {
@@ -66,7 +66,7 @@ namespace RTParser.AIMLTagHandlers
                                 {
                                     if (result > 0)
                                     {
-                                        return (string)this.query.ThatStar[result - 1];
+                                        return (Unifiable)this.query.ThatStar[result - 1];
                                     }
                                     else
                                     {
@@ -86,7 +86,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                 }
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

@@ -60,23 +60,23 @@ namespace RTParser
         /// Key = class name
         /// Value = TagHandler class that provides information about the class
         /// </summary>
-        private Dictionary<string, TagHandler> CustomTags;
+        private Dictionary<Unifiable, TagHandler> CustomTags;
 
         /// <summary>
         /// Holds references to the assemblies that hold the custom tag handling code.
         /// </summary>
-        private Dictionary<string, Assembly> LateBindingAssemblies = new Dictionary<string, Assembly>();
+        private Dictionary<Unifiable, Assembly> LateBindingAssemblies = new Dictionary<Unifiable, Assembly>();
 
         /// <summary>
         /// An List<> containing the tokens used to split the input into sentences during the 
         /// normalization process
         /// </summary>
-        public List<string> Splitters = new List<string>();
+        public List<Unifiable> Splitters = new List<Unifiable>();
 
         /// <summary>
         /// A buffer to hold log messages to be written out to the log file when a max size is reached
         /// </summary>
-        private List<string> LogBuffer = new List<string>();
+        private List<Unifiable> LogBuffer = new List<Unifiable>();
 
         /// <summary>
         /// How big to let the log buffer get before writing to disk
@@ -97,7 +97,7 @@ namespace RTParser
         /// <summary>
         /// The message to show if a user tries to use the Proccessor whilst it is set to not process user input
         /// </summary>
-        private string NotAcceptingUserInputMessage
+        private Unifiable NotAcceptingUserInputMessage
         {
             get
             {
@@ -119,7 +119,7 @@ namespace RTParser
         /// <summary>
         /// The message to display in the event of a timeout
         /// </summary>
-        public string TimeOutMessage
+        public Unifiable TimeOutMessage
         {
             get
             {
@@ -152,7 +152,7 @@ namespace RTParser
         /// <summary>
         /// The email address of the botmaster to be used if WillCallHome is set to true
         /// </summary>
-        public string AdminEmail
+        public Unifiable AdminEmail
         {
             get
             {
@@ -163,7 +163,7 @@ namespace RTParser
                 if (value.Length > 0)
                 {
                     // check that the email is valid
-                    string patternStrict = @"^(([^<>()[\]\\.,;:\s@\""]+"
+                    Unifiable patternStrict = @"^(([^<>()[\]\\.,;:\s@\""]+"
                     + @"(\.[^<>()[\]\\.,;:\s@\""]+)*)|(\"".+\""))@"
                     + @"((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"
                     + @"\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+"
@@ -194,7 +194,7 @@ namespace RTParser
         {
             get
             {
-                string islogging = this.GlobalSettings.grabSetting("islogging");
+                Unifiable islogging = this.GlobalSettings.grabSetting("islogging");
                 if (islogging.ToLower() == "true")
                 {
                     return true;
@@ -214,7 +214,7 @@ namespace RTParser
         {
             get
             {
-                string willcallhome = this.GlobalSettings.grabSetting("willcallhome");
+                Unifiable willcallhome = this.GlobalSettings.grabSetting("willcallhome");
                 if (willcallhome.ToLower() == "true")
                 {
                     return true;
@@ -262,7 +262,7 @@ namespace RTParser
         /// <summary>
         /// The directory to look in for the AIML files
         /// </summary>
-        public string PathToAIML
+        public Unifiable PathToAIML
         {
             get
             {
@@ -273,7 +273,7 @@ namespace RTParser
         /// <summary>
         /// The directory to look in for the various XML configuration files
         /// </summary>
-        public string PathToConfigFiles
+        public Unifiable PathToConfigFiles
         {
             get
             {
@@ -284,7 +284,7 @@ namespace RTParser
         /// <summary>
         /// The directory into which the various log files will be written
         /// </summary>
-        public string PathToLogs
+        public Unifiable PathToLogs
         {
             get
             {
@@ -354,7 +354,7 @@ namespace RTParser
         /// </summary>
         /// <param name="newAIML">The XML document containing the AIML</param>
         /// <param name="filename">The originator of the XML document</param>
-        public void loadAIMLFromXML(XmlDocument newAIML, string filename)
+        public void loadAIMLFromXML(XmlDocument newAIML, Unifiable filename)
         {
             AIMLLoader loader = new AIMLLoader(this);
             loader.loadAIMLFromXML(newAIML, filename);
@@ -371,7 +371,7 @@ namespace RTParser
             this.PersonSubstitutions = new SettingsDictionary(this);
             this.Substitutions = new SettingsDictionary(this);
             this.DefaultPredicates = new SettingsDictionary(this);
-            this.CustomTags = new Dictionary<string, TagHandler>();
+            this.CustomTags = new Dictionary<Unifiable, TagHandler>();
             this.Graphmaster = new RTParser.Utils.Node(null);
             loadCustomTagHandlers("RTParser.dll");
         }
@@ -382,7 +382,7 @@ namespace RTParser
         public void loadSettings()
         {
             // try a safe default setting for the settings xml file
-            string path = Path.Combine(Environment.CurrentDirectory, Path.Combine("config", "Settings.xml"));
+            Unifiable path = Path.Combine(Environment.CurrentDirectory, Path.Combine("config", "Settings.xml"));
             this.loadSettings(path);          
         }
 
@@ -391,7 +391,7 @@ namespace RTParser
         /// Also generates some default values if such values have not been set by the settings file.
         /// </summary>
         /// <param name="pathToSettings">Path to the settings xml file</param>
-        public void loadSettings(string pathToSettings)
+        public void loadSettings(Unifiable pathToSettings)
         {
             this.GlobalSettings.loadSettings(pathToSettings);
 
@@ -438,7 +438,7 @@ namespace RTParser
             }
             if (this.GlobalSettings.containsSettingCalled("adminemail"))
             {
-                string emailToCheck = this.GlobalSettings.grabSetting("adminemail");
+                Unifiable emailToCheck = this.GlobalSettings.grabSetting("adminemail");
                 this.AdminEmail = emailToCheck;
             }
             else
@@ -529,7 +529,7 @@ namespace RTParser
         /// Loads the splitters for this Proccessor from the supplied config file (or sets up some safe defaults)
         /// </summary>
         /// <param name="pathToSplitters">Path to the config file</param>
-        private void loadSplitters(string pathToSplitters)
+        private void loadSplitters(Unifiable pathToSplitters)
         {
             FileInfo splittersFile = new FileInfo(pathToSplitters);
             if (splittersFile.Exists)
@@ -548,7 +548,7 @@ namespace RTParser
                         {
                             if ((myNode.Name == "item") & (myNode.Attributes.Count == 1))
                             {
-                                string value = myNode.Attributes["value"].Value;
+                                Unifiable value = myNode.Attributes["value"].Value;
                                 this.Splitters.Add(value);
                             }
                         }
@@ -571,7 +571,7 @@ namespace RTParser
         /// <summary>
         /// The last message to be entered into the log (for testing purposes)
         /// </summary>
-        public string LastLogMessage=string.Empty;
+        public Unifiable LastLogMessage=Unifiable.Empty;
 
         public OutputDelegate outputDelegate;
         public delegate void OutputDelegate(string str);
@@ -582,7 +582,7 @@ namespace RTParser
         /// Log files have the form of yyyyMMdd.log.
         /// </summary>
         /// <param name="message">The message to log</param>
-        public void writeToLog(string message)
+        public void writeToLog(Unifiable message)
         {
 
             if (outputDelegate != null)
@@ -608,7 +608,7 @@ namespace RTParser
                         logDirectory.Create();
                     }
 
-                    string logFileName = DateTime.Now.ToString("yyyyMMdd")+".log";
+                    Unifiable logFileName = DateTime.Now.ToString("yyyyMMdd")+".log";
                     FileInfo logFile = new FileInfo(Path.Combine(this.PathToLogs,logFileName));
                     StreamWriter writer;
                     if (!logFile.Exists)
@@ -620,7 +620,7 @@ namespace RTParser
                         writer = logFile.AppendText();
                     }
 
-                    foreach (string msg in this.LogBuffer)
+                    foreach (Unifiable msg in this.LogBuffer)
                     {
                         writer.WriteLine(msg);
                     }
@@ -644,7 +644,7 @@ namespace RTParser
         /// <param name="rawInput">the raw input</param>
         /// <param name="UserGUID">an ID for the new user (referenced in the result object)</param>
         /// <returns>the result to be output to the user</returns>
-        public Result Chat(string rawInput, string UserGUID)
+        public Result Chat(Unifiable rawInput, Unifiable UserGUID)
         {
             Request request = new Request(rawInput, new User(UserGUID, this), this);
             return this.Chat(request);
@@ -664,16 +664,16 @@ namespace RTParser
                 // Normalize the input
                 AIMLLoader loader = new AIMLLoader(this);
                 RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
-                string[] rawSentences = new string[] { request.rawInput };//splitter.Transform(request.rawInput);
-                foreach (string sentence in rawSentences)
+                Unifiable[] rawSentences = new Unifiable[] { request.rawInput };//splitter.Transform(request.rawInput);
+                foreach (Unifiable sentence in rawSentences)
                 {
                     result.InputSentences.Add(sentence);
-                    string path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.user.Topic, true);
+                    Unifiable path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.user.Topic, true);
                     result.NormalizedPaths.Add(path);
                 }
 
                 // grab the templates for the various sentences from the graphmaster
-                foreach (string path in result.NormalizedPaths)
+                foreach (Unifiable path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path);
                     query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
@@ -712,7 +712,7 @@ namespace RTParser
                     try
                     {
                         //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
-                        string output = s.Output.OuterXml;
+                        Unifiable output = s.Output.OuterXml;
                         bool usedGuard = false;
                         if (s.Guard != null)
                         {
@@ -725,7 +725,7 @@ namespace RTParser
 
                         }
                         XmlNode templateNode = AIMLTagHandler.getNode(output);
-                        string outputSentence = this.processNode(templateNode, query, request, result, request.user);
+                        Unifiable outputSentence = this.processNode(templateNode, query, request, result, request.user);
                         int f = outputSentence.IndexOf("GUARDBOM");
                         if (f < 0)
                         {
@@ -738,9 +738,9 @@ namespace RTParser
                         {
                             try
                            {
-	                           string left = outputSentence.Substring(0, f);
-	                            string ss = EvalSubL("(cyc-query '" + left + " #$EverythingPSC)", null);
-	                            if (ss == null) continue;
+	                           Unifiable left = outputSentence.Substring(0, f);
+	                            Unifiable ss = EvalSubL("(cyc-query '" + left + " #$EverythingPSC)", null);
+                                if (Unifiable.IsNull(ss)) continue;
 	                            ss = ss.Trim();
 	                            if (ss == "" || ss == "NIL") continue;
 	                            outputSentence = outputSentence.Substring(f + 9);
@@ -777,19 +777,19 @@ namespace RTParser
         /// <param name="request">the request from the user</param>
         /// <param name="result">the result to be sent to the user</param>
         /// <param name="user">the user who originated the request</param>
-        /// <returns>the output string</returns>
-        public string processNode(XmlNode node, SubQuery query, Request request, Result result, User user)
+        /// <returns>the output Unifiable</returns>
+        public Unifiable processNode(XmlNode node, SubQuery query, Request request, Result result, User user)
         {
             // check for timeout (to avoid infinite loops)
             if (request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
             {
                 request.Proccessor.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" + request.rawInput + "\" processing template: \""+query.Template+"\"");
                 request.hasTimedOut = true;
-                return string.Empty;
+                return Unifiable.Empty;
             }
                         
             // process the node
-            string tagName = node.Name.ToLower();
+            Unifiable tagName = node.Name.ToLower();
             if (tagName == "template")
             {
                 StringBuilder templateResult = new StringBuilder();
@@ -960,7 +960,7 @@ namespace RTParser
                     }
                     else
                     {
-                        string resultNodeInnerXML = tagHandler.Transform();
+                        Unifiable resultNodeInnerXML = tagHandler.Transform();
                         XmlNode resultNode = AIMLTagHandler.getNode(String.Format("<node>{0}</node>", resultNodeInnerXML));
                         if (resultNode.HasChildNodes)
                         {
@@ -989,7 +989,7 @@ namespace RTParser
         /// <param name="request">the request from the user</param>
         /// <param name="result">the result to be sent to the user</param>
         /// <param name="node">the node to evaluate</param>
-        /// <returns>the output string</returns>
+        /// <returns>the output Unifiable</returns>
         public AIMLTagHandler getBespokeTags(User user, SubQuery query, Request request, Result result, XmlNode node)
         {
             if (this.CustomTags.ContainsKey(node.Name.ToLower()))
@@ -1027,7 +1027,7 @@ namespace RTParser
         /// Proccessor starts
         /// </summary>
         /// <param name="path">the path to the file for saving</param>
-        public void saveToBinaryFile(string path)
+        public void saveToBinaryFile(Unifiable path)
         {
             // check to delete an existing version of the file
             FileInfo fi = new FileInfo(path);
@@ -1046,7 +1046,7 @@ namespace RTParser
         /// Loads a dump of the graphmaster into memory so avoiding processing the AIML files again
         /// </summary>
         /// <param name="path">the path to the dump file</param>
-        public void loadFromBinaryFile(string path)
+        public void loadFromBinaryFile(Unifiable path)
         {
             FileStream loadFile = File.OpenRead(path);
             BinaryFormatter bf = new BinaryFormatter();
@@ -1062,7 +1062,7 @@ namespace RTParser
         /// Loads any custom tag handlers found in the dll referenced in the argument
         /// </summary>
         /// <param name="pathToDLL">the path to the dll containing the custom tag handling code</param>
-        public void loadCustomTagHandlers(string pathToDLL)
+        public void loadCustomTagHandlers(Unifiable pathToDLL)
         {
             Assembly tagDLL = Assembly.LoadFrom(pathToDLL);
             Type[] tagDLLTypes = tagDLL.GetTypes();
@@ -1109,11 +1109,11 @@ namespace RTParser
         /// </summary>
         /// <param name="errorMessage">the resulting error message</param>
         /// <param name="request">the request object that encapsulates all sorts of useful information</param>
-        public void phoneHome(string errorMessage, Request request)
+        public void phoneHome(Unifiable errorMessage, Request request)
         {
             MailMessage msg = new MailMessage("donotreply@aimlbot.com",this.AdminEmail);
             msg.Subject = "WARNING! AIMLBot has encountered a problem...";
-            string message = @"Dear Botmaster,
+            Unifiable message = @"Dear Botmaster,
 
 This is an automatically generated email to report errors with your Proccessor.
 
@@ -1142,7 +1142,7 @@ The AIMLbot program.
             message = message.Replace("*RAWINPUT*", request.rawInput);
             message = message.Replace("*USER*", request.user.UserID);
             StringBuilder paths = new StringBuilder();
-            foreach(string path in request.result.NormalizedPaths)
+            foreach(Unifiable path in request.result.NormalizedPaths)
             {
                 paths.Append(path+Environment.NewLine);
             }
@@ -1202,9 +1202,9 @@ The AIMLbot program.
             }
             set { cycAccess = value; }
         }
-        public string EvalSubL(string cmd, string filter)
+        public Unifiable EvalSubL(Unifiable cmd, Unifiable filter)
         {
-            string result = "(EVAL-SUBL " + cmd + ")";
+            Unifiable result = "(EVAL-SUBL " + cmd + ")";
             CycAccess access = GetCycAccess;
             if (!UseCyc) return result;
             try
@@ -1249,12 +1249,12 @@ The AIMLbot program.
             return result;
         }
 
-        internal string processNodeInside(XmlNode templateNode, SubQuery query, Request request, Result result, User user)
+        internal Unifiable processNodeInside(XmlNode templateNode, SubQuery query, Request request, Result result, User user)
         {
             return processNode(templateNode, query, request, result, user);
         }
 
-        internal bool IsaFilter(string term, string filter)
+        internal bool IsaFilter(Unifiable term, Unifiable filter)
         {
             if (term.Length < 0) return false;
             if (term == "NIL") return false;
@@ -1267,7 +1267,7 @@ The AIMLbot program.
             return true;
         }
 
-        internal string Paraphrase(string text)
+        internal Unifiable Paraphrase(Unifiable text)
         {
             text = Cyclify(text);
             if (text.StartsWith("("))
@@ -1287,13 +1287,13 @@ The AIMLbot program.
 
         #endregion
 
-        internal string SystemExecute(string cmd, string langu, User user)
+        internal Unifiable SystemExecute(Unifiable cmd, Unifiable langu, User user)
         {
             if (String.IsNullOrEmpty(langu))
             {
                 langu = "bot";  
             }
-            string s = "<The system tag should be doing '" + cmd + "' lang=" + langu + ">";
+            Unifiable s = "<The system tag should be doing '" + cmd + "' lang=" + langu + ">";
             writeToLog(s);
             SystemExecHandler handler = null;
             if (ExecuteHandlers.ContainsKey(langu))
@@ -1314,7 +1314,7 @@ The AIMLbot program.
             
         }
 
-        internal string Cyclify(string mt)
+        internal Unifiable Cyclify(Unifiable mt)
         {
             mt = mt.Trim();
             if (mt.Length == 0) return mt;
@@ -1326,7 +1326,7 @@ The AIMLbot program.
             return "#$" + mt;
         }
 
-        static readonly Dictionary<string,SystemExecHandler> ExecuteHandlers = new Dictionary<string, SystemExecHandler>();
+        static readonly Dictionary<Unifiable,SystemExecHandler> ExecuteHandlers = new Dictionary<Unifiable, SystemExecHandler>();
         public void AddExcuteHandler(string lang, SystemExecHandler handler)
         {
             ExecuteHandlers[lang] = handler;
@@ -1338,9 +1338,9 @@ The AIMLbot program.
         /// </summary>
         /// <param name="name">the name of the setting whose value we're interested in</param>
         /// <returns>the value of the setting</returns>
-        public string GetBotSetting(string name)
+        public Unifiable GetBotSetting(Unifiable name)
         {
-            return (string) GlobalSettings.grabSetting(name);
+            return (Unifiable) GlobalSettings.grabSetting(name);
         }
 
     }

@@ -5,8 +5,8 @@ namespace RTParser.Utils
     /// <summary>
     /// Encapsulates all the required methods and attributes for any text transformation.
     /// 
-    /// An input string is provided and various methods and attributes can be used to grab
-    /// a transformed string.
+    /// An input Unifiable is provided and various methods and attributes can be used to grab
+    /// a transformed Unifiable.
     /// 
     /// The protected ProcessChange() method is abstract and should be overridden to contain 
     /// the code for transforming the input text into the output text.
@@ -15,9 +15,9 @@ namespace RTParser.Utils
     {
         #region Attributes
         /// <summary>
-        /// Instance of the input string
+        /// Instance of the input Unifiable
         /// </summary>
-        protected string inputString;
+        protected Unifiable inputString;
 
         /// <summary>
         /// The Proc that this transformation is connected with
@@ -25,18 +25,18 @@ namespace RTParser.Utils
         public RTParser.RTPBot Proc;
 
         /// <summary>
-        /// The input string to be transformed in some way
+        /// The input Unifiable to be transformed in some way
         /// </summary>
-        public string InputString
+        public Unifiable InputString
         {
             get{return this.inputString;}
             set{this.inputString=value;}
         }
 
         /// <summary>
-        /// The transformed string
+        /// The transformed Unifiable
         /// </summary>
-        public string OutputString
+        public Unifiable OutputString
         {
             get{return this.Transform();}
         }
@@ -46,8 +46,8 @@ namespace RTParser.Utils
         /// ctor
         /// </summary>
         /// <param name="bot">The bot this transformer is a part of</param>
-        /// <param name="inputString">The input string to be transformed</param>
-        public TextTransformer(RTParser.RTPBot bot, string inputString)
+        /// <param name="inputString">The input Unifiable to be transformed</param>
+        public TextTransformer(RTParser.RTPBot bot, Unifiable inputString)
         {
             this.Proc = bot;
             this.inputString = inputString;
@@ -60,7 +60,7 @@ namespace RTParser.Utils
         public TextTransformer(RTParser.RTPBot bot)
         {
             this.Proc = bot;
-            this.inputString = string.Empty;
+            this.inputString = Unifiable.Empty;
         }
 
         /// <summary>
@@ -69,25 +69,25 @@ namespace RTParser.Utils
         public TextTransformer()
         {
             this.Proc = null;
-            this.inputString = string.Empty;
+            this.inputString = Unifiable.Empty;
         }
 
         /// <summary>
-        /// Do a transformation on the supplied input string
+        /// Do a transformation on the supplied input Unifiable
         /// </summary>
-        /// <param name="input">The string to be transformed</param>
+        /// <param name="input">The Unifiable to be transformed</param>
         /// <returns>The resulting output</returns>
-        public string Transform(string input)
+        public Unifiable Transform(Unifiable input)
         {
             this.inputString = input;
             return this.Transform();
         }
 
         /// <summary>
-        /// Do a transformation on the string found in the InputString attribute
+        /// Do a transformation on the Unifiable found in the InputString attribute
         /// </summary>
-        /// <returns>The resulting transformed string</returns>
-        public string Transform()
+        /// <returns>The resulting transformed Unifiable</returns>
+        public Unifiable Transform()
         {
             if (this.inputString.Length > 0)
             {
@@ -95,7 +95,7 @@ namespace RTParser.Utils
             }
             else
             {
-                return string.Empty;
+                return Unifiable.Empty;
             }
         }
 
@@ -103,6 +103,6 @@ namespace RTParser.Utils
         /// The method that does the actual processing of the text.
         /// </summary>
         /// <returns>The resulting processed text</returns>
-        protected abstract string ProcessChange();
+        protected abstract Unifiable ProcessChange();
     }
 }

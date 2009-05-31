@@ -6,7 +6,7 @@ namespace RTParser.Normalize
 {
     /// <summary>
     /// Splits the raw input into its constituent sentences. Split using the tokens found in 
-    /// the bots Splitters string array.
+    /// the bots Splitters Unifiable array.
     /// </summary>
     public class SplitIntoSentences
     {
@@ -16,16 +16,16 @@ namespace RTParser.Normalize
         private RTParser.RTPBot bot;
 
         /// <summary>
-        /// The raw input string
+        /// The raw input Unifiable
         /// </summary>
-        private string inputString;
+        private Unifiable inputString;
 
         /// <summary>
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot this sentence splitter is associated with</param>
-        /// <param name="inputString">The raw input string to be processed</param>
-        public SplitIntoSentences(RTParser.RTPBot bot, string inputString)
+        /// <param name="inputString">The raw input Unifiable to be processed</param>
+        public SplitIntoSentences(RTParser.RTPBot bot, Unifiable inputString)
         {
             this.bot = bot;
             this.inputString = inputString;
@@ -46,7 +46,7 @@ namespace RTParser.Normalize
         /// </summary>
         /// <param name="inputString">The raw input to split</param>
         /// <returns>An array of strings representing the constituent "sentences"</returns>
-        public string[] Transform(string inputString)
+        public Unifiable[] Transform(Unifiable inputString)
         {
             this.inputString = inputString;
             return this.Transform();
@@ -57,20 +57,20 @@ namespace RTParser.Normalize
         /// found in the bot's Splitters List<>
         /// </summary>
         /// <returns>An array of strings representing the constituent "sentences"</returns>
-        public string[] Transform()
+        public Unifiable[] Transform()
         {
-            string[] tokens = (string[])this.bot.Splitters.ToArray();
-            string[] rawResult = this.inputString.Split(tokens, System.StringSplitOptions.RemoveEmptyEntries);
-            List<string> tidyResult = new List<string>();
-            foreach (string rawSentence in rawResult)
+            Unifiable[] tokens = (Unifiable[])this.bot.Splitters.ToArray();
+            Unifiable[] rawResult = this.inputString.Split(tokens, System.StringSplitOptions.RemoveEmptyEntries);
+            List<Unifiable> tidyResult = new List<Unifiable>();
+            foreach (Unifiable rawSentence in rawResult)
             {
-                string tidySentence = rawSentence.Trim();
+                Unifiable tidySentence = rawSentence.Trim();
                 if (tidySentence.Length > 0)
                 {
                     tidyResult.Add(tidySentence);
                 }
             }
-            return (string[])tidyResult.ToArray();
+            return (Unifiable[])tidyResult.ToArray();
         }
     }
 }

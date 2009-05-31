@@ -31,13 +31,13 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "version")
             {
                 return this.Proc.GlobalSettings.grabSetting("version");
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

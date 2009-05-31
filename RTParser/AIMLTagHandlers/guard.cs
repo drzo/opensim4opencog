@@ -44,18 +44,18 @@ namespace RTParser.AIMLTagHandlers
            // this.isRecursive = false;
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "guard")
             {
                 templateNodeInnerText = Recurse();
                 if (templateNodeInnerText.Length > 0)
                 {
-                    string res = Proc.EvalSubL(templateNodeInnerText, null);
+                    Unifiable res = Proc.EvalSubL(templateNodeInnerText, null);
                     return res;
                 }
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

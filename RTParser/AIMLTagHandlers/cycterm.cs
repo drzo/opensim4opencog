@@ -31,23 +31,23 @@ namespace RTParser.AIMLTagHandlers
         }
 
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "cycterm")
             {                    
-                string filter = base.GetAttribValue("filter", GetAttribValue("isa", "Thing"));
-                string r = Recurse();
-                string term;
+                Unifiable filter = base.GetAttribValue("filter", GetAttribValue("isa", "Thing"));
+                Unifiable r = Recurse();
+                Unifiable term;
                 if (lookup(r, filter, out term))
                 {
                     return term;
                 }
-                return string.Empty;
+                return Unifiable.Empty;
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
 
-        private bool lookup(string text,string filter,out string term)
+        private bool lookup(Unifiable text,Unifiable filter,out Unifiable term)
         {
             if (!Proc.CycEnabled)
             {
@@ -60,7 +60,7 @@ namespace RTParser.AIMLTagHandlers
                 return false;
             }
             filter = Proc.Cyclify(filter);
-            string ptext = text.Substring(0, 1).ToUpper() + text.Substring(1);
+            Unifiable ptext = text.Substring(0, 1).ToUpper() + text.Substring(1);
             if(false
             || lookupCycTerm("(#$nameString ?CYCOBJECT \"%s\")", text, filter, out term)
             || lookupCycTerm("(#$denotation #$%s-TheWord ?TEXT ?TYPE ?CYCOBJECT)", ptext, filter, out term)
@@ -99,7 +99,7 @@ namespace RTParser.AIMLTagHandlers
                     return true;
                 }
             }
-            term = this.Proc.EvalSubL(String.Format("(car (denots-of-string \"{0}\"))", text), null);
+            term = this.Proc.EvalSubL(String.Format("(car (denots-of-Unifiable \"{0}\"))", text), null);
             if (!String.IsNullOrEmpty(term) && term.ToUpper() != "NIL")
             {
                 if (this.Proc.IsaFilter(term, filter))
@@ -107,14 +107,14 @@ namespace RTParser.AIMLTagHandlers
                     return true;
                 }
             }
-            // and if that fails returns a string of using #$\”%s\”
-            term = string.Format("#${0}", text);
+            // and if that fails returns a Unifiable of using #$\”%s\”
+            term = Unifiable.Format("#${0}", text);
             return false;
         }
 
         //(mapcar #'(lambda (x) (pwhen (member col x) ))  (denotation-mapper "isa"))
 
-        private bool lookupCycTerm(string template, string text,string filter, out string term)
+        private bool lookupCycTerm(Unifiable template, Unifiable text,Unifiable filter, out Unifiable term)
         {
             template = template.Replace("%s", text);            
             try

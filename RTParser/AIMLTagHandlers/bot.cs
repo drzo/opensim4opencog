@@ -9,7 +9,7 @@ namespace RTParser.AIMLTagHandlers
     /// tell the AIML interpreter that it should substitute the contents of a "bot predicate". The 
     /// value of a bot predicate is set at load-time, and cannot be changed at run-time. The AIML 
     /// interpreter may decide how to set the values of bot predicate at load-time. If the bot 
-    /// predicate has no value defined, the AIML interpreter should substitute an empty string.
+    /// predicate has no value defined, the AIML interpreter should substitute an empty Unifiable.
     /// 
     /// The bot element has a required name attribute that identifies the bot predicate. 
     /// 
@@ -36,13 +36,13 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "bot")
             {
-                return (string) this.Proc.GlobalSettings.grabSetting(GetAttribValue("name", templateNodeInnerText));
+                return (Unifiable) this.Proc.GlobalSettings.grabSetting(GetAttribValue("name", templateNodeInnerText));
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

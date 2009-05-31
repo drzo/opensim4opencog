@@ -28,7 +28,7 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             return this.Proc.SystemExecute(Recurse(),GetAttribValue("lang","bot"),user);
         }

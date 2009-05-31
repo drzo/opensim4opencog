@@ -9,13 +9,13 @@ namespace RTParser.Normalize
     /// </summary>
     public class MakeCaseInsensitive : RTParser.Utils.TextTransformer
     {
-        public MakeCaseInsensitive(RTParser.RTPBot bot, string inputString) : base(bot, inputString)
+        public MakeCaseInsensitive(RTParser.RTPBot bot, Unifiable inputString) : base(bot, inputString)
         { }
 
         public MakeCaseInsensitive(RTParser.RTPBot bot) : base(bot) 
         { }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             return this.inputString.ToUpper();
         }
@@ -23,9 +23,9 @@ namespace RTParser.Normalize
         /// <summary>
         /// An ease-of-use static method that re-produces the instance transformation methods
         /// </summary>
-        /// <param name="input">The string to transform</param>
-        /// <returns>The resulting string</returns>
-        public static string TransformInput(string input)
+        /// <param name="input">The Unifiable to transform</param>
+        /// <returns>The resulting Unifiable</returns>
+        public static Unifiable TransformInput(Unifiable input)
         {
             return input.ToUpper();
         }

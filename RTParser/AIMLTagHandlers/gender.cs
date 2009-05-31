@@ -46,7 +46,7 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "gender")
             {
@@ -67,11 +67,11 @@ namespace RTParser.AIMLTagHandlers
                     }
                     else
                     {
-                        return string.Empty;
+                        return Unifiable.Empty;
                     }
                 }
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

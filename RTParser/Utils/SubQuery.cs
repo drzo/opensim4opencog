@@ -13,7 +13,7 @@ namespace RTParser.Utils
         /// <summary>
         /// The path that this query relates to
         /// </summary>
-        public string FullPath;
+        public Unifiable FullPath;
 
         /// <summary>
         /// The template found from searching the graphmaster brain with the path 
@@ -24,21 +24,21 @@ namespace RTParser.Utils
         /// If the raw input matches a wildcard then this attribute will contain the block of 
         /// text that the user has inputted that is matched by the wildcard.
         /// </summary>
-        public List<string> InputStar = new List<string>();
+        public List<Unifiable> InputStar = new List<Unifiable>();
 
         /// <summary>
         /// If the "that" part of the normalized path contains a wildcard then this attribute 
         /// will contain the block of text that the user has inputted that is matched by the wildcard.
         /// </summary>
-        public List<string> ThatStar = new List<string>();
+        public List<Unifiable> ThatStar = new List<Unifiable>();
 
         /// <summary>
         /// If the "topic" part of the normalized path contains a wildcard then this attribute 
         /// will contain the block of text that the user has inputted that is matched by the wildcard.
         /// </summary>
-        public List<string> TopicStar = new List<string>();
+        public List<Unifiable> TopicStar = new List<Unifiable>();
              
-        public List<string> GuardStar = new List<string>();
+        public List<Unifiable> GuardStar = new List<Unifiable>();
 
         #endregion
 
@@ -46,7 +46,7 @@ namespace RTParser.Utils
         /// Ctor
         /// </summary>
         /// <param name="fullPath">The path that this query relates to</param>
-        public SubQuery(string fullPath)
+        public SubQuery(Unifiable fullPath)
         {
             this.FullPath = fullPath;
         }

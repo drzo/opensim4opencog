@@ -10,8 +10,8 @@ namespace RTParser.AIMLTagHandlers
     /// the locale indicated by the specified language (if specified). This is similar to methods 
     /// that are sometimes called "Title Case". 
     /// 
-    /// If no character in this string has a different uppercase version, based on the Unicode 
-    /// standard, then the original string is returned.
+    /// If no character in this Unifiable has a different uppercase version, based on the Unicode 
+    /// standard, then the original Unifiable is returned.
     /// </summary>
     public class formal : RTParser.Utils.AIMLTagHandler
     {
@@ -34,17 +34,17 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "formal")
             {
                 StringBuilder result = new StringBuilder();
                 if (templateNodeInnerText.Length > 0)
                 {
-                    string[] words = templateNodeInnerText.ToLower().Split();
-                    foreach (string word in words)
+                    Unifiable[] words = templateNodeInnerText.ToLower().Split();
+                    foreach (Unifiable word in words)
                     {
-                        string newWord = word.Substring(0, 1);
+                        Unifiable newWord = word.Substring(0, 1);
                         newWord = newWord.ToUpper();
                         if (word.Length > 1)
                         {
@@ -55,7 +55,7 @@ namespace RTParser.AIMLTagHandlers
                 }
                 return result.ToString().Trim();
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

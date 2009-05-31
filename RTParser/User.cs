@@ -18,7 +18,7 @@ namespace RTParser
         /// <summary>
         /// The local instance of the GUID that identifies this user to the bot
         /// </summary>
-        private string id;
+        private Unifiable id;
 
         /// <summary>
         /// The bot this user is using
@@ -28,7 +28,7 @@ namespace RTParser
         /// <summary>
         /// The GUID that identifies this user to the bot
         /// </summary>
-        public string UserID
+        public Unifiable UserID
         {
             get{return this.id;}
         }
@@ -41,7 +41,7 @@ namespace RTParser
 		/// <summary>
 		/// the value of the "topic" predicate
 		/// </summary>
-        public string Topic
+        public Unifiable Topic
         {
             get
             {
@@ -81,7 +81,7 @@ namespace RTParser
         /// </summary>
         /// <param name="UserID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-		public User(string UserID, RTParser.RTPBot bot)
+		public User(Unifiable UserID, RTParser.RTPBot bot)
 		{
             if (UserID.Length > 0)
             {
@@ -98,10 +98,10 @@ namespace RTParser
 		}
 
         /// <summary>
-        /// Returns the string to use for the next that part of a subsequent path
+        /// Returns the Unifiable to use for the next that part of a subsequent path
         /// </summary>
-        /// <returns>the string to use for that</returns>
-        public string getLastBotOutput()
+        /// <returns>the Unifiable to use for that</returns>
+        public Unifiable getLastBotOutput()
         {
             if (this.Results.Count > 0)
             {
@@ -117,7 +117,7 @@ namespace RTParser
         /// Returns the first sentence of the last output from the bot
         /// </summary>
         /// <returns>the first sentence of the last output from the bot</returns>
-        public string getThat()
+        public Unifiable getThat()
         {
             return this.getThat(0,0);
         }
@@ -127,7 +127,7 @@ namespace RTParser
         /// </summary>
         /// <param name="n">the number of steps back to go</param>
         /// <returns>the first sentence of the output "n" steps ago from the bot</returns>
-        public string getThat(int n)
+        public Unifiable getThat(int n)
         {
             return this.getThat(n, 0);
         }
@@ -138,24 +138,24 @@ namespace RTParser
         /// <param name="n">the number of steps back to go</param>
         /// <param name="sentence">the sentence number to get</param>
         /// <returns>the sentence numbered by "sentence" of the output "n" steps ago from the bot</returns>
-        public string getThat(int n, int sentence)
+        public Unifiable getThat(int n, int sentence)
         {
             if ((n >= 0) & (n < this.Results.Count))
             {
                 Result historicResult = (Result)this.Results[n];
                 if ((sentence >= 0) & (sentence < historicResult.OutputSentences.Count))
                 {
-                    return (string)historicResult.OutputSentences[sentence];
+                    return (Unifiable)historicResult.OutputSentences[sentence];
                 }
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
 
         /// <summary>
         /// Returns the first sentence of the last output from the bot
         /// </summary>
         /// <returns>the first sentence of the last output from the bot</returns>
-        public string getResultSentence()
+        public Unifiable getResultSentence()
         {
             return this.getResultSentence(0, 0);
         }
@@ -165,7 +165,7 @@ namespace RTParser
         /// </summary>
         /// <param name="n">the number of steps back to go</param>
         /// <returns>the first sentence from the output from the bot "n" steps ago</returns>
-        public string getResultSentence(int n)
+        public Unifiable getResultSentence(int n)
         {
             return this.getResultSentence(n, 0);
         }
@@ -176,17 +176,17 @@ namespace RTParser
         /// <param name="n">the number of steps back to go</param>
         /// <param name="sentence">the sentence number to return</param>
         /// <returns>the identified sentence number from the output from the bot "n" steps ago</returns>
-        public string getResultSentence(int n, int sentence)
+        public Unifiable getResultSentence(int n, int sentence)
         {
             if ((n >= 0) & (n < this.Results.Count))
             {
                 Result historicResult = (Result)this.Results[n];
                 if ((sentence >= 0) & (sentence < historicResult.InputSentences.Count))
                 {
-                    return (string)historicResult.InputSentences[sentence];
+                    return (Unifiable)historicResult.InputSentences[sentence];
                 }
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
 
         /// <summary>

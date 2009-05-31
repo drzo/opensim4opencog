@@ -32,19 +32,19 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "sr")
             {
                 XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
                 star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
-                string starContent = recursiveStar.Transform();
+                Unifiable starContent = recursiveStar.Transform();
 
                 XmlNode sraiNode = RTParser.Utils.AIMLTagHandler.getNode(String.Format("<srai>{0}</srai>", starContent));
                 srai sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
                 return sraiHandler.Transform();
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }

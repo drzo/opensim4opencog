@@ -32,11 +32,11 @@ namespace RTParser.AIMLTagHandlers
           //  this.isRecursive = false;
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "cycrandom")
             {
-                string filter = base.GetAttribValue("filter", null);
+                Unifiable filter = base.GetAttribValue("filter", null);
                 if (templateNodeInnerText.Length > 0)
                 {
                     return
@@ -46,7 +46,7 @@ namespace RTParser.AIMLTagHandlers
                                 base.Recurse()), filter);
                 }
             }
-            return string.Empty;
+            return Unifiable.Empty;
         }
     }
 }
