@@ -93,15 +93,15 @@ namespace RTParser.Utils
         /// <item name="name" value="value"/>
         /// </summary>
         /// <param name="pathToSettings">The file containing the settings</param>
-        public void loadSettings(Unifiable pathToSettings)
+        public void loadSettings(string pathToSettings)
         {
             if (pathToSettings.Length > 0)
             {
-                FileInfo fi = new FileInfo(pathToSettings.AsString());
+                FileInfo fi = new FileInfo(pathToSettings);
                 if (fi.Exists)
                 {
                     XmlDocument xmlDoc = new XmlDocument();
-                    xmlDoc.Load(pathToSettings.AsString());
+                    xmlDoc.Load(pathToSettings);
                     this.loadSettings(xmlDoc);
                 }
                 else
@@ -141,7 +141,7 @@ namespace RTParser.Utils
                     if ((myNode.Attributes[0].Name == "name") & (myNode.Attributes[1].Name == "value"))
                     {
                         string name = myNode.Attributes["name"].Value;
-                        Unifiable value = myNode.Attributes["value"].Value;
+                        Unifiable value = Unifiable.Create(myNode.Attributes["value"].Value);
                         if (name.Length > 0)
                         {
                             this.addSetting(name, value);
@@ -159,7 +159,7 @@ namespace RTParser.Utils
         /// <param name="value">The value associated with this setting</param>
         public void addSetting(string name, Unifiable value)
         {
-            string key = MakeCaseInsensitive.TransformInput(name);
+            string key = MakeCaseInsensitive.TransformInput(Unifiable.Create(name));
             if (key.Length > 0)
             {
                 this.removeSetting(key);
@@ -228,7 +228,7 @@ namespace RTParser.Utils
             }
             else
             {
-                if (bot.GlobalSettings == this) return String.Empty;
+                if (bot.GlobalSettings == this) return Unifiable.Empty;
                 return bot.GetBotSetting(name);
             }
         }

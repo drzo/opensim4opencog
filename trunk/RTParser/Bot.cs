@@ -182,7 +182,7 @@ namespace RTParser
                 }
                 else
                 {
-                    this.GlobalSettings.addSetting("adminemail", "");
+                    this.GlobalSettings.addSetting("adminemail", Unifiable.Empty);
                 }
             }
         }
@@ -195,7 +195,7 @@ namespace RTParser
             get
             {
                 Unifiable islogging = this.GlobalSettings.grabSetting("islogging");
-                if (islogging.ToLower() == "true")
+                if (Unifiable.IsTrue(islogging))
                 {
                     return true;
                 }
@@ -262,7 +262,7 @@ namespace RTParser
         /// <summary>
         /// The directory to look in for the AIML files
         /// </summary>
-        public Unifiable PathToAIML
+        public string PathToAIML
         {
             get
             {
@@ -273,7 +273,7 @@ namespace RTParser
         /// <summary>
         /// The directory to look in for the various XML configuration files
         /// </summary>
-        public Unifiable PathToConfigFiles
+        public string PathToConfigFiles
         {
             get
             {
@@ -284,7 +284,7 @@ namespace RTParser
         /// <summary>
         /// The directory into which the various log files will be written
         /// </summary>
-        public Unifiable PathToLogs
+        public string PathToLogs
         {
             get
             {
@@ -382,7 +382,7 @@ namespace RTParser
         public void loadSettings()
         {
             // try a safe default setting for the settings xml file
-            Unifiable path = Path.Combine(Environment.CurrentDirectory, Path.Combine("config", "Settings.xml"));
+            string path = Path.Combine(Environment.CurrentDirectory, Path.Combine("config", "Settings.xml"));
             this.loadSettings(path);          
         }
 
@@ -391,9 +391,9 @@ namespace RTParser
         /// Also generates some default values if such values have not been set by the settings file.
         /// </summary>
         /// <param name="pathToSettings">Path to the settings xml file</param>
-        public void loadSettings(Unifiable pathToSettings)
+        public void loadSettings(string pathToSettings)
         {
-            this.GlobalSettings.loadSettings(pathToSettings.AsString());
+            this.GlobalSettings.loadSettings(pathToSettings);
 
             // Checks for some important default settings
             if (!this.GlobalSettings.containsSettingCalled("version"))
@@ -529,7 +529,7 @@ namespace RTParser
         /// Loads the splitters for this Proccessor from the supplied config file (or sets up some safe defaults)
         /// </summary>
         /// <param name="pathToSplitters">Path to the config file</param>
-        private void loadSplitters(Unifiable pathToSplitters)
+        private void loadSplitters(string pathToSplitters)
         {
             FileInfo splittersFile = new FileInfo(pathToSplitters);
             if (splittersFile.Exists)
@@ -548,7 +548,7 @@ namespace RTParser
                         {
                             if ((myNode.Name == "item") & (myNode.Attributes.Count == 1))
                             {
-                                Unifiable value = myNode.Attributes["value"].Value;
+                                Unifiable value = Unifiable.Create(myNode.Attributes["value"].Value);
                                 this.Splitters.Add(value);
                             }
                         }
@@ -571,7 +571,7 @@ namespace RTParser
         /// <summary>
         /// The last message to be entered into the log (for testing purposes)
         /// </summary>
-        public Unifiable LastLogMessage=Unifiable.Empty;
+        public string LastLogMessage = string.Empty;
 
         public OutputDelegate outputDelegate;
         public delegate void OutputDelegate(string str);
@@ -582,7 +582,12 @@ namespace RTParser
         /// Log files have the form of yyyyMMdd.log.
         /// </summary>
         /// <param name="message">The message to log</param>
-        public void writeToLog(Unifiable message)
+        public void writeToLog(string message)
+        {
+            message = (DateTime.Now.ToString() + ": " + message + Environment.NewLine);
+            writeToLog0(Unifiable.Create(message));
+        }
+        public void writeToLog0(Unifiable message)
         {
 
             if (outputDelegate != null)
@@ -598,7 +603,8 @@ namespace RTParser
             this.LastLogMessage = message;
             if (this.IsLogging)
             {
-                this.LogBuffer.Add(DateTime.Now.ToString() + ": " + message + Environment.NewLine);
+                //  this.LogBuffer.Add(DateTime.Now.ToString() + ": " + message + Environment.NewLine);
+                this.LogBuffer.Add(message);
                 if (this.LogBuffer.Count > this.MaxLogBufferSize-1)
                 {
                     // Write out to log file
@@ -738,11 +744,11 @@ namespace RTParser
                         {
                             try
                            {
-	                           Unifiable left = outputSentence.Substring(0, f);
+	                           string left = outputSentence.Substring(0, f);
 	                            Unifiable ss = EvalSubL("(cyc-query '" + left + " #$EverythingPSC)", null);
                                 if (Unifiable.IsNull(ss)) continue;
 	                            ss = ss.Trim();
-	                            if (ss == "" || ss == "NIL") continue;
+	                            if (Unifiable.IsFalse(ss)) continue;
 	                            outputSentence = outputSentence.Substring(f + 9);
 	                            if (outputSentence.Length > 0)
 	                            {
@@ -789,7 +795,7 @@ namespace RTParser
             }
                         
             // process the node
-            Unifiable tagName = node.Name.ToLower();
+            string tagName = node.Name.ToLower();
             if (tagName == "template")
             {
                 UUnifiable templateResult = new UUnifiable();
@@ -952,7 +958,7 @@ namespace RTParser
                             {
                                 if (childNode.NodeType != XmlNodeType.Text)
                                 {
-                                    childNode.InnerXml = this.processNode(childNode, query, request, result, user);
+                                    childNode.InnerText = this.processNode(childNode, query, request, result, user);
                                 }
                             }
                         }
@@ -970,7 +976,7 @@ namespace RTParser
                             {
                                 recursiveResult.Append(this.processNode(childNode, query, request, result, user));
                             }
-                            return recursiveResult.ToString();
+                            return recursiveResult;//.ToString();
                         }
                         else
                         {
@@ -1306,7 +1312,7 @@ The AIMLbot program.
                 catch (Exception e)
                 {
                     Console.WriteLine("" + e);
-                    return String.Empty;
+                    return Unifiable.Empty;
                 }
             }
             if (langu == "subl") return EvalSubL(cmd, null);
@@ -1326,7 +1332,7 @@ The AIMLbot program.
             return "#$" + mt;
         }
 
-        static readonly Dictionary<Unifiable,SystemExecHandler> ExecuteHandlers = new Dictionary<Unifiable, SystemExecHandler>();
+        static readonly Dictionary<string,SystemExecHandler> ExecuteHandlers = new Dictionary<string, SystemExecHandler>();
         public void AddExcuteHandler(string lang, SystemExecHandler handler)
         {
             ExecuteHandlers[lang] = handler;

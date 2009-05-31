@@ -42,7 +42,7 @@ namespace RTParser.Utils
         /// <summary>
         /// The AIML source for the category that defines the template
         /// </summary>
-        public Unifiable filename = Unifiable.Empty;
+        public string filename = Unifiable.Empty;
 
         /// <summary>
         /// The word that identifies this node to it's parent node
@@ -63,7 +63,7 @@ namespace RTParser.Utils
         /// <param name="path">the path for the category</param>
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        public void addCategoryTag(Unifiable path, XmlNode template, XmlNode guard, Unifiable filename)
+        public void addCategoryTag(Unifiable path, XmlNode template, XmlNode guard, string filename)
         {
             if (template==null)
             {
@@ -292,11 +292,11 @@ namespace RTParser.Utils
                 // the "classic" path looks like this: "user input <that> that <topic> topic"
                 // but having it backwards is more efficient for searching purposes
                 MatchState newMatchstate = matchstate;
-                if (firstWord == "<THAT>")
+                if (firstWord.IsTag("<THAT>"))
                 {
                     newMatchstate = MatchState.That;
                 }
-                else if (firstWord == "<TOPIC>")
+                else if (firstWord.IsTag("<TOPIC>"))
                 {
                     newMatchstate = MatchState.Topic;
                 }
