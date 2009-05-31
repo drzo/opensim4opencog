@@ -4,6 +4,7 @@ using System.Xml;
 
 namespace RTParser
 {
+
     public class Unifiable
     {
         public static Unifiable Empty
@@ -99,7 +100,12 @@ namespace RTParser
         }
 
 
-        private readonly string str;
+        protected string str;
+
+        protected Unifiable()
+        {
+            str = Unifiable.Empty;
+        }
 
         public Unifiable(string value)
         {
@@ -163,14 +169,15 @@ namespace RTParser
             return str.StartsWith(s);
         }
 
-        public Unifiable[] Split(char[] c, StringSplitOptions options)
-        {
-            return arrayOf(str.Split(c, options));
-        }
+        //public Unifiable[] Split(char[] c, StringSplitOptions options)
+        //{
+        //    return arrayOf(str.Split(c, options));
+        //}
 
 
         public override bool Equals(object obj)
         {
+            if (obj is Unifiable) return ((Unifiable)obj) == this;
             return str == obj.ToString();
         }
 
@@ -201,10 +208,10 @@ namespace RTParser
         }
 
 
-        internal Unifiable[] Split(char[] p)
-        {
-            return arrayOf(str.Split(p));
-        }
+        //internal Unifiable[] Split(char[] p)
+        //{
+        //    return arrayOf(str.Split(p));
+        //}
 
         public bool Contains(string p)
         {
@@ -241,9 +248,11 @@ namespace RTParser
             return (str == "*" || str == "_");
         }
 
+
+
         public Unifiable[] Split()
         {
-            return arrayOf(str.Split(" \r\n\t".ToCharArray()));
+            return arrayOf(str.Trim().Split(" \r\n\t".ToCharArray(), StringSplitOptions.RemoveEmptyEntries));
         }
 
         public bool IsTag(string that)
@@ -255,12 +264,72 @@ namespace RTParser
         {
             if (Object.ReferenceEquals(tf, null)) return true;
             string found = tf.AsString();
-            return  found.Trim() == "" || found.Trim() == "NIL";
+            return found.Trim() == "" || found.Trim() == "NIL";
         }
 
         internal static bool IsNull(Unifiable name)
         {
             return Object.ReferenceEquals(name, null) || name.str == null;
         }
+
+        internal string GetSettingName()
+        {
+            return str;
+        }
+
+        public static Unifiable operator +(Unifiable u, string more)
+        {
+            return u.str + more;
+        }
+        public static Unifiable operator +(Unifiable u, Unifiable more)
+        {
+            return u.str + more.AsString();
+        }
+    }
+
+    public class UUnifiable : Unifiable
+    {
+
+        public UUnifiable()
+        {
+            str = Unifiable.Empty;
+        }
+
+        public static Unifiable operator +(UUnifiable u, string more)
+        {
+            return u.str + more;
+        }
+        public static Unifiable operator +(UUnifiable u, Unifiable more)
+        {
+            return u.str + more.AsString();
+        }
+
+        internal void Append(Unifiable p)
+        {
+            if (str == "")
+                str = p.AsString();
+            else
+            {
+                str += " ";
+                str += p.AsString();
+            }
+        }
+
+        internal void Remove(int p, int c)
+        {
+            str = str.Remove(p, c);
+        }
+
+        public override String ToString()
+        {
+            return str;
+        }
+
+        internal Unifiable Frozen()
+        {
+            return str;
+        }
+
     }
 }
+
