@@ -14,7 +14,7 @@ namespace cogbot.Actions
             usageString = "To find out wher an object, building or a person is, type \"where is <object/person name>\"";
         }
 
-        public override void acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args)
         {
             Primitive prim;
             Avatar avatar;
@@ -22,7 +22,7 @@ namespace cogbot.Actions
 
             if (args.prepPhrases["is"].Length == 0)
             {
-                WriteLine("Provide something for which you need to know Where is it.");
+                return("Provide something for which you need to know Where is it.");
             }
             else
             {
@@ -58,10 +58,10 @@ namespace cogbot.Actions
                 }
                 else
                 {
-                    WriteLine("I don't know where is " + args.prepPhrases["is"] + ".");
-                    return;
+                    return ("I don't know where is " + args.prepPhrases["is"] + ".");
                 }
             }
+            return writeBuffer.ToString();
         }
     }
 }

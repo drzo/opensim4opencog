@@ -14,7 +14,7 @@ namespace cogbot.Actions
             usageString = helpString + "\r\n you can type  'wear /My Outfit/Dance Party";
         }
 
-        public override void acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args)
         {
            // base.acceptInput(verb, args);
             string target = String.Empty;
@@ -23,10 +23,11 @@ namespace cogbot.Actions
             {
                 WriteLine("wear args =(" + args.str + ").");
                 Client.Appearance.WearOutfit(args.str.Split('/'), bake);
+                return "worn " + args.str;
             }
             catch (InvalidOutfitException ex)
             {
-                WriteLine("Invalid outfit (" + ex.Message + ")" + args.str+".");
+                return "(Invalid outfit (" + ex.Message + ")" + args.str+".";
             }
 
 

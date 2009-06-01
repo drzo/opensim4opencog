@@ -653,8 +653,6 @@ namespace cogbot
                 string toprint = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
                 string SelfName = String.Format("{0} ", Self.Name);
                 toprint = toprint.Replace("$bot", SelfName);
-                toprint = toprint.Replace("You ", SelfName);
-                toprint = toprint.Replace("you ", SelfName);
                 ClientManager.output(SelfName + ": " + toprint);
 			} catch (Exception) {
 			}
@@ -1100,17 +1098,22 @@ namespace cogbot
             return ScriptEventListener.argString(p);
         }
 
-        public bool ExecuteCommand(string text)
+        public string ExecuteCommand(string text)
         {
-            if (text == null) return true;
+            if (text == null)
+            {
+                return String.Empty;
+            }
             text = text.TrimStart();
-            if (text.Length == 0) return true;
+            if (text.Length == 0)
+            {
+                return String.Empty;
+            }
             try
             {
                 if (text.StartsWith("("))
                 {
-                    output(evalLispString(text));
-                    return true;
+                    return evalLispString(text);
                 }
                 //            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
                 //text = text.Replace("\"", "");
@@ -1120,23 +1123,24 @@ namespace cogbot
                     Action act = Commands[verb];
                     if (act is RegionMasterCommand)
                     {
-                      if (!WorldSystem.IsRegionMaster) return false;
+                      if (!WorldSystem.IsRegionMaster)
+                      {
+                          return String.Empty;
+                      }
                     }
-                    if (text.Length > verb.Length)
-                        act.acceptInputWrapper(verb, text.Substring(verb.Length + 1));
-                    else
-                        act.acceptInputWrapper(verb, "");
-                    return true;
+                    if (text.Length > verb.Length)                                       
+                       return act.acceptInputWrapper(verb, text.Substring(verb.Length + 1));
+                    return act.acceptInputWrapper(verb, "");
                 }
                 else
                 {
-                    return false;
+                    return String.Empty;
                 }
             }
             catch (Exception e)
             {
                 output("" + e);
-                return false;
+                return String.Empty;
             }
         }
 

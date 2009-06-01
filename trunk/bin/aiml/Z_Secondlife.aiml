@@ -3,7 +3,18 @@
 
 
 <!-- follow command -->
-<category><pattern>FOLLOW ME *</pattern><template><think><system>follow "<get name="name"/>"</system></think>Ok, I am following you <get name="name"/></template></category>
+  <category>
+    <pattern>FOLLOW ME *</pattern>
+    <pattern>COME HERE <bot>name</bot></pattern>
+    <pattern>A B C COMEHERE <bot>name</bot></pattern>
+    <template>
+      <think>
+        <system>
+          follow "<get name="name"/>"
+        </system>
+      </think>Ok, I am following you <get name="name"/>
+    </template>
+  </category>
 <category><pattern>FOLLOW NO ONE *</pattern><template><think><system>stop-following</system></think>Ok, I am on my own now.</template></category>
 <category><pattern>STOP FOLLOWING *</pattern><template><think><system>stop-following</system></think>Ok, I am on my own now.</template></category>
 <category><pattern>WHAT ARE YOU DOING</pattern><template><system lang="lisp">thisClient.WorldSystem.TheSimAvatar.CurrentAction</system></template></category>
@@ -13,6 +24,9 @@
 
 <!-- dotlisp command -->
 <category><pattern>DOTLISP *</pattern><template><system lang="lisp"><star/></system></template></category>
+
+<!-- exec command -->
+<category><pattern>EXEC *</pattern><template>result of "<star/>" is: <system lang="bot"><star/></system></template></category>
 
 </aiml>
 

@@ -274,8 +274,9 @@ namespace cogbot
             return null;
         }
 
-        public bool ExecuteCommand(string text)
+        public string ExecuteCommand(string text)
         {
+            string res = String.Empty;
             try
             {
                 //text = text.Replace("\"", "");
@@ -292,7 +293,8 @@ namespace cogbot
                     if (CurrentClient != null)
                     {
 
-                        if (CurrentClient.ExecuteCommand(text)) handled = true;
+                        res += CurrentClient.ExecuteCommand(text);
+                        if (!String.IsNullOrEmpty(res)) handled = true;
                     }
 
                 if (!handled)
@@ -301,20 +303,20 @@ namespace cogbot
                     if (groupActions.ContainsKey(verb))
                     {
                         if (text.Length > verb.Length)
-                            groupActions[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1));
+                            res += groupActions[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1));
                         else
-                            groupActions[verb].acceptInputWrapper(verb, "");
-                        return true;
+                            res += groupActions[verb].acceptInputWrapper(verb, "");
+                        return res;
                     }
                     output("I don't understand the verb " + verb + ".");
                     output("Type \"help\" for help.");
                 }
-                return handled;
+                return res;
             }
             catch (Exception e)
             {
                 output("TextForm:" + e);
-                return false;
+                return res;
             }
         }
 
@@ -415,7 +417,7 @@ namespace cogbot
                 //output(text);
                 consoleInputText.Text = "";
 
-                describeNext = !ExecuteCommand(text);
+                output(ExecuteCommand(text));
 
                 //if (describeNext)
                 //{
@@ -706,7 +708,7 @@ namespace cogbot
             
             if (args.Length < 3)
             {
-                WriteLine("Usage: login firstname lastname password [simname] [login server url]");
+                output("Usage: login firstname lastname password [simname] [login server url]");
                 return null;
             }
             LoginDetails account = new LoginDetails();
@@ -733,7 +735,7 @@ namespace cogbot
         /// </summary>
         public void Run()
         {
-            WriteLine("Type quit to exit.  Type help for a command list.");
+            output("Type quit to exit.  Type help for a command list.");
 
             while (Running)
             {
@@ -796,20 +798,20 @@ namespace cogbot
                 {
                     foreach (BotClient client in Clients.Values)
                     {
-                        WriteLine(client.Commands["help"].Execute(args, UUID.Zero));
+                        output(client.Commands["help"].ExecuteBuffer(args, UUID.Zero));
                         break;
                     }
                 }
                 else
                 {
-                    WriteLine("You must login at least one bot to use the help command");
+                    output("You must login at least one bot to use the help command");
                 }
             }
             else if (firstToken == "script")
             {
                 // No reason to pass this to all bots, and we also want to allow it when there are no bots
                 ScriptCommand command = new ScriptCommand(null);
-                Logger.Log(command.Execute(args, UUID.Zero), Helpers.LogLevel.Info);
+                Logger.Log(command.ExecuteBuffer(args, UUID.Zero), Helpers.LogLevel.Info);
             }
             else
             {
@@ -825,7 +827,7 @@ namespace cogbot
                         {
                             BotClient testClient = (BotClient)state;
                             if (testClient.Commands.ContainsKey(firstToken))
-                                Logger.Log(testClient.Commands[firstToken].Execute(args, fromAgentID),
+                                Logger.Log(testClient.Commands[firstToken].ExecuteBuffer(args, fromAgentID),
                                     Helpers.LogLevel.Info, testClient.gridClient);
                             else
                                 Logger.Log("Unknown command " + firstToken, Helpers.LogLevel.Warning);
@@ -838,11 +840,6 @@ namespace cogbot
                 while (completed < clientsCopy.Count)
                     Thread.Sleep(50);
             }
-        }
-
-        private void WriteLine(string p)
-        {
-            throw new Exception("The method or operation is not implemented.");
         }
 
         /// <summary>

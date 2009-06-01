@@ -16,11 +16,11 @@ namespace cogbot.Actions
             usageString = "fly [up|down] 'no_argument= start flying";
         }
 
-        public override void acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args)
         {
           //  base.acceptInput(verb, args);
 
-            WriteLine("You are flying.");
+            Client.describeNext = true;
 
             if (args.str == "up")
             {
@@ -29,6 +29,7 @@ namespace cogbot.Actions
                 Thread.Sleep(1000);
                 Client.Self.Movement.UpPos = false;
                 Client.Self.Movement.SendUpdate(true);
+                return "flew up";
             }
             else if (args.str == "down")
             {
@@ -37,13 +38,14 @@ namespace cogbot.Actions
                 Thread.Sleep(1000);
                 Client.Self.Movement.UpNeg = false;
                 Client.Self.Movement.SendUpdate(true);
+                return "flew down";
             }
             else
             {
                 Client.Self.Fly(true);
+                return "now flying";
             }
 
-            Client.describeNext = true;
         }
     }
 }

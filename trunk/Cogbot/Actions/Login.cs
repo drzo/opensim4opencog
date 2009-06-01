@@ -4,29 +4,25 @@ using System.Text;
 
 namespace cogbot.Actions
 {
-    class Login : Action,BotSystemCommand
+    class Login : Action, BotSystemCommand
     {
-        protected string firstName = "Eelke";
-		protected string lastName = "Forder";
-		protected string password = "geheim";
 
         public Login(BotClient Client)
             : base(Client)
         {
-            helpString = "Login to Secondlife";
-			usageString = "login <first name> <last name> <password>";
+            helpString = "Login to World Server";
+            usageString = "login <first name> <last name> <password> [<simurl>] [<location>]";
         }
 
-		public override void acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args)
         {
-			//base.acceptInput(verb, args);
+            //base.acceptInput(verb, args);
             string[] tokens = args.objectPhrase.Split(null);
 
             BotClient Client = TheBotClient;
             if ((tokens.Length != 1) && (tokens.Length != 3))
             {
-                WriteLine("Please enter login FirstName LastName and Password to login to the SL");
-                return;
+                return ("Please enter login FirstName LastName and Password to login to the SL");
             }
             else
             {
@@ -53,12 +49,13 @@ namespace cogbot.Actions
                 if (!Client.Network.Connected && !Client.Network.LoginMessage.StartsWith("Logging"))
                 {
                     Client.Settings.LOGIN_SERVER = TheBotClient.BotLoginParams.URI;// TextForm.SingleInstance.config.simURL; // "http://127.0.0.1:8002/";
-///                    Client.Network.Login(Client.BotLoginParams.FirstName, Client.BotLoginParams.LastName, Client.BotLoginParams.Password, "OnRez", "UNR");
+                    ///                    Client.Network.Login(Client.BotLoginParams.FirstName, Client.BotLoginParams.LastName, Client.BotLoginParams.Password, "OnRez", "UNR");
                     Client.Login();
                 }
                 else
-                    WriteLine("You are already logged in.");
+                    return ("You are already logged in.");
             }
-		}
+            return "loging in...";
+        }
     }
 }

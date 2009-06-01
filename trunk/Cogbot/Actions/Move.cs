@@ -53,8 +53,13 @@ namespace cogbot.Actions
                 } 
             }
         }
+         public override string acceptInput(string verb, Parser args)
+         {
+                acceptInput0(verb,args);
+                return writeBuffer.ToString();
+         }
 
-        public override void acceptInput(string verb, Parser args)
+         void acceptInput0(string verb, Parser args)
         {
             GridClient client = Client;
             string temp;

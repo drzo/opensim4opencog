@@ -13,16 +13,16 @@ namespace cogbot.Actions
             usageString = "to Jump type \"jump\""; ;
         }
 
-        public override void acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args)
         {
           //  base.acceptInput(verb, args);
 
-            WriteLine("You jumped.");
             Client.Self.Jump(true);
             System.Threading.Thread.Sleep(500);
             Client.Self.Jump(false);
 
             TheBotClient.describeNext = true;
+            return "You jumped.";
         }
     }
 }

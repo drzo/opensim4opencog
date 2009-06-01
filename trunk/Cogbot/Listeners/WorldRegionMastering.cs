@@ -8,6 +8,7 @@ using OpenMetaverse.Assets;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 using PathSystem3D.Navigation;
+using RTParser;
 
 namespace cogbot.Listeners
 {

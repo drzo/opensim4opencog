@@ -13,11 +13,11 @@ namespace cogbot.Actions
             usageString = "To locate the coordinates of yourself, type in \"locate\"";
         }
 
-        public override void acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args)
         {
            // base.acceptInput(verb, args);
 
-            WriteLine("You are in " + Client.Network.CurrentSim.Name + "/" + (int)Client.Self.SimPosition.X + "/" + (int)Client.Self.SimPosition.Y + "/" + (int)Client.Self.SimPosition.Z);
+            return ("You are in " + Client.Network.CurrentSim.Name + "/" + (int)Client.Self.SimPosition.X + "/" + (int)Client.Self.SimPosition.Y + "/" + (int)Client.Self.SimPosition.Z);
         }
     }
 }
