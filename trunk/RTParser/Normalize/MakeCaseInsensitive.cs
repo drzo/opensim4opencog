@@ -29,9 +29,10 @@ namespace RTParser.Normalize
         {
             return input.ToUpper();
         }
-        public static Unifiable TransformInput(string input)
+        public static string TransformInput(string input)
         {
-            return Unifiable.Create(input.ToUpper());
+            input = input.ToUpper();
+            return input;
         }
     }
 }

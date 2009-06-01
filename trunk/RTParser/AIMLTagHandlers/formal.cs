@@ -38,18 +38,13 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "formal")
             {
-                UUnifiable result = new UUnifiable();
+                Unifiable result = new Unifiable();
                 if (templateNodeInnerText.Length > 0)
                 {
                     Unifiable[] words = templateNodeInnerText.ToLower().Split();
                     foreach (Unifiable word in words)
                     {
-                        Unifiable newWord = word.Substring(0, 1);
-                        newWord = newWord.ToUpper();
-                        if (word.Length > 1)
-                        {
-                            newWord += word.Substring(1);
-                        }
+                        Unifiable newWord = word.ToPropper();
                         result.Append(newWord + " ");
                     }
                 }
