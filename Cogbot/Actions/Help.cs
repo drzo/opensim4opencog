@@ -13,12 +13,12 @@ namespace cogbot.Actions
             usageString = helpString;
         }
 
-        public override void acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args)
         {
             // base.acceptInput(verb, args);
 
             BotClient Client = TheBotClient;
-
+            
             if (args.objectPhrase.Length == 0)
             {
                 foreach (string action in TheBotClient.Commands.Keys)
@@ -41,6 +41,7 @@ namespace cogbot.Actions
             }
 
             Client.describeNext = false;
+            return writeBuffer.ToString();
         }
     }
 }

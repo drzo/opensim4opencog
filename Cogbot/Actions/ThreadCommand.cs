@@ -40,7 +40,7 @@ namespace cogbot.Actions
             {
                 try
                 {
-                    Client.ExecuteCommand(cmd);
+                    WriteLine(Client.ExecuteCommand(cmd));
                 }
                 catch (ThreadAbortException) { }
                 WriteLine("done with " + cmd);

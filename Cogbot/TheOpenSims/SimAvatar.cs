@@ -626,10 +626,11 @@ namespace cogbot.TheOpenSims
 
         public void DoBestUse(SimObject someObject)
         {
+            if (someObject==null) return;
             SimTypeUsage use = someObject.GetBestUse(CurrentNeeds);
             if (use == null)
             {
-                double closeness = Approach(someObject, 2);
+                double closeness = Approach(someObject, someObject.GetSizeDistance());
                 AgentManager ClientSelf = Client.Self;
                 ClientSelf.Touch(someObject.Prim.LocalID);
                 if (closeness < 3)

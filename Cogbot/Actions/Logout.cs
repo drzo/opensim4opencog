@@ -13,12 +13,14 @@ namespace cogbot.Actions
             usageString = "To Logout from Second Life, type \"logout\"";
         }
 
-        public override void acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args)
         {
             if (Client.Network.Connected)
             {
                 Client.Network.Logout();
+                return "Logged out " + Client;
             }
+            return "Was Logged out " + Client;
         }
 
     }

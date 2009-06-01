@@ -5,6 +5,7 @@ using OpenMetaverse; //using libsecondlife;
 using System.Threading;
 using System.Windows.Forms;
 using cogbot.TheOpenSims;
+using PathSystem3D.Navigation;
 
 namespace cogbot.Actions
 {
@@ -21,8 +22,9 @@ namespace cogbot.Actions
         }
 
 
-        public override void acceptInput(string verb, Parser pargs)
+        public override string acceptInput(string verb, Parser pargs)
         {
+            TheBotClient.describeNext = true;
             // base.acceptInput(verb, args);
             string[] args = pargs.tokens;
             UUID primID;
@@ -41,27 +43,28 @@ namespace cogbot.Actions
 
                     // The thread that accepts the Client and awaits messages
                     me.CurrentAction = new FollowerAction(me, followAvatar);
+                    return "started following " + followAvatar;
                 }
                 else
                 {
-                    WriteLine("I don't know who " + name + " is.");
+                    return ("I don't know who " + name + " is.");
                 }
             }
             else if (verb == "stop-following")
             {
 
 
-                WriteLine("You stop following " + WorldSystem.TheSimAvatar.ApproachPosition + ".");
 
+                SimPosition ap = WorldSystem.TheSimAvatar.ApproachPosition;
                 WorldSystem.TheSimAvatar.SetMoveTarget(null,10);
                 WorldSystem.TheSimAvatar.StopMoving();
+                return ("You stop following " + ap + ".");
             }
             else
             {
-                WriteLine("You aren't following anyone.");
+                return ("You aren't following anyone.");
             }
 
-            TheBotClient.describeNext = true;
         }
 
     }

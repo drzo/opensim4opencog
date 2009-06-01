@@ -75,13 +75,15 @@ namespace cogbot.Listeners
                 MyBot.AddExcuteHandler("bot", BotExecHandler);
                 MyBot.AddExcuteHandler("lisp", LispExecHandler);
                 MyBot.loadSettings();
-                MyUser = new User("AIMLInterp", MyBot);
+                //MyBot.GlobalSettings.addSetting("name", client.BotLoginParams.FirstName+ " " + client.BotLoginParams.LastName);
+                MyUser = new User(Unifiable.Create("AIMLInterp"), MyBot);
                 MyBot.isAcceptingUserInput = false;
                 MyBot.loadAIMLFromFiles();
                 MyBot.isAcceptingUserInput = true;
                 MyBot.outputDelegate = output;
                 // wont get here unless there was no problem
                 client.Self.OnChat += AIML_OnChat;
+                client.Self.OnInstantMessage += AIML_OnInstantMessage;
                 while (false)
                 {
                     Console.Write("You: ");
@@ -101,10 +103,49 @@ namespace cogbot.Listeners
             {
                 foreach (var u in BotUsers.Values)
                 {
-                    if (u.UserID.Contains(username) || username.Contains(u.UserID))
+                    if (u.UserID.AsString().Contains(username) || username.Contains(u.UserID))
                         u.RespondToChat = value;
                 }
             }
+        }
+
+        private User GetMyUser(string fromname)
+        {
+            lock (BotUsers)
+            {
+                if (BotUsers.ContainsKey(fromname)) return BotUsers[fromname];
+                User myUser = new User(fromname, MyBot);
+                BotUsers[fromname] = myUser;
+                AIMLInterp("My name is " + fromname, myUser);
+                myUser.Predicates.addSetting("name", fromname);
+                myUser.RespondToChat = RespondToChatByDefaultAllUsers;
+                return myUser;
+            }
+        }
+
+        public void AIML_OnInstantMessage(InstantMessage im, Simulator simulator)
+        {
+            User myUser = GetMyUser(im.FromAgentName);
+
+            //UpdateQueue.Enqueue(() => SendNewEvent("on-instantmessage", , im.Message, im.ToAgentID,
+            //                           im.Offline, im.IMSessionID, im.GroupIM, im.Position, im.Dialog,
+            //                           im.ParentEstateID));
+
+            string message = im.Message;
+            if (message == "typing") return;
+            if (message == "") return;
+            (new Thread(() => // this can be long running
+                            {
+                                string resp = AIMLInterp(message, myUser);
+                                if (im.Offline == InstantMessageOnline.Offline) return;
+                                if (String.IsNullOrEmpty(resp)) return;
+                                //if (im.GroupIM) ; //todo
+                                foreach (string ting in resp.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    client.Self.InstantMessage(im.FromAgentID, ting.Trim(), im.IMSessionID);
+                                }
+                            })).Start();
+
         }
 
         /// <summary>
@@ -117,19 +158,7 @@ namespace cogbot.Listeners
 
             if (String.IsNullOrEmpty(message) || message.Length < 3) return;
             if (fromname == TheSimAvatar.theAvatar.Name) return;
-            User myUser;
-            if (!BotUsers.ContainsKey(fromname))
-            {
-                myUser = new User(fromname, MyBot);
-                AIMLInterp("My name is " + fromname, myUser);
-                myUser.Predicates.addSetting("name", fromname);
-                BotUsers[fromname] = myUser;
-                myUser.RespondToChat = RespondToChatByDefaultAllUsers;
-            }
-            else
-            {
-                myUser = BotUsers[fromname];
-            }
+            User myUser = GetMyUser(fromname);
             // todo hard coded to be changed
             if (message.Contains("chat on"))
             {
@@ -156,17 +185,20 @@ namespace cogbot.Listeners
                                     output("AIML_OnChat Reply is quietly: " + resp);
                                     return;
                                 }
-                                Realism.Chat(client, resp, type, 6);
+                                foreach (string ting in resp.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    Realism.Chat(client, ting.Trim(), type, 6);
+                                }
                                 myUser.LastResponseGivenTime = Environment.TickCount;
                             })).Start();
         }
 
-        public string AIMLInterp(string input)
+        public Unifiable AIMLInterp(string input)
         {
             return AIMLInterp(input, MyUser);
         }
 
-        public string AIMLInterp(string input, User myUser)
+        public Unifiable AIMLInterp(string input, User myUser)
         {
             Request r = new Request(input, myUser, MyBot);
             Result res = MyBot.Chat(r);

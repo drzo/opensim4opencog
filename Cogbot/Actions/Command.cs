@@ -49,15 +49,15 @@ namespace cogbot.Actions
         /// </summary>
         /// <param name="verb"></param>
         /// <param name="args"></param>
-        public override void acceptInput(string verb, cogbot.Actions.Parser args) {
-            WriteLine(Execute(args.tokens, UUID.Zero));
+        public override string acceptInput(string verb, cogbot.Actions.Parser args) {
+            return ExecuteBuffer(args.tokens, UUID.Zero);
         } // method: acceptInput
 
 
 		public string Description;
         public CommandCategory Category;
 
-		public new abstract string Execute(string[] args, UUID fromAgentID);
+		//public new abstract string Execute(string[] args, UUID fromAgentID);
 
 
         public int CompareTo(object obj)

@@ -1,5 +1,6 @@
 using System;
 using OpenMetaverse;
+using System.IO;
 
 
 namespace cogbot.Actions
@@ -125,6 +126,7 @@ namespace cogbot.Actions
             m_Client = _parent;//.CurrentClient;
         }
 
+        readonly protected System.Text.StringBuilder writeBuffer = new System.Text.StringBuilder();
         /// <summary>
         /// 
         /// </summary>
@@ -134,27 +136,46 @@ namespace cogbot.Actions
         {
 
             String s;
-            if (arg == null || arg.Length == 0) s = format;
-            else s
-                = String.Format(format, arg);
+            if (arg == null || arg.Length == 0) { s = format; }
+            else
+            {
+                s = String.Format(format, arg);
+            }
             Console.WriteLine(s);
+            lock (writeBuffer)
+            {
+                writeBuffer.AppendLine(s);
+            }
             if (TheBotClient != null) TheBotClient.output(s);
         } // method: WriteLine
 
-        public void acceptInputWrapper(string verb, string args)
+        public string acceptInputWrapper(string verb, string args)
         {
-            acceptInput(verb, new Parser(args));
+           return acceptInput(verb, new Parser(args));
+        }
+
+        public string ExecuteBuffer(string[] args, UUID fromAgentID)
+        {
+            lock (writeBuffer)
+            {
+                writeBuffer.Remove(0, writeBuffer.Length);
+                Parser p = new Parser(String.Join(" ", args));
+                p.tokens = args;
+                string str = Execute(args, fromAgentID);
+                string ret = writeBuffer.ToString();
+                writeBuffer.Remove(0, writeBuffer.Length);
+                return (ret + "\n" + str).Trim();
+            }
         }
 
         public virtual string Execute(string[] args, UUID fromAgentID)
         {
             Parser p = new Parser(String.Join(" ", args));
             p.tokens = args;
-            acceptInput(Name, p);
-            return String.Empty;
+            return acceptInput(Name, p);
         }
 
-        public abstract void acceptInput(string verb, Parser args);
+        public abstract string acceptInput(string verb, Parser args);
 
         public virtual string makeHelpString()
         {

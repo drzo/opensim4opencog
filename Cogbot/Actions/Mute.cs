@@ -16,7 +16,7 @@ namespace cogbot.Actions
                           "To Unmute an avatar, type \"Mute <avatar name>\" again; to Unmute all, type \"mute all\" again";
         }
 
-        public override void acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args)
         {
            // base.acceptInput(verb, args);
 
@@ -26,26 +26,26 @@ namespace cogbot.Actions
 			
 			if (args.str=="all") {
                 chat.muted = !chat.muted;  // inverse mute
-				if (chat.muted) WriteLine("All conversation muted");
-				else WriteLine("All conversation unmuted");
+				if (chat.muted) return("All conversation muted");
+				else return("All conversation unmuted");
 			} 
 			else if ((WorldSystem).tryGetAvatar(args.str, out avatar))
             {
                // Listeners.Chat chat = (Listeners.Chat)Client.listeners["chat"];
                 if (chat.muteList.Contains(avatar.Name))
                 {
-                    WriteLine("Unmuted " + avatar.Name + ".");
                     chat.muteList.Remove(avatar.Name);
+                    return("Unmuted " + avatar.Name + ".");
                 }
                 else
                 {
-                    WriteLine("Muted " + avatar.Name + ".");
                     chat.muteList.Add(avatar.Name);
+                    return("Muted " + avatar.Name + ".");
                 }
             }
             else
             {
-                WriteLine("I don't know who " + args.str + " is.");
+                return("I don't know who " + args.str + " is.");
             }
         }
     }

@@ -148,7 +148,8 @@ namespace cogbot.TheOpenSims
 
         public override void InvokeReal()
         {
-            FollowThread.Start();
+            // start if not already started
+            if (!FollowThread.IsAlive) FollowThread.Start();
         }
 
         public void FollowLoop()

@@ -3010,13 +3010,9 @@ namespace cogbot.Listeners
         public override void Self_OnInstantMessage(InstantMessage im, Simulator simulator)
         {
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(() =>
-                                        {
-                                            SendNewEvent("on-instantmessage", im.FromAgentName, im.Message, im.ToAgentID,
-                                                         im.Offline, im.IMSessionID, im.GroupIM, im.Position, im.Dialog,
-                                                         im.ParentEstateID);
-                                            client.ExecuteCommand(im.Message);
-                                        });
+                UpdateQueue.Enqueue(() => SendNewEvent("on-instantmessage", im.FromAgentName, im.Message, im.ToAgentID,
+                                                       im.Offline, im.IMSessionID, im.GroupIM, im.Position, im.Dialog,
+                                                       im.ParentEstateID));
         }
 
         public override void Self_OnAlertMessage(string msg)

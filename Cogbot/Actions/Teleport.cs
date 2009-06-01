@@ -39,7 +39,13 @@ namespace cogbot.Actions
             }
         }
 
-        public override void acceptInput(string verb, Parser parser)
+        public override string acceptInput(string verb, Parser args)
+        {
+            acceptInput0(verb, args);
+            return writeBuffer.ToString();
+        }
+
+        void acceptInput0(string verb, Parser parser)
         {
             String[] args = parser.tokens;
             string ToS = parser.prepPhrases["to"];

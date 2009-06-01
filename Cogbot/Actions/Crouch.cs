@@ -16,7 +16,7 @@ namespace cogbot.Actions
             usageString = "crouch [on|off]";
         }
 
-        public override void acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args)
         {
             Client.describeNext = true;
             string[] tokens = args.tokens;
@@ -25,23 +25,23 @@ namespace cogbot.Actions
             {
                 Client.Self.Crouch(true);
                 System.Threading.Thread.Sleep(500);
-                WriteLine(Client.Self.Name + " crouched.");
                // isCrouching = false;
                 Client.Self.Crouch(false);
+                return (Client.Self.Name + " crouched.");
             }
             else
                 if (tokens[0].Equals("on"))
                 {
                     Client.Self.Crouch(true);
                  //   isCrouching = true;
-                    WriteLine(Client.Self.Name + " started crouching.");
+                    return (Client.Self.Name + " started crouching.");
                 }
                 else
                 {
                     Client.Self.Crouch(true);
                  //   isCrouching = false;
-                    WriteLine(Client.Self.Name + " done crouching.");
                     Client.Self.Crouch(false);
+                    return (Client.Self.Name + " done crouching.");
                 }
         }
 
