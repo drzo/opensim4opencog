@@ -84,7 +84,7 @@ namespace RTParser.AIMLTagHandlers
                 return true;
             term = this.Proc.EvalSubL(String.Format("(car (fi-complete \"{0}\"))", text),null);
             // Followed by asking Cyc to guess at the word using (fi-complete \”%s\”)
-            if (!String.IsNullOrEmpty(term) && term.ToUpper() != "NIL")
+            if (Unifiable.IsTrue(term))
             {
                 if (Proc.IsaFilter(term, filter))
                 {
@@ -92,7 +92,7 @@ namespace RTParser.AIMLTagHandlers
                 }
             }
             term = this.Proc.EvalSubL(String.Format("(cdr (car (denotation-mapper \"{0}\")))", text),null);
-            if (!String.IsNullOrEmpty(term) && term.ToUpper() != "NIL")
+            if (Unifiable.IsTrue(term))
             {
                 if (this.Proc.IsaFilter(term, filter))
                 {
@@ -100,7 +100,7 @@ namespace RTParser.AIMLTagHandlers
                 }
             }
             term = this.Proc.EvalSubL(String.Format("(car (denots-of-Unifiable \"{0}\"))", text), null);
-            if (!String.IsNullOrEmpty(term) && term.ToUpper() != "NIL")
+            if (Unifiable.IsTrue(term))
             {
                 if (this.Proc.IsaFilter(term, filter))
                 {
@@ -126,7 +126,7 @@ namespace RTParser.AIMLTagHandlers
                 term = null;
                 return false;
             }
-            if (String.IsNullOrEmpty(term) || term.ToUpper() == "NIL") return false;
+            if (Unifiable.IsFalse(term)) return false;
             return true;
         }
     }

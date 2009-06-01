@@ -93,7 +93,7 @@ namespace RTParser.Utils
                     else
                     {
                         Unifiable found = Proc.processNode(childNode, query, request, result, user);
-                        if (Unifiable.IsNull(found) || found.Trim() == "" || found.Trim() == "NIL")
+                        if (Unifiable.IsFalse(found))
                         {
                             return Unifiable.Empty;
                         }

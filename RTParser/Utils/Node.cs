@@ -86,9 +86,11 @@ namespace RTParser.Utils
             // split the input into its component words
             Unifiable[] words = path./*Trim().*/Split();//" ".ToCharArray());
 
-            if (words[0].Contains("COMEHERE"))
+            string w = words[0].AsString();
+
+            if (w.Contains("COMEHERE"))
             {
-                if (!words[0].Contains("<t"))
+                if (!w.Contains("<t"))
                 {
 
                 }
@@ -98,7 +100,7 @@ namespace RTParser.Utils
 
             // concatenate the rest of the sentence into a suffix (to act as the
             // path argument in the child nodemapper)
-            Unifiable newPath = path.Substring(firstWord.Length, path.Length - firstWord.Length).Trim();
+            Unifiable newPath = path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length).Trim();
 
             // o.k. check we don't already have a child with the key from this sentence
             // if we do then pass the handling of this sentence down the branch to the 
@@ -235,14 +237,14 @@ namespace RTParser.Utils
             }
 
             // otherwise split the input into it's component words
-            Unifiable[] splitPath = path.Split();
-            Unifiable first = splitPath[0];// path.First();
+            Unifiable[] splitPath0 = path.Split();
+            Unifiable first = splitPath0[0];// path.First();
 
             // get the first word of the sentence
             Unifiable firstWord = Normalize.MakeCaseInsensitive.TransformInput(first);
 
             // and concatenate the rest of the input into a new path for child nodes
-            Unifiable newPath = path.Substring(firstWord.Length, path.Length - firstWord.Length);
+            Unifiable newPath = path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length);
 
             // first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
