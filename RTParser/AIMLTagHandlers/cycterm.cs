@@ -60,7 +60,7 @@ namespace RTParser.AIMLTagHandlers
                 return false;
             }
             filter = Proc.Cyclify(filter);
-            Unifiable ptext = text.Substring(0, 1).ToUpper() + text.Substring(1);
+            Unifiable ptext = text.ToPropper();
             if(false
             || lookupCycTerm("(#$nameString ?CYCOBJECT \"%s\")", text, filter, out term)
             || lookupCycTerm("(#$denotation #$%s-TheWord ?TEXT ?TYPE ?CYCOBJECT)", ptext, filter, out term)

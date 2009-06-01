@@ -112,7 +112,7 @@ namespace RTParser
         {
             get
             {
-                return Convert.ToDouble(this.GlobalSettings.grabSetting("timeout"));
+                return Convert.ToDouble(this.GlobalSettings.grabSetting("timeout").AsString());
             }
         }
 
@@ -682,7 +682,7 @@ namespace RTParser
                 foreach (Unifiable path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path);
-                    query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new UUnifiable());
+                    query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new Unifiable());
                     result.SubQueries.Add(query);
                 }
 
@@ -718,7 +718,7 @@ namespace RTParser
                     try
                     {
                         //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
-                        Unifiable output = s.Output.OuterXml;
+                        string output = s.Output.OuterXml;
                         bool usedGuard = false;
                         if (s.Guard != null)
                         {
@@ -726,12 +726,12 @@ namespace RTParser
                             output = output.Trim();
                             if (output.StartsWith("<template>"))
                             {
-                                output = "<template>" + s.Guard.InnerXml + "GUARDBOM " + output.Substring(10);
+                                output = "<template>" + s.Guard.InnerXml + " GUARDBOM " + output.Substring(10);
                             }
 
                         }
                         XmlNode templateNode = AIMLTagHandler.getNode(output);
-                        Unifiable outputSentence = this.processNode(templateNode, query, request, result, request.user);
+                        string outputSentence = this.processNode(templateNode, query, request, result, request.user);
                         int f = outputSentence.IndexOf("GUARDBOM");
                         if (f < 0)
                         {
@@ -798,7 +798,7 @@ namespace RTParser
             string tagName = node.Name.ToLower();
             if (tagName == "template")
             {
-                UUnifiable templateResult = new UUnifiable();
+                Unifiable templateResult = new Unifiable();
                 if (node.HasChildNodes)
                 {
                     // recursively check
@@ -970,7 +970,7 @@ namespace RTParser
                         XmlNode resultNode = AIMLTagHandler.getNode(String.Format("<node>{0}</node>", resultNodeInnerXML));
                         if (resultNode.HasChildNodes)
                         {
-                            UUnifiable recursiveResult = new UUnifiable();
+                            Unifiable recursiveResult = new Unifiable();
                             // recursively check
                             foreach (XmlNode childNode in resultNode.ChildNodes)
                             {
@@ -1147,7 +1147,7 @@ The AIMLbot program.
             message = message.Replace("*MESSAGE*", errorMessage);
             message = message.Replace("*RAWINPUT*", request.rawInput);
             message = message.Replace("*USER*", request.user.UserID);
-            UUnifiable paths = new UUnifiable();
+            Unifiable paths = new Unifiable();
             foreach(Unifiable path in request.result.NormalizedPaths)
             {
                 paths.Append(path+Environment.NewLine);

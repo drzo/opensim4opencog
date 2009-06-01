@@ -69,7 +69,7 @@ namespace RTParser
                     }
                     else
                     {
-                        UUnifiable paths = new UUnifiable();
+                        Unifiable paths = new Unifiable();
                         foreach (Unifiable pattern in this.NormalizedPaths)
                         {
                             paths.Append(pattern + Environment.NewLine);
@@ -88,7 +88,7 @@ namespace RTParser
         {
             get
             {
-                UUnifiable result = new UUnifiable();
+                Unifiable result = new Unifiable();
                 foreach (Unifiable sentence in OutputSentences)
                 {
                     Unifiable sentenceForOutput = sentence.Trim();

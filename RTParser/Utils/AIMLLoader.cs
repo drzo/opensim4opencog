@@ -277,10 +277,10 @@ namespace RTParser.Utils
         public Unifiable generatePath(Unifiable pattern, Unifiable that, Unifiable topicName, bool isUserInput)
         {
             // to hold the normalized path to be entered into the graphmaster
-            UUnifiable normalizedPath = new UUnifiable();
-            Unifiable normalizedPattern = Unifiable.Empty;
-            Unifiable normalizedThat = Unifiable.UNIV_STAR;
-            Unifiable normalizedTopic = Unifiable.UNIV_STAR;
+            Unifiable normalizedPath = new Unifiable();
+            string normalizedPattern;// = Unifiable.Empty;
+            Unifiable normalizedThat;// = Unifiable.UNIV_STAR;
+            Unifiable normalizedTopic;// = Unifiable.UNIV_STAR;
 
             if ((this.RProcessor.TrustAIML) & (!isUserInput || RawUserInput))
             {
@@ -342,7 +342,7 @@ namespace RTParser.Utils
         /// <param name="isUserInput">True if the Unifiable being normalized is part of the user input path - 
         /// flags that we need to normalize out * and _ chars</param>
         /// <returns>The normalized Unifiable</returns>
-        public Unifiable Normalize(Unifiable input, bool isUserInput)
+        public Unifiable Normalize(string input, bool isUserInput)
         {
             input = input.Trim();
             while (input.EndsWith("?"))
@@ -354,7 +354,7 @@ namespace RTParser.Utils
                 return input;
             }
 
-            UUnifiable result = new UUnifiable();
+            Unifiable result = new Unifiable();
 
             // objects for normalization of the input
             Normalize.ApplySubstitutions substitutor = new RTParser.Normalize.ApplySubstitutions(this.RProcessor);

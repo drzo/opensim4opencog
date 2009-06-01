@@ -80,7 +80,7 @@ namespace RTParser.Utils
         public XmlNode templateNode;
         protected Unifiable Recurse()
         {
-            UUnifiable templateResult = new UUnifiable();
+            Unifiable templateResult = new Unifiable();
             if (this.templateNode.HasChildNodes)
             {
                 // recursively check
@@ -119,7 +119,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="outerXML">the Unifiable to XMLize</param>
         /// <returns>The XML node</returns>
-        public static XmlNode getNode(Unifiable outerXML)
+        public static XmlNode getNode(string outerXML)
         {
             XmlDocument temp = new XmlDocument();
             temp.LoadXml(outerXML);

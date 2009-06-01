@@ -8,7 +8,7 @@ namespace RTParser
 
     public class Unifiable
     {
-        public static UUnifiable Empty = new UUnifiable()
+        public static Unifiable Empty = new Unifiable("")
                                  //{
                                  //    public override void Append(Unifiable p)
                                  //    {
@@ -121,12 +121,11 @@ namespace RTParser
             return !(s == t);
         }
 
-
         protected string str;
 
-        protected Unifiable()
+        public Unifiable()
         {
-            str = Unifiable.Empty;
+            str = "";
         }
 
         public Unifiable(string value)
@@ -276,14 +275,14 @@ namespace RTParser
 
         public virtual bool IsWildCard()
         {
-            return (str == "*" || str == "_");
+            return (str.Contains("*") || str.Contains("_") || str.Contains("<"));
         }
 
 
 
         public Unifiable[] Split()
         {
-            return arrayOf(str.Trim().Split(" \r\n\t".ToCharArray(), StringSplitOptions.RemoveEmptyEntries));
+            return arrayOf(str.Trim().Split(BRKCHARS, StringSplitOptions.RemoveEmptyEntries));
         }
 
         public bool IsTag(string that)
@@ -322,29 +321,15 @@ namespace RTParser
         {
             return new Unifiable(p);
         }
+        public static Unifiable Create(Unifiable p)
+        {
+            return p;
+        }
 
         internal static Unifiable CreateFromObject(XmlNode pattern)
         {
            // TODO
             return new Unifiable(pattern.InnerXml);
-        }
-    }
-
-    public class UUnifiable : Unifiable
-    {
-
-        public UUnifiable()
-        {
-            str = "";
-        }
-
-        public static Unifiable operator +(UUnifiable u, string more)
-        {
-            return u.str + more;
-        }
-        public static Unifiable operator +(UUnifiable u, Unifiable more)
-        {
-            return u.str + more.AsString();
         }
 
         public virtual void Append(Unifiable p)
@@ -363,16 +348,45 @@ namespace RTParser
             str = str.Remove(p, c);
         }
 
-        public override String ToString()
-        {
-            return str;
-        }
-
         public virtual Unifiable Frozen()
         {
-            return str;
+            return Create(str);
         }
 
+
+        internal Unifiable ToPropper()
+        {
+            int len = str.Length;
+
+            if (len == 0) return this;
+            string newWord = str.Substring(0, 1).ToUpper();
+            if (len == 1)
+            {
+                if (newWord == str) return this;
+            }
+            newWord += str.Substring(1);
+            return newWord;
+        }
+
+        internal Unifiable Rest()
+        {
+            if (String.IsNullOrEmpty(this.str)) return Unifiable.Empty;
+            int i = str.IndexOfAny(BRKCHARS);
+            if (i == -1) return Empty;
+            string rest = str.Substring(i + 1);
+            return Create(rest.Trim());
+        }
+
+        readonly static char[] BRKCHARS = " \r\n\t".ToCharArray();
+
+        internal Unifiable First()
+        {
+            if (String.IsNullOrEmpty(str)) return Unifiable.Empty;
+            int i = str.IndexOfAny(BRKCHARS);
+            if (i == -1) return Create(str);
+            string rest = str.Substring(0, i - 1);
+            return Create(rest.Trim());
+        }
     }
 }
 
