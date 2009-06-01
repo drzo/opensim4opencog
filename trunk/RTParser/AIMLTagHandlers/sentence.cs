@@ -43,11 +43,11 @@ namespace RTParser.AIMLTagHandlers
                 if (templateNodeInnerText.Length > 0)
                 {
                     Unifiable result = new Unifiable();
-                    char[] letters = templateNodeInnerText.Trim().ToCharArray();
+                    char[] letters = templateNodeInnerText.AsString().Trim().ToCharArray();
                     bool doChange = true;
                     for (int i = 0; i < letters.Length; i++)
                     {
-                        Unifiable letterAsString = Convert.ToString(letters[i]);
+                        string letterAsString = Convert.ToString(letters[i]);
                         if (this.Proc.Splitters.Contains(letterAsString))
                         {
                             doChange = true;

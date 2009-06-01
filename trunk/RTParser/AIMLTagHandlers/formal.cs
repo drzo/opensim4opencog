@@ -41,7 +41,7 @@ namespace RTParser.AIMLTagHandlers
                 Unifiable result = new Unifiable();
                 if (templateNodeInnerText.Length > 0)
                 {
-                    Unifiable[] words = templateNodeInnerText.ToLower().Split();
+                    Unifiable[] words = templateNodeInnerText.Split();
                     foreach (Unifiable word in words)
                     {
                         Unifiable newWord = word.ToPropper();

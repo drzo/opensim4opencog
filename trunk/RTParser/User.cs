@@ -109,7 +109,7 @@ namespace RTParser
             }
             else
             {
-                return "*";
+                return Unifiable.STAR;
             }
         }
 

@@ -215,14 +215,7 @@ namespace RTParser
             get
             {
                 Unifiable willcallhome = this.GlobalSettings.grabSetting("willcallhome");
-                if (willcallhome.ToLower() == "true")
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                return (Unifiable.IsTrue(willcallhome));
             }
         }
 
@@ -746,8 +739,6 @@ namespace RTParser
                            {
 	                           string left = outputSentence.Substring(0, f);
 	                            Unifiable ss = EvalSubL("(cyc-query '" + left + " #$EverythingPSC)", null);
-                                if (Unifiable.IsNull(ss)) continue;
-	                            ss = ss.Trim();
 	                            if (Unifiable.IsFalse(ss)) continue;
 	                            outputSentence = outputSentence.Substring(f + 9);
 	                            if (outputSentence.Length > 0)

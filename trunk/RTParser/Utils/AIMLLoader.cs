@@ -154,7 +154,7 @@ namespace RTParser.Utils
         /// <param name="filename">the file from which this category was taken</param>
         private void processCategory(XmlNode node, string filename)
         {
-            this.processCategory(node, Unifiable.UNIV_STAR, filename);
+            this.processCategory(node, Unifiable.STAR, filename);
         }
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace RTParser.Utils
             XmlNode that = this.FindNode("that", node);
 
             Unifiable patternText;
-            Unifiable thatText = Unifiable.UNIV_STAR;
+            Unifiable thatText = Unifiable.STAR;
             if (object.Equals(null, pattern))
             {
                 patternText = Unifiable.Empty;
@@ -279,13 +279,13 @@ namespace RTParser.Utils
             // to hold the normalized path to be entered into the graphmaster
             Unifiable normalizedPath = new Unifiable();
             string normalizedPattern;// = Unifiable.Empty;
-            Unifiable normalizedThat;// = Unifiable.UNIV_STAR;
-            Unifiable normalizedTopic;// = Unifiable.UNIV_STAR;
+            Unifiable normalizedThat;// = Unifiable.STAR;
+            Unifiable normalizedTopic;// = Unifiable.STAR;
 
             if ((this.RProcessor.TrustAIML) & (!isUserInput || RawUserInput))
             {
 
-                normalizedPattern = pattern.Trim();
+                normalizedPattern = pattern.AsString().Trim();
                 while (normalizedPattern.EndsWith("?") || normalizedPattern.EndsWith("."))
                 {
                     normalizedPattern = normalizedPattern.Substring(0, normalizedPattern.Length - 1).Trim();
@@ -306,25 +306,25 @@ namespace RTParser.Utils
             {
                 if (normalizedThat.Length == 0)
                 {
-                    normalizedThat = "*";
+                    normalizedThat = Unifiable.STAR;
                 }
                 if (normalizedTopic.Length == 0)
                 {
-                    normalizedTopic = "*";
+                    normalizedTopic = Unifiable.STAR;
                 }
 
                 // This check is in place to avoid huge "that" elements having to be processed by the 
                 // graphmaster. 
                 if (normalizedThat.Length > this.RProcessor.MaxThatSize)
                 {
-                    normalizedThat = "*";
+                    normalizedThat = Unifiable.STAR;
                 }
 
                 // o.k. build the path
-                normalizedPath.Append(normalizedPattern);
-                normalizedPath.Append(" <that> ");
+                normalizedPath.Append(Unifiable.Create(normalizedPattern));
+                normalizedPath.Append(Unifiable.ThatTag);
                 normalizedPath.Append(normalizedThat);
-                normalizedPath.Append(" <topic> ");
+                normalizedPath.Append(Unifiable.TopicTag);
                 normalizedPath.Append(normalizedTopic);
 
                 return normalizedPath;//.Frozen();
@@ -374,7 +374,7 @@ namespace RTParser.Utils
                 }
                 else
                 {
-                    if ((word == "*") || (word == "_"))
+                    if (word.IsWildCard())
                     {
                         normalizedWord = word;
                     }

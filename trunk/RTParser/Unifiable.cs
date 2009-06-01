@@ -24,8 +24,7 @@ namespace RTParser
                                  ;
 
                                             
-        public static Unifiable STAR = new Unifiable("*");
-        public static Unifiable UNIV_STAR
+        public static Unifiable STAR
         {
             get
             {
@@ -46,7 +45,12 @@ namespace RTParser
         public static implicit operator Unifiable(string value)
         {
             if (value == null) return null;
-            return new Unifiable(value);
+            Unifiable u = new Unifiable(value);
+            if (u.IsWildCard())
+            {
+                
+            }
+            return u;
         }
 
         public static Unifiable Join(string p, Unifiable[] fsp, int p_3, int p_4)
@@ -59,7 +63,7 @@ namespace RTParser
             Unifiable[] it = new Unifiable[strs.Length];
             for (int i = 0; i < it.Length; i++)
             {
-                it[i] = strs[i];
+                it[i] = Create(strs[i]);
             }
             return it;
         }
@@ -145,6 +149,9 @@ namespace RTParser
             }
         }
 
+        public static Unifiable ThatTag = Create(" <that> ");
+        public static Unifiable TopicTag = Create(" <topic> ");
+
 
         public Unifiable Replace(object marker, object param1)
         {
@@ -169,10 +176,10 @@ namespace RTParser
             return str;
         }
 
-        public virtual Unifiable ToLower()
-        {
-            return str.ToLower();
-        }
+        //public virtual Unifiable ToLower()
+        //{
+        //    return str.ToLower();
+        //}
 
         public Unifiable ToUpper()
         {
@@ -218,18 +225,19 @@ namespace RTParser
 
         public override int GetHashCode()
         {
+            if (IsWildCard()) return -1;
             return str.GetHashCode();
         }
 
-        public virtual Unifiable Substring(int p)
-        {
-            return str.Substring(p);
-        }
+        //public virtual Unifiable Substring(int p)
+        //{
+        //    return str.Substring(p);
+        //}
 
-        public virtual int IndexOf(string p)
-        {
-            return str.IndexOf(p);
-        }
+        //public virtual int IndexOf(string p)
+        //{
+        //    return str.IndexOf(p);
+        //}
 
 
         public virtual Unifiable[] Split(Unifiable[] tokens, StringSplitOptions stringSplitOptions)
@@ -243,20 +251,20 @@ namespace RTParser
         //    return arrayOf(str.Split(p));
         //}
 
-        public bool Contains(string p)
-        {
-            return str.Contains(p);
-        }
+        //public bool Contains(string p)
+        //{
+        //    return str.Contains(p);
+        //}
 
-        public virtual string ToLower(CultureInfo cultureInfo)
-        {
-            return str.ToLower(cultureInfo);
-        }
+        //public virtual string ToLower(CultureInfo cultureInfo)
+        //{
+        //    return str.ToLower(cultureInfo);
+        //}
 
-        public virtual string ToUpper(CultureInfo cultureInfo)
-        {
-            return str.ToUpper(cultureInfo);
-        }
+        //public virtual string ToUpper(CultureInfo cultureInfo)
+        //{
+        //    return str.ToUpper(cultureInfo);
+        //}
 
         public virtual Unifiable TrimEnd()
         {
@@ -293,8 +301,9 @@ namespace RTParser
         public static bool IsFalse(Unifiable tf)
         {
             if (Object.ReferenceEquals(tf, null)) return true;
-            string found = tf.AsString();
-            return found.Trim() == "" || found.Trim() == "NIL";
+            if (String.IsNullOrEmpty(tf.str)) return true;
+            string found = tf.AsString().Trim().ToUpper();
+            return found == "" || found == "NIL" || found == "()" || found == "FALSE";
         }
 
         public static bool IsNull(Object name)
@@ -364,7 +373,7 @@ namespace RTParser
             {
                 if (newWord == str) return this;
             }
-            newWord += str.Substring(1);
+            newWord += str.Substring(1).ToLower();
             return newWord;
         }
 
