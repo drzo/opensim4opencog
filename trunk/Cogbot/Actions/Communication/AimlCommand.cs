@@ -103,7 +103,7 @@ namespace cogbot.Listeners
             {
                 foreach (var u in BotUsers.Values)
                 {
-                    if (u.UserID.AsString().Contains(username) || username.Contains(u.UserID))
+                    if (u.UserID.ToValue().Contains(username) || username.Contains(u.UserID))
                         u.RespondToChat = value;
                 }
             }

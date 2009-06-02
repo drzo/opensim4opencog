@@ -285,7 +285,7 @@ namespace RTParser.Utils
             if ((this.RProcessor.TrustAIML) & (!isUserInput || RawUserInput))
             {
 
-                normalizedPattern = pattern.AsString().Trim();
+                normalizedPattern = pattern.ToValue().Trim();
                 while (normalizedPattern.EndsWith("?") || normalizedPattern.EndsWith("."))
                 {
                     normalizedPattern = normalizedPattern.Substring(0, normalizedPattern.Length - 1).Trim();

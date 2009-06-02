@@ -122,7 +122,7 @@ namespace RTParser.AIMLTagHandlers
                 if (this.templateNode.Attributes.Count == 2) // block
                 {
                     string name = String.Empty;
-                    string value = String.Empty;
+                    Unifiable value = Unifiable.Empty;
 
                     if (this.templateNode.Attributes[0].Name == "name")
                     {
@@ -142,11 +142,12 @@ namespace RTParser.AIMLTagHandlers
                         value = this.templateNode.Attributes[1].Value;
                     }
 
-                    if ((name.Length > 0) & (value.Length > 0))
+                    if ((name.Length > 0) & (!value.IsEmpty))
                     {
                         Unifiable actualValue = this.user.Predicates.grabSetting(name);
-                        Regex matcher = new Regex(value.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
-                        if (matcher.IsMatch(actualValue))
+                        //Regex matcher = new Regex(value.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
+                        //if (matcher.IsMatch(actualValue))
+                        if (value.IsMatch(actualValue))
                         {
                             return this.templateNode.InnerXml;
                         }
@@ -166,8 +167,10 @@ namespace RTParser.AIMLTagHandlers
                                     if (childLINode.Attributes[0].Name.ToLower() == "value")
                                     {
                                         Unifiable actualValue = this.user.Predicates.grabSetting(name);
-                                        Regex matcher = new Regex(childLINode.Attributes[0].Value.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
-                                        if (matcher.IsMatch(actualValue))
+                                        Unifiable value = childLINode.Attributes[0].Value;
+                                        //Regex matcher = new Regex(value.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
+                                        //if (matcher.IsMatch(actualValue))
+                                        if (value.IsMatch(actualValue))
                                         {
                                             return childLINode.InnerXml;
                                         }
@@ -212,8 +215,7 @@ namespace RTParser.AIMLTagHandlers
                                 if ((name.Length > 0) & (!value.IsEmpty))
                                 {
                                     Unifiable actualValue = this.user.Predicates.grabSetting(name);
-                                    Regex matcher = new Regex(value.AsString().Replace(" ", "\\s").Replace("*","[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
-                                    if (matcher.IsMatch(actualValue))
+                                    if (value.IsMatch(actualValue))
                                     {
                                         return childLINode.InnerXml;
                                     }

@@ -112,7 +112,7 @@ namespace RTParser
         {
             get
             {
-                return Convert.ToDouble(this.GlobalSettings.grabSetting("timeout").AsString());
+                return Convert.ToDouble(this.GlobalSettings.grabSetting("timeout").ToValue());
             }
         }
 
@@ -662,7 +662,7 @@ namespace RTParser
             {
                 // Normalize the input
                 AIMLLoader loader = new AIMLLoader(this);
-                RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
+                //RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
                 Unifiable[] rawSentences = new Unifiable[] { request.rawInput };//splitter.Transform(request.rawInput);
                 foreach (Unifiable sentence in rawSentences)
                 {

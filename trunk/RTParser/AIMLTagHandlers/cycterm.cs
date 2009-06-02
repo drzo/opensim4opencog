@@ -49,7 +49,7 @@ namespace RTParser.AIMLTagHandlers
 
         private bool lookup(Unifiable textIn,Unifiable filter,out Unifiable term)
         {
-            string text = textIn.AsString();
+            string text = textIn.ToValue();
 
             if (!Proc.CycEnabled)
             {
@@ -110,7 +110,7 @@ namespace RTParser.AIMLTagHandlers
                 }
             }
             // and if that fails returns a Unifiable of using #$\”%s\”
-            term = Unifiable.Format("#${0}", text);
+            term = string.Format("#${0}", text);
             return false;
         }
 

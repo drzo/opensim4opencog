@@ -43,7 +43,7 @@ namespace RTParser.AIMLTagHandlers
                 if (!templateNodeInnerText.IsEmpty)
                 {
                     Unifiable result = new Unifiable();
-                    char[] letters = templateNodeInnerText.AsString().Trim().ToCharArray();
+                    char[] letters = templateNodeInnerText.ToValue().Trim().ToCharArray();
                     bool doChange = true;
                     for (int i = 0; i < letters.Length; i++)
                     {
