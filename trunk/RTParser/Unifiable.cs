@@ -4,12 +4,22 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Xml;
 using RTParser.AIMLTagHandlers;
+using RTParser.Utils;
 
 namespace RTParser
 {
 
     public class Unifiable
     {
+        public static Unifiable InnerXmlText(XmlNode templateNode)
+        {
+            if (templateNode.NodeType == XmlNodeType.Text)
+            {
+                return templateNode.InnerText;
+            }
+            return templateNode.InnerXml;
+        }
+
         public static Unifiable Empty = new Unifiable("")
                                  //{
                                  //    public override void Append(Unifiable p)
@@ -453,11 +463,8 @@ namespace RTParser
         internal bool IsShortWildCard()
         {
             if (str == "_") return true;
-            if (this.IsMarkerTag()) return false;
-            if (str.Contains("<"))
-            {
-
-            }
+            // if (this.IsMarkerTag()) return false; // tested by the next line
+            if (IsLazyWildcard()) return true;
             return false;
         }
 
@@ -465,11 +472,13 @@ namespace RTParser
         {
             if (str == ("*")) return true;
             if (this.IsMarkerTag()) return false;
-            if (str.Contains("<"))
-            {
-                
-            }
             return false;
+        }
+
+        private bool IsLazyWildcard()
+        {
+            if (this.IsMarkerTag()) return false;
+            return str.StartsWith("<");
         }
 
         private bool IsMarkerTag()
@@ -478,11 +487,35 @@ namespace RTParser
             return test.StartsWith("TAG-");
         }
 
-        internal bool Unify(Unifiable unifiable)
+        static private SubQuery subquery;
+        internal bool Unify(Unifiable unifiable, SubQuery query)
         {
-            if (IsWildCard()) return true;
-            if (unifiable.IsWildCard()) return true;
+            subquery = query;
+            if (IsWildCard())
+            {
+                if (IsLazyWildcard())
+                {
+                    string mustBe = unifiable.ToValue();
+                    string value = EvalLazy().AsString();
+                    return mustBe.ToUpper() == value.ToUpper();
+                }
+                return true;
+            }
+            if (unifiable.IsWildCard())
+            {
+                return unifiable.Unify(this, query);
+            }
             return unifiable.str.ToUpper() == str.ToUpper();
+        }
+
+        private Unifiable EvalLazy()
+        {
+            XmlNode templateNode = AIMLTagHandler.getNode("<template>" + str + "</template>");
+            Result result = subquery.Result;
+            Request request = result.request;
+            RTPBot bot = request.Proccessor;
+            Unifiable outputSentence = bot.processNode(templateNode, subquery, request, result, request.user);
+            return outputSentence;
         }
 
         internal bool IsEmpty
@@ -497,6 +530,10 @@ namespace RTParser
 
         public string ToValue()
         {
+            if (IsLazyWildcard())
+            {
+                
+            }
             return AsString();
         }
 

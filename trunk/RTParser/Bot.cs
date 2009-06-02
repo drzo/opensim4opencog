@@ -674,7 +674,7 @@ namespace RTParser
                 // grab the templates for the various sentences from the graphmaster
                 foreach (Unifiable path in result.NormalizedPaths)
                 {
-                    Utils.SubQuery query = new SubQuery(path);
+                    Utils.SubQuery query = new SubQuery(path,result);
                     query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new Unifiable());
                     result.SubQueries.Add(query);
                 }
@@ -778,7 +778,7 @@ namespace RTParser
         public Unifiable processNode(XmlNode node, SubQuery query, Request request, Result result, User user)
         {
             // check for timeout (to avoid infinite loops)
-            if (request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
+            if (request != null  && request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
             {
                 request.Proccessor.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" + request.rawInput + "\" processing template: \""+query.Template+"\"");
                 request.hasTimedOut = true;
@@ -795,7 +795,15 @@ namespace RTParser
                     // recursively check
                     foreach (XmlNode childNode in node.ChildNodes)
                     {
-                        templateResult.Append(this.processNode(childNode, query, request, result, user));
+                        try
+                        {
+                            Unifiable part = this.processNode(childNode, query, request, result, user);
+                            templateResult.Append(part);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("" + e);
+                        }
                     }
                 }
                 return templateResult;//.ToString();

@@ -42,12 +42,14 @@ namespace RTParser.Utils
 
         #endregion
 
+        public Result Result;
         /// <summary>
         /// Ctor
         /// </summary>
         /// <param name="fullPath">The path that this query relates to</param>
-        public SubQuery(Unifiable fullPath)
+        public SubQuery(Unifiable fullPath, Result req)
         {
+            Result = req;
             this.FullPath = fullPath;
         }
     }

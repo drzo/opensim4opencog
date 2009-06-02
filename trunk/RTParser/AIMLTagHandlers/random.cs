@@ -51,7 +51,7 @@ namespace RTParser.AIMLTagHandlers
                     {
                         Random r = new Random();
                         XmlNode chosenNode = (XmlNode)listNodes[r.Next(listNodes.Count)];
-                        return chosenNode.InnerXml;
+                        return Unifiable.InnerXmlText(chosenNode);
                     }
                 }
             }
