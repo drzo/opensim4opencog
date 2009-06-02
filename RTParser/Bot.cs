@@ -152,7 +152,7 @@ namespace RTParser
         /// <summary>
         /// The email address of the botmaster to be used if WillCallHome is set to true
         /// </summary>
-        public Unifiable AdminEmail
+        public string AdminEmail
         {
             get
             {
@@ -1253,11 +1253,11 @@ The AIMLbot program.
 
         internal bool IsaFilter(Unifiable term, Unifiable filter)
         {
-            if (term.Length < 0) return false;
+            if (term.IsEmpty) return false;
             if (term == "NIL") return false;
-            if (filter.Length > 0)
+            if (!filter.IsEmpty)
             {
-                if (filter == "NIL") return true;
+                if (Unifiable.IsFalse(filter)) return true;
                 if (this.EvalSubL(String.Format("(ask-template 'T '(#$isa {0} {1}) #$EverythingPSC)", term, Cyclify(filter)),null) == "NIL")
                     return false;
             }
@@ -1311,7 +1311,7 @@ The AIMLbot program.
             
         }
 
-        internal Unifiable Cyclify(Unifiable mt)
+        internal Unifiable Cyclify(string mt)
         {
             mt = mt.Trim();
             if (mt.Length == 0) return mt;

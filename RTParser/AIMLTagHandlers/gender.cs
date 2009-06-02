@@ -50,7 +50,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "gender")
             {
-                if (templateNodeInnerText.Length > 0)
+                if (!templateNodeInnerText.IsEmpty)
                 {
                     // non atomic version of the node
                     return RTParser.Normalize.ApplySubstitutions.Substitute(this.Proc, this.Proc.GenderSubstitutions, templateNodeInnerText);
@@ -61,7 +61,7 @@ namespace RTParser.AIMLTagHandlers
                     XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
                     star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
                     templateNodeInnerText = recursiveStar.Transform();
-                    if (templateNodeInnerText.Length > 0)
+                    if (!templateNodeInnerText.IsEmpty)
                     {
                         return this.ProcessChange();
                     }

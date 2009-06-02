@@ -38,7 +38,7 @@ namespace RTParser.AIMLTagHandlers
             if (this.templateNode.Name.ToLower() == "gossip")
             {
                 // gossip is merely logged by the Proc and written to log files
-                if (templateNodeInnerText.Length > 0)
+                if (!templateNodeInnerText.IsEmpty)
                 {
                     this.Proc.writeToLog(Unifiable.Format("GOSSIP from user: {0}, '{1}'", this.user.UserID, templateNodeInnerText));
                 }

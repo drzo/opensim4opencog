@@ -37,7 +37,7 @@ namespace RTParser.AIMLTagHandlers
             if (this.templateNode.Name.ToLower() == "cycrandom")
             {
                 Unifiable filter = base.GetAttribValue("filter", null);
-                if (templateNodeInnerText.Length > 0)
+                if (!templateNodeInnerText.IsEmpty)
                 {
                     return
                         this.Proc.EvalSubL(

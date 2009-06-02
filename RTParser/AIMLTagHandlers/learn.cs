@@ -36,7 +36,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 // currently only AIML files in the local filesystem can be referenced
                 // ToDo: Network HTTP and web service based learning
-                if (templateNodeInnerText.Length > 0)
+                if (!templateNodeInnerText.IsEmpty)
                 {
                     Unifiable path = templateNodeInnerText;
                     FileInfo fi = new FileInfo(path);

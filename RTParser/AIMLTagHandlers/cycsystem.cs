@@ -31,7 +31,7 @@ namespace RTParser.AIMLTagHandlers
             if (this.templateNode.Name.ToLower() == "cycsystem")
             {
                 Unifiable filter = base.GetAttribValue("filter", null);
-                if (templateNodeInnerText.Length > 0)
+                if (!templateNodeInnerText.IsEmpty)
                 {
                     Unifiable result = this.Proc.EvalSubL(Recurse(),filter);
                     return result;

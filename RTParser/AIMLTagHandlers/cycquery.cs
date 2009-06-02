@@ -36,7 +36,7 @@ namespace RTParser.AIMLTagHandlers
                 Unifiable filter = GetAttribValue("filter", null);
                 Unifiable varname = base.GetAttribValue("varname", "?REPLY");
                 Unifiable mt = GetAttribValue("mt", "EverythingPSC");
-                if (templateNodeInnerText.Length > 0)
+                if (!templateNodeInnerText.IsEmpty)
                 {
                     return this.Proc.EvalSubL(String.Format("(ask-template '{0} {1} {2})",varname, Recurse(), Proc.Cyclify(mt)), filter);
                 }

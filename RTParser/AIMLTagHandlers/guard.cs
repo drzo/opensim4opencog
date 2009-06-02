@@ -49,7 +49,7 @@ namespace RTParser.AIMLTagHandlers
             if (this.templateNode.Name.ToLower() == "guard")
             {
                 templateNodeInnerText = Recurse();
-                if (templateNodeInnerText.Length > 0)
+                if (!templateNodeInnerText.IsEmpty)
                 {
                     Unifiable res = Proc.EvalSubL(templateNodeInnerText, null);
                     return res;
