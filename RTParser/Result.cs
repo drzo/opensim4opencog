@@ -59,7 +59,7 @@ namespace RTParser
             {
                 if (OutputSentences.Count > 0)
                 {
-                    return this.RawOutput;
+                    return this.RawOutput.AsString().Trim().Replace("  "," ");
                 }
                 else
                 {

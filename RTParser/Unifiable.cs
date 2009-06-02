@@ -15,6 +15,14 @@ namespace RTParser
         {
             if (templateNode.NodeType == XmlNodeType.Text)
             {
+                if (templateNode.InnerXml.Length>0)
+                {
+                    return templateNode.InnerText + templateNode.InnerXml;                   
+                }
+                if (templateNode.InnerText.Length > 0)
+                {
+                    return templateNode.InnerText + templateNode.InnerXml;
+                }
                 return templateNode.InnerText;
             }
             return templateNode.InnerXml;
@@ -70,7 +78,7 @@ namespace RTParser
             return string.Join(p, FromArrayOf(fsp), p_3, p_4);
         }
 
-        private static Unifiable[] arrayOf(string[] strs)
+        public static Unifiable[] arrayOf(string[] strs)
         {
             Unifiable[] it = new Unifiable[strs.Length];
             for (int i = 0; i < it.Length; i++)
@@ -80,7 +88,7 @@ namespace RTParser
             return it;
         }
 
-        private static string[] FromArrayOf(Unifiable[] tokens)
+        public static string[] FromArrayOf(Unifiable[] tokens)
         {
             string[] it = new string[tokens.Length];
             for (int i = 0; i < it.Length; i++)
@@ -137,7 +145,7 @@ namespace RTParser
         //    return !(s == t);
         //}
 
-        private string _str;
+        public string _str;
         protected string str
         {
             get
@@ -182,7 +190,7 @@ namespace RTParser
         //    return str.Replace(astr(marker), astr(param1));
         //}
 
-        private static string astr(object param1)
+        public static string astr(object param1)
         {
             return "" + param1;
         }
@@ -395,7 +403,7 @@ namespace RTParser
             return p;
         }
 
-        internal static Unifiable CreateFromObject(XmlNode pattern)
+        public static Unifiable CreateFromObject(XmlNode pattern)
         {
            // TODO
             return new Unifiable(pattern.InnerXml);
@@ -423,7 +431,7 @@ namespace RTParser
         }
 
 
-        internal Unifiable ToPropper()
+        public virtual Unifiable ToPropper()
         {
             int len = str.Length;
 
@@ -437,7 +445,7 @@ namespace RTParser
             return newWord;
         }
 
-        //internal Unifiable Rest()
+        //public virtual Unifiable Rest()
         //{
         //    Unifiable[] splitted = Splitter(str);
         //    return Join(" ", splitted, 1, splitted.Length - 1);
@@ -450,7 +458,7 @@ namespace RTParser
 
         readonly static char[] BRKCHARS = " \r\n\t".ToCharArray();
 
-        //internal Unifiable First()
+        //public virtual Unifiable First()
         //{
         //    if (String.IsNullOrEmpty(str)) return Unifiable.Empty;
         //    //int i = str.IndexOfAny(BRKCHARS);
@@ -460,44 +468,49 @@ namespace RTParser
         //    //return Create(rest.Trim());
         //}
 
-        internal bool IsShortWildCard()
+        public virtual bool IsShortWildCard()
         {
             if (str == "_") return true;
             // if (this.IsMarkerTag()) return false; // tested by the next line
-            if (IsLazyWildcard()) return true;
+            if (IsLazy()) return true;
             return false;
         }
 
-        internal bool IsLongWildCard()
+        public virtual bool IsLongWildCard()
         {
             if (str == ("*")) return true;
             if (this.IsMarkerTag()) return false;
             return false;
         }
 
-        private bool IsLazyWildcard()
+        public virtual bool IsLazy()
         {
             if (this.IsMarkerTag()) return false;
             return str.StartsWith("<");
         }
 
-        private bool IsMarkerTag()
+        public virtual bool IsMarkerTag()
         {
             string test = str.Trim().ToUpper();
             return test.StartsWith("TAG-");
         }
 
-        static private SubQuery subquery;
-        internal bool Unify(Unifiable unifiable, SubQuery query)
+        static public SubQuery subquery;
+        public virtual bool Unify(Unifiable unifiable, SubQuery query)
         {
             subquery = query;
             if (IsWildCard())
             {
-                if (IsLazyWildcard())
+                if (IsLazy())
                 {
-                    string mustBe = unifiable.ToValue();
-                    string value = EvalLazy().AsString();
-                    return mustBe.ToUpper() == value.ToUpper();
+                    try
+                    {
+                        return UnifyLazy(unifiable);
+                    } catch(Exception e)
+                    {
+                        Console.WriteLine(""+e);
+                        return false;
+                    }
                 }
                 return true;
             }
@@ -508,36 +521,52 @@ namespace RTParser
             return unifiable.str.ToUpper() == str.ToUpper();
         }
 
-        private Unifiable EvalLazy()
+        public virtual bool UnifyLazy(Unifiable unifiable)
         {
-            XmlNode templateNode = AIMLTagHandler.getNode("<template>" + str + "</template>");
-            Result result = subquery.Result;
-            Request request = result.request;
-            RTPBot bot = request.Proccessor;
-            Unifiable outputSentence = bot.processNode(templateNode, subquery, request, result, request.user);
-            return outputSentence;
+            AIMLTagHandler tagHandler = GetTagHandler();
+            if (tagHandler.CanUnify(unifiable)) return true;
+            Unifiable outputSentence = tagHandler.CompleteProcess();///bot.GetTagHandler(templateNode, subquery, request, result, request.user);
+            string value = outputSentence.AsString();
+            string mustBe = unifiable.ToValue();
+            return mustBe.ToUpper() == value.ToUpper();
         }
 
-        internal bool IsEmpty
+        public virtual AIMLTagHandler GetTagHandler()
+        {
+            XmlNode node = GetNode();
+            // if (node.ChildNodes.Count == 0) ;
+            Result result = subquery.Result;
+            Request request = result.request;
+            User user = result.user;
+            RTPBot bot = request.Proccessor;
+            return bot.GetTagHandler(user, subquery, request, result, node);
+        }
+
+        public virtual XmlNode GetNode()
+        {
+            return AIMLTagHandler.getNode(str);
+        }
+
+        public virtual bool IsEmpty
         {
             get { return string.IsNullOrEmpty(str); }
         }
 
-        internal void Clear()
+        public virtual void Clear()
         {
             str = "";
         }
 
         public string ToValue()
         {
-            if (IsLazyWildcard())
+            if (IsLazy())
             {
                 
             }
             return AsString();
         }
 
-        internal bool IsMatch(Unifiable actualValue)
+        public virtual bool IsMatch(Unifiable actualValue)
         {
             return TwoMatch(actualValue.AsString(), this.AsString()) || TwoMatch(actualValue.ToValue(), this.ToValue());
         }
@@ -546,6 +575,24 @@ namespace RTParser
         {
             Regex matcher = new Regex(s1.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
             return matcher.IsMatch(s2);
+        }
+
+        public bool IsStar()
+        {
+            if (str == "_") return true;
+            if (str == "*") return true;
+            if (IsLazyStar())
+            {
+                return true;
+            }
+            //if (GetTagHandler() is star) return true;
+            return false;
+        }
+
+        public virtual bool IsLazyStar()
+        {
+            if (!IsLazy()) return false;
+            return GetTagHandler() is star;
         }
     }
 }

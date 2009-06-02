@@ -264,7 +264,7 @@ namespace RTParser.Utils
                 Node childNode = this.children[childNodeWord];
                 // add the next word to the wildcard match 
                 Unifiable newWildcard = new Unifiable();
-                this.storeWildCard(first, newWildcard);
+                if (childNodeWord.IsStar()) this.storeWildCard(first, newWildcard);
                 
                 // move down into the identified branch of the GraphMaster structure
                 List<Template> result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);

@@ -95,7 +95,7 @@ namespace RTParser.Utils
                         Unifiable found = Proc.processNode(childNode, query, request, result, user);
                         if (Unifiable.IsFalse(found))
                         {
-                            return Unifiable.Empty;
+                        //    return Unifiable.Empty;
                         }
                         templateResult.Append(found);
                     }
@@ -126,6 +126,23 @@ namespace RTParser.Utils
             return temp.FirstChild;
         }
 
+
+
+        /// <summary>
+        /// Helper method that turns the passed Unifiable into an XML node
+        /// </summary>
+        /// <param name="outerXML">the Unifiable to XMLize</param>
+        /// <returns>The XML node</returns>
+        public virtual bool CanUnify(Unifiable with)
+        {
+            string w = with.ToValue();
+            Unifiable t1 = ProcessChange();
+            if (t1.Unify(with,query)) return true;
+            Unifiable t2 = CompleteProcess();
+            if (t2.Unify(with,query)) return true;
+            return false;
+        }
+
         #endregion
 
         protected Unifiable GetAttribValue(string attribName,Unifiable defaultIfEmpty)
@@ -138,5 +155,45 @@ namespace RTParser.Utils
             return defaultIfEmpty;
         }
 
+
+        public virtual Unifiable CompleteProcess()
+        {
+            AIMLTagHandler tagHandler = this;
+            XmlNode node = templateNode;
+            if (tagHandler.isRecursive)
+            {
+                if (node.HasChildNodes)
+                {
+                    // recursively check
+                    foreach (XmlNode childNode in node.ChildNodes)
+                    {
+                        if (childNode.NodeType != XmlNodeType.Text)
+                        {
+                            childNode.InnerText = Proc.processNode(childNode, query, request, result, user);
+                        }
+                    }
+                }
+                return tagHandler.Transform();
+            }
+            else
+            {
+                Unifiable resultNodeInnerXML = tagHandler.Transform();
+                XmlNode resultNode = getNode(String.Format("<node>{0}</node>", resultNodeInnerXML));
+                if (resultNode.HasChildNodes)
+                {
+                    Unifiable recursiveResult = new Unifiable();
+                    // recursively check
+                    foreach (XmlNode childNode in resultNode.ChildNodes)
+                    {
+                        recursiveResult.Append(Proc.processNode(childNode, query, request, result, user));
+                    }
+                    return recursiveResult;//.ToString();
+                }
+                else
+                {
+                    return resultNode.InnerXml;
+                }
+            }
+        }
     }
 }

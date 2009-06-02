@@ -778,212 +778,175 @@ namespace RTParser
         public Unifiable processNode(XmlNode node, SubQuery query, Request request, Result result, User user)
         {
             // check for timeout (to avoid infinite loops)
-            if (request != null  && request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
+            if (request != null && request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
             {
-                request.Proccessor.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" + request.rawInput + "\" processing template: \""+query.Template+"\"");
+                request.Proccessor.writeToLog("WARNING! Request timeout. User: " + request.user.UserID +
+                                              " raw input: \"" + request.rawInput + "\" processing template: \"" +
+                                              query.Template + "\"");
                 request.hasTimedOut = true;
                 return Unifiable.Empty;
             }
-                        
-            // process the node
-            string tagName = node.Name.ToLower();
-            if (tagName == "template")
-            {
-                Unifiable templateResult = new Unifiable();
-                if (node.HasChildNodes)
-                {
-                    // recursively check
-                    foreach (XmlNode childNode in node.ChildNodes)
-                    {
-                        try
-                        {
-                            Unifiable part = this.processNode(childNode, query, request, result, user);
-                            templateResult.Append(part);
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine("" + e);
-                        }
-                    }
-                }
-                return templateResult;//.ToString();
-            }
-            else
-            {
-                AIMLTagHandler tagHandler = null;
-                tagHandler = this.getBespokeTags(user, query, request, result, node);
-                if (object.Equals(null, tagHandler))
-                {
-                    switch (tagName)
-                    {
-                        case "bot":
-                            tagHandler = new AIMLTagHandlers.bot(this, user, query, request, result, node);
-                            break;
-                        case "condition":
-                            tagHandler = new AIMLTagHandlers.condition(this, user, query, request, result, node);
-                            break;
-                        case "date":
-                            tagHandler = new AIMLTagHandlers.date(this, user, query, request, result, node);
-                            break;
-                        case "formal":
-                            tagHandler = new AIMLTagHandlers.formal(this, user, query, request, result, node);
-                            break;
-                        case "gender":
-                            tagHandler = new AIMLTagHandlers.gender(this, user, query, request, result, node);
-                            break;
-                        case "get":
-                            tagHandler = new AIMLTagHandlers.get(this, user, query, request, result, node);
-                            break;
-                        case "gossip":
-                            tagHandler = new AIMLTagHandlers.gossip(this, user, query, request, result, node);
-                            break;
-                        case "id":
-                            tagHandler = new AIMLTagHandlers.id(this, user, query, request, result, node);
-                            break;
-                        case "input":
-                            tagHandler = new AIMLTagHandlers.input(this, user, query, request, result, node);
-                            break;
-                        case "javascript":
-                            tagHandler = new AIMLTagHandlers.javascript(this, user, query, request, result, node);
-                            break;
-                        case "learn":
-                            tagHandler = new AIMLTagHandlers.learn(this, user, query, request, result, node);
-                            break;
-                        case "lowercase":
-                            tagHandler = new AIMLTagHandlers.lowercase(this, user, query, request, result, node);
-                            break;
-                        case "person":
-                            tagHandler = new AIMLTagHandlers.person(this, user, query, request, result, node);
-                            break;
-                        case "person2":
-                            tagHandler = new AIMLTagHandlers.person2(this, user, query, request, result, node);
-                            break;
-                        case "random":
-                            tagHandler = new AIMLTagHandlers.random(this, user, query, request, result, node);
-                            break;
-                        case "sentence":
-                            tagHandler = new AIMLTagHandlers.sentence(this, user, query, request, result, node);
-                            break;
-                        case "set":
-                            tagHandler = new AIMLTagHandlers.set(this, user, query, request, result, node);
-                            break;
-                        case "size":
-                            tagHandler = new AIMLTagHandlers.size(this, user, query, request, result, node);
-                            break;
-                        case "sr":
-                            tagHandler = new AIMLTagHandlers.sr(this, user, query, request, result, node);
-                            break;
-                        case "srai":
-                            tagHandler = new AIMLTagHandlers.srai(this, user, query, request, result, node);
-                            break;
-                        case "star":
-                            tagHandler = new AIMLTagHandlers.star(this, user, query, request, result, node);
-                            break;
-                        case "system":
-                            tagHandler = new AIMLTagHandlers.system(this, user, query, request, result, node);
-                            break;
-                        case "that":
-                            tagHandler = new AIMLTagHandlers.that(this, user, query, request, result, node);
-                            break;
-                        case "thatstar":
-                            tagHandler = new AIMLTagHandlers.thatstar(this, user, query, request, result, node);
-                            break;
-                        case "think":
-                            tagHandler = new AIMLTagHandlers.think(this, user, query, request, result, node);
-                            break;
-                        case "topicstar":
-                            tagHandler = new AIMLTagHandlers.topicstar(this, user, query, request, result, node);
-                            break;
-                        case "uppercase":
-                            tagHandler = new AIMLTagHandlers.uppercase(this, user, query, request, result, node);
-                            break;
-                        case "version":
-                            tagHandler = new AIMLTagHandlers.version(this, user, query, request, result, node);
-                            break;
-                        case "cycsystem":
-                            tagHandler = new AIMLTagHandlers.cycsystem(this, user, query, request, result, node);
-                            break;
-                        case "cycretract":
-                            tagHandler = new AIMLTagHandlers.cycretract(this, user, query, request, result, node);
-                            break;
-                        case "cycassert":
-                            tagHandler = new AIMLTagHandlers.cycassert(this, user, query, request, result, node);
-                            break;
-                        case "cycterm":
-                            tagHandler = new AIMLTagHandlers.cycterm(this, user, query, request, result, node);
-                            break;
-                        case "cycquery":
-                            tagHandler = new AIMLTagHandlers.cycquery(this, user, query, request, result, node);
-                            break;
-                        case "cyccondition":
-                            tagHandler = new AIMLTagHandlers.cyccondition(this, user, query, request, result, node);
-                            break;
-                        case "cycphrase":
-                            tagHandler = new AIMLTagHandlers.cycphrase(this, user, query, request, result, node);
-                            break;
-                        case "cycparaphrase":
-                            tagHandler = new AIMLTagHandlers.cycphrase(this, user, query, request, result, node);
-                            break;
-                        case "guard":
-                            tagHandler = new AIMLTagHandlers.guard(this, user, query, request, result, node);
-                            break;
-                        case "guardstar":
-                            tagHandler = new AIMLTagHandlers.guardstar(this, user, query, request, result, node);
-                            break;
-                        case "cycrandom":
-                            tagHandler = new AIMLTagHandlers.cycrandom(this, user, query, request, result, node);
-                            break;
-                        case "space":
-                            tagHandler = new AIMLTagHandlers.space(this, user, query, request, result, node);
-                            break;
 
-                        default:
-                            tagHandler = null;
-                            break;
-                    }
-                }
-                if (object.Equals(null, tagHandler))
+            // process the node
+            AIMLTagHandler tagHandler = GetTagHandler(user, query, request, result, node);
+            if (object.Equals(null, tagHandler))
+            {
+                return node.InnerText;
+            }
+            return tagHandler.CompleteProcess();
+        }
+
+
+        internal AIMLTagHandler GetTagHandler(User user, SubQuery query, Request request, Result result, XmlNode node)
+        {
+            AIMLTagHandler tagHandler = null;
+            tagHandler = this.getBespokeTags(user, query, request, result, node);
+            if (object.Equals(null, tagHandler))
+            {
+                switch (node.Name.ToLower())
                 {
-                    return node.InnerText;
-                }
-                else
-                {
-                    if (tagHandler.isRecursive)
-                    {
-                        if (node.HasChildNodes)
-                        {
-                            // recursively check
-                            foreach (XmlNode childNode in node.ChildNodes)
-                            {
-                                if (childNode.NodeType != XmlNodeType.Text)
-                                {
-                                    childNode.InnerText = this.processNode(childNode, query, request, result, user);
-                                }
-                            }
-                        }
-                        return tagHandler.Transform();
-                    }
-                    else
-                    {
-                        Unifiable resultNodeInnerXML = tagHandler.Transform();
-                        XmlNode resultNode = AIMLTagHandler.getNode(String.Format("<node>{0}</node>", resultNodeInnerXML));
-                        if (resultNode.HasChildNodes)
-                        {
-                            Unifiable recursiveResult = new Unifiable();
-                            // recursively check
-                            foreach (XmlNode childNode in resultNode.ChildNodes)
-                            {
-                                recursiveResult.Append(this.processNode(childNode, query, request, result, user));
-                            }
-                            return recursiveResult;//.ToString();
-                        }
-                        else
-                        {
-                            return resultNode.InnerXml;
-                        }
-                    }
+                    case "template":
+                        tagHandler = new AIMLTagHandlers.template(this, user, query, request, result, node);
+                        break;
+                    case "and":
+                        tagHandler = new AIMLTagHandlers.and(this, user, query, request, result, node);
+                        break;
+                    case "or":
+                        tagHandler = new AIMLTagHandlers.or(this, user, query, request, result, node);
+                        break;
+                    case "optional":
+                        tagHandler = new AIMLTagHandlers.optional(this, user, query, request, result, node);
+                        break;
+                    case "isa":
+                        tagHandler = new AIMLTagHandlers.isa(this, user, query, request, result, node);
+                        break;
+                    case "bot":
+                        tagHandler = new AIMLTagHandlers.bot(this, user, query, request, result, node);
+                        break;
+                    case "condition":
+                        tagHandler = new AIMLTagHandlers.condition(this, user, query, request, result, node);
+                        break;
+                    case "date":
+                        tagHandler = new AIMLTagHandlers.date(this, user, query, request, result, node);
+                        break;
+                    case "formal":
+                        tagHandler = new AIMLTagHandlers.formal(this, user, query, request, result, node);
+                        break;
+                    case "gender":
+                        tagHandler = new AIMLTagHandlers.gender(this, user, query, request, result, node);
+                        break;
+                    case "get":
+                        tagHandler = new AIMLTagHandlers.get(this, user, query, request, result, node);
+                        break;
+                    case "gossip":
+                        tagHandler = new AIMLTagHandlers.gossip(this, user, query, request, result, node);
+                        break;
+                    case "id":
+                        tagHandler = new AIMLTagHandlers.id(this, user, query, request, result, node);
+                        break;
+                    case "input":
+                        tagHandler = new AIMLTagHandlers.input(this, user, query, request, result, node);
+                        break;
+                    case "javascript":
+                        tagHandler = new AIMLTagHandlers.javascript(this, user, query, request, result, node);
+                        break;
+                    case "learn":
+                        tagHandler = new AIMLTagHandlers.learn(this, user, query, request, result, node);
+                        break;
+                    case "lowercase":
+                        tagHandler = new AIMLTagHandlers.lowercase(this, user, query, request, result, node);
+                        break;
+                    case "person":
+                        tagHandler = new AIMLTagHandlers.person(this, user, query, request, result, node);
+                        break;
+                    case "person2":
+                        tagHandler = new AIMLTagHandlers.person2(this, user, query, request, result, node);
+                        break;
+                    case "random":
+                        tagHandler = new AIMLTagHandlers.random(this, user, query, request, result, node);
+                        break;
+                    case "sentence":
+                        tagHandler = new AIMLTagHandlers.sentence(this, user, query, request, result, node);
+                        break;
+                    case "set":
+                        tagHandler = new AIMLTagHandlers.set(this, user, query, request, result, node);
+                        break;
+                    case "size":
+                        tagHandler = new AIMLTagHandlers.size(this, user, query, request, result, node);
+                        break;
+                    case "sr":
+                        tagHandler = new AIMLTagHandlers.sr(this, user, query, request, result, node);
+                        break;
+                    case "srai":
+                        tagHandler = new AIMLTagHandlers.srai(this, user, query, request, result, node);
+                        break;
+                    case "star":
+                        tagHandler = new AIMLTagHandlers.star(this, user, query, request, result, node);
+                        break;
+                    case "system":
+                        tagHandler = new AIMLTagHandlers.system(this, user, query, request, result, node);
+                        break;
+                    case "that":
+                        tagHandler = new AIMLTagHandlers.that(this, user, query, request, result, node);
+                        break;
+                    case "thatstar":
+                        tagHandler = new AIMLTagHandlers.thatstar(this, user, query, request, result, node);
+                        break;
+                    case "think":
+                        tagHandler = new AIMLTagHandlers.think(this, user, query, request, result, node);
+                        break;
+                    case "topicstar":
+                        tagHandler = new AIMLTagHandlers.topicstar(this, user, query, request, result, node);
+                        break;
+                    case "uppercase":
+                        tagHandler = new AIMLTagHandlers.uppercase(this, user, query, request, result, node);
+                        break;
+                    case "version":
+                        tagHandler = new AIMLTagHandlers.version(this, user, query, request, result, node);
+                        break;
+                    case "cycsystem":
+                        tagHandler = new AIMLTagHandlers.cycsystem(this, user, query, request, result, node);
+                        break;
+                    case "cycretract":
+                        tagHandler = new AIMLTagHandlers.cycretract(this, user, query, request, result, node);
+                        break;
+                    case "cycassert":
+                        tagHandler = new AIMLTagHandlers.cycassert(this, user, query, request, result, node);
+                        break;
+                    case "cycterm":
+                        tagHandler = new AIMLTagHandlers.cycterm(this, user, query, request, result, node);
+                        break;
+                    case "cycquery":
+                        tagHandler = new AIMLTagHandlers.cycquery(this, user, query, request, result, node);
+                        break;
+                    case "cyccondition":
+                        tagHandler = new AIMLTagHandlers.cyccondition(this, user, query, request, result, node);
+                        break;
+                    case "cycphrase":
+                        tagHandler = new AIMLTagHandlers.cycphrase(this, user, query, request, result, node);
+                        break;
+                    case "cycparaphrase":
+                        tagHandler = new AIMLTagHandlers.cycphrase(this, user, query, request, result, node);
+                        break;
+                    case "guard":
+                        tagHandler = new AIMLTagHandlers.guard(this, user, query, request, result, node);
+                        break;
+                    case "guardstar":
+                        tagHandler = new AIMLTagHandlers.guardstar(this, user, query, request, result, node);
+                        break;
+                    case "cycrandom":
+                        tagHandler = new AIMLTagHandlers.cycrandom(this, user, query, request, result, node);
+                        break;
+                    case "space":
+                        tagHandler = new AIMLTagHandlers.space(this, user, query, request, result, node);
+                        break;
+
+                    default:
+                        tagHandler = null;
+                        break;
                 }
             }
+            return tagHandler;
         }
 
         /// <summary>

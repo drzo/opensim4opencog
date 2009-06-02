@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Xml;
+using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -19,7 +20,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The star element does not have any content. 
     /// </summary>
-    public class star : RTParser.Utils.AIMLTagHandler
+    public class star : UnifibleTagHandler
     {
         /// <summary>
         /// Ctor
@@ -40,45 +41,66 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
+        public override bool CanUnify(Unifiable with)
+        {
+            if (templateNode.NodeType == XmlNodeType.Text)
+            {
+                string srch = (" " + with.ToValue() + " ").ToUpper();
+                return ((" " + templateNode.InnerText + " ").ToUpper().Equals(srch));
+            }
+            if (templateNode.HasChildNodes)
+            {
+                // recursively check
+                foreach (XmlNode childNode in templateNode.ChildNodes)
+                {
+                    try
+                    {
+                        if (childNode.NodeType == XmlNodeType.Text)
+                        {
+                            string srch = (" " + with.ToValue() + " ").ToUpper();
+                            return ((" " + childNode.InnerText + " ").ToUpper().Equals(srch));
+                        }
+                        AIMLTagHandler part = Proc.GetTagHandler(user, query, request, result, childNode);
+                        if (!part.CanUnify(with)) return false;
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("" + e);
+                    }
+                }
+                return true;
+            }
+            return true;
+        }
+
         protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "star")
             {
                 if (this.query.InputStar.Count > 0)
                 {
-                    if (this.templateNode.Attributes.Count == 0)
+                    int index = Convert.ToInt32(GetAttribValue("index", "1"));
+                    try
                     {
-                        // return the first (latest) star in the List<>
-                        return (Unifiable)this.query.InputStar[0];
-                    }
-                    else if (this.templateNode.Attributes.Count == 1)
-                    {
-                        if (this.templateNode.Attributes[0].Name.ToLower() == "index")
+                        index--;
+                        if ((index >= 0) & (index < this.query.InputStar.Count))
                         {
-                            try
-                            {
-                                int index = Convert.ToInt32(this.templateNode.Attributes[0].Value);
-                                index--;
-                                if ((index >= 0) & (index < this.query.InputStar.Count))
-                                {
-                                    index = this.query.InputStar.Count - 1 - index;
-                                    return (Unifiable)this.query.InputStar[index];
-                                }
-                                else
-                                {
-                                    this.Proc.writeToLog("InputStar out of bounds reference caused by input: " + this.request.rawInput);
-                                }
-                            }
-                            catch
-                            {
-                                this.Proc.writeToLog("Index set to non-integer value whilst processing star tag in response to the input: " + this.request.rawInput);
-                            }
+                            index = this.query.InputStar.Count - 1 - index;
+                            return (Unifiable)this.query.InputStar[index];
                         }
+                        else
+                        {
+                            this.Proc.writeToLog("InputStar out of bounds reference caused by input: " + this.request.rawInput);
+                        }
+                    }
+                    catch
+                    {
+                        this.Proc.writeToLog("Index set to non-integer value whilst processing star tag in response to the input: " + this.request.rawInput);
                     }
                 }
                 else
                 {
-                    this.Proc.writeToLog("A star tag tried to reference an empty InputStar collection when processing the input: "+this.request.rawInput);
+                    this.Proc.writeToLog("A star tag tried to reference an empty InputStar collection when processing the input: " + this.request.rawInput);
                 }
             }
             return Unifiable.Empty;
