@@ -84,6 +84,7 @@ namespace cogbot.Listeners
                 // wont get here unless there was no problem
                 client.Self.OnChat += AIML_OnChat;
                 client.Self.OnInstantMessage += AIML_OnInstantMessage;
+                client.Network.OnLogin += AIML_OnLogin;
                 while (false)
                 {
                     Console.Write("You: ");
@@ -94,6 +95,17 @@ namespace cogbot.Listeners
             catch (Exception e)
             {
                 Console.WriteLine("" + e);
+            }
+        }
+
+        private void AIML_OnLogin(LoginStatus login, string message)
+        {
+            if (login == LoginStatus.Success)
+            {
+                MyBot.GlobalSettings.addSetting("name",
+                                                client.BotLoginParams.FirstName + " " + client.BotLoginParams.LastName);
+                MyBot.GlobalSettings.addSetting("firstname", client.BotLoginParams.FirstName);
+                MyBot.GlobalSettings.addSetting("lastname", client.BotLoginParams.LastName);
             }
         }
 
@@ -137,7 +149,7 @@ namespace cogbot.Listeners
             (new Thread(() => // this can be long running
                             {
                                 string resp = AIMLInterp(message, myUser);
-                                if (im.Offline == InstantMessageOnline.Offline) return;
+                               // if (im.Offline == InstantMessageOnline.Offline) return;
                                 if (String.IsNullOrEmpty(resp)) return;
                                 //if (im.GroupIM) ; //todo
                                 foreach (string ting in resp.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries))
