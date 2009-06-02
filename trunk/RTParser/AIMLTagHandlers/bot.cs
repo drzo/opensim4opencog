@@ -42,7 +42,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 string name = GetAttribValue("name", templateNodeInnerText.Trim());
                 Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
-                Unifiable result = this.user.Predicates.grabSetting(name).Trim();
+                Unifiable result = this.Proc.GlobalSettings.grabSetting(name).Trim();
                 if (result.ToValue().ToUpper() == "UNKNOWN") return result + " " + name;
                 if (!String.IsNullOrEmpty(result)) return result;
                 return defaultVal;
