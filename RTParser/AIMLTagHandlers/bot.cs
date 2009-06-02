@@ -40,7 +40,10 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "bot")
             {
-                return (Unifiable) this.Proc.GlobalSettings.grabSetting(GetAttribValue("name", templateNodeInnerText));
+                string name = GetAttribValue("name", templateNodeInnerText);
+                Unifiable result = this.Proc.GlobalSettings.grabSetting(name).Trim();
+                if (result.ToValue().ToUpper() == "UNKNOWN") return result + " " + name;
+                return result;
             }
             return Unifiable.Empty;
         }

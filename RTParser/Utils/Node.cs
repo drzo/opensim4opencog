@@ -108,7 +108,8 @@ namespace RTParser.Utils
 
             // concatenate the rest of the sentence into a suffix (to act as the
             // path argument in the child nodemapper)
-            Unifiable newPath = path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length).Trim();
+            Unifiable newPath = Unifiable.Join(" ", words0, 1, words0.Length - 1);
+            // path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length).Trim();
 
             // o.k. check we don't already have a child with the key from this sentence
             // if we do then pass the handling of this sentence down the branch to the 
@@ -252,7 +253,7 @@ namespace RTParser.Utils
             Unifiable firstWord = Normalize.MakeCaseInsensitive.TransformInput(first);
 
             // and concatenate the rest of the input into a new path for child nodes
-            Unifiable newPath = path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length);
+            Unifiable newPath = Unifiable.Join(" ", splitPath0, 1, splitPath0.Length - 1);// path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length);
 
             // first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet

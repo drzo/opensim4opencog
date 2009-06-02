@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Xml;
 using RTParser.AIMLTagHandlers;
 
@@ -64,7 +65,7 @@ namespace RTParser
             Unifiable[] it = new Unifiable[strs.Length];
             for (int i = 0; i < it.Length; i++)
             {
-                it[i] = Create(strs[i]);
+                it[i] = Create(strs[i].Trim());
             }
             return it;
         }
@@ -79,15 +80,15 @@ namespace RTParser
             return it;
         }
 
-        public static Unifiable Format(string s, params object[] args)
-        {
-            return string.Format(s, args);
-        }
+        //public static Unifiable Format(string s, params object[] args)
+        //{
+        //    return string.Format(s, args);
+        //}
 
-        static public bool operator ==(Unifiable t, string s)
-        {
-            return t.AsString() == s;
-        }
+        //static public bool operator ==(Unifiable t, string s)
+        //{
+        //    return t.AsString().ToLower() == s.ToLower();
+        //}
 
 
         static public bool operator ==(Unifiable t, Unifiable s)
@@ -101,7 +102,7 @@ namespace RTParser
                 return false;
             }
 
-            return t.AsString().ToLower() == s.AsString().ToLower();
+            return t.AsString().ToLower() == s.AsString().ToLower() || t.ToValue().ToLower() == s.ToValue().ToLower();
         }
 
         public static bool operator !=(Unifiable t, Unifiable s)
@@ -110,21 +111,21 @@ namespace RTParser
         }
 
 
-        public static bool operator !=(Unifiable t, string s)
-        {
-            return !(t == s);
-        }
+        //public static bool operator !=(Unifiable t, string s)
+        //{
+        //    return !(t == s);
+        //}
 
 
-        static public bool operator ==(string s, Unifiable t)
-        {
-            return t.AsString() == s;
-        }
+        //static public bool operator ==(string s, Unifiable t)
+        //{
+        //    return t.AsString().ToUpper() == s.ToUpper();
+        //}
 
-        public static bool operator !=(string s, Unifiable t)
-        {
-            return !(s == t);
-        }
+        //public static bool operator !=(string s, Unifiable t)
+        //{
+        //    return !(s == t);
+        //}
 
         private string _str;
         protected string str
@@ -166,10 +167,10 @@ namespace RTParser
         public static Unifiable TopicTag = Create("TAG-TOPIC");
 
 
-        public Unifiable Replace(object marker, object param1)
-        {
-            return str.Replace(astr(marker), astr(param1));
-        }
+        //public Unifiable Replace(object marker, object param1)
+        //{
+        //    return str.Replace(astr(marker), astr(param1));
+        //}
 
         private static string astr(object param1)
         {
@@ -329,7 +330,7 @@ namespace RTParser
                     }
                     else
                     {
-                        string splitMe = node.OuterXml;
+                        string splitMe = node.OuterXml.Trim();
                         list.Add(splitMe);
                     }
                 }
@@ -426,28 +427,28 @@ namespace RTParser
             return newWord;
         }
 
-        internal Unifiable Rest()
-        {
-            Unifiable[] splitted = Splitter(str);
-            return Join(" ", splitted, 1, splitted.Length - 1);
-            if (String.IsNullOrEmpty(this.str)) return Unifiable.Empty;
-            int i = str.IndexOfAny(BRKCHARS);
-            if (i == -1) return Empty;
-            string rest = str.Substring(i + 1);
-            return Create(rest.Trim());
-        }
+        //internal Unifiable Rest()
+        //{
+        //    Unifiable[] splitted = Splitter(str);
+        //    return Join(" ", splitted, 1, splitted.Length - 1);
+        //    if (String.IsNullOrEmpty(this.str)) return Unifiable.Empty;
+        //    int i = str.IndexOfAny(BRKCHARS);
+        //    if (i == -1) return Empty;
+        //    string rest = str.Substring(i + 1);
+        //    return Create(rest.Trim());
+        //}
 
         readonly static char[] BRKCHARS = " \r\n\t".ToCharArray();
 
-        internal Unifiable First()
-        {
-            if (String.IsNullOrEmpty(str)) return Unifiable.Empty;
-            //int i = str.IndexOfAny(BRKCHARS);
-            //if (i == -1) return Create(str);
-            return Split()[0];
-            //string rest = str.Substring(0, i - 1);
-            //return Create(rest.Trim());
-        }
+        //internal Unifiable First()
+        //{
+        //    if (String.IsNullOrEmpty(str)) return Unifiable.Empty;
+        //    //int i = str.IndexOfAny(BRKCHARS);
+        //    //if (i == -1) return Create(str);
+        //    return Split()[0];
+        //    //string rest = str.Substring(0, i - 1);
+        //    //return Create(rest.Trim());
+        //}
 
         internal bool IsShortWildCard()
         {
@@ -492,6 +493,22 @@ namespace RTParser
         internal void Clear()
         {
             str = "";
+        }
+
+        public string ToValue()
+        {
+            return AsString();
+        }
+
+        internal bool IsMatch(Unifiable actualValue)
+        {
+            return TwoMatch(actualValue.AsString(), this.AsString()) || TwoMatch(actualValue.ToValue(), this.ToValue());
+        }
+
+        static bool TwoMatch(string s1, string s2)
+        {
+            Regex matcher = new Regex(s1.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
+            return matcher.IsMatch(s2);
         }
     }
 }
