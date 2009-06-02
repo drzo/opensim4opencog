@@ -1110,7 +1110,7 @@ namespace RTParser
         {
             MailMessage msg = new MailMessage("donotreply@aimlbot.com",this.AdminEmail);
             msg.Subject = "WARNING! AIMLBot has encountered a problem...";
-            Unifiable message = @"Dear Botmaster,
+            string message = @"Dear Botmaster,
 
 This is an automatically generated email to report errors with your Proccessor.
 
@@ -1264,7 +1264,7 @@ The AIMLbot program.
             return true;
         }
 
-        internal Unifiable Paraphrase(Unifiable text)
+        internal Unifiable Paraphrase(string text)
         {
             text = Cyclify(text);
             if (text.StartsWith("("))

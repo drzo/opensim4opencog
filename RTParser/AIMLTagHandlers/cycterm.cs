@@ -47,8 +47,10 @@ namespace RTParser.AIMLTagHandlers
             return Unifiable.Empty;
         }
 
-        private bool lookup(Unifiable text,Unifiable filter,out Unifiable term)
+        private bool lookup(Unifiable textIn,Unifiable filter,out Unifiable term)
         {
+            string text = textIn.AsString();
+
             if (!Proc.CycEnabled)
             {
                 term = String.Format("\"{0}\"", text);
@@ -60,7 +62,7 @@ namespace RTParser.AIMLTagHandlers
                 return false;
             }
             filter = Proc.Cyclify(filter);
-            Unifiable ptext = text.ToPropper();
+            Unifiable ptext = textIn.ToPropper();
             if(false
             || lookupCycTerm("(#$nameString ?CYCOBJECT \"%s\")", text, filter, out term)
             || lookupCycTerm("(#$denotation #$%s-TheWord ?TEXT ?TYPE ?CYCOBJECT)", ptext, filter, out term)
@@ -114,7 +116,7 @@ namespace RTParser.AIMLTagHandlers
 
         //(mapcar #'(lambda (x) (pwhen (member col x) ))  (denotation-mapper "isa"))
 
-        private bool lookupCycTerm(Unifiable template, Unifiable text,Unifiable filter, out Unifiable term)
+        private bool lookupCycTerm(string template, Unifiable text,Unifiable filter, out Unifiable term)
         {
             template = template.Replace("%s", text);            
             try

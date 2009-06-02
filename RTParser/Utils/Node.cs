@@ -272,7 +272,7 @@ namespace RTParser.Utils
                 // the result
                 if (result!=null && result.Count>0)
                 {
-                    if (newWildcard.Length > 0)
+                    if (!newWildcard.IsEmpty)
                     {
                         // capture and push the star content appropriate to the current matchstate
                         switch (matchstate)
@@ -280,7 +280,7 @@ namespace RTParser.Utils
                             case MatchState.UserInput:
                                 query.InputStar.Add(newWildcard.Frozen());
                                 // added due to this match being the end of the line
-                                newWildcard.Remove(0, newWildcard.Length);
+                                newWildcard.Clear();
                                 break;
                             case MatchState.That:
                                 query.ThatStar.Add(newWildcard.Frozen());
@@ -324,7 +324,7 @@ namespace RTParser.Utils
                 // and if we get a result from the child return it
                 if (result != null && result.Count > 0)
                 {
-                    if (newWildcard.Length > 0)
+                    if (!newWildcard.IsEmpty)
                     {
                         // capture and push the star content appropriate to the matchstate if it exists
                         // and then clear it for subsequent wildcards
@@ -332,15 +332,15 @@ namespace RTParser.Utils
                         {
                             case MatchState.UserInput:
                                 query.InputStar.Add(newWildcard.Frozen());
-                                newWildcard.Remove(0, newWildcard.Length);
+                                newWildcard.Clear();
                                 break;
                             case MatchState.That:
                                 query.ThatStar.Add(newWildcard.Frozen());
-                                newWildcard.Remove(0, newWildcard.Length);
+                                newWildcard.Clear();
                                 break;
                             case MatchState.Topic:
                                 query.TopicStar.Add(newWildcard.Frozen());
-                                newWildcard.Remove(0, newWildcard.Length);
+                                newWildcard.Clear();
                                 break;
                         }
                     }
@@ -367,7 +367,7 @@ namespace RTParser.Utils
                 // and if we get a result from the branch process and return it
                 if (result!=null && result.Count > 0)
                 {
-                    if (newWildcard.Length > 0)
+                    if (!newWildcard.IsEmpty)
                     {
                         // capture and push the star content appropriate to the current matchstate
                         switch (matchstate)
@@ -375,7 +375,7 @@ namespace RTParser.Utils
                             case MatchState.UserInput:
                                 query.InputStar.Add(newWildcard.Frozen());
                                 // added due to this match being the end of the line
-                                newWildcard.Remove(0, newWildcard.Length);
+                                newWildcard.Clear();
                                 break;
                             case MatchState.That:
                                 query.ThatStar.Add(newWildcard.Frozen());

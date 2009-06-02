@@ -51,10 +51,10 @@ namespace RTParser.Normalize
         public static Unifiable Substitute(RTParser.RTPBot bot, RTParser.Utils.SettingsDictionary dictionary, Unifiable target)
         {
             Unifiable marker = ApplySubstitutions.getMarker(5);
-            Unifiable result = target;
-            foreach (Unifiable pattern in dictionary.SettingNames)
+            string result = target.AsString();
+            foreach (string pattern in dictionary.SettingNames)
             {
-                Unifiable p2 = ApplySubstitutions.makeRegexSafe(pattern);
+                string p2 = ApplySubstitutions.makeRegexSafe(pattern);
                 //Unifiable match = "\\b"+@p2.Trim().Replace(" ","\\s*")+"\\b";
                 Unifiable match = "\\b" + p2.TrimEnd().TrimStart() + "\\b";
                 Unifiable replacement = marker+dictionary.grabSetting(pattern).Trim()+marker;
@@ -70,9 +70,9 @@ namespace RTParser.Normalize
         /// </summary>
         /// <param name="input">The raw input</param>
         /// <returns>the safe version</returns>
-        private static Unifiable makeRegexSafe(Unifiable input)
+        private static string makeRegexSafe(string input)
         {
-            Unifiable result = input.Replace("\\","");
+            string result = input.Replace("\\","");
             result = result.Replace(")", "\\)");
             result = result.Replace("(", "\\(");
             result = result.Replace(".", "\\.");
