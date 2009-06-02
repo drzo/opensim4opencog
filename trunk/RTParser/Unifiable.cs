@@ -126,29 +126,41 @@ namespace RTParser
             return !(s == t);
         }
 
-        protected string str;
+        private string _str;
+        protected string str
+        {
+            get
+            {
+                return _str;
+            }
+             
+            set
+            {
+                _str = value;
+            }
+        }
 
         public Unifiable()
         {
             str = "";
         }
 
-        public Unifiable(string value)
+        private Unifiable(string value)
         {
             str = value;
         }
 
-        public int Length
-        {
-            get
-            {
-                if (str == null)
-                {
-                    return 0;
-                }
-                return str.Length;
-            }
-        }
+        //public int Length
+        //{
+        //    get
+        //    {
+        //        if (str == null)
+        //        {
+        //            return 0;
+        //        }
+        //        return str.Length;
+        //    }
+        //}
 
         public static Unifiable ThatTag = Create("TAG-THAT");
         public static Unifiable TopicTag = Create("TAG-TOPIC");
@@ -187,25 +199,25 @@ namespace RTParser
             return Create(str.ToUpper());
         }
 
-        public Unifiable Substring(int i, int ii)
-        {
-            return str.Substring(i, ii);
-        }
+        //public Unifiable Substring(int i, int ii)
+        //{
+        //    return str.Substring(i, ii);
+        //}
 
         public virtual char[] ToCharArray()
         {
             return str.ToCharArray();
         }
 
-        public bool EndsWith(string s)
-        {
-            return str.EndsWith(s);
-        }
+        //public bool EndsWith(string s)
+        //{
+        //    return str.EndsWith(s);
+        //}
 
-        public bool StartsWith(string s)
-        {
-            return str.StartsWith(s);
-        }
+        //public bool StartsWith(string s)
+        //{
+        //    return str.StartsWith(s);
+        //}
 
         //public Unifiable[] Split(char[] c, StringSplitOptions options)
         //{
@@ -216,7 +228,7 @@ namespace RTParser
         public override bool Equals(object obj)
         {
             if (obj is Unifiable) return ((Unifiable)obj) == this;
-            return str == obj.ToString();
+            return str == astr(obj);
         }
 
         public override string ToString()
@@ -267,15 +279,15 @@ namespace RTParser
         //    return str.ToUpper(cultureInfo);
         //}
 
-        public virtual Unifiable TrimEnd()
-        {
-            return str.TrimEnd();
-        }
+        //public virtual Unifiable TrimEnd()
+        //{
+        //    return str.TrimEnd();
+        //}
 
-        public Unifiable TrimStart()
-        {
-            return str.TrimStart();
-        }
+        //public Unifiable TrimStart()
+        //{
+        //    return str.TrimStart();
+        //}
 
         static public bool IsTrue(Unifiable v)
         {
@@ -389,10 +401,10 @@ namespace RTParser
             }
         }
 
-        public virtual void Remove(int p, int c)
-        {
-            str = str.Remove(p, c);
-        }
+        //public virtual void Remove(int p, int c)
+        //{
+        //    str = str.Remove(p, c);
+        //}
 
         public virtual Unifiable Frozen()
         {

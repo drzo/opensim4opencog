@@ -146,7 +146,7 @@ namespace RTParser
         /// </summary>
         /// <param name="sentence">the sentence to check</param>
         /// <returns>True if ends with an appropriate sentence splitter</returns>
-        private bool checkEndsAsSentence(Unifiable sentence)
+        private bool checkEndsAsSentence(string sentence)
         {
             foreach (Unifiable splitter in this.bot.Splitters)
             {

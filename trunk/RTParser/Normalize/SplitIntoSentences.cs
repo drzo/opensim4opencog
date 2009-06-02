@@ -65,7 +65,7 @@ namespace RTParser.Normalize
             foreach (Unifiable rawSentence in rawResult)
             {
                 Unifiable tidySentence = rawSentence.Trim();
-                if (tidySentence.Length > 0)
+                if (!tidySentence.IsEmpty)
                 {
                     tidyResult.Add(tidySentence);
                 }
