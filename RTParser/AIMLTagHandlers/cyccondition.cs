@@ -149,7 +149,7 @@ namespace RTParser.AIMLTagHandlers
                         //if (matcher.IsMatch(actualValue))
                         if (value.IsMatch(actualValue))
                         {
-                            return this.templateNode.InnerXml;
+                            return Unifiable.InnerXmlText(templateNode);
                         }
                     }
                 }
@@ -172,13 +172,13 @@ namespace RTParser.AIMLTagHandlers
                                         //if (matcher.IsMatch(actualValue))
                                         if (value.IsMatch(actualValue))
                                         {
-                                            return childLINode.InnerXml;
+                                            return Unifiable.InnerXmlText(childLINode);
                                         }
                                     }
                                 }
                                 else if (childLINode.Attributes.Count == 0)
                                 {
-                                    return childLINode.InnerXml;
+                                    return Unifiable.InnerXmlText(childLINode);
                                 }
                             }
                         }
@@ -217,13 +217,13 @@ namespace RTParser.AIMLTagHandlers
                                     Unifiable actualValue = this.user.Predicates.grabSetting(name);
                                     if (value.IsMatch(actualValue))
                                     {
-                                        return childLINode.InnerXml;
+                                        return Unifiable.InnerXmlText(childLINode);
                                     }
                                 }
                             }
                             else if (childLINode.Attributes.Count == 0)
                             {
-                                return childLINode.InnerXml;
+                                return Unifiable.InnerXmlText(childLINode);
                             }
                         }
                     }

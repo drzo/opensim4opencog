@@ -13,8 +13,8 @@ namespace RTParser.Utils
 
         protected Unifiable templateNodeInnerText
         {
-            get { return templateNode.InnerText; }
-            set { templateNode.InnerText = value; }
+            get { return templateNode.InnerText.Trim(); }
+            set { templateNode.InnerText = value.Trim(); }
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace RTParser.Utils
                 {
                     if (childNode.NodeType == XmlNodeType.Text)
                     {
-                        templateResult.Append(childNode.InnerXml);
+                        templateResult.Append(childNode.InnerText);
                     }
                     else
                     {
@@ -101,11 +101,11 @@ namespace RTParser.Utils
                     }
                 }
                 templateNodeInnerText = templateResult;//.ToString();
-                return templateNodeInnerText;
+                return templateResult;
             }
             else
             {
-                Unifiable before = this.templateNode.InnerXml;               
+                Unifiable before = Unifiable.InnerXmlText(this.templateNode);//.InnerXml;               
                 return before;                
             }
 
@@ -137,5 +137,6 @@ namespace RTParser.Utils
             }
             return defaultIfEmpty;
         }
+
     }
 }

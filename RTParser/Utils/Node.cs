@@ -260,7 +260,7 @@ namespace RTParser.Utils
             foreach (Unifiable childNodeWord in this.children.Keys)
             {
                 if (!childNodeWord.IsShortWildCard()) continue;
-                if (!childNodeWord.Unify(first)) continue;
+                if (!childNodeWord.Unify(first,query)) continue;
                 Node childNode = this.children[childNodeWord];
                 // add the next word to the wildcard match 
                 Unifiable newWildcard = new Unifiable();
@@ -302,7 +302,7 @@ namespace RTParser.Utils
             {
                 Node childNode = this.children[childNodeWord];
                 if (childNode.word.IsWildCard()) continue;
-                if (!childNode.word.Unify(firstWord)) continue;
+                if (!childNode.word.Unify(firstWord,query)) continue;
                 // process the matchstate - this might not make sense but the matchstate is working
                 // with a "backwards" path: "topic <topic> that <that> user input"
                 // the "classic" path looks like this: "user input <that> that <topic> topic"
@@ -355,7 +355,7 @@ namespace RTParser.Utils
             foreach (Unifiable childNodeWord in this.children.Keys)
             {
                 if (!childNodeWord.IsLongWildCard()) continue;
-                if (!childNodeWord.Unify(first)) continue;
+                if (!childNodeWord.Unify(first, query)) continue;
                 Node childNode = this.children[childNodeWord];
                 // o.k. look for the path in the child node denoted by "*"
                 //Node childNode = (Node)this.children["*"];
