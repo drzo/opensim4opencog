@@ -71,9 +71,10 @@ namespace RTParser.Utils
             }
 
             // check we're not at the leaf node
-            if (path.Trim().Length == 0)
+            if (!path.IsWildCard() && path.AsString().Trim().Length == 0)
             {
                 if (this.template == null) this.template = new List<Template>();
+                // last in first out addition
                 this.template.Insert(0, new Template(template, guard));
                 //this.GuardText = guard;
                 this.filename = filename;
@@ -84,9 +85,10 @@ namespace RTParser.Utils
             // be fully mapped within the GraphMaster structure.
 
             // split the input into its component words
-            Unifiable[] words = path./*Trim().*/Split();//" ".ToCharArray());
+            Unifiable[] words0 = path./*Trim().*/Split();//" ".ToCharArray());
 
-            string w = words[0].AsString();
+            Unifiable firstRaw = words0[0];
+            string w = firstRaw.AsString();
 
             if (w.Contains("COMEHERE"))
             {
@@ -96,7 +98,13 @@ namespace RTParser.Utils
                 }
             }
             // get the first word (to form the key for the child nodemapper)
-            Unifiable firstWord = Normalize.MakeCaseInsensitive.TransformInput(words[0]);
+            //Unifiable firstWord = Normalize.MakeCaseInsensitive.TransformInput(firstRaw);
+            string uc = firstRaw.AsString().ToUpper();
+            if (uc!=firstRaw.AsString() && !uc.Contains("<"))
+            {
+                
+            }
+            Unifiable firstWord = firstRaw;
 
             // concatenate the rest of the sentence into a suffix (to act as the
             // path argument in the child nodemapper)
@@ -220,7 +228,7 @@ namespace RTParser.Utils
             // return the cCategory for this node
             if (this.children.Count==0)
             {
-                if (path.Length > 0)
+                if (!path.IsEmpty)
                 {
                     // if we get here it means that there is a wildcard in the user input part of the
                     // path.
@@ -231,7 +239,7 @@ namespace RTParser.Utils
 
             // if we've matched all the words in the input sentence and this is the end
             // of the line then return the cCategory for this node
-            if (path.Length == 0)
+            if (path.IsEmpty)
             {
                 return this.template;
             }
@@ -248,10 +256,11 @@ namespace RTParser.Utils
 
             // first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
-            if (this.children.ContainsKey("_"))
+            foreach (Unifiable childNodeWord in this.children.Keys)
             {
-                Node childNode = (Node)this.children["_"];
-
+                if (!childNodeWord.IsShortWildCard()) continue;
+                if (!childNodeWord.Unify(first)) continue;
+                Node childNode = this.children[childNodeWord];
                 // add the next word to the wildcard match 
                 Unifiable newWildcard = new Unifiable();
                 this.storeWildCard(first, newWildcard);
@@ -288,23 +297,26 @@ namespace RTParser.Utils
             // second option - the nodemapper may have contained a "_" child, but led to no match
             // or it didn't contain a "_" child at all. So get the child nodemapper from this 
             // nodemapper that matches the first word of the input sentence.
-            if (this.children.ContainsKey(firstWord))
+            foreach (Unifiable childNodeWord in this.children.Keys)
             {
+                Node childNode = this.children[childNodeWord];
+                if (childNode.word.IsWildCard()) continue;
+                if (!childNode.word.Unify(firstWord)) continue;
                 // process the matchstate - this might not make sense but the matchstate is working
                 // with a "backwards" path: "topic <topic> that <that> user input"
                 // the "classic" path looks like this: "user input <that> that <topic> topic"
                 // but having it backwards is more efficient for searching purposes
                 MatchState newMatchstate = matchstate;
-                if (firstWord.IsTag("<THAT>"))
+                if (firstWord.IsTag("TAG-THAT"))
                 {
                     newMatchstate = MatchState.That;
                 }
-                else if (firstWord.IsTag("<TOPIC>"))
+                else if (firstWord.IsTag("TAG-TOPIC"))
                 {
                     newMatchstate = MatchState.Topic;
                 }
 
-                Node childNode = (Node)this.children[firstWord];
+                //Node childNode = (Node)this.children[firstWord];
                 // move down into the identified branch of the GraphMaster structure using the new
                 // matchstate
                 Unifiable newWildcard = new Unifiable();
@@ -339,10 +351,13 @@ namespace RTParser.Utils
             // third option - the input part of the path might have been matched so far but hasn't
             // returned a match, so check to see it contains the "*" wildcard. "*" comes last in
             // precedence in the AIML alphabet.
-            if (this.children.ContainsKey("*"))
+            foreach (Unifiable childNodeWord in this.children.Keys)
             {
+                if (!childNodeWord.IsLongWildCard()) continue;
+                if (!childNodeWord.Unify(first)) continue;
+                Node childNode = this.children[childNodeWord];
                 // o.k. look for the path in the child node denoted by "*"
-                Node childNode = (Node)this.children["*"];
+                //Node childNode = (Node)this.children["*"];
 
                 // add the next word to the wildcard match 
                 Unifiable newWildcard = new Unifiable();
@@ -387,7 +402,7 @@ namespace RTParser.Utils
             // If we get here then we're at a dead end so return an empty Unifiable. Hopefully, if the
             // AIML files have been set up to include a "* <that> * <topic> *" catch-all this
             // state won't be reached. Remember to empty the surplus to requirements wildcard matches
-            wildcard = new Unifiable();
+            wildcard.Clear();// = new Unifiable();
             return null;// Unifiable.Empty;
         }
 
@@ -398,7 +413,7 @@ namespace RTParser.Utils
         /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
         private void storeWildCard(Unifiable word, Unifiable wildcard)
         {
-            if (wildcard.Length > 0)
+            if (!wildcard.IsEmpty)
             {
                 wildcard.Append(" ");
             }

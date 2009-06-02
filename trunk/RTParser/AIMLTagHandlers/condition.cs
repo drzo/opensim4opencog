@@ -121,8 +121,8 @@ namespace RTParser.AIMLTagHandlers
 
                 if (this.templateNode.Attributes.Count == 2) // block
                 {
-                    Unifiable name = Unifiable.Empty;
-                    Unifiable value = Unifiable.Empty;
+                    string name = String.Empty;
+                    string value = String.Empty;
 
                     if (this.templateNode.Attributes[0].Name == "name")
                     {
@@ -156,7 +156,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     if (this.templateNode.Attributes[0].Name == "name")
                     {
-                        Unifiable name = this.templateNode.Attributes[0].Value;
+                        string name = this.templateNode.Attributes[0].Value;
                         foreach (XmlNode childLINode in this.templateNode.ChildNodes)
                         {
                             if (childLINode.Name.ToLower() == "li")

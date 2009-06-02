@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Xml;
 using RTParser.AIMLTagHandlers;
@@ -73,7 +74,7 @@ namespace RTParser
             string[] it = new string[tokens.Length];
             for (int i = 0; i < it.Length; i++)
             {
-                it[i] = tokens[i];
+                it[i] = tokens[i].AsString().Trim();
             }
             return it;
         }
@@ -149,8 +150,8 @@ namespace RTParser
             }
         }
 
-        public static Unifiable ThatTag = Create(" <that> ");
-        public static Unifiable TopicTag = Create(" <topic> ");
+        public static Unifiable ThatTag = Create("TAG-THAT");
+        public static Unifiable TopicTag = Create("TAG-TOPIC");
 
 
         public Unifiable Replace(object marker, object param1)
@@ -283,6 +284,7 @@ namespace RTParser
 
         public virtual bool IsWildCard()
         {
+            if (IsMarkerTag()) return false;
             return (str.Contains("*") || str.Contains("_") || str.Contains("<"));
         }
 
@@ -290,7 +292,42 @@ namespace RTParser
 
         public Unifiable[] Split()
         {
-            return arrayOf(str.Trim().Split(BRKCHARS, StringSplitOptions.RemoveEmptyEntries));
+            return Splitter(str); 
+        }
+
+
+        static Unifiable[] Splitter(string str)
+        {
+            string strTrim = str.Trim();
+            if (!strTrim.Contains("<"))
+                return arrayOf(strTrim.Split(BRKCHARS, StringSplitOptions.RemoveEmptyEntries));
+            XmlDocument doc = new XmlDocument();
+            List<Unifiable> list = new List<Unifiable>();
+
+            try
+            {
+                doc.LoadXml("<node>" + strTrim + "</node>");
+                foreach (XmlNode node in doc.FirstChild.ChildNodes)
+                {
+                    if (node.NodeType == XmlNodeType.Whitespace) continue;
+                    if (node.NodeType == XmlNodeType.Text)
+                    {
+                        string splitMe = node.OuterXml.Trim();
+                        list.AddRange(Splitter(splitMe));
+                    }
+                    else
+                    {
+                        string splitMe = node.OuterXml;
+                        list.Add(splitMe);
+                    }
+                }
+                return list.ToArray();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("" + e);
+            }
+            return arrayOf(strTrim.Split(BRKCHARS, StringSplitOptions.RemoveEmptyEntries));
         }
 
         public bool IsTag(string that)
@@ -379,6 +416,8 @@ namespace RTParser
 
         internal Unifiable Rest()
         {
+            Unifiable[] splitted = Splitter(str);
+            return Join(" ", splitted, 1, splitted.Length - 1);
             if (String.IsNullOrEmpty(this.str)) return Unifiable.Empty;
             int i = str.IndexOfAny(BRKCHARS);
             if (i == -1) return Empty;
@@ -391,10 +430,56 @@ namespace RTParser
         internal Unifiable First()
         {
             if (String.IsNullOrEmpty(str)) return Unifiable.Empty;
-            int i = str.IndexOfAny(BRKCHARS);
-            if (i == -1) return Create(str);
-            string rest = str.Substring(0, i - 1);
-            return Create(rest.Trim());
+            //int i = str.IndexOfAny(BRKCHARS);
+            //if (i == -1) return Create(str);
+            return Split()[0];
+            //string rest = str.Substring(0, i - 1);
+            //return Create(rest.Trim());
+        }
+
+        internal bool IsShortWildCard()
+        {
+            if (str == "_") return true;
+            if (this.IsMarkerTag()) return false;
+            if (str.Contains("<"))
+            {
+
+            }
+            return false;
+        }
+
+        internal bool IsLongWildCard()
+        {
+            if (str == ("*")) return true;
+            if (this.IsMarkerTag()) return false;
+            if (str.Contains("<"))
+            {
+                
+            }
+            return false;
+        }
+
+        private bool IsMarkerTag()
+        {
+            string test = str.Trim().ToUpper();
+            return test.StartsWith("TAG-");
+        }
+
+        internal bool Unify(Unifiable unifiable)
+        {
+            if (IsWildCard()) return true;
+            if (unifiable.IsWildCard()) return true;
+            return unifiable.str.ToUpper() == str.ToUpper();
+        }
+
+        internal bool IsEmpty
+        {
+            get { return string.IsNullOrEmpty(str); }
+        }
+
+        internal void Clear()
+        {
+            str = "";
         }
     }
 }

@@ -33,7 +33,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "cycassert")
             {                
-                if (templateNodeInnerText.Length > 0)
+                if (!templateNodeInnerText.IsEmpty)
                 {
                     return this.Proc.EvalSubL(String.Format("(cyc-assert '{0})", Recurse()),null);
                 }

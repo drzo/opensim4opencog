@@ -184,7 +184,7 @@ namespace RTParser.Utils
                 Unifiable categoryPath = this.generatePath00(pattern, node, topicName, false);
 
                 // o.k., add the processed AIML to the GraphMaster structure
-                if (categoryPath.Length > 0)
+                if (!categoryPath.IsEmpty)
                 {
                     try
                     {
@@ -304,21 +304,21 @@ namespace RTParser.Utils
             // check sizes
             if (normalizedPattern.Length > 0)
             {
-                if (normalizedThat.Length == 0)
+                if (normalizedThat.IsEmpty)
                 {
                     normalizedThat = Unifiable.STAR;
                 }
-                if (normalizedTopic.Length == 0)
+                if (normalizedTopic.IsEmpty)
                 {
                     normalizedTopic = Unifiable.STAR;
                 }
 
                 // This check is in place to avoid huge "that" elements having to be processed by the 
                 // graphmaster. 
-                if (normalizedThat.Length > this.RProcessor.MaxThatSize)
-                {
-                    normalizedThat = Unifiable.STAR;
-                }
+                //if (normalizedThat.Length > this.RProcessor.MaxThatSize)
+                //{
+                //    normalizedThat = Unifiable.STAR;
+                //}
 
                 // o.k. build the path
                 normalizedPath.Append(Unifiable.Create(normalizedPattern));

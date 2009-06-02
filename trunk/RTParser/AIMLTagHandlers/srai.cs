@@ -38,7 +38,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "srai")
             {
-                if (templateNodeInnerText.Length > 0)
+                if (!templateNodeInnerText.IsEmpty)
                 {
                     Request subRequest = new Request(templateNodeInnerText, this.user, this.Proc);
                     subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request

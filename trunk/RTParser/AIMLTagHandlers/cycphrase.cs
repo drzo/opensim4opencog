@@ -34,7 +34,7 @@ namespace RTParser.AIMLTagHandlers
         {
            // if (this.templateNode.Name.ToLower() == "cycphrase")
             {
-                if (templateNodeInnerText.Length > 0)
+                if (!templateNodeInnerText.IsEmpty)
                 {
                     return this.Proc.Paraphrase(Recurse());
                 }

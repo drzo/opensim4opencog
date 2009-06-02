@@ -81,7 +81,7 @@ namespace RTParser
         /// </summary>
         /// <param name="UserID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-		public User(Unifiable UserID, RTParser.RTPBot bot)
+		public User(string UserID, RTParser.RTPBot bot)
 		{
             if (UserID.Length > 0)
             {

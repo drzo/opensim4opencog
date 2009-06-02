@@ -49,7 +49,7 @@ namespace RTParser.AIMLTagHandlers
                 Unifiable name = GetAttribValue("name", null);
                 if (!Unifiable.IsNull(name))
                 {
-                    if (templateNodeInnerText.Length > 0)
+                    if (!templateNodeInnerText.IsEmpty)
                     {
                         this.user.Predicates.addSetting(name, templateNodeInnerText);
                         return this.user.Predicates.grabSetting(name);

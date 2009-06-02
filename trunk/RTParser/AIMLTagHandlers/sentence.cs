@@ -40,7 +40,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if(this.templateNode.Name.ToLower()=="sentence")
             {
-                if (templateNodeInnerText.Length > 0)
+                if (!templateNodeInnerText.IsEmpty)
                 {
                     Unifiable result = new Unifiable();
                     char[] letters = templateNodeInnerText.AsString().Trim().ToCharArray();
@@ -80,7 +80,7 @@ namespace RTParser.AIMLTagHandlers
                     XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
                     star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
                     templateNodeInnerText = recursiveStar.Transform();
-                    if (templateNodeInnerText.Length > 0)
+                    if (!templateNodeInnerText.IsEmpty)
                     {
                         return this.ProcessChange();
                     }
