@@ -20,11 +20,11 @@ namespace cogbot.Actions
             string[] tokens = args.objectPhrase.Split(null);
 
             BotClient Client = TheBotClient;
-            if ((tokens.Length != 1) && (tokens.Length != 3))
-            {
-                return ("Please enter login FirstName LastName and Password to login to the SL");
-            }
-            else
+            //if ((tokens.Length != 1) && (tokens.Length != 3))
+            //{
+            //    return ("Please enter login FirstName LastName and Password to login to the SL");
+            //}
+            //else
             {
                 if (tokens.Length > 0 && !String.IsNullOrEmpty(tokens[0]))
                 {
