@@ -125,8 +125,7 @@ namespace cogbot.Actions
            // Client = _parent;
             m_Client = _parent;//.CurrentClient;
         }
-
-        readonly protected System.Text.StringBuilder writeBuffer = new System.Text.StringBuilder();
+      
         /// <summary>
         /// 
         /// </summary>
@@ -142,40 +141,23 @@ namespace cogbot.Actions
                 s = String.Format(format, arg);
             }
             Console.WriteLine(s);
-            lock (writeBuffer)
-            {
-                writeBuffer.AppendLine(s);
-            }
-            if (TheBotClient != null) TheBotClient.output(s);
-        } // method: WriteLine
-
-        public string acceptInputWrapper(string verb, string args)
-        {
-           return acceptInput(verb, new Parser(args));
+            Client.WriteLine(s);
         }
 
-        public string ExecuteBuffer(string[] args, UUID fromAgentID)
+        public string acceptInputWrapper(string verb, string args , OutputDelegate WriteLine)
         {
-            lock (writeBuffer)
-            {
-                writeBuffer.Remove(0, writeBuffer.Length);
-                Parser p = new Parser(String.Join(" ", args));
-                p.tokens = args;
-                string str = Execute(args, fromAgentID);
-                string ret = writeBuffer.ToString();
-                writeBuffer.Remove(0, writeBuffer.Length);
-                return (ret + "\n" + str).Trim();
-            }
+
+                return acceptInput(verb, new Parser(args), WriteLine);
         }
 
-        public virtual string Execute(string[] args, UUID fromAgentID)
+        public virtual string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             Parser p = new Parser(String.Join(" ", args));
             p.tokens = args;
-            return acceptInput(Name, p);
+            return acceptInput(Name, p, WriteLine);
         }
 
-        public abstract string acceptInput(string verb, Parser args);
+        public abstract string acceptInput(string verb, Parser args, OutputDelegate WriteLine);
 
         public virtual string makeHelpString()
         {

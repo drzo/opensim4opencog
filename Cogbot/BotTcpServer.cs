@@ -63,9 +63,9 @@ namespace cogbot.Utilities
 
                 int PortNumber = serverPort; // 5555;
                 tcp_socket = new TcpListener(IPAddress.Parse("0.0.0.0"), PortNumber);
-                parent.output("About to initialize port.");
+                parent.WriteLine("About to initialize port.");
                 tcp_socket.Start();
-                parent.output("Listening for a connection... port=" + PortNumber);
+                parent.WriteLine("Listening for a connection... port=" + PortNumber);
                 while (true)
                 {
                     try
@@ -80,7 +80,7 @@ namespace cogbot.Utilities
                     }
                     catch (Exception e)
                     {
-                        output(e.ToString());
+                        WriteLine(e.ToString());
                     }
                 }
               //  tcp_socket.Stop();
@@ -89,7 +89,7 @@ namespace cogbot.Utilities
             }
             catch (Exception ee)
             {
-                output(ee.ToString());
+                WriteLine(ee.ToString());
             }
         }
 
@@ -102,7 +102,7 @@ namespace cogbot.Utilities
             }
             catch (Exception e)
             {
-                output(""+this_client+ " caused " + e.ToString());
+                WriteLine(""+this_client+ " caused " + e.ToString());
             }
         }
 
@@ -127,7 +127,7 @@ namespace cogbot.Utilities
             {
 
                 clientMessage = tcpStreamReader.ReadLine().Trim();
-                parent.output("SockClient:" + clientMessage);
+                parent.WriteLine("SockClient:" + clientMessage);
                 tcpStreamWriter.WriteLine();
                 String lowerCmd = clientMessage.ToLower();
 
@@ -216,7 +216,7 @@ namespace cogbot.Utilities
 
         public string EvaluateXmlCommand(string xcmd)
         {
-            output("EvaluateXmlCommand :" + xcmd);
+            WriteLine("EvaluateXmlCommand :" + xcmd);
 
             string response = "<request>\r\n <cmd>" + xcmd + "</cmd>\r\n <response>null</response>\r\n</request>";
             try
@@ -312,7 +312,7 @@ namespace cogbot.Utilities
 
                         case XmlNodeType.Text:
                             // Todo
-                            output(" TextNode: depth=" + depth.ToString() + "  path = " + strPath[depth - 1]); ;
+                            WriteLine(" TextNode: depth=" + depth.ToString() + "  path = " + strPath[depth - 1]); ;
                             if (reader.Name == "param")
                             {
                                 overwrite2Hash(attributeStack[depth], strPath[depth - 1] + ".param." + strName[depth] + ".InnerText", reader.Value);
@@ -341,27 +341,27 @@ namespace cogbot.Utilities
             } //try
             catch (Exception e)
             {
-                output("error occured: " + e.Message);
-                output("        Stack: " + e.StackTrace.ToString());
+                WriteLine("error occured: " + e.Message);
+                WriteLine("        Stack: " + e.StackTrace.ToString());
                 return "<error><response>" + response + "</response><errormsg>" + e.Message.ToString() + "</errormsg> </error>";
             }
         }
 
         public void xStartElement(string strURI, string strName, Hashtable attributes, int depth, Hashtable[] attributeStack)
         {
-            output("   xStartElement: strURI =(" + strURI + ") strName=(" + strName + ") depth=(" + depth + ")");
+            WriteLine("   xStartElement: strURI =(" + strURI + ") strName=(" + strName + ") depth=(" + depth + ")");
         }
 
-        private void output(string p)
+        private void WriteLine(string p)
         {
-            parent.output(p);
+            parent.WriteLine(p);
         }
 
         public string xEndElement(string strURI, string strName, Hashtable attributes, int depth, Hashtable[] attributeStack)
         {
             try
             {
-                output("   xEndElement: strURI =(" + strURI + ") strName=(" + strName + ") depth=(" + depth + ")");
+                WriteLine("   xEndElement: strURI =(" + strURI + ") strName=(" + strName + ") depth=(" + depth + ")");
                 if (strName == "action")
                 {
                     string act = attributes["name"].ToString();
@@ -407,8 +407,8 @@ namespace cogbot.Utilities
             }
             catch (Exception e)
             {
-                output("error occured: " + e.Message);
-                output("        Stack: " + e.StackTrace.ToString());
+                WriteLine("error occured: " + e.Message);
+                WriteLine("        Stack: " + e.StackTrace.ToString());
                 return "<error>" + e.Message + "</error>";
             }
         }
@@ -423,7 +423,7 @@ namespace cogbot.Utilities
                                        + "' sequence='" + seqID
                                        + "' name='" + act
                                        + "' status='" + status + "'/>";
-            output("actReport:" + actReport);
+            WriteLine("actReport:" + actReport);
             return actReport;
         }
 
@@ -431,7 +431,7 @@ namespace cogbot.Utilities
         {
             if (hashTable.ContainsKey(key)) hashTable.Remove(key);
             hashTable.Add(key, value);
-            //output("  +Hash :('" + key + "' , " + value + ")");
+            //WriteLine("  +Hash :('" + key + "' , " + value + ")");
         }
 
         public string getWithDefault(Hashtable hashTable, string key, string defaultValue)
@@ -441,8 +441,7 @@ namespace cogbot.Utilities
         }
         public string EvaluateCommand(string cmd)
         {
-            parent.ExecuteCommand(cmd);
-            return "";
+            return parent.ExecuteCommand(cmd);
         }
 
         /// <summary>

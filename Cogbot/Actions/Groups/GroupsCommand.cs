@@ -21,7 +21,7 @@ namespace cogbot.Actions
             Description = "List avatar groups. Usage: groups";
             Category = CommandCategory.Groups;
         }
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (groups.Count == 0)
             {

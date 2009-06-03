@@ -7,22 +7,23 @@ namespace cogbot.Listeners
 {
     public class Teleport : Listener
     {
-        public Teleport(TextForm parent)
+        public Teleport(BotClient parent)
             : base(parent)
         {
             client.Self.OnTeleport += new AgentManager.TeleportCallback(Self_OnTeleport);
         }
 
-        void Self_OnTeleport(string message, AgentManager.TeleportStatus status, AgentManager.TeleportFlags flags)
+        void Self_OnTeleport(string message, TeleportStatus status, TeleportFlags flags)
         {
-            if (status == AgentManager.TeleportStatus.Failed)
+            BotClient parent = client;
+            if (status == TeleportStatus.Failed)
             {
-                parent.output("Teleport failed.");
+                parent.WriteLine("Teleport failed.");
                 parent.describeSituation();
             }
-            else if (status == AgentManager.TeleportStatus.Finished)
+            else if (status == TeleportStatus.Finished)
             {
-                parent.output("Teleport succeeded.");
+                parent.WriteLine("Teleport succeeded.");
                 parent.describeSituation();
             }
         }

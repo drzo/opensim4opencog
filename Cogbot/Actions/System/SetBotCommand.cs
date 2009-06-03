@@ -15,7 +15,7 @@ namespace cogbot.Actions
                 Category = CommandCategory.TestClient;
             }
 
-            public override string Execute(string[] args, UUID fromAgentID)
+            public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
             {
                 string botname = String.Join(" ",args).Trim();
                 TheBotClient.ClientManager.SetOnlyOneCurrentBotClient(botname);

@@ -14,7 +14,7 @@ namespace cogbot.Actions
             Description = "Searches for a simulator and returns information about it. Usage: findsim [Simulator Name]";
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
                 return "Usage: findsim [Simulator Name]";

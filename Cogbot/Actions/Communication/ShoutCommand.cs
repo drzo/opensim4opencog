@@ -15,7 +15,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Communication;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int channel = 0;
             int startIndex = 0;

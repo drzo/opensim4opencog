@@ -14,8 +14,7 @@ namespace cogbot.Actions
             Description = "Prints out information for every viewer effect that is received. Usage: showeffects [on/off]";
             Category = CommandCategory.Other;
         }
-
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length == 0)
             {

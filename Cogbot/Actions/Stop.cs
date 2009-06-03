@@ -14,7 +14,7 @@ namespace cogbot.Actions
 			usageString = "To cancel a particular action, type \"stop <action>\"";
         }
 
-        public override string acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             //base.acceptInput(verb, args);
 

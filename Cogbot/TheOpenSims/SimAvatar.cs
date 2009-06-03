@@ -840,7 +840,7 @@ namespace cogbot.TheOpenSims
 
         public override void Debug(string p, params object[] args)
         {
-            WorldSystem.output(String.Format(p, args));
+            WorldSystem.WriteLine(String.Format(p, args));
         }
 
         public void Eat(SimObject target)
@@ -1077,7 +1077,7 @@ namespace cogbot.TheOpenSims
         ///     double dist = Vector3.Distance(v3, swp.GetWorldPosition());
         ///     if (!swp.Passable)
         ///     {
-        ///         WorldSystem.output("CreateClosestWaypoint: " + v3 + " <- " + dist + " -> " + swp + " " + this);
+        ///         WorldSystem.WriteLine("CreateClosestWaypoint: " + v3 + " <- " + dist + " -> " + swp + " " + this);
         ///     }
         ///     return swp;
         /// }

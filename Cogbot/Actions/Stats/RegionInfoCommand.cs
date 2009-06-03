@@ -13,7 +13,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Simulator;
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             StringBuilder output = new StringBuilder();
             output.AppendLine(Client.Network.CurrentSim.ToString());

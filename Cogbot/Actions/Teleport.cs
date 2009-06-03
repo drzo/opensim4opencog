@@ -31,18 +31,18 @@ namespace cogbot.Actions
             if (status == TeleportStatus.Finished)
             {
                 WriteLine(message + " " + status);
-                Client.describePeople(false);
-                Client.describeObjects(false);
-                Client.describeBuildings(false);
+                Client.describePeople(false, WriteLine);
+                Client.describeObjects(false, WriteLine);
+                Client.describeBuildings(false, WriteLine);
                 Client.Self.OnTeleport -= On_Teleport;
                 TeleportFinished.Set();
             }
         }
 
-        public override string acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             acceptInput0(verb, args);
-            return writeBuffer.ToString();
+            return verb + " complete";
         }
 
         void acceptInput0(string verb, Parser parser)

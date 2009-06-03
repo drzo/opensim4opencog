@@ -22,7 +22,7 @@ namespace cogbot.Actions
             Description = "Set a group as active. Usage: activategroup GroupName";
             Category = CommandCategory.Groups;
         }
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
                 return Description;

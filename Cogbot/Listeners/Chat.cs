@@ -10,7 +10,7 @@ namespace cogbot.Listeners
         public List<string> muteList;
 		public bool muted = false;
 
-        public Chat(TextForm parent) : base(parent) {
+        public Chat(BotClient parent) : base(parent) {
             muteList = new List<string>();
 
             client.Self.OnChat += new AgentManager.ChatCallback(Self_OnChat);
@@ -20,9 +20,10 @@ namespace cogbot.Listeners
             ChatSourceType sourceType, string fromName, UUID id, UUID ownerid, 
             Vector3 position)
         {
+            BotClient parent = client;
             if (message.Length > 0 && sourceType == ChatSourceType.Agent && !muteList.Contains(fromName))
             {
-                parent.output(fromName + " says, \"" + message + "\".");
+                parent.WriteLine(fromName + " says, \"" + message + "\".");
                 //parent.enqueueLispTask("(thisClient.msgClient \"(heard (" + fromName + ") '" + message + "' )\" )");
                 parent.enqueueLispTask("(on-chat (@\"" + fromName + "\") (@\"" + message + "\") )");
             }

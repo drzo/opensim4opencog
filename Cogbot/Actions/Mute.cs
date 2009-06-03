@@ -16,7 +16,7 @@ namespace cogbot.Actions
                           "To Unmute an avatar, type \"Mute <avatar name>\" again; to Unmute all, type \"mute all\" again";
         }
 
-        public override string acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
            // base.acceptInput(verb, args);
 

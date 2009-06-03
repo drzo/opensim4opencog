@@ -21,7 +21,7 @@ namespace cogbot.Actions
             Category = CommandCategory.TestClient;
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
 			string masterName = String.Empty;
 			for (int ct = 0; ct < args.Length;ct++)

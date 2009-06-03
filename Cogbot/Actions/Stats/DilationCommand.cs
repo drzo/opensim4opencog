@@ -15,7 +15,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Simulator;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             return "Dilation is " + Client.Network.CurrentSim.Stats.Dilation.ToString();
         }

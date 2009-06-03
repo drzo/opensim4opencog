@@ -118,7 +118,7 @@ namespace cogbot.Actions
             Description = "Backup inventory to a folder on your hard drive. Usage: " + Name + " [to <directory>] | [abort] | [status]";            
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             StringBuilder sbResult = new StringBuilder();
 
@@ -286,7 +286,7 @@ namespace cogbot.Actions
                         }
 
                         string sExtension = (ii.AssetType == AssetType.LSLText) ? ".lsl" : ".txt";
-                        // make the output file
+                        // make the WriteLine file
                         string sPath = sPathSoFar + @"\" + MakeValid(ii.Name.Trim()) + sExtension;
 
                         // create the new qdi

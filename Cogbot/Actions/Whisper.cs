@@ -20,7 +20,7 @@ namespace cogbot.Actions
             currentSession = UUID.Zero;
         }
 
-        public override string acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             //base.acceptInput(verb, args);
 

@@ -24,10 +24,10 @@ namespace cogbot.Actions
             {
                 if (sittingOn != 0)
                 {
-                    WriteLine("You sat down.");
+                    WriteLine("$bot sat down.");
                 }
                 else
-                    WriteLine("You stood up.");
+                    WriteLine("$bot stood up.");
             }
             else
             {
@@ -38,13 +38,13 @@ namespace cogbot.Actions
             }
         }
 
-        public override string acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
-            acceptInput0(verb, args);
-            return writeBuffer.ToString();
+            acceptInput0(verb, args, WriteLine);
+            return verb + " complete";
         }
 
-        void acceptInput0(string verb, Parser args)
+        void acceptInput0(string verb, Parser args, OutputDelegate WriteLine)
         {
             //base.acceptInput(verb, args);
 
@@ -55,7 +55,7 @@ namespace cogbot.Actions
             }
 
             if (Client.Self.SittingOn != 0 || sittingOnGround)
-                WriteLine("You are already sitting.");
+                WriteLine("$bot is already sitting.");
             else
             {
                 if (args.prepPhrases["on"].Length > 0)
@@ -64,7 +64,7 @@ namespace cogbot.Actions
                     Primitive prim;
                     if (WorldSystem.tryGetPrim(on, out prim))
                     {
-                        WriteLine("Trying to sit on " + prim.Properties.Name + ".");
+                        WriteLine("Trying to sit on {0}.", prim.Properties.Name);
                         Client.Self.RequestSit(prim.ID, Vector3.Zero);
                         Client.Self.Sit();
                         sittingOnGround = false;
@@ -76,7 +76,7 @@ namespace cogbot.Actions
                 }
                 else
                 {
-                    WriteLine("You sit on the ground.");
+                    WriteLine("$bot sit on the ground.");
                     Client.Self.SitOnGround();
                     sittingOnGround = true;
                 }

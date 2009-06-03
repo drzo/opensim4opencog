@@ -16,7 +16,7 @@ namespace cogbot.Actions
             usageString = "fly [up|down] 'no_argument= start flying";
         }
 
-        public override string acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
           //  base.acceptInput(verb, args);
 

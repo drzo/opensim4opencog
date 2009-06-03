@@ -198,7 +198,7 @@ namespace cogbot.ScriptEngines
             Console.Write(p);
      //       for (int i = 0; i < chars.Length; i++)
        //     {
-         //       output.WriteByte((byte)chars[i]);
+         //       WriteLine.WriteByte((byte)chars[i]);
            // }
            // if (ironTextBoxControl != null)
            // {

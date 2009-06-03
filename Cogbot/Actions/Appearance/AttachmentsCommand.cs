@@ -14,7 +14,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Appearance;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             List<Primitive> attachments = Client.Network.CurrentSim.ObjectsPrimitives.FindAll(
                 delegate(Primitive prim) { return prim.ParentID == Client.Self.LocalID; }

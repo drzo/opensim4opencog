@@ -20,7 +20,7 @@ namespace cogbot.Tutorials
         private void SetNextCommand()
         {
             XmlReader XMLCommand = XMLTutorial.getAllChildren()[CommandIdx];
-            parent.output(XMLCommand["instruction"]);
+            parent.WriteLine(XMLCommand["instruction"]);
             AcceptableCommand = XMLCommand["acceptable"];
             FailureMessage = XMLCommand["failure"];
             SuccessMessage = XMLCommand["success"];
@@ -33,8 +33,8 @@ namespace cogbot.Tutorials
             {
                 SetModeTutorial();
 
-                parent.output("Welcome to your first Tutorial!");
-                parent.groupActions["mute"].acceptInputWrapper("mute", "all");
+                parent.WriteLine("Welcome to your first Tutorial!");
+                parent.groupActions["mute"].acceptInputWrapper("mute", "all", parent.WriteLine);
                 
                 SetNextCommand();
                 CommandIdx++;
@@ -46,7 +46,7 @@ namespace cogbot.Tutorials
                 {
                     if (parent.ExecuteCommand(text)!=String.Empty)
                     {
-                        parent.output(SuccessMessage);
+                        parent.WriteLine(SuccessMessage);
                         if (CommandIdx < CommandCount)
                             SetNextCommand();
                         CommandIdx++;
@@ -54,13 +54,13 @@ namespace cogbot.Tutorials
                         {
                             RestoreMode();
                             CommandIdx = 0;
-                            parent.output("Congratulations!! You completed your first Tutorial! ");
-                            parent.groupActions["mute"].acceptInputWrapper("mute", "all");
+                            parent.WriteLine("Congratulations!! You completed your first Tutorial! ");
+                            parent.groupActions["mute"].acceptInputWrapper("mute", "all", parent.WriteLine);
                         }                     
                     }
                 }
                 else
-                    parent.output(FailureMessage);
+                    parent.WriteLine(FailureMessage);
             }
         }
 

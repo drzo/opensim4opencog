@@ -13,7 +13,7 @@ namespace cogbot.Actions
         {
             helpString = "Use an item from inventory.";
         }
-       public override string acceptInput(string verb, Parser args)
+       public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
        {
         //   base.acceptInput(verb, args);
            string to_op = "";

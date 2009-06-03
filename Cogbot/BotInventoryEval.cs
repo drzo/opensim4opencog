@@ -28,7 +28,7 @@ namespace cogbot
             if (!hooked.ContainsKey(folder.UUID))
             {
                 hooked.Add(folder.UUID, folder.Name);
-                output("  regFolderHook " + folder.Name);
+                WriteLine("  regFolderHook " + folder.Name);
             }
 
         }
@@ -39,7 +39,7 @@ namespace cogbot
             {
                 hooked.Add(folder.UUID, folder.Name);
                 //    botclient.Inventory.OnContentsRetrieved += new InventoryFolder.ContentsRetrieved(myfolder_OnContentsRetrieved);
-                output("  appendFolderHook " + folder.Name);
+                WriteLine("  appendFolderHook " + folder.Name);
             }
 
         }
@@ -48,7 +48,7 @@ namespace cogbot
         {
             regFolderHook(folder);
             // folder.DownloadContentsOpenSim(TimeSpan.FromSeconds(60));
-            // output("    myfolder_OnContentsRetrieved [" + folder.Name + "] = " + folder.UUID.ToString()+ " with count="+folder.Contents.Count.ToString());
+            // WriteLine("    myfolder_OnContentsRetrieved [" + folder.Name + "] = " + folder.UUID.ToString()+ " with count="+folder.Contents.Count.ToString());
             List<InventoryBase> folderContents = botclient.Inventory.FolderContents(folder.UUID, botclient.Self.AgentID,
                                                                                     true, true, InventorySortOrder.ByName, 3000);
             if (folderContents != null)
@@ -64,8 +64,8 @@ namespace cogbot
                             //int indent = 1;
                             //StringBuilder result = new StringBuilder();
                             //result.AppendFormat("{0}{1} ({2})\n", new String(' ', indent * 2), ii.Name, ii.UUID.ToString());
-                            //output(result.ToString());
-                            output("   [Inventory Item] Name: " + ii.Name + " <==> " + ii.UUID.ToString() + " in folder[" + folder.Name + "]");
+                            //WriteLine(result.ToString());
+                            WriteLine("   [Inventory Item] Name: " + ii.Name + " <==> " + ii.UUID.ToString() + " in folder[" + folder.Name + "]");
                         }
 
 
@@ -86,7 +86,7 @@ namespace cogbot
                     {
                         InventoryFolder fld = (InventoryFolder)ib;
 
-                        output(String.Format(" [Folder] Name: {0} <==> {1} in folder[{2}] RECIEVED", ib.Name, ib.UUID, folder.Name));
+                        WriteLine(String.Format(" [Folder] Name: {0} <==> {1} in folder[{2}] RECIEVED", ib.Name, ib.UUID, folder.Name));
 
                         //evalOnFolders(ib as InventoryFolder, operation, itemName);
                         appendFolderHook(fld);
@@ -107,7 +107,7 @@ namespace cogbot
             try
             {
                 /*
-             //   output("examining folder [" + folder.Name + "] = " + folder.UUID.ToString());
+             //   WriteLine("examining folder [" + folder.Name + "] = " + folder.UUID.ToString());
                 bool success = false;
                 if (folder.IsStale)
                 {
@@ -115,15 +115,15 @@ namespace cogbot
                     {
                         success = folder.DownloadContentsOpenSim(TimeSpan.FromSeconds(wait));
                         //success = folder.DownloadContents(TimeSpan.FromSeconds(wait));
-                        output(" DownloadContentets returned " + success.ToString());
-                        output(" Contents.count = " + folder.Contents.Count.ToString());
+                        WriteLine(" DownloadContentets returned " + success.ToString());
+                        WriteLine(" Contents.count = " + folder.Contents.Count.ToString());
                     }
                 //appendFolderHook(folder);
                 //folder.RequestContents();
                 }
                 //else
                 //{
-                //    output(" Claim is folder is fresh...");
+                //    WriteLine(" Claim is folder is fresh...");
                 //}
                 */
 
@@ -136,7 +136,7 @@ namespace cogbot
 
                     foreach (InventoryBase ib in folderContents)
                     {
-                        //output(" [InvAll] Name: " + ib.Name + " <==> " + ib.ToString());
+                        //WriteLine(" [InvAll] Name: " + ib.Name + " <==> " + ib.ToString());
                         if (ib is InventoryItem)
                         {
                             InventoryItem ii = ib as InventoryItem;
@@ -145,8 +145,8 @@ namespace cogbot
                                 //int indent = 1;
                                 //StringBuilder result = new StringBuilder();
                                 //result.AppendFormat("{0}{1} ({2})\n", new String(' ', indent * 2), ii.Name, ii.UUID.ToString());
-                                //output(result.ToString());
-                                output(String.Format(" [Inventory Item] Name: {0} <==> {1} OP:{2} ITEM:{3}", ii.Name, ii.UUID, operation, itemName));
+                                //WriteLine(result.ToString());
+                                WriteLine(String.Format(" [Inventory Item] Name: {0} <==> {1} OP:{2} ITEM:{3}", ii.Name, ii.UUID, operation, itemName));
                             }
 
 
@@ -168,14 +168,14 @@ namespace cogbot
 
                         if (ib is InventoryFolder)
                         {
-                            output(String.Format(" [Folder] Name: {0} <==> {1} OP:{2} ITEM:{3}", ib.Name, ib.UUID, operation, itemName));
+                            WriteLine(String.Format(" [Folder] Name: {0} <==> {1} OP:{2} ITEM:{3}", ib.Name, ib.UUID, operation, itemName));
                             InventoryFolder fld = (InventoryFolder)ib;
                             //appendFolderHook(fld);
                             //fld.RequestContents();
                             if ((operation == "wear") && (ib.Name == itemName))
                             {
                                 botclient.Appearance.WearOutfit(ib.UUID, false);
-                                output(" [WEAR] Name: " + ib.Name + " <==> " + ib.UUID.ToString());
+                                WriteLine(" [WEAR] Name: " + ib.Name + " <==> " + ib.UUID.ToString());
                                 return;
                             }
                             evalOnFolders(ib as InventoryFolder, operation, itemName);
@@ -185,15 +185,15 @@ namespace cogbot
             }
             catch (Exception e)
             {
-                output("Search Exception :" + e.StackTrace);
-                output("  msg:" + e.Message);
+                WriteLine("Search Exception :" + e.StackTrace);
+                WriteLine("  msg:" + e.Message);
 
             }
         }
 
-        private void output(string p)
+        private void WriteLine(string p)
         {
-            botclient.output(p);
+            botclient.WriteLine(p);
         }
 
 

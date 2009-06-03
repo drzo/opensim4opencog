@@ -13,7 +13,7 @@ namespace cogbot.Listeners
         private int searchStep;
         private List<string> numberedAvatars;
 
-        public Avatars(TextForm parent)
+        public Avatars(BotClient parent)
             : base(parent)
         {
             searchStep = 1;
@@ -41,7 +41,7 @@ namespace cogbot.Listeners
             }
             catch(Exception e)
                 {
-                    parent.output("err :" + e.StackTrace);
+                    client.WriteLine("err :" + e.StackTrace);
                 }
         }
 
@@ -154,36 +154,38 @@ namespace cogbot.Listeners
 
         public void describeAvatar(Avatar avatar)
         {
+            BotClient parent = client;
             string verb;
             //if (avatar.SittingOn == 0)
             //    verb = "standing";
             //else
             //    verb = "sitting";
-            //parent.output(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
-            parent.output(avatar.Name + " is " + Vector3.Distance(client.Self.SimPosition, avatar.Position).ToString() + " distant.");
+            //parent.WriteLine(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
+            parent.WriteLine(avatar.Name + " is " + Vector3.Distance(client.Self.SimPosition, avatar.Position).ToString() + " distant.");
             if (avatar.ProfileProperties.BornOn != null)
-                parent.output("Born on: " + avatar.ProfileProperties.BornOn);
+                parent.WriteLine("Born on: " + avatar.ProfileProperties.BornOn);
             if (avatar.ProfileProperties.AboutText != null)
-                parent.output("About their second life: " + avatar.ProfileProperties.AboutText);
+                parent.WriteLine("About their second life: " + avatar.ProfileProperties.AboutText);
             if (avatar.ProfileProperties.FirstLifeText != null)
-                parent.output("About their first life: " + avatar.ProfileProperties.FirstLifeText);
+                parent.WriteLine("About their first life: " + avatar.ProfileProperties.FirstLifeText);
             if (avatar.ProfileInterests.LanguagesText != null)
-                parent.output("Languages spoken: " + avatar.ProfileInterests.LanguagesText);
+                parent.WriteLine("Languages spoken: " + avatar.ProfileInterests.LanguagesText);
             if (avatar.ProfileInterests.SkillsText != null)
-                parent.output("Skills: " + avatar.ProfileInterests.SkillsText);
+                parent.WriteLine("Skills: " + avatar.ProfileInterests.SkillsText);
             if (avatar.ProfileInterests.WantToText != null)
-                parent.output("Wants to: " + avatar.ProfileInterests.WantToText);
+                parent.WriteLine("Wants to: " + avatar.ProfileInterests.WantToText);
         }
 
         public void describeAvatarToAI(Avatar avatar)
         {
+            BotClient parent = client;
             string verb;
            // if (avatar.SittingOn == 0)
            //     verb = "standing";
            // else
            //     verb = "sitting";
-            //parent.output(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
-            //parent.output(avatar.Name + " is " + Vector3.Distance(Client.Self.SimPosition, avatar.Position).ToString() + " distant.");
+            //parent.WriteLine(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
+            //parent.WriteLine(avatar.Name + " is " + Vector3.Distance(Client.Self.SimPosition, avatar.Position).ToString() + " distant.");
 
             parent.enqueueLispTask("(on-avatar-dist (@\"" + avatar.Name + "\") " + Vector3.Distance(client.Self.SimPosition, avatar.Position).ToString() + " )");
             parent.enqueueLispTask("(on-avatar-pos (@\"" + avatar.Name + "\") (@\"" + avatar.Position.ToString() + "\") )");
@@ -191,17 +193,17 @@ namespace cogbot.Listeners
             
             /*
             if (avatar.ProfileProperties.BornOn != null)
-                parent.output("Born on: " + avatar.ProfileProperties.BornOn);
+                parent.WriteLine("Born on: " + avatar.ProfileProperties.BornOn);
             if (avatar.ProfileProperties.AboutText != null)
-                parent.output("About their second life: " + avatar.ProfileProperties.AboutText);
+                parent.WriteLine("About their second life: " + avatar.ProfileProperties.AboutText);
             if (avatar.ProfileProperties.FirstLifeText != null)
-                parent.output("About their first life: " + avatar.ProfileProperties.FirstLifeText);
+                parent.WriteLine("About their first life: " + avatar.ProfileProperties.FirstLifeText);
             if (avatar.ProfileInterests.LanguagesText != null)
-                parent.output("Languages spoken: " + avatar.ProfileInterests.LanguagesText);
+                parent.WriteLine("Languages spoken: " + avatar.ProfileInterests.LanguagesText);
             if (avatar.ProfileInterests.SkillsText != null)
-                parent.output("Skills: " + avatar.ProfileInterests.SkillsText);
+                parent.WriteLine("Skills: " + avatar.ProfileInterests.SkillsText);
             if (avatar.ProfileInterests.WantToText != null)
-                parent.output("Wants to: " + avatar.ProfileInterests.WantToText);
+                parent.WriteLine("Wants to: " + avatar.ProfileInterests.WantToText);
             */
         
         }

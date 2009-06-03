@@ -15,7 +15,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Other;
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
 			StringBuilder result = new StringBuilder();
 

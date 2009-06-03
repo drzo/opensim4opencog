@@ -24,7 +24,7 @@ namespace cogbot.Actions
         /// <param name="args"></param>
         /// <param name="fromAgentID"></param>
         /// <returns></returns>
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             Client.Inventory.EmptyLostAndFound();
             return "Lost And Found Emptied";

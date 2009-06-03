@@ -15,9 +15,9 @@ namespace cogbot.Actions
             Category = CommandCategory.Movement;
 		}
 
-		public override string Execute(string[] args, UUID fromAgentID)
+		public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
-            return "CurrentSim: '" + Client.Network.CurrentSim.ToString() + "' Position: " + 
+            return "$bot CurrentSim: '" + Client.Network.CurrentSim.ToString() + "' Position: " + 
                 Client.Self.SimPosition.ToString();
 		}
     }

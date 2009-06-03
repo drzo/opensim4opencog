@@ -17,7 +17,7 @@ namespace cogbot.Actions
             Category = CommandCategory.TestClient;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             string name = Client.ToString();
             return "I am " + name + ", Up Since: " + Created + " (" + (DateTime.Now - Created) + ")";

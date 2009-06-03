@@ -15,7 +15,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Other;
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
 			if (fromAgentID == UUID.Zero)
 				return "Unable to send money to console.  This command only works when IMed.";

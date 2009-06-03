@@ -17,7 +17,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Appearance;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             string targetName = String.Empty;
             List<DirectoryManager.AgentSearchData> matches;

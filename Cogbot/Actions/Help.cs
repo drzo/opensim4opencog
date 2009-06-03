@@ -13,7 +13,7 @@ namespace cogbot.Actions
             usageString = helpString;
         }
 
-        public override string acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             // base.acceptInput(verb, args);
 
@@ -41,7 +41,7 @@ namespace cogbot.Actions
             }
 
             Client.describeNext = false;
-            return writeBuffer.ToString();
+            return "Help complete";
         }
     }
 }

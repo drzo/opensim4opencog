@@ -27,7 +27,7 @@ namespace cogbot.Actions.Movement
     //        Category = cogbot.Actions.CommandCategory.Movement;
     //    }
 
-    //    public override string Execute(string[] args, UUID fromAgentID)
+    //    public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
     //    {
     //        string[] tokens = args;
     //        if (tokens.Length > 0 && !String.IsNullOrEmpty(tokens[0]))
@@ -76,7 +76,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length == 0)
             {
@@ -106,7 +106,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             GraphFormer gf = new GraphFormer(SimGlobalRoutes.Instance);
             gf.Show();
@@ -122,7 +122,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length == 0)
             {
@@ -152,7 +152,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             lock (Client.Network.Simulators)
             {
@@ -174,7 +174,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             float Dist;
             if (args.Length > 1 && float.TryParse(args[1], out Dist))
@@ -200,7 +200,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length==0)
             {
@@ -225,7 +225,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int argcount;
             SimPosition pos = WorldSystem.GetVector(args, out argcount);
@@ -247,7 +247,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int argcount;
             SimPosition pos = WorldSystem.GetVector(args, out argcount);
@@ -274,7 +274,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             Image I = null;// WorldSystem.miniMap.Image;
             if (I == null)
@@ -303,7 +303,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             IEnumerable<SimObject> objs = WorldSystem.GetAllSimObjects(String.Join(" ", args));
             foreach (SimObject o in objs)
@@ -324,7 +324,7 @@ namespace cogbot.Actions.Movement
     //        Category = cogbot.Actions.CommandCategory.Movement;
     //    }
 
-    //    public override string Execute(string[] args, UUID fromAgentID)
+    //    public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
     //    {
     //        int argsused;
     //        SimPosition v3 = WorldSystem.GetVector(args, out argsused);
@@ -359,7 +359,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int argcount;
             SimPosition pos = WorldSystem.GetVector(args, out argcount);
@@ -396,7 +396,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int argcount;
             SimPosition pos = WorldSystem.GetVector(args, out argcount);
@@ -433,7 +433,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int argcount;
             SimPosition pos = WorldSystem.GetVector(args, out argcount);
@@ -459,7 +459,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             SimPosition simObject;
             float distance = 2.0f;
@@ -559,7 +559,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             SimPosition simObject;
 
@@ -618,7 +618,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length==0) {
                 WorldObjects.ResetSelectedObjects();
@@ -640,7 +640,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
 
             if (args.Length < 3)
@@ -682,7 +682,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
 
             if (args.Length < 3)

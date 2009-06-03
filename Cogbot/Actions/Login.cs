@@ -14,7 +14,7 @@ namespace cogbot.Actions
             usageString = "login <first name> <last name> <password> [<simurl>] [<location>]";
         }
 
-        public override string acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             //base.acceptInput(verb, args);
             string[] tokens = args.objectPhrase.Split(null);
@@ -50,10 +50,12 @@ namespace cogbot.Actions
                 {
                     Client.Settings.LOGIN_SERVER = TheBotClient.BotLoginParams.URI;// TextForm.SingleInstance.config.simURL; // "http://127.0.0.1:8002/";
                     ///                    Client.Network.Login(Client.BotLoginParams.FirstName, Client.BotLoginParams.LastName, Client.BotLoginParams.Password, "OnRez", "UNR");
+                    WriteLine("$bot beginning login");
                     Client.Login();
+                    WriteLine("$bot completed login");
                 }
                 else
-                    return ("You are already logged in.");
+                    return ("$bot is already logged in.");
             }
             return "loging in...";
         }

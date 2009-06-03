@@ -93,7 +93,7 @@
 //
 // The above would parse the argument string array, and would invoke the
 // lambda expression three times, setting `verbose' to 3 when complete.  
-// It would also print out "A" and "B" to standard output.
+// It would also print out "A" and "B" to standard WriteLine.
 // The returned array would contain the string "extra".
 //
 // C# 3.0 collection initializers are supported and encouraged:

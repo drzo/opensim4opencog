@@ -13,13 +13,13 @@ namespace cogbot.Actions
             usageString = "To stop flying type: \"stop-flying\"";
         }
 
-        public override string acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
          //   base.acceptInput(verb, args);
             Client.Self.Fly(false);
 
             TheBotClient.describeNext = true;
-            return "You stopped flying";
+            return "$bot stopped flying";
         }
     }
 }

@@ -15,7 +15,7 @@ namespace cogbot.Actions.Inventory.Shell
             Description = "Lists the contents of the current working inventory folder.";
             Category = CommandCategory.Inventory;
         }
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length > 1)
                 return "Usage: ls [-l]";
@@ -35,7 +35,7 @@ namespace cogbot.Actions.Inventory.Shell
                 if (longDisplay)
                 {
                     // Generate a nicely formatted description of the item.
-                    // It kinda looks like the output of the unix ls.
+                    // It kinda looks like the WriteLine of the unix ls.
                     // starts with 'd' if the inventory is a folder, '-' if not.
                     // 9 character permissions string
                     // UUID of object

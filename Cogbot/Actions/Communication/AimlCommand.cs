@@ -20,7 +20,7 @@ namespace cogbot.Listeners
             Category = CommandCategory.Communication;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length == 0) return "Usage: aiml [[on|off]|text]";
             string s = args[0].ToLower();
@@ -80,7 +80,7 @@ namespace cogbot.Listeners
                 MyBot.isAcceptingUserInput = false;
                 MyBot.loadAIMLFromFiles();
                 MyBot.isAcceptingUserInput = true;
-                MyBot.outputDelegate = output;
+                MyBot.outputDelegate = WriteLine;
                 // wont get here unless there was no problem
                 client.Self.OnChat += AIML_OnChat;
                 client.Self.OnInstantMessage += AIML_OnInstantMessage;
@@ -190,12 +190,12 @@ namespace cogbot.Listeners
                                 if (Environment.TickCount - myUser.LastResponseGivenTime <
                                     (60000 / myUser.MaxRespondToChatPerMinute))
                                 {
-                                    output("AIML_OnChat Reply is too fast: " + resp);
+                                    WriteLine("AIML_OnChat Reply is too fast: " + resp);
                                     return; //too early to respond.. but still listened
                                 }
                                 if (!myUser.RespondToChat)
                                 {
-                                    output("AIML_OnChat Reply is quietly: " + resp);
+                                    WriteLine("AIML_OnChat Reply is quietly: " + resp);
                                     return;
                                 }
                                 foreach (string ting in resp.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries))

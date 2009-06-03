@@ -15,7 +15,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Parcel;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
                 return "Usage: primowners parcelID (use parcelinfo to get ID)";

@@ -33,7 +33,7 @@ namespace cogbot.Actions
         /// <param name="fromAgentID">The <seealso cref="OpenMetaverse.UUID"/> 
         /// of the agent making the request</param>
         /// <returns></returns>
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             // initialize a StringBuilder object used to return the results
             StringBuilder sb = new StringBuilder();
@@ -42,10 +42,10 @@ namespace cogbot.Actions
             if (Client.Friends.FriendList.Count > 0)
             {
                 // iterate over the InternalDictionary using a delegate to populate
-                // our StringBuilder output string
+                // our StringBuilder WriteLine string
                 Client.Friends.FriendList.ForEach(delegate(FriendInfo friend)
                 {
-                    // append the name of the friend to our output
+                    // append the name of the friend to our WriteLine
                     sb.AppendLine(friend.Name);
                 });
             }

@@ -20,7 +20,7 @@ namespace cogbot.Actions
                 WriteLine("Notecard successfully uploaded, ItemID {0} AssetID {1}", itemID, assetID);
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
                 return "Usage: createnotecard filename.txt";

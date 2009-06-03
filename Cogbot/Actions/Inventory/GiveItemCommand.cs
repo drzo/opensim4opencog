@@ -15,7 +15,7 @@ namespace cogbot.Actions.Inventory.Shell
             Description = "Gives items from the current working directory to an avatar.";
             Category = CommandCategory.Inventory;
         }
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 2)
             {

@@ -446,7 +446,7 @@ namespace cogbot.TheOpenSims
         //        {
         //            double dist = Vector3d.Distance(v3, swp.GetWorldPosition());
         //            swp.EnsureAtLeastOnePath();
-        //            WorldSystem.output("CreateClosestWaypoint: " + v3 + " <- " + dist + " -> " + swp + " " + this);
+        //            WorldSystem.WriteLine("CreateClosestWaypoint: " + v3 + " <- " + dist + " -> " + swp + " " + this);
         //        }
         //        if (lastPos != v3)
         //        {
@@ -460,7 +460,7 @@ namespace cogbot.TheOpenSims
         //        if (!swp.Passable)
         //        {
         //            double dist = Vector3d.Distance(v3, swp.GetWorldPosition());
-        //            WorldSystem.output("BAD: " + v3 + " <- " + dist + " -> " + swp + " " + this);
+        //            WorldSystem.WriteLine("BAD: " + v3 + " <- " + dist + " -> " + swp + " " + this);
         //            swp = PathStore.ClosestNode(v3.X, v3.Y, v3.Y, out dist, false);//, GetSizeDistance() + 1, 7, 1.0f);
         //        }
         //    }
@@ -1148,7 +1148,7 @@ namespace cogbot.TheOpenSims
 
         public virtual void Debug(string p, params object[] args)
         {
-            WorldSystem.output(String.Format(Prim + ": " + p, args));
+            WorldSystem.WriteLine(String.Format(Prim + ": " + p, args));
         }
 
         public Exception Error(string p, params object[] args)

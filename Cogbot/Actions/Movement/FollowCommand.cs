@@ -19,7 +19,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Movement;            
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
             // Construct the target name from the passed arguments
 			string target = String.Empty;
