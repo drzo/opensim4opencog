@@ -39,20 +39,47 @@ Time to Configure the system.
 +-------------------------+
 |    COMPILING - LINUX    |
 +-------------------------+
-BIG TODO:
-Awaiting definition of how to compile on a linux machine.
-
 We do know the follwing will be needed:
 
 * nANT
 * Mono 1.2.4 or better (with .NET 2.0 package)
 * gmcs (known as the mono-gmcs package on Debian)
 
-Once installed, cd to the main directory of your copy of cogbot
-and run "nant" in the command line. 
+Here is a typical build session:
 
-After 10-50 seconds of compiling you should see "Build Succeeded".
-(Or something like it).
+[root@titan trunk]# pwd
+/development/Opensim4OpenCog/trunk
+[root@titan trunk]# ./runprebuild.sh
+Prebuild v2.0.3
+Copyright (c) 2004-2008
+Matthew Holmes (matthew@wildfiregames.com),
+Dan Moorehead (dan05a@gmail.com),
+David Hudson (jendave@yahoo.com),
+Rob Loach (http://www.robloach.net),
+C.J. Adams-Collier (cjac@colliertech.org),
+See 'prebuild /usage' for help
+
+Creating NAnt build files
+...Creating project: RTParser
+...Creating project: PathSystem3D
+...Creating project: OpenMetaverse.Utilities
+...Creating project: Cogbot
+...Creating project: OpenMetaverseTypes
+...Creating project: OpenMetaverse.Rendering.Meshmerizer
+...Creating project: OpenMetaverse
+...Creating project: OpenMetaverse.StructuredData
+...Creating project: OpenMetaverse.Http
+...Creating project: DotLisp
+
+[root@titan trunk]# nant
+...
+...
+After 10-50 seconds of compiling you should see "BUILD SUCCEEDED".
+....
+
+[root@titan trunk]# cd bin
+[root@titan bin]# mono Cogbot.exe
+
 
 +-------------------------+
 |      CONFIGURATION      |
