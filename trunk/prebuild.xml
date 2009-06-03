@@ -97,32 +97,6 @@
         </Files>
       </Project>
 
-      <Project name="OpenMetaverse.Utilities" path="lib/OpenMetaverse.Utilities" type="Library">
-        <Configuration name="Debug">
-          <Options>
-            <OutputPath>../bin/</OutputPath>
-          </Options>
-        </Configuration>
-        <Configuration name="Release">
-          <Options>
-            <OutputPath>../../bin/</OutputPath>
-            <XmlDocFile>OpenMetaverse.Utilities.XML</XmlDocFile>
-          </Options>
-        </Configuration>
-
-        <ReferencePath>../../bin/</ReferencePath>
-        <Reference name="System"/>
-        <Reference name="System.Xml"/>
-        <Reference name="System.Data"/>
-        <Reference name="OpenMetaverse"/>
-        <Reference name="OpenMetaverseTypes"/>
-        <Reference name="OpenMetaverse.StructuredData"/>
-        <Reference name="OpenMetaverse.Http"/>
-        <Files>
-          <Match pattern="*.cs" recurse="true"/>
-        </Files>
-      </Project>
-
       <Project name="OpenMetaverse.StructuredData" path="lib/OpenMetaverse.StructuredData" type="Library" rootNamespace="OpenMetaverse.StructuredData">
         <Configuration name="Debug">
           <Options>
@@ -195,6 +169,32 @@
         <Reference name="OpenMetaverse.StructuredData"/>
         <Reference name="OpenMetaverse.Http"/>
         <Reference name="XMLRPC"/>
+        <Files>
+          <Match pattern="*.cs" recurse="true"/>
+        </Files>
+      </Project>
+
+      <Project name="OpenMetaverse.Utilities" path="lib/OpenMetaverse.Utilities" type="Library">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../bin/</OutputPath>
+          </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../../bin/</OutputPath>
+            <XmlDocFile>OpenMetaverse.Utilities.XML</XmlDocFile>
+          </Options>
+        </Configuration>
+
+        <ReferencePath>../../bin/</ReferencePath>
+        <Reference name="System"/>
+        <Reference name="System.Xml"/>
+        <Reference name="System.Data"/>
+        <Reference name="OpenMetaverse"/>
+        <Reference name="OpenMetaverseTypes"/>
+        <Reference name="OpenMetaverse.StructuredData"/>
+        <Reference name="OpenMetaverse.Http"/>
         <Files>
           <Match pattern="*.cs" recurse="true"/>
         </Files>
@@ -449,3 +449,4 @@
 
   </Solution>
 </Prebuild>
+
