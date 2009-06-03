@@ -50,25 +50,32 @@ namespace RTParser.AIMLTagHandlers
             }
             if (templateNode.HasChildNodes)
             {
-                // recursively check
-                foreach (XmlNode childNode in templateNode.ChildNodes)
+                Unifiable[] split = with.Split();
+                if (templateNode.ChildNodes.Count == split.Length)
                 {
-                    try
+                    int idx = 0;
+                    // recursively check
+                    foreach (XmlNode childNode in templateNode.ChildNodes)
                     {
-                        if (childNode.NodeType == XmlNodeType.Text)
+                        with = split[idx++];
+                        try
                         {
-                            string srch = (" " + with.ToValue() + " ").ToUpper();
-                            return ((" " + childNode.InnerText + " ").ToUpper().Equals(srch));
+                            if (childNode.NodeType == XmlNodeType.Text)
+                            {
+                                string srch = (" " + with.ToValue() + " ").ToUpper();
+                                return ((" " + childNode.InnerText + " ").ToUpper().Equals(srch));
+                            }
+                            AIMLTagHandler part = Proc.GetTagHandler(user, query, request, result, childNode);
+                            if (!part.CanUnify(with)) return false;
                         }
-                        AIMLTagHandler part = Proc.GetTagHandler(user, query, request, result, childNode);
-                        if (!part.CanUnify(with)) return false;
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("" + e);
+                        }
                     }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine("" + e);
-                    }
+                    return true;
                 }
-                return true;
+                return false;
             }
             return true;
         }

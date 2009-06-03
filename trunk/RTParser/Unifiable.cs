@@ -472,6 +472,7 @@ namespace RTParser
         {
             if (str == "_") return true;
             // if (this.IsMarkerTag()) return false; // tested by the next line
+            if (IsLazyStar()) return false;
             if (IsLazy()) return true;
             return false;
         }
@@ -480,6 +481,7 @@ namespace RTParser
         {
             if (str == ("*")) return true;
             if (this.IsMarkerTag()) return false;
+            if (IsLazyStar()) return true;
             return false;
         }
 
@@ -575,18 +577,6 @@ namespace RTParser
         {
             Regex matcher = new Regex(s1.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
             return matcher.IsMatch(s2);
-        }
-
-        public bool IsStar()
-        {
-            if (str == "_") return true;
-            if (str == "*") return true;
-            if (IsLazyStar())
-            {
-                return true;
-            }
-            //if (GetTagHandler() is star) return true;
-            return false;
         }
 
         public virtual bool IsLazyStar()

@@ -1180,7 +1180,7 @@ namespace OpenMetaverse
                         // Try and find this value in our collection of downloaded wearables
                         foreach (WearableData data in Wearables.Dictionary.Values)
                         {
-                            if (data.Asset.Params.ContainsKey(vp.ParamID))
+                            if (data!=null && data.Asset != null && data.Asset.Params.ContainsKey(vp.ParamID))
                             {
                                 paramValues.Add(vp.ParamID, data.Asset.Params[vp.ParamID]);
                                 found = true;
