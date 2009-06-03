@@ -15,7 +15,7 @@ namespace cogbot.Actions
             Category = CommandCategory.TestClient;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int seconds;
             if (args.Length != 1 || !Int32.TryParse(args[0], out seconds))

@@ -26,7 +26,7 @@ namespace cogbot.Actions.Movement
             callback = new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length > 4 || args.Length < 3)
                 return "Usage: FlyTo x y z [seconds]";

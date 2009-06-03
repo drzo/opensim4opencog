@@ -36,7 +36,7 @@ namespace cogbot.Actions
             return true;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (!IsVoiceManagerRunning())
                 return String.Format("VoiceManager not running for {0}", Client.Self.Name);

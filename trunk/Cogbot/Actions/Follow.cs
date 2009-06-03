@@ -22,7 +22,7 @@ namespace cogbot.Actions
         }
 
 
-        public override string acceptInput(string verb, Parser pargs)
+        public override string acceptInput(string verb, Parser pargs, OutputDelegate WriteLine)
         {
             TheBotClient.describeNext = true;
             // base.acceptInput(verb, args);
@@ -58,11 +58,11 @@ namespace cogbot.Actions
                 SimPosition ap = WorldSystem.TheSimAvatar.ApproachPosition;
                 WorldSystem.TheSimAvatar.SetMoveTarget(null,10);
                 WorldSystem.TheSimAvatar.StopMoving();
-                return ("You stop following " + ap + ".");
+                return ("$bot stop following " + ap + ".");
             }
             else
             {
-                return ("You aren't following anyone.");
+                return ("$bot isn't following anyone.");
             }
 
         }

@@ -172,7 +172,7 @@ namespace cogbot
              manager = new TextForm(accounts, getTextures);
 
              if (!String.IsNullOrEmpty(scriptFile))
-                 manager.DoCommandAll("script " + scriptFile, UUID.Zero);
+                 manager.DoCommandAll("script " + scriptFile, UUID.Zero, Console.WriteLine);
 
              // Then Run the ClientManager normally
              manager.Run();

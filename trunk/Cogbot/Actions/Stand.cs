@@ -14,14 +14,14 @@ namespace cogbot.Actions
             usageString = "To Stand up, type \"stand\"";
         }
 
-        public override string acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             //base.acceptInput(verb, args);
 
             Sit sit = (Sit)Client.Commands["sit"];
             if (Client.Self.SittingOn == 0 && !sit.sittingOnGround)
             {
-                return ("You are already standing.");
+                return ("$bot is already standing.");
             }
             else
             {
@@ -31,7 +31,7 @@ namespace cogbot.Actions
             }
 
             Client.describeNext = true;
-            return("You stood up.");
+            return("$bot stood up.");
         }
     }
 }

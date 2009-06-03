@@ -77,7 +77,7 @@ namespace cogbot
         {
             try
             {
-            if (parent != null) parent.output("LoginForm Network_OnConnected :" + attempt.ToString());
+            if (parent != null) parent.WriteLine("LoginForm Network_OnConnected :" + attempt.ToString());
             }
             catch (Exception e)
             {
@@ -97,7 +97,7 @@ namespace cogbot
             for (int i = 1; i <= 1; i++)
             {
                 myattempt = (attempt++);
-                if (parent != null) parent.output("LoginForm Start Attempt " + myattempt.ToString());
+                if (parent != null) parent.WriteLine("LoginForm Start Attempt " + myattempt.ToString());
 
                 logInButton.Enabled = false;
                 string startLocation = NetworkManager.StartLocation("Citadel", 140, 140, 23);
@@ -107,13 +107,13 @@ namespace cogbot
                     lastNameText.Text, passwordText.Text,
                     "TextSL", startLocation, "UNR"))
                 {
-                    if (parent != null) parent.output("LoginForm Logged in :" + myattempt.ToString() + " " + client.Network.LoginMessage);
+                    if (parent != null) parent.WriteLine("LoginForm Logged in :" + myattempt.ToString() + " " + client.Network.LoginMessage);
                     CloseIt();
                     return;
                 }
                 else
                 {
-                    if (parent != null) parent.output("LoginForm NOT logged in for reason:" + myattempt.ToString() + " " + client.Network.LoginMessage);
+                    if (parent != null) parent.WriteLine("LoginForm NOT logged in for reason:" + myattempt.ToString() + " " + client.Network.LoginMessage);
                     //System.Threading.Thread.Sleep(30000); // give it a rest for 30 sec then try again
                 }
             }

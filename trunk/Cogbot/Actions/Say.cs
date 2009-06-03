@@ -14,7 +14,7 @@ namespace cogbot.Actions
             usageString = "To communicate to everyone, type \"say <message>\"";
         }
 
-        public override string acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
           //  base.acceptInput(verb, args);
 

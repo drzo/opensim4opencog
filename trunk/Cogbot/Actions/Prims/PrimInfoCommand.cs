@@ -13,7 +13,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Objects;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             UUID primID;
 
@@ -21,7 +21,7 @@ namespace cogbot.Actions
             {
                 foreach (SimObject O in WorldSystem.TheSimAvatar.GetNearByObjects(10, true))
                 {
-                    WriteLine("\n " + WorldSystem.describePrim(O.Prim));
+                    WriteLine("\n {0}", WorldSystem.describePrim(O.Prim, false));
                 }
                 return "Done.";
             }
@@ -38,7 +38,7 @@ namespace cogbot.Actions
 
                 if (target != null)
                 {
-                    WriteLine("\n " + WorldSystem.describePrim(target));
+                    WriteLine("\n {0}", WorldSystem.describePrim(target, true));
                     return "Done.";
                 }
                 else

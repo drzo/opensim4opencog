@@ -40,7 +40,7 @@ namespace cogbot.Actions
         /// <param name="args">arguments passed to this module</param>
         /// <param name="fromAgentID">The ID of the avatar sending the request</param>
         /// <returns></returns>
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int timeout = 120000; // default the timeout to 2 minutes
             fileName = Client.Network.CurrentSim.Name + ".raw";

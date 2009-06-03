@@ -73,12 +73,12 @@ namespace cogbot.Listeners
 
             msg += "]";
 
-            textForm.output(msg);
+            textForm.WriteLine(msg);
         }
 
         void SimEventSubscriber.ShuttingDown()
         {
-            textForm.output("SimEventTextSubscriber shuttdown for " + From);
+            textForm.WriteLine("SimEventTextSubscriber shuttdown for " + From);
         }
 
         #endregion

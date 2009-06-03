@@ -21,7 +21,7 @@ namespace cogbot.Actions
             callback = new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             StringBuilder sb = new StringBuilder();
             string result;

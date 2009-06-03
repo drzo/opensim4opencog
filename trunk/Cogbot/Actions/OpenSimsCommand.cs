@@ -17,7 +17,7 @@ namespace cogbot.Actions
             helpString = "Tell a bot to do an action on an object";
             usageString = "Usage: " + Name + " [UseTypeName] [object]";
         }
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 2) return usageString;
             SimTypeUsage use = SimTypeSystem.FindObjectUse(args[0]);
@@ -45,7 +45,7 @@ namespace cogbot.Actions
             usageString = "Usage: " + Name + " [ini|list|objects|uses|instances|load]";
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length > 0)
             {
@@ -94,7 +94,7 @@ namespace cogbot.Actions
             usageString = "simbot [on|start|stop|off|think|needs|info|load]";           
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length > 0)
             {

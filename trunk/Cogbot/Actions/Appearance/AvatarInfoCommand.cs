@@ -14,7 +14,7 @@ namespace cogbot.Actions.Appearance
             Category = CommandCategory.Appearance;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length != 2)
                 return "Usage: avatarinfo [firstname] [lastname]";

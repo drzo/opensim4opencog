@@ -12,7 +12,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Other;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length == 1)
                 return Utils.MD5(args[0]);

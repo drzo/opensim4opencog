@@ -28,9 +28,11 @@ using Action=cogbot.Actions.Action;
 namespace cogbot
 {
 #pragma warning disable 0168
+    
+    //the Simain stuff in the opensim4opencog stopped being used for a bit.. it was going to do scene management.. but still
+    public delegate void OutputDelegate(string str, params object[] args);
 
-    public delegate void OutputDelegate(string str);
-    public delegate void DescribeDelegate(bool detailed);
+    public delegate void DescribeDelegate(bool detailed, OutputDelegate WriteLine);
     enum Modes { normal, tutorial };
 
     public partial class TextForm : Form
@@ -118,7 +120,7 @@ namespace cogbot
             // CurrentClient.Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
             // CurrentClient.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
 
-            outputDelegate = new OutputDelegate(doOutput);
+            outputDelegate = new OutputDelegate(WriteLine);
 
             //listeners = new Dictionary<string, cogbot.Listeners.Listener>();
             //listeners["chat"] = new Listeners.Chat(this);
@@ -184,13 +186,13 @@ namespace cogbot
                         }
                         catch (Exception e)
                         {
-                            output("RegisterBotSystemCommands: " + e.ToString() + "\n" + e.InnerException + "\n In " + t.Name);
+                            WriteLine("RegisterBotSystemCommands: " + e.ToString() + "\n" + e.InnerException + "\n In " + t.Name);
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    output(e.ToString());
+                    WriteLine(e.ToString());
                 }
             }
         }
@@ -244,7 +246,7 @@ namespace cogbot
             }
             BotClient OBotClient = GetBotByName(CurrentBotClient);
             if (OBotClient == null)
-                output("SetOnlyOneCurrentBotClient to unkown bot: " + CurrentBotClient);
+                WriteLine("SetOnlyOneCurrentBotClient to unkown bot: " + CurrentBotClient);
             else OnlyOneCurrentBotClient = OBotClient;
             
         }
@@ -281,7 +283,7 @@ namespace cogbot
             {
                 //text = text.Replace("\"", "");
                 text = text.Trim();
-                output("textform> " + text);
+                WriteLine("textform> " + text);
                 if (BotByName.Count == 0 && lastBotClient != null) return lastBotClient.ExecuteCommand(text);
                 if (OnlyOneCurrentBotClient != null)
                 {
@@ -290,12 +292,12 @@ namespace cogbot
                 }
                 bool handled = false;
                 foreach (BotClient CurrentClient in BotByName.Values)
-                    if (CurrentClient != null)
-                    {
+                        if (CurrentClient != null)
+                        {
 
-                        res += CurrentClient.ExecuteCommand(text);
-                        if (!String.IsNullOrEmpty(res)) handled = true;
-                    }
+                            res += CurrentClient.ExecuteCommand(text);
+                            if (!String.IsNullOrEmpty(res)) handled = true;
+                        }
 
                 if (!handled)
                 {
@@ -303,22 +305,23 @@ namespace cogbot
                     if (groupActions.ContainsKey(verb))
                     {
                         if (text.Length > verb.Length)
-                            res += groupActions[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1));
+                            res += groupActions[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1), WriteLine);
                         else
-                            res += groupActions[verb].acceptInputWrapper(verb, "");
+                            res += groupActions[verb].acceptInputWrapper(verb, "", WriteLine);
                         return res;
                     }
-                    output("I don't understand the verb " + verb + ".");
-                    output("Type \"help\" for help.");
+                    WriteLine("I don't understand the verb " + verb + ".");
+                    WriteLine("Type \"help\" for help.");
                 }
                 return res;
             }
             catch (Exception e)
             {
-                output("TextForm:" + e);
+                WriteLine("TextForm:" + e);
                 return res;
             }
         }
+
 
 
         private void TextForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -367,17 +370,35 @@ namespace cogbot
             config.saveConfig();
         }
 
-        public void output(string str)
+        // for lisp to call
+        public void output(string txt)
+        {
+            WriteLine(txt);
+        }
+
+        public void WriteLine(string str, params object[] args)
         {
             try
             {
+                if (str == null) return;
+                str = String.Format(str, args).Trim();
+                if (str == "") return;
+
                 str = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
                 //if (str.ToLower().Contains("look")) return;
                 if (IsDisposed) return; // for (un)clean exits
-                this.Invoke(outputDelegate, str);
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new OutputDelegate(doOutput), str, new object[0]);
+                }
+                else
+                {
+                    doOutput(str);
+                }
             }
             catch (Exception e)
             {
+                Console.WriteLine("" + e);                
                 if (IsDisposed)
                 {
                     logout();
@@ -386,8 +407,11 @@ namespace cogbot
             }
         }
 
-        public void doOutput(string str)
+        public void doOutput(string str, params object[] args)
         {
+            if (str == null) return;
+            str = String.Format(str, args).Trim();
+            if (str == "") return;
             try
             {
                // lock (consoleText)
@@ -398,6 +422,7 @@ namespace cogbot
             }
             catch (Exception e)
             {
+                Console.WriteLine("" + e);
                 // probably dead anyway ...
             }
             return;
@@ -414,10 +439,10 @@ namespace cogbot
             string text = consoleInputText.Text;
             if (text.Length > 0)
             {
-                //output(text);
+                //WriteLine(text);
                 consoleInputText.Text = "";
 
-                output(ExecuteCommand(text));
+                WriteLine(ExecuteCommand(text));
 
                 //if (describeNext)
                 //{
@@ -440,7 +465,7 @@ namespace cogbot
         {
             try
             {
-                output("Start Loading TaskInterperter ... '" + taskInterperterType + "' \n");
+                WriteLine("Start Loading TaskInterperter ... '" + taskInterperterType + "' \n");
                 lispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
                 lispTaskInterperter.LoadFile("boot.lisp");
                 lispTaskInterperter.LoadFile("extra.lisp");
@@ -448,14 +473,14 @@ namespace cogbot
                 lispTaskInterperter.Intern("clientManager", this);
                 scriptEventListener = new ScriptEventListener(lispTaskInterperter, null);
                 lispTaskInterperter.Intern("thisClient", this);
-                output("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
+                WriteLine("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
                 // load the initialization string
             }
             catch (Exception e)
             {
-                output("!Exception: " + e.GetBaseException().Message);
-                output("error occured: " + e.Message);
-                output("        Stack: " + e.StackTrace.ToString());
+                WriteLine("!Exception: " + e.GetBaseException().Message);
+                WriteLine("error occured: " + e.Message);
+                WriteLine("        Stack: " + e.StackTrace.ToString());
             }
 
         }
@@ -475,7 +500,7 @@ namespace cogbot
                     initTaskInterperter();
                 }
                 //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
-                output("Eval> " + lispCode);
+                WriteLine("Eval> " + lispCode);
                 Object r = null;
                 StringReader stringCodeReader = new StringReader(lispCode);
                 r = lispTaskInterperter.Read("evalLispString", stringCodeReader);
@@ -485,9 +510,9 @@ namespace cogbot
             }
             catch (Exception e)
             {
-                output("!Exception: " + e.GetBaseException().Message);
-                output("error occured: " + e.Message);
-                output("        Stack: " + e.StackTrace.ToString());
+                WriteLine("!Exception: " + e.GetBaseException().Message);
+                WriteLine("error occured: " + e.Message);
+                WriteLine("        Stack: " + e.StackTrace.ToString());
                 throw e;
             }
         }
@@ -593,7 +618,7 @@ namespace cogbot
 
             BotClient cl = lastBotClient;
             foreach(BotClient bc in Clients.Values) {
-                if (bc.Self.Name.Equals(botname)) {
+                if (bc.GetName().Equals(botname)) {
                     cl = bc;
                 }
             }
@@ -708,7 +733,7 @@ namespace cogbot
             
             if (args.Length < 3)
             {
-                output("Usage: login firstname lastname password [simname] [login server url]");
+                WriteLine("Usage: login firstname lastname password [simname] [login server url]");
                 return null;
             }
             LoginDetails account = new LoginDetails();
@@ -735,13 +760,13 @@ namespace cogbot
         /// </summary>
         public void Run()
         {
-            output("Type quit to exit.  Type help for a command list.");
+            WriteLine("Type quit to exit.  Type help for a command list.");
 
             while (Running)
             {
                 PrintPrompt();
                 string input = Console.ReadLine();
-                DoCommandAll(input, UUID.Zero);
+                DoCommandAll(input, UUID.Zero, outputDelegate);
             }
 
             foreach (BotClient client in Clients.Values)
@@ -769,7 +794,7 @@ namespace cogbot
         /// <param name="cmd"></param>
         /// <param name="fromAgentID"></param>
         /// <param name="imSessionID"></param>
-        public void DoCommandAll(string cmd, UUID fromAgentID)
+        public void DoCommandAll(string cmd, UUID fromAgentID, OutputDelegate WriteLine)
         {
             string[] tokens = cmd.Trim().Split(new char[] { ' ', '\t' });
             if (tokens.Length == 0)
@@ -798,20 +823,20 @@ namespace cogbot
                 {
                     foreach (BotClient client in Clients.Values)
                     {
-                        output(client.Commands["help"].ExecuteBuffer(args, UUID.Zero));
+                        WriteLine(client.Commands["help"].Execute(args, UUID.Zero, WriteLine));
                         break;
                     }
                 }
                 else
                 {
-                    output("You must login at least one bot to use the help command");
+                    WriteLine("You must login at least one bot to use the help command");
                 }
             }
             else if (firstToken == "script")
             {
                 // No reason to pass this to all bots, and we also want to allow it when there are no bots
                 ScriptCommand command = new ScriptCommand(null);
-                Logger.Log(command.ExecuteBuffer(args, UUID.Zero), Helpers.LogLevel.Info);
+                Logger.Log(command.Execute(args, UUID.Zero, WriteLine), Helpers.LogLevel.Info);
             }
             else
             {
@@ -827,7 +852,7 @@ namespace cogbot
                         {
                             BotClient testClient = (BotClient)state;
                             if (testClient.Commands.ContainsKey(firstToken))
-                                Logger.Log(testClient.Commands[firstToken].ExecuteBuffer(args, fromAgentID),
+                                Logger.Log(testClient.Commands[firstToken].Execute(args, fromAgentID,WriteLine),
                                     Helpers.LogLevel.Info, testClient.gridClient);
                             else
                                 Logger.Log("Unknown command " + firstToken, Helpers.LogLevel.Warning);

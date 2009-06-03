@@ -7,7 +7,7 @@ namespace cogbot.Listeners
 {
     class Sound : Listener
     {
-        public Sound(TextForm parent)
+        public Sound(BotClient parent)
             : base(parent)
         {
             client.Sound.OnPreloadSound += new SoundManager.PreloadSoundCallback(Sound_OnPreloadSound);
@@ -17,12 +17,12 @@ namespace cogbot.Listeners
         void Sound_OnSoundTrigger(UUID soundID, UUID ownerID, UUID objectID, UUID parentID, 
             float gain, ulong regionHandle, Vector3 position)
         {
-            //parent.output("sound trigger " + soundID);
+            //parent.WriteLine("sound trigger " + soundID);
         }
 
         void Sound_OnPreloadSound(UUID soundID, UUID ownerID, UUID objectID)
         {
-            //parent.output("preload sound " + soundID);
+            //parent.WriteLine("preload sound " + soundID);
         }
     }
 }

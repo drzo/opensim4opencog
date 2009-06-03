@@ -22,7 +22,7 @@ namespace cogbot.Actions
             callback = new AssetManager.AssetReceivedCallback(Assets_OnAssetReceived);
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length != 2)
                 return "Usage: download [uuid] [assetType]";

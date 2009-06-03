@@ -17,7 +17,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Other;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
                 return "Usage: searchevents [search text]";
@@ -28,36 +28,35 @@ namespace cogbot.Actions
             searchText = searchText.TrimEnd();
             waitQuery.Reset();
 
-            Client.Directory.OnEventsReply += new DirectoryManager.EventReplyCallback(Directory_OnEventsReply);
+            DirectoryManager.EventReplyCallback cb = new DirectoryManager.EventReplyCallback((queryid, matchedevents) =>
+                                                                                          {
+                                                                                              if (matchedevents[0].ID == 0 && matchedevents.Count == 1)
+                                                                                              {
+                                                                                                  WriteLine("No Results matched your search string");
+                                                                                              }
+                                                                                              else
+                                                                                              {
+                                                                                                  foreach (DirectoryManager.EventsSearchData ev in matchedevents)
+                                                                                                  {
+                                                                                                     WriteLine("Event ID: {0} Event Name: {1} Event Date: {2}", ev.ID, ev.Name, ev.Date);
+                                                                                                  }
+                                                                                              }
+                                                                                              resultCount = matchedevents.Count;
+                                                                                              waitQuery.Set();
+                                                                                          });
+            Client.Directory.OnEventsReply += cb;
             Client.Directory.StartEventsSearch(searchText, true, "u", 0, DirectoryManager.EventCategories.All, UUID.Random());
             string result;
             if (waitQuery.WaitOne(20000, false) && Client.Network.Connected)
             {
-                result =  "Your query '" + searchText + "' matched " + resultCount + " Events. ";
+                result =  "$bot's query '" + searchText + "' matched " + resultCount + " Events. ";
             }
             else
             {
                 result =  "Timeout waiting for simulator to respond.";
-            }            
-            Client.Directory.OnEventsReply -= new DirectoryManager.EventReplyCallback(Directory_OnEventsReply);
+            }
+            Client.Directory.OnEventsReply -= cb;
             return result;
-        }
-
-        void Directory_OnEventsReply(UUID queryID, List<DirectoryManager.EventsSearchData> matchedEvents)
-        {
-            if (matchedEvents[0].ID == 0 && matchedEvents.Count == 1)
-            {
-                WriteLine("No Results matched your search string");
-            }
-            else
-            {
-                foreach (DirectoryManager.EventsSearchData ev in matchedEvents)
-                {
-                    WriteLine("Event ID: {0} Event Name: {1} Event Date: {2}", ev.ID, ev.Name, ev.Date);
-                }
-            }
-            resultCount = matchedEvents.Count;
-            waitQuery.Set();
         }
     }
 }

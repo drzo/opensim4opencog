@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
@@ -15,9 +16,9 @@ namespace cogbot.Actions
             Category = CommandCategory.Other;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            BotClient Client = TheBotClient;
+            //BotClient Client = TheBotClient;
             if (args.Length < 1)
             {
                 return "Usage: thread anim 30 crouch";
@@ -42,7 +43,9 @@ namespace cogbot.Actions
                 {
                     WriteLine(Client.ExecuteCommand(cmd));
                 }
-                catch (ThreadAbortException) { }
+                catch (OutOfMemoryException) { }
+                catch (StackOverflowException) { }
+                catch (Exception) { }
                 WriteLine("done with " + cmd);
                 lock (Client.botCommandThreads)
                     TheBotClient.botCommandThreads.Remove(Thread.CurrentThread);

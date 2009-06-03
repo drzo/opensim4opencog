@@ -43,7 +43,7 @@ namespace cogbot.Listeners
             return prim;
         }
 
-        public Objects(TextForm parent)
+        public Objects(BotClient parent)
             : base(parent)
         {
             newPrims = new List<Primitive>();
@@ -70,6 +70,7 @@ namespace cogbot.Listeners
 
         void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties properties)
         {
+            BotClient parent = client;
             sim = simulator;
             lock (pendingPrims)
             {
@@ -89,7 +90,7 @@ namespace cogbot.Listeners
                                 if (!primGroups.ContainsKey(groupId))
                                     primGroups[groupId] = new List<Primitive>();
                                 primGroups[groupId].Add(prims[properties.Name]);
-                                //parent.output("group count " + groupId + " " + primGroups[groupId].Count);
+                                //parent.WriteLine("group count " + groupId + " " + primGroups[groupId].Count);
                             }
                         }
                     }
@@ -101,6 +102,7 @@ namespace cogbot.Listeners
 
         void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
         {
+            BotClient parent = client;
             sim = simulator;
             try
             {
@@ -130,11 +132,12 @@ namespace cogbot.Listeners
             }
             catch (Exception e)
             {
-                parent.output("ERR:" + e.StackTrace);
+                parent.WriteLine("ERR:" + e.StackTrace);
             }
         }
         public void CalcStats(Primitive prim)
         {
+            BotClient parent = client;
             SelectObject(prim);
             if (boringNamesHeuristic(prim) == 0)
                 parent.BoringNamesCount++;                
@@ -179,12 +182,13 @@ namespace cogbot.Listeners
 
         public void describePrim(Primitive prim)
         {
+            BotClient parent = client;
             SelectObject(prim);
-            parent.output(prim.Properties.Name + ": " + prim.Properties.Description);
+            parent.WriteLine(prim.Properties.Name + ": " + prim.Properties.Description);
             if (prim.Sound != UUID.Zero)
-                parent.output("This object makes sound.");
+                parent.WriteLine("This object makes sound.");
             if (prim.Properties.SalePrice != 0)
-                parent.output("This object is for sale for L" + prim.Properties.SalePrice);
+                parent.WriteLine("This object is for sale for L" + prim.Properties.SalePrice);
         }
 
         public void describePrimToAI(Primitive prim)
@@ -193,16 +197,17 @@ namespace cogbot.Listeners
             SelectObject(prim);
             if (prim.Properties.Name != null)
                {
+                 BotClient parent = client;
                  //parent.enqueueLispTask("(on-prim-description '(" + prim.Properties.Name + ") '" + prim.Properties.Description + "' )");
                  parent.enqueueLispTask("(on-prim-dist (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() +"\") " + Vector3.Distance(client.Self.SimPosition, prim.Position).ToString() + " )");
                  parent.enqueueLispTask("(on-prim-pos (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() + "\") (@\"" + prim.Position.ToString() + "\") )");
                  parent.enqueueLispTask("(on-prim-description  (@\"" + prim.Properties.Name + "\") (@\"" + prim.Properties.ObjectID.ToString() + "\") (@\"" + prim.Properties.Description + "\") )");
 
-                //parent.output(prim.Properties.Name + ": " + prim.Properties.Description);
+                //parent.WriteLine(prim.Properties.Name + ": " + prim.Properties.Description);
                 //if (prim.Sound != UUID.Zero)
-                //    parent.output("This object makes sound.");
+                //    parent.WriteLine("This object makes sound.");
                 //if (prim.Properties.SalePrice != 0)
-                //    parent.output("This object is for sale for L" + prim.Properties.SalePrice);
+                //    parent.WriteLine("This object is for sale for L" + prim.Properties.SalePrice);
               }
             }
 

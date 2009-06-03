@@ -341,7 +341,7 @@ namespace cogbot.Listeners
 
             //throw new NotImplementedException();
             //   SendNewEvent("On-Land-Patch", x, y, width, BVHData);
-            //            output("TextForm Terrain_OnLandPatch: "+simulator.ToString()+"/"+x.ToString()+"/"+y.ToString()+" w="+width.ToString());
+            //            WriteLine("TextForm Terrain_OnLandPatch: "+simulator.ToString()+"/"+x.ToString()+"/"+y.ToString()+" w="+width.ToString());
         }
 
     }

@@ -39,13 +39,13 @@ namespace cogbot.Actions
             return str;
         }
 
-        public override string acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
-            acceptInput0(verb, args);
-            return writeBuffer.ToString();
+            acceptInput0(verb, args, WriteLine);
+            return verb + " complete";
         }
 
-        void acceptInput0(string verb, Parser args)
+        void acceptInput0(string verb, Parser args, OutputDelegate WriteLine)
         {
             //   base.acceptInput(verb, args);
 
@@ -53,8 +53,8 @@ namespace cogbot.Actions
             string subject = args.objectPhrase;
             if (subject.Length == 0)
             {
-                Client.describeAll();
-                Client.describeSituation();
+                Client.describeAll(false, WriteLine);
+              //  Client.describeSituation(WriteLine);
                 return;
             }
             Client.describeNext = false;
@@ -75,7 +75,7 @@ namespace cogbot.Actions
                     {
                         foreach (SimObject o in objs)
                         {
-                            WriteLine(WorldSystem.describePrim(o.Prim));
+                            WriteLine(WorldSystem.describePrim(o.Prim, false));
                         }
                         return;
                     }
@@ -84,7 +84,7 @@ namespace cogbot.Actions
             else
             {
                 if (TheBotClient.describers.ContainsKey(subject))
-                    TheBotClient.describers[subject].Invoke(true);
+                    TheBotClient.describers[subject].Invoke(true, WriteLine);
                 else
                 {
                     Avatar avatar;
@@ -94,7 +94,7 @@ namespace cogbot.Actions
                     {
                         Primitive prim;
                         if (WorldSystem.tryGetPrim(args.str, out prim))
-                            WriteLine(WorldSystem.describePrim(prim));
+                            WriteLine(WorldSystem.describePrim(prim, true));
                         else
                         {
 

@@ -127,7 +127,7 @@ namespace cogbot
         ///public DotCYC.CycConnectionForm cycConnection;
         public Dictionary<string, DescribeDelegate> describers;
 
-        //public Dictionary<string, Listeners.Listener> listeners;
+        readonly public Dictionary<string, Listeners.Listener> listeners;
         public SortedDictionary<string, Actions.Action> Commands;
         public Dictionary<string, Tutorials.Tutorial> tutorials;
         //public Utilities.TcpServer UtilitiesTcpServer;
@@ -236,7 +236,8 @@ namespace cogbot
 
             describePos = 0;
 
-            //listeners = new Dictionary<string, cogbot.Listeners.Listener>();
+            listeners = new Dictionary<string, cogbot.Listeners.Listener>();
+            //listeners["avatars"] = new Listeners.Avatars(this);
             //listeners["chat"] = new Listeners.Chat(this);
             WorldSystem = new Listeners.WorldObjects(this);
             //listeners["teleport"] = new Listeners.Teleport(this);
@@ -244,6 +245,7 @@ namespace cogbot
             //ObjectSystem = new Listeners.Objects(this);
             //listeners["bump"] = new Listeners.Bump(this);
             //listeners["sound"] = new Listeners.Sound(this);
+            //listeners["sound"] = new Listeners.Objects(this);
 
             Commands = new SortedDictionary<string, cogbot.Actions.Action>();
             Commands["login"] = new Actions.Login(this);
@@ -334,7 +336,7 @@ namespace cogbot
 
 
 		//breaks up large responses to deal with the max IM size
-		private void SendResponseIM(GridClient client, UUID fromAgentID, string data)
+		private void SendResponseIM(GridClient client, UUID fromAgentID, OutputDelegate WriteLine, string data)
 		{
 			for (int i = 0; i < data.Length; i += 1024) {
 				int y;
@@ -359,7 +361,7 @@ namespace cogbot
 		{
 			AgentDataUpdatePacket p = (AgentDataUpdatePacket)packet;
 			if (p.AgentData.AgentID == sim.Client.Self.AgentID) {
-                output(String.Format("Got the group ID for {0}, requesting group members...", sim.Client));
+                WriteLine(String.Format("Got the group ID for {0}, requesting group members...", sim.Client));
 				GroupID = p.AgentData.ActiveGroupID;
 
 				sim.Client.Groups.RequestGroupMembers(GroupID);
@@ -368,7 +370,7 @@ namespace cogbot
 
 		private void GroupMembersHandler(Dictionary<UUID, GroupMember> members)
 		{
-            output(String.Format("Got {0} group members.", members.Count));
+            WriteLine(String.Format("Got {0} group members.", members.Count));
 			GroupMembers = members;
 		}
 
@@ -382,21 +384,16 @@ namespace cogbot
 		private void AlertMessageHandler(Packet packet, Simulator simulator)
 		{
 			AlertMessagePacket message = (AlertMessagePacket)packet;
-            output("[AlertMessage] " + Utils.BytesToString(message.AlertData.Message));
+            WriteLine("[AlertMessage] " + Utils.BytesToString(message.AlertData.Message));
 		}
 
 
         void Self_OnTeleport(string message, TeleportStatus status, TeleportFlags flags)
         {
-            if (status == TeleportStatus.Failed)
+            if (status == TeleportStatus.Finished || status == TeleportStatus.Failed || status == TeleportStatus.Cancelled)
             {
-                output("Teleport failed.");
-                describeSituation();
-            }
-            else if (status == TeleportStatus.Finished)
-            {
-                output("Teleport succeeded.");
-                describeSituation();
+                WriteLine("Teleport " + status);
+                describeSituation(WriteLine);
             }
         }
 
@@ -405,7 +402,7 @@ namespace cogbot
         {
             if (message.Length > 0 && sourceType == ChatSourceType.Agent && !muteList.Contains(fromName))
             {
-                output(String.Format("{0} says, \"{1}\".", fromName, message));
+                WriteLine(String.Format("{0} says, \"{1}\".", fromName, message));
             }
         }
 
@@ -413,7 +410,7 @@ namespace cogbot
 		{
             if (im.Message.Length > 0 && im.Dialog == InstantMessageDialog.MessageFromAgent)
             {
-                output(String.Format("{0} whispers, \"{1}\".", im.FromAgentName, im.Message));
+                WriteLine(String.Format("{0} whispers, \"{1}\".", im.FromAgentName, im.Message));
 
                 Actions.Whisper whisper = (Actions.Whisper)Commands["whisper"];
                 whisper.currentAvatar = im.FromAgentID;
@@ -424,19 +421,19 @@ namespace cogbot
 
 			if (im.FromAgentID == MasterKey || (GroupCommands && groupIM)) {
 				// Received an IM from someone that is authenticated
-				output(String.Format("<{0} ({1})> {2}: {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM", im.Dialog, im.FromAgentName, im.Message, im.RegionID, im.Position));
+				WriteLine(String.Format("<{0} ({1})> {2}: {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM", im.Dialog, im.FromAgentName, im.Message, im.RegionID, im.Position));
 
 				if (im.Dialog == InstantMessageDialog.RequestTeleport) {
-					output("Accepting teleport lure.");
+					WriteLine("Accepting teleport lure.");
 					Self.TeleportLureRespond(im.FromAgentID, true);
 				} else if (
 						  im.Dialog == InstantMessageDialog.MessageFromAgent ||
 						  im.Dialog == InstantMessageDialog.MessageFromObject) {
-					ClientManager.DoCommandAll(im.Message, im.FromAgentID);
+					ClientManager.DoCommandAll(im.Message, im.FromAgentID,WriteLine);
 				}
 			} else {
 				// Received an IM from someone that is not the bot's master, ignore
-				output(String.Format( "<{0} ({1})> {2} (not master): {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM", im.Dialog, im.FromAgentName, im.Message,
+				WriteLine(String.Format( "<{0} ({1})> {2} (not master): {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM", im.Dialog, im.FromAgentName, im.Message,
 									  im.RegionID, im.Position));
 				return;
 			}
@@ -461,14 +458,14 @@ namespace cogbot
 		{
 			try {
 				if (message.Length > 0)
-					output("Disconnected from server. Reason is " + message + ". " + reason);
+					WriteLine("Disconnected from server. Reason is " + message + ". " + reason);
 				else
-					output("Disconnected from server. " + reason);
+					WriteLine("Disconnected from server. " + reason);
 
 				SendNewEvent("on-network-disconnected",reason,message);
 
-				output("Bad Names: " + BoringNamesCount);
-				output("Good Names: " + GoodNamesCount);
+				WriteLine("Bad Names: " + BoringNamesCount);
+				WriteLine("Good Names: " + GoodNamesCount);
 			} catch (Exception e) {
 			}
 		}
@@ -567,7 +564,7 @@ namespace cogbot
             }
             else
             {
-                output("UseInventoryItem " + usage + " " + itemName + " is not yet ready");
+                WriteLine("UseInventoryItem " + usage + " " + itemName + " is not yet ready");
  
             }
 		}
@@ -595,7 +592,7 @@ namespace cogbot
 
 			if (folderID != UUID.Zero) {
 				Self.Chat("Wearing folder \"" + folderName + "\"", 0, ChatType.Normal);
-				output("Wearing folder \"" + folderName + "\"");
+				WriteLine("Wearing folder \"" + folderName + "\"");
 
 				Appearance.WearOutfit(folderID,false);
 				/*
@@ -610,14 +607,14 @@ namespace cogbot
 						{
 							Client.Appearance.Attach(i, AttachmentPoint.Default);
 							Client.Self.Chat("Attaching item: " + i.Name, 0, ChatType.Normal);
-							output("Attaching item: " + i.Name);
+							WriteLine("Attaching item: " + i.Name);
 						}
 					);
 				}
 				*/
 			} else {
 				Self.Chat("Can't find folder \"" + folderName + "\" to wear", 0, ChatType.Normal);
-				output(   "Can't find folder \""    +    folderName    +    "\" to wear");
+				WriteLine(   "Can't find folder \""    +    folderName    +    "\" to wear");
 			}
 
 		}
@@ -647,24 +644,33 @@ namespace cogbot
 				Network.Logout();
 		}
 
-		public void output(string str)
+        public void WriteLine(string str, params object[] args)
 		{
 			try {
+                if (str == null) return;
+			    str = String.Format(str,args).Trim();
+                if (str == "") return;
+                if (str.StartsWith("$bot")) str = str.Substring(4);
                 string toprint = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
-                string SelfName = String.Format("{0} ", Self.Name);
+                string SelfName = String.Format("{0} ", GetName());
                 toprint = toprint.Replace("$bot", SelfName);
-                ClientManager.output(SelfName + ": " + toprint);
+                ClientManager.WriteLine(SelfName + ": " + toprint);
 			} catch (Exception) {
 			}
 		}
+        // for lisp to call
+        public void output(string txt)
+        {
+            WriteLine(txt);
+        }
 
-		public void describeAll()
+        public void describeAll(bool detailed,OutputDelegate outputDel)
 		{
-			foreach (string dname in describers.Keys)
-			describers[dname].Invoke(true);
+            foreach (string dname in describers.Keys)
+                describers[dname].Invoke(detailed, outputDel);
 		}
 
-		public void describeSituation()
+		public void describeSituation(OutputDelegate outputDel)
 		{
 			int i = 0;
 			string name = "";
@@ -672,53 +678,53 @@ namespace cogbot
 			if (i++ == describePos)
 				name = dname;
 			describePos = (describePos + 1) % describers.Count;
-			describers[name].Invoke(false);
+		    describers[name].Invoke(false, outputDel);
 		}
 
-		public void describeLocation(bool detailed)
+        public void describeLocation(bool detailed, OutputDelegate WriteLine)
 		{
-			output("You are in " + Network.CurrentSim.Name + ".");
+		    WriteLine("$bot is in " + (Network.CurrentSim != null ? Network.CurrentSim.Name : "<Unknown>") + ".");
 		}
 
-		public void describePeople(bool detailed)
+        public void describePeople(bool detailed, OutputDelegate WriteLine)
 		{
             //if (detailed) {
             //    List<Avatar> avatarList = WorldSystem.getAvatarsNear(Self.RelativePosition, 8);
             //    if (avatarList.Count > 1) {
-            //        string str = "You see the people ";
+            //        string str = "$bot sees the people ";
             //        for (int i = 0; i < avatarList.Count - 1; ++i)
             //            str += WorldSystem.getAvatarName(avatarList[i]) + ", ";
             //        str += "and " + WorldSystem.getAvatarName(avatarList[avatarList.Count - 1]) + ".";
-            //        output(str);
+            //        WriteLine(str);
             //    } else if (avatarList.Count == 1) {
-            //        output("You see one person: " + WorldSystem.getAvatarName(avatarList[0]) + ".");
+            //        WriteLine("$bot sees one person: " + WorldSystem.getAvatarName(avatarList[0]) + ".");
             //    } else
-            //        output("You don't see anyone around.");
+            //        WriteLine("doesn't see anyone around.");
             //} else {
-            //    output("You see " + WorldSystem.numAvatars() + " people.");
+            //    WriteLine("$bot sees " + WorldSystem.numAvatars() + " people.");
             //}
 		}
 
-		public void describeObjects(bool detailed)
+        public void describeObjects(bool detailed, OutputDelegate WriteLine)
 		{
 			List<Primitive> prims = WorldSystem.getPrimitives(16);
 			if (prims.Count > 1) {
-				string str = "You see the objects:\n";
+				string str = "$bot sees the objects:\n";
 				for (int i = 0; i < prims.Count; ++i)
-                    str += WorldSystem.describePrim(prims[i]) + "\n";
+                    str += WorldSystem.describePrim(prims[i], detailed) + "\n";
 				//str += "and " + WorldSystem.GetSimObject(prims[prims.Count - 1]) + ".";
-				output(str);
+				WriteLine(str);
 			} else if (prims.Count == 1) {
-				output("You see one object: " + WorldSystem.getObjectName(prims[0]));
+				WriteLine("$bot sees one object: " + WorldSystem.getObjectName(prims[0]));
 			} else {
-				output("You don't see any objects around.");
+				WriteLine("$bot doesn't see any objects around.");
 			}
 		}
 
-		public void describeBuildings(bool detailed)
+        public void describeBuildings(bool detailed, OutputDelegate WriteLine)
 		{
 			List<Vector3> buildings = WorldSystem.getBuildings(8);
-			output("You see " + buildings.Count + " buildings.");
+			WriteLine("$bot sees " + buildings.Count + " buildings.");
 		}
 
 		//------------------------------------ 
@@ -728,7 +734,7 @@ namespace cogbot
         //public void msgClient(string serverMessage)
         //{
         //    if (debugLevel>1) {
-        //        output(serverMessage);             
+        //        WriteLine(serverMessage);             
         //    }
         //    lock (lBotMsgSubscribers)
         //    {
@@ -743,7 +749,7 @@ namespace cogbot
 		{
 			if (hashTable.ContainsKey(key))	hashTable.Remove(key);
 			hashTable.Add(key, value);
-			//output("  +Hash :('" + key + "' , " + value + ")");
+			//WriteLine("  +Hash :('" + key + "' , " + value + ")");
 		}
 
 		public string getWithDefault(Hashtable hashTable, string key, string defaultValue)
@@ -756,14 +762,14 @@ namespace cogbot
 		{
 			DateTime dt = DateTime.Now;
 
-			string actReport = "  <pet-signal pet-name='" + Self.Name.ToString()
+			string actReport = "  <pet-signal pet-name='" + GetName()
 							   + "' pet-id='" + Self.AgentID.ToString()
 							   + "' timestamp='" + dt.ToString()
 							   + "' action-plan-id='" + planID
 							   + "' sequence='" + seqID
 							   + "' name='" + act
 							   + "' status='" + status + "'/>";
-			output("actReport:" + actReport);
+			WriteLine("actReport:" + actReport);
 			return actReport;
 		}
 
@@ -826,7 +832,7 @@ namespace cogbot
 								overwrite2Hash(attributeStack[depth], attributeName, attributeValue);
 							}
 						}
-						// output(" X2L Begin(" + depth.ToString() + ") " + attributeStack[depth]["name"].ToString());
+						// WriteLine(" X2L Begin(" + depth.ToString() + ") " + attributeStack[depth]["name"].ToString());
 						if (tagname == "op") {
 							lispCodeString += "(" + getWithDefault(attributeStack[depth], "name", " ");
 						}
@@ -840,7 +846,7 @@ namespace cogbot
 						//
 
 					case XmlNodeType.Text:
-						//output(" X2L TEXT(" + depth.ToString() + ") " + reader.Name);
+						//WriteLine(" X2L TEXT(" + depth.ToString() + ") " + reader.Name);
 
 						// Todo
 						lispCodeString += " " + reader.Value.ToString();
@@ -863,16 +869,16 @@ namespace cogbot
 						break;
 					} //switch
 				} //while
-				output("XML2Lisp =>'" + lispCodeString + "'");
+				WriteLine("XML2Lisp =>'" + lispCodeString + "'");
 				//string results = evalLispString(lispCodeString);
 				//string results = "'(enqueued)";
 				return evalLispString(lispCodeString);
 				//return results;
 			} //try
 			catch (Exception e) {
-				output("error occured: " + e.Message);
-				output("        Stack: " + e.StackTrace.ToString());
-                output("        lispCodeString: " + lispCodeString);
+				WriteLine("error occured: " + e.Message);
+				WriteLine("        Stack: " + e.StackTrace.ToString());
+                WriteLine("        lispCodeString: " + lispCodeString);
                 return "()";
 			}
 
@@ -886,7 +892,7 @@ namespace cogbot
 		{    
             try
             {
-				output("Start Loading TaskInterperter ... '" + taskInterperterType + "' \n");
+				WriteLine("Start Loading TaskInterperter ... '" + taskInterperterType + "' \n");
                 lispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
                 lispTaskInterperter.LoadFile("boot.lisp");
                 lispTaskInterperter.LoadFile("extra.lisp");
@@ -895,15 +901,15 @@ namespace cogbot
                 scriptEventListener = new ScriptEventListener(lispTaskInterperter,this);
                 botPipeline.AddSubscriber(scriptEventListener);
 
-                output("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
+                WriteLine("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
                 // load the initialization string
 				if (TextForm.SingleInstance.config.startupClientLisp.Length > 1) {
                     scriptEventListener.enqueueLispEvent("(progn " + TextForm.SingleInstance.config.startupClientLisp + ")");
 				}
 			} catch (Exception e) {
-				output("!Exception: " + e.GetBaseException().Message);
-				output("error occured: " + e.Message);
-				output("        Stack: " + e.StackTrace.ToString());
+				WriteLine("!Exception: " + e.GetBaseException().Message);
+				WriteLine("error occured: " + e.Message);
+				WriteLine("        Stack: " + e.StackTrace.ToString());
 			}
 
 		}
@@ -928,9 +934,9 @@ namespace cogbot
             }
             catch (Exception e)
             {
-                output("!Exception: " + e.GetBaseException().Message);
-                output("error occured: " + e.Message);
-                output("        Stack: " + e.StackTrace.ToString());
+                WriteLine("!Exception: " + e.GetBaseException().Message);
+                WriteLine("error occured: " + e.Message);
+                WriteLine("        Stack: " + e.StackTrace.ToString());
                 throw e;
             }
         }
@@ -944,23 +950,23 @@ namespace cogbot
                 {
                     initTaskInterperter();
                 }
-                output("Eval> " + lispCode);
+                WriteLine("Eval> " + lispCode);
                 if (lispTaskInterperter.Eof(lispCode))
                     return lispCode.ToString();
                 return lispTaskInterperter.Eval(lispCode);
             }
             catch (Exception e)
             {
-                output("!Exception: " + e.GetBaseException().Message);
-                output("error occured: " + e.Message);
-                output("        Stack: " + e.StackTrace.ToString());
+                WriteLine("!Exception: " + e.GetBaseException().Message);
+                WriteLine("error occured: " + e.Message);
+                WriteLine("        Stack: " + e.StackTrace.ToString());
                 throw e;
             }
         }
 
         public override string ToString()
         {
-            return "'(thisClient " + gridClient.ToString() + ")";
+            return "'(thisClient \"" + GetName() + "\")";
         }
 
 		/// <summary>
@@ -974,16 +980,16 @@ namespace cogbot
 				// Start in the inventory root folder.
 				CurrentDirectory = Inventory.Store.RootFolder;//.RootFolder;
 			}
-//            output("TextForm Network_OnLogin : [" + login.ToString() + "] " + message);
+//            WriteLine("TextForm Network_OnLogin : [" + login.ToString() + "] " + message);
 			//SendNewEvent("On-Login", login, message);
 
 			if (login == LoginStatus.Failed) {
-				output("Not able to login");
+				WriteLine("Not able to login");
 				// SendNewEvent("on-login-fail",login,message);
 				SendNewEvent("On-Login-Fail", login, message);
                 if (LoginRetries-->=0) Login();
 			} else if (login == LoginStatus.Success) {
-				output("Logged in successfully");
+				WriteLine("Logged in successfully");
 				SendNewEvent("On-Login-Success", login, message);
 //                SendNewEvent("on-login-success",login,message);
 			} else {
@@ -1004,11 +1010,11 @@ namespace cogbot
 							Command command = (Command)info.Invoke(new object[]{ this});
 							RegisterCommand(command);
 						} catch (Exception e) {
-							output("RegisterAllCommands: " + e.ToString() + "\n" + e.InnerException + "\n In " + t.Name);
+							WriteLine("RegisterAllCommands: " + e.ToString() + "\n" + e.InnerException + "\n In " + t.Name);
 						}
 					}
 				} catch (Exception e) {
-					output(e.ToString());
+					WriteLine(e.ToString());
 				}
 			}
 		}
@@ -1037,9 +1043,9 @@ namespace cogbot
 			RegisterCommand(command.Name, command);
 		}
 
-		internal void DoCommandAll(string line, UUID uUID)
+		internal void DoCommandAll(string line, UUID uUID, OutputDelegate outputDelegate)
 		{
-			ClientManager.DoCommandAll(line,uUID);
+		    ClientManager.DoCommandAll(line, uUID, outputDelegate);
 		}
 
 		//internal void LogOut(GridClient Client)
@@ -1128,9 +1134,16 @@ namespace cogbot
                           return String.Empty;
                       }
                     }
-                    if (text.Length > verb.Length)                                       
-                       return act.acceptInputWrapper(verb, text.Substring(verb.Length + 1));
-                    return act.acceptInputWrapper(verb, "");
+                    string res;
+                    if (text.Length > verb.Length)
+                        res = act.acceptInputWrapper(verb, text.Substring(verb.Length + 1), WriteLine);
+                    else
+                        res = act.acceptInputWrapper(verb, "", WriteLine);
+                    if (String.IsNullOrEmpty(res))
+                    {
+                        return string.Format("{0} Completed: {1}",GetName(),text);
+                    }
+                    return res.Replace("$bot",GetName());
                 }
                 else
                 {
@@ -1139,9 +1152,16 @@ namespace cogbot
             }
             catch (Exception e)
             {
-                output("" + e);
+                WriteLine("" + e);
                 return String.Empty;
             }
+        }
+
+        public string GetName()
+        {
+            string n= Self.Name;
+            if (!String.IsNullOrEmpty(n)) return n;
+            return BotLoginParams.FirstName + " " + BotLoginParams.LastName;
         }
 
         #region SimEventSubscriber Members

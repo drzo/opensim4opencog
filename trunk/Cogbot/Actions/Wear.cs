@@ -14,7 +14,7 @@ namespace cogbot.Actions
             usageString = helpString + "\r\n you can type  'wear /My Outfit/Dance Party";
         }
 
-        public override string acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
            // base.acceptInput(verb, args);
             string target = String.Empty;

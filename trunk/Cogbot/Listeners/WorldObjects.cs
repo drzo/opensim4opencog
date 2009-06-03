@@ -11,7 +11,7 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.Listeners
 {
-    public delegate float ObjectHeuristic(SimObject prim);
+    public delegate float SimObjectHeuristic(SimObject prim);
 
     public partial class WorldObjects : DebugAllEvents
     {
@@ -86,7 +86,7 @@ namespace cogbot.Listeners
         public Vector3 compPos;
         public SimActor m_TheSimAvatar;
         public List<string> numberedAvatars;
-        public List<ObjectHeuristic> objectHeuristics;
+        public List<SimObjectHeuristic> objectHeuristics;
         public Dictionary<UUID, List<Primitive>> primGroups;
         public int searchStep;
 
@@ -114,10 +114,10 @@ namespace cogbot.Listeners
 
                 primGroups = new Dictionary<UUID, List<Primitive>>();
 
-                objectHeuristics = new List<ObjectHeuristic>();
-                objectHeuristics.Add(new ObjectHeuristic(distanceHeuristic));
-                //objectHeuristics.Add(new ObjectHeuristic(nameLengthHeuristic));
-                objectHeuristics.Add(new ObjectHeuristic(boringNamesHeuristic));
+                objectHeuristics = new List<SimObjectHeuristic>();
+                objectHeuristics.Add(new SimObjectHeuristic(distanceHeuristic));
+                //objectHeuristics.Add(new SimObjectHeuristic(nameLengthHeuristic));
+                objectHeuristics.Add(new SimObjectHeuristic(boringNamesHeuristic));
 
                 client.Settings.ENABLE_CAPS = true;
                 client.Settings.ENABLE_SIMSTATS = true;
@@ -699,10 +699,10 @@ namespace cogbot.Listeners
             Debug(String.Format(p, args));
         }
 
-        public void output(string p)
+        public void WriteLine(string p)
         {
             Debug(p);
-            client.output(p);
+            client.WriteLine(p);
         }
 
         public override void Self_OnMeanCollision(MeanCollisionType type, UUID perp, UUID victim, float magnitude,
@@ -716,9 +716,9 @@ namespace cogbot.Listeners
                                                 TryGetSimObject(victim, out victimAv))
                                             {
                                                 // if (victimAv.Name == client.Self.Name)
-                                                //   output(perpAv.Name + " bumped into $bot like " + type);
+                                                //   WriteLine(perpAv.Name + " bumped into $bot like " + type);
                                                 // else if (perpAv.Name == client.Self.Name)
-                                                //   output("$bot bumped into " + victimAv.Name + " like " + type);   
+                                                //   WriteLine("$bot bumped into " + victimAv.Name + " like " + type);   
                                                 perpAv.LogEvent("" + type, victimAv, magnitude);
                                                 SendNewEvent("on-meanCollision", type, perpAv, victimAv,
                                                              magnitude);
@@ -766,7 +766,7 @@ namespace cogbot.Listeners
             if (!MaintainSounds) return;
             RequestAsset(soundID, AssetType.Sound, true);
             //base.Sound_OnPreloadSound(soundID, ownerID, objectID);
-            //output("preload sound " + soundID);
+            //WriteLine("preload sound " + soundID);
         }
 
 
@@ -1268,7 +1268,7 @@ namespace cogbot.Listeners
             }
             catch (Exception e)
             {
-                output(String.Format("err :{0}", e.StackTrace));
+                WriteLine(String.Format("err :{0}", e.StackTrace));
             }
         }
 
@@ -1399,7 +1399,7 @@ namespace cogbot.Listeners
                                 //     Update(objectUpdated.ID, simObject.GetSimPosition(), update.Rotation);
                                 // }
                                 //   })).Start();
-                                // output("Updating state for Avatar " + prim.Name);
+                                // WriteLine("Updating state for Avatar " + prim.Name);
                             }
                         }
                         // Call ISimObject Update the Previous object update will be saved in the "lastObjectUpdate[objectUpdated.ID]"
@@ -1452,7 +1452,7 @@ namespace cogbot.Listeners
             }
             else
             {
-                //output("missing Objects_OnObjectUpdated");
+                //WriteLine("missing Objects_OnObjectUpdated");
             }
         }
 
@@ -1777,11 +1777,11 @@ namespace cogbot.Listeners
                 UpdateQueue.Enqueue(() =>
                                         {
                                             //if (source != null) source;
-                                            // output("TextForm Avatars_OnLookAt: " + sourceID.ToString() + " to " + targetID.ToString() + " at " + targetID.ToString() + " with type " + lookType.ToString() + " duration " + duration.ToString());
+                                            // WriteLine("TextForm Avatars_OnLookAt: " + sourceID.ToString() + " to " + targetID.ToString() + " at " + targetID.ToString() + " with type " + lookType.ToString() + " duration " + duration.ToString());
                                             if (targetID == client.Self.AgentID)
                                             {
                                                 // if (lookType == LookAtType.Idle) return;
-                                                //output("  (TARGET IS SELF)");
+                                                //WriteLine("  (TARGET IS SELF)");
                                                 SendNewEvent("on-effect-targeted-self", s, p, effectType);
                                                 // ()/*GetObject*/(sourceID), effectType);
                                             }
@@ -2195,12 +2195,12 @@ namespace cogbot.Listeners
                 prim = matches[(int) pickNum - 1].Prim;
                 return true;
             }
-            output("Found " + matches.Count + " matches: ");
+            WriteLine("Found " + matches.Count + " matches: ");
             int num = 0;
             foreach (SimObject obj in matches)
             {
                 num++;
-                output(" " + num + ": " + obj + " " + TheSimAvatar.DistanceVectorString(obj));
+                WriteLine(" " + num + ": " + obj + " " + TheSimAvatar.DistanceVectorString(obj));
                 if (num == pickNum)
                 {
                     prim = obj.Prim;
@@ -2209,12 +2209,12 @@ namespace cogbot.Listeners
             }
             if (!retVal)
             {
-                output("Use '" + name + " ###'");
+                WriteLine("Use '" + name + " ###'");
             }
             return retVal;
         }
 
-        public string describePrim(Primitive target)
+        public string describePrim(Primitive target, bool detailed)
         {
             if (target == null) return "null";
             SimObject simObject = GetSimObject(target);
@@ -2223,7 +2223,7 @@ namespace cogbot.Listeners
             {
                 str += simObject.ToString();
                 str += String.Format(" {0}", TheSimAvatar.DistanceVectorString(simObject));
-                str += String.Format("\n GroupLeader: {0}", simObject.GetGroupLeader());
+               if (detailed) str += String.Format("\n GroupLeader: {0}", simObject.GetGroupLeader());
             }
             else
             {
@@ -2231,6 +2231,7 @@ namespace cogbot.Listeners
             }
             if (target.Properties != null && target.Properties.SalePrice != 0)
                 str += " Sale: L" + target.Properties.SalePrice;
+            if (!detailed) return str;
             //str += "\nPrimInfo: " + target.ToString());
             //str += "\n Type: " + GetPrimTypeName(target));
             str += "\n Light: " + target.Light;
@@ -2253,7 +2254,7 @@ namespace cogbot.Listeners
                     }
                 }
             }
-            return str; // output(str);
+            return str; // WriteLine(str);
         }
 
         public void describePrimToAI(Primitive prim, Simulator simulator)
@@ -2273,11 +2274,11 @@ namespace cogbot.Listeners
                 SendNewEvent("on-prim-dist", prim, Vector3.Distance(client.Self.SimPosition, prim.Position));
                 SendNewEvent("on-prim-pos", prim, prim.Position);
                 SendNewEvent("on-prim-description", prim, "" + prim.Properties.Description);
-                //output(prim.Properties.Name + ": " + prim.Properties.Description);
+                //WriteLine(prim.Properties.Name + ": " + prim.Properties.Description);
                 //if (prim.Sound != UUID.Zero)
-                //    output("This object makes sound.");
+                //    WriteLine("This object makes sound.");
                 //if (prim.Properties.SalePrice != 0)
-                //    output("This object is for sale for L" + prim.Properties.SalePrice);
+                //    WriteLine("This object is for sale for L" + prim.Properties.SalePrice);
             }
         }
 
@@ -2319,7 +2320,7 @@ namespace cogbot.Listeners
                 return /* ((float)prim.ToString().Length/5 -*/ (float) TheSimAvatar.Distance(prim);
             }
             float fitness = 1;
-            foreach (ObjectHeuristic heuristic in objectHeuristics)
+            foreach (SimObjectHeuristic heuristic in objectHeuristics)
             {
                 fitness *= heuristic(prim);
             }
@@ -2516,20 +2517,20 @@ namespace cogbot.Listeners
             //    verb = "standing";
             //else
             //    verb = "sitting";
-            //output(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
-            output(avatar.Name + " is " + TheSimAvatar.DistanceVectorString(GetSimObject(avatar)) + " distant.");
+            //WriteLine(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
+            WriteLine(avatar.Name + " is " + TheSimAvatar.DistanceVectorString(GetSimObject(avatar)) + " distant.");
             if (avatar.ProfileProperties.BornOn != null)
-                output("Born on: " + avatar.ProfileProperties.BornOn);
+                WriteLine("Born on: " + avatar.ProfileProperties.BornOn);
             if (avatar.ProfileProperties.AboutText != null)
-                output("About their second life: " + avatar.ProfileProperties.AboutText);
+                WriteLine("About their second life: " + avatar.ProfileProperties.AboutText);
             if (avatar.ProfileProperties.FirstLifeText != null)
-                output("About their first life: " + avatar.ProfileProperties.FirstLifeText);
+                WriteLine("About their first life: " + avatar.ProfileProperties.FirstLifeText);
             if (avatar.ProfileInterests.LanguagesText != null)
-                output("Languages spoken: " + avatar.ProfileInterests.LanguagesText);
+                WriteLine("Languages spoken: " + avatar.ProfileInterests.LanguagesText);
             if (avatar.ProfileInterests.SkillsText != null)
-                output("Skills: " + avatar.ProfileInterests.SkillsText);
+                WriteLine("Skills: " + avatar.ProfileInterests.SkillsText);
             if (avatar.ProfileInterests.WantToText != null)
-                output("Wants to: " + avatar.ProfileInterests.WantToText);
+                WriteLine("Wants to: " + avatar.ProfileInterests.WantToText);
         }
 
         public void describeAvatarToAI(Avatar avatar)
@@ -2539,8 +2540,8 @@ namespace cogbot.Listeners
             //     verb = "standing";
             // else
             //     verb = "sitting";
-            //output(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
-            //output(avatar.Name + " is " + Vector3.Distance(Client.Self.SimPosition, avatar.Position).ToString() + " distant.");
+            //WriteLine(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
+            //WriteLine(avatar.Name + " is " + Vector3.Distance(Client.Self.SimPosition, avatar.Position).ToString() + " distant.");
             SendNewEvent("on-avatar-dist", avatar, Vector3.Distance(client.Self.SimPosition, avatar.Position));
             SendNewEvent("on-avatar-pos", avatar, avatar.Position);
             SendNewEvent("on-avatar-description", avatar, avatar.GroupName);
@@ -2548,17 +2549,17 @@ namespace cogbot.Listeners
 
             /*
             if (avatar.ProfileProperties.BornOn != null)
-                output("Born on: " + avatar.ProfileProperties.BornOn);
+                WriteLine("Born on: " + avatar.ProfileProperties.BornOn);
             if (avatar.ProfileProperties.AboutText != null)
-                output("About their second life: " + avatar.ProfileProperties.AboutText);
+                WriteLine("About their second life: " + avatar.ProfileProperties.AboutText);
             if (avatar.ProfileProperties.FirstLifeText != null)
-                output("About their first life: " + avatar.ProfileProperties.FirstLifeText);
+                WriteLine("About their first life: " + avatar.ProfileProperties.FirstLifeText);
             if (avatar.ProfileInterests.LanguagesText != null)
-                output("Languages spoken: " + avatar.ProfileInterests.LanguagesText);
+                WriteLine("Languages spoken: " + avatar.ProfileInterests.LanguagesText);
             if (avatar.ProfileInterests.SkillsText != null)
-                output("Skills: " + avatar.ProfileInterests.SkillsText);
+                WriteLine("Skills: " + avatar.ProfileInterests.SkillsText);
             if (avatar.ProfileInterests.WantToText != null)
-                output("Wants to: " + avatar.ProfileInterests.WantToText);
+                WriteLine("Wants to: " + avatar.ProfileInterests.WantToText);
             */
         }
 
@@ -2674,7 +2675,7 @@ namespace cogbot.Listeners
         public void RescanTypes()
         {
             int count = SimObjects.Count;
-            output("Rescaning " + count + " simobjects");
+            WriteLine("Rescaning " + count + " simobjects");
             foreach (SimObject obj in SimObjects)
             {
                 //obj._Parent = obj.Parent;

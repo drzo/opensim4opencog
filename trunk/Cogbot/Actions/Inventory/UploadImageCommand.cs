@@ -22,7 +22,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Inventory;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             string inventoryName;
             uint timeout;

@@ -13,7 +13,7 @@ namespace cogbot.Actions
             usageString = "to Jump type \"jump\""; ;
         }
 
-        public override string acceptInput(string verb, Parser args)
+        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
           //  base.acceptInput(verb, args);
 
@@ -22,7 +22,7 @@ namespace cogbot.Actions
             Client.Self.Jump(false);
 
             TheBotClient.describeNext = true;
-            return "You jumped.";
+            return "$bot jumped.";
         }
     }
 }

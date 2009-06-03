@@ -14,12 +14,23 @@ namespace cogbot.Actions
             Category = CommandCategory.Other;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
                 return "Usage: showevent [eventID] (use searchevents to get ID)";
 
-            Client.Directory.OnEventInfo += new DirectoryManager.EventInfoCallback(Directory_OnEventInfo);
+            DirectoryManager.EventInfoCallback callback = new DirectoryManager.EventInfoCallback(matchedevent =>
+                                                                                                     {
+                                                                                                         float x,y;
+                                                                                                         Helpers.GlobalPosToRegionHandle((float)matchedevent.GlobalPos.X, (float)matchedevent.GlobalPos.Y, out x, out y);
+                                                                                                         StringBuilder sb = new StringBuilder();
+                                                                                                         sb.AppendFormat("       Name: {0} ({1})" + System.Environment.NewLine, matchedevent.Name, matchedevent.ID);
+                                                                                                         sb.AppendFormat("   Location: {0}/{1}/{2}" + System.Environment.NewLine, matchedevent.SimName, x, y);
+                                                                                                         sb.AppendFormat("       Date: {0}" + System.Environment.NewLine, matchedevent.Date);
+                                                                                                         sb.AppendFormat("Description: {0}" + System.Environment.NewLine, matchedevent.Desc);
+                                                                                                         WriteLine(sb.ToString());
+                                                                                                     });
+            Client.Directory.OnEventInfo += callback;
             uint eventID;
 
             if (UInt32.TryParse(args[0], out eventID))
@@ -31,18 +42,6 @@ namespace cogbot.Actions
             {
                 return "Usage: showevent [eventID] (use searchevents to get ID)";
             }
-        }
-
-        void Directory_OnEventInfo(DirectoryManager.EventInfo matchedEvent)
-        {
-            float x,y;
-            Helpers.GlobalPosToRegionHandle((float)matchedEvent.GlobalPos.X, (float)matchedEvent.GlobalPos.Y, out x, out y);
-            StringBuilder sb = new StringBuilder();
-            sb.AppendFormat("       Name: {0} ({1})" + System.Environment.NewLine, matchedEvent.Name, matchedEvent.ID);
-            sb.AppendFormat("   Location: {0}/{1}/{2}" + System.Environment.NewLine, matchedEvent.SimName, x, y);
-            sb.AppendFormat("       Date: {0}" + System.Environment.NewLine, matchedEvent.Date);
-            sb.AppendFormat("Description: {0}" + System.Environment.NewLine, matchedEvent.Desc);
-            WriteLine(sb.ToString());
         }
     }
 }

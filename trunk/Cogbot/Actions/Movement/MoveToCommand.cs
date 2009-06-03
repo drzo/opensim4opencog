@@ -14,7 +14,7 @@ namespace cogbot.Actions.Movement
             Category = CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 3)
                 return "Usage: moveto x y z";

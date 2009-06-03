@@ -30,7 +30,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Objects;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length != 2 && !(args.Length == 1 && SelectedObject != UUID.Zero))
                 return "Usage: export uuid outputfile.xml";

@@ -31,26 +31,27 @@ namespace cogbot.ScriptEngines
 
         public void jobManager()
         {
-            try
+            while (true)
             {
-                while (true)
+                while (taskQueue.Count > 0)
                 {
-                    while (taskQueue.Count > 0)
+                    try
                     {
                         taskTick();
-                        Thread.Sleep(5);
                     }
-                    Thread.Sleep(500);
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("!Exception: " + e.GetBaseException().Message);
+                        Console.WriteLine("error occured: " + e.Message);
+                        Console.WriteLine("        Stack: " + e.StackTrace.ToString());
+                    }
+                    Thread.Sleep(5);
                 }
-            }
-            catch (Exception e)
-            {
-                String o = "!Exception: " + e.GetBaseException().Message
-                + "\n" + ("error occured: " + e.Message)
-                + "\n" + ("        Stack: " + e.StackTrace.ToString());
-                Console.WriteLine(o);
+                Thread.Sleep(500);
             }
         }
+
+
         public Object genLispCodeTree(string lispCode)
         {
             Object codeTree = null;
@@ -334,9 +335,9 @@ namespace cogbot.ScriptEngines
                 //}
                 if (false)
                 {
-                    // output(" taskcode: " + lastcode + " --> " + thisTask.results);
-                    //output(" taskTick Results>" + thisTask.results);
-                    //output(" taskTick continueTask=" + thisTask.requeue.ToString());
+                    // WriteLine(" taskcode: " + lastcode + " --> " + thisTask.results);
+                    //WriteLine(" taskTick Results>" + thisTask.results);
+                    //WriteLine(" taskTick continueTask=" + thisTask.requeue.ToString());
                 }
 
                 // Should we do again ?

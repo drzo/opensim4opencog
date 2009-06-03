@@ -154,7 +154,7 @@ namespace cogbot.Actions.SimExport
                 WriteLine("Texture failed to download: " + id.ToString(), Helpers.LogLevel.Warning);
             }
         }
-        public override string Execute(string[] args, UUID fromAgentID)
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length > 1)
             {
@@ -507,7 +507,7 @@ namespace cogbot.Actions.SimExport
                 .Add("f|firstname=", "first name of the bot to log in", delegate(string v) { firstName = v; })
                 .Add("l|lastname=", "last name of the bot to log in", delegate(string v) { lastName = v; })
                 .Add("p|password=", "password of the bot to log in", delegate(string v) { password = v; })
-                .Add("o|output=", "filename of the OAR to write (default is 'simexport.tgz')", delegate(string v) { filename = v; })
+                .Add("o|WriteLine=", "filename of the OAR to write (default is 'simexport.tgz')", delegate(string v) { filename = v; })
                 .Add("h|?|help", delegate(string v) { showhelp = (v != null); })
                 .Add("v|verbose", delegate(string v) { if (v != null) ++Verbosity; });
             argParser.Parse(args);
