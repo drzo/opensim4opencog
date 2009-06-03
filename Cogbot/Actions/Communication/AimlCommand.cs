@@ -137,6 +137,7 @@ namespace cogbot.Listeners
 
         public void AIML_OnInstantMessage(InstantMessage im, Simulator simulator)
         {
+            if (im.FromAgentName == TheSimAvatar.theAvatar.Name) return;
             User myUser = GetMyUser(im.FromAgentName);
 
             //UpdateQueue.Enqueue(() => SendNewEvent("on-instantmessage", , im.Message, im.ToAgentID,
@@ -172,12 +173,12 @@ namespace cogbot.Listeners
             if (fromname == TheSimAvatar.theAvatar.Name) return;
             User myUser = GetMyUser(fromname);
             // todo hard coded to be changed
-            if (message.Contains("chat on"))
+            if (!myUser.RespondToChat && (message.Contains("chat on") || client.Self.Name.Contains(message)))
             {
                 myUser.RespondToChat = true;
                 return;
             }
-            if (message.Contains("chat off"))
+            if (myUser.RespondToChat && message.Contains("chat off"))
             {
                 myUser.RespondToChat = false;
                 return;

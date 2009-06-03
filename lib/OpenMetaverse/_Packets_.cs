@@ -20787,7 +20787,7 @@ namespace OpenMetaverse.Packets
 
         public ObjectGrabPacket()
         {
-            HasVariableBlocks = false; //dmiles
+            HasVariableBlocks = true;
             Type = PacketType.ObjectGrab;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;

@@ -14,7 +14,7 @@ namespace RTParser.Utils
         private Node Parent;
         public Node(Node P)
         {
-            Parent = P;            
+            Parent = P;
         }
         #region Attributes
 
@@ -47,7 +47,7 @@ namespace RTParser.Utils
         /// <summary>
         /// The word that identifies this node to it's parent node
         /// </summary>
-        public Unifiable word=Unifiable.Empty;
+        public Unifiable word = Unifiable.Empty;
 
         //private XmlNode GuardText;
 
@@ -65,7 +65,7 @@ namespace RTParser.Utils
         /// <param name="filename">the file that was the source of this category</param>
         public void addCategoryTag(Unifiable path, XmlNode template, XmlNode guard, string filename)
         {
-            if (template==null)
+            if (template == null)
             {
                 throw new XmlException("The category with a pattern: " + path + " found in file: " + filename + " has an empty template tag. ABORTING");
             }
@@ -100,9 +100,9 @@ namespace RTParser.Utils
             // get the first word (to form the key for the child nodemapper)
             //Unifiable firstWord = Normalize.MakeCaseInsensitive.TransformInput(firstRaw);
             string uc = firstRaw.AsString().ToUpper();
-            if (uc!=firstRaw.AsString() && !uc.Contains("<"))
+            if (uc != firstRaw.AsString() && !uc.Contains("<"))
             {
-                
+
             }
             Unifiable firstWord = firstRaw;
 
@@ -133,63 +133,22 @@ namespace RTParser.Utils
         public static bool AlwaysFail = true;
         #region Evaluate Node
 
-        public List<Template> evaluate(Unifiable path, SubQuery query, Request request, MatchState matchstate, Unifiable wildcard)
-        {
-            //// are we in failure?
-            //// first call the pre-existing evaluate  that was renamed to evaluate0
-            //// String temp = evaluate0(path, query, request, matchstate, wildcard);
-            //if (this.GuardText!=null)
-            //{
-            //    Unifiable preserve = query.Template;
-            //    try
-            //    {
-	                
-            //        Result result = new Result(request.user, request.Proccessor, request);
-            //        XmlNode templateNode = AIMLTagHandler.getNode(GuardText.OuterXml);
-            //        query.Template = GuardText.OuterXml;
-            //        Unifiable outputSentence = request.Proccessor.processNode(templateNode, query, request, result, request.user);
-            //        bool failed = outputSentence == null || outputSentence == "NIL";
-            //        if (failed)
-            //        {
-            //            Console.WriteLine("failing guard " + GuardText.InnerXml + " for " + this);
-            //            Node next = GetNextNode();
-            //            if (next!=null)
-            //            {
-            //                // return next.evaluate(path, query, request, matchstate, wildcard);
-            //            }
-            //            return String.Empty;
-            //        }
-            //        // success
-            //        return evaluate0(path, query, request, matchstate, wildcard); ;
-            //    }
-            //    catch (System.Exception ex)
-            //    {
-            //        Console.WriteLine("" + ex);
-            //        return null;// String.Empty; //fail
-            //    }
-            //    finally
-            //    {
-            //        query.Template = preserve;
-            //    }
-            //}
-            return evaluate0(path, query, request, matchstate, wildcard); ;
-        }
 
         public Node GetNextNode()
         {
-            if (Parent==null) return null;
+            if (Parent == null) return null;
             bool useNext = false;
             foreach (KeyValuePair<Unifiable, Node> v in Parent.children)
             {
                 if (useNext) return v.Value;
-                if (v.Value==this)
+                if (v.Value == this)
                 {
                     useNext = true;
                 }
             }
             if (useNext)
             {
-           //     Console.WriteLine(String.Format("Last key {0}", ToString()));
+                //     Console.WriteLine(String.Format("Last key {0}", ToString()));
                 return Parent.GetNextNode();
             }
             return null;
@@ -212,7 +171,7 @@ namespace RTParser.Utils
         /// <param name="matchstate">The part of the input path the node represents</param>
         /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
         /// <returns>The template to process to generate the output</returns>
-        private List<Template> evaluate0(Unifiable path, SubQuery query, Request request, MatchState matchstate, Unifiable wildcard)
+        public List<Template> evaluate(Unifiable path, SubQuery query, Request request, MatchState matchstate, Unifiable wildcard)
         {
             // check for timeout
             if (request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
@@ -227,7 +186,7 @@ namespace RTParser.Utils
 
             // check if this is the end of a branch in the GraphMaster 
             // return the cCategory for this node
-            if (this.children.Count==0)
+            if (this.children.Count == 0)
             {
                 if (!path.IsEmpty)
                 {
@@ -260,39 +219,18 @@ namespace RTParser.Utils
             foreach (Unifiable childNodeWord in this.children.Keys)
             {
                 if (!childNodeWord.IsShortWildCard()) continue;
-                if (!childNodeWord.Unify(first,query)) continue;
+                if (!childNodeWord.Unify(first, query)) continue;
                 Node childNode = this.children[childNodeWord];
                 // add the next word to the wildcard match 
                 Unifiable newWildcard = new Unifiable();
-                if (childNodeWord.IsStar()) this.storeWildCard(first, newWildcard);
-                
+                this.storeWildCard(first, newWildcard);
+
                 // move down into the identified branch of the GraphMaster structure
                 List<Template> result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);
 
                 // and if we get a result from the branch process the wildcard matches and return 
                 // the result
-                if (result!=null && result.Count>0)
-                {
-                    if (!newWildcard.IsEmpty)
-                    {
-                        // capture and push the star content appropriate to the current matchstate
-                        switch (matchstate)
-                        {
-                            case MatchState.UserInput:
-                                query.InputStar.Add(newWildcard.Frozen());
-                                // added due to this match being the end of the line
-                                newWildcard.Clear();
-                                break;
-                            case MatchState.That:
-                                query.ThatStar.Add(newWildcard.Frozen());
-                                break;
-                            case MatchState.Topic:
-                                query.TopicStar.Add(newWildcard.Frozen());
-                                break;
-                        }
-                    }
-                    return result;
-                }
+                if (ResultStateReady(result, newWildcard, matchstate, query)) return result;
             }
 
             // second option - the nodemapper may have contained a "_" child, but led to no match
@@ -302,7 +240,7 @@ namespace RTParser.Utils
             {
                 Node childNode = this.children[childNodeWord];
                 if (childNode.word.IsWildCard()) continue;
-                if (!childNode.word.Unify(firstWord,query)) continue;
+                if (!childNode.word.Unify(firstWord, query)) continue;
                 // process the matchstate - this might not make sense but the matchstate is working
                 // with a "backwards" path: "topic <topic> that <that> user input"
                 // the "classic" path looks like this: "user input <that> that <topic> topic"
@@ -323,30 +261,8 @@ namespace RTParser.Utils
                 Unifiable newWildcard = new Unifiable();
                 List<Template> result = childNode.evaluate(newPath, query, request, newMatchstate, newWildcard);
                 // and if we get a result from the child return it
-                if (result != null && result.Count > 0)
-                {
-                    if (!newWildcard.IsEmpty)
-                    {
-                        // capture and push the star content appropriate to the matchstate if it exists
-                        // and then clear it for subsequent wildcards
-                        switch (matchstate)
-                        {
-                            case MatchState.UserInput:
-                                query.InputStar.Add(newWildcard.Frozen());
-                                newWildcard.Clear();
-                                break;
-                            case MatchState.That:
-                                query.ThatStar.Add(newWildcard.Frozen());
-                                newWildcard.Clear();
-                                break;
-                            case MatchState.Topic:
-                                query.TopicStar.Add(newWildcard.Frozen());
-                                newWildcard.Clear();
-                                break;
-                        }
-                    }
-                    return result;
-                }
+                if (ResultStateReady(result, newWildcard, matchstate, query)) return result;
+
             }
 
             // third option - the input part of the path might have been matched so far but hasn't
@@ -354,40 +270,33 @@ namespace RTParser.Utils
             // precedence in the AIML alphabet.
             foreach (Unifiable childNodeWord in this.children.Keys)
             {
+                int matchLen = 0;
                 if (!childNodeWord.IsLongWildCard()) continue;
-                if (!childNodeWord.Unify(first, query)) continue;
                 Node childNode = this.children[childNodeWord];
                 // o.k. look for the path in the child node denoted by "*"
                 //Node childNode = (Node)this.children["*"];
-
+                List<Template> result = null;
                 // add the next word to the wildcard match 
                 Unifiable newWildcard = new Unifiable();
-                this.storeWildCard(first, newWildcard);
-
-                List<Template> result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);
-                // and if we get a result from the branch process and return it
-                if (result!=null && result.Count > 0)
+                // normal * and LazyMatch on first word
+                if (childNodeWord.Unify(first, query))
                 {
-                    if (!newWildcard.IsEmpty)
+                    this.storeWildCard(first, newWildcard);
+                    result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);
+                    if (ResultStateReady(result, newWildcard, matchstate, query)) return result;
+                }
+                else // some lazy matches take two words
+                    if (splitPath0.Length > 1 && childNodeWord.IsLazyStar())
                     {
-                        // capture and push the star content appropriate to the current matchstate
-                        switch (matchstate)
+                        Unifiable firstAndSecond = first + " " + splitPath0[1];
+                        if (childNodeWord.Unify(firstAndSecond, query))
                         {
-                            case MatchState.UserInput:
-                                query.InputStar.Add(newWildcard.Frozen());
-                                // added due to this match being the end of the line
-                                newWildcard.Clear();
-                                break;
-                            case MatchState.That:
-                                query.ThatStar.Add(newWildcard.Frozen());
-                                break;
-                            case MatchState.Topic:
-                                query.TopicStar.Add(newWildcard.Frozen());
-                                break;
+                            this.storeWildCard(firstAndSecond, newWildcard);
+                            result = childNode.evaluate(Unifiable.Join(" ", splitPath0, 2, splitPath0.Length - 2), query,
+                                                        request, matchstate, newWildcard);
+                            if (ResultStateReady(result, newWildcard, matchstate, query)) return result;
                         }
                     }
-                    return result;
-                }
             }
 
             // o.k. if the nodemapper has failed to match at all: the input contains neither 
@@ -405,6 +314,45 @@ namespace RTParser.Utils
             // state won't be reached. Remember to empty the surplus to requirements wildcard matches
             wildcard.Clear();// = new Unifiable();
             return null;// Unifiable.Empty;
+        }
+
+        /// <summary>
+        // If we get a result from the branch process the wildcard matches and return 
+        // the result
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="newWildcard"></param>
+        /// <param name="matchstate"></param>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        private static bool ResultStateReady(ICollection<Template> result, Unifiable newWildcard, MatchState matchstate, SubQuery query)
+        {
+            // and if we get a result from the branch process and return it
+            if (result != null && result.Count > 0)
+            {
+                if (!newWildcard.IsEmpty)
+                {
+                    // capture and push the star content appropriate to the matchstate if it exists
+                    // and then clear it for subsequent wildcards
+
+                    switch (matchstate)
+                    {
+                        case MatchState.UserInput:
+                            query.InputStar.Add(newWildcard.Frozen());
+                            // added due to this match being the end of the line
+                            newWildcard.Clear();
+                            break;
+                        case MatchState.That:
+                            query.ThatStar.Add(newWildcard.Frozen());
+                            break;
+                        case MatchState.Topic:
+                            query.TopicStar.Add(newWildcard.Frozen());
+                            break;
+                    }
+                }
+                return true;
+            }
+            return false;
         }
 
         /// <summary>

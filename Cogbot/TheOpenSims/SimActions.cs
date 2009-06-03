@@ -136,10 +136,15 @@ namespace cogbot.TheOpenSims
             : base("Follow " + impl + " -> " + impl.DistanceVectorString(position))
         {
             TheBot = impl;
-            maxDistance = 4;// position.GetSizeDistance();
+            maxDistance = 3;// position.GetSizeDistance();
             Target = position;
             FollowThread = new Thread(FollowLoop);
-        }         
+        }
+
+        public override string ToString()
+        {
+            return "Follow " + TheBot + " -> " + TheBot.DistanceVectorString(Target);
+        }
 
         public override BotNeeds ProposedChange()
         {
