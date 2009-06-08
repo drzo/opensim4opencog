@@ -198,7 +198,7 @@ namespace RTParser
 
         public Unifiable Trim()
         {
-            string str2 = str.Trim();
+            string str2 = str.Trim().Replace("  "," ").Replace("  "," ");
             if (str2==str) return this;
             return str.Trim();
         }
@@ -329,7 +329,7 @@ namespace RTParser
 
         static Unifiable[] Splitter(string str)
         {
-            string strTrim = str.Trim();
+            string strTrim = str.Trim().Replace("  "," ").Replace("  "," ");
             if (!strTrim.Contains("<"))
                 return arrayOf(strTrim.Split(BRKCHARS, StringSplitOptions.RemoveEmptyEntries));
             XmlDocument doc = new XmlDocument();
@@ -356,7 +356,7 @@ namespace RTParser
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e);
+                Console.WriteLine("" + e.Message + ": " +strTrim);
             }
             return arrayOf(strTrim.Split(BRKCHARS, StringSplitOptions.RemoveEmptyEntries));
         }
@@ -510,7 +510,7 @@ namespace RTParser
                         return UnifyLazy(unifiable);
                     } catch(Exception e)
                     {
-                        Console.WriteLine(""+e);
+                        //Console.WriteLine(""+e);
                         return false;
                     }
                 }
@@ -518,7 +518,7 @@ namespace RTParser
             }
             if (unifiable.IsWildCard())
             {
-                return unifiable.Unify(this, query);
+                // return unifiable.Unify(this, query);
             }
             return unifiable.str.ToUpper() == str.ToUpper();
         }
