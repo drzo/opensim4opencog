@@ -7,10 +7,11 @@
   <item name=",)" value=" smile " />
   <item name=";)" value=" smile " />
   <item name=";-)" value=" smile " />
+  <!--
   <item name="&quot;" value="" />
-  <item name="/" value=" " />
-  <item name="&gt;" value=" gt " />
+  <item name="&gt;" value=" " />
   <item name="&lt;" value=" lt " />
+  <item name="/" value=" " />
   <item name="(" value=" " />
   <item name=")" value=" " />
   <item name="`" value=" " />
@@ -19,6 +20,7 @@
   <item name="&amp;" value=" " />
   <item name="-" value="-" />
   <item name="=" value=" " />
+  -->
   <item name="L A" value=" la " />
   <item name=" O K " value=" ok " />
   <item name=" P S " value=" ps " />

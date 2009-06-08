@@ -824,7 +824,11 @@
 <category><pattern>*</pattern><that>WHAT OTHER * DO YOU LIKE</that><template><srai>I LIKE <star/> </srai></template></category> 
 <category><pattern>*</pattern><that>WHAT SCHOOL DO YOU GO TO</that><template><random>  <li>I never heard of it before.</li>  <li>Is it any good?</li>  <li>What are the other students like?</li>  </random><think><set name="it"><set name="topic"><person/></set></set></think></template></category>  
 <category><pattern>*</pattern><that>WHAT SUBJECT</that><template><think><set name="it"><set name="topic"><person/></set></set></think>Good choice.</template></category>  
+
+<!--
 <category><pattern>*</pattern><that>WHAT</that><template><think><set name="it"><set name="topic"><person/></set></set></think>I don't have an answer for you.</template></category>  
+-->
+
 <category><pattern>*</pattern><that>WHAT TIME IS IT THERE</that><template><think><set name="it"><set name="topic"><person/></set></set></think> Are you usually awake at this hour?</template></category>  
 <category><pattern>*</pattern><that>WHAT WERE THE CIRCUMSTANCES</that><template>I hope that never happens again.</template></category>  
 <category><pattern>*</pattern><that>WHAT WERE WE TALKING ABOUT AGAIN</that><template><think><set name="it"><set name="topic"><person/></set></set></think> Oh yeah, now I remember.</template></category>  
@@ -850,10 +854,10 @@
 <category><pattern>*</pattern><that>WHERE DO YOU GO TO SCHOOL</that><template><think><set name="it"><set name="topic"><person/></set></set></think>I don't know anyone who went there.  What's it like?</template></category>  
 <category><pattern>*</pattern><that>WHERE DO YOU LIVE</that><template><srai>I LIVE IN <star/></srai></template></category> 
 <category><pattern>*</pattern><that>WHERE DO YOU SEE IT</that><template>I wouldn't have thought of looking there.</template></category>  
-<category><pattern>*</pattern><that>WHERE DO YOU WANT ME TO TAKE IT</that><template>Where is that?</template></category>  
+<category><pattern>*</pattern><that>WHERE DO YOU WANT ME TO TAKE IT</that><template>Where is that? ?</template></category>  
 <category><pattern>*</pattern><that>WHERE IS HERE</that><template><srai>I AM IN <star/></srai></template></category> 
 <category><pattern>*</pattern><that>WHERE IS THAT</that><template>I've never heard of it before.  <think><set name="it"><set name="topic"><person/></set></set></think></template></category>  
-<category><pattern>*</pattern><that>WHERE</that><template><think><set name="it"><set name="topic"><person/></set></set></think> Where is that?</template></category>  
+<category><pattern>*</pattern><that>WHERE</that><template><think><set name="it"><set name="topic"><person/></set></set></think> Where's that?</template></category>
 <category><pattern>*</pattern><that>WHICH STATE</that><template><random>  <li>Is that a state?</li>  <li>I've never heard of it.</li>  <li>What part of the country is that?</li>  </random></template></category>  
 <category><pattern>*</pattern><that>WHO ARE THEY AGAIN</that><template><srai>THEY REFERS TO <star/></srai></template></category> 
 <category><pattern>*</pattern><that>WHO ARE THEY</that><template><srai>THEY REFERS TO <star/></srai></template></category> 
