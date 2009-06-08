@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using RTParser;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
 namespace cogbot.Listeners
 {
 
-    public partial class WorldObjects : DebugAllEvents
+    public partial class WorldObjects
     {
 
         public static bool ScriptHolderPrecreated = true;

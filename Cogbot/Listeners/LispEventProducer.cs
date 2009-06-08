@@ -23,6 +23,21 @@ namespace cogbot.Listeners
             UnregisterAll();
         }
 
+        public override string GetModuleName()
+        {
+            return "ListEventProducer";
+        }
+
+        public override void StartupListener()
+        {
+            RegisterAll();
+        }
+
+        public override void ShutdownListener()
+        {
+            UnregisterAll();
+        }
+
         public static bool EventArgsInDictionary = true;
         public override bool BooleanOnEvent(string eventName, string[] paramNames, Type[] paramTypes, params object[] parameters)
         {

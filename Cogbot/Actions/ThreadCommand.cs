@@ -41,7 +41,7 @@ namespace cogbot.Actions
             {
                 try
                 {
-                    WriteLine(Client.ExecuteCommand(cmd));
+                    WriteLine(Client.ExecuteCommand(cmd, WriteLine));
                 }
                 catch (OutOfMemoryException) { }
                 catch (StackOverflowException) { }

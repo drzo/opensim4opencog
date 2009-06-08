@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using cogbot.DotCYC;
+using cogbot.Listeners;
 using OpenMetaverse; //using libsecondlife;
 //using OpenMetaverseTypes;
 
@@ -37,6 +38,16 @@ namespace cogbot
 
     public partial class TextForm : Form
     {
+        private ICollection<BotClient> BotClients
+        {
+            get
+            {
+                // Make an immutable copy of the Clients list to safely iterate over
+                List<BotClient> clientsCopy = new List<BotClient>();
+                lock (BotByName) clientsCopy.AddRange(BotByName.Values);
+                return clientsCopy;
+            }
+        }
         public static SimCyclifier Cyclifier;
 
         public static bool DownloadTextures = false;
@@ -67,7 +78,7 @@ namespace cogbot
         public DotCYC.CycConnectionForm cycConnection;
         ///public Dictionary<string, DescribeDelegate> describers;
 
-        // public Dictionary<string, Listeners.Listener> listeners;
+        public List<Type> registrationTypes;
         public Dictionary<string, Actions.Action> groupActions;
         public Dictionary<string, Tutorials.Tutorial> tutorials;
 
@@ -109,7 +120,7 @@ namespace cogbot
             //Manager = CurrentClient.Inventory;
             //Inventory = Manager.Store;
             groupActions = new Dictionary<string, Action>();
-            groupActions["login"] = new Login(null);
+            //groupActions["login"] = new Login(null);
 
 
             //   CurrentClient.Settings.LOGIN_SERVER = config.simURL;
@@ -122,14 +133,14 @@ namespace cogbot
 
             outputDelegate = new OutputDelegate(WriteLine);
 
-            //listeners = new Dictionary<string, cogbot.Listeners.Listener>();
-            //listeners["chat"] = new Listeners.Chat(this);
-            //listeners["avatars"] = new Listeners.Avatars(this);
-            //listeners["teleport"] = new Listeners.Teleport(this);
-            //listeners["whisper"] = new Listeners.Whisper(this);
+            registrationTypes = new List<Type>();
+            //registrationTypes["chat"] = new Listeners.Chat(this);
+            //registrationTypes["avatars"] = new Listeners.Avatars(this);
+            //registrationTypes["teleport"] = new Listeners.Teleport(this);
+            //registrationTypes["whisper"] = new Listeners.Whisper(this);
             //ObjectSystem = new Listeners.Objects(this);
-            //listeners["bump"] = new Listeners.Bump(this);
-            //listeners["sound"] = new Listeners.Sound(this);
+            //registrationTypes["bump"] = new Listeners.Bump(this);
+            //registrationTypes["sound"] = new Listeners.Sound(this);
 
 
             tutorials = new Dictionary<string, cogbot.Tutorials.Tutorial>();
@@ -158,7 +169,7 @@ namespace cogbot
 
             //Client.Network.RegisterCallback(PacketType.AvatarAppearance, new NetworkManager.PacketCallback(AvatarAppearanceHandler));
             //Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(AlertMessageHandler));
-            RegisterBotSystemCommands(Assembly.GetExecutingAssembly());
+            RegisterAssembly(Assembly.GetExecutingAssembly());
             new Thread(new ThreadStart(delegate()
             {
                 if (config.startupLisp.Length > 1)
@@ -276,30 +287,43 @@ namespace cogbot
             return null;
         }
 
-        public string ExecuteCommand(string text)
+
+        public string ExecuteCommand(string text, OutputDelegate WriteLine)
+        {
+            WriteLine("textform> " + text);
+            String res = ExecuteBotsCommand(text,WriteLine);
+            if (!String.IsNullOrEmpty(res)) return res;
+            return ExecuteSystemCommand(text,WriteLine);
+        }
+
+        private string ExecuteBotsCommand(string text, OutputDelegate WriteLine)
+        {
+            string res = String.Empty;
+            if (BotByName.Count == 0 && lastBotClient != null) return lastBotClient.ExecuteBotCommand(text, WriteLine);
+            if (OnlyOneCurrentBotClient != null)
+            {
+                return OnlyOneCurrentBotClient.ExecuteBotCommand(text,WriteLine);
+
+            }
+
+            foreach (BotClient CurrentClient in BotClients)
+                if (CurrentClient != null)
+                {
+
+                    res += CurrentClient.ExecuteBotCommand(text, WriteLine).Trim();
+                    if (!String.IsNullOrEmpty(res))
+                    {
+                        res += "\n";
+                    }
+                }
+            return res;
+        }
+
+        public string ExecuteSystemCommand(string text, OutputDelegate WriteLine)
         {
             string res = String.Empty;
             try
             {
-                //text = text.Replace("\"", "");
-                text = text.Trim();
-                WriteLine("textform> " + text);
-                if (BotByName.Count == 0 && lastBotClient != null) return lastBotClient.ExecuteCommand(text);
-                if (OnlyOneCurrentBotClient != null)
-                {
-                    return OnlyOneCurrentBotClient.ExecuteCommand(text);
-
-                }
-                bool handled = false;
-                foreach (BotClient CurrentClient in BotByName.Values)
-                        if (CurrentClient != null)
-                        {
-
-                            res += CurrentClient.ExecuteCommand(text);
-                            if (!String.IsNullOrEmpty(res)) handled = true;
-                        }
-
-                if (!handled)
                 {
                     string verb = text.Split(null)[0];
                     if (groupActions.ContainsKey(verb))
@@ -381,7 +405,8 @@ namespace cogbot
             try
             {
                 if (str == null) return;
-                str = String.Format(str, args).Trim();
+                if (args.Length>0) str = String.Format(str, args);
+                str = str.Trim();
                 if (str == "") return;
 
                 str = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
@@ -410,7 +435,8 @@ namespace cogbot
         public void doOutput(string str, params object[] args)
         {
             if (str == null) return;
-            str = String.Format(str, args).Trim();
+            if (args.Length > 0) str = String.Format(str, args);
+            str = str.Trim(); 
             if (str == "") return;
             try
             {
@@ -434,6 +460,12 @@ namespace cogbot
             consoleInputText.Text = oldInput;
         }
 
+
+        public string ExecuteCommand(string text)
+        {
+            return ExecuteCommand(text, WriteLine);
+        }
+
         public void acceptConsoleInput()
         {
             string text = consoleInputText.Text;
@@ -442,7 +474,7 @@ namespace cogbot
                 //WriteLine(text);
                 consoleInputText.Text = "";
 
-                WriteLine(ExecuteCommand(text));
+                WriteLine(ExecuteCommand(text,WriteLine));
 
                 //if (describeNext)
                 //{
@@ -608,9 +640,19 @@ namespace cogbot
                     Clients.Add(bc.Self.AgentID, bc);
                 }
             });
-            BotByName[""+bc.BotLoginParams.FirstName+" "+bc.BotLoginParams.LastName] = bc;
             //LoginParams loginParams = bc.Network.DefaultLoginParams(account.FirstName, account.LastName, account.Password, "BotClient", version);            
+            AddTypesToBotClient(bc);
+            bc.StartupClientLisp();
             return bc;
+        }
+
+        private void AddTypesToBotClient(BotClient bc)
+        {
+            BotByName["" + bc.BotLoginParams.FirstName + " " + bc.BotLoginParams.LastName] = bc;
+            lock (registrationTypes) foreach (Type t in registrationTypes)
+            {
+                bc.RegisterType(t);
+            }
         }
 
         public Utilities.TcpServer CreateHttpServer(int port, string botname)
@@ -674,7 +716,7 @@ namespace cogbot
             client.GroupCommands = account.GroupCommands;
 			client.MasterName = account.MasterName;
             client.MasterKey = account.MasterKey;
-            client.AllowObjectMaster = client.MasterKey != UUID.Zero; // Require UUID for object master.
+            //client.AllowObjectMaster = client.MasterKey != UUID.Zero; // Require UUID for object master.
 
             LoginParams loginParams = client.Network.DefaultLoginParams(account.FirstName, account.LastName, account.Password, "BotClient", version);
 
@@ -683,7 +725,7 @@ namespace cogbot
 
             if (!String.IsNullOrEmpty(account.URI))
                 loginParams.URI = account.URI;
-            
+
             if (client.Network.Login(loginParams))
             {
                 Clients[client.Self.AgentID] = client;
@@ -841,11 +883,9 @@ namespace cogbot
             else
             {
                 // Make an immutable copy of the Clients dictionary to safely iterate over
-                Dictionary<UUID, BotClient> clientsCopy = new Dictionary<UUID, BotClient>(Clients);
-
                 int completed = 0;
 
-                foreach (BotClient client in clientsCopy.Values)
+                foreach (BotClient client in BotClients)
                 {
                     ThreadPool.QueueUserWorkItem((WaitCallback)
                         delegate(object state)
@@ -862,7 +902,7 @@ namespace cogbot
                         client);
                 }
 
-                while (completed < clientsCopy.Count)
+                while (completed < BotClients.Count)
                     Thread.Sleep(50);
             }
         }
@@ -886,6 +926,26 @@ namespace cogbot
             // TODO: It would be really nice if we could figure out a way to abort the ReadLine here in so that Run() will exit.
         }
 
+
+        internal void RegisterAssembly(Assembly assembly)
+        {
+            lock (registrationTypes)
+            {
+                bool newTypes = false;
+                RegisterBotSystemCommands(assembly);
+                foreach (Type t in assembly.GetTypes())
+                {
+                    if (registrationTypes.Contains(t)) continue;
+                    registrationTypes.Add(t);
+                    newTypes = true;
+                }
+                if (newTypes)
+                    foreach (BotClient client in BotClients)
+                    {
+                        AddTypesToBotClient(client);
+                    }
+            }
+        }
     }
 
     #region -- Configuration Class --

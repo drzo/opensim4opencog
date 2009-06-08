@@ -28,7 +28,7 @@ namespace cogbot.Actions
             // base.acceptInput(verb, args);
             string[] args = pargs.tokens;
             UUID primID;
-            if (verb == "follow")
+            if (verb == "follow" && args.Length > 0)
             {
 
                 string name = pargs.objectPhrase;
@@ -43,26 +43,24 @@ namespace cogbot.Actions
 
                     // The thread that accepts the Client and awaits messages
                     me.CurrentAction = new FollowerAction(me, followAvatar);
-                    return "started following " + followAvatar;
+                    return "$bot started following " + followAvatar;
                 }
                 else
                 {
-                    return ("I don't know who " + name + " is.");
+                    return ("$bot don't know who " + name + " is.");
                 }
             }
             else if (verb == "stop-following")
             {
 
-
-
                 SimPosition ap = WorldSystem.TheSimAvatar.ApproachPosition;
-                WorldSystem.TheSimAvatar.SetMoveTarget(null,10);
+                WorldSystem.TheSimAvatar.SetMoveTarget(null, 10);
                 WorldSystem.TheSimAvatar.StopMoving();
-                return ("$bot stop following " + ap + ".");
+                return ("$bot stops following " + ap + ".");
             }
             else
             {
-                return ("$bot isn't following anyone.");
+                return "$bot ApproachPosition: " + WorldSystem.TheSimAvatar.ApproachPosition;
             }
 
         }

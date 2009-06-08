@@ -31,7 +31,7 @@ namespace cogbot.Actions
 			} 
 			else if ((WorldSystem).tryGetAvatar(args.str, out avatar))
             {
-               // Listeners.Chat chat = (Listeners.Chat)Client.listeners["chat"];
+               // Listeners.Chat chat = (Listeners.Chat)Client.registrationTypes["chat"];
                 if (chat.muteList.Contains(avatar.Name))
                 {
                     chat.muteList.Remove(avatar.Name);

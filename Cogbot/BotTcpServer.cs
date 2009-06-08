@@ -441,7 +441,9 @@ namespace cogbot.Utilities
         }
         public string EvaluateCommand(string cmd)
         {
-            return parent.ExecuteCommand(cmd);
+            StringWriter wl = new StringWriter();
+            string s = parent.ExecuteCommand(cmd,wl.WriteLine);
+            return wl.ToString() + s;
         }
 
         /// <summary>

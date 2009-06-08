@@ -5,7 +5,7 @@ using OpenMetaverse; //using libsecondlife;
 
 namespace cogbot.Listeners
 {
-    public class Listener
+    abstract public class Listener
     {
      //   protected TextForm botclient;
         public BotClient client;
@@ -14,6 +14,16 @@ namespace cogbot.Listeners
         {
             //botclient = _parent;
             client = _parent;//.CurrentClient;
+            client.listeners[this.GetModuleName()] = this;
         }
+
+        /// <summary>
+        ///  Name registered in the BotClient.registrationTypes collection
+        /// </summary>
+        /// <returns></returns>
+        public abstract string GetModuleName();
+
+        public abstract void StartupListener();
+        public abstract void ShutdownListener();
     }
 }

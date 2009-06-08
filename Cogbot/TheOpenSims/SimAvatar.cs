@@ -12,7 +12,7 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.TheOpenSims
 {
-    public class SimAvatarImpl : SimObjectImpl, SimMover, SimAvatar, SimActor
+    public partial class SimAvatarImpl : SimObjectImpl, SimMover, SimAvatar, SimActor
     {
         public override bool IsKilled
         {
@@ -75,7 +75,7 @@ namespace cogbot.TheOpenSims
             {
                 if (o is SimObject) KnownSimObjects.Add((SimObject) o);
             }
-            KnownTypeUsages.AddTo(SimTypeSystem.CreateTypeUsage(typeUse));
+            _knownTypeUsages.AddTo(SimTypeSystem.CreateTypeUsage(typeUse));
             base.LogEvent(typeUse, args1_N);
         }
 
@@ -84,22 +84,13 @@ namespace cogbot.TheOpenSims
             base.AddCanBeTargetOf(textualActionName, argN, arg0_N);
         }
 
-        public Thread avatarThinkerThread;
-        public Thread avatarHeartbeatThread;
-
         public Avatar theAvatar
         {
             get { return (Avatar) Prim; }
         }
 
-        public SimAvatar InDialogWith { get; set; }
+        //public SimAvatar InDialogWith { get; set; }
 
-        private readonly BotNeeds _CurrentNeeds;
-
-        public BotNeeds CurrentNeeds
-        {
-            get { return _CurrentNeeds; }
-        }
 
         private double _SightRange = 260.0;
 
@@ -137,68 +128,66 @@ namespace cogbot.TheOpenSims
         }
 
         /// <summary>
-        ///   which will result in 
-        /// </summary>
-        public List<BotAction> KnownBotActions = new List<BotAction>();
-
-        /// <summary>
-        ///  which will be skewed with how much one bot like a Mental Aspect
-        /// </summary> 
-        public readonly Dictionary<BotMentalAspect, int> AspectEnjoyment = new Dictionary<BotMentalAspect, int>();
-
-        /// notice this also stores object types that pleases the bot as well as people
-        ///  (so how much one bot likes another avatar is stored here as well)
-
-        ///  Actions the bot might do next cycle.
-        private List<BotAction> TodoBotActions = new List<BotAction>();
-
-        /// <summary>
-        ///  Actions observed
-        /// </summary>
-        private readonly List<BotAction> ObservedBotActions = new List<BotAction>();
-
-        /// <summary>
         ///  Action template stubs 
         /// </summary>
-        private readonly ListAsSet<SimTypeUsage> KnownTypeUsages = new ListAsSet<SimTypeUsage>();
-
-        /// <summary>
-        ///  Assumptions about stubs
-        /// </summary>
-        public readonly Dictionary<SimObjectType, BotNeeds> Assumptions = new Dictionary<SimObjectType, BotNeeds>();
+        private readonly ListAsSet<SimTypeUsage> _knownTypeUsages;
 
         private BotAction _currentAction;
-
+        private Thread actionThread = null;
+        private readonly object actionLock = new object();
+        public BotMentalAspect LastAction { get; set;}
+        
         /// <summary>
         ///  Current action 
         /// </summary>       
         public BotAction CurrentAction
         {
-            get { return _currentAction; }
+            get
+            {
+                lock (actionLock)
+                {
+                    if (_currentAction == null) return null;
+                    return _currentAction;
+                }
+            }
             set
             {
-                if (Object.ReferenceEquals(_currentAction, value)) return;
-                if (_currentAction != null) _currentAction.Abort();
-                _currentAction = value;
-                if (value != null)
+                lock (actionLock)
                 {
-                    UseAspect(value);
+                    if (Object.ReferenceEquals(_currentAction, value)) return;
+                    if (_currentAction != null)
+                    {
+                        LastAction = _currentAction;
+                        try
+                        {
+                            _currentAction.Abort();
+
+                        }
+                        catch (Exception)
+                        {
+                        }
+                        _currentAction = value;
+                    }
+                    _currentAction = value;
+                    if (actionThread != null)
+                    {
+                        try
+                        {
+                            actionThread.Abort();
+                            actionThread = null;
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+                    if (value != null)
+                    {
+                        actionThread = new Thread(() => _currentAction.InvokeReal()) { Name = _currentAction.ToString() };
+                        actionThread.Start();
+                    }
                 }
             }
         }
-
-        /// <summary>
-        ///  When seeking out objects for use
-        ///  the whole region at least - this is different than the sight distance
-        /// </summary>
-        public double MaxThinkAboutDistance = 256d;
-
-        /// <summary>
-        ///  When seeking out objects for use -  
-        ///  this is only limited due to the pathfinder demo for the moment
-        /// </summary>
-        public double MaxSupportedZChange = 2d;
-
 
         public override sealed bool MakeEnterable(SimMover actor)
         {
@@ -210,9 +199,9 @@ namespace cogbot.TheOpenSims
         public SimAvatarImpl(Avatar slAvatar, WorldObjects objectSystem, Simulator reg)
             : base(slAvatar, objectSystem, reg)
         {
+            _knownTypeUsages = new ListAsSet<SimTypeUsage>();
             WorldObjects.SimAvatars.Add(this);
             ObjectType.SuperType.Add(SimTypeSystem.GetObjectType("Avatar"));
-            _CurrentNeeds = new BotNeeds(90.0F);
             try
             {
                 AspectName = slAvatar.Name;
@@ -221,15 +210,9 @@ namespace cogbot.TheOpenSims
             {
                 AspectName += objectSystem.client + "_Avatar_" + slAvatar.LocalID;
             }
-            avatarHeartbeatThread = new Thread(Aging)
-                                        {
-                                            Name = String.Format("AvatarHeartbeatThread for {0}", AspectName),
-                                            Priority = ThreadPriority.Lowest
-                                        };
-            avatarHeartbeatThread.Start();
+
             MakeEnterable(this);
         }
-
 
         public override bool RestoreEnterable(SimMover agent)
         {
@@ -284,70 +267,6 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public override string DebugInfo()
-        {
-            String s = String.Format("\n{0}", ToString());
-            List<SimObject> KnowsAboutList = GetKnownObjects();
-            KnowsAboutList.Sort(CompareObjects);
-            s += String.Format("\nCurrentAction: {0}", CurrentAction);
-            int show = 10;
-            s += String.Format("\nKnowsAboutList: {0}", KnowsAboutList.Count);
-            foreach (SimObject item in KnowsAboutList)
-            {
-                show--;
-                if (show < 0) break;
-                /// if (item is ISimAvatar) continue;
-                s += String.Format("\n   {0} {1}", item, DistanceVectorString(item));
-            }
-            show = 10;
-            KnownTypeUsages.Sort(CompareUsage);
-            s += String.Format("\nKnownTypeUsages: {0}", KnownTypeUsages.Count);
-            foreach (SimTypeUsage item in KnownTypeUsages)
-            {
-                show--;
-                if (show < 0) break;
-                /// if (item is ISimAvatar) continue;
-                s += String.Format("\n   {0} {1}", item, item.RateIt(CurrentNeeds));
-            }
-            s += String.Format("\nCurrentNeeds: {0}", CurrentNeeds);
-            return s;
-        }
-
-        public void StartThinking()
-        {
-            if (avatarThinkerThread == null)
-            {
-                avatarThinkerThread = new Thread(Think) { Name = String.Format("AvatarThinkerThread for {0}", Client) };
-                if (IsControllable)
-                {
-                    ///  only think for ourselves
-                    avatarThinkerThread.Priority = ThreadPriority.Normal;
-                    avatarThinkerThread.Start();
-                }
-            }
-            if (!avatarThinkerThread.IsAlive) avatarThinkerThread.Resume();
-        }
-
-        public bool IsThinking()
-        {
-            return (avatarThinkerThread != null && avatarThinkerThread.IsAlive);
-        }
-
-        public void PauseThinking()
-        {
-            if (avatarThinkerThread != null)
-            {
-                try
-                {
-                    ///  avatarThinkerThread.Suspend();
-                    avatarThinkerThread.Abort();
-                    avatarThinkerThread = null;
-                }
-                catch (Exception)
-                {
-                }
-            }
-        }
 
         public override Simulator GetSimulator()
         {
@@ -357,11 +276,11 @@ namespace cogbot.TheOpenSims
 
         public override Vector3 GetSimPosition()
         {
-            if (Client!=null && Client.Self.AgentID == Prim.ID)
-            {
-                if (Client.Settings.OBJECT_TRACKING)
-                    return Client.Self.SimPosition;
-            }
+            //if (Client!=null && Client.Self.AgentID == Prim.ID)
+            //{
+            //    if (Client.Settings.OBJECT_TRACKING)
+            //        return Client.Self.SimPosition;
+            //}
             if (theAvatar.ParentID == 0)
             {
                 return theAvatar.Position;
@@ -433,105 +352,6 @@ namespace cogbot.TheOpenSims
                 return base.GetSimRotation();
             }
         }
-
-        public void Think()
-        {
-            while (true)
-            {
-                try
-                {
-                    Thread.Sleep(3000);
-                    ThinkOnce();
-                }
-                catch (Exception e)
-                {
-                    Debug(e.ToString());
-                }
-            }
-        }
-
-        public void Aging()
-        {
-            BotNeeds OneMinute = SimTypeSystem.GetObjectType("OnMinuteTimer").GetUsageActual("OnMinuteTimer");
-            while (true)
-            {
-                ScanNewObjects(2, SightRange);
-                CurrentNeeds.AddFrom(OneMinute);
-                CurrentNeeds.SetRange(0.0F, 100.0F);
-                //SimPosition to = WorldObjects.Master.m_TheSimAvatar;
-                //if (to != null)
-                //{
-                //    Console.WriteLine("Aging: " + this + " " + to.DistanceVectorString(this));
-                //}
-                Thread.Sleep(60000); ///  one minute
-
-                ///  Debug(CurrentNeeds.ToString());
-            }
-        }
-
-
-        public void ThinkOnce()
-        {
-            ScanNewObjects(2, SightRange);
-            CurrentAction = GetNextAction();
-            if (CurrentAction != null)
-            {
-                UseAspect(CurrentAction);
-            }
-        }
-
-        public BotAction GetNextAction()
-        {
-            BotAction act = CurrentAction;
-
-            IList<BotAction> acts = GetPossibleActions(MaxThinkAboutDistance, MaxSupportedZChange);
-
-            lock (acts)
-            {
-                if (acts.Count > 0)
-                {
-                    act = (BotAction) FindBestUsage(acts);
-                    acts.Remove(act);
-                }
-                if (act == null)
-                {
-                    Vector3d v3d =
-                        GetSimRegion().LocalToGlobal(new Vector3(MyRandom.Next(250) + 5, MyRandom.Next(250) + 5,
-                                                                 GetSimPosition().Z));
-                    Debug("MoveToLocation: " + DistanceVectorString(v3d));
-                    SimPosition WP = SimWaypointImpl.CreateGlobal(v3d);
-                    act = new MoveToLocation(this, WP);
-                }
-                return act;
-            }
-        }
-
-        public SimUsage FindBestUsage(IEnumerable acts)
-        {
-            SimUsage bestAct = null;
-            if (acts != null)
-            {
-                lock (acts)
-                {
-                    {
-                        IEnumerator enumer = acts.GetEnumerator();
-                        double bestRate = double.MinValue;
-                        while (enumer.MoveNext())
-                        {
-                            SimUsage b = (SimUsage) enumer.Current;
-                            double brate = b.RateIt(CurrentNeeds);
-                            if (brate > bestRate)
-                            {
-                                bestAct = b;
-                                bestRate = brate;
-                            }
-                        }
-                    }
-                }
-            }
-            return bestAct;
-        }
-
         /// public void AddGrass(Simulator simulator, Vector3 scale, Quaternion rotation, Vector3 position, Grass grassType, UUID groupOwner)
         /// {
         /// }
@@ -569,158 +389,12 @@ namespace cogbot.TheOpenSims
         ///     acts.Sort(CompareUsage);
         /// }
 
-        public int CompareUsage(SimUsage act1, SimUsage act2)
-        {
-            return (int) (act2.RateIt(CurrentNeeds) - act1.RateIt(CurrentNeeds));
-        }
-
-        public int CompareObjects(SimObject act1, SimObject act2)
-        {
-            if (act1 == act2) return 0;
-            if (act1 == null) return -1;
-            if (act2 == null) return 1;
-            return (int) (act2.RateIt(CurrentNeeds) - act1.RateIt(CurrentNeeds));
-        }
-
-        public IList<BotAction> GetPossibleActions(double maxXYDistance, double maxZDist)
-        {
-            if (TodoBotActions.Count < 2)
-            {
-                TodoBotActions = NewPossibleActions(maxXYDistance, maxZDist);
-            }
-            return TodoBotActions;
-        }
-
-        public List<BotAction> NewPossibleActions(double maxXYDistance, double maxZDist)
-        {
-            double myZ = GetWorldPosition().Z;
-            List<SimObject> useObjects = new List<SimObject>();
-            foreach (SimObject O in GetKnownObjects())
-            {
-                if (!O.IsRegionAttached()) continue;
-                if (O.Distance(this) > maxXYDistance) continue;
-                if (Math.Abs(O.GetWorldPosition().Z - myZ) > maxZDist) continue;
-                useObjects.Add(O);
-            }
-
-
-            List<BotAction> acts = new List<BotAction>();
-            lock (ObservedBotActions) foreach (BotAction obj in ObservedBotActions)
-            {
-                acts.Add(obj);
-            }
-
-            foreach (SimObject obj in useObjects)
-            {
-                foreach (SimObjectUsage objuse in obj.GetUsages())
-                {
-                    acts.Add(new BotObjectAction(this, objuse));
-                    lock (KnownTypeUsages) foreach (SimTypeUsage puse in KnownTypeUsages)
-                    {
-                        /// acts.Add( new BotObjectAction(this, puse, obj));
-                    }
-                }
-            }
-            return acts;
-        }
-
-        public void DoBestUse(SimObject someObject)
-        {
-            if (someObject==null) return;
-            SimTypeUsage use = someObject.GetBestUse(CurrentNeeds);
-            if (use == null)
-            {
-                double closeness = Approach(someObject, someObject.GetSizeDistance());
-                AgentManager ClientSelf = Client.Self;
-                ClientSelf.Touch(someObject.Prim.LocalID);
-                if (closeness < 3)
-                {
-                    ClientSelf.RequestSit(someObject.Prim.ID, Vector3.Zero);
-                    ClientSelf.Sit();
-                }
-                return;
-            }
-            Do(use, someObject);
-            return;
-        }
-
+      
         public void Do(SimTypeUsage use, SimObject someObject)
         {
-            UseAspect(new BotObjectAction(this, new SimObjectUsage(use, someObject)));
+            CurrentAction = new BotObjectAction(this, new SimObjectUsage(use, someObject));
         }
 
-        public void UseAspect(BotMentalAspect someAspect)
-        {
-            if (someAspect is BotAction)
-            {
-                BotAction act = (BotAction) someAspect;
-                act.InvokeReal();
-                return;
-            }
-            if (InDialogWith != null)
-            {
-                TalkTo(InDialogWith, someAspect);
-                return;
-            }
-
-            if (someAspect is SimObject)
-            {
-                SimObject someObject = (SimObject) someAspect;
-                DoBestUse(someObject);
-            }
-        }
-
-        private List<SimObject> InterestingObjects = new List<SimObject>();
-
-        public SimObject GetNextInterestingObject()
-        {
-            SimObject mostInteresting = null;
-            if (InterestingObjects.Count < 2)
-            {
-                InterestingObjects = GetKnownObjects();
-                InterestingObjects.Remove(this);
-            }
-            int count = InterestingObjects.Count - 2;
-            foreach (BotMentalAspect cAspect in InterestingObjects)
-            {
-                if (cAspect is SimObject)
-                {
-                    if (mostInteresting == null)
-                    {
-                        mostInteresting = (SimObject) cAspect;
-                        ///  break;
-                    }
-                    else
-                    {
-                        mostInteresting = (SimObject) CompareTwo(mostInteresting, cAspect);
-                    }
-                    count--;
-                    if (count < 0) break;
-                }
-            }
-            InterestingObjects.Remove(mostInteresting);
-            InterestingObjects.Add(mostInteresting);
-            return mostInteresting;
-        }
-
-        private readonly Random MyRandom = new Random(DateTime.Now.Millisecond);
-
-        /// <summary>
-        ///   TODO Real Eval routine
-        /// </summary>
-        /// <param name="mostInteresting"></param>
-        /// <param name="cAspect"></param>
-        /// <returns></returns>
-        public BotMentalAspect CompareTwo(BotMentalAspect mostInteresting, BotMentalAspect cAspect)
-        {
-            if ((mostInteresting is SimObject) && (cAspect is SimObject))
-            {
-                int rate = CompareObjects((SimObject) mostInteresting, (SimObject) cAspect);
-                if (rate > 0) return cAspect;
-                if (rate < 0) return mostInteresting;
-            }
-            return (MyRandom.Next(1, 2) == 1) ? mostInteresting : cAspect;
-        }
 
         /// <summary>
         ///  
@@ -758,10 +432,10 @@ namespace cogbot.TheOpenSims
                                     IList<SimTypeUsage> uses = obj.GetTypeUsages();
                                     foreach (SimTypeUsage use in uses)
                                     {
-                                        lock (KnownTypeUsages)
-                                            if (!KnownTypeUsages.Contains(use))
+                                        lock (_knownTypeUsages)
+                                            if (!_knownTypeUsages.Contains(use))
                                             {
-                                                KnownTypeUsages.Add(use);
+                                                _knownTypeUsages.Add(use);
                                             }
                                     }
                                 }
@@ -780,8 +454,7 @@ namespace cogbot.TheOpenSims
             base.ResetRegion(regionHandle);
             if (changed)
             {
-                KnownSimObjects.Clear();
-                TodoBotActions.Clear();
+                KnownSimObjects.Clear();              
                 GetKnownObjects();
             }
         }
@@ -810,11 +483,11 @@ namespace cogbot.TheOpenSims
 
         public void TalkTo(SimAvatar avatar, String talkAbout)
         {
-            SimAvatar avatarWasInDialogWith = ((SimAvatarImpl) avatar).InDialogWith;
-            SimAvatar wasInDialogWith = InDialogWith;
-            try
+            //SimAvatar avatarWasInDialogWith = ((SimAvatarImpl) avatar).InDialogWith;
+            //SimAvatar wasInDialogWith = InDialogWith;
+            //try
             {
-                InDialogWith = avatar;
+                SimObject InDialogWith = avatar;
                 BotClient Client = GetGridClient();
                 AgentManager ClientSelf = Client.Self;
                 AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
@@ -825,11 +498,11 @@ namespace cogbot.TheOpenSims
                 Thread.Sleep(3000);
                 ClientSelf.AnimationStop(Animations.TALK, true);
             }
-            finally
-            {
-                InDialogWith = wasInDialogWith;
-                avatar.InDialogWith = avatarWasInDialogWith;
-            }
+            //finally
+            //{
+            //    InDialogWith = wasInDialogWith;
+            //    //avatar.InDialogWith = avatarWasInDialogWith;
+            //}
         }
 
         public void TalkTo(SimAvatar avatar, BotMentalAspect talkAbout)
@@ -840,7 +513,14 @@ namespace cogbot.TheOpenSims
 
         public override void Debug(string p, params object[] args)
         {
-            WorldSystem.WriteLine(String.Format(p, args));
+            if (Client != null)
+            {
+                Client.WorldSystem.WriteLine(String.Format(p, args));
+            }
+            else
+            {
+                WorldSystem.WriteLine(String.Format(p, args));                
+            }
         }
 
         public void Eat(SimObject target)
@@ -851,16 +531,11 @@ namespace cogbot.TheOpenSims
         public ThreadStart WithSitOn(SimObject obj, ThreadStart closure)
         {
             bool CanUseSit = WorldObjects.CanUseSit;
-            BotClient Client = GetGridClient();
-            AgentManager ClientSelf = Client.Self;
             return () =>
                        {
                            if (CanUseSit)
                            {
-                               Primitive targetPrim = obj.Prim;
-
-                               ClientSelf.RequestSit(targetPrim.ID, Vector3.Zero);
-                               ClientSelf.Sit();
+                               SitOn(obj);
                            }
 
                            try
@@ -869,17 +544,9 @@ namespace cogbot.TheOpenSims
                            }
                            finally
                            {
-                               bool SAU = Client.Settings.SEND_AGENT_UPDATES;
-                               try
+                               if (CanUseSit)
                                {
-                                   Client.Settings.SEND_AGENT_UPDATES = true;
-                                   ClientSelf.AnimationStart(Animations.STANDUP, true);
-                                   if (CanUseSit) ClientSelf.Stand();
-                                   StopAllAnimations();
-                               }
-                               finally
-                               {
-                                   Client.Settings.SEND_AGENT_UPDATES = SAU;
+                                   StandUp();
                                }
                            }
                        };
@@ -1026,25 +693,30 @@ namespace cogbot.TheOpenSims
 
         public SimObject StandUp()
         {
-            SimObject UnPhantom = null;
+            BotClient Client = GetGridClient();
             AgentManager ClientSelf = Client.Self;
-            AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
-            if (ClientMovement.SitOnGround)
+            bool SAU = Client.Settings.SEND_AGENT_UPDATES;
+            try
             {
-                ClientSelf.Stand();
-            }
-            else
-            {
+                Client.Settings.SEND_AGENT_UPDATES = true;
+                SimObject UnPhantom = null;
+                AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
                 uint sit = ClientSelf.SittingOn;
                 if (sit != 0)
                 {
                     Simulator simu = GetSimulator();
                     UnPhantom = WorldSystem.GetSimObject(WorldSystem.GetPrimitive(sit, simu));
                     UnPhantom.MakeEnterable(this);
-                    ClientSelf.Stand();
                 }
+                ClientSelf.AnimationStart(Animations.STANDUP, true);
+                ClientSelf.Stand();
+                StopAllAnimations();
+                return UnPhantom;
             }
-            return UnPhantom;
+            finally
+            {
+                Client.Settings.SEND_AGENT_UPDATES = SAU;
+            }
         }
 
 
@@ -1168,6 +840,7 @@ namespace cogbot.TheOpenSims
 
         private void TrackerLoop()
         {
+            Random MyRandom = new Random(DateTime.Now.Millisecond);
             Boolean stopNext = false;
             while (true)
             {
@@ -1556,6 +1229,75 @@ namespace cogbot.TheOpenSims
         public SimPosition ApproachPosition { get; set; }
         public Vector3d ApproachVector3D { get; set; }
 
+        /// <summary>
+        ///  Action template stubs 
+        /// </summary>
+        public IEnumerable<SimTypeUsage> KnownTypeUsages
+        {
+            get { return _knownTypeUsages; }
+        }
+
+        public bool SitOn(SimObject someObject)
+        {
+            if (someObject == null) return SitOnGround();
+
+            AgentManager ClientSelf = Client.Self;
+            uint local = someObject.Prim.LocalID;
+
+            AutoResetEvent are = new AutoResetEvent(false);
+            ObjectManager.AvatarSitChanged OnSitChanged =
+                (simulator, avatar, sittingon, oldseat) =>
+                    {
+                        if (avatar == theAvatar)
+                        {
+                            are.Set();
+                        }
+                    };
+            Client.Objects.OnAvatarSitChanged += OnSitChanged;
+            try
+            {
+                ClientSelf.RequestSit(someObject.Prim.ID, Vector3.Zero);
+                ClientSelf.Sit();
+                if (!are.WaitOne(10000))
+                {
+                    return false;
+                }
+                return local == ClientSelf.SittingOn;
+            }
+            finally
+            {
+                Client.Objects.OnAvatarSitChanged -= OnSitChanged;
+            }
+        }
+
+        public bool SitOnGround()
+        {
+            AgentManager ClientSelf = Client.Self;
+            AutoResetEvent are = new AutoResetEvent(false);
+            ObjectManager.AvatarSitChanged OnSitChanged =
+                (simulator, avatar, sittingon, oldseat) =>
+                {
+                    if (avatar == theAvatar)
+                    {
+                        are.Set();
+                    }
+                };
+            Client.Objects.OnAvatarSitChanged += OnSitChanged;
+            try
+            {
+                ClientSelf.SitOnGround();
+                if (!are.WaitOne(10000))
+                {
+                    return false;
+                }
+                return 0 == ClientSelf.SittingOn;
+            }
+            finally
+            {
+                Client.Objects.OnAvatarSitChanged -= OnSitChanged;
+            }
+        }
+
         private Thread ApproachThread; /// = new Thread(TrackerLoop);
 
         public override bool SetObjectRotation(Quaternion localPos)
@@ -1811,53 +1553,43 @@ namespace cogbot.TheOpenSims
         #endregion
     }
 
+
     public interface SimActor : SimAvatar, SimMover
     {
         new SimPosition ApproachPosition { get; set; }
         double Approach(SimObject obj, double maxDistance);
         cogbot.TheOpenSims.BotAction CurrentAction { get; set; }
         void Do(SimTypeUsage use, SimObject someObject);
-        void DoBestUse(SimObject someObject);
         void Eat(SimObject target);
         void ExecuteLisp(SimObjectUsage botObjectAction, object lisp);
+        SimRegion GetSimRegion();
         SimObject StandUp();
-        void StartThinking();
         //void StopMoving();
         void TalkTo(SimAvatar avatar, BotMentalAspect talkAbout);
         void TalkTo(SimAvatar avatar, string talkAbout);
-        void Think();
-        void ThinkOnce();
-        void UseAspect(BotMentalAspect someAspect);
         ThreadStart WithAnim(UUID anim, ThreadStart closure);
         ThreadStart WithGrabAt(SimObject obj, ThreadStart closure);
         ThreadStart WithSitOn(SimObject obj, ThreadStart closure);
-        BotAction GetNextAction();
-        SimObject GetNextInterestingObject();
-        IList<BotAction> GetPossibleActions(double maxXYDistance, double maxZDist);
-        bool IsThinking();
-        void PauseThinking();
+        //ICollection<BotAction> GetPossibleActions(double maxXYDistance, double maxZDist);
+//        List<BotAction> ScanNewPossibleActions(double maxXYDistance, double maxZDist);
         void SetClient(BotClient Client);
         BotClient GetGridClient();
-        new SimAvatar InDialogWith { get; set; }
         new bool IsSitting { get; set; }
+        BotMentalAspect LastAction { get; set; }
+        IEnumerable<SimTypeUsage> KnownTypeUsages { get; }
+        bool SitOn(SimObject o);
     }
 
 
     public interface SimAvatar : SimObject, PathSystem3D.Navigation.SimMover
     {
         void RemoveObject(SimObject O);
-        int CompareObjects(SimObject act1, SimObject act2);
-        BotMentalAspect CompareTwo(BotMentalAspect mostInteresting, BotMentalAspect cAspect);
-        int CompareUsage(SimUsage act1, SimUsage act2);
-        SimUsage FindBestUsage(IEnumerable acts);
         SimObject FindSimObject(SimObjectType pUse, double maxXYDistance, double maxZDist);
         List<SimObject> GetKnownObjects();
-        List<BotAction> NewPossibleActions(double maxXYDistance, double maxZDist);
         void ScanNewObjects(int minimum, double sightRange);
         double SightRange { get; set; }
-        SimAvatar InDialogWith { get; set; }
         SimPosition ApproachPosition { get; }
-        BotNeeds CurrentNeeds { get; }
+        //BotNeeds CurrentNeeds { get; }
         Avatar theAvatar { get; }
         bool IsSitting { get; }
         float ZHeading { get; }

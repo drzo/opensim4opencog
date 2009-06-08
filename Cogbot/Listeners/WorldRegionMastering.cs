@@ -8,12 +8,11 @@ using OpenMetaverse.Assets;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 using PathSystem3D.Navigation;
-using RTParser;
 
 namespace cogbot.Listeners
 {
 
-    public partial class WorldObjects : DebugAllEvents
+    public partial class WorldObjects
     {
         public static readonly Dictionary<ulong, WorldObjects> SimMaster = new Dictionary<ulong, WorldObjects>();
         /// <summary>
