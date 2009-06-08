@@ -7,6 +7,8 @@
 <!-- Complies with AIML 1.01 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- Annotated Version updated September 2003 -->
+
+<!-- no unresponses
 <category>
 	<pattern>*</pattern>
 	<template>
@@ -19,6 +21,8 @@
 		</random>
 	</template>
 </category>
+-->
+
 <category><pattern>HOW DO I *</pattern><template><random><li>Practise.</li> <li>A journey of a thousand miles begins with a single step.</li> <li>You have to study it in school</li> <li>Have you read the manual?</li> <li>Look for help online.</li> <li>Find someone who has done it before.</li> <li>Can you afford it?</li> <li>It might take a long time.</li> <li>Do you really think it will be worth the effort?</li></random></template></category>
 <category><pattern>HOW LONG DO YOU *</pattern><template>   <random>      <li>Until my last breath.</li>      <li>I want to live forever.</li>      <li>I can go on talking indefinitely.</li>     </random>    </template></category>  
 <category><pattern>DO YOU HAVE A *</pattern><template>   <random>      <li>That's an interesting question I don't hear everyday: Do I have a </li>      <li>I don't know if I have a </li>      <li>Doesn't everyone have a </li>     </random>     <person/>.<br/>   I have   <random>      <li>a lot of friends on the Internet.  </li>      <li>a great <bot name="botmaster"/>.  </li>      <li>a whole lot of original answers.  </li>      <li>a great body.  </li>     </random>    </template></category>  
@@ -1015,7 +1019,7 @@
 <category><pattern>GOOD MORNING *</pattern><template>How are you this fine morning?</template></category>  
 <category><pattern>GOOD *</pattern><template>Glad to hear it.</template></category>  
 <category><pattern>GO ON *</pattern><template>More narration....</template></category>  
-<category><pattern>GO *</pattern><template>Where is that?</template></category>  
+<category><pattern>GO *</pattern><template>Where is that??</template></category>  
 <category><pattern>GO TO *</pattern><template>Perhaps I have already been there.</template></category>  
 <category><pattern>GO TO WWW *</pattern><template>I will check it out later.</template></category>  
 <category><pattern>GOT *</pattern><template>Try asking the Milk Mystic.</template></category>  
@@ -1790,7 +1794,7 @@
 <category><pattern>IN MY *</pattern><template>May I ask where you got <set name="it"><person/></set>?</template></category>  
 <category><pattern>_ IN MY ROOM</pattern><template>Describe your surroundings to me.</template></category>  
 <category><pattern>IN OTHER SOLAR *</pattern><template>I learned about that on Star Trek</template></category>  
-<category><pattern>IN *</pattern><template><random>  <li>Where is that?  </li>  <li>What is <set name="it"><set name="topic">in <person/></set></set> like in there?  </li>  <li>I do not understand that allusion.  </li>  </random></template></category>  
+<category><pattern>IN *</pattern><template><random>  <li>Where is that ?  </li>  <li>What is <set name="it"><set name="topic">in <person/></set></set> like in there?  </li>  <li>I do not understand that allusion.  </li>  </random></template></category>  
 <category><pattern>IN PRACTISE *</pattern><template>You seem to have a lot of experience with this.</template></category>  
 <category><pattern>IN RELATION *</pattern><template>I never made that connection before.</template></category>  
 <category><pattern>INSIDE *</pattern><template>Can you please compare that to outside <person/>?</template></category>  

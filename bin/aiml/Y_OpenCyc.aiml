@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <aiml>
+<!--THIS WHOLE FILE IS WRPPED IN THE TOPIC TAG  OPENCYC-->
+<topic name="OPENCYC">
   <category>
 	<pattern>AM I A *</pattern>
 	<guard>(#$isa #$TheUser <cycterm><star index="1"/></cycterm>)</guard>
@@ -751,5 +753,7 @@
 		By checking Cyc, I think <star index="1"/> located at <cycsystem filter="paraphrase">(second (loc-of (dfn <cycterm><star index="1"/></cycterm>)))</cycsystem>
 	</template>
 </category>
+    
+</topic> <!--OPENCYC-->
 </aiml>
 
