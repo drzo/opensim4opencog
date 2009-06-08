@@ -101,12 +101,18 @@ namespace RTParser.Utils
                 if (fi.Exists)
                 {
                     XmlDocument xmlDoc = new XmlDocument();
-                    xmlDoc.Load(pathToSettings);
-                    this.loadSettings(xmlDoc);
+                    try
+                    {
+                        xmlDoc.Load(pathToSettings);
+                        this.loadSettings(xmlDoc);
+                    } catch(Exception e)
+                    {
+                        Console.WriteLine("loadSettings: " + pathToSettings + "\n" + e);
+                    }
                 }
                 else
                 {
-                    throw new FileNotFoundException();
+                    throw new FileNotFoundException(pathToSettings);
                 }
             }
             else
@@ -136,6 +142,7 @@ namespace RTParser.Utils
 
             foreach (XmlNode myNode in rootChildren)
             {
+                if (myNode.NodeType==XmlNodeType.Comment) continue;
                 if ((myNode.Name == "item") & (myNode.Attributes.Count == 2))
                 {
                     if ((myNode.Attributes[0].Name == "name") & (myNode.Attributes[1].Name == "value"))

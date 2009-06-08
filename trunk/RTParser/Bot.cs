@@ -379,6 +379,16 @@ namespace RTParser
             this.loadSettings(path);          
         }
 
+        public void ReloadAll()
+        {
+            setup();
+            loadSettings();
+            //MyBot.GlobalSettings.addSetting("name", client.BotLoginParams.FirstName+ " " + client.BotLoginParams.LastName);
+            this.isAcceptingUserInput = false;
+            this.loadAIMLFromFiles();
+            this.isAcceptingUserInput = true;
+        }
+
         /// <summary>
         /// Loads settings and configuration info from various xml files referenced in the settings file passed in the args. 
         /// Also generates some default values if such values have not been set by the settings file.
@@ -550,6 +560,8 @@ namespace RTParser
             }
             if (this.Splitters.Count == 0)
             {
+                // if we process lisp and other things
+                if (true) return; 
                 // we don't have any splitters, so lets make do with these...
                 this.Splitters.Add(".");
                 this.Splitters.Add("!");
@@ -685,8 +697,7 @@ namespace RTParser
                 // process the templates into appropriate output
                 foreach (SubQuery query in result.SubQueries)
                 {
-                    processTemplate(query, request, result);
-
+                    if (processTemplate(query, request, result)) break;
                 }
             }
             else
@@ -701,13 +712,20 @@ namespace RTParser
             return result;
         }
 
-        private void processTemplate(SubQuery query, Request request, Result result)
+        /// <summary>
+        /// Return false if the guard fails
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="request"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        private bool processTemplate(SubQuery query, Request request, Result result)
         {
+            bool found = false;
             if (query.Template != null && query.Template.Count > 0)
             {
                 foreach (Template s in query.Template)
                 {
-
                     try
                     {
                         //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
@@ -730,7 +748,8 @@ namespace RTParser
                         {
                             if (outputSentence.Length > 0)
                             {
-                                result.OutputSentences.Add(outputSentence);
+                                result.OutputSentences.Add(outputSentence.Trim().Replace("  ", " ").Replace("  ", " "));
+                                found = true;
                             }
                         }
                         else
@@ -744,6 +763,7 @@ namespace RTParser
 	                            if (outputSentence.Length > 0)
 	                            {
 	                                result.OutputSentences.Add(outputSentence);
+	                                found = true;
 	                                break;
 	                            }
                            }
@@ -762,9 +782,11 @@ namespace RTParser
                         }
                         this.writeToLog("WARNING! A problem was encountered when trying to process the input: " +
                                         request.rawInput + " with the template: \"" + query.Template + "\"");
+                        return false;
                     }
                 }
             }
+            return found;
         }
         /// <summary>
         /// Recursively evaluates the template nodes returned from the Proccessor
@@ -1294,7 +1316,7 @@ The AIMLbot program.
             return "#$" + mt;
         }
 
-        static readonly Dictionary<string,SystemExecHandler> ExecuteHandlers = new Dictionary<string, SystemExecHandler>();
+        readonly Dictionary<string,SystemExecHandler> ExecuteHandlers = new Dictionary<string, SystemExecHandler>();
         public void AddExcuteHandler(string lang, SystemExecHandler handler)
         {
             ExecuteHandlers[lang] = handler;
