@@ -647,7 +647,7 @@ namespace OpenMetaverse
             if (packet.Header.AppendedAcks || (packet.Header.AckList != null && packet.Header.AckList.Length > 0))
                 Logger.Log("Attempting to send packet " + packet.Type + " with ACKs appended before serialization", Helpers.LogLevel.Error);
 
-            if (false && packet.HasVariableBlocks)
+            if (packet.HasVariableBlocks)
             {
                 byte[][] datas = packet.ToBytesMultiple();
                 int packetCount = datas.Length;
