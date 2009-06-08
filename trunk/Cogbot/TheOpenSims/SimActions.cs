@@ -63,6 +63,8 @@ namespace cogbot.TheOpenSims
         {
         }
 
+        public abstract SimPosition Target { get; set; }
+
         public override float RateIt(BotNeeds current)
         {
             return ProposedChange().TotalSideEffect(current);
@@ -70,6 +72,7 @@ namespace cogbot.TheOpenSims
 
         // the actor
         public SimAvatar TheBot;
+
         // Returns how much the needs should be changed;
         public abstract BotNeeds ProposedChange();
         // the needs are really changed;
@@ -87,14 +90,12 @@ namespace cogbot.TheOpenSims
         public abstract Vector3 GetUsePostion();
 
 
-        public virtual void Abort()
-        {
-        }
+        public abstract void Abort();
     }
 
     public class MoveToLocation : BotAction
     {
-        readonly private SimPosition Target;
+        public override SimPosition Target { get; set; }
         readonly static BotNeeds ProposedChanges = new BotNeeds(0.0f);
         public MoveToLocation(SimAvatar impl, SimPosition position)
             : base("MoveTo " + impl + " -> " + impl.DistanceVectorString(position))
@@ -122,11 +123,16 @@ namespace cogbot.TheOpenSims
         {
             throw new NotImplementedException();
         }
+
+        public override void Abort()
+        {
+            TheBot.StopMoving();
+        }
     }
 
     public class FollowerAction : BotAction
     {
-        readonly private SimPosition Target;
+        public override SimPosition Target { get; set; }
         readonly static BotNeeds ProposedChanges = new BotNeeds(0.0f);
         readonly private float maxDistance;
         readonly private Thread FollowThread;
@@ -192,12 +198,13 @@ namespace cogbot.TheOpenSims
         {
             throw new NotImplementedException();
         }
+
     }
 
     public class SimObjectUsage : SimUsage
     {
         public SimTypeUsage TypeUsage;
-        public SimObject Target;
+        public SimObject Target { get; set;}
 
         private CycFort fort;
         override public CycFort GetCycFort()
@@ -291,7 +298,7 @@ namespace cogbot.TheOpenSims
         {
             TheBot.Debug(ToString());
             //User.ApplyUpdate(use, simObject);
-            BotNeeds CurrentNeeds = TheBot.CurrentNeeds;
+            BotNeeds CurrentNeeds = (BotNeeds)TheBot["CurrentNeeds"];
             BotNeeds needsBefore = CurrentNeeds.Copy();
             BotNeeds update = Target.GetActualUpdate(TypeUsage.UsageName);
             //TODO rate interaction and update TheBot.Assumptions
@@ -440,6 +447,11 @@ namespace cogbot.TheOpenSims
             return TargetUse.GetUsePosition();
         }
 
+        public override void Abort()
+        {
+           // throw new NotImplementedException();
+        }
+
         public SimObjectUsage TargetUse;
         public BotObjectAction(SimAvatar who, SimObjectUsage whattarget)
             : base(whattarget.ToString())
@@ -464,10 +476,30 @@ namespace cogbot.TheOpenSims
         }
 
 
+
+        public override SimPosition Target
+        {
+            get
+            {
+                return TargetUse.Target;
+            }
+            set
+            {
+                if (value is SimObject)
+                {
+                    TargetUse.Target = (SimObject) value;
+                }
+            }
+        }
     }
 
     public class BotSocialAction : BotAction
     {
+        public override SimPosition Target { get { return Victem; } set
+        {
+            if (value is SimAvatar) Victem = (SimAvatar) value;
+        }
+        }
         private CycFort fort;
         public override CycFort GetCycFort()
         {
@@ -481,6 +513,11 @@ namespace cogbot.TheOpenSims
         public override Vector3 GetUsePostion()
         {
             return Victem.GetSimPosition();
+        }
+
+        public override void Abort()
+        {
+            throw new NotImplementedException();
         }
 
         static Random rand = new Random(DateTime.Now.Millisecond);
@@ -517,12 +554,12 @@ namespace cogbot.TheOpenSims
                 String use = TypeUsage.UsageName;
                 TheBot.Approach(Victem, 5);
                 TheBot.Debug(ToString());
-                CurrentTopic = TheBot.GetNextInterestingObject();
+                CurrentTopic = TheBot.LastAction;
                 TheBot.TalkTo(Victem, CurrentTopic);
                 Thread.Sleep(8000);
                 //User.ApplyUpdate(use, simObject);
             }
-            BotNeeds CurrentNeeds = TheBot.CurrentNeeds;
+            BotNeeds CurrentNeeds = (BotNeeds)TheBot["CurrentNeeds"];
             BotNeeds needsBefore = CurrentNeeds.Copy();
             BotNeeds simNeeds = TypeUsage.ChangeActual;
             //TODO rate interaction

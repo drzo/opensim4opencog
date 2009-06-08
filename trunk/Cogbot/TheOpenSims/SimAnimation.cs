@@ -624,7 +624,9 @@ namespace cogbot.TheOpenSims
                     {
                         try
                         {
-                            _reader = new BinBVHAnimationReader(BvhData);
+                            byte[] tryb = BvhData;
+                            if (tryb != null && tryb.Length>0)
+                                _reader = new BinBVHAnimationReader(tryb);
                         } catch (Exception e)
                         {
                             _BvhData = null; 

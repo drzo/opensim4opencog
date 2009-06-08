@@ -702,18 +702,38 @@ namespace cogbot.TheOpenSims
 
         public void UpdateProperties(Primitive.ObjectProperties objectProperties)
         {
-            _TOSRTING = null;
-            if (objectProperties != null)
-            {
-                ObjectType.SitName = objectProperties.SitName;
-                ObjectType.TouchName = objectProperties.TouchName;
-                needUpdate = false;
-                // Prim.Properties = objectProperties;
-            }
             try
             {
-                //  Parent;
-                SimTypeSystem.GuessSimObjectTypes(objectProperties, this);
+                _TOSRTING = null;
+                if (objectProperties != null)
+                {
+                    ObjectType.SitName = objectProperties.SitName;
+                    ObjectType.TouchName = objectProperties.TouchName;
+                    if (needUpdate)
+                    {
+                        needUpdate = false;
+                        //  Parent;
+                        if (Prim.Properties != null)
+                        {
+                            SimTypeSystem.GuessSimObjectTypes(objectProperties, this);
+                        }
+                        else
+                        {
+                            SimTypeSystem.GuessSimObjectTypes(objectProperties, this);
+                        }
+                    }
+                    else
+                    {
+                        if (Prim.Properties != null)
+                        {
+                            SimTypeSystem.GuessSimObjectTypes(objectProperties, this);                        
+                        } else
+                        {
+                            SimTypeSystem.GuessSimObjectTypes(objectProperties, this);                        
+                        }
+                    }
+                    // Prim.Properties = objectProperties;
+                }
             }
             catch (Exception e)
             {
@@ -1532,10 +1552,28 @@ namespace cogbot.TheOpenSims
             if (IsUseable) return Color.Green;
             return Color.Empty;
         }
+
+        #region SimObject Members
+
+        readonly Dictionary<string,object> dict = new Dictionary<string, object>();
+        public object this[string s]
+        {
+            get
+            {
+                return dict[s];
+            }
+            set
+            {
+                dict[s] = value;
+            }
+        }
+
+        #endregion
     }
 
     public interface SimObject : SimPosition, BotMentalAspect, SimMover
     {
+        object this[String s]{get;set;}
         bool AddChild(SimObject simObject);
         void AddSuperTypes(IList<SimObjectType> listAsSet);
         bool BadLocation(Vector3 transValue);

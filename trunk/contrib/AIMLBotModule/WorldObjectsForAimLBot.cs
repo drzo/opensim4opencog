@@ -1,52 +1,36 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
-using RTParser;
-using cogbot.Actions;
-using cogbot.TheOpenSims;
+using cogbot.Listeners;
 using OpenMetaverse;
-using OpenMetaverse.Utilities;
+using RTParser;
+using cogbot;
 
-
-namespace cogbot.Listeners
+namespace AIMLBotModule
 {
-
-    public class AimlCommand : Command
+    public class WorldObjectsForAimLBot : WorldObjectsModule
     {
-        public AimlCommand(BotClient testClient)
-        {
-            Name = "aiml";
-            Description = "Usage: aiml [...text]..";
-            Category = CommandCategory.Communication;
-        }
-
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
-        {
-            if (args.Length == 0) return "Usage: aiml [[on|off]|text]";
-            string s = args[0].ToLower();
-            if (s == "on")
-            {
-                WorldSystem.RespondToChatByDefaultAllUsers = true;
-                WorldSystem.SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), true);
-                return "WorldObjects.RespondToChatByDefaultAllUsers = true;";
-            }
-            else
-                if (s == "off")
-                {
-                    WorldSystem.RespondToChatByDefaultAllUsers = false;
-                    WorldSystem.SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), false);
-                    return "WorldObjects.RespondToChatByDefaultAllUsers = false;";
-                }
-            string joined = String.Join(" ", args);
-            return WorldSystem.AIMLInterp(joined);
-        }
-    }
-    public partial class WorldObjects : DebugAllEvents
-    {
+        public static bool AcceptFriends = true;
+        public static bool UseRealism = false;
 
         object BotExecHandler(string cmd, User user)
         {
-            return client.ExecuteCommand(cmd);
+            User prev = MyUser;
+            try
+            {
+                MyUser = user;
+                using (StringWriter sw = new StringWriter())
+                {
+                    string s = client.ExecuteCommand(cmd, sw.WriteLine);
+                    return String.Format("{0}{1}", sw, s);
+                }
+            }
+            finally
+            {
+                MyUser = prev;
+
+            }
         }
 
         object LispExecHandler(string cmd, User user)
@@ -67,7 +51,7 @@ namespace cogbot.Listeners
         public RTPBot MyBot;
         public User MyUser;
         readonly Dictionary<string, User> BotUsers = new Dictionary<string, User>();
-        void InitConsoleBot()
+        public override void StartupListener()
         {
             try
             {
@@ -85,6 +69,9 @@ namespace cogbot.Listeners
                 client.Self.OnChat += AIML_OnChat;
                 client.Self.OnInstantMessage += AIML_OnInstantMessage;
                 client.Network.OnLogin += AIML_OnLogin;
+                client.Friends.OnFriendshipOffered += AIML_OnFriendshipOffered;
+                SimEventSubscriber evtSub = new AIMLEventSubscriber(MyBot, this);
+                client.AddBotMessageSubscriber(evtSub);
                 while (false)
                 {
                     Console.Write("You: ");
@@ -96,6 +83,17 @@ namespace cogbot.Listeners
             {
                 Console.WriteLine("" + e);
             }
+        }
+
+        private void WriteLine(string str)
+        {
+            Console.WriteLine(str);
+        }
+
+        private void AIML_OnFriendshipOffered(UUID agentid, string agentname, UUID imsessionid)
+        {
+            if (AcceptFriends) client.Friends.AcceptFriendship(agentid, imsessionid);
+            //else client.Friends.DeclineFriendship(agentid, imsessionid);
         }
 
         private void AIML_OnLogin(LoginStatus login, string message)
@@ -135,14 +133,32 @@ namespace cogbot.Listeners
             }
         }
 
+        public string GetName()
+        {
+            return client.GetName();
+        }
+
         public void AIML_OnInstantMessage(InstantMessage im, Simulator simulator)
         {
-            if (im.FromAgentName == TheSimAvatar.theAvatar.Name) return;
+            if (im.FromAgentName == GetName()) return;
+            if (im.FromAgentName == "System") return;
             User myUser = GetMyUser(im.FromAgentName);
+            bool UseThrottle = im.GroupIM;
+            //if (im.GroupIM)
+            //{
+            //    string groupName = null;
+            //    Group group;
+            //    client.Groups.GroupName2KeyCache.ForEach(delegate(KeyValuePair<UUID, string> kv)
+            //                                                 {
+            //                                                     if (im.FromAgentID == kv.Key) groupName = kv.Value;
+            //                                                 });
+            //    //if (groupName == null) return;
+            //}
 
             //UpdateQueue.Enqueue(() => SendNewEvent("on-instantmessage", , im.Message, im.ToAgentID,
             //                           im.Offline, im.IMSessionID, im.GroupIM, im.Position, im.Dialog,
             //                           im.ParentEstateID));
+
 
             string message = im.Message;
             if (message == "typing") return;
@@ -150,13 +166,30 @@ namespace cogbot.Listeners
             (new Thread(() => // this can be long running
                             {
                                 string resp = AIMLInterp(message, myUser);
-                               // if (im.Offline == InstantMessageOnline.Offline) return;
+                                // if (im.Offline == InstantMessageOnline.Offline) return;
                                 if (String.IsNullOrEmpty(resp)) return;
-                                //if (im.GroupIM) ; //todo
+                                if (UseThrottle)
+                                {
+                                    if (Environment.TickCount - myUser.LastResponseGivenTime <
+                                        (60000 / myUser.MaxRespondToChatPerMinute))
+                                    {
+                                        WriteLine("AIML_OnChat Reply is too fast: " + resp);
+                                        return; //too early to respond.. but still listened
+                                    }
+                                }
                                 foreach (string ting in resp.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries))
                                 {
-                                    client.Self.InstantMessage(im.FromAgentID, ting.Trim(), im.IMSessionID);
+                                    Thread.Sleep(100);
+                                    if (im.GroupIM)
+                                    {
+                                        client.Self.InstantMessageGroup(GetName(), im.FromAgentID, ting.Trim());
+                                    }
+                                    else
+                                    {
+                                        client.Self.InstantMessage(im.FromAgentID, ting.Trim(), im.IMSessionID);
+                                    }
                                 }
+                                myUser.LastResponseGivenTime = Environment.TickCount;
                             })).Start();
 
         }
@@ -166,11 +199,17 @@ namespace cogbot.Listeners
         ///  See next function to change the keywords
         /// </summary>
         public bool RespondToChatByDefaultAllUsers = false;
+
+        public WorldObjectsForAimLBot(BotClient testClient)
+            : base(testClient)
+        {
+        }
+
         private void AIML_OnChat(string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourcetype, string fromname, UUID id, UUID ownerid, Vector3 position)
         {
 
             if (String.IsNullOrEmpty(message) || message.Length < 3) return;
-            if (fromname == TheSimAvatar.theAvatar.Name) return;
+            if (fromname == GetName()) return;
             User myUser = GetMyUser(fromname);
             // todo hard coded to be changed
             if (!myUser.RespondToChat && (message.Contains("chat on") || client.Self.Name.Contains(message)))
@@ -183,6 +222,8 @@ namespace cogbot.Listeners
                 myUser.RespondToChat = false;
                 return;
             }
+            UseRealism = true;
+
             (new Thread(() => // this can be long running
                             {
                                 string resp = AIMLInterp(message, myUser);
@@ -200,10 +241,67 @@ namespace cogbot.Listeners
                                 }
                                 foreach (string ting in resp.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries))
                                 {
-                                    Realism.Chat(client, ting.Trim(), type, 6);
+                                    string sting = ting.Trim();
+                                    if (UseRealism)
+                                        Chat(client, sting, type, 6);
+                                    else client.Self.Chat(sting, 0, type);
+                                    UseRealism = false;
                                 }
                                 myUser.LastResponseGivenTime = Environment.TickCount;
                             })).Start();
+        }
+
+
+        /// <summary>
+        /// A psuedo-realistic chat function that uses the typing sound and
+        /// animation, types at a given rate, and randomly pauses. This 
+        /// function will block until the message has been sent
+        /// </summary>
+        /// <param name="client">A reference to the client that will chat</param>
+        /// <param name="message">The chat message to send</param>
+        /// <param name="type">The chat type (usually Normal, Whisper or Shout)</param>
+        /// <param name="cps">Characters per second rate for chatting</param>
+        public static void Chat(GridClient client, string message, ChatType type, int cps)
+        {
+            Random rand = new Random();
+            int characters = 0;
+            bool typing = true;
+
+            // Start typing
+            client.Self.Chat(String.Empty, 0, ChatType.StartTyping);
+            client.Self.AnimationStart(Animations.TYPE, false);
+
+            while (characters < message.Length)
+            {
+                if (!typing)
+                {
+                    // Start typing again
+                    client.Self.Chat(String.Empty, 0, ChatType.StartTyping);
+                    client.Self.AnimationStart(Animations.TYPE, false);
+                    typing = true;
+                }
+                else
+                {
+                    // Randomly pause typing
+                    if (rand.Next(10) >= 9)
+                    {
+                        client.Self.Chat(String.Empty, 0, ChatType.StopTyping);
+                        client.Self.AnimationStop(Animations.TYPE, false);
+                        typing = false;
+                    }
+                }
+
+                // Sleep for a second and increase the amount of characters we've typed
+                System.Threading.Thread.Sleep(1000);
+                characters += cps;
+            }
+
+            // Send the message
+            client.Self.Chat(message, 0, type);
+
+            // Stop typing
+            client.Self.Chat(String.Empty, 0, ChatType.StopTyping);
+            client.Self.AnimationStop(Animations.TYPE, false);
         }
 
         public Unifiable AIMLInterp(string input)
@@ -217,8 +315,15 @@ namespace cogbot.Listeners
             Result res = MyBot.Chat(r);
             return res.Output;
         }
+
+        public override string GetModuleName()
+        {
+            return "AIMLBotModule";
+        }
+
+        public override void ShutdownListener()
+        {
+            //todo throw new NotImplementedException();
+        }
     }
-
-
 }
-

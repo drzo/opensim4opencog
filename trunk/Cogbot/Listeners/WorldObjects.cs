@@ -13,8 +13,9 @@ namespace cogbot.Listeners
 {
     public delegate float SimObjectHeuristic(SimObject prim);
 
-    public partial class WorldObjects : DebugAllEvents
+    public partial class WorldObjects : AllEvents
     {
+
         public static bool CanPhantomize = false;
         public static bool CanUseSit = true;
         public static bool DoCatchUp = true;
@@ -23,6 +24,7 @@ namespace cogbot.Listeners
         public static bool MaintainAttachments = false;
         public static bool MaintainCollisions = true;
         public static bool MaintainEffects = false;
+        public static bool MaintainPropertyQueue = false;       
         public static bool MaintainObjectUpdates = false;
         public static bool MaintainSounds = false;
         public static bool SimplifyBoxes = false; // true takes longer startup but speeds up runtime path finding
@@ -75,7 +77,6 @@ namespace cogbot.Listeners
         private static Thread TrackUpdateLagThread;
         private static Thread TrackUpdatesThread;
 
-
         public static readonly Dictionary<uint, OSDMap> lastOSD = new Dictionary<uint, OSDMap>();
 
         public static float buildingSize = 5;
@@ -89,6 +90,37 @@ namespace cogbot.Listeners
         public List<SimObjectHeuristic> objectHeuristics;
         public Dictionary<UUID, List<Primitive>> primGroups;
         public int searchStep;
+
+
+
+        public override string GetModuleName()
+        {
+            return "WorldSystem";
+        }
+
+        public override void StartupListener()
+        {
+            RegisterAll();
+        }
+
+        public override void ShutdownListener()
+        {
+            UnregisterAll();
+        }
+
+
+        public override bool BooleanOnEvent(string eventName, string[] paramNames, Type[] paramTypes, params object[] parameters)
+        {
+
+            if (eventName.EndsWith("On-Image-Receive-Progress")) return true;
+            if (eventName.EndsWith("Look-At")) return true;
+            Console.WriteLine("\n" + eventName);
+            for (int i = 0; i < paramNames.Length; i++)
+            {
+                Console.WriteLine(" " + paramNames[i] + ": " + client.argString(parameters[i]));
+            }
+            return true;
+        }
 
         static WorldObjects()
         {
@@ -163,16 +195,17 @@ namespace cogbot.Listeners
                     }
                     if (TrackUpdatesThread == null)
                     {
-                        TrackUpdatesThread = new Thread(TrackUpdates);
-                        TrackUpdatesThread.Name = "Track Updates/Properties";
+                        TrackUpdatesThread = new Thread(TrackUpdates) {Name = "Track Updates/Properties"};
                         //TrackPathsThread.Priority = ThreadPriority.Lowest;
                         TrackUpdatesThread.Start();
                     }
                     if (TrackUpdateLagThread == null)
                     {
-                        TrackUpdateLagThread = new Thread(Lagometer);
-                        TrackUpdateLagThread.Name = "Lagometer thread";
-                        TrackUpdateLagThread.Priority = ThreadPriority.Lowest;
+                        TrackUpdateLagThread = new Thread(Lagometer)
+                                                   {
+                                                       Name = "Lagometer thread",
+                                                       Priority = ThreadPriority.Lowest
+                                                   };
                         TrackUpdateLagThread.Start();
                     }
                     InterpolationTimer = new Timer(ReallyEnsureSelected_Thread, null, 1000, 1000);
@@ -181,7 +214,6 @@ namespace cogbot.Listeners
                 }
                 //SetWorldMaster(false);
                 //RegisterAll();
-                InitConsoleBot();
             }
         }
 
@@ -207,7 +239,7 @@ namespace cogbot.Listeners
                             (SimActor) GetSimObject(GetAvatar(client.Self.AgentID, client.Network.CurrentSim));
                         if (m_TheSimAvatar == null)
                         {
-                            Thread.Sleep(100);
+                            Thread.Sleep(1000);
                             continue;
                         }
 
@@ -1192,6 +1224,9 @@ namespace cogbot.Listeners
             CheckConnected(simulator);
             NeverSelect(prim.LocalID, simulator);
 
+            if (!MaintainPropertyQueue)
+            Objects_OnObjectProperties1(simulator, prim, props);
+            else
             lock (PropertyQueue)
                 PropertyQueue.Enqueue(delegate() { Objects_OnObjectProperties1(simulator, prim, props); });
         }
@@ -1233,6 +1268,7 @@ namespace cogbot.Listeners
                                                         Primitive.TextureEntryFace[] faceTextures,
                                                         List<byte> visualParams)
         {
+            client.Avatars.OnAvatarAppearance -= Avatars_OnAvatarAppearance;
             base.Avatars_OnAvatarAppearance(avatarID, isTrial, defaultTexture, faceTextures, visualParams);
         }
 
@@ -1848,6 +1884,19 @@ namespace cogbot.Listeners
             return found.GetType();
         }
 
+
+        static public object GetScriptableObject(object id)
+        {
+            if (id is UUID)
+            {
+                UUID uid = (UUID)id;
+                if (uid == UUID.Zero) return id;
+                return Master.GetObject(uid);
+            }
+            if (id is Primitive) return Master.GetSimObject((Primitive)id);
+            return id;
+        }
+
         public object GetObject(UUID id)
         {
             if (id == UUID.Zero) return null;
@@ -2103,9 +2152,9 @@ namespace cogbot.Listeners
             for (int i = 0; i < args.Length; i++)
             {
                 object arg = args[i];
-                if (arg is UUID)
+                //     if (arg is UUID)
                 {
-                    object o = GetObject((UUID) arg);
+                    object o = GetScriptableObject(arg);
                     if (o == null)
                     {
                         o = arg;
@@ -2160,7 +2209,7 @@ namespace cogbot.Listeners
                 }
             }
             List<SimObject> matches = new List<SimObject>();
-            if (TheSimAvatar != null)
+            if (m_TheSimAvatar != null)
             {
                 List<SimObject> set = TheSimAvatar.GetKnownObjects();
                 if (set.Count == 0)
@@ -2189,7 +2238,7 @@ namespace cogbot.Listeners
             }
             bool retVal = false;
 
-            TheSimAvatar.SortByDistance(matches);
+            if (m_TheSimAvatar != null) TheSimAvatar.SortByDistance(matches);
             if (pickNum != 0 && pickNum <= matches.Count)
             {
                 prim = matches[(int) pickNum - 1].Prim;
@@ -2200,7 +2249,8 @@ namespace cogbot.Listeners
             foreach (SimObject obj in matches)
             {
                 num++;
-                WriteLine(" " + num + ": " + obj + " " + TheSimAvatar.DistanceVectorString(obj));
+                if (m_TheSimAvatar != null) 
+                    WriteLine(" " + num + ": " + obj + " " + TheSimAvatar.DistanceVectorString(obj));
                 if (num == pickNum)
                 {
                     prim = obj.Prim;
@@ -2672,20 +2722,7 @@ namespace cogbot.Listeners
                 inTimer = false;
         }
 
-        public void RescanTypes()
-        {
-            int count = SimObjects.Count;
-            WriteLine("Rescaning " + count + " simobjects");
-            foreach (SimObject obj in SimObjects)
-            {
-                //obj._Parent = obj.Parent;
-                obj.UpdateProperties(obj.Prim.Properties);
-            }
-            if (count != SimObjects.Count)
-            {
-                RescanTypes();
-            }
-        }
+
 
         public override void Groups_OnCurrentGroups(Dictionary<UUID, Group> groups)
         {
@@ -2794,6 +2831,7 @@ namespace cogbot.Listeners
             ;
             return nearby;
         }
+
 
         public SimObject GetSimObject(Primitive prim)
         {
@@ -2915,88 +2953,6 @@ namespace cogbot.Listeners
         {
             Simulator sim = GetSimulator(P);
             client.Objects.SelectObject(sim, P.LocalID);
-        }
-
-        internal Primitive AddTempPrim(SimRegion R, string name, PrimType primType, Vector3 scale, Vector3 loc)
-        {
-            Primitive.ConstructionData CD = ObjectManager.BuildBasicShape(primType);
-            CD.Material = Material.Light;
-            CD.ProfileHole = HoleType.Triangle;
-
-            bool success = false;
-
-            Simulator simulator = R.TheSimulator;
-            Primitive newPrim = null;
-            // Register a handler for the creation event
-            AutoResetEvent creationEvent = new AutoResetEvent(false);
-            Quaternion rot = Quaternion.Identity;
-            ObjectManager.NewPrimCallback callback =
-                delegate(Simulator simulator0, Primitive prim, ulong regionHandle, ushort timeDilation)
-                    {
-                        if (regionHandle != R.RegionHandle) return;
-                        if ((loc - prim.Position).Length() > 3)
-                        {
-                            Debug("Not the prim " + (loc - prim.Position).Length());
-                            return;
-                        }
-                        if (prim.PrimData.ProfileHole != HoleType.Triangle)
-                        {
-                            Debug("Not the prim?  prim.PrimData.ProfileHole != HoleType.Triangle: {0}!={1}",
-                                  prim.PrimData.ProfileHole, HoleType.Triangle);
-                            // return;       //
-                        }
-                        if (Material.Light != prim.PrimData.Material)
-                        {
-                            Debug("Not the prim? Material.Light != prim.PrimData.Material: {0}!={1}", Material.Light,
-                                  prim.PrimData.Material);
-                            // return;
-                        }
-                        if ((prim.Flags & PrimFlags.CreateSelected) == 0)
-                        {
-                            Debug("Not the prim? (prim.Flags & PrimFlags.CreateSelected) == 0) was {0}", prim.Flags);
-                            // return;
-                        }
-                        if (primType != prim.Type)
-                        {
-                            Debug("Not the prim? Material.Light != prim.PrimData.Material: {0}!={1}", Material.Light,
-                                  prim.PrimData.Material);
-                            // return;
-                        }
-                        //if (prim.Scale != scale) return;
-                        //     if (prim.Rotation != rot) return;
-
-                        //  if (Material.Light != prim.PrimData.Material) return;
-                        //if (CD != prim.PrimData) return;
-                        newPrim = prim;
-                        creationEvent.Set();
-                    };
-
-            client.Objects.OnNewPrim += callback;
-
-            // Start the creation setting process (with baking enabled or disabled)
-            client.Objects.AddPrim(simulator, CD, UUID.Zero, loc, scale, rot,
-                                   PrimFlags.CreateSelected | PrimFlags.Phantom | PrimFlags.Temporary);
-
-            // Wait for the process to complete or time out
-            if (creationEvent.WaitOne(1000*120, false))
-                success = true;
-
-            // Unregister the handler
-            client.Objects.OnNewPrim -= callback;
-
-            // Return success or failure message
-            if (!success)
-            {
-                Debug("Timeout on new prim " + name);
-                return null;
-            }
-            uint LocalID = newPrim.LocalID;
-            client.Objects.SetName(simulator, LocalID, name);
-            client.Objects.SetPosition(simulator, LocalID, loc);
-            client.Objects.SetScale(simulator, LocalID, scale, true, true);
-            client.Objects.SetRotation(simulator, LocalID, rot);
-            client.Objects.SetFlags(LocalID, false, true, true, false);
-            return newPrim;
         }
 
         public override void Self_OnChat(string message, ChatAudibleLevel audible, ChatType type,

@@ -11,7 +11,7 @@ namespace cogbot.Actions
        public Use(BotClient Client)
             : base(Client)
         {
-            helpString = "Use an item from inventory.";
+            helpString = "Use an item from inventory or world.";
         }
        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
        {
@@ -29,8 +29,9 @@ namespace cogbot.Actions
                Primitive prim;
                if (WorldSystem.tryGetPrim(objname, out prim))
                {
-                   BotMentalAspect objToUse = WorldSystem.GetSimObject(prim);
-                   WorldSystem.TheSimAvatar.UseAspect(objToUse);
+                   SimObject objToUse = WorldSystem.GetSimObject(prim);
+                   SimTypeUsage usage = objToUse.GetBestUse((BotNeeds)WorldSystem.TheSimAvatar["CurrentNeeds"]);
+                   WorldSystem.TheSimAvatar.Do(usage,objToUse);
                    return "used " + objToUse;
                }
                return "I don't know what to do with "+objname; 

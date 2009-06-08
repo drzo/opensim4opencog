@@ -28,11 +28,15 @@ namespace cogbot.Listeners
             }
         }
 
-        internal string GetName()
+        public override string ToString()
+        {
+            return "SimEvent " + eventName + " " + ScriptEngines.ScriptEventListener.argsListString(args);
+        }
+        public string GetName()
         {
             return eventName;
         }
-        internal object[] GetArgs()
+        public object[] GetArgs()
         {
             return args;
         }

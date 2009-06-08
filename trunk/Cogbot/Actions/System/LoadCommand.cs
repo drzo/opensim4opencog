@@ -23,8 +23,13 @@ namespace cogbot.Actions
 
             BotClient Client = TheBotClient;
 
-			string filename = AppDomain.CurrentDomain.BaseDirectory + args[0] + ".dll";
-			Client.RegisterAllCommands(Assembly.LoadFile(filename));
+			string filename = AppDomain.CurrentDomain.BaseDirectory + args[0];
+		    string loadfilename = filename;
+            if (!filename.EndsWith(".dll") && !filename.EndsWith(".exe"))
+            {
+                loadfilename += ".dll";
+            }
+            TextForm.SingleInstance.RegisterAssembly(Assembly.LoadFile(loadfilename));
             return "Assembly " + filename + " loaded.";
 		}
     }

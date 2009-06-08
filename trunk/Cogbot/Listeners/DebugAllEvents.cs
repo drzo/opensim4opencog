@@ -5,17 +5,32 @@ using OpenMetaverse;
 
 namespace cogbot.Listeners
 {
-    public class DebugAllEvents: AllEvents
+    sealed public class DebugAllEvents: AllEvents
     {
         public DebugAllEvents(BotClient bc)
             : base(bc)
         {
-           // the subclass must now run this
+          // the subclass must now run this
             if (this.GetType()==typeof(DebugAllEvents))
             RegisterAll();
         }
 
         ~DebugAllEvents()
+        {
+            UnregisterAll();
+        }
+
+        public override string GetModuleName()
+        {
+            return "DebugAllEvents";
+        }
+
+        public override void StartupListener()
+        {
+            RegisterAll();
+        }
+
+        public override void ShutdownListener()
         {
             UnregisterAll();
         }

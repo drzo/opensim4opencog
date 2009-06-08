@@ -17,6 +17,8 @@
      ' (create-botclient "Sixth" "Bot" )
     </startupLisp>
   <startupClientLisp>
+       (thisClient.ExecuteCommand "load AIMLBotModule")
+       (thisClient.ExecuteCommand "load TheSimiansModule")
        (thisClient.ExecuteCommand "login")
     </startupClientLisp>
 </Configuration>
