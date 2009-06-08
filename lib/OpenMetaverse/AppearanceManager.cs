@@ -1476,8 +1476,16 @@ namespace OpenMetaverse
 
                             if (baked)
                             {
-                                UploadBake(PendingBakes[type]);
-                                PendingBakes.Remove(type);
+                                try
+                                {
+                                    UploadBake(PendingBakes[type]);
+                                    PendingBakes.Remove(type);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(""+ex.Message);
+                                    //throw ex;
+                                }
                             }
 
                             if (ImageDownloads.Count == 0 && PendingUploads.Count == 0)
