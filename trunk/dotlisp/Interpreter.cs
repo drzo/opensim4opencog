@@ -427,7 +427,7 @@ public class Interpreter
 		//EOF            = intern(":eof");
 		}
 
-	internal Symbol 
+	public Symbol 
 	BLOCK ,
 	SET              ,
 	FIRST           ,
