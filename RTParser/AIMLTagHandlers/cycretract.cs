@@ -36,7 +36,7 @@ namespace RTParser.AIMLTagHandlers
             {                
                 if (!templateNodeInnerText.IsEmpty)
                 {
-                    return this.Proc.EvalSubL(String.Format("(cyc-retract `{0})", Recurse()),null);
+                    return this.Proc.EvalSubL(String.Format("(cyc-unassert `{0})", Recurse()),null);
                 }
             }
             return Unifiable.Empty;

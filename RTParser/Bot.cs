@@ -1209,23 +1209,6 @@ The AIMLbot program.
                 string str = "(list " + cmd + ")";
                 Object oresult = access.converseList(str).first();
                 Console.WriteLine( " => " + oresult);
-                while (oresult is CycList)
-                {
-                    CycList lresuult = (CycList) oresult;
-
-
-
-                    if (lresuult.first() is CycSymbol)
-                    {
-                        oresult = lresuult; //lresuult.rest();
-                        break;
-                    }
-                    else
-                        if (lresuult.first() is CycVariable)
-                            oresult = lresuult.rest();
-                        else
-                            oresult = lresuult.first();
-                }
                 result = "" + oresult;
                 if (oresult is CycObject)
                 {
