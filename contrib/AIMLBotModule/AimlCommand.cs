@@ -70,7 +70,9 @@ namespace AIMLBotModule
             {
                 return;
             }
-            Console.WriteLine("SimEvent " + evt.GetName() + " " + argsListString(evt.GetArgs()));
+            string aimlCall = string.Format("SimEvent {0} {1}", evt.GetName(), argsListString(evt.GetArgs()));
+            //Console.WriteLine(aimlCall);
+            //Result r = AimlBot.Chat(aimlCall,"EventSystem");
         }
 
         public string argsListString(IEnumerable args)

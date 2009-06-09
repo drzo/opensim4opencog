@@ -12,6 +12,7 @@ namespace AIMLBotModule
     public class WorldObjectsForAimLBot : WorldObjectsModule
     {
         public static bool AcceptFriends = true;
+        public static bool EventsToAIML = false;
         public static bool UseRealism = false;
 
         object BotExecHandler(string cmd, User user)
@@ -70,8 +71,11 @@ namespace AIMLBotModule
                 client.Self.OnInstantMessage += AIML_OnInstantMessage;
                 client.Network.OnLogin += AIML_OnLogin;
                 client.Friends.OnFriendshipOffered += AIML_OnFriendshipOffered;
-                SimEventSubscriber evtSub = new AIMLEventSubscriber(MyBot, this);
-                client.AddBotMessageSubscriber(evtSub);
+                if (EventsToAIML)
+                {
+                    SimEventSubscriber evtSub = new AIMLEventSubscriber(MyBot, this);
+                    client.AddBotMessageSubscriber(evtSub);
+                }
                 while (false)
                 {
                     Console.Write("You: ");
