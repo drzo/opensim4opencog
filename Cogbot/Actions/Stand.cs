@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using cogbot.TheOpenSims;
 using OpenMetaverse; //using libsecondlife;
 
 namespace cogbot.Actions
@@ -18,16 +19,14 @@ namespace cogbot.Actions
         {
             //base.acceptInput(verb, args);
 
-            Sit sit = (Sit)Client.Commands["sit"];
-            if (Client.Self.SittingOn == 0 && !sit.sittingOnGround)
+            SimActor sitter = WorldSystem.TheSimAvatar;
+            if (!sitter.IsSitting)
             {
                 return ("$bot is already standing.");
             }
             else
             {
-                Client.Self.Crouch(false);
-                Client.Self.Stand();
-                sit.sittingOnGround = false;
+                sitter.StandUp();
             }
 
             Client.describeNext = true;
