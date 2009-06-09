@@ -141,7 +141,7 @@ namespace AIMLBotModule
         public void AIML_OnInstantMessage(InstantMessage im, Simulator simulator)
         {
             if (im.FromAgentName == GetName()) return;
-            if (im.FromAgentName == "System") return;
+            if (im.FromAgentName == "System" || im.FromAgentName=="Second Life") return;
             User myUser = GetMyUser(im.FromAgentName);
             bool UseThrottle = im.GroupIM;
             //if (im.GroupIM)
