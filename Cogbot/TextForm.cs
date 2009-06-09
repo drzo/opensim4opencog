@@ -922,11 +922,19 @@ namespace cogbot
         }
 
         public void AddTool(string name, string text, EventHandler threadStart)
+        {
+               base.Invoke(new AddToolDelegate(AddTool0), new object[] {name, text, threadStart});
+        }
+
+        public delegate void AddToolDelegate(string name, string text, EventHandler threadStart);
+        public void AddTool0(string name, string text, EventHandler threadStart)
         {           
+            SuspendLayout();
             ToolStripMenuItem stripMenuItem =
                 new ToolStripMenuItem {Name = name, Size = new System.Drawing.Size(168, 22), Text = text};
             stripMenuItem.Click += threadStart;
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {stripMenuItem});
+            ResumeLayout();
         }
     }
 
