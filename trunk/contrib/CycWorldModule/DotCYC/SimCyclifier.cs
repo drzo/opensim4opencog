@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 using org.opencyc.api;
@@ -8,21 +6,21 @@ using org.opencyc.cycobject;
 using CUID = org.opencyc.util.UUID;
 using Guid=org.opencyc.cycobject.Guid;
 
-namespace cogbot.DotCYC
+namespace CycWorldModule.DotCYC
 {
     public class SimCyclifier
     {
-        public static bool UseCyc = false;
+        public static bool UseCyc = true;
         readonly private CycAccess cycAccess;
         readonly private CycFort vocabMt;
         readonly private CycFort assertMt;
         readonly private CycFort simObjectFort;
-        private CycConnectionForm cycConnection;
+        readonly CycConnectionForm cycConnection;
 
-        public SimCyclifier(TextForm tf)
+        public SimCyclifier(CycWorldModule tf)
         {
             if (!UseCyc) return;
-            cycConnection = new CycConnectionForm();
+            cycConnection = tf.CycConnectionForm;
             cycAccess = cycConnection.getCycAccess();
             assertMt = createIndividual("SimDataMt", "#$DataMicrotheory for the simulator", "UniversalVocabularyMt",
                                                   "DataMicrotheory");

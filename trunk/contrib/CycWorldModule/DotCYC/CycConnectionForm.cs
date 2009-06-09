@@ -3,18 +3,11 @@
 //#define MICROSOFT
 #endif
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 
-namespace cogbot.DotCYC
+namespace CycWorldModule.DotCYC
 {
     using org.opencyc.api;
-    using org.opencyc.cycobject;
-    using System.Runtime.InteropServices;
     using System.Reflection;
     public partial class CycConnectionForm : Form
     {
