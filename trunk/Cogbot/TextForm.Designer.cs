@@ -36,7 +36,6 @@ namespace cogbot
             this.loginToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.logoutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.cycConnectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.submitButton = new System.Windows.Forms.Button();
             this.consoleInputText = new System.Windows.Forms.TextBox();
             this.consoleText = new System.Windows.Forms.TextBox();
@@ -96,18 +95,9 @@ namespace cogbot
             // 
             // toolsToolStripMenuItem
             // 
-            this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.cycConnectionToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
-            // 
-            // cycConnectionToolStripMenuItem
-            // 
-            this.cycConnectionToolStripMenuItem.Name = "cycConnectionToolStripMenuItem";
-            this.cycConnectionToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
-            this.cycConnectionToolStripMenuItem.Text = "Cyc Connection..";
-            this.cycConnectionToolStripMenuItem.Click += new System.EventHandler(this.cycConnectionToolStripMenuItem_Click);
             // 
             // submitButton
             // 
@@ -173,7 +163,6 @@ namespace cogbot
         private System.Windows.Forms.TextBox consoleInputText;
         private System.Windows.Forms.TextBox consoleText;
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem cycConnectionToolStripMenuItem;
     }
 }
 

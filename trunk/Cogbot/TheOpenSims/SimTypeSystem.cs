@@ -1,28 +1,22 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using cogbot.ScriptEngines;
-using OpenMetaverse;
-using DotLisp;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text.RegularExpressions;
-using org.opencyc.cycobject;
+using cogbot.ScriptEngines;
+using DotLisp;
+using OpenMetaverse;
 
 namespace cogbot.TheOpenSims
 {
     public class SimObjectType : BotMentalAspect
     {
 
-        private CycFort fort;
-        public CycFort GetCycFort()
+        
+        public FirstOrderTerm GetTerm()
         {
-            if (fort == null)
-            {
-                fort = TextForm.Cyclifier.FindOrCreateCycFort(this);
-            }
-            return fort;
+            throw new NotImplementedException();
         }
 
         // Attachments

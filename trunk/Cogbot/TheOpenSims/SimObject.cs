@@ -5,7 +5,6 @@ using System.Threading;
 using System.Windows.Forms;
 using cogbot.Listeners;
 using OpenMetaverse;
-using org.opencyc.cycobject;
 using PathSystem3D.Mesher;
 using PathSystem3D.Navigation;
 
@@ -16,7 +15,7 @@ namespace cogbot.TheOpenSims
     {
 
         public ulong RegionHandle { get; set; }
-        private CycFort fort;
+        
 
         public float GetCubicMeters()
         {
@@ -33,13 +32,9 @@ namespace cogbot.TheOpenSims
             return e[0];
         }
 
-        public CycFort GetCycFort()
+        public FirstOrderTerm GetTerm()
         {
-            if (fort == null)
-            {
-                fort = TextForm.Cyclifier.FindOrCreateCycFort(this);
-            }
-            return fort;
+            throw new NotImplementedException();
         }
 
         #region SimMover Members
