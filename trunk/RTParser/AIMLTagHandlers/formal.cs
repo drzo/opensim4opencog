@@ -38,7 +38,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "formal")
             {
-                Unifiable result = new Unifiable();
+                Unifiable result = Unifiable.CreateAppendable();
                 if (!templateNodeInnerText.IsEmpty)
                 {
                     Unifiable[] words = templateNodeInnerText.Split();

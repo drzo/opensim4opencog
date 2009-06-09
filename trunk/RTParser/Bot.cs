@@ -605,6 +605,11 @@ namespace RTParser
                 {
                 }
             }
+            else
+            {
+                string m = message.AsString().ToLower();
+               if (m.Contains("error") || m.Contains("excep")) Console.WriteLine(message);
+            }
             this.LastLogMessage = message;
             if (this.IsLogging)
             {
@@ -687,7 +692,7 @@ namespace RTParser
                 foreach (Unifiable path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path,result);
-                    query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new Unifiable());
+                    query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
@@ -1131,7 +1136,7 @@ The AIMLbot program.
             message = message.Replace("*MESSAGE*", errorMessage);
             message = message.Replace("*RAWINPUT*", request.rawInput);
             message = message.Replace("*USER*", request.user.UserID);
-            Unifiable paths = new Unifiable();
+            Unifiable paths = Unifiable.CreateAppendable(); 
             foreach(Unifiable path in request.result.NormalizedPaths)
             {
                 paths.Append(path+Environment.NewLine);

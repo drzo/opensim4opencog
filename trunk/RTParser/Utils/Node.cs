@@ -222,7 +222,7 @@ namespace RTParser.Utils
                 if (!childNodeWord.Unify(first, query)) continue;
                 Node childNode = this.children[childNodeWord];
                 // add the next word to the wildcard match 
-                Unifiable newWildcard = new Unifiable();
+                Unifiable newWildcard = Unifiable.CreateAppendable();
                 this.storeWildCard(first, newWildcard);
 
                 // move down into the identified branch of the GraphMaster structure
@@ -246,11 +246,11 @@ namespace RTParser.Utils
                 // the "classic" path looks like this: "user input <that> that <topic> topic"
                 // but having it backwards is more efficient for searching purposes
                 MatchState newMatchstate = matchstate;
-                if (firstWord.IsTag("TAG-THAT"))
+                if (firstWord.IsTag("THAT"))
                 {
                     newMatchstate = MatchState.That;
                 }
-                else if (firstWord.IsTag("TAG-TOPIC"))
+                else if (firstWord.IsTag("TOPIC"))
                 {
                     newMatchstate = MatchState.Topic;
                 }
@@ -258,7 +258,7 @@ namespace RTParser.Utils
                 //Node childNode = (Node)this.children[firstWord];
                 // move down into the identified branch of the GraphMaster structure using the new
                 // matchstate
-                Unifiable newWildcard = new Unifiable();
+                Unifiable newWildcard = Unifiable.CreateAppendable();
                 List<Template> result = childNode.evaluate(newPath, query, request, newMatchstate, newWildcard);
                 // and if we get a result from the child return it
                 if (ResultStateReady(result, newWildcard, matchstate, query)) return result;
@@ -277,7 +277,7 @@ namespace RTParser.Utils
                 //Node childNode = (Node)this.children["*"];
                 List<Template> result = null;
                 // add the next word to the wildcard match 
-                Unifiable newWildcard = new Unifiable();
+                Unifiable newWildcard = Unifiable.CreateAppendable();
                 // normal * and LazyMatch on first word
                 if (childNodeWord.Unify(first, query))
                 {
