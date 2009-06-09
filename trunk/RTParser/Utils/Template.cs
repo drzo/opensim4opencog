@@ -4,13 +4,20 @@ namespace RTParser.Utils
 {
     public class Template
     {
-        public XmlNode Output;
+        readonly private XmlNode _output;
         public XmlNode Guard;
+        public Node Node;
 
-        public Template(XmlNode template, XmlNode guard)
+        public Template(XmlNode template, XmlNode guard, Node node)
         {
-            Output = template;
+            _output = template;
             Guard = guard;
+            Node = node;
+        }
+
+        public XmlNode Output
+        {
+            get { return _output; }
         }
     }
 }
