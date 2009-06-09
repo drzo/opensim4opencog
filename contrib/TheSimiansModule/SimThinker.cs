@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
-using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using PathSystem3D.Navigation;
 using Exception=System.Exception;
@@ -506,7 +505,7 @@ namespace TheSimiansModule
             return CurrentAction.GetUsePostion();
         }
 
-        public override org.opencyc.cycobject.CycFort GetCycFort()
+        public override FirstOrderTerm GetTerm()
         {
             throw new NotImplementedException();
         }
@@ -570,9 +569,9 @@ namespace TheSimiansModule
             Act.Abort();
         }
 
-        public override org.opencyc.cycobject.CycFort GetCycFort()
+        public override FirstOrderTerm GetTerm()
         {
-            return Act.GetCycFort();
+            return Act.GetTerm();
         }
     }
 }

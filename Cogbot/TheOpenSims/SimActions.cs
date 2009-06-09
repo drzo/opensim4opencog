@@ -1,20 +1,15 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
-using System.Collections;
 using cogbot.Listeners;
-using org.opencyc.cycobject;
+using OpenMetaverse;
 using PathSystem3D.Navigation;
-using Vector3 = OpenMetaverse.Vector3;
-using UUID = OpenMetaverse.UUID;
 
 namespace cogbot.TheOpenSims
 {
 
     abstract public class SimUsage : BotMentalAspect
     {
-        public abstract CycFort GetCycFort();
+        public abstract FirstOrderTerm GetTerm();
 
         public String UsageName;
 
@@ -125,7 +120,7 @@ namespace cogbot.TheOpenSims
             return Target.GetSimPosition();
         }
 
-        public override org.opencyc.cycobject.CycFort GetCycFort()
+        public override FirstOrderTerm GetTerm()
         {
             throw new NotImplementedException();
         }
@@ -162,7 +157,7 @@ namespace cogbot.TheOpenSims
             return TheBot.GetSimPosition();
         }
 
-        public override org.opencyc.cycobject.CycFort GetCycFort()
+        public override FirstOrderTerm GetTerm()
         {
             throw new NotImplementedException();
         }
@@ -199,7 +194,7 @@ namespace cogbot.TheOpenSims
             return TheBot.GetSimPosition();
         }
 
-        public override org.opencyc.cycobject.CycFort GetCycFort()
+        public override FirstOrderTerm GetTerm()
         {
             throw new NotImplementedException();
         }
@@ -277,7 +272,7 @@ namespace cogbot.TheOpenSims
             return Target.GetSimPosition();
         }
 
-        public override org.opencyc.cycobject.CycFort GetCycFort()
+        public override FirstOrderTerm GetTerm()
         {
             throw new NotImplementedException();
         }
@@ -289,14 +284,10 @@ namespace cogbot.TheOpenSims
         public SimTypeUsage TypeUsage;
         public SimObject Target { get; set;}
 
-        private CycFort fort;
-        override public CycFort GetCycFort()
+        
+        override public FirstOrderTerm GetTerm()
         {
-            if (fort == null)
-            {
-                fort = TextForm.Cyclifier.FindOrCreateCycFort(this);
-            }
-            return fort;
+            throw new NotImplementedException();
         }
 
         public override string ToString()
@@ -416,14 +407,10 @@ namespace cogbot.TheOpenSims
     // most object have use that advertises ChangePromise but actually calls ChangeActual
     public class SimTypeUsage : SimUsage
     {
-        private CycFort fort;
-        public override CycFort GetCycFort()
+
+        public override FirstOrderTerm GetTerm()
         {
-            if (fort == null)
-            {
-                fort = TextForm.Cyclifier.FindOrCreateCycFort(this);
-            }
-            return fort;
+            throw new NotImplementedException();
         }
 
         public SimTypeUsage(String name):base(name)
@@ -516,14 +503,10 @@ namespace cogbot.TheOpenSims
 
     public class BotObjectAction : BotAction
     {
-        private CycFort fort;
-        public override CycFort GetCycFort()
+
+        public override FirstOrderTerm GetTerm()
         {
-            if (fort == null)
-            {
-                fort = TextForm.Cyclifier.FindOrCreateCycFort(this);
-            }
-            return fort;
+            throw new NotImplementedException();
         }
 
         public override Vector3 GetUsePostion()
@@ -584,14 +567,10 @@ namespace cogbot.TheOpenSims
             if (value is SimAvatar) Victem = (SimAvatar) value;
         }
         }
-        private CycFort fort;
-        public override CycFort GetCycFort()
+
+        public override FirstOrderTerm GetTerm()
         {
-            if (fort == null)
-            {
-                fort = TextForm.Cyclifier.FindOrCreateCycFort(this);
-            }
-            return fort;
+            throw new NotImplementedException();
         }
 
         public override Vector3 GetUsePostion()

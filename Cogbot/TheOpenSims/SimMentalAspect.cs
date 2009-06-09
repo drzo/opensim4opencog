@@ -1,20 +1,14 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using cogbot.Listeners;
-using OpenMetaverse;
-using System.IO;
-using DotLisp;
 using System.Collections;
-using org.opencyc.cycobject;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace cogbot.TheOpenSims
 {
     // Mental Aspects
     public interface BotMentalAspect
     {
-        CycFort GetCycFort();
+        FirstOrderTerm GetTerm();
 
         //public BotMentalAspect(string s)
         //{

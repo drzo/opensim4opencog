@@ -6,8 +6,6 @@ using System.Threading;
 using cogbot.Listeners;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
-using org.opencyc.cycobject;
-
 
 namespace cogbot.TheOpenSims
 {
@@ -539,7 +537,7 @@ namespace cogbot.TheOpenSims
 
             }
             public List<UUID> AnimationIDs = new List<UUID>();
-            private CycFort fort;
+            
             public List<string> _Name = new List<string>();
             public string Name
             {
@@ -662,15 +660,10 @@ namespace cogbot.TheOpenSims
                 }
             }
 
-            public CycFort GetCycFort()
+            public FirstOrderTerm GetTerm()
             {
-                if (fort == null)
-                {
-                    fort = TextForm.Cyclifier.FindOrCreateCycFort(this);
-                }
-                return fort;
+                throw new NotImplementedException();
             }
-
 
             internal bool IsIncomplete()
             {
@@ -680,7 +673,6 @@ namespace cogbot.TheOpenSims
  
     }
 
-   
 #if PORTIT
 
     /// <summary>

@@ -1,30 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Text;
-using System.Windows.Forms;
-using cogbot.DotCYC;
-using cogbot.Listeners;
-using OpenMetaverse; //using libsecondlife;
-//using OpenMetaverseTypes;
-
-using System.Reflection;
-using System.Xml;
-using System.Xml.XPath;
-using System.Xml.Serialization;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
 using System.IO;
-using System.Collections;
-using cogbot.ScriptEngines;
-using OpenMetaverse.Packets;
+using System.Reflection;
+using System.Threading;
+using System.Windows.Forms;
 using cogbot.Actions;
-using Action=cogbot.Actions.Action;
-//using DotLisp;
-
+using cogbot.ScriptEngines;
+using OpenMetaverse; //using libsecondlife;
+using Action = cogbot.Actions.Action;
 
 namespace cogbot
 {
@@ -48,7 +32,6 @@ namespace cogbot
                 return clientsCopy;
             }
         }
-        public static SimCyclifier Cyclifier;
 
         public static bool DownloadTextures = false;
         public static int nextTcpPort = 5555;
@@ -75,7 +58,6 @@ namespace cogbot
 
         //public BotClient CurrentClient;
         public OutputDelegate outputDelegate;
-        public DotCYC.CycConnectionForm cycConnection;
         ///public Dictionary<string, DescribeDelegate> describers;
 
         public List<Type> registrationTypes;
@@ -177,7 +159,6 @@ namespace cogbot
                     evalLispString("(progn " + config.startupLisp + ")");
                 }
             })).Start();
-            if (Cyclifier==null) Cyclifier = new SimCyclifier(this);
         }
 
         public void RegisterBotSystemCommands(Assembly assembly)
@@ -587,13 +568,6 @@ namespace cogbot
             this.submitButton.Location = new System.Drawing.Point(this.Size.Width - 90, consoleInputText.Top);
         }
 
-
-        private void cycConnectionToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (cycConnection == null || cycConnection.IsDisposed) cycConnection = new DotCYC.CycConnectionForm();
-            cycConnection.Reactivate();
-        }
-
         /// <summary>
         /// Initialize everything that needs to be initialized once we're logged in.
         /// </summary>
@@ -945,6 +919,14 @@ namespace cogbot
                         AddTypesToBotClient(client);
                     }
             }
+        }
+
+        public void AddTool(string name, string text, EventHandler threadStart)
+        {           
+            ToolStripMenuItem stripMenuItem =
+                new ToolStripMenuItem {Name = name, Size = new System.Drawing.Size(168, 22), Text = text};
+            stripMenuItem.Click += threadStart;
+            this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {stripMenuItem});
         }
     }
 

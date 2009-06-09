@@ -477,34 +477,67 @@
  </Project>
 
 
-    <Project name="TheSimiansModule" path="contrib/TheSimiansModule" type="Library">
-       <Configuration name="Debug">
-         <Options>
-             <OutputPath>../../bin/</OutputPath>
-         </Options>
-       </Configuration>
-       <Configuration name="Release">
-         <Options>
-             <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
-             <OutputPath>../../bin/</OutputPath>
-         </Options>
-       </Configuration>
+  <Project name="TheSimiansModule" path="contrib/TheSimiansModule" type="Library">
+     <Configuration name="Debug">
+       <Options>
+           <OutputPath>../../bin/</OutputPath>
+       </Options>
+     </Configuration>
+     <Configuration name="Release">
+       <Options>
+           <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
+           <OutputPath>../../bin/</OutputPath>
+       </Options>
+     </Configuration>
 
-       <ReferencePath>../../bin/</ReferencePath>
-       <Reference name="Cogbot" localCopy="false"/>
-       <Reference name="PathSystem3D" localCopy="false"/>
-       <Reference name="OpenMetaverse" localCopy="false"/>
-       <Reference name="OpenMetaverseTypes" localCopy="false"/>
-       <Reference name="System" localCopy="false"/>
-       <Reference name="DotLisp" localCopy="false"/>
-       <Reference name="OpenCyc.dll" localCopy="false"/>
-        <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-       <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
-       <Files>
-           <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
-           <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
-       </Files>
- </Project>
+     <ReferencePath>../../bin/</ReferencePath>
+     <Reference name="Cogbot" localCopy="false"/>
+     <Reference name="PathSystem3D" localCopy="false"/>
+     <Reference name="OpenMetaverse" localCopy="false"/>
+     <Reference name="OpenMetaverseTypes" localCopy="false"/>
+     <Reference name="System" localCopy="false"/>
+     <Reference name="DotLisp" localCopy="false"/>
+     <Reference name="OpenCyc.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+     <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+     <Files>
+         <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
+         <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+     </Files>
+</Project>
+
+
+  <Project name="CycWorldModule" path="contrib/CycWorldModule" type="Library">
+     <Configuration name="Debug">
+       <Options>
+           <OutputPath>../../bin/</OutputPath>
+       </Options>
+     </Configuration>
+     <Configuration name="Release">
+       <Options>
+           <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
+           <OutputPath>../../bin/</OutputPath>
+       </Options>
+     </Configuration>
+
+     <ReferencePath>../../bin/</ReferencePath>
+     <Reference name="Cogbot" localCopy="false"/>
+     <Reference name="PathSystem3D" localCopy="false"/>
+     <Reference name="System.Drawing" localCopy="false"/>
+     <Reference name="System.Windows.Forms" localCopy="false"/>
+     <Reference name="System.Data" localCopy="false"/>
+     <Reference name="OpenMetaverse" localCopy="false"/>
+     <Reference name="OpenMetaverseTypes" localCopy="false"/>
+     <Reference name="System" localCopy="false"/>
+     <Reference name="DotLisp" localCopy="false"/>
+     <Reference name="OpenCyc.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+     <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+     <Files>
+         <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
+         <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+     </Files>
+</Project>
 
 
 

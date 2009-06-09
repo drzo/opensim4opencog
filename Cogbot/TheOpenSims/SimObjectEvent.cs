@@ -1,5 +1,4 @@
 using System;
-using org.opencyc.cycobject;
 
 namespace cogbot.TheOpenSims
 {
@@ -12,14 +11,10 @@ namespace cogbot.TheOpenSims
             EventName = eventName;
             Parameters = args;
         }
-        private CycFort fort;
-        public CycFort GetCycFort()
+        
+        public FirstOrderTerm GetTerm()
         {
-            if (fort == null)
-            {
-                fort = TextForm.Cyclifier.FindOrCreateCycFort(this);
-            }
-            return fort;
+            throw new NotImplementedException();
         }
 
     }
