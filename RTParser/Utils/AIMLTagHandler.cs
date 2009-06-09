@@ -80,7 +80,7 @@ namespace RTParser.Utils
         public XmlNode templateNode;
         protected Unifiable Recurse()
         {
-            Unifiable templateResult = new Unifiable();
+            Unifiable templateResult = Unifiable.CreateAppendable();
             if (this.templateNode.HasChildNodes)
             {
                 // recursively check
@@ -181,7 +181,7 @@ namespace RTParser.Utils
                 XmlNode resultNode = getNode(String.Format("<node>{0}</node>", resultNodeInnerXML));
                 if (resultNode.HasChildNodes)
                 {
-                    Unifiable recursiveResult = new Unifiable();
+                    Unifiable recursiveResult = Unifiable.CreateAppendable();
                     // recursively check
                     foreach (XmlNode childNode in resultNode.ChildNodes)
                     {

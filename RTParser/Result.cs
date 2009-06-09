@@ -69,10 +69,10 @@ namespace RTParser
                     }
                     else
                     {
-                        Unifiable paths = new Unifiable();
+                        Unifiable paths = Unifiable.CreateAppendable();
                         foreach (Unifiable pattern in this.NormalizedPaths)
                         {
-                            return pattern;
+                            //return pattern;
                             paths.Append(pattern + Environment.NewLine);
                         }
                         this.bot.writeToLog("The bot could not find any response for the input: " + this.RawInput + " with the path(s): " + Environment.NewLine + paths.ToString() + " from the user with an id: " + this.user.UserID);
@@ -89,11 +89,12 @@ namespace RTParser
         {
             get
             {
-                Unifiable result = new Unifiable();
+                Unifiable result = Unifiable.CreateAppendable();
                 foreach (string sentence in OutputSentences)
                 {
                     return sentence;
                     Unifiable sentenceForOutput = sentence.Trim();
+
                     if (!this.checkEndsAsSentence(sentenceForOutput))
                     {
                         sentenceForOutput += ".";

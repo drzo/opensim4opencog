@@ -74,6 +74,9 @@ namespace RTParser.Utils
                 {
                     throw new FileNotFoundException("Could not find any .aiml files in the specified directory (" + path + "). Please make sure that your aiml file end in a lowercase aiml extension, for example - myFile.aiml is valid but myFile.AIML is not.");
                 }
+            } else if (File.Exists(path))
+            {
+                this.loadAIMLFile(path); 
             }
             else
             {
@@ -92,7 +95,18 @@ namespace RTParser.Utils
             
             // load the document
             XmlDocument doc = new XmlDocument();
-            doc.Load(filename);
+            try
+            {
+                doc.Load(filename);
+            } catch(Exception e)
+            {
+                if (Directory.Exists(filename))
+                {
+                    loadAIML(filename);
+                    return;
+                }
+                throw e;
+            }
             this.loadAIMLFromXML(doc, filename);
         }
 
@@ -111,6 +125,7 @@ namespace RTParser.Utils
             // process each of these child nodes
             foreach (XmlNode currentNode in rootChildren)
             {
+                if (currentNode.NodeType == XmlNodeType.Comment) continue;
                 if (currentNode.Name == "topic")
                 {
                     this.processTopic(currentNode, filename);
@@ -118,6 +133,10 @@ namespace RTParser.Utils
                 else if (currentNode.Name == "category")
                 {
                     this.processCategory(currentNode, filename);
+                }
+                else
+                {
+                    this.RProcessor.writeToLog("unused node in " + doc + ": " + currentNode.OuterXml);
                 }
             }
         }
@@ -225,7 +244,7 @@ namespace RTParser.Utils
             }
             else
             {
-                patternText = Unifiable.CreateFromObject(pattern);//.InnerXml;
+                patternText = Unifiable.Create(pattern);//.InnerXml;
             }
             if (!object.Equals(null, that))
             {
@@ -277,7 +296,7 @@ namespace RTParser.Utils
         public Unifiable generatePath(Unifiable pattern, Unifiable that, Unifiable topicName, bool isUserInput)
         {
             // to hold the normalized path to be entered into the graphmaster
-            Unifiable normalizedPath = new Unifiable();
+            Unifiable normalizedPath = Unifiable.CreateAppendable();
             string normalizedPattern;// = Unifiable.Empty;
             Unifiable normalizedThat;// = Unifiable.STAR;
             Unifiable normalizedTopic;// = Unifiable.STAR;
@@ -285,7 +304,7 @@ namespace RTParser.Utils
             if ((this.RProcessor.TrustAIML) & (!isUserInput || RawUserInput))
             {
 
-                normalizedPattern = pattern.ToValue().Trim();
+                normalizedPattern = pattern.Trim();
                 while (normalizedPattern.EndsWith("?") || normalizedPattern.EndsWith("."))
                 {
                     normalizedPattern = normalizedPattern.Substring(0, normalizedPattern.Length - 1).Trim();
@@ -354,7 +373,7 @@ namespace RTParser.Utils
                 return input;
             }
 
-            Unifiable result = new Unifiable();
+            Unifiable result = Unifiable.CreateAppendable();
 
             // objects for normalization of the input
             Normalize.ApplySubstitutions substitutor = new RTParser.Normalize.ApplySubstitutions(this.RProcessor);
