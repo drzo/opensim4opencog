@@ -121,7 +121,7 @@ namespace RTParser.AIMLTagHandlers
             template = template.Replace("%s", text);            
             try
             {
-	            term = this.Proc.EvalSubL(String.Format("(cdr (assoc '?CYCOBJECT (nth 0 (cyc-query '(#$and {0} (#$isa ?CYCOBJECT {1})) #$EverythingPSC )) )))", template,filter), null);
+	            term = this.Proc.EvalSubL(String.Format("(first (ask-template '?CYCOBJECT '(#$and {0} (#$isa ?CYCOBJECT {1})) #$EverythingPSC))", template,filter), null);
             }
             catch (System.Exception ex)
             {
