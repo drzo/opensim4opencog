@@ -449,6 +449,7 @@ namespace RTParser
         static public SubQuery subquery;
         public override bool Unify(Unifiable unifiable, SubQuery query)
         {
+            if (IsShortWildCard()) if (unifiable.AsString().Contains(" ")) return false;
             subquery = query;
             if (IsWildCard())
             {

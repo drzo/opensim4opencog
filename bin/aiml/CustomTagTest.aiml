@@ -13,13 +13,15 @@
 <category><pattern>CUSTOM TAG FORTUNE</pattern><template><fortunecookie/></template></category>
 <category><pattern>CUSTOM TAG PIG LATIN *</pattern><template><piglatin><star/></piglatin></template></category>
 <category><pattern>CUSTOM TAG NEWS</pattern><template><news/></template></category>
-<!-- CUSTOM TAG CYCQUERY (#$isa ?REPLY #$Dog) -->
-<category><pattern>CUSTOM TAG CYCQUERY *</pattern><template><cycquery><star/></cycquery></template></category>
-<!-- CUSTOM TAG CYCTERM USA -->
+<!-- CUSTOM TAG CYCQUERY (#$isa ?X #$Dog) -->
+<category><pattern>CUSTOM TAG CYCQUERY *</pattern><template><cycquery varname="?X"><star/></cycquery></template></category>
+<!-- CUSTOM TAG CYCTERM puppy   ====> (#$JuvenileFn #$Dog) -->
 <category><pattern>CUSTOM TAG CYCTERM *</pattern><template><cycterm><star/></cycterm></template></category>
+<!-- CUSTOM TAG CYCPHRASE (#$JuvenileFn #$Dog)   ====>  puppy -->
 <category><pattern>CUSTOM TAG CYCPHRASE *</pattern><template><cycphrase><star/></cycphrase></template></category>
-<!--CUSTOM TAG CYCASSERT (#$genls <cycterm isa="Collection">CartoonDog</cycterm> #$Dog)-->
+<!-- CUSTOM TAG CYCASSERT (#$isa ,(find-or-create-constant "CartoonDog777") #$Dog) #$AimlContextMt -->
 <category><pattern>CUSTOM TAG CYCASSERT *</pattern><template><cycassert><star/></cycassert></template></category>
+<!-- CUSTOM TAG CYCRETRACT (#$isa ,(find-or-create-constant "CartoonDog777") #$Dog) #$AimlContextMt -->
 <category><pattern>CUSTOM TAG CYCRETRACT *</pattern><template><cycretract><star/></cycretract></template></category>
 <category><pattern>CUSTOM TAG GUARD *</pattern><template><guard><star/></guard></template></category>
 <!--CUSTOM TAG CYCRANDOMP (ask-template '?REPLY '(#$isa   ?REPLY   #$Dog) #$EverythingPSC)-->
@@ -28,6 +30,7 @@
 <category><pattern>CUSTOM TAG CYCRANDOM *</pattern><template><cycrandom><star/></cycrandom></template></category>
 <!--CUSTOM TAG CYCSYSTEM (ask-template '?REPLY '(#$isa   ?REPLY   #$Dog) #$EverythingPSC))-->
 <category><pattern>CUSTOM TAG CYCSYSTEM *</pattern><template><cycsystem><star/></cycsystem></template></category>
+<!--CUSTOM TAG SYSTEM look 5-->
 <category><pattern>CUSTOM TAG SYSTEM *</pattern><template><system><star/></system></template></category>
 
 
@@ -37,6 +40,44 @@
     <pattern>PATTERN B TEST</pattern>
     <template>
       <person>Pattern A or B test.</person>
+    </template>
+  </category>
+
+
+ <!-- star vs dash at end
+  
+textform> aiml test lineending 1
+Found the hyphen. star= 1
+textform> aiml test lineending 1 2
+Found the star. star= 1 2
+textform> aiml test lineending 1 2 3 done
+Found the star+done. star= 1 2 3
+textform> aiml test lineending 1 done
+Found the hyphen+done. star= 1
+    
+  -->
+  <category>
+    <pattern>TEST LINEENDING _</pattern>
+    <template>
+      Found the hyphen. star=<star/>
+    </template>
+  </category>
+  <category>
+    <pattern>TEST LINEENDING _ done</pattern>
+    <template>
+      Found the hyphen+done. star=<star/>
+    </template>
+  </category>
+  <category>
+    <pattern>TEST LINEENDING *</pattern>
+    <template>
+      Found the star. star=<star/>
+    </template>
+  </category>
+  <category>
+    <pattern>TEST LINEENDING * done</pattern>
+    <template>
+      Found the star+done. star=<star/>
     </template>
   </category>
 

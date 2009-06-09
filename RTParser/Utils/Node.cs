@@ -75,7 +75,7 @@ namespace RTParser.Utils
             {
                 if (this.template == null) this.template = new List<Template>();
                 // last in first out addition
-                this.template.Insert(0, new Template(template, guard));
+                this.template.Insert(0, new Template(template, guard, this));
                 //this.GuardText = guard;
                 this.filename = filename;
                 return;
@@ -230,7 +230,16 @@ namespace RTParser.Utils
 
                 // and if we get a result from the branch process the wildcard matches and return 
                 // the result
-                if (ResultStateReady(result, newWildcard, matchstate, query)) return result;
+                string freezit = newWildcard.Frozen();
+                if (ResultStateReady(result, newWildcard, matchstate, query))
+                {
+                    if (freezit.Contains(" "))
+                    {
+                        // cannot match input containing spaces
+                        continue;
+                    }
+                    return result;
+                }
             }
 
             // second option - the nodemapper may have contained a "_" child, but led to no match
@@ -312,7 +321,7 @@ namespace RTParser.Utils
             // If we get here then we're at a dead end so return an empty Unifiable. Hopefully, if the
             // AIML files have been set up to include a "* <that> * <topic> *" catch-all this
             // state won't be reached. Remember to empty the surplus to requirements wildcard matches
-            wildcard.Clear();// = new Unifiable();
+            //wildcard.Clear();// = new Unifiable();
             return null;// Unifiable.Empty;
         }
 
