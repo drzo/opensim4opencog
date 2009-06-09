@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
@@ -30,12 +31,12 @@ namespace cogbot.Actions
         {
             GridClient client = Client;
             string temp;
-            // base.acceptInput(verb, args);
-            Sit sit = (Sit)Client.Commands["sit"];
+            SimActor sitter = WorldSystem.TheSimAvatar;
 
-            if (client.Self.SittingOn != 0 || sit.sittingOnGround)
+            if (sitter.IsSitting)
             {
-                Client.Self.Stand();
+                WriteLine("$bot is standing.");
+                sitter.StandUp();
                 // WriteLine("$bot is sitting, Please stand up to move.");
             }
             {

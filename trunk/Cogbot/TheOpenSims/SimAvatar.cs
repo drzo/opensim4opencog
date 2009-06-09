@@ -233,14 +233,16 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                /// BotClient Client = base.WorldSystem.client;
                 if (IsControllable)
                 {
-                    AgentManager ClientSelf = Client.Self;
-                    AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
-                    if (ClientMovement.SitOnGround) return true;
-                    return ClientSelf.SittingOn != 0;
+                    if (Client.Self.SittingOn != 0) return true;
+                    if (Client.Self.Movement.SitOnGround) return true;
                 }
+                Dictionary<UUID, int> anims = ExpectedCurrentAnims;
+                if (anims.ContainsKey(Animations.SIT_GROUND) || anims.ContainsKey(Animations.SIT)
+                    || anims.ContainsKey(Animations.SIT_GENERIC)
+                    || anims.ContainsKey(Animations.SIT_FEMALE)
+                    || anims.ContainsKey(Animations.SIT_GROUND_staticRAINED)) return true;
                 return theAvatar.ParentID != 0;
             }
             set
@@ -250,13 +252,14 @@ namespace cogbot.TheOpenSims
                 {
                     if (value)
                     {
-                        Client.Self.SitOnGround();
+                        SitOnGround();
                     }
                     else
                     {
-                        Client.Self.Stand();
+                        StandUp();
                     }
                 }
+                Debug("Uncontroled IsStting=" + value);
             }
         }
 
@@ -536,9 +539,10 @@ namespace cogbot.TheOpenSims
             bool CanUseSit = WorldObjects.CanUseSit;
             return () =>
                        {
+                           bool SattedUpon = false;
                            if (CanUseSit)
                            {
-                               SitOn(obj);
+                              SattedUpon = SitOn(obj);
                            }
 
                            try
@@ -549,7 +553,7 @@ namespace cogbot.TheOpenSims
                            {
                                if (CanUseSit)
                                {
-                                   StandUp();
+                                   if (SattedUpon) StandUp();
                                }
                            }
                        };
@@ -711,6 +715,7 @@ namespace cogbot.TheOpenSims
                     UnPhantom = WorldSystem.GetSimObject(WorldSystem.GetPrimitive(sit, simu));
                     UnPhantom.MakeEnterable(this);
                 }
+                Client.Self.Crouch(false);
                 ClientSelf.AnimationStart(Animations.STANDUP, true);
                 ClientSelf.Stand();
                 StopAllAnimations();
@@ -1249,35 +1254,13 @@ namespace cogbot.TheOpenSims
             AgentManager ClientSelf = Client.Self;
             uint local = someObject.Prim.LocalID;
 
-            AutoResetEvent are = new AutoResetEvent(false);
-            ObjectManager.AvatarSitChanged OnSitChanged =
-                (simulator, avatar, sittingon, oldseat) =>
-                    {
-                        if (avatar == theAvatar)
-                        {
-                            are.Set();
-                        }
-                    };
-            Client.Objects.OnAvatarSitChanged += OnSitChanged;
-            try
+            //already sitting on 
+            if (theAvatar.ParentID == local || Client.Self.SittingOn == local)
             {
-                ClientSelf.RequestSit(someObject.Prim.ID, Vector3.Zero);
-                ClientSelf.Sit();
-                if (!are.WaitOne(10000))
-                {
-                    return false;
-                }
-                return local == ClientSelf.SittingOn;
+                Debug("todo should we stand once first? " + someObject);
+                return true;
             }
-            finally
-            {
-                Client.Objects.OnAvatarSitChanged -= OnSitChanged;
-            }
-        }
 
-        public bool SitOnGround()
-        {
-            AgentManager ClientSelf = Client.Self;
             AutoResetEvent are = new AutoResetEvent(false);
             ObjectManager.AvatarSitChanged OnSitChanged =
                 (simulator, avatar, sittingon, oldseat) =>
@@ -1290,6 +1273,53 @@ namespace cogbot.TheOpenSims
             Client.Objects.OnAvatarSitChanged += OnSitChanged;
             try
             {
+                ClientSelf.RequestSit(someObject.Prim.ID, Vector3.Zero);
+                ClientSelf.Sit();
+                if (!are.WaitOne(10000))
+                {
+                   // return false;
+                }
+                return local == ClientSelf.SittingOn;
+            }
+            finally
+            {
+                Client.Objects.OnAvatarSitChanged -= OnSitChanged;
+            }
+        }
+
+        public bool SitOnGround()
+        {
+            Client.Self.Movement.AutoResetControls = false;
+            Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
+            Client.Self.Movement.UpdateInterval = 0;
+
+            AgentManager ClientSelf = Client.Self;
+            AutoResetEvent are = new AutoResetEvent(false);
+            ObjectManager.AvatarSitChanged OnSitChanged =
+                (simulator, avatar, sittingon, oldseat) =>
+                {
+                    if (avatar == theAvatar)
+                    {
+                        are.Set();
+                    }
+                };
+            AvatarManager.AvatarAnimationCallback OnAnimsChanged =
+                (UUID avatarID, InternalDictionary<UUID, int> anims) =>
+                    {
+                        if (avatarID == theAvatar.ID)
+                            if (anims.ContainsKey(Animations.SIT_GROUND) || anims.ContainsKey(Animations.SIT)
+                                || anims.ContainsKey(Animations.SIT_GENERIC)
+                                || anims.ContainsKey(Animations.SIT_FEMALE)
+                                || anims.ContainsKey(Animations.SIT_GROUND_staticRAINED))
+                        {
+                            //int seq = anims[Animations.SIT_GROUND];
+                            are.Set();
+                        }
+                    };
+            Client.Objects.OnAvatarSitChanged += OnSitChanged;
+            Client.Avatars.OnAvatarAnimation += OnAnimsChanged;
+            try
+            {
                 ClientSelf.SitOnGround();
                 if (!are.WaitOne(10000))
                 {
@@ -1300,6 +1330,7 @@ namespace cogbot.TheOpenSims
             finally
             {
                 Client.Objects.OnAvatarSitChanged -= OnSitChanged;
+                Client.Avatars.OnAvatarAnimation -= OnAnimsChanged;
             }
         }
 
@@ -1568,6 +1599,7 @@ namespace cogbot.TheOpenSims
         void Eat(SimObject target);
         void ExecuteLisp(SimObjectUsage botObjectAction, object lisp);
         SimRegion GetSimRegion();
+        bool SitOnGround();
         SimObject StandUp();
         //void StopMoving();
         void TalkTo(SimAvatar avatar, BotMentalAspect talkAbout);
