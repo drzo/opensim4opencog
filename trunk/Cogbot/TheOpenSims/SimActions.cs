@@ -73,6 +73,12 @@ namespace cogbot.TheOpenSims
         // the actor
         public SimAvatar TheBot;
 
+
+        public BotClient GetGridClient()
+        {
+            return TheBot.GetGridClient();
+        }
+
         // Returns how much the needs should be changed;
         public abstract BotNeeds ProposedChange();
         // the needs are really changed;
@@ -129,6 +135,80 @@ namespace cogbot.TheOpenSims
             TheBot.StopMoving();
         }
     }
+    public class CommandAction : BotAction
+    {
+        public override SimPosition Target { get; set; }
+        readonly static BotNeeds ProposedChanges = new BotNeeds(0.0f);
+        readonly String command;
+        public CommandAction(SimAvatar impl, String command)
+            : base("ExecuteCommand " + impl + " -> " + command)
+        {
+            TheBot = impl;
+            this.command = command;
+        }
+
+        public override BotNeeds ProposedChange()
+        {
+            return ProposedChanges;
+        }
+
+        public override void InvokeReal()
+        {
+            GetGridClient().ExecuteCommand(command);
+        }
+
+        public override Vector3 GetUsePostion()
+        {
+            return TheBot.GetSimPosition();
+        }
+
+        public override org.opencyc.cycobject.CycFort GetCycFort()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Abort()
+        {
+
+        }
+    }
+    public class LispCodeAction : BotAction
+    {
+        public override SimPosition Target { get; set; }
+        readonly static BotNeeds ProposedChanges = new BotNeeds(0.0f);
+        readonly object command;
+        public LispCodeAction(SimAvatar impl, object command)
+            : base("ExecuteCommand " + impl + " -> " + command)
+        {
+            TheBot = impl;
+            this.command = command;
+        }
+
+        public override BotNeeds ProposedChange()
+        {
+            return ProposedChanges;
+        }
+
+        public override void InvokeReal()
+        {
+            GetGridClient().evalLispCode(command);
+        }
+
+        public override Vector3 GetUsePostion()
+        {
+            return TheBot.GetSimPosition();
+        }
+
+        public override org.opencyc.cycobject.CycFort GetCycFort()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Abort()
+        {
+
+        }
+    }
 
     public class FollowerAction : BotAction
     {
@@ -167,16 +247,19 @@ namespace cogbot.TheOpenSims
         {
             while (KeepFollowing)
             {
-                TheBot.TurnToward(Target);
-                TheBot.StopMoving();
-                TheBot.SetMoveTarget(Target,maxDistance);
-                Thread.Sleep(4000);
-                TheBot.StopMoving();
-                TheBot.TurnToward(Target);
-                if (TheBot.Distance(Target) > maxDistance + 1)
+                for (int i = 0; i < 3; i++)
+                {
+                    TheBot.TurnToward(Target);
+                    TheBot.SetMoveTarget(Target, maxDistance);
+                    Thread.Sleep(2000);
+                    TheBot.StopMoving();                  
+                }
+                if (false && TheBot.Distance(Target) > maxDistance + 2)
                     TheBot.GotoTarget(Target);
             }
         }
+
+
         public override void Abort()
         {
             KeepFollowing = false;
@@ -275,7 +358,8 @@ namespace cogbot.TheOpenSims
             try
             {
                 double howClose = TheBot.Approach(Target, TypeUsage.maximumDistance);
-
+                TheBot.ApproachPosition = Target;
+                TheBot.TurnToward(Target);
                 if (howClose - 1 > TypeUsage.maximumDistance + 0.5f)
                 {
                     TheBot.Debug("Too far away " + howClose + " from " + this);

@@ -113,9 +113,13 @@ namespace cogbot.TheOpenSims
         /// </summary>
         public readonly ListAsSet<SimObject> KnownSimObjects = new ListAsSet<SimObject>();
 
+        /// <summary>
+        /// Returns hopefully at least three objects sorted by distance
+        /// </summary>
+        /// <returns></returns>
         public List<SimObject> GetKnownObjects()
         {
-            ScanNewObjects(3, SightRange);
+            ScanNewObjects(3, SightRange, false);
             SortByDistance(KnownSimObjects);
             return KnownSimObjects;
         }
@@ -283,7 +287,7 @@ namespace cogbot.TheOpenSims
             //}
             if (theAvatar.ParentID == 0)
             {
-                return theAvatar.Position;
+                return LastKnownPos = theAvatar.Position;
             }
             return base.GetSimPosition();
         }
@@ -401,14 +405,14 @@ namespace cogbot.TheOpenSims
         /// </summary>
         /// <param name="minimum"></param>
         /// <param name="sightRange"></param>
-        public void ScanNewObjects(int minimum, double sightRange)
+        public void ScanNewObjects(int minimum, double sightRange, bool rootOnly)
         {
-            List<SimObject> objects = GetNearByObjects(sightRange, true);
+            List<SimObject> objects = GetNearByObjects(sightRange, rootOnly);
             ///  ill do this for us: AddKnowns(objects);
             if (KnownSimObjects.Count < minimum)
             {
                 if (sightRange < 255)
-                    ScanNewObjects(minimum, sightRange + 10);
+                    ScanNewObjects(minimum, sightRange + 10, false);
             }
         }
 
@@ -795,7 +799,7 @@ namespace cogbot.TheOpenSims
             ClientMovement.Stop = true;
             ClientMovement.TurnLeft = false;
             ClientMovement.TurnRight = false;
-            ClientMovement.UpdateInterval = 0;
+            //ClientMovement.UpdateInterval = 0;
             ClientMovement.UpNeg = false;
             ClientMovement.UpPos = false;
             ClientMovement.YawNeg = false;
@@ -842,10 +846,12 @@ namespace cogbot.TheOpenSims
         {
             Random MyRandom = new Random(DateTime.Now.Millisecond);
             Boolean stopNext = false;
+            Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = false;
+            Client.Self.Movement.AutoResetControls = true;
+            Client.Self.Movement.UpdateInterval = 10;
+
             while (true)
             {
-                Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
-                Client.Self.Movement.AutoResetControls = false;
                 Vector3d targetPosition = ApproachVector3D;
                 lock (TrackerLoopLock)
                 {
@@ -872,7 +878,7 @@ namespace cogbot.TheOpenSims
                     AgentManager ClientSelf = Client.Self;
                     AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
                     ClientMovement.AutoResetControls = false;
-                    ClientMovement.UpdateInterval = 0; /// 100
+                    //ClientMovement.UpdateInterval = 0; /// 100
                     SimRegion R = GetSimRegion();
                     float WaterHeight = R.WaterHeight();
                     float selfZ = ClientSelf.SimPosition.Z;
@@ -1035,7 +1041,7 @@ namespace cogbot.TheOpenSims
                         {
                             TurnToward(targetPosition);
                             ClientMovement.AtPos = true;
-                            ClientMovement.UpdateInterval = 0;
+                           // ClientMovement.UpdateInterval = 0;
                             SendUpdate(MyRandom.Next(25, 100));
                             ///   TurnToward(targetPosition);
                             /// (int)(25 * (1 + (curDist / followDist)))
@@ -1052,7 +1058,7 @@ namespace cogbot.TheOpenSims
                             ///                             TurnToward(targetPosition);
                             ///  ClientMovement.ResetControlFlags();
                             ClientMovement.AtPos = false;
-                            ClientMovement.UpdateInterval = 0;
+                            //ClientMovement.UpdateInterval = 0;
                             /// ClientMovement.StandUp = true;
                             /// ClientMovement.SendUpdate();
                             ClientMovement.FinishAnim = true;
@@ -1159,7 +1165,7 @@ namespace cogbot.TheOpenSims
         {
             /// Client.Self.Movement.AutoResetControls = true;
             Client.Self.Movement.SendUpdate(true);
-            if (ms > 0) Thread.Sleep(ms*3);
+            if (ms > 0) Thread.Sleep(ms);
         }
 
         public override void TeleportTo(SimRegion R, Vector3 local)
@@ -1573,7 +1579,7 @@ namespace cogbot.TheOpenSims
         //ICollection<BotAction> GetPossibleActions(double maxXYDistance, double maxZDist);
 //        List<BotAction> ScanNewPossibleActions(double maxXYDistance, double maxZDist);
         void SetClient(BotClient Client);
-        BotClient GetGridClient();
+        //BotClient GetGridClient();
         new bool IsSitting { get; set; }
         BotMentalAspect LastAction { get; set; }
         IEnumerable<SimTypeUsage> KnownTypeUsages { get; }
@@ -1585,8 +1591,12 @@ namespace cogbot.TheOpenSims
     {
         void RemoveObject(SimObject O);
         SimObject FindSimObject(SimObjectType pUse, double maxXYDistance, double maxZDist);
+        /// <summary>
+        /// Returns hopefully at least three objects sorted by distance
+        /// </summary>
+        /// <returns></returns>
         List<SimObject> GetKnownObjects();
-        void ScanNewObjects(int minimum, double sightRange);
+        void ScanNewObjects(int minimum, double sightRange,bool rootOnly);
         double SightRange { get; set; }
         SimPosition ApproachPosition { get; }
         //BotNeeds CurrentNeeds { get; }
@@ -1596,5 +1606,7 @@ namespace cogbot.TheOpenSims
         void OnAvatarAnimations(InternalDictionary<UUID, int> anims);
 
         Dictionary<UUID, int> GetCurrentAnims();
+
+        BotClient GetGridClient();
     }
 }

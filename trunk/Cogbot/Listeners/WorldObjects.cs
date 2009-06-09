@@ -2214,7 +2214,7 @@ namespace cogbot.Listeners
                 List<SimObject> set = TheSimAvatar.GetKnownObjects();
                 if (set.Count == 0)
                 {
-                    TheSimAvatar.ScanNewObjects(5, 100);
+                    TheSimAvatar.ScanNewObjects(5, 100, false);
                     set = TheSimAvatar.GetKnownObjects();
                 }
                 lock (set)
@@ -2340,7 +2340,7 @@ namespace cogbot.Listeners
         public List<Primitive> getPrimitives(int num)
         {
             List<SimObject> ret = new List<SimObject>();
-            TheSimAvatar.ScanNewObjects(10, 100);
+            TheSimAvatar.ScanNewObjects(10, 100, false);
             TheSimAvatar.GetKnownObjects().ForEach(delegate(SimObject prim) { ret.Add(prim); });
 
             //foreach (Primitive prim in prims[simulator.Handle].ForEach.Values)
@@ -2560,7 +2560,7 @@ namespace cogbot.Listeners
             return name;
         }
 
-        public void describeAvatar(Avatar avatar)
+        public string describeAvatar(Avatar avatar)
         {
             //	string verb;
             //if (avatar.SittingOn == 0)
@@ -2568,19 +2568,21 @@ namespace cogbot.Listeners
             //else
             //    verb = "sitting";
             //WriteLine(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
-            WriteLine(avatar.Name + " is " + TheSimAvatar.DistanceVectorString(GetSimObject(avatar)) + " distant.");
+            string s = String.Empty;
+            s += (avatar.Name + " is " + TheSimAvatar.DistanceVectorString(GetSimObject(avatar)) + " distant.");
             if (avatar.ProfileProperties.BornOn != null)
-                WriteLine("Born on: " + avatar.ProfileProperties.BornOn);
+                s += ("Born on: " + avatar.ProfileProperties.BornOn);
             if (avatar.ProfileProperties.AboutText != null)
-                WriteLine("About their second life: " + avatar.ProfileProperties.AboutText);
+                s += ("About their second life: " + avatar.ProfileProperties.AboutText);
             if (avatar.ProfileProperties.FirstLifeText != null)
-                WriteLine("About their first life: " + avatar.ProfileProperties.FirstLifeText);
+                s += ("About their first life: " + avatar.ProfileProperties.FirstLifeText);
             if (avatar.ProfileInterests.LanguagesText != null)
-                WriteLine("Languages spoken: " + avatar.ProfileInterests.LanguagesText);
+                s += ("Languages spoken: " + avatar.ProfileInterests.LanguagesText);
             if (avatar.ProfileInterests.SkillsText != null)
-                WriteLine("Skills: " + avatar.ProfileInterests.SkillsText);
+                s += ("Skills: " + avatar.ProfileInterests.SkillsText);
             if (avatar.ProfileInterests.WantToText != null)
-                WriteLine("Wants to: " + avatar.ProfileInterests.WantToText);
+                s += ("Wants to: " + avatar.ProfileInterests.WantToText);
+            return s;
         }
 
         public void describeAvatarToAI(Avatar avatar)
