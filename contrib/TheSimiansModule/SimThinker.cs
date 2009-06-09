@@ -158,10 +158,17 @@ namespace TheSimiansModule
                 {
                 }
             }
-            if (Actor.CurrentAction == CurrentAction || Actor.CurrentAction == this)
+            if (IsControlling)
             {
                 Actor.CurrentAction = null;
             }
+        }
+
+        protected bool IsControlling
+        {
+            get {
+                return Actor.CurrentAction == CurrentAction || Actor.CurrentAction == this ||
+                       Actor.CurrentAction is AbortableAction; }
         }
 
         public SimObject GetNextInterestingObject()
@@ -255,9 +262,9 @@ namespace TheSimiansModule
 
         public void ThinkOnce()
         {
-            Actor.ScanNewObjects(2, Actor.SightRange);
+            Actor.ScanNewObjects(2, Actor.SightRange, false);
             CurrentAction = GetNextAction();
-            Actor.CurrentAction = CurrentAction; 
+            Actor.CurrentAction = new AbortableAction(CurrentAction, this);
         }
 
 
@@ -279,7 +286,7 @@ namespace TheSimiansModule
         public string DebugInfo()
         {
             String s = String.Format("\n{0}", ToString());
-            s += String.Format("\nCurrentAction: {0}", CurrentAction);
+
             int show = 10;
 
             List<SimObject> KnowsAboutList = Actor.GetKnownObjects();
@@ -305,9 +312,10 @@ namespace TheSimiansModule
                 s += String.Format("\n   {0} {1}", item, item.RateIt(CurrentNeeds));
             }
 
-            s += String.Format("\nGetNextAction: {0}", GetNextAction());
-
             s += String.Format("\nCurrentNeeds: {0}", CurrentNeeds);
+            s += String.Format("\nNextAction: {0}", GetNextAction());
+            s += String.Format("\nLastAction: {0}", Actor.LastAction);
+            s += String.Format("\nCurrentAction: {0}", Actor.CurrentAction);
             return s;
         }
 
@@ -319,7 +327,7 @@ namespace TheSimiansModule
             BotNeeds OneMinute = SimTypeSystem.GetObjectType("OnMinuteTimer").GetUsageActual("OnMinuteTimer");
             while (true)
             {
-                Actor.ScanNewObjects(2, Actor.SightRange);
+                Actor.ScanNewObjects(2, Actor.SightRange, false);
                 CurrentNeeds.AddFrom(OneMinute);
                 CurrentNeeds.SetRange(0.0F, 100.0F);
                 //SimPosition to = WorldObjects.Master.m_TheSimAvatar;
@@ -514,6 +522,57 @@ namespace TheSimiansModule
             {
                 if (CurrentAction != null) CurrentAction.Target = value;
             }
+        }
+    }
+
+    public class AbortableAction : BotAction
+    {
+        readonly BotAction Act;
+        readonly SimThinker Thinker;
+        public AbortableAction(BotAction action, SimThinker thinker)
+            : base(action.ToString())
+        {
+            Act = action;
+            Thinker = thinker;
+        }
+
+
+        public override SimPosition Target
+        {
+            get
+            {
+                return Act.Target;
+            }
+            set
+            {
+                Act.Target = value;
+            }
+        }
+
+        public override BotNeeds ProposedChange()
+        {
+            return Act.ProposedChange();
+        }
+
+        public override void InvokeReal()
+        {
+            Act.InvokeReal();
+        }
+
+        public override Vector3 GetUsePostion()
+        {
+            return Act.GetUsePostion();
+        }
+
+        public override void Abort()
+        {
+            Thinker.Abort();
+            Act.Abort();
+        }
+
+        public override org.opencyc.cycobject.CycFort GetCycFort()
+        {
+            return Act.GetCycFort();
         }
     }
 }

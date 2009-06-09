@@ -87,14 +87,15 @@ namespace cogbot.Actions
                     TheBotClient.describers[subject].Invoke(true, WriteLine);
                 else
                 {
-                    Avatar avatar;
-                    if (WorldSystem.tryGetAvatar(subject, out avatar))
-                        WorldSystem.describeAvatar(avatar);
-                    else
                     {
                         Primitive prim;
                         if (WorldSystem.tryGetPrim(args.str, out prim))
-                            WriteLine(WorldSystem.describePrim(prim, true));
+                        {
+                            if (prim is Avatar)
+                                WriteLine(WorldSystem.describeAvatar((Avatar) prim));
+                            else
+                                WriteLine(WorldSystem.describePrim(prim, true));
+                        }
                         else
                         {
 

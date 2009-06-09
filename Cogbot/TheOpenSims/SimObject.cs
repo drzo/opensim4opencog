@@ -308,9 +308,10 @@ namespace cogbot.TheOpenSims
         {
             get
             {
+                Primitive Prim = this.Prim;
+                if ((Prim.Flags & PrimFlags.Touch) != 0) return true;
                 if (Prim.Properties != null)
                     return !String.IsNullOrEmpty(Prim.Properties.TouchName);
-                if ((Prim.Flags & PrimFlags.Touch) != 0) return true;
                 return false;
             }
         }
@@ -322,9 +323,10 @@ namespace cogbot.TheOpenSims
         {
             get
             {
+                Primitive Prim = this.Prim;
+                if (Prim.ClickAction == ClickAction.Sit) return true;
                 if (Prim.Properties != null)
                     return !String.IsNullOrEmpty(Prim.Properties.SitName);
-                if (Prim.ClickAction == ClickAction.Sit) return true;
                 return false;
             }
         }
@@ -704,9 +706,11 @@ namespace cogbot.TheOpenSims
         {
             try
             {
+                Primitive Prim = this.Prim;
                 _TOSRTING = null;
                 if (objectProperties != null)
                 {
+                    if (Prim.Properties == null) Prim.Properties = objectProperties;
                     ObjectType.SitName = objectProperties.SitName;
                     ObjectType.TouchName = objectProperties.TouchName;
                     if (needUpdate)
@@ -839,6 +843,7 @@ namespace cogbot.TheOpenSims
         {
             if (_TOSRTING == null)
             {
+                Primitive Prim = this.Prim;
                 _TOSRTING = "";
                 UUID ID = Prim.ID;
                 Primitive.ConstructionData PrimData = Prim.PrimData;
@@ -871,6 +876,11 @@ namespace cogbot.TheOpenSims
                         _TOSRTING += String.Format("{0} ", Prim.Properties.Name);
                     if (!String.IsNullOrEmpty(Prim.Properties.Description))
                         _TOSRTING += String.Format(" | {0} ", Prim.Properties.Description);
+                } else
+                {
+                    needUpdate = true;
+                    Console.WriteLine("Reselecting prim " + Prim);
+                    WorldSystem.ReSelectObject(Prim);
                 }
                 if (!String.IsNullOrEmpty(Prim.Text))
                     _TOSRTING += String.Format(" | {0} ", Prim.Text);
@@ -907,11 +917,28 @@ namespace cogbot.TheOpenSims
                 {
                     _TOSRTING += "(ch0)";
                 }
+
+                const PrimFlags AllPrimFlags = (PrimFlags)0xffffffff;
+                const PrimFlags FlagsToPrintFalse =
+                    PrimFlags.ObjectAnyOwner | PrimFlags.InventoryEmpty | PrimFlags.ObjectOwnerModify;
+                const PrimFlags FlagsToPrintTrue = (PrimFlags) (AllPrimFlags - FlagsToPrintFalse);
+
+                PrimFlags showTrue = (Prim.Flags & FlagsToPrintTrue);
+                if (showTrue != PrimFlags.None) _TOSRTING += "(PrimFlagsTrue " + showTrue + ")";
+                PrimFlags showFalse = ((~Prim.Flags) & FlagsToPrintFalse);
+                if (showFalse != PrimFlags.None) _TOSRTING += "(PrimFlagsFalse " + showFalse + ")";
                 if (_Mesh != null)
                     _TOSRTING += " (size " + GetSizeDistance() + ") ";
                 _TOSRTING += SuperTypeString();
                 if (Prim.Sound != UUID.Zero)
                     _TOSRTING += "(Audible)";
+                if (IsTouchDefined)
+                    _TOSRTING += "(IsTouchDefined)";
+                if (IsSitDefined)
+                    _TOSRTING += "(IsSitDefined)";
+                string simverb = GetSimVerb();
+                if (!String.IsNullOrEmpty(simverb))
+                    _TOSRTING += "(SimVerb " + simverb + ")";
                 if (!IsPassable)
                     _TOSRTING += "(!IsPassable)";
                 if (Prim.PrimData.ProfileHollow > 0f)
@@ -1002,15 +1029,25 @@ namespace cogbot.TheOpenSims
             return transValue;
         }
 
+        protected Vector3 LastKnownPos;
         public virtual Vector3 GetSimPosition()
         {
-            //if (!IsRegionAttached()) return Prim.Position; 
-            //throw Error("GetWorldPosition !IsRegionAttached: " + this);
             Primitive thisPrim = Prim;
             Vector3 thisPos = thisPrim.Position;
-            if (thisPrim.ParentID != 0)
+            //if (!IsRegionAttached()) return Prim.Position; 
+            //throw Error("GetWorldPosition !IsRegionAttached: " + this);
+            if (thisPrim.ParentID == 0)
+            {
+                return LastKnownPos = thisPos;
+            }
             {
                 Primitive outerPrim = GetParentPrim(thisPrim);
+
+                if (outerPrim == null)
+                {
+                    if (LastKnownPos!=default(Vector3))return LastKnownPos;
+                    Debug("Unknown parent");
+                }
 
                 thisPos = outerPrim.Position +
                           Vector3.Transform(thisPos, Matrix4.CreateFromQuaternion(outerPrim.Rotation));
@@ -1163,7 +1200,15 @@ namespace cogbot.TheOpenSims
 
         public virtual bool Matches(string name)
         {
-            return SimTypeSystem.MatchString(ToString(), name);
+            string toString1 = ToString();
+            return SimTypeSystem.MatchString(toString1, name);
+        }
+
+        public virtual bool HasFlag(object name)
+        {
+            if (name == null) return PrimFlags.None == Prim.Flags;
+            if (name is PrimFlags) return (Prim.Flags & (PrimFlags) name) != 0;
+            return (" " + Prim.Flags.ToString().ToLower() + " ").Contains(" " + name.ToString().ToLower() + " ");
         }
 
         public virtual void Debug(string p, params object[] args)
@@ -1229,6 +1274,7 @@ namespace cogbot.TheOpenSims
 
         public virtual string GetName()
         {
+            Primitive Prim = this.Prim;
             if (Prim.Properties != null)
             {
                 String s = Prim.Properties.Name;
@@ -1418,12 +1464,21 @@ namespace cogbot.TheOpenSims
 
         public string GetSimVerb()
         {
-            string sn = Prim.Properties.TouchName;
-            if (!String.IsNullOrEmpty(sn)) return sn;
+            Primitive Prim = this.Prim;
+            string sn;
+            OpenMetaverse.Primitive.ObjectProperties PrimProperties = Prim.Properties;
+            if (PrimProperties != null)
+            {
+                sn = PrimProperties.TouchName;
+                if (!String.IsNullOrEmpty(sn)) return sn;
+            }
             sn = ObjectType.GetTouchName();
             if (!String.IsNullOrEmpty(sn)) return sn;
-            sn = Prim.Properties.SitName;
-            if (!String.IsNullOrEmpty(sn)) return sn;
+            if (PrimProperties != null)
+            {
+                sn = PrimProperties.SitName;
+                if (!String.IsNullOrEmpty(sn)) return sn;
+            }
             sn = ObjectType.GetSitName();
             if (!String.IsNullOrEmpty(sn)) return sn;
             return null;
