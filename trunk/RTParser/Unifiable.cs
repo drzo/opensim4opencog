@@ -365,6 +365,7 @@ namespace RTParser
 
         public override void Append(Unifiable p)
         {
+            if (p==null) return;
             if (str == "")
                 str = p.AsString();
             else

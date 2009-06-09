@@ -148,16 +148,17 @@ namespace AIMLBotModule
             if (im.FromAgentName == "System" || im.FromAgentName=="Second Life") return;
             User myUser = GetMyUser(im.FromAgentName);
             bool UseThrottle = im.GroupIM;
-            //if (im.GroupIM)
-            //{
-            //    string groupName = null;
-            //    Group group;
-            //    client.Groups.GroupName2KeyCache.ForEach(delegate(KeyValuePair<UUID, string> kv)
-            //                                                 {
-            //                                                     if (im.FromAgentID == kv.Key) groupName = kv.Value;
-            //                                                 });
-            //    //if (groupName == null) return;
-            //}
+            string groupName = null;
+            if (im.GroupIM)
+            {
+                Group group;
+                client.Groups.GroupName2KeyCache.ForEach(delegate(KeyValuePair<UUID, string> kv)
+                                                             {
+                                                                 if (im.FromAgentID == kv.Key) groupName = kv.Value;
+                                                             });
+
+                Console.WriteLine("Group IM {0}",groupName);
+            }
 
             //UpdateQueue.Enqueue(() => SendNewEvent("on-instantmessage", , im.Message, im.ToAgentID,
             //                           im.Offline, im.IMSessionID, im.GroupIM, im.Position, im.Dialog,
@@ -186,10 +187,13 @@ namespace AIMLBotModule
                                     Thread.Sleep(100);
                                     if (im.GroupIM)
                                     {
+
+                                        Console.WriteLine("InstantMessageGroup {0} {1} {2}", im.FromAgentName + "/" + groupName, im.FromAgentID, ting.Trim());
                                         client.Self.InstantMessageGroup(GetName(), im.FromAgentID, ting.Trim());
                                     }
                                     else
                                     {
+                                        Console.WriteLine("InstantMessage {0} {1} {2}", im.FromAgentName, im.FromAgentID, ting.Trim());
                                         client.Self.InstantMessage(im.FromAgentID, ting.Trim(), im.IMSessionID);
                                     }
                                 }

@@ -38,7 +38,7 @@ namespace RTParser.AIMLTagHandlers
                 Unifiable mt = GetAttribValue("mt", "EverythingPSC");
                 if (!templateNodeInnerText.IsEmpty)
                 {
-                    return this.Proc.EvalSubL(String.Format("(ask-template '{0} {1} {2})",varname, Recurse(), Proc.Cyclify(mt)), filter);
+                    return this.Proc.EvalSubL(String.Format("(ask-template '{0} `{1} {2})",varname, Recurse(), Proc.Cyclify(mt)), filter);
                 }
             }
             return Unifiable.Empty;

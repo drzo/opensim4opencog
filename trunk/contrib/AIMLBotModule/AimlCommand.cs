@@ -31,7 +31,7 @@ namespace AIMLBotModule
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length == 0) return "Usage: aiml [[on|off]|text]";
+            if (args.Length == 0) return "Usage: aiml [[on|off|reload|learn]|text]";
             string s = args[0].ToLower();
             if (s == "on")
             {
@@ -46,6 +46,12 @@ namespace AIMLBotModule
                     WorldSystemModule.SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), false);
                     return "WorldObjects.RespondToChatByDefaultAllUsers = false;";
                 }
+                else
+                    if (s == "reload")
+                    {
+                        WorldSystemModule.MyBot.ReloadAll();
+                        return "WorldSystemModule.MyBot.ReloadAll();";
+                    }
             string joined = String.Join(" ", args);
             return WorldSystemModule.AIMLInterp(joined);
         }

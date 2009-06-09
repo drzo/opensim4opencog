@@ -35,7 +35,7 @@ namespace RTParser.AIMLTagHandlers
             {                
                 if (!templateNodeInnerText.IsEmpty)
                 {
-                    return this.Proc.EvalSubL(String.Format("(cyc-assert '{0})", Recurse()),null);
+                    return this.Proc.EvalSubL(String.Format("(cyc-assert `{0})", Recurse()),null);
                 }
             }
             return Unifiable.Empty;

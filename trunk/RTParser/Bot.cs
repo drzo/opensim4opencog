@@ -702,7 +702,7 @@ namespace RTParser
                 // process the templates into appropriate output
                 foreach (SubQuery query in result.SubQueries)
                 {
-                    if (processTemplate(query, request, result)) break;
+                    if (processTemplate(query, request, result)) ;
                 }
             }
             else
@@ -1206,7 +1206,8 @@ The AIMLbot program.
             {
                 Console.Write(result);
                 Console.Out.Flush();
-                Object oresult = access.converseList("(list " + cmd + ")").first();
+                string str = "(list " + cmd + ")";
+                Object oresult = access.converseList(str).first();
                 Console.WriteLine( " => " + oresult);
                 while (oresult is CycList)
                 {
@@ -1256,7 +1257,7 @@ The AIMLbot program.
             if (!filter.IsEmpty)
             {
                 if (Unifiable.IsFalse(filter)) return true;
-                if (this.EvalSubL(String.Format("(ask-template 'T '(#$isa {0} {1}) #$EverythingPSC)", term, Cyclify(filter)),null) == "NIL")
+                if (this.EvalSubL(String.Format("(ask-template 'T `(#$isa {0} {1}) #$EverythingPSC)", term, Cyclify(filter)), null) == "NIL")
                     return false;
             }
             return true;
