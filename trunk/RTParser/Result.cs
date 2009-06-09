@@ -92,6 +92,7 @@ namespace RTParser
                 Unifiable result = new Unifiable();
                 foreach (string sentence in OutputSentences)
                 {
+                    return sentence;
                     Unifiable sentenceForOutput = sentence.Trim();
                     if (!this.checkEndsAsSentence(sentenceForOutput))
                     {
