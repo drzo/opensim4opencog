@@ -652,7 +652,48 @@ namespace RTParser
 
         #endregion
 
+        // Persistent user tracking
+        readonly Dictionary<string, User> BotUsers = new Dictionary<string, User>();
+
+        public void SetChatOnOff(string username, bool value)
+        {
+            lock (BotUsers)
+            {
+                foreach (var u in BotUsers.Values)
+                {
+                    if (u.UserID.ToValue().Contains(username) || username.Contains(u.UserID))
+                        u.RespondToChat = value;
+                }
+            }
+        }
+
+        public User FindOrCreateUser(string fromname)
+        {
+            lock (BotUsers)
+            {
+                if (BotUsers.ContainsKey(fromname)) return BotUsers[fromname];
+                User myUser = new User(fromname, this);
+                BotUsers[fromname] = myUser;
+                Request r = new Request("My name is " + fromname, myUser, this);
+                Result res = Chat(r);
+                myUser.Predicates.addSetting("name", fromname);
+                return myUser;
+            }
+        }
+
         #region Conversation methods
+
+        /// <summary> 
+        /// Given some raw input string username/unique ID creates a response for the user
+        /// </summary>
+        /// <param name="rawInput">the raw input</param>
+        /// <param name="UserGUID">a usersname</param>
+        /// <returns>the result to be output to the user</returns>        
+        public string ChatString(string rawInput, string username)
+        {
+            return Chat(new Request(rawInput, FindOrCreateUser(username), this)).Output;
+        }
+
 
         /// <summary>
         /// Given some raw input and a unique ID creates a response for a new user

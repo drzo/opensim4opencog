@@ -65,6 +65,9 @@ namespace RTParser
                 {
                     if (this.request.hasTimedOut)
                     {
+
+                        this.bot.writeToLog("ERROR: TIMEOUT on " + this.RawInput + " from the user with an id: " + this.user.UserID);
+                        return Unifiable.Empty;
                         return this.bot.TimeOutMessage;
                     }
                     else
