@@ -73,7 +73,28 @@ namespace RTParser.Utils
             // check we're not at the leaf node
             if (!path.IsWildCard() && path.AsString().Trim().Length == 0)
             {
+                const bool RemoveDupes = true; //slows it down but maybe important to do
                 if (this.template == null) this.template = new List<Template>();
+                else if (RemoveDupes)
+                    lock (this.template)
+                    {
+                        // search for old
+                        string newStr = template.OuterXml;
+                        string newGuard = guard != null ? guard.OuterXml : null;
+                        List<Template> dupes = new List<Template>();
+                        this.template.ForEach(delegate(Template temp)
+                                                  {
+                                                      string oldGuard = temp.Guard != null ? temp.Guard.OuterXml : null;
+                                                      if (newStr == temp.Output.OuterXml)
+                                                          if (newGuard == oldGuard)
+                                                              dupes.Add(temp);
+                                                  });
+                        dupes.ForEach(delegate(Template temp)
+                                          {
+                                              this.template.Remove(temp);
+                                          });
+                    }
+
                 // last in first out addition
                 this.template.Insert(0, new Template(template, guard, this));
                 //this.GuardText = guard;
