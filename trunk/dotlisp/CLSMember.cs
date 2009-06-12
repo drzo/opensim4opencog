@@ -47,7 +47,7 @@ internal abstract class CLSMember : IFunction
 			}
 		//lookup name in type, create approriate derivee
 		MemberInfo[] members = type.GetMember(name,
-														  BindingFlags.Public|
+														  BindingFlags.Public|BindingFlags.NonPublic|
 														  (isStatic?BindingFlags.Static:BindingFlags.Instance)
 														 ); //all public members with matching isstatic
 		if(members.Length == 0)
@@ -59,7 +59,11 @@ internal abstract class CLSMember : IFunction
 
 		//CLS says all same-named members must be same type (field or param or method)
 		//so just check first one
-
+        else if (members[0] is EventInfo)
+        {
+            EventInfo mi = (EventInfo)members[0];
+            return new CLSEvent(name, type, mi, false);
+        }
 		if(members[0] is FieldInfo)
 			{
 			FieldInfo fi = (FieldInfo) members[0];
