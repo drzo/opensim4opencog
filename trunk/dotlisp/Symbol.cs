@@ -168,43 +168,48 @@ internal class SymbolTable
 		else	//short name
 			{
 			ArrayList tlist = (ArrayList)shortNamesToTypes[name];
-			if(tlist == null)
-				{
-				throw new Exception("Can't find Type: " + name);
-				}
-			else if(tlist.Count > 1)
-				{
+            if (tlist == null)
+            {
+                if (name.Contains(":"))
+                {
+                    name = name.Replace(":", ".");
+                    return (Type)fullNamesToTypes[name];
+                }
+                throw new Exception("Can't find Type: " + name);
+            }
+            else if (tlist.Count > 1)
+            {
                 // KHC patch: to disambiguate to common choices for now ...
-                    foreach (Type type in tlist)
-                    {
-                        string typeString = type.ToString();
-                        if (typeString == "System.Type") return (Type)type;
-                        if (typeString == "System.Enum") return (Type)type;
-                        if (typeString == "System.IO.Path") return (Type)type;
-                        if (typeString == "System.Collections.IEnumerable") return (Type)type;
-                        if (typeString == "System.Collections.IEnumerator") return (Type)type;
-                        if (typeString == "System.Windows.Forms.IDataObject") return (Type)type;
-                    }
-		    foreach (Type type in tlist) 
-                    {
-                        string typeString = type.ToString(); 
-                        if (typeString.StartsWith("System.")) return (Type)type;
-                        if (typeString.StartsWith("DotLisp.")) return (Type)type; 
-                        if (typeString.StartsWith("Microsoft.")) return (Type)type; 
-                        if (typeString.StartsWith("Mono.")) return (Type)type; 
-                    } 
+                foreach (Type type in tlist)
+                {
+                    string typeString = type.ToString();
+                    if (typeString == "System.Type") return (Type)type;
+                    if (typeString == "System.Enum") return (Type)type;
+                    if (typeString == "System.IO.Path") return (Type)type;
+                    if (typeString == "System.Collections.IEnumerable") return (Type)type;
+                    if (typeString == "System.Collections.IEnumerator") return (Type)type;
+                    if (typeString == "System.Windows.Forms.IDataObject") return (Type)type;
+                }
+                foreach (Type type in tlist)
+                {
+                    string typeString = type.ToString();
+                    if (typeString.StartsWith("System.")) return (Type)type;
+                    if (typeString.StartsWith("DotLisp.")) return (Type)type;
+                    if (typeString.StartsWith("Microsoft.")) return (Type)type;
+                    if (typeString.StartsWith("Mono.")) return (Type)type;
+                }
 
-				//todo tell them which names conflict
-				StringBuilder sb = new StringBuilder
-										 ("Ambiguous Type name: " + name + " ->");
-				foreach(Type type in tlist)
-					{
-					sb.Append("\n " + type.FullName);
-					}
-				throw new Exception(sb.ToString());
-				}
-			else
-				return(Type)tlist[0];
+                //todo tell them which names conflict
+                StringBuilder sb = new StringBuilder
+                                         ("Ambiguous Type name: " + name + " ->");
+                foreach (Type type in tlist)
+                {
+                    sb.Append("\n " + type.FullName);
+                }
+                throw new Exception(sb.ToString());
+            }
+            else
+                return (Type)tlist[0];
 			}
 		}
 
