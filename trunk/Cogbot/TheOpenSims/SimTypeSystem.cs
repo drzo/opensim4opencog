@@ -91,72 +91,80 @@ namespace cogbot.TheOpenSims
 
         public SimTypeUsage FindObjectUsage(string usename)
         {
+            lock (UsageAffect)
+            {
+                List<SimTypeUsage> usages = new List<SimTypeUsage>();
 
-            List<SimTypeUsage> usages = new List<SimTypeUsage>();
+                lock (SuperType)
 
-            lock (SuperType)
-
-                foreach (SimObjectType type in SuperType)
-                {
-                    SimTypeUsage find = type.FindObjectUsage(usename);
-                    if (find != null)
+                    foreach (SimObjectType type in SuperType)
                     {
-                        usages.Add(find);
+                        SimTypeUsage find = type.FindObjectUsage(usename);
+                        if (find != null)
+                        {
+                            usages.Add(find);
+                        }
                     }
+
+                if (UsageAffect.ContainsKey(usename))
+                    usages.Add(UsageAffect[usename]);
+
+
+                if (usages.Count == 0) return null;
+
+                SimTypeUsage newUse = new SimTypeUsage(usename);
+
+                foreach (SimTypeUsage use in usages)
+                {
+                    newUse.OverrideProperties(use);
                 }
 
-            if (UsageAffect.ContainsKey(usename))
-                usages.Add(UsageAffect[usename]);
+                // TODO maybe store for later?
+                // usageAffect[usename] = newUse;
 
-
-            if (usages.Count == 0) return null;
-
-            SimTypeUsage newUse = new SimTypeUsage(usename);
-
-            foreach (SimTypeUsage use in usages)
-            {
-                newUse.OverrideProperties(use);
+                return newUse;
             }
-
-            // TODO maybe store for later?
-            // usageAffect[usename] = newUse;
-
-            return newUse;
         }
 
         public SimTypeUsage CreateObjectUsage(string usename)
         {
-            if (UsageAffect.ContainsKey(usename))
-                return UsageAffect[usename];
-            SimTypeUsage sou = new SimTypeUsage(usename);
-            //  sou.TextName = usename;
-            UsageAffect[usename] = sou;
-            return sou;
+            lock (UsageAffect)
+            {
+                if (UsageAffect.ContainsKey(usename))
+                    return UsageAffect[usename];
+                SimTypeUsage sou = new SimTypeUsage(usename);
+                //  sou.TextName = usename;
+                UsageAffect[usename] = sou;
+                return sou;
+            }
         }
 
         public IList<SimTypeUsage> GetTypeUsages()
         {
-            ListAsSet<string> verbs = new ListAsSet<string>();
-            foreach (string key in UsageAffect.Keys)
+            lock (UsageAffect)
             {
-                verbs.AddTo(key);
-            }
-            foreach (SimObjectType st in SuperType)
-            {
-                foreach (SimTypeUsage v in st.GetTypeUsages())
+                ListAsSet<string> verbs = new ListAsSet<string>();
+                foreach (string key in UsageAffect.Keys)
                 {
-                    verbs.AddTo(v.UsageName);
+                    verbs.AddTo(key);
                 }
-            }
-            List<SimTypeUsage> usages = new List<SimTypeUsage>();
-            foreach (string st in verbs)
-            {
-                SimTypeUsage use = FindObjectUsage(st);
-                use.ToString();
-                usages.Add(use);
-            }
+                foreach (SimObjectType st in SuperType)
+                {
+                    foreach (SimTypeUsage v in st.GetTypeUsages())
+                    {
+                        verbs.AddTo(v.UsageName);
+                    }
+                }
+                List<SimTypeUsage> usages = new List<SimTypeUsage>();
+                foreach (string st in verbs)
+                {
+                    SimTypeUsage use = FindObjectUsage(st);
+                    use.ToString();
+                    usages.Add(use);
+                }
 
-            return usages;
+                return usages;
+            }
         }
 
         public BotNeeds GetUsagePromise(string usename)
