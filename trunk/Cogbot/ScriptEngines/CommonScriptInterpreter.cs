@@ -26,6 +26,7 @@ namespace cogbot.ScriptEngines
         public abstract string Str(object code);
         public abstract ScriptInterpreter newInterpreter();
         public abstract bool IsSubscriberOf(string eventName);
+        public abstract object GetSymbol(string eventName);
 
         #endregion
     }

@@ -331,7 +331,10 @@ namespace cogbot
             updateTimer.Start();
             searcher = new BotInventoryEval(this);
             initTaskInterperter();
+            lispEventProducer = new LispEventProducer(this,lispTaskInterperter);
         }
+
+        private LispEventProducer lispEventProducer;
 
         public void StartupClientLisp()
         {
@@ -693,6 +696,23 @@ namespace cogbot
                 Network.Logout();
         }
 
+        public void WriteLine(string str)
+        {
+            try
+            {
+                if (str == null) return;
+                if (str == "") return;
+                if (str.StartsWith("$bot")) str = str.Substring(4);
+                string toprint = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
+                string SelfName = String.Format("{0} ", GetName());
+                toprint = toprint.Replace("$bot", SelfName);
+                ClientManager.WriteLine(SelfName + ": " + toprint);
+            }
+            catch (Exception)
+            {
+            }
+            
+        }
         public void WriteLine(string str, params object[] args)
         {
             try

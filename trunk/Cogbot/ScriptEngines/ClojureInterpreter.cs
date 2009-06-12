@@ -8,6 +8,11 @@ namespace cogbot.ScriptEngines
     {
         DotLisp.Interpreter dotLispInterpreter;
 
+        public override object GetSymbol(string eventName)
+        {
+            throw new NotImplementedException();
+        }
+
         public override bool IsSubscriberOf(string eventName)
         {
             eventName = eventName.ToLower();

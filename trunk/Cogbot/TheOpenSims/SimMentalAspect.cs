@@ -319,6 +319,16 @@ namespace cogbot.TheOpenSims
             return default(T);
         }
 
+        public bool AddFirst(T item)
+        {
+            lock (this)
+            {
+                bool found = Remove(item);
+                Insert(0,item);
+                return !found;
+            }
+        }
+
         public bool AddTo(T item)
         {
             lock (this)

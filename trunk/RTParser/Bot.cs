@@ -669,9 +669,17 @@ namespace RTParser
 
         public User FindOrCreateUser(string fromname)
         {
+            bool b;
+            return FindOrCreateUser(fromname, out b);
+        }
+
+        public User FindOrCreateUser(string fromname, out bool newlyCreated)
+        {
+            newlyCreated = false;
             lock (BotUsers)
             {
                 if (BotUsers.ContainsKey(fromname)) return BotUsers[fromname];
+                newlyCreated = true;
                 User myUser = new User(fromname, this);
                 BotUsers[fromname] = myUser;
                 Request r = new Request("My name is " + fromname, myUser, this);

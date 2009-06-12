@@ -22,7 +22,7 @@ namespace cogbot.Actions
             {
                 ICollection<string> list = WorldSystem.SimAnimationSystem.GetAnimationList();
                 WriteLine(TheBotClient.argsListString(list));
-                Dictionary<UUID, int> anims = WorldSystem.TheSimAvatar.GetCurrentAnims();
+                IDictionary<UUID, int> anims = WorldSystem.TheSimAvatar.GetCurrentAnimDict();
                 string alist = String.Empty;
                 foreach (UUID id in anims.Keys)
                 {

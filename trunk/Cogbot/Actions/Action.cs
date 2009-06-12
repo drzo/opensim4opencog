@@ -1,6 +1,7 @@
 using System;
 using OpenMetaverse;
 using System.IO;
+using cogbot.TheOpenSims;
 
 
 namespace cogbot.Actions
@@ -113,6 +114,14 @@ namespace cogbot.Actions
             }
         }
 
+        public SimActor TheSimAvatar
+        {
+            get
+            {
+                return WorldSystem.TheSimAvatar;
+            }
+        }
+
         public string Name;
         protected string helpString;
         protected string usageString;
@@ -147,12 +156,13 @@ namespace cogbot.Actions
         public string acceptInputWrapper(string verb, string args , OutputDelegate WriteLine)
         {
 
-                return acceptInput(verb, new Parser(args), WriteLine);
+                return acceptInput(verb, Parser.ParseArgs(args), WriteLine);
         }
 
         public virtual string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            Parser p = new Parser(String.Join(" ", args));
+
+            Parser p = Parser.ParseArgs(String.Join(" ", args));
             p.tokens = args;
             return acceptInput(Name, p, WriteLine);
         }

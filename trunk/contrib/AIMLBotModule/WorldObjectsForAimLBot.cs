@@ -13,6 +13,7 @@ namespace AIMLBotModule
     {
         public static bool AcceptFriends = true;
         public static bool EventsToAIML = false;
+        public static bool ProccessUnsolisitedChat = true;
         public static bool UseRealism = false;
 
         object BotExecHandler(string cmd, User user)
@@ -51,7 +52,7 @@ namespace AIMLBotModule
 
         public RTPBot MyBot;
         public User MyUser;
-        readonly Dictionary<string, User> BotUsers = new Dictionary<string, User>();
+ 
         public override void StartupListener()
         {
             try
@@ -113,28 +114,15 @@ namespace AIMLBotModule
 
         public void SetChatOnOff(string username, bool value)
         {
-            lock (BotUsers)
-            {
-                foreach (var u in BotUsers.Values)
-                {
-                    if (u.UserID.ToValue().Contains(username) || username.Contains(u.UserID))
-                        u.RespondToChat = value;
-                }
-            }
+                MyBot.SetChatOnOff(username,value);
         }
 
         private User GetMyUser(string fromname)
         {
-            lock (BotUsers)
-            {
-                if (BotUsers.ContainsKey(fromname)) return BotUsers[fromname];
-                User myUser = new User(fromname, MyBot);
-                BotUsers[fromname] = myUser;
-                AIMLInterp("My name is " + fromname, myUser);
-                myUser.Predicates.addSetting("name", fromname);
-                myUser.RespondToChat = RespondToChatByDefaultAllUsers;
-                return myUser;
-            }
+            bool newlyCreated;
+            User user = MyBot.FindOrCreateUser(fromname, out newlyCreated);
+            if (newlyCreated) user.RespondToChat = RespondToChatByDefaultAllUsers;
+            return user;
         }
 
         public string GetName()
@@ -182,20 +170,32 @@ namespace AIMLBotModule
                                         return; //too early to respond.. but still listened
                                     }
                                 }
+                                UseRealism = true;
                                 foreach (string ting in resp.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries))
                                 {
+                                    string tsing = ting.Trim();
+                                    if (tsing.Length > 1000)
+                                    {
+                                        tsing = tsing.Substring(0, 1000);
+                                    }
                                     Thread.Sleep(100);
                                     if (im.GroupIM)
                                     {
 
-                                        Console.WriteLine("InstantMessageGroup {0} {1} {2}", im.FromAgentName + "/" + groupName, im.FromAgentID, ting.Trim());
-                                        client.Self.InstantMessageGroup(GetName(), im.FromAgentID, ting.Trim());
+                                        Console.WriteLine("InstantMessageGroup {0} {1} {2}",
+                                                          im.FromAgentName + "/" + groupName, im.FromAgentID,
+                                                          ting.Trim());
+                                        client.Self.InstantMessageGroup(GetName(), im.FromAgentID, tsing);
                                     }
                                     else
                                     {
-                                        Console.WriteLine("InstantMessage {0} {1} {2}", im.FromAgentName, im.FromAgentID, ting.Trim());
-                                        client.Self.InstantMessage(im.FromAgentID, ting.Trim(), im.IMSessionID);
+                                        // todo maybe send a typing message for the UseRealism
+                                        Console.WriteLine("InstantMessage {0} {1} {2}", im.FromAgentName,
+                                                          im.FromAgentID, ting.Trim());
+                                        client.Self.InstantMessage(im.FromAgentID, tsing, im.IMSessionID);
                                     }
+                                    UseRealism = false;
+
                                 }
                                 myUser.LastResponseGivenTime = Environment.TickCount;
                             })).Start();
@@ -230,6 +230,9 @@ namespace AIMLBotModule
                 myUser.RespondToChat = false;
                 return;
             }
+
+            if (!myUser.RespondToChat && !ProccessUnsolisitedChat) return;
+
             UseRealism = true;
 
             (new Thread(() => // this can be long running

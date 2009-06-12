@@ -14,6 +14,11 @@ namespace cogbot.TheOpenSims
     public class SimObjectImpl : SimPosition, BotMentalAspect, SimMover, SimObject, MeshableObject
     {
 
+        public BotMentalAspect GetObject(string name)
+        {
+            return WorldSystem.GetObject(name);
+        }
+
         public ulong RegionHandle { get; set; }
         
 
@@ -170,6 +175,15 @@ namespace cogbot.TheOpenSims
             return move.Goto() == SimMoverState.COMPLETE;
         }
 
+
+        public void TeleportTo(SimPosition local)
+        {
+            if (!IsControllable)
+            {
+                throw Error("GotoTarget !Client.Self.AgentID == Prim.ID");
+            }
+            TeleportTo(SimRegion.GetRegion(local.GetWorldPosition()), local.GetSimPosition());
+        }
 
         public virtual void TeleportTo(SimRegion R, Vector3 local)
         {
@@ -771,7 +785,7 @@ namespace cogbot.TheOpenSims
         public void AddSuperTypes(IList<SimObjectType> listAsSet)
         {
             _TOSRTING = null;
-            //SimObjectType UNKNOWN = SimObjectType.UNKNOWN;
+            //SimObjectType _UNKNOWN = SimObjectType._UNKNOWN;
             foreach (SimObjectType type in listAsSet)
             {
                 ObjectType.AddSuperType(type);
@@ -1402,31 +1416,68 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public virtual void AddCanBeTargetOf(string eventName, int ArgN, object[] arg0_N)
+        public virtual void AddCanBeTargetOf(int ArgN,SimObjectEvent evt)
         {
             if (ArgN == 1)
-                ObjectType.AddSuperType(SimTypeSystem.CreateObjectUse(eventName));
+            {
+                SimObjectType simTypeSystemCreateObjectUse = SimTypeSystem.CreateObjectType(evt.Verb);
+                SimTypeUsage usage = simTypeSystemCreateObjectUse.CreateObjectUsage(evt.Verb);
+                if (evt.EventType == SimEventType.SIT)
+                {
+                    usage.UseSit = true;
+                }
+                if (evt.EventType == SimEventType.TOUCH)
+                {
+                    usage.UseGrab = true;
+                }
+                if (evt.EventType == SimEventType.ANIM)
+                {
+                    usage.UseAnim = evt.Verb;
+                }
+                if (evt.EventType == SimEventType.EFFECT)
+                {
+                 //   usage.UseAnim = evt.Verb;
+                }
+                ObjectType.AddSuperType(simTypeSystemCreateObjectUse);
+            }
         }
 
         public static int MaxEventSize = 10; // Keeps only last 9 events
         public Queue<SimObjectEvent> ActionEventQueue = new Queue<SimObjectEvent>(MaxEventSize);
+        public SimObjectEvent lastEvent = null;
+        readonly public Dictionary<string, SimObjectEvent> LastEventByName = new Dictionary<string, SimObjectEvent>();
 
-        public virtual void LogEvent(string eventName, params object[] args1_N)
+        public virtual bool LogEvent(SimObjectEvent SE)
         {
+           // string eventName = SE.Verb;
+            object[] args1_N = SE.Parameters;
+            bool saveevent = true;
             object[] args0_N = PushFrontOfArray(ref args1_N, this);
-            SimObjectEvent SE = new SimObjectEvent(eventName, args0_N, 0);
-            if (ActionEventQueue.Count >= MaxEventSize) ActionEventQueue.Dequeue();
-            ActionEventQueue.Enqueue(SE);
-
+            lock (ActionEventQueue)
+            {
+                int ActionEventQueueCount = ActionEventQueue.Count;
+                if (ActionEventQueueCount > 0)
+                {
+                    if (lastEvent!=null && lastEvent.SameAs(SE))
+                    {
+                        saveevent = false;
+                    }
+                    if (saveevent && ActionEventQueueCount >= MaxEventSize) ActionEventQueue.Dequeue();
+                }
+                lastEvent = SE;
+                if (saveevent) ActionEventQueue.Enqueue(SE);
+                LastEventByName[SE.EventName] = SE;
+            }
             for (int argN = 1; argN < args0_N.Length; argN++)
             {
                 object o = args0_N[argN];
                 if (o is SimObject)
                 {
                     SimObject newSit = (SimObject) o;
-                    newSit.AddCanBeTargetOf(eventName, argN, args0_N);
+                    newSit.AddCanBeTargetOf(argN, SE);
                 }
             }
+            return saveevent;
         }
 
         public static object[] RestOfArray(object[] args, int p)
@@ -1466,14 +1517,11 @@ namespace cogbot.TheOpenSims
             {
                 sn = PrimProperties.TouchName;
                 if (!String.IsNullOrEmpty(sn)) return sn;
-            }
-            sn = ObjectType.GetTouchName();
-            if (!String.IsNullOrEmpty(sn)) return sn;
-            if (PrimProperties != null)
-            {
                 sn = PrimProperties.SitName;
                 if (!String.IsNullOrEmpty(sn)) return sn;
             }
+            sn = ObjectType.GetTouchName();
+            if (!String.IsNullOrEmpty(sn)) return sn;
             sn = ObjectType.GetSitName();
             if (!String.IsNullOrEmpty(sn)) return sn;
             return null;
@@ -1489,6 +1537,10 @@ namespace cogbot.TheOpenSims
                     sn = Prim.Properties.SitName;
                 if (!String.IsNullOrEmpty(sn)) return sn;
                 sn = ObjectType.GetSitName();
+                if (sn!=null && sn.ToLower()=="pc")
+                {
+                   Console.WriteLine("SITNAME = PC");
+                }
                 if (!String.IsNullOrEmpty(sn)) return sn;
                 return "SitOnObject";
             }
@@ -1503,6 +1555,10 @@ namespace cogbot.TheOpenSims
                     sn = Prim.Properties.TouchName;
                 if (!String.IsNullOrEmpty(sn)) return sn;
                 sn = ObjectType.GetTouchName();
+                if (sn != null && sn.ToLower() == "pc")
+                {
+                    Console.WriteLine("SITNAME = PC");
+                }
                 if (!String.IsNullOrEmpty(sn)) return sn;
                 return "TouchTheObject";
             }
@@ -1548,11 +1604,12 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public void OnEffect(string effectType, object t, object p, float duration, UUID id)
+        public virtual bool OnEffect(string effectType, object t, object p, float duration, UUID id)
         {
-            LogEvent(effectType, t, p, duration, id);
+            bool noteable = LogEvent(new SimObjectEvent(effectType, SimEventType.EFFECT, SimEventStatus.Once, t, p, duration, id));
             //todo
-            WorldSystem.SendNewEvent("on-effect", effectType, this, t, p, duration, id);
+            if (noteable)WorldSystem.SendNewEvent("on-effect", effectType, this, t, p, duration, id);
+            return noteable;
             //throw new NotImplementedException();
         }
 
@@ -1698,13 +1755,13 @@ namespace cogbot.TheOpenSims
 
         // void AddPossibleAction(string textualActionName, params object[] args);
 
-        void AddCanBeTargetOf(string textualActionName, int argN, params object[] args);
+        void AddCanBeTargetOf(int argN, SimObjectEvent evt);
 
-        void LogEvent(string p, params object[] args);
+        bool LogEvent(SimObjectEvent evt);
 
         void OnSound(UUID soundID, float gain);
 
-        void OnEffect(string effectType, object t, object p, float duration, UUID id);
+        //bool OnEffect(string effectType, object t, object p, float duration, UUID id);
 
         SimObject GetGroupLeader();
 

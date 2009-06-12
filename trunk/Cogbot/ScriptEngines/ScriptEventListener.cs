@@ -8,6 +8,7 @@ using System.Collections;
 using OpenMetaverse;
 using System.Reflection;
 using cogbot.TheOpenSims;
+using OpenMetaverse.Assets;
 
 namespace cogbot.ScriptEngines
 {
@@ -129,6 +130,23 @@ namespace cogbot.ScriptEngines
             {
                 Avatar prim = (Avatar)arg;
                 arg = "'(avatar"; //+ argString(prim.ID.ToString());
+                if (prim.Name != null)
+                {
+                    arg = arg + " " + argString(prim.Name);
+                }
+                return arg + ")";
+            }
+
+            if (arg is AssetAnimation)
+            {
+                AssetAnimation prim = (AssetAnimation)arg;
+                arg = SimAnimationStore.GetAminFromAssest(prim);
+            }
+
+            if (arg is SimAnimation)
+            {
+                SimAnimation prim = (SimAnimation)arg;
+                arg = "'(anim"; //+ argString(prim.ID.ToString());
                 if (prim.Name != null)
                 {
                     arg = arg + " " + argString(prim.Name);

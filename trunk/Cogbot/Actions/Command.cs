@@ -58,7 +58,7 @@ namespace cogbot.Actions
 		public string Description;
         public CommandCategory Category;
 
-		//public new abstract string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine);
+		public new abstract string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine);
 
 
         public int CompareTo(object obj)

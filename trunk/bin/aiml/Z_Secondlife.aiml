@@ -1,6 +1,58 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<aiml>
+<aiml>	
+  <category>
+    <pattern>RELOAD AIML</pattern>
+    <template>
+        <system>aiml reload</system>
+    </template>
+  </category>
+  <category>
+    <pattern>evraj</pattern>
+    <template>
+      <system>evinfo rae</system>
+    </template>
+  </category>
+  
+  <!-- Sitting in secondlife -->
+  <category>
+    <pattern>SIT _</pattern>
+    <template>
+      <think>
+        <system>sit</system>
+      </think>In <system>locate</system> am sitting now.
+    </template>
+  </category>
+  <category>
+    <pattern>SIT ON *</pattern>
+    <template>
+      <think>
+        <system>
+          sit on <star/>
+        </system>
+      </think>
+      I am sitting on <star/> with location <system>locate</system>
+    </template>
+  </category>
 
+  <!-- Teleport in secondlife -->
+  <category>
+    <pattern>TELEPORT HERE</pattern>
+    <template>
+        Teleporting to <system>
+          eval (thisClient.WorldSystem.GetObject "<id/> 1")
+        </system> <system>locate <id/></system>
+      <think>
+        <system>
+          say thread teleport 
+          <system>     KEYWORDS
+            (enqueue (.TeleportTo thisClient.WorldSystem.TheSimAvatar  (thisClient.WorldSystem.GetObject "<id/> 1")))
+          </system>
+      </system>
+      </think>
+      </template>
+  </category>
+
+  <!-- Sitting in secondlife -->
   <category>
     <pattern>FOLLOW NO ONE *</pattern>
     <template>
@@ -75,6 +127,4 @@
     </template>
   </category>
 </aiml>
-
-
 

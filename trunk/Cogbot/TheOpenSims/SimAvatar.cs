@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using cogbot.Listeners;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
@@ -11,6 +12,99 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.TheOpenSims
 {
+    public class SimHeading: SimPosition
+    {
+        public override string ToString()
+        {
+            return reg.RegionName + "/" + pos.X + "/" + pos.X + "/" + pos.Y + "/" + pos.Z + "@" +
+                   ZHeading*SimPathStore.RAD2DEG;
+        }
+
+        private SimRegion reg;
+        private Vector3 pos;
+        Quaternion rot;
+        public SimHeading(SimRegion reg, Vector3 pos, Quaternion rot)
+        {
+            this.reg = reg;
+            this.pos = pos;
+            this.rot = rot;
+        }
+
+        public bool IsPassable
+        {
+            get { return true; }
+            set { throw new NotImplementedException(); }
+        }
+
+        public string DistanceVectorString(SimPosition obj)
+        {
+            if (!obj.IsRegionAttached())
+            {
+                Vector3 loc;
+                loc = obj.GetSimPosition();
+                SimPathStore R = obj.GetPathStore();
+                return String.Format("unknown relative {0}/{1:0.00}/{2:0.00}/{3:0.00}",
+                                     R.RegionName, loc.X, loc.Y, loc.Z);
+            }
+            return DistanceVectorString(obj.GetWorldPosition());
+        }
+
+        public string DistanceVectorString(Vector3d loc3d)
+        {
+            Vector3 loc = SimPathStore.GlobalToLocal(loc3d);
+            SimPathStore R = SimPathStore.GetPathStore(loc3d);
+            return String.Format("{0:0.00}m ", Vector3d.Distance(GetWorldPosition(), loc3d))
+                   + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
+        }
+
+        public string DistanceVectorString(Vector3 loc)
+        {
+            SimRegion R = reg;
+            return String.Format("{0:0.00}m ", Vector3.Distance(GetSimPosition(), loc))
+                   + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
+        }
+
+        public Vector3 GetSimPosition()
+        {
+            return pos;
+        }
+
+        public float GetSizeDistance()
+        {
+            return 0.2f;
+        }
+
+        public bool IsRegionAttached()
+        {
+            return reg != null;
+        }
+
+        public Quaternion GetSimRotation()
+        {
+            return rot;
+        }
+
+        public Vector3d GetWorldPosition()
+        {
+            return reg.LocalToGlobal(pos);
+        }
+
+        public SimPathStore GetPathStore()
+        {
+            return reg.GetPathStore(pos);
+        }
+
+        public float ZHeading
+        {
+            get
+            {
+                Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(GetSimRotation()));
+                return (float)Math.Atan2(v3.Y, v3.X);
+            }
+        }
+    }
+
+
     public partial class SimAvatarImpl : SimObjectImpl, SimMover, SimAvatar, SimActor
     {
         public override bool IsKilled
@@ -63,24 +157,57 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public object[] GetHeading()
+        public SimHeading GetHeading()
         {
-            return new object[] {ZHeading*SimPathStore.RAD2DEG, GetSimulator().Name, GetSimPosition()};
+            return new SimHeading(GetSimRegion(), GetSimPosition(), GetSimRotation());
         }
 
-        public override void LogEvent(string typeUse, params object[] args1_N)
+
+        public override string DebugInfo()
         {
-            foreach (object o in args1_N)
+
+            string s = this.GetName() + "Z=" + ZHeading * SimPathStore.RAD2DEG + " " + GetSimulator().Name + GetSimPosition() + "";
+            lock (ActionEventQueue) foreach (SimObjectEvent s1 in ActionEventQueue)
             {
-                if (o is SimObject) KnownSimObjects.Add((SimObject) o);
+                s += "\n " + s1;
+                
+            }
+            return s;
+                
+        }                    
+        public override bool OnEffect(string effectType, object t, object p, float duration, UUID id)
+        {
+            bool noteable = LogEvent(new SimObjectEvent(effectType, SimEventType.EFFECT, SimEventStatus.Once, this, t, p, duration, id));
+            //todo
+            if (noteable) WorldSystem.SendNewEvent("on-effect", effectType, this, t, p, duration, id);
+            return noteable;
+            //throw new NotImplementedException();
+        }
+
+        public override bool LogEvent(SimObjectEvent SE)
+        {
+            string typeUse = SE.Verb;
+            object[] args1_N = SE.Parameters;
+            // does this backwards to the first argument is the most reliavant object
+            for (int i = args1_N.Length-1; i >= 0 ; i--)
+            {
+                object o = args1_N[i];
+                if (o == this) continue; //skip self
+                if (o is SimObject) KnownSimObjects.AddFirst((SimObject)o);
             }
             _knownTypeUsages.AddTo(SimTypeSystem.CreateTypeUsage(typeUse));
-            base.LogEvent(typeUse, args1_N);
+            bool noteable = base.LogEvent(SE);
+            if (noteable)
+                //if (theAvatar.Name.Contains("rael"))
+                {
+                    Console.WriteLine(SE);
+                }
+            return noteable;
         }
 
-        public override void AddCanBeTargetOf(string textualActionName, int argN, params object[] arg0_N)
+        public override void AddCanBeTargetOf(int argN, SimObjectEvent evt)
         {
-            base.AddCanBeTargetOf(textualActionName, argN, arg0_N);
+            base.AddCanBeTargetOf(argN, evt);
         }
 
         public Avatar theAvatar
@@ -239,10 +366,7 @@ namespace cogbot.TheOpenSims
                     if (Client.Self.Movement.SitOnGround) return true;
                 }
                 Dictionary<UUID, int> anims = ExpectedCurrentAnims;
-                if (anims.ContainsKey(Animations.SIT_GROUND) || anims.ContainsKey(Animations.SIT)
-                    || anims.ContainsKey(Animations.SIT_GENERIC)
-                    || anims.ContainsKey(Animations.SIT_FEMALE)
-                    || anims.ContainsKey(Animations.SIT_GROUND_staticRAINED)) return true;
+                if (SimAnimationStore.Matches(anims.Keys,"sit").Count>0) return true;
                 return theAvatar.ParentID != 0;
             }
             set
@@ -562,7 +686,7 @@ namespace cogbot.TheOpenSims
         private void StopAllAnimations()
         {
             Dictionary<UUID, bool> animations = new Dictionary<UUID, bool>();
-            foreach (UUID animation in ExpectedCurrentAnims.Keys)
+            foreach (UUID animation in GetCurrentAnims())
             {
                 animations[animation] = false;
             }
@@ -1178,7 +1302,8 @@ namespace cogbot.TheOpenSims
             {
                 throw Error("GotoTarget !Client.Self.AgentID == Prim.ID");
             }
-            Client.Self.Teleport(R.RegionName, local);
+            Client.ExecuteCommand("teleport " + R.RegionName + "/" + local.X + "/" + local.Y + "/" + local.Z);
+          //  Client.Self.Teleport(R.RegionName, local);
         }
 
         public override void SetMoveTarget(SimPosition target, double maxDist)
@@ -1307,10 +1432,7 @@ namespace cogbot.TheOpenSims
                 (UUID avatarID, InternalDictionary<UUID, int> anims) =>
                     {
                         if (avatarID == theAvatar.ID)
-                            if (anims.ContainsKey(Animations.SIT_GROUND) || anims.ContainsKey(Animations.SIT)
-                                || anims.ContainsKey(Animations.SIT_GENERIC)
-                                || anims.ContainsKey(Animations.SIT_FEMALE)
-                                || anims.ContainsKey(Animations.SIT_GROUND_staticRAINED))
+                            if (SimAnimationStore.IsSitAnim(anims.Dictionary.Keys))
                         {
                             //int seq = anims[Animations.SIT_GROUND];
                             are.Set();
@@ -1413,7 +1535,45 @@ namespace cogbot.TheOpenSims
         private readonly Dictionary<UUID, int> RemovedAnims = new Dictionary<UUID, int>();
         private readonly Dictionary<UUID, int> AddedAnims = new Dictionary<UUID, int>();
 
-        public Dictionary<UUID, int> GetCurrentAnims()
+
+        public bool IsWalking
+        {
+            get
+            {
+                return SimAnimationStore.IsWalkingAnim(GetCurrentAnims());
+            }
+
+        }
+        public bool IsFlying
+        {
+            get
+            {
+                return SimAnimationStore.IsFlyAnim(GetCurrentAnims());
+            }
+        }
+
+        public bool IsStanding
+        {
+            get
+            {
+                return SimAnimationStore.IsStandingAnim(GetCurrentAnims());
+            }
+        }
+
+        public bool IsSleeping
+        {
+            get
+            {
+                return SimAnimationStore.IsSleepAnim(GetCurrentAnims());
+            }
+        }
+
+        public ICollection<UUID> GetCurrentAnims()
+        {
+            return ExpectedCurrentAnims.Keys;
+        }
+
+        public IDictionary<UUID,int> GetCurrentAnimDict()
         {
             return ExpectedCurrentAnims;
         }
@@ -1425,8 +1585,8 @@ namespace cogbot.TheOpenSims
         /// <param name="anims"></param>
         public void OnAvatarAnimations(InternalDictionary<UUID, int> anims)
         {
-            bool SendAnimEvent = WorldObjects.MaintainAnims;
-            /// if (!theAvatar.Name.Contains("rael")) return;
+            bool SendAnimEvent = !WorldObjects.UseNewEventSystem;
+            //if (!theAvatar.Name.Contains("rael")) return;
             lock (ExpectedCurrentAnims)
             {
                 int mostCurrentSequence = -1;
@@ -1454,7 +1614,7 @@ namespace cogbot.TheOpenSims
 
                 UUID mostCurrentAnim = UUID.Zero;
                 ///  List<String> names = new List<String>();
-                List<UUID> RemovedThisEvent = new List<UUID>(ExpectedCurrentAnims.Keys);
+                List<UUID> RemovedThisEvent = new List<UUID>(GetCurrentAnims());
                 anims.ForEach(delegate(UUID key)
                                   {
                                       RemovedThisEvent.Remove(key);
@@ -1503,6 +1663,8 @@ namespace cogbot.TheOpenSims
                 List<UUID> shownRemoved = new List<UUID>();
                 List<UUID> showAdded = new List<UUID>();
 
+                ICollection<UUID> AddedThisEvent = AddedAnims.Keys;
+
                 foreach (UUID key in RemovedThisEvent)
                 {
                     ExpectedCurrentAnims.Remove(key);
@@ -1518,6 +1680,61 @@ namespace cogbot.TheOpenSims
                 foreach (UUID key in RemovedThisEvent)
                 {
                     if (SendAnimEvent) WorldSystem.SendNewEvent("On-Stop-Animation", this, key, GetHeading());
+                }
+
+
+                List<SimObjectEvent> startStops = new List<SimObjectEvent>();
+
+                //if (SimAnimationStore.IsSitAnim(RemovedThisEvent)) {
+                //    if (!SimAnimationStore.IsSitAnim(AddedThisEvent))
+                //    {
+                //        LogEvent(new SimObjectEvent("StandUp", SimEventType.ANIM, this, ZHeading * SimPathStore.RAD2DEG, GetSimulator().Name, GetSimPosition()));
+                //    }
+                //}
+
+                // start or stop flying
+                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsFlyAnim, "Flying", SimEventType.ANIM, startStops);
+
+                //start or stop moving
+                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsWalkingAnim, "Moving", SimEventType.ANIM, startStops);
+
+                //start or stop sleeping
+                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsSleepAnim, "Sleep", SimEventType.ANIM, startStops);
+
+                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsJumpAnim, "Jump", SimEventType.ANIM, startStops);
+
+                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsSitAnim, "Sit", SimEventType.ANIM, startStops);
+
+                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsStandingAnim, "Stand", SimEventType.ANIM, startStops);
+
+                //start or stop talking
+                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsCommunationAnim, "Commuincation", SimEventType.ANIM, startStops);
+
+                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsOtherAnim, "OtherAnim", SimEventType.ANIM, startStops);
+
+                foreach (SimObjectEvent evt in startStops)
+                {
+                    if (evt.Verb == "Stand")
+                    {
+                        LastEventByName[evt.EventName] = evt;
+                        continue;
+                    }
+                    if (evt.Verb == "Sit")
+                    {
+                        LastEventByName[evt.EventName] = evt;
+                        continue;
+                    }
+                    if (evt.EventName == "MovingStart")
+                    {
+                        LastEventByName[evt.EventName] = evt;
+                        continue;
+                    }
+                    if (evt.EventName == "MovingStop")
+                    {
+                        object old = GetLastEvent("MovingStart", 2);
+                        evt.Verb = "MoveTo";
+                    }
+                    LogEvent(evt);
                 }
 
                 for (int seq = leastCurrentSequence; seq <= mostCurrentSequence; seq++)
@@ -1558,6 +1775,10 @@ namespace cogbot.TheOpenSims
                     RemovedThisEvent.Remove(key);
                     RemovedAnims.Remove(key);
                 }
+                if (SimAnimationStore.IsSitAnim(showAdded))
+                {
+
+                }
                 foreach (UUID key in showAdded)
                 {
                     AddedAnims.Remove(key);
@@ -1584,6 +1805,32 @@ namespace cogbot.TheOpenSims
 
             /// CurrentAmin = mostCurrentAnim;
             /// SendNewEvent("On-Avatar-Animation", avatar, names);
+        }
+
+        private delegate bool AnimationTest(ICollection<UUID> thisEvent);
+
+        private void StartOrStopAnimEvent(ICollection<UUID> RemovedThisEvent, ICollection<UUID> AddedThisEvent, AnimationTest animTest, string name,SimEventType type, List<SimObjectEvent> startStops )
+        {
+            if (animTest(RemovedThisEvent))
+            {
+                if (!animTest(AddedThisEvent))
+                {
+                    startStops.Insert(0,
+                                      new SimObjectEvent(name ,type, SimEventStatus.Start, this, GetHeading()));
+                }
+            }
+            else
+            {
+                if (animTest(AddedThisEvent))
+                {
+                    startStops.Add(new SimObjectEvent(name, type, SimEventStatus.Stop, this, GetHeading()));
+                }
+            }
+        }
+
+        public object GetLastEvent(String name, int arg)
+        {
+            return LastEventByName.ContainsKey(name) ? LastEventByName[name].GetArg(arg) : null;
         }
 
         #endregion
@@ -1615,6 +1862,8 @@ namespace cogbot.TheOpenSims
         BotMentalAspect LastAction { get; set; }
         IEnumerable<SimTypeUsage> KnownTypeUsages { get; }
         bool SitOn(SimObject o);
+
+        BotMentalAspect GetObject(string name);
     }
 
 
@@ -1636,7 +1885,8 @@ namespace cogbot.TheOpenSims
         float ZHeading { get; }
         void OnAvatarAnimations(InternalDictionary<UUID, int> anims);
 
-        Dictionary<UUID, int> GetCurrentAnims();
+        ICollection<UUID> GetCurrentAnims();
+        IDictionary<UUID, int> GetCurrentAnimDict();
 
         BotClient GetGridClient();
     }
