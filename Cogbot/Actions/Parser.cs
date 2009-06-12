@@ -22,8 +22,15 @@ namespace cogbot.Actions
             objectPhrase = "";
 
             string currentPrep = "";
-            //tokens = str.Split(new char[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
-            tokens = Parsing.ParseArguments(str);
+            // sometimes ParseArgumetns throw exception
+            try
+            {
+                tokens = Parsing.ParseArguments(str);
+            }
+            catch (Exception e)
+            {
+                tokens = str.Split(new char[] {' ', ','}, StringSplitOptions.RemoveEmptyEntries);
+            }
             bool firstTok = true;
 
             for (int i = 0; i < tokens.Length; ++i)
@@ -50,6 +57,19 @@ namespace cogbot.Actions
                         firstTok = false;
                     }
                 }
+            }
+        }
+
+        internal static Parser ParseArgs(string args)
+        {
+            try
+            {
+                return new Parser(args);
+            } catch (Exception e)
+            {
+               Console.WriteLine(""+e);
+                
+                return null;
             }
         }
     }

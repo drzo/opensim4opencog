@@ -336,10 +336,12 @@ Found the hyphen+done. star= 1
       Do you <set name="topic">like</set> cheese?
     </template>
   </category>
+  <!--
   <category>
     <pattern>YES</pattern>
     <template>"Yes" what?</template>
   </category>
+  -->
   <category>
     <pattern>YES</pattern>
     <that>DO YOU LIKE CAKE</that>

@@ -80,8 +80,8 @@ namespace cogbot.TheOpenSims
     public class SimAnimationStore
     {
 
-        private static readonly Dictionary<UUID, SimAnimation> uuidAnim = new Dictionary<UUID, SimAnimation>();
-        private static readonly Dictionary<string, SimAnimation> nameAnim = new Dictionary<string, SimAnimation>();
+        internal static readonly Dictionary<UUID, SimAnimation> uuidAnim = new Dictionary<UUID, SimAnimation>();
+        internal static readonly Dictionary<string, SimAnimation> nameAnim = new Dictionary<string, SimAnimation>();
 
         readonly BotClient Client;
         public SimAnimationStore(BotClient GC)
@@ -341,6 +341,23 @@ namespace cogbot.TheOpenSims
                 AnimUUID("YES_HAPPY", "b8c8b2a3-9008-1771-3bfc-90924955ab2d");
                 AnimUUID("YES_HEAD", "15dd911d-be82-2856-26db-27659b142875");
                 AnimUUID("YOGA_FLOAT", "42ecd00b-9947-a97c-400a-bbc9174c7aeb");
+                AnimUUID("DO_CRUCIFIX_BOOK", "6a492cee-d738-455c-7042-6ef1e52c8ad4");
+                AnimUUID("WRITING", "25a57306-f2b8-4821-a28e-23bac5eb5c4a");
+                AnimUUID("TYPING", "944daa15-4be4-4319-9568-14ce5d1fcf01");
+                
+
+                // from http://wiki.secondlife.com/wiki/Internal_Animations#Viewer-generated_motions
+                AnimUUID("body_noise", "9aa8b0a6-0c6f-9518-c7c3-4f41f2c001ad", "LLBodyNoiseMotion in newview/llvoavatar.cpp", "2", "Minor body turns. Joints moved: torso.");
+                AnimUUID("breathe_rot", "4c5a103e-b830-2f1c-16bc-224aa0ad5bc8", "LLBreatheMotionRot in newview/llvoavatar.cpp", "1", "Breathing simulation. Joints moved: chest");
+                AnimUUID("editing", "2a8eba1d-a7f8-5596-d44a-b4977bf8c8bb", "LLEditingMotion in llcharacter/lleditingmotion.cpp", "2", "Left arm follows selected and edited objects. Joints moved: left shoulder, left elbow, left wrist, torso.");
+                AnimUUID("eye", "5c780ea8-1cd1-c463-a128-48c023f6fbea", "LLEyeMotion in llcharacter/llheadrotmotion.cpp", "1", "Eye rotation and blinking. Joints moved: head, left eye, right eye");
+                AnimUUID("fly_adjust", "db95561f-f1b0-9f9a-7224-b12f71af126e", "LLFlyAdjustMotion in llcharacter/llkeyframewalkmotion.cpp", "3", "Add body roll during flight. Joints moved: pelvis");
+                AnimUUID("hand_motion", "ce986325-0ba7-6e6e-cc24-b17c4b795578", "LLHandMotion in llcharacter/llhandmotion.cpp", "1", "Sets standard hand poses defined in other animations");
+                AnimUUID("head_rot", "e6e8d1dd-e643-fff7-b238-c6b4b056a68d", "LLHeadRotMotion in llcharacter/llheadrotmotion.cpp", "1", "Moves head and torso to follow the avatar's look at position (cursor, camera). Joints moved: torso, neck, head");
+                AnimUUID("pelvis_fix", "0c5dd2a2-514d-8893-d44d-05beffad208b", "LLPelvisFixMotion in newview/llvoavatar.cpp", "0", "Makes corrections to keep avatar standing upright. Joints moved: pelvis");
+                AnimUUID("target", "0e4896cb-fba4-926c-f355-8720189d5b55", "LLTargetingMotion in llcharacter/lltargetingmotion.cpp", "2", "Move body with look at position, used during aim_* animations above. Joints moved: pelvis, torso, right wrist");
+                AnimUUID("walk_adjust", "829bc85b-02fc-ec41-be2e-74cc6dd7215d", "LLWalkAdjustMotion in llcharacter/llkeyframewalkmotion.cpp", "2", "Makes walking corrections for terrain, turns. Joints moved: pelvis, left ankle, right ankle");
+                
 
                 foreach (FieldInfo fi in typeof (Animations).GetFields())
                 {
@@ -370,6 +387,11 @@ namespace cogbot.TheOpenSims
                    if (A.IsIncomplete())  Console.WriteLine("Animation: " + A.ToString());
                 }
             }
+        }
+
+        private void AnimUUID(string p, string p_2, string p_3, string p_4, string p_5)
+        {
+            AnimUUID(p, p_2);
         }
 
         private void AnimUUID(string p,string p_2,string p_3)
@@ -488,7 +510,7 @@ namespace cogbot.TheOpenSims
             anim.Name = s;
         }
 
-        private SimAnimation FindAnimation(UUID uUID)
+        static SimAnimation FindAnimation(UUID uUID)
         {
             SimAnimation anim;
             if (!uuidAnim.TryGetValue(uUID, out anim))
@@ -504,7 +526,163 @@ namespace cogbot.TheOpenSims
             return anim;
         }
 
-        private SimAnimation FindOrCreateAnimation(UUID uUID)
+        public static List<UUID> Matches(String name)
+        {            
+            List<UUID> matches = new List<UUID>();
+            foreach (var A in SimAnimations)
+            {
+                if (A.Matches(name))
+                {
+                    matches.Add(A.AnimationID);
+                }
+            }            
+            return matches;   
+        }
+
+
+        public static SimAnimation GetAminFromAssest(AssetAnimation asset)
+        {
+            SimAnimation A = FindOrCreateAnimation(asset.AssetID);
+            A.BvhData = asset.AssetData;
+            return A;
+        }
+
+        static public bool IsSitAnim(ICollection<UUID> anims)
+        {
+            if (anims.Contains(Animations.SIT_GROUND) 
+                || anims.Contains(Animations.SIT)
+                || anims.Contains(Animations.SIT_GENERIC)
+                || anims.Contains(Animations.SIT_FEMALE)
+                || anims.Contains(Animations.CROUCH)
+                || anims.Contains(Animations.MOTORCYCLE_SIT)
+                || anims.Contains(Animations.SIT_GROUND_staticRAINED)) return true;
+            return false;
+        }
+
+        readonly static UUID WALK_ADJUST = new UUID("829bc85b-02fc-ec41-be2e-74cc6dd7215d");
+        readonly static UUID FLY_ADJUST = new UUID("db95561f-f1b0-9f9a-7224-b12f71af126e");
+
+        static public bool IsFlyAnim(ICollection<UUID> anims)
+        {
+            if (anims.Contains(Animations.FLYSLOW)
+                || anims.Contains(Animations.FLY)
+                || anims.Contains(FLY_ADJUST)
+                || anims.Contains(Animations.HOVER)
+                || anims.Contains(Animations.HOVER_DOWN)
+                || anims.Contains(Animations.HOVER_UP)
+                || anims.Contains(Animations.YOGA_FLOAT)) return true;
+
+            return false;
+        }
+
+        static public bool IsWalkingAnim(ICollection<UUID> anims)
+        {
+            if (anims.Contains(Animations.WALK) 
+                || anims.Contains(Animations.TURNLEFT)
+                || anims.Contains(Animations.TURNLEFT)
+                || anims.Contains(Animations.STRIDE)
+                || anims.Contains(Animations.RUN)
+                || anims.Contains(Animations.FEMALE_WALK)
+                || anims.Contains(WALK_ADJUST)
+                || anims.Contains(Animations.CROUCHWALK)
+                //|| anims.Contains(Animations.FALLDOWN)
+                ) return true;
+            return false;
+        }
+
+        static public bool IsStoppingAnim(ICollection<UUID> anims)
+        {
+            if (anims.Contains(Animations.SIT_TO_STAND) 
+                || anims.Contains(Animations.FALLDOWN)
+                || anims.Contains(Animations.STANDUP)
+                || anims.Contains(Animations.MEDIUM_LAND)
+                || anims.Contains(Animations.LAND)
+                //|| anims.Contains(Animations.FALLDOWN)
+                ) return true;
+            return false;
+        }
+
+        static public bool IsSleepAnim(ICollection<UUID> anims)
+        {
+            if (anims.Contains(Animations.SLEEP)
+                ||(anims.Contains(Animations.DEAD))
+                //|| anims.Contains(Animations.FALLDOWN)
+                ) return true;
+            return false;
+        }
+
+        static public bool IsStandingAnim(ICollection<UUID> anims)
+        {
+            if (anims.Contains(Animations.STAND)
+                || anims.Contains(Animations.STAND_1)
+                || anims.Contains(Animations.STAND_2)
+                || anims.Contains(Animations.STAND_3)
+                || anims.Contains(Animations.STAND_4)
+                || anims.Contains(Animations.STANDUP)
+                   || anims.Contains(Animations.AWAY)
+                   || anims.Contains(Animations.BUSY)
+                //|| anims.Contains(Animations.FALLDOWN)
+                ) return true;
+            return !IsFlyAnim(anims) && !IsWalkingAnim(anims) && !IsSleepAnim(anims) && !IsSitAnim(anims);
+        }
+
+        static public bool IsOtherAnim(ICollection<UUID> anims)
+        {
+            if (IsFlyAnim(anims) 
+                || IsSitAnim(anims)
+                || IsSleepAnim(anims)
+                || IsStoppingAnim(anims)
+                || IsStandingAnim(anims)
+                || IsWalkingAnim(anims) 
+                || IsCommunationAnim(anims))
+                return false;
+            return true;
+        }
+
+        public static bool IsJumpAnim(ICollection<UUID> anims)
+        {
+            if (anims.Contains(Animations.JUMP) || anims.Contains(Animations.PRE_JUMP)
+                //|| anims.Contains(Animations.FALLDOWN)
+                ) return true;
+            return false;
+        }
+
+        public static bool IsCommunationAnim(ICollection<UUID> anims)
+        {
+            if (anims.Contains(Animations.TALK) || anims.Contains(Animations.TYPE)
+                || anims.Contains(Animations.SHRUG)
+                || anims.Contains(Animations.YES)
+                || anims.Contains(Animations.YES_HAPPY)
+                || anims.Contains(Animations.NO)
+                || anims.Contains(Animations.NO_UNHAPPY)
+                || anims.Contains(Animations.ANGRY)
+                || anims.Contains(Animations.LAUGH_SHORT)
+                || anims.Contains(Animations.CRY)
+                || anims.Contains(Animations.WINK)
+                || anims.Contains(Animations.WHISTLE)
+                || anims.Contains(Animations.SHOUT)
+                //|| anims.Contains(Animations.FALLDOWN)
+                ) return true;
+            return false;
+        }
+
+
+        public static List<UUID> Matches(ICollection<UUID> anims, String name)
+        {
+            List<UUID> matches = new List<UUID>();
+            foreach (UUID uuid in anims)
+            {
+                SimAnimation A = FindAnimation(uuid); 
+                if (A==null) continue;
+                if (A.Matches(name))
+                {
+                    matches.Add(uuid);
+                }
+            }
+            return matches;
+        }
+
+        public static SimAnimation FindOrCreateAnimation(UUID uUID)
         {
             SimAnimation anim = FindAnimation(uUID);
             if (anim == null)
@@ -516,161 +694,172 @@ namespace cogbot.TheOpenSims
             return anim;
         }
 
-        readonly static List<SimAnimation> SimAnimations = new List<SimAnimation>();
-        readonly private static Dictionary<string,string> nameNameMap = new Dictionary<string, string>();
+        internal readonly static List<SimAnimation> SimAnimations = new List<SimAnimation>();
+        internal readonly static Dictionary<string,string> nameNameMap = new Dictionary<string, string>();
 
-        public class SimAnimation : BotMentalAspect
+    }
+
+
+    public class SimAnimation : BotMentalAspect
+    {
+
+        public bool Matches(String s)
         {
-            public override string ToString()
-            {
-                string s = String.Empty;
-                foreach(string n  in _Name)
-                {
-                    s += " " + n;
-                }
-                foreach (UUID n in AnimationIDs)
-                {
-                    s += " " + n;
-                }
-                if (_reader == null) s += " NOBVH";
-                return s.TrimStart();
+            return ToString().ToLower().Contains(s.ToLower());
+        }
 
-            }
-            public List<UUID> AnimationIDs = new List<UUID>();
-            
-            public List<string> _Name = new List<string>();
-            public string Name
+        public override string ToString()
+        {
+            string s = String.Empty;
+            foreach (string n in _Name)
             {
-                get
+                s += " " + n;
+            }
+            foreach (UUID n in AnimationIDs)
+            {
+                s += " " + n;
+            }
+            if (_reader == null) s += " NOBVH";
+            return s.TrimStart();
+
+        }
+        public List<UUID> AnimationIDs = new List<UUID>();
+
+        public List<string> _Name = new List<string>();
+        public string Name
+        {
+            get
+            {
+                if (_Name.Count == 0)
                 {
-                    if (_Name.Count== 0)
+                    // InventoryFolder AF = (InventoryFolder) Client.Inventory.Store[Client.AnimationFolder];
+
+                    //InventoryItem item = InventoryManager.CreateInventoryItem(InventoryType.Animation, uUID);
+                    //item.InventoryType = InventoryType.Animation;
+                    //item.AssetUUID = uUID;
+                    //item.AssetType = AssetType.Animation;
+                    //item.Name = "Animation" + uUID.ToString();
+                    //item.ParentUUID = Client.AnimationFolder; // FindFolderForType(item.AssetType);
+                    //item.CreationDate = new DateTime();
+                    BinBVHAnimationReader bvh = Reader;
+                    if (bvh != null && bvh.ExpressionName != null)
                     {
-                        // InventoryFolder AF = (InventoryFolder) Client.Inventory.Store[Client.AnimationFolder];
-
-                        //InventoryItem item = InventoryManager.CreateInventoryItem(InventoryType.Animation, uUID);
-                        //item.InventoryType = InventoryType.Animation;
-                        //item.AssetUUID = uUID;
-                        //item.AssetType = AssetType.Animation;
-                        //item.Name = "Animation" + uUID.ToString();
-                        //item.ParentUUID = Client.AnimationFolder; // FindFolderForType(item.AssetType);
-                        //item.CreationDate = new DateTime();
-                        BinBVHAnimationReader bvh = Reader;
-                        if (bvh!=null && bvh.ExpressionName != null)
-                        {
-                            string n = bvh.ExpressionName;
-                            _Name.Add(n);
-                            return n;
-                        }
-                        return "" + AnimationIDs[0];                        
+                        string n = bvh.ExpressionName;
+                        _Name.Add(n);
+                        return n;
                     }
-                    return _Name[0];
+                    return "" + AnimationIDs[0];
                 }
-                set
-                {
-                    if (value == null) return;
-                    if (!_Name.Contains(value))
-                        _Name.Add(value);
-                    if (!nameAnim.ContainsKey(value))
-                        nameAnim[value] = this;
-                }
+                return _Name[0];
             }
-           
-            public byte[] _BvhData;
-            public byte[] BvhData
+            set
             {
-                get
-                {
-                    if (_BvhData==null)
-                    {
-                        foreach (string n in _Name)
-                        {
-                            byte[] N_BvhData;
-                            string usedName;
-                            if (BytesFromFile(n,out N_BvhData,out usedName))
-                            {
-                                _BvhData = N_BvhData;
-                                Name = usedName;
-                                break;
-                            }
-
-                        }
-                        
-                    }
-                    return _BvhData;
-                }
-                set
-                {
-                    if (_BvhData != value)
-                        return;
-                    _BvhData = value;
-                    try
-                    {
-                        _reader = new BinBVHAnimationReader(BvhData);
-                    }
-                    catch (System.Exception ex)
-                    {
-                        BvhData = null;                    	
-                    }
-                }
-            }
-            public BinBVHAnimationReader _reader;
-            public BinBVHAnimationReader Reader
-            {
-                get
-                {
-                    if (_reader == null)
-                    {
-                        try
-                        {
-                            byte[] tryb = BvhData;
-                            if (tryb != null && tryb.Length>0)
-                                _reader = new BinBVHAnimationReader(tryb);
-                        } catch (Exception e)
-                        {
-                            _BvhData = null; 
-                        }
-                    }
-                    return _reader;
-                }
-                set
-                {
-                    if (_reader == value)
-                        return;
-                    _reader = value;
-                }
-            }
-
-            public SimAnimation(UUID anim, String name)
-            {
-                AnimationID = anim;
-                Name = name;
-                SimAnimations.Add(this);
-            }
-
-            public UUID AnimationID
-            {
-                get { if (AnimationIDs.Count==0) return UUID.Zero;
-                    return AnimationIDs[0]; }
-                set
-                {
-                    if (value == UUID.Zero) return;
-                    uuidAnim[value] = this;
-                    if (AnimationIDs.Contains(value)) return;
-                    AnimationIDs.Add(value);
-                }
-            }
-
-            public FirstOrderTerm GetTerm()
-            {
-                throw new NotImplementedException();
-            }
-
-            internal bool IsIncomplete()
-            {
-                return Reader == null || AnimationIDs.Count == 0 || _Name.Count == 0;
+                if (value == null) return;
+                if (!_Name.Contains(value))
+                    _Name.Add(value);
+                if (!SimAnimationStore.nameAnim.ContainsKey(value))
+                    SimAnimationStore.nameAnim[value] = this;
             }
         }
- 
+
+        public byte[] _BvhData;
+        public byte[] BvhData
+        {
+            get
+            {
+                if (_BvhData == null)
+                {
+                    foreach (string n in _Name)
+                    {
+                        byte[] N_BvhData;
+                        string usedName;
+                        if (SimAnimationStore.BytesFromFile(n, out N_BvhData, out usedName))
+                        {
+                            _BvhData = N_BvhData;
+                            Name = usedName;
+                            break;
+                        }
+
+                    }
+
+                }
+                return _BvhData;
+            }
+            set
+            {
+                if (_BvhData != value)
+                    return;
+                _BvhData = value;
+                try
+                {
+                    _reader = new BinBVHAnimationReader(BvhData);
+                }
+                catch (System.Exception ex)
+                {
+                    BvhData = null;
+                }
+            }
+        }
+        public BinBVHAnimationReader _reader;
+        public BinBVHAnimationReader Reader
+        {
+            get
+            {
+                if (_reader == null)
+                {
+                    try
+                    {
+                        byte[] tryb = BvhData;
+                        if (tryb != null && tryb.Length > 0)
+                            _reader = new BinBVHAnimationReader(tryb);
+                    }
+                    catch (Exception e)
+                    {
+                        _BvhData = null;
+                    }
+                }
+                return _reader;
+            }
+            set
+            {
+                if (_reader == value)
+                    return;
+                _reader = value;
+            }
+        }
+
+        public SimAnimation(UUID anim, String name)
+        {
+            AnimationID = anim;
+            Name = name;
+            SimAnimationStore.SimAnimations.Add(this);
+        }
+
+        public UUID AnimationID
+        {
+            get
+            {
+                if (AnimationIDs.Count == 0) return UUID.Zero;
+                return AnimationIDs[0];
+            }
+            set
+            {
+                if (value == UUID.Zero) return;
+                SimAnimationStore.uuidAnim[value] = this;
+                if (AnimationIDs.Contains(value)) return;
+                AnimationIDs.Add(value);
+            }
+        }
+
+        public FirstOrderTerm GetTerm()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool IsIncomplete()
+        {
+            return Reader == null || AnimationIDs.Count == 0 || _Name.Count == 0;
+        }
     }
 
 #if PORTIT

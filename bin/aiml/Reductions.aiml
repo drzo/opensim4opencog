@@ -6228,7 +6228,7 @@
 <category><pattern>YE</pattern><template><srai>YES</srai></template></category>   
 <category><pattern>YEPPERS</pattern><template><srai>YES</srai></template></category>   
 <category><pattern>YER</pattern><template><srai>YES</srai></template></category>   
-<category><pattern>YES</pattern><template><srai>interjection</srai></template></category>   
+<category><pattern>YES</pattern><template><srai>interjection</srai></template></category>
 <category><pattern>YES THANKYOU</pattern><template><srai>thankyou</srai></template></category>
 <category><pattern>YES THANKS</pattern><template><srai>thankyou</srai></template></category>
 <category><pattern>YESSS</pattern><template><srai>YES</srai></template></category>   

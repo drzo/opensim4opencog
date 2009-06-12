@@ -26,6 +26,8 @@ namespace cogbot.ScriptEngines
 
         bool IsSubscriberOf(string eventName);
 
+        object GetSymbol(string eventName);
+
 
     }
     //------------------------------------ 

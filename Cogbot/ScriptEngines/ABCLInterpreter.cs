@@ -102,6 +102,13 @@ namespace cogbot.ScriptEngines
 
     public class ABCLInterpreter : CommonScriptInterpreter
     {
+        public override object GetSymbol(string eventName)
+        {
+            eventName = eventName.ToLower();
+            Symbol s = Package.getCurrentPackage().findAccessibleSymbol(eventName); 
+            return s;
+        }
+
         public override bool IsSubscriberOf(string eventName)
         {
             eventName = eventName.ToUpper();

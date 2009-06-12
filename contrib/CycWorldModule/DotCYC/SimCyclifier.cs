@@ -75,7 +75,7 @@ namespace CycWorldModule.DotCYC
             return constant;
         }
 
-        public CycFort FindOrCreateCycFort(SimAnimationStore.SimAnimation simAnimation)
+        public CycFort FindOrCreateCycFort(SimAnimation simAnimation)
         {
             throw new NotImplementedException();
         }

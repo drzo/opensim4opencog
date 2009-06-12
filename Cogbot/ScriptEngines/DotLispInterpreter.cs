@@ -16,6 +16,13 @@ namespace cogbot.ScriptEngines
             return false;
         }
 
+        public override object GetSymbol(string eventName)
+        {
+            eventName = eventName.ToLower();
+            DotLisp.Symbol o = dotLispInterpreter.intern(eventName);//.Read("DefinedFunction", new System.IO.StringReader(eventName));           
+            return o;
+        }
+
         public DotLispInterpreter()
         {
             dotLispInterpreter = new DotLisp.Interpreter();

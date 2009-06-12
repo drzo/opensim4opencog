@@ -38,10 +38,12 @@ namespace cogbot.Listeners
             UnregisterAll();
         }
 
-        public static bool EventArgsInDictionary = true;
+        public static bool EventArgsInDictionary = false;
         public override bool BooleanOnEvent(string eventName, string[] paramNames, Type[] paramTypes, params object[] parameters)
         {
             if (Interpreter==null) return true;
+            eventName = eventName.ToLower();
+            if (!Interpreter.IsSubscriberOf(eventName)) return true;
             if (EventArgsInDictionary)
             {
                 Dictionary<String, object> eventArgs = new Dictionary<string, object>();
@@ -53,13 +55,12 @@ namespace cogbot.Listeners
             }
             else
             {
-                Cons invokeMe = null;
-                Dictionary<String, object> eventArgs = new Dictionary<string, object>();
+                Cons invokeMe = null;              
                 for (int i = paramNames.Length - 1; i >= 0; i--)
                 {
                     invokeMe = new Cons(CoerceArg(parameters[i], paramTypes[i]), invokeMe);
                 }
-                object o = Interpreter.Eval(new Cons(eventName, invokeMe));
+                object o = Interpreter.Eval(new Cons(Interpreter.GetSymbol(eventName.ToLower()), invokeMe));
             }
             // right now most events are void but there is one that is boolean which means we may as well eturn true for all
             return true;
@@ -67,6 +68,7 @@ namespace cogbot.Listeners
 
         public object CoerceArg(object p, Type type)
         {
+            if (type.IsInstanceOfType(p)) return p;
             return Interpreter.ConvertArgToLisp(p);
         }
 

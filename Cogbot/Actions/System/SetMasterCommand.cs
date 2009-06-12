@@ -31,6 +31,7 @@ namespace cogbot.Actions
             if (masterName.Length == 0)
                 return "Usage: setmaster [name]";
 
+            if (String.IsNullOrEmpty(Client.MasterName)) Client.MasterName = masterName;
             DirectoryManager.DirPeopleReplyCallback callback = new DirectoryManager.DirPeopleReplyCallback(KeyResolvHandler);
             Client.Directory.OnDirPeopleReply += callback;
 
@@ -39,6 +40,7 @@ namespace cogbot.Actions
             if (keyResolution.WaitOne(TimeSpan.FromMinutes(1), false))
             {
                 Client.MasterKey = resolvedMasterKey;
+                Client.MasterName = masterName;
                 keyResolution.Reset();
                 Client.Directory.OnDirPeopleReply -= callback;
             }

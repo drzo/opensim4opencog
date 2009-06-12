@@ -4,7 +4,7 @@ using System.Text;
 
 namespace cogbot.Actions
 {
-    class Parsing
+    public class Parsing
     {
         public static string[] ParseArguments(string str)
         {

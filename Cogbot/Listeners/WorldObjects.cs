@@ -15,19 +15,23 @@ namespace cogbot.Listeners
 
     public partial class WorldObjects : AllEvents
     {
+     
+        public static Dictionary<string, UUID> Name2Key = new Dictionary<string, UUID>();
 
         public static bool CanPhantomize = false;
         public static bool CanUseSit = true;
         public static bool DoCatchUp = true;
-        public static bool MaintainAnims = false;
+        public static bool MaintainAnims = true;
         public static bool MaintainAnimsInFolders = false;
         public static bool MaintainAttachments = false;
-        public static bool MaintainCollisions = true;
-        public static bool MaintainEffects = false;
-        public static bool MaintainPropertyQueue = false;       
+        public static bool MaintainCollisions = false;
+        public static bool MaintainEffects = true;
+        public static bool MaintainPropertiesFromQueue = false;       
         public static bool MaintainObjectUpdates = false;
-        public static bool MaintainSounds = false;
+        public static bool MaintainSounds = true;
+        public static bool UseNewEventSystem = true;
         public static bool SimplifyBoxes = false; // true takes longer startup but speeds up runtime path finding
+        public static bool SendAllEvents = MaintainObjectUpdates;
 
         /// <summary>
         /// Assets that WorldObjects requested
@@ -751,9 +755,8 @@ namespace cogbot.Listeners
                                                 //   WriteLine(perpAv.Name + " bumped into $bot like " + type);
                                                 // else if (perpAv.Name == client.Self.Name)
                                                 //   WriteLine("$bot bumped into " + victimAv.Name + " like " + type);   
-                                                perpAv.LogEvent("" + type, victimAv, magnitude);
-                                                SendNewEvent("on-meanCollision", type, perpAv, victimAv,
-                                                             magnitude);
+                                                perpAv.LogEvent(new SimObjectEvent("" + type, SimEventType.SOCIAL, SimEventStatus.Once, perpAv, victimAv, magnitude));
+                                                SendNewEvent("on-meanCollision", type, perpAv, victimAv, magnitude);
                                             }
                                         });
         }
@@ -854,7 +857,10 @@ namespace cogbot.Listeners
                 UpdateQueue.Enqueue(() =>
                                         {
                                             SimAvatar avatar = (SimAvatar) GetSimObjectFromUUID(avatarID);
-                                            if (avatar == null) return;
+                                            if (avatar == null)
+                                            {
+                                                return;
+                                            }
                                             if (UseEventSource(avatar))
                                             {
                                                 avatar.OnAvatarAnimations(anims);
@@ -1154,7 +1160,6 @@ namespace cogbot.Listeners
                 }
             }
         }
-
         /*
 		         
          On-Folder-Updated
@@ -1224,7 +1229,7 @@ namespace cogbot.Listeners
             CheckConnected(simulator);
             NeverSelect(prim.LocalID, simulator);
 
-            if (!MaintainPropertyQueue)
+            if (!MaintainPropertiesFromQueue)
             Objects_OnObjectProperties1(simulator, prim, props);
             else
             lock (PropertyQueue)
@@ -1616,47 +1621,51 @@ namespace cogbot.Listeners
                                             SimObject user = GetSimObject(avatar, simulator);
                                             SimObject newSit = GetSimObject(sittingOn, simulator);
                                             SimObject oldSit = GetSimObject(oldSeat, simulator);
-                                            object[] eventArgs = new object[] {user, newSit, oldSit};
-                                            string sitName = null;
+                                            string newSitName = null;
+                                            string oldSitName = null;
                                             if (newSit != null)
                                             {
-                                                sitName = newSit.SitName;
+                                                newSitName = newSit.SitName;
                                             }
-                                            else
+                                            if (newSitName == null) newSitName = "SitOnObject";
+                                            if (oldSit != null)
                                             {
-                                                if (oldSit != null) sitName = oldSit.SitName;
+                                                oldSitName = oldSit.SitName;
                                             }
+                                            if (oldSitName == null) oldSitName = "SitOnObject";
 
-                                            SendNewEvent("On-Avatar-Sit-Changed", user, newSit, oldSit);
+                                            if (SendAllEvents)
+                                                SendNewEvent("On-Avatar-Sit-Changed", user, newSit, oldSit);
                                             if (user != null)
                                             {
-                                                if (sitName != null) user.LogEvent(sitName, newSit, oldSit);
-                                                else
-                                                {
-                                                    if (sittingOn + oldSeat > 0)
-                                                    {
-                                                        user.LogEvent("SitOnGround");
-                                                        Thread.Sleep(1000);
-                                                        newSit = GetSimObject(sittingOn, simulator);
-                                                        oldSit = GetSimObject(oldSeat, simulator);
-                                                        if (newSit != null || oldSit != null)
-                                                        {
-                                                            Objects_OnAvatarSitChanged(simulator, avatar, sittingOn,
-                                                                                       oldSeat);
-                                                        }
-                                                    }
-                                                    else
-                                                        user.LogEvent("SitOnGround");
-                                                }
+                                                if (oldSeat != 0) LogSitEvent(user, SimEventStatus.Stop, oldSitName, user, oldSit);
+                                                if (sittingOn != 0)
+                                                    LogSitEvent(user, SimEventStatus.Start, newSitName, user, newSit);
+                                                if (sittingOn + oldSeat == 0)
+                                                    LogSitEvent(user, SimEventStatus._UNKNOWN, "SitChangedUnknown", user);
                                             }
                                             else
                                             {
+                                                object[] eventArgs = new object[] {user, newSit, oldSit};
                                                 if (newSit != null)
-                                                    newSit.AddCanBeTargetOf(newSit.SitName, 1, eventArgs);
-                                                else if (oldSit != null)
-                                                    oldSit.AddCanBeTargetOf(oldSit.SitName, 2, eventArgs);
+                                                    newSit.AddCanBeTargetOf(1,
+
+                                                                            new SimObjectEvent(newSitName,
+                                                                                               SimEventType.SIT, SimEventStatus.Start, avatar,
+                                                                                               newSit));
+                                                if (oldSit != null)
+                                                    oldSit.AddCanBeTargetOf(1,
+                                                                            new SimObjectEvent(oldSitName,
+                                                                                               SimEventType.SIT, SimEventStatus.Stop, avatar,
+                                                                                               oldSit));
                                             }
                                         });
+        }
+
+        private void LogSitEvent(SimObject user, SimEventStatus updown, string p, params object[] args)
+        {
+            //Console.WriteLine(user + " " + p + " " + ScriptEngines.ScriptEventListener.argsListString(args));
+            user.LogEvent(new SimObjectEvent(p, SimEventType.SIT, updown ,args));
         }
 
         public SimObject GetSimObject(uint sittingOn, Simulator simulator)
@@ -1675,8 +1684,12 @@ namespace cogbot.Listeners
             }
             if (p == null)
             {
+                client.Objects.RequestObject(simulator, sittingOn);
+                client.Objects.SelectObject(simulator, sittingOn);
                 p = GetPrimitive(sittingOn, simulator);
+                if (p != null) return GetSimObject(p,simulator);
                 Debug("WARN: cant get prim " + sittingOn + " sim " + simulator);
+
                 return null;
             }
             return GetSimObject(p, simulator);
@@ -1759,7 +1772,8 @@ namespace cogbot.Listeners
         {
             if (so is SimAvatar)
             {
-                if (so.ToString().Contains("rael")) return true;
+                //if (so.ToString().Contains("rael")) 
+                    return true;
             }
             return false;
         }
@@ -1821,16 +1835,17 @@ namespace cogbot.Listeners
                                                 SendNewEvent("on-effect-targeted-self", s, p, effectType);
                                                 // ()/*GetObject*/(sourceID), effectType);
                                             }
+                                            SimObjectEvent evt = new SimObjectEvent(effectType, SimEventType.EFFECT, SimEventStatus.Once, s, t, p, duration, id);
+
                                             if (source != null)
                                             {
-                                                source.OnEffect(effectType, t, p, duration, id);
+                                                source.LogEvent(evt);
                                             }
                                             else
                                             {
                                                 if (target != null)
                                                 {
-                                                    target.AddCanBeTargetOf(effectType, 1,
-                                                                            new object[] {s, t, p, duration, id});
+                                                    target.AddCanBeTargetOf(2, evt);
                                                 }
                                                 RegisterUUID(id, effectType);
                                                 //TODO 
@@ -1894,6 +1909,7 @@ namespace cogbot.Listeners
                 return Master.GetObject(uid);
             }
             if (id is Primitive) return Master.GetSimObject((Primitive)id);
+           // if (id is String) return Master.GetObject((string) id);
             return id;
         }
 
@@ -2125,6 +2141,7 @@ namespace cogbot.Listeners
 
         public void SendNewEvent(string eventName, params object[] args)
         {
+            if (WorldObjects.UseNewEventSystem) return;
             if (!IsRegionMaster) return;
             //	Debug(eventName + " " + client.argsListString(args));
             String evtStr = eventName.ToString();
@@ -2173,8 +2190,15 @@ namespace cogbot.Listeners
                 client.GoodNamesCount++;
         }
 
+        public BotMentalAspect GetObject(string name)
+        {
+            Primitive prim;
+            if (tryGetPrim(name, out prim)) return GetSimObject(prim);
+            return null;
+        }
         public bool tryGetPrim(string name, out Primitive prim)
         {
+            name = name.Trim().Replace("  "," ");
             prim = null;
             uint pickNum = 0;
             UUID uuid;
@@ -2907,8 +2931,11 @@ namespace cogbot.Listeners
 
         private Simulator GetSimulator(Primitive Prim)
         {
-            ulong handle = Prim.RegionHandle;
-            if (handle != 0) return GetSimulator(handle);
+            if (Prim != null)
+            {
+                ulong handle = Prim.RegionHandle;
+                if (handle != 0) return GetSimulator(handle);
+            }
             Debug("GetSimulator returning current sim for " + Prim);
             return client.Network.CurrentSim;
         }
@@ -2954,6 +2981,11 @@ namespace cogbot.Listeners
         internal void ReSelectObject(Primitive P)
         {
             Simulator sim = GetSimulator(P);
+            if (P==null)
+            {
+                Console.WriteLine("NULL RESELECTOBJECT");
+                return;
+            }
             client.Objects.SelectObject(sim, P.LocalID);
         }
 
@@ -2990,5 +3022,129 @@ namespace cogbot.Listeners
         private delegate void ObjectUpdateItem();
 
         #endregion
+
+        public override void Avatars_OnAvatarNameSearch(UUID queryID, Dictionary<UUID, string> avatars)
+        {
+            foreach (KeyValuePair<UUID, string> kvp in avatars)
+            {
+                lock (Name2Key) Name2Key[kvp.Value.ToLower()] = kvp.Key;
+            }
+        }
+
+        public override void Avatars_OnAvatarNames(Dictionary<UUID, string> names)
+        {
+            foreach (KeyValuePair<UUID, string> kvp in names)
+            {
+                lock (Name2Key) Name2Key[kvp.Value.ToLower()] = kvp.Key;
+            }
+        }
+
+        public override void Avatars_OnAvatarPicks(UUID avatarid, Dictionary<UUID, string> picks)
+        {
+            foreach (KeyValuePair<UUID, string> kvp in picks)
+            {
+                lock (Name2Key) Name2Key[kvp.Value.ToLower()] = kvp.Key;
+            }
+        }
+
+        public override void Friends_OnFriendOnline(FriendInfo friend)
+        {
+            if (friend.IsOnline && friend.Name.ToLower() == client.MasterName.ToLower())
+            {
+                lock (Name2Key) Name2Key[friend.Name.ToLower()] = friend.UUID;
+                client.Self.InstantMessage(friend.UUID, "Hello Master");
+            }
+            //base.Friends_OnFriendOnline(friend);
+        }
+        public override void Friends_OnFriendNamesReceived(Dictionary<UUID, string> names)
+        {
+            foreach (KeyValuePair<UUID, string> kvp in names)
+            {
+                lock (Name2Key) Name2Key[kvp.Value.ToLower()] = kvp.Key;
+            }
+            //base.Friends_OnFriendNamesReceived(names);
+        }
+
+        public override void Directory_OnDirPeopleReply(UUID queryID, List<DirectoryManager.AgentSearchData> matchedPeople)
+        {
+            matchedPeople.ForEach(data =>
+            {
+                lock (Name2Key)
+                    Name2Key[data.FirstName.ToLower() + " " + data.LastName.ToLower()] = data.AgentID;
+            });
+        }
+
+        public override void Directory_OnDirGroupsReply(UUID queryID, List<DirectoryManager.GroupSearchData> matchedGroups)
+        {
+            matchedGroups.ForEach(data =>
+            {
+                lock (Name2Key)
+                    Name2Key[data.GroupName] = data.GroupID;
+            });
+        }
+
+        public override void Friends_OnFriendRights(FriendInfo friend)
+        {
+            lock (Name2Key) Name2Key[friend.Name.ToLower()] = friend.UUID;
+            base.Friends_OnFriendRights(friend);
+        }
+
+        internal UUID GetUserID(string ToAvatarName)
+        {
+            lock (Name2Key)
+                if (Name2Key.ContainsKey(ToAvatarName.ToLower()))
+                {
+                    return Name2Key[ToAvatarName.ToLower()];
+                }
+            UUID found = UUID.Zero;
+
+            ManualResetEvent NameSearchEvent = new ManualResetEvent(false);
+            AvatarManager.AvatarNameSearchCallback callback =
+                new AvatarManager.AvatarNameSearchCallback((queryid, avatars) =>
+                                                               {
+                                                                   foreach (KeyValuePair<UUID, string> kvp in avatars)
+                                                                   {
+                                                                       if (kvp.Value.ToLower() == ToAvatarName.ToLower())
+                                                                       {
+                                                                           lock (Name2Key)
+                                                                               Name2Key[ToAvatarName.ToLower()] =
+                                                                                   kvp.Key;
+                                                                           NameSearchEvent.Set();
+                                                                           return;
+                                                                       }
+                                                                   }
+                                                               });
+
+            bool indict;
+
+            lock (Name2Key) indict = Name2Key.ContainsKey(ToAvatarName.ToLower());
+
+            if (!indict)
+            {
+                try
+                {
+                    client.Avatars.OnAvatarNameSearch += callback;
+                    // Send the Query
+                    client.Avatars.RequestAvatarNameSearch(ToAvatarName, UUID.Random());
+
+                    NameSearchEvent.WaitOne(6000, false);
+                }
+                finally
+                {
+                    client.Avatars.OnAvatarNameSearch -= callback;
+                }
+            }
+
+
+            lock (Name2Key)
+                if (Name2Key.ContainsKey(ToAvatarName.ToLower()))
+                {
+                    found = Name2Key[ToAvatarName.ToLower()];
+
+                }
+
+            return found;
+        }
+
     }
 }
