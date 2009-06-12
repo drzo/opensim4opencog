@@ -152,14 +152,14 @@ namespace DotLisp
                     if (fieldInfo != null)
                     {
                         Delegate del = fieldInfo.GetValue(target) as Delegate;
-                        //   Type[] argtypes = Type.GetTypeArray(argarray);
-                        //ParameterInfo[] paramInfos = eventInfo.EventHandlerType;//.GetParameters();
-                        // if (Coerce(argarray, argtypes, paramInfos, out parameters))
-                        //   return m.Invoke(target, parameters);
 
                         if (del != null)
-                            del.DynamicInvoke(argarray);
-                        return true;
+                        {
+                            Type[] argtypes = Type.GetTypeArray(argarray);
+                            ParameterInfo[] paramInfos = del.Method.GetParameters();
+                            if (Coerce(argarray, argtypes, paramInfos, out parameters))
+                                return del.DynamicInvoke(parameters);
+                        }
                     }
                 }
             }
@@ -168,7 +168,6 @@ namespace DotLisp
                 Console.WriteLine("rethrowing " + lastException.ToString());
                 throw lastException;
             }
-
             throw new Exception("Can't find matching event: " + name + " for: " + type.Name);
         }
 
