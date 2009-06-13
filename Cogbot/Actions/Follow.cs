@@ -54,6 +54,10 @@ namespace cogbot.Actions
             {
 
                 SimPosition ap = WorldSystem.TheSimAvatar.ApproachPosition;
+                if (WorldSystem.TheSimAvatar.CurrentAction is FollowerAction)
+                {
+                    WorldSystem.TheSimAvatar.CurrentAction = null;
+                }
                 WorldSystem.TheSimAvatar.SetMoveTarget(null, 10);
                 WorldSystem.TheSimAvatar.StopMoving();
                 return ("$bot stops following " + ap + ".");
