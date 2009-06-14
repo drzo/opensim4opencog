@@ -68,6 +68,8 @@ namespace cogbot.Listeners
 
         public object CoerceArg(object p, Type type)
         {
+            if (p == null)
+                return type.IsValueType ? Activator.CreateInstance(type) : null;
             if (type.IsInstanceOfType(p)) return p;
             return Interpreter.ConvertArgToLisp(p);
         }

@@ -96,10 +96,35 @@ namespace cogbot.TheOpenSims
             return o;
         }
 
+         internal SimObjectEvent CombinesWith(SimObjectEvent SE)
+         {
+             if (this.Verb == SE.Verb)
+             {
+                 if (this.EventStatus == SE.EventStatus )
+                 {
+                     return new SimObjectEvent(Verb, this.EventType, this.EventStatus, this.Parameters, SE.Parameters);
+                 }
+                 if (this.EventStatus == SimEventStatus.Start && SE.EventStatus == SimEventStatus.Stop)
+                 {
+                     return new SimObjectEvent(Verb, this.EventType, SimEventStatus.Once, this.Parameters, SE.Parameters);
+                 }
+                 if (this.EventStatus == SimEventStatus.Once && SE.EventStatus == SimEventStatus.Stop)
+                 {
+                     return new SimObjectEvent(Verb, this.EventType, SimEventStatus.Once, this.Parameters, SE.Parameters);
+                 }
+                 if (this.EventStatus == SimEventStatus.Start && SE.EventStatus == SimEventStatus.Once)
+                 {
+                     return new SimObjectEvent(Verb, this.EventType, SimEventStatus.Once, this.Parameters, SE.Parameters);
+                 }
+             }
+             return null;
+         }
+
 
         internal bool SameAs(SimObjectEvent SE)
         {
             if (Verb != SE.Verb) return false;
+            if (EventStatus != SE.EventStatus) return false;
             if (Parameters == null) return SE.Parameters == null;
             if (SE.Parameters == null) return Parameters == null;
             if (Parameters.Length != SE.Parameters.Length) return false;
@@ -121,7 +146,7 @@ namespace cogbot.TheOpenSims
 
         static bool NonComparable(Type type)
         {
-            if (type == typeof (Vector3)) return true;
+       //     if (type == typeof (Vector3)) return true;
             return false;
         }
     }

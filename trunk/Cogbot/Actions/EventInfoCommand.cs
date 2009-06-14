@@ -37,7 +37,8 @@ namespace cogbot.Actions
                     {
                         foreach (SimObject o in objs)
                         {
-                            WriteLine(ListEvents(o));
+                            string s = DebugInfo(o);
+                            WriteLine(s);
                         }
                         return "simEventComplete";
                     }
@@ -61,7 +62,8 @@ namespace cogbot.Actions
                                 if (o.Matches(subject))
                                 {
                                     count++;
-                                    WriteLine(ListEvents(o));
+                                    string s = DebugInfo(o);
+                                    WriteLine(s);
                                 }
                             }
                         }
@@ -73,7 +75,8 @@ namespace cogbot.Actions
                             if (o.Matches(subject))
                             {
                                 count++;
-                                WriteLine(ListEvents(o));
+                                string s = DebugInfo(o);
+                                WriteLine(s);
                             }
                         }                        
                     }
@@ -82,10 +85,10 @@ namespace cogbot.Actions
             return "simEventComplete";
         }
 
-        private string ListEvents(SimObject o)
+        private string DebugInfo(SimObject o)
         {
-            return o.DebugInfo();
+            string s = o.DebugInfo();
+            return s.Replace("{", "{{").Replace("}", "}}");
         }
-
     }
 }

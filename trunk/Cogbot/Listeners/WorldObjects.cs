@@ -23,8 +23,8 @@ namespace cogbot.Listeners
         public static bool DoCatchUp = true;
         public static bool MaintainAnims = true;
         public static bool MaintainAnimsInFolders = false;
-        public static bool MaintainAttachments = false;
-        public static bool MaintainCollisions = false;
+        public static bool MaintainAttachments = true;
+        public static bool MaintainCollisions = true;
         public static bool MaintainEffects = true;
         public static bool MaintainPropertiesFromQueue = false;       
         public static bool MaintainObjectUpdates = false;
@@ -1634,8 +1634,8 @@ namespace cogbot.Listeners
                                             }
                                             if (oldSitName == null) oldSitName = "SitOnObject";
 
-                                            if (SendAllEvents)
-                                                SendNewEvent("On-Avatar-Sit-Changed", user, newSit, oldSit);
+                                            //if (SendAllEvents)
+                                               // SendNewEvent("On-Avatar-Sit-Changed", user, newSit, oldSit);
                                             if (user != null)
                                             {
                                                 if (oldSeat != 0) LogSitEvent(user, SimEventStatus.Stop, oldSitName, user, oldSit);
@@ -1987,7 +1987,8 @@ namespace cogbot.Listeners
             if (id == UUID.Zero) return;
             if (assetType == AssetType.Animation)
             {
-                if (Master.SimAnimationSystem.GetAnimationName(id) != null) return;
+                SimAnimation sa = SimAnimationStore.FindOrCreateAnimation(id);
+                if (sa.BvhData!=null) return;
             }
             lock (AssetRequests)
             {
@@ -2141,11 +2142,16 @@ namespace cogbot.Listeners
 
         public void SendNewEvent(string eventName, params object[] args)
         {
-            if (WorldObjects.UseNewEventSystem) return;
+            if (UseNewEventSystem)
+            {
+                return;
+            }
             if (!IsRegionMaster) return;
             //	Debug(eventName + " " + client.argsListString(args));
             String evtStr = eventName.ToString();
-            if (evtStr == "on-object-position")
+            if (evtStr == "on-object-rotation") return;
+                
+                if (evtStr == "on-object-position")
             {
                 Primitive prim = (Primitive) args[0];
                 Vector3 vect = (Vector3) args[1];

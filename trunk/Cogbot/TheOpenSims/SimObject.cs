@@ -1445,7 +1445,8 @@ namespace cogbot.TheOpenSims
         public static int MaxEventSize = 10; // Keeps only last 9 events
         public Queue<SimObjectEvent> ActionEventQueue = new Queue<SimObjectEvent>(MaxEventSize);
         public SimObjectEvent lastEvent = null;
-        readonly public Dictionary<string, SimObjectEvent> LastEventByName = new Dictionary<string, SimObjectEvent>();
+
+        public readonly Dictionary<string, SimObjectEvent> LastEventByName = new Dictionary<string, SimObjectEvent>();
 
         public virtual bool LogEvent(SimObjectEvent SE)
         {
@@ -1458,9 +1459,23 @@ namespace cogbot.TheOpenSims
                 int ActionEventQueueCount = ActionEventQueue.Count;
                 if (ActionEventQueueCount > 0)
                 {
-                    if (lastEvent!=null && lastEvent.SameAs(SE))
+                    if (lastEvent != null)
                     {
-                        saveevent = false;
+                        if (lastEvent.SameAs(SE))
+                        {
+                            saveevent = false;
+                        }
+                        else
+                        {
+                            SimObjectEvent newEvt = lastEvent.CombinesWith(SE);
+                            if (newEvt != null)
+                            {
+                                lastEvent.EventStatus = newEvt.EventStatus;
+                                lastEvent.Parameters = newEvt.Parameters;
+                                saveevent = false;
+                                SE = lastEvent;
+                            }
+                        }
                     }
                     if (saveevent && ActionEventQueueCount >= MaxEventSize) ActionEventQueue.Dequeue();
                 }
