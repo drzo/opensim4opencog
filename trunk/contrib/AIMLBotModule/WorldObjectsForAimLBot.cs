@@ -12,6 +12,7 @@ namespace AIMLBotModule
     public class WorldObjectsForAimLBot : WorldObjectsModule
     {
         public static bool AcceptFriends = true;
+        public static bool RespondToGroup = false;
         public static bool EventsToAIML = false;
         public static bool ProccessUnsolisitedChat = true;
         public static bool UseRealism = false;
@@ -137,6 +138,10 @@ namespace AIMLBotModule
             User myUser = GetMyUser(im.FromAgentName);
             bool UseThrottle = im.GroupIM;
             string groupName = null;
+            if (im.Dialog == InstantMessageDialog.StartTyping || im.Dialog == InstantMessageDialog.StopTyping)
+            {
+                return;
+            }
             if (im.GroupIM)
             {
                 Group group;
@@ -146,6 +151,7 @@ namespace AIMLBotModule
                                                              });
 
                 Console.WriteLine("Group IM {0}",groupName);
+                if (!myUser.RespondToChat && !ProccessUnsolisitedChat) return;
             }
 
             //UpdateQueue.Enqueue(() => SendNewEvent("on-instantmessage", , im.Message, im.ToAgentID,
@@ -181,6 +187,8 @@ namespace AIMLBotModule
                                     Thread.Sleep(100);
                                     if (im.GroupIM)
                                     {
+                                        if (!myUser.RespondToChat) return;
+                                        if (!RespondToGroup) return;
 
                                         Console.WriteLine("InstantMessageGroup {0} {1} {2}",
                                                           im.FromAgentName + "/" + groupName, im.FromAgentID,
@@ -190,6 +198,22 @@ namespace AIMLBotModule
                                     else
                                     {
                                         // todo maybe send a typing message for the UseRealism
+                                        if (UseRealism)
+                                        {
+                                            client.Self.InstantMessage(GetName(), im.FromAgentID, "typing", im.IMSessionID,
+                                                                       InstantMessageDialog.StartTyping,
+                                                                       InstantMessageOnline.Offline,
+                                                                       client.Self.SimPosition,
+                                                                       UUID.Zero, Utils.EmptyBytes);
+                                            Thread.Sleep(500);
+                                            client.Self.InstantMessage(GetName(), im.FromAgentID, "typing", im.IMSessionID,
+                                                                       InstantMessageDialog.StopTyping,
+                                                                       InstantMessageOnline.Online,
+                                                                       client.Self.SimPosition,
+                                                                       UUID.Zero, Utils.EmptyBytes);
+
+                                        }
+
                                         Console.WriteLine("InstantMessage {0} {1} {2}", im.FromAgentName,
                                                           im.FromAgentID, ting.Trim());
                                         client.Self.InstantMessage(im.FromAgentID, tsing, im.IMSessionID);
