@@ -11,19 +11,19 @@ namespace cogbot.TheOpenSims
 {
     public class AnimThread
     {
-        private readonly UUID anim;
+        private readonly SimAnimation anim;
         private readonly AgentManager ClientSelf;
         private Thread animLoop;
         private bool repeat = true;
 
-        public AnimThread(AgentManager c, UUID amin0)
+        public AnimThread(AgentManager c, SimAnimation amin0)
         {
             ClientSelf = c; //.Self;
             //c.Client
-            if (WorldObjects.Master.GetAnimationName(amin0).StartsWith("S"))
-            {
-                repeat = false;
-            }
+            //if (WorldObjects.Master.GetAnimationName(amin0).StartsWith("S"))
+            //{
+             //   repeat = false;
+           // }
             anim = amin0;
         }
 
@@ -42,21 +42,36 @@ namespace cogbot.TheOpenSims
         {
             try
             {
-                ClientSelf.AnimationStart(anim, true);
-                while (repeat)
+                ClientSelf.AnimationStart(AnimationID, true);
+                while (NeedsLooping)
                 {
                     // some anims will only last a short time so we have to 
                     // remind the server we still want to be using it 
                     // like Laugh .. lasts for about .9 seconds
                     //12000 is a estimate average
-                    Thread.Sleep(3200);
-                    ClientSelf.AnimationStop(anim, true);
-                    ClientSelf.AnimationStart(anim, true);
+                    Thread.Sleep((int)(anim.Length*1000));
+                    ClientSelf.AnimationStop(AnimationID, true);
+                    ClientSelf.AnimationStart(AnimationID, true);
                 }
             }
             catch (Exception)
             {
             } // for the Abort 
+        }
+
+        protected bool NeedsLooping
+        {
+            get
+            {
+                if (repeat) return true;
+                if (!anim.IsLoop) return true;
+                return false;
+            }
+        }
+
+        protected UUID AnimationID
+        {
+            get { return anim.AnimationID; }
         }
 
         public void Stop()
@@ -73,7 +88,7 @@ namespace cogbot.TheOpenSims
                 }
                 animLoop = null;
             }
-            ClientSelf.AnimationStop(anim, true);
+            ClientSelf.AnimationStop(AnimationID, true);
         }
     }
 
@@ -382,6 +397,7 @@ namespace cogbot.TheOpenSims
                     }
                 }
 
+                ClassifyAnims();
                 foreach (SimAnimation A in SimAnimations)
                 {
                    if (A.IsIncomplete())  Console.WriteLine("Animation: " + A.ToString());
@@ -398,6 +414,7 @@ namespace cogbot.TheOpenSims
         {
             AnimUUID(p, p_3);
         }
+
 
         private void AnimUUID(string fName, string id)
         {
@@ -547,125 +564,109 @@ namespace cogbot.TheOpenSims
             return A;
         }
 
+
+        void ClassifyAnims()
+        {
+            string type = "Sitting";
+            PutType(type, Animations.SIT_GROUND);
+            PutType(type,Animations.SIT);
+            PutType(type,Animations.SIT_GENERIC);
+            PutType(type,Animations.SIT_FEMALE);
+            PutType(type,Animations.CROUCH);
+            PutType(type,Animations.MOTORCYCLE_SIT);
+            PutType(type,Animations.SIT_GROUND_staticRAINED);
+
+            type = "Flying";
+
+            PutType(type, Animations.FLYSLOW);
+            PutType(type,Animations.FLY);
+            PutType(type,FLY_ADJUST);
+            PutType(type,Animations.HOVER);
+            PutType(type,Animations.HOVER_DOWN);
+            PutType(type,Animations.HOVER_UP);
+            PutType(type,Animations.YOGA_FLOAT);
+
+            type = "Walking";
+            PutType(type, Animations.WALK);
+            PutType(type, Animations.TURNLEFT);
+            PutType(type, Animations.TURNRIGHT);
+            PutType(type, Animations.STRIDE);
+            PutType(type, Animations.RUN);
+            PutType(type, Animations.FEMALE_WALK);
+            PutType(type, WALK_ADJUST);
+            PutType(type, Animations.CROUCHWALK);
+
+
+            type = "Stopping";
+            PutType(type,Animations.SIT_TO_STAND);
+            PutType(type,Animations.FALLDOWN);
+            PutType(type,Animations.STANDUP);
+            PutType(type,Animations.MEDIUM_LAND);
+            PutType(type,Animations.LAND);
+                            
+            type = "Laying";
+            PutType(type,Animations.SLEEP);
+            PutType(type,Animations.DEAD);
+            
+            type = "Standing";
+            PutType(type,Animations.STAND);
+            PutType(type,Animations.STAND_1);
+            PutType(type,Animations.STAND_2);
+            PutType(type,Animations.STAND_3);
+            PutType(type,Animations.STAND_4);
+            PutType(type,Animations.STANDUP);
+            PutType(type,Animations.AWAY);
+            PutType(type,Animations.BUSY);  ;
+
+            type = "Jumping";
+            PutType(type,Animations.JUMP);
+            PutType(type,Animations.PRE_JUMP);
+
+            type = "Communicating";
+            PutType(type,Animations.TALK);
+            PutType(type,Animations.TYPE);
+            PutType(type,Animations.SHRUG);
+            PutType(type,Animations.YES);
+            PutType(type,Animations.YES_HAPPY);
+            PutType(type,Animations.NO);
+            PutType(type,Animations.NO_UNHAPPY);
+            PutType(type,Animations.ANGRY);
+            PutType(type,Animations.LAUGH_SHORT);
+            PutType(type,Animations.CRY);
+            PutType(type,Animations.WINK);
+            PutType(type,Animations.WHISTLE);
+            PutType(type,Animations.SHOUT);
+        }
+
+        
+
+        static Dictionary<string,List<UUID>> stringList = new Dictionary<string, List<UUID>>();
+
+        public static List<UUID> MeaningUUIDs(string name)
+        {     
+            lock (stringList)
+            {
+                if (stringList.ContainsKey(name))
+                {
+                    return stringList[name];
+                }
+                return stringList[name] = new List<UUID>();
+            }
+        }
+
+        private void PutType(string anims, UUID uUID)
+        {
+            SimAnimation a = FindOrCreateAnimation(uUID);
+            a.AddType(anims);
+        }
+
         static public bool IsSitAnim(ICollection<UUID> anims)
         {
-            if (anims.Contains(Animations.SIT_GROUND) 
-                || anims.Contains(Animations.SIT)
-                || anims.Contains(Animations.SIT_GENERIC)
-                || anims.Contains(Animations.SIT_FEMALE)
-                || anims.Contains(Animations.CROUCH)
-                || anims.Contains(Animations.MOTORCYCLE_SIT)
-                || anims.Contains(Animations.SIT_GROUND_staticRAINED)) return true;
             return false;
         }
 
         readonly static UUID WALK_ADJUST = new UUID("829bc85b-02fc-ec41-be2e-74cc6dd7215d");
         readonly static UUID FLY_ADJUST = new UUID("db95561f-f1b0-9f9a-7224-b12f71af126e");
-
-        static public bool IsFlyAnim(ICollection<UUID> anims)
-        {
-            if (anims.Contains(Animations.FLYSLOW)
-                || anims.Contains(Animations.FLY)
-                || anims.Contains(FLY_ADJUST)
-                || anims.Contains(Animations.HOVER)
-                || anims.Contains(Animations.HOVER_DOWN)
-                || anims.Contains(Animations.HOVER_UP)
-                || anims.Contains(Animations.YOGA_FLOAT)) return true;
-
-            return false;
-        }
-
-        static public bool IsWalkingAnim(ICollection<UUID> anims)
-        {
-            if (anims.Contains(Animations.WALK) 
-                || anims.Contains(Animations.TURNLEFT)
-                || anims.Contains(Animations.TURNLEFT)
-                || anims.Contains(Animations.STRIDE)
-                || anims.Contains(Animations.RUN)
-                || anims.Contains(Animations.FEMALE_WALK)
-                || anims.Contains(WALK_ADJUST)
-                || anims.Contains(Animations.CROUCHWALK)
-                //|| anims.Contains(Animations.FALLDOWN)
-                ) return true;
-            return false;
-        }
-
-        static public bool IsStoppingAnim(ICollection<UUID> anims)
-        {
-            if (anims.Contains(Animations.SIT_TO_STAND) 
-                || anims.Contains(Animations.FALLDOWN)
-                || anims.Contains(Animations.STANDUP)
-                || anims.Contains(Animations.MEDIUM_LAND)
-                || anims.Contains(Animations.LAND)
-                //|| anims.Contains(Animations.FALLDOWN)
-                ) return true;
-            return false;
-        }
-
-        static public bool IsSleepAnim(ICollection<UUID> anims)
-        {
-            if (anims.Contains(Animations.SLEEP)
-                ||(anims.Contains(Animations.DEAD))
-                //|| anims.Contains(Animations.FALLDOWN)
-                ) return true;
-            return false;
-        }
-
-        static public bool IsStandingAnim(ICollection<UUID> anims)
-        {
-            if (anims.Contains(Animations.STAND)
-                || anims.Contains(Animations.STAND_1)
-                || anims.Contains(Animations.STAND_2)
-                || anims.Contains(Animations.STAND_3)
-                || anims.Contains(Animations.STAND_4)
-                || anims.Contains(Animations.STANDUP)
-                   || anims.Contains(Animations.AWAY)
-                   || anims.Contains(Animations.BUSY)
-                //|| anims.Contains(Animations.FALLDOWN)
-                ) return true;
-            return !IsFlyAnim(anims) && !IsWalkingAnim(anims) && !IsSleepAnim(anims) && !IsSitAnim(anims);
-        }
-
-        static public bool IsOtherAnim(ICollection<UUID> anims)
-        {
-            if (IsFlyAnim(anims) 
-                || IsSitAnim(anims)
-                || IsSleepAnim(anims)
-                || IsStoppingAnim(anims)
-                || IsStandingAnim(anims)
-                || IsWalkingAnim(anims) 
-                || IsCommunationAnim(anims))
-                return false;
-            return true;
-        }
-
-        public static bool IsJumpAnim(ICollection<UUID> anims)
-        {
-            if (anims.Contains(Animations.JUMP) || anims.Contains(Animations.PRE_JUMP)
-                //|| anims.Contains(Animations.FALLDOWN)
-                ) return true;
-            return false;
-        }
-
-        public static bool IsCommunationAnim(ICollection<UUID> anims)
-        {
-            if (anims.Contains(Animations.TALK) || anims.Contains(Animations.TYPE)
-                || anims.Contains(Animations.SHRUG)
-                || anims.Contains(Animations.YES)
-                || anims.Contains(Animations.YES_HAPPY)
-                || anims.Contains(Animations.NO)
-                || anims.Contains(Animations.NO_UNHAPPY)
-                || anims.Contains(Animations.ANGRY)
-                || anims.Contains(Animations.LAUGH_SHORT)
-                || anims.Contains(Animations.CRY)
-                || anims.Contains(Animations.WINK)
-                || anims.Contains(Animations.WHISTLE)
-                || anims.Contains(Animations.SHOUT)
-                //|| anims.Contains(Animations.FALLDOWN)
-                ) return true;
-            return false;
-        }
-
 
         public static List<UUID> Matches(ICollection<UUID> anims, String name)
         {
@@ -719,7 +720,7 @@ namespace cogbot.TheOpenSims
             {
                 s += " " + n;
             }
-            if (_reader == null) s += " NOBVH";
+            if (_reader == null && (_BvhData == null || _BvhData.Length == 0)) s += " NOBVH";
             return s.TrimStart();
 
         }
@@ -742,13 +743,23 @@ namespace cogbot.TheOpenSims
                     //item.ParentUUID = Client.AnimationFolder; // FindFolderForType(item.AssetType);
                     //item.CreationDate = new DateTime();
                     BinBVHAnimationReader bvh = Reader;
-                    if (bvh != null && bvh.ExpressionName != null)
+                    if (bvh != null && !string.IsNullOrEmpty(bvh.ExpressionName))
                     {
                         string n = bvh.ExpressionName;
                         _Name.Add(n);
                         return n;
                     }
-                    return "" + AnimationIDs[0];
+                    string tmpname = "" + AnimationIDs[0];
+                    if (AnimationIDs.Count==1)
+                    {
+                        byte[] bs = BvhData;
+                        if (bs!=null && bs.Length>0)
+                        {
+                            File.WriteAllBytes(tmpname+".anim",BvhData);
+                        }
+                        //WorldObjects.Master.GetModuleName()
+                    }
+                    return tmpname;
                 }
                 return _Name[0];
             }
@@ -787,19 +798,45 @@ namespace cogbot.TheOpenSims
             }
             set
             {
-                if (_BvhData != value)
+                if (_BvhData == value)
                     return;
                 _BvhData = value;
                 try
                 {
-                    _reader = new BinBVHAnimationReader(BvhData);
+                    _reader = new BinBVHAnimationReader(_BvhData);
+                    AnalyzeBvh();
                 }
                 catch (System.Exception ex)
                 {
-                    BvhData = null;
+                    Console.WriteLine("" + ex);
+                    //_BvhData = null;
                 }
             }
         }
+
+        public Single Length
+        {
+            get
+            {
+                if (!HasReader()) return 2;
+                return Reader.Length;
+            }
+        }
+
+        private bool HasReader()
+        {
+            return _reader != null;
+        }
+
+        public bool IsLoop
+        {
+            get
+            {
+                if (!HasReader()) return false;
+                return Reader.Loop;
+            }
+        }
+
         public BinBVHAnimationReader _reader;
         public BinBVHAnimationReader Reader
         {
@@ -812,10 +849,13 @@ namespace cogbot.TheOpenSims
                         byte[] tryb = BvhData;
                         if (tryb != null && tryb.Length > 0)
                             _reader = new BinBVHAnimationReader(tryb);
+                        AnalyzeBvh();
+
                     }
                     catch (Exception e)
                     {
-                        _BvhData = null;
+                        Console.WriteLine("" + e);
+//                        _BvhData = null;
                     }
                 }
                 return _reader;
@@ -825,7 +865,69 @@ namespace cogbot.TheOpenSims
                 if (_reader == value)
                     return;
                 _reader = value;
+                AnalyzeBvh();
             }
+        }
+
+       
+        
+        private void AnalyzeBvh()
+        {
+            if (!HasReader()) return;
+            BinBVHAnimationReader r = _reader;
+            foreach (SimAnimation animation in SimAnimationStore.SimAnimations)
+            {
+                if (animation == this) continue;
+                if (!animation.HasReader()) continue;
+                if (r == animation.Reader)
+                {
+                    Console.WriteLine("Found dup " + animation);
+                    foreach (string name in animation._Name)
+                    {
+                        AddName(name + "_" + AnimationID);
+                    }
+                    foreach (string meaning in animation.Meanings)
+                    {
+                        AddType(meaning);
+                    }
+                    return;
+                }
+            }
+        }
+   
+        private void AddName(string n)
+        {
+            if (!string.IsNullOrEmpty(n))
+            {
+                if (!_Name.Contains(n)) _Name.Add(n);
+            }
+        }
+
+        public string DebugInfo()
+        {
+            string st = ToString();
+            if (!IsIncomplete())
+            {
+                BinBVHAnimationReader r = Reader;
+                AddName(r.ExpressionName);
+
+
+                foreach (var c in r.joints)
+                {
+                    st += c.Name;
+                    st += "\n rotationkeys: ";
+                    foreach (var s in c.rotationkeys)
+                    {
+                        st += " " + s.key_element;
+                    }
+                    st += "\n positionkeys:";
+                    foreach (var s in c.positionkeys)
+                    {
+                        st += " " + s.key_element;
+                    }
+                }
+            }
+            return st;
         }
 
         public SimAnimation(UUID anim, String name)
@@ -858,7 +960,25 @@ namespace cogbot.TheOpenSims
 
         internal bool IsIncomplete()
         {
-            return Reader == null || AnimationIDs.Count == 0 || _Name.Count == 0;
+            return !HasReader() || AnimationIDs.Count == 0 || _Name.Count == 0;
+        }
+
+        readonly List<string> Meanings = new List<string>();
+        internal void AddType(string anims)
+        {
+            lock (Meanings)
+            {
+                if (!Meanings.Contains(anims))
+                {
+                    Meanings.Add(anims);
+                    List<UUID> AMeanings = SimAnimationStore.MeaningUUIDs(anims);
+                    if (!AMeanings.Contains(AnimationID))
+                    {
+                        AMeanings.Add(AnimationID);
+                    }
+
+                }
+            }
         }
     }
 

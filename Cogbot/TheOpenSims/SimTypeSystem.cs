@@ -261,7 +261,7 @@ namespace cogbot.TheOpenSims
                     continue;
                 }
 
-                fi = type.GetType().GetField(s+"s");
+                fi = type.GetType().GetField(s + "s");
                 if (fi != null)
                 {
                     type.SpecifiedProperties.AddTo(fi.Name);
@@ -720,10 +720,15 @@ namespace cogbot.TheOpenSims
         static public SimObjectType CreateObjectType(string aspectName, params object[] parseStr)
         {
             if (parseStr.Length == 1 && parseStr[0] is object[]) parseStr = (object[])parseStr[0];
-            SimObjectType type = GetObjectType(aspectName);
-            type.ParseAffect(null, parseStr);
-            type.ParseAffect(null, new object[] { "Match", "* " + aspectName + " *" });
-            return type;
+            SimObjectType type1 = FindObjectType(aspectName);
+            if (type1 == null)
+            {
+                type1 = new SimObjectType(aspectName);
+                type1.ParseAffect(null, new object[] { "Match", "* " + aspectName + " *" });
+                lock (objectTypes) objectTypes.Add(type1);
+            }
+            type1.ParseAffect(null, parseStr);
+            return type1;
         }
 
         static public SimObjectType FindObjectType(string aspectName)

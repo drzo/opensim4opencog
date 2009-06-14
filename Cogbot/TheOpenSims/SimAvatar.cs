@@ -1,10 +1,14 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
+using java.util;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
+using Random=System.Random;
+using UUID=OpenMetaverse.UUID;
 
 /// Complex outcomes may be a result of simple causes, or they may just be complex by nature. 
 /// Those complexities that turn out to have simple causes can be simulated and studied, 
@@ -16,7 +20,7 @@ namespace cogbot.TheOpenSims
     {
         public override string ToString()
         {
-            return reg.RegionName + "/" + pos.X + "/" + pos.X + "/" + pos.Y + "/" + pos.Z + "@" +
+            return reg.RegionName + "/" + pos.X + "/" + pos.Y + "/" + pos.Z + "@" +
                    ZHeading*SimPathStore.RAD2DEG;
         }
 
@@ -40,8 +44,7 @@ namespace cogbot.TheOpenSims
         {
             if (!obj.IsRegionAttached())
             {
-                Vector3 loc;
-                loc = obj.GetSimPosition();
+                Vector3 loc = obj.GetSimPosition();
                 SimPathStore R = obj.GetPathStore();
                 return String.Format("unknown relative {0}/{1:0.00}/{2:0.00}/{3:0.00}",
                                      R.RegionName, loc.X, loc.Y, loc.Z);
@@ -99,7 +102,7 @@ namespace cogbot.TheOpenSims
             get
             {
                 Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(GetSimRotation()));
-                return (float)Math.Atan2(v3.Y, v3.X);
+                return (float) (Math.Atan2(-v3.X, -v3.Y) + Math.PI); // 2Pi= N, 1/2Pi = E
             }
         }
     }
@@ -143,6 +146,11 @@ namespace cogbot.TheOpenSims
                                                        }))).Start();
         }
 
+        public ThreadStart WithAnim(UUID uUID, ThreadStart threadStart)
+        {
+            return WithAnim(SimAnimationStore.FindOrCreateAnimation(uUID), threadStart);
+        }
+
         public override void OpenNearbyClosedPassages()
         {
             WithAnim(Animations.AFRAID, base.OpenNearbyClosedPassages);
@@ -166,7 +174,7 @@ namespace cogbot.TheOpenSims
         public override string DebugInfo()
         {
 
-            string s = this.GetName() + "Z=" + ZHeading * SimPathStore.RAD2DEG + " " + GetSimulator().Name + GetSimPosition() + "";
+            string s = this.GetName() + " " + GetHeading();
             lock (ActionEventQueue) foreach (SimObjectEvent s1 in ActionEventQueue)
             {
                 s += "\n " + s1;
@@ -721,7 +729,7 @@ namespace cogbot.TheOpenSims
                        };
         }
 
-        public ThreadStart WithAnim(UUID anim, ThreadStart closure)
+        public ThreadStart WithAnim(SimAnimation anim, ThreadStart closure)
         {
             BotClient Client = GetGridClient();
             AnimThread animThread = new AnimThread(Client.Self, anim);
@@ -1540,7 +1548,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                return SimAnimationStore.IsWalkingAnim(GetCurrentAnims());
+                return Overlaps(GetCurrentAnims(), SimAnimationStore.MeaningUUIDs("Walking"));
             }
 
         }
@@ -1548,7 +1556,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                return SimAnimationStore.IsFlyAnim(GetCurrentAnims());
+                return Overlaps(GetCurrentAnims(), SimAnimationStore.MeaningUUIDs("Flying"));
             }
         }
 
@@ -1556,7 +1564,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                return SimAnimationStore.IsStandingAnim(GetCurrentAnims());
+                return Overlaps(GetCurrentAnims(), SimAnimationStore.MeaningUUIDs("Standing"));
             }
         }
 
@@ -1564,7 +1572,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                return SimAnimationStore.IsSleepAnim(GetCurrentAnims());
+                return Overlaps(GetCurrentAnims(), SimAnimationStore.MeaningUUIDs("Sleeping"));
             }
         }
 
@@ -1693,48 +1701,54 @@ namespace cogbot.TheOpenSims
                 //}
 
                 // start or stop flying
-                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsFlyAnim, "Flying", SimEventType.ANIM, startStops);
+                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "Flying",  startStops);
 
                 //start or stop moving
-                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsWalkingAnim, "Moving", SimEventType.ANIM, startStops);
+                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "Walking", startStops);
 
                 //start or stop sleeping
-                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsSleepAnim, "Sleep", SimEventType.ANIM, startStops);
+                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "Laying", startStops);
 
-                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsJumpAnim, "Jump", SimEventType.ANIM, startStops);
+                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent,  "Jumping", startStops);
 
-                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsSitAnim, "Sit", SimEventType.ANIM, startStops);
+                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "Sitting", startStops);
 
-                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsStandingAnim, "Stand", SimEventType.ANIM, startStops);
+                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "Standing",startStops);
 
                 //start or stop talking
-                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsCommunationAnim, "Commuincation", SimEventType.ANIM, startStops);
+                //StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsCommunationAnim, "Commuincation", SimEventType.ANIM, startStops);
 
-                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsOtherAnim, "OtherAnim", SimEventType.ANIM, startStops);
+               // StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "OtherAnim", startStops);
 
                 foreach (SimObjectEvent evt in startStops)
                 {
-                    if (evt.Verb == "Stand")
+                    if (evt.Verb == "Standing")
                     {
                         LastEventByName[evt.EventName] = evt;
                         continue;
                     }
-                    if (evt.Verb == "Sit")
+                    if (evt.Verb == "Sitting")
                     {
                         LastEventByName[evt.EventName] = evt;
                         continue;
                     }
-                    if (evt.EventName == "MovingStart")
+                    if (evt.EventName == "WalkingStart")
                     {
                         LastEventByName[evt.EventName] = evt;
+                        lastEvent = evt;
                         continue;
                     }
-                    if (evt.EventName == "MovingStop")
-                    {
-                        object old = GetLastEvent("MovingStart", 2);
-                        evt.Verb = "MoveTo";
-                    }
+                    //if (evt.EventName == "MovingStop")
+                    //{
+                    //    object old = GetLastEvent("MovingStart", 2);
+                    //    evt.Verb = "MoveTo";
+                    //}
                     LogEvent(evt);
+                }
+                bool showIndependant = false;
+                if (startStops.Count==0)
+                {
+                  //todo later  showIndependant = true; 
                 }
 
                 for (int seq = leastCurrentSequence; seq <= mostCurrentSequence; seq++)
@@ -1749,6 +1763,13 @@ namespace cogbot.TheOpenSims
                                     WorldSystem.SendNewEvent("On-Finished-Animation", this, uuid, GetWorldPosition(),
                                                              GetHeading());
                                 shownRemoved.Add(uuid);
+                                if (showIndependant)
+                                {
+                                    SimAnimation a = SimAnimationStore.FindOrCreateAnimation(uuid);
+                                    WorldSystem.client.SendNewEvent("On-Finished-Animation", this, a, GetHeading());
+                                    LogEvent(new SimObjectEvent(a.Name, SimEventType.ANIM, SimEventStatus.Stop, this, a, GetHeading()));
+                                }
+
                                 /// ExpectedCurrentAnims.Remove(uuid);
                             }
                         }
@@ -1763,6 +1784,13 @@ namespace cogbot.TheOpenSims
                                     WorldSystem.SendNewEvent("On-Start-Animation", this, uuid, GetHeading());
                                 ExpectedCurrentAnims[uuid] = seq;
                                 showAdded.Add(uuid);
+
+                                if (showIndependant)
+                                {
+                                    SimAnimation a = SimAnimationStore.FindOrCreateAnimation(uuid);
+                                    WorldSystem.client.SendNewEvent("On-Start-Animation", this, a, GetHeading());
+                                    LogEvent(new SimObjectEvent(a.Name, SimEventType.ANIM, SimEventStatus.Start, this, a, GetHeading()));
+                                }
                                 /// RemovedAnims[uuid] = mostCurrentSequence + 1;
                             }
                         }
@@ -1807,26 +1835,41 @@ namespace cogbot.TheOpenSims
             /// SendNewEvent("On-Avatar-Animation", avatar, names);
         }
 
-        private delegate bool AnimationTest(ICollection<UUID> thisEvent);
+        //private delegate bool AnimationTest(ICollection<UUID> thisEvent);
 
-        private void StartOrStopAnimEvent(ICollection<UUID> RemovedThisEvent, ICollection<UUID> AddedThisEvent, AnimationTest animTest, string name,SimEventType type, List<SimObjectEvent> startStops )
+        private void StartOrStopAnimEvent(IEnumerable<UUID> RemovedThisEvent, IEnumerable<UUID> AddedThisEvent, string name, IList<SimObjectEvent> startStops)
         {
-            if (animTest(RemovedThisEvent))
+            List<UUID> e = SimAnimationStore.MeaningUUIDs(name);
+            if (e.Count==0) throw new NoSuchElementException(name);
+            if (Overlaps(e, AddedThisEvent))
             {
-                if (!animTest(AddedThisEvent))
+                startStops.Add(new SimObjectEvent(name, SimEventType.ANIM, SimEventStatus.Stop, this, GetHeading()));
+                return;
+            }
+
+            if (Overlaps(e, RemovedThisEvent))
+            {
+                if (!Overlaps(e, AddedThisEvent))
                 {
                     startStops.Insert(0,
-                                      new SimObjectEvent(name ,type, SimEventStatus.Start, this, GetHeading()));
-                }
-            }
-            else
-            {
-                if (animTest(AddedThisEvent))
-                {
-                    startStops.Add(new SimObjectEvent(name, type, SimEventStatus.Stop, this, GetHeading()));
+                                      new SimObjectEvent(name, SimEventType.ANIM, SimEventStatus.Start, this,
+                                                         GetHeading()));
                 }
             }
         }
+
+        static bool Overlaps(IEnumerable<UUID> c1, IEnumerable<UUID> c2)
+        {
+            foreach (var uuid in c2)
+            {
+                foreach (var uuid1 in c1)
+                {
+                    if (uuid == uuid1) return true;
+                }
+            }
+            return false;
+        }
+
 
         public object GetLastEvent(String name, int arg)
         {
@@ -1851,7 +1894,8 @@ namespace cogbot.TheOpenSims
         //void StopMoving();
         void TalkTo(SimAvatar avatar, BotMentalAspect talkAbout);
         void TalkTo(SimAvatar avatar, string talkAbout);
-        ThreadStart WithAnim(UUID anim, ThreadStart closure);
+        ThreadStart WithAnim(SimAnimation anim, ThreadStart closure);
+        ThreadStart WithAnim(UUID animID, ThreadStart closure);
         ThreadStart WithGrabAt(SimObject obj, ThreadStart closure);
         ThreadStart WithSitOn(SimObject obj, ThreadStart closure);
         //ICollection<BotAction> GetPossibleActions(double maxXYDistance, double maxZDist);
@@ -1864,6 +1908,7 @@ namespace cogbot.TheOpenSims
         bool SitOn(SimObject o);
 
         BotMentalAspect GetObject(string name);
+
     }
 
 
