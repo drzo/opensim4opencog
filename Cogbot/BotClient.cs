@@ -444,9 +444,26 @@ namespace cogbot
                 whisper.currentSession = im.IMSessionID;
             }
 
+            if (im.Message.Length > 0 && im.Dialog == InstantMessageDialog.GroupInvitation)
+            {
+                if (im.FromAgentID == MasterKey || im.FromAgentName == MasterName)
+                {
+                    string groupName = im.Message;
+                    int found = groupName.IndexOf("Group:");
+                    if (found > 0) groupName = groupName.Substring(found + 6);
+                    found = groupName.IndexOf(":");
+                    if (found>0)
+                    {
+                        groupName = groupName.Substring(0, found).Trim();
+                        ExecuteCommand("joingroup " + groupName);
+                    }
+                 
+                }
+            }
+
             bool groupIM = im.GroupIM && GroupMembers != null && GroupMembers.ContainsKey(im.FromAgentID) ? true : false;
 
-            if (im.FromAgentID == MasterKey || (GroupCommands && groupIM))
+            if (im.FromAgentID == MasterKey || (GroupCommands && groupIM) || im.FromAgentName==MasterName)
             {
                 // Received an IM from someone that is authenticated
                 WriteLine(String.Format("<{0} ({1})> {2}: {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM", im.Dialog,
