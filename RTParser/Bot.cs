@@ -71,7 +71,7 @@ namespace RTParser
         /// An List<> containing the tokens used to split the input into sentences during the 
         /// normalization process
         /// </summary>
-        public List<Unifiable> Splitters = new List<Unifiable>();
+        public List<string> Splitters = new List<string>();
 
         /// <summary>
         /// A buffer to hold log messages to be written out to the log file when a max size is reached

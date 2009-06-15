@@ -106,9 +106,9 @@ namespace RTParser.Utils
             // be fully mapped within the GraphMaster structure.
 
             // split the input into its component words
-            Unifiable[] words0 = path./*Trim().*/Split();//" ".ToCharArray());
+            //Unifiable[] words0 = path./*Trim().*/Split();//" ".ToCharArray());
 
-            Unifiable firstRaw = words0[0];
+            Unifiable firstRaw = path.First();// words0[0];
             string w = firstRaw.AsString();
 
             if (w.Contains("COMEHERE"))
@@ -129,7 +129,7 @@ namespace RTParser.Utils
 
             // concatenate the rest of the sentence into a suffix (to act as the
             // path argument in the child nodemapper)
-            Unifiable newPath = Unifiable.Join(" ", words0, 1, words0.Length - 1);
+            Unifiable newPath = path.Rest();// Unifiable.Join(" ", words0, 1, words0.Length - 1);
             // path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length).Trim();
 
             // o.k. check we don't already have a child with the key from this sentence
@@ -226,14 +226,14 @@ namespace RTParser.Utils
             }
 
             // otherwise split the input into it's component words
-            Unifiable[] splitPath0 = path.Split();
-            Unifiable first = splitPath0[0];// path.First();
+          //  Unifiable[] splitPath0 = path.Split();
+            Unifiable first = path.First();
 
             // get the first word of the sentence
             Unifiable firstWord = Normalize.MakeCaseInsensitive.TransformInput(first);
 
             // and concatenate the rest of the input into a new path for child nodes
-            Unifiable newPath = Unifiable.Join(" ", splitPath0, 1, splitPath0.Length - 1);// path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length);
+            Unifiable newPath = path.Rest();// Unifiable.Join(" ", splitPath0, 1, splitPath0.Length - 1);// path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length);
 
             // first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
@@ -315,18 +315,22 @@ namespace RTParser.Utils
                     result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);
                     if (ResultStateReady(result, newWildcard, matchstate, query)) return result;
                 }
-                else // some lazy matches take two words
-                    if (splitPath0.Length > 1 && childNodeWord.IsLazyStar())
+                else
+                {
+                // some lazy matches take two words
+                    Unifiable second = newPath.First();
+                    if (!second.IsEmpty && childNodeWord.IsLazyStar())
                     {
-                        Unifiable firstAndSecond = first + " " + splitPath0[1];
+                        Unifiable firstAndSecond = first + " " + second;
                         if (childNodeWord.Unify(firstAndSecond, query))
                         {
                             this.storeWildCard(firstAndSecond, newWildcard);
-                            result = childNode.evaluate(Unifiable.Join(" ", splitPath0, 2, splitPath0.Length - 2), query,
+                            result = childNode.evaluate(newPath.Rest(), query,
                                                         request, matchstate, newWildcard);
                             if (ResultStateReady(result, newWildcard, matchstate, query)) return result;
                         }
                     }
+                }
             }
 
             // o.k. if the nodemapper has failed to match at all: the input contains neither 

@@ -16,19 +16,16 @@ namespace RTParser
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public override bool Equals(object obj)
-        {
-            throw new NotImplementedException();
-        }
+        public new abstract bool Equals(object obj);
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         /// <summary>
         /// This should be overridden!
         /// </summary>
         /// <returns></returns>
-        public override int GetHashCode()
-        {
-            throw new NotImplementedException();
-        }
+        public new abstract int GetHashCode();
 
         public static string InnerXmlText(XmlNode templateNode)
         {
@@ -179,29 +176,59 @@ namespace RTParser
         public static Unifiable TopicTag = Create("TAG-TOPIC");
 
         protected abstract object Raw { get; }
-        public abstract bool IsEmpty { get; }
-        protected abstract bool IsFalse();
+        public virtual bool IsEmpty
+        {
+            get
+            {
+                return string.IsNullOrEmpty(ToValue());
+            }
+        }
+        protected virtual bool IsFalse()
+        {
+            return IsEmpty;            
+        }
         public abstract bool IsTag(string s);
         public abstract bool IsMatch(Unifiable unifiable);
-        public abstract bool IsWildCard();
+        public virtual bool IsWildCard()
+        {
+            return true;
+        }
         public abstract bool IsLazyStar();
         public abstract bool IsLongWildCard();
         public abstract bool IsShortWildCard();
         public abstract bool Unify(Unifiable unifiable, SubQuery query);
 
-        public abstract Unifiable ToCaseInsenitive();
-        public abstract Unifiable Frozen();
+        public virtual Unifiable ToCaseInsenitive()
+        {
+            return this;
+        }
+        public virtual Unifiable Frozen()
+        {
+            return ToValue();
+        }
         public abstract string ToValue();
         public abstract string AsString();
-        public abstract Unifiable ToPropper();
-        public abstract Unifiable Trim();
-        public abstract Unifiable[] Split(Unifiable[] unifiables, StringSplitOptions options);
-        public abstract Unifiable[] Split();
+        public virtual Unifiable ToPropper()
+        {
+            return this;
+        }
+        public virtual Unifiable Trim()
+        {
+            return this;
+        }
+
+        //public abstract Unifiable[] Split(Unifiable[] unifiables, StringSplitOptions options);
+        //public abstract Unifiable[] Split();
 
 
         // join functions
         public abstract void Append(Unifiable part);
         public abstract void Clear();
+
+        public abstract Unifiable First();
+
+        public abstract Unifiable Rest();
+
     }
 
     public class StringUnifiable : Unifiable
@@ -257,6 +284,7 @@ namespace RTParser
         }
 
 
+
         public override Unifiable Trim()
         {
             string str2 = str.Trim().Replace("  "," ").Replace("  "," ");
@@ -296,10 +324,10 @@ namespace RTParser
             return str.GetHashCode();
         }
 
-        public override Unifiable[] Split(Unifiable[] tokens, StringSplitOptions stringSplitOptions)
-        {
-            return arrayOf(str.Split(FromArrayOf(tokens), stringSplitOptions));
-        }
+        //public override Unifiable[] Split(Unifiable[] tokens, StringSplitOptions stringSplitOptions)
+        //{
+        //    return arrayOf(str.Split(FromArrayOf(tokens), stringSplitOptions));
+        //}
 
         protected override object Raw
         {
@@ -319,7 +347,7 @@ namespace RTParser
             return (str.Contains("*") || str.Contains("_") || str.Contains("<"));
         }
 
-        public override Unifiable[] Split()
+        public Unifiable[] Split()
         {
             return Splitter(str); 
         }
@@ -394,28 +422,28 @@ namespace RTParser
             return newWord;
         }
 
-        //public virtual Unifiable Rest()
-        //{
-        //    Unifiable[] splitted = Splitter(str);
-        //    return Join(" ", splitted, 1, splitted.Length - 1);
-        //    if (String.IsNullOrEmpty(this.str)) return Unifiable.Empty;
-        //    int i = str.IndexOfAny(BRKCHARS);
-        //    if (i == -1) return Empty;
-        //    string rest = str.Substring(i + 1);
-        //    return Create(rest.Trim());
-        //}
+        public override Unifiable Rest()
+        {
+            Unifiable[] splitted = Splitter(str);
+            return Join(" ", splitted, 1, splitted.Length - 1);
+            if (String.IsNullOrEmpty(this.str)) return Unifiable.Empty;
+            int i = str.IndexOfAny(BRKCHARS);
+            if (i == -1) return Empty;
+            string rest = str.Substring(i + 1);
+            return Create(rest.Trim());
+        }
 
         readonly static char[] BRKCHARS = " \r\n\t".ToCharArray();
 
-        //public virtual Unifiable First()
-        //{
-        //    if (String.IsNullOrEmpty(str)) return Unifiable.Empty;
-        //    //int i = str.IndexOfAny(BRKCHARS);
-        //    //if (i == -1) return Create(str);
-        //    return Split()[0];
-        //    //string rest = str.Substring(0, i - 1);
-        //    //return Create(rest.Trim());
-        //}
+        public override Unifiable First()
+        {
+            if (String.IsNullOrEmpty(str)) return Unifiable.Empty;
+            //int i = str.IndexOfAny(BRKCHARS);
+            //if (i == -1) return Create(str);
+            return Split()[0];
+            //string rest = str.Substring(0, i - 1);
+            //return Create(rest.Trim());
+        }
 
         public override bool IsShortWildCard()
         {

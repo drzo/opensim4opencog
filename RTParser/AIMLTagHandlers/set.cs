@@ -64,20 +64,17 @@ namespace RTParser.AIMLTagHandlers
                 else  //recursive form like <set>name value Unifiable</set>
                 {
                     Unifiable nv = Recurse();
-                    Unifiable[] fsp = nv.Split();//
+                    //Unifiable fsp = nv.Split();//
                     //new char[] { ' ', '\n', '\t', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (fsp.Length > 0)
+                    name = nv.First();
+                    Unifiable joined = nv.Rest();// Unifiable.Join(" ", fsp, 1, fsp.Length - 1);
+                    if (joined.IsEmpty)
                     {
-                        if (fsp.Length == 1)
-                        {
-                            this.user.Predicates.removeSetting(fsp[0]);
-                            return Unifiable.Empty;
-                        }
-                        String joined = Unifiable.Join(" ", fsp, 1, fsp.Length - 1);
-                        name = fsp[0];
-                        this.user.Predicates.addSetting(name, joined);
-                        return this.user.Predicates.grabSetting(name);
+                        this.user.Predicates.removeSetting(name);
+                        return Unifiable.Empty;
                     }
+                    this.user.Predicates.addSetting(name, joined);
+                    return this.user.Predicates.grabSetting(name);
                 }
             }
             return Unifiable.Empty;
