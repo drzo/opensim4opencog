@@ -115,7 +115,7 @@
     ; (thisClient.ExecuteCommand (@"{0}" (str message)))
   (if
    (notme agent)
-    ;; end this progn
+    (progn
     (setj message (str message))
     ; (setj messageList (into nil (message.Split(" "))))     
     ; (when (member messageList wamo ) (thisClient.ExecuteCommand "say I just saw wamo"))
@@ -132,7 +132,7 @@
        (progn
         (setj mycommand (str message))
         (setj mycommand1 (mycommand.Replace "cogbot " ""))
-        (thisClient.ExecuteCommand  mycommand1 ))))))))
+        (thisClient.ExecuteCommand  mycommand1 )))))))))
         
  
  ;  (on-instantmessage agent message) -> "(heard (agent) message)";
