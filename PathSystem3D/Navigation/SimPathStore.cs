@@ -1478,6 +1478,13 @@ namespace PathSystem3D.Navigation
             get { return _OuterBounds; }
         }
 
+        private int _AddedCount = 0;
+        public int AddedCount
+        {
+            get { return _AddedCount; }
+            set { _AddedCount = value; }
+        }
+
         public override string ToString()
         {
             return String.Format("{0}: {1}", GetType().Name,RegionName);// +" Level=" + SimZAverage;

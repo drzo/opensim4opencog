@@ -156,6 +156,7 @@ namespace PathSystem3D.Mesher
                         UpdatePathOccupiedVeryFast(pathStore);
                        // t1 = Environment.TickCount - tc;
                         InnerBoxes = null;
+                        PathStore.AddedCount++;
                         //  Console.WriteLine("t1 vs t2 = " + t1 );
                         return true;
                     }
@@ -235,6 +236,7 @@ namespace PathSystem3D.Mesher
             // if (!IsSculpted)
             {
                 UpdateOccupied(pathStore);
+                PathStore.AddedCount++;
                 return;
             }
             new Thread(new ThreadStart(delegate()

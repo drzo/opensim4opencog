@@ -50,6 +50,8 @@ namespace PathSystem3D.Navigation
             }
         }
 
+        static Thread updateWatcher;
+
         public CollisionPlane(int xsize0, int ysize0, float minZ, SimPathStore pathStore)
         {
             TotalCollisionPlanes++;
@@ -65,6 +67,22 @@ namespace PathSystem3D.Navigation
             OuterBox.MaxX = 256f - PathStore.StepSize;
             OuterBox.MaxY = 256f - PathStore.StepSize;
             SetDefaultConstraints();
+            updateWatcher = new Thread(new ThreadStart(UpdateWatcher));
+            Users = 1;
+        }
+
+        public int Users = 0;
+        private void UpdateWatcher()
+        {
+            while (true)
+            {
+                if (Users>0 && PathStore.AddedCount>0)
+                {
+                    PathStore.AddedCount = 0;
+                    MatrixNeedsUpdate = true;
+                }
+                Thread.Sleep(60000);
+            }
         }
 
         public float MinZ { get; set; }
