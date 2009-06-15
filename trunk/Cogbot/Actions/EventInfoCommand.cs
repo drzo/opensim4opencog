@@ -55,7 +55,7 @@ namespace cogbot.Actions
                     if (simAva != null)
                     {
                         List<SimObject> objs = simAva.GetKnownObjects();
-                        if (objs.Count > 0)
+                        lock (objs) if (objs.Count > 0)
                         {
                             foreach (SimObject o in objs)
                             {
