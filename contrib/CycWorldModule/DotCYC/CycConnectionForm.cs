@@ -80,6 +80,7 @@ namespace CycWorldModule.DotCYC
             }
             catch (Exception ee)
             {
+                Console.WriteLine(""+ee);
                 txtCycOutput.Text = ee.ToString();
             }
             wasConnected = IsConnected();
