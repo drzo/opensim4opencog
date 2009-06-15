@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using cogbot.Listeners;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 using RTParser;
 using cogbot;
@@ -73,6 +74,10 @@ namespace AIMLBotModule
                 client.Self.OnInstantMessage += AIML_OnInstantMessage;
                 client.Network.OnLogin += AIML_OnLogin;
                 client.Friends.OnFriendshipOffered += AIML_OnFriendshipOffered;
+                client.Avatars.OnPointAt += AIML_OnPointAt;
+                client.Avatars.OnLookAt += AIML_OnLookAt;
+                client.Avatars.OnEffect += AINL_OnEffect;
+
                 if (EventsToAIML)
                 {
                     SimEventSubscriber evtSub = new AIMLEventSubscriber(MyBot, this);
@@ -91,6 +96,36 @@ namespace AIMLBotModule
             }
         }
 
+        private void AINL_OnEffect(EffectType type, UUID sourceid, UUID targetid, Vector3d targetpos, float duration, UUID id)
+        {
+            SetInterest(sourceid, targetid, false);
+        }
+
+        private void AIML_OnLookAt(UUID sourceid, UUID targetid, Vector3d targetpos, LookAtType looktype, float duration, UUID id)
+        {
+           SetInterest(sourceid, targetid,false);
+        }
+
+        private void AIML_OnPointAt(UUID sourceid, UUID targetid, Vector3d targetpos, PointAtType pointtype, float duration, UUID id)
+        {
+            SetInterest(sourceid, targetid, true);
+        }
+
+        private void SetInterest(UUID sourceid, UUID targetid, bool forced)
+        {
+            if (sourceid == UUID.Zero) return;
+            if (targetid == UUID.Zero) return;
+            if (targetid == sourceid) return;
+            SimObject source = WorldSystem.GetSimObject(WorldSystem.GetPrimitive(sourceid, null));
+            if (source == null) return;
+            SimObject target = WorldSystem.GetSimObject(WorldSystem.GetPrimitive(targetid, null));
+            if (target == null) return;
+            User user = GetMyUser(source.GetName());
+            user.Predicates.addSetting("it", targetid.ToString());
+            user.Predicates.addSetting("what", targetid.ToString());
+            user.Predicates.addSetting("object", targetid.ToString());
+        }
+
         private void WriteLine(string str)
         {
             Console.WriteLine(str);
@@ -106,8 +141,8 @@ namespace AIMLBotModule
         {
             if (login == LoginStatus.Success)
             {
-                MyBot.GlobalSettings.addSetting("name",
-                                                client.BotLoginParams.FirstName + " " + client.BotLoginParams.LastName);
+                MyBot.GlobalSettings.addSetting("name",                                                
+                    String.Format("{0} {1}", client.BotLoginParams.FirstName, client.BotLoginParams.LastName));
                 MyBot.GlobalSettings.addSetting("firstname", client.BotLoginParams.FirstName);
                 MyBot.GlobalSettings.addSetting("lastname", client.BotLoginParams.LastName);
             }
@@ -136,6 +171,9 @@ namespace AIMLBotModule
             if (im.FromAgentName == GetName()) return;
             if (im.FromAgentName == "System" || im.FromAgentName=="Second Life") return;
             User myUser = GetMyUser(im.FromAgentName);
+            myUser.Predicates.addSetting("host", im.FromAgentID.ToString());
+           // myUser.Predicates.addObjectFields(im);
+            
             bool UseThrottle = im.GroupIM;
             string groupName = null;
             if (im.Dialog == InstantMessageDialog.StartTyping || im.Dialog == InstantMessageDialog.StopTyping)
