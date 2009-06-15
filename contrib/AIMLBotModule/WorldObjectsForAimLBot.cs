@@ -205,7 +205,7 @@ namespace AIMLBotModule
                                                                        InstantMessageOnline.Offline,
                                                                        client.Self.SimPosition,
                                                                        UUID.Zero, Utils.EmptyBytes);
-                                            Thread.Sleep(500);
+                                            Thread.Sleep(1900);
                                             client.Self.InstantMessage(GetName(), im.FromAgentID, "typing", im.IMSessionID,
                                                                        InstantMessageDialog.StopTyping,
                                                                        InstantMessageOnline.Online,
@@ -242,6 +242,18 @@ namespace AIMLBotModule
 
             if (String.IsNullOrEmpty(message) || message.Length < 3) return;
             if (fromname == GetName()) return;
+            if (string.IsNullOrEmpty(fromname))
+            {
+                Primitive prim = WorldSystem.GetPrimitive(id, null);
+                if (prim!=null)
+                {
+                    fromname = GetSimObject(prim).GetName();
+                }
+            }
+            if (string.IsNullOrEmpty(fromname))
+            {
+                fromname = "" + id;
+            }
             User myUser = GetMyUser(fromname);
             // todo hard coded to be changed
             if (!myUser.RespondToChat && (message.Contains("chat on") || client.Self.Name.Contains(message)))
