@@ -289,16 +289,19 @@ namespace TheSimiansModule
             int show = 10;
 
             List<SimObject> KnowsAboutList = Actor.GetKnownObjects();
-            KnowsAboutList.Sort(CompareObjects);
-            s += String.Format("\nKnowsAboutList: {0}", KnowsAboutList.Count);
-            foreach (SimObject item in KnowsAboutList)
+            lock (KnowsAboutList)
             {
-                show--;
-                if (show < 0) break;
-                /// if (item is ISimAvatar) continue;
-                s += String.Format("\n   {0} {1}", item, Actor.DistanceVectorString(item));
+                KnowsAboutList.Sort(CompareObjects);
+                s += String.Format("\nKnowsAboutList: {0}", KnowsAboutList.Count);
+                foreach (SimObject item in KnowsAboutList)
+                {
+                    show--;
+                    if (show < 0) break;
+                    /// if (item is ISimAvatar) continue;
+                    s += String.Format("\n   {0} {1}", item, Actor.DistanceVectorString(item));
+                }
             }
-            
+
             show = 10;
             List<SimTypeUsage> KnownTypeUsages = new List<SimTypeUsage>(Actor.KnownTypeUsages);
             KnownTypeUsages.Sort(CompareUsage);
