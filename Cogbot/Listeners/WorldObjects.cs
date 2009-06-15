@@ -2242,11 +2242,12 @@ namespace cogbot.Listeners
             if (m_TheSimAvatar != null)
             {
                 List<SimObject> set = TheSimAvatar.GetKnownObjects();
-                if (set.Count == 0)
-                {
-                    TheSimAvatar.ScanNewObjects(5, 100, false);
-                    set = TheSimAvatar.GetKnownObjects();
-                }
+                lock (set)
+                    if (set.Count == 0)
+                    {
+                        TheSimAvatar.ScanNewObjects(5, 100, false);
+                        set = TheSimAvatar.GetKnownObjects();
+                    }
                 lock (set)
                     foreach (SimObject obj in set)
                     {
@@ -2371,8 +2372,8 @@ namespace cogbot.Listeners
         {
             List<SimObject> ret = new List<SimObject>();
             TheSimAvatar.ScanNewObjects(10, 100, false);
-            TheSimAvatar.GetKnownObjects().ForEach(delegate(SimObject prim) { ret.Add(prim); });
-
+            List<SimObject> set = TheSimAvatar.GetKnownObjects();
+            lock (set) set.ForEach(prim => ret.Add(prim));
             //foreach (Primitive prim in prims[simulator.Handle].ForEach.Values)
             //{
             //    ret.Add(prim);

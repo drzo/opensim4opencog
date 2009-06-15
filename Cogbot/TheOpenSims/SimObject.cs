@@ -1031,6 +1031,11 @@ namespace cogbot.TheOpenSims
             if (thisPrim.ParentID != 0)
             {
                 Primitive outerPrim = GetParentPrim(thisPrim);
+                if (outerPrim == null)
+                {
+                    //TODO no biggy here ?
+                    return transValue;
+                }
                 transValue = outerPrim.Rotation*transValue;
                 thisPrim = outerPrim;
                 //  transValue.Normalize();
@@ -1073,18 +1078,25 @@ namespace cogbot.TheOpenSims
         protected Primitive GetParentPrim(Primitive thisPrim)
         {
             Primitive outerPrim = null;
+            int requests = 0;
             while (outerPrim == null)
             {
                 if (thisPrim == Prim && _Parent != null) return _Parent.Prim;
                 uint theLPrimParentID = thisPrim.ParentID;
+                if (theLPrimParentID == 0 || requests > 10)
+                {
+                    Debug("Why are not we getting a parent prim?");
+                    return null;
+                }
                 Simulator simu = GetSimulator();
                 outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
                 if (outerPrim == null)
                 {
-                    Thread.Sleep(100);
+                    Thread.Sleep(500);
                     if (IsRegionAttached()) ;
                     outerPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
                 }
+                requests++;                
             }
             return outerPrim;
         }

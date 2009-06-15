@@ -254,7 +254,7 @@ namespace cogbot.TheOpenSims
         public List<SimObject> GetKnownObjects()
         {
             ScanNewObjects(3, SightRange, false);
-            SortByDistance(KnownSimObjects);
+            lock (KnownSimObjects) SortByDistance(KnownSimObjects);
             return KnownSimObjects;
         }
 
@@ -592,7 +592,7 @@ namespace cogbot.TheOpenSims
             base.ResetRegion(regionHandle);
             if (changed)
             {
-                KnownSimObjects.Clear();              
+                lock (KnownSimObjects) KnownSimObjects.Clear();
                 GetKnownObjects();
             }
         }
@@ -815,7 +815,7 @@ namespace cogbot.TheOpenSims
         {
             double myZ = GetWorldPosition().Z;
             IList<SimObject> objects = GetKnownObjects();
-            foreach (SimObject O in objects)
+            lock (objects) foreach (SimObject O in objects)
             {
                 if (O.Distance(this) > maxXYDistance) continue;
                 if (Math.Abs(O.GetWorldPosition().Z - myZ) > maxZDist) continue;

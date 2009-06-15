@@ -1250,7 +1250,8 @@ namespace cogbot.TheOpenSims
 
         internal bool AddCollisions(SimMesh C)
         {
-            return C.UpdateOccupied(PathStore);
+            bool b = C.UpdateOccupied(PathStore);
+            return b;
         }
 
         public static Vector3d GetGlobalFromLocal(ulong handle, Vector3 objectLoc)
