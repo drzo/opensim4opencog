@@ -20,7 +20,9 @@ namespace cogbot.Actions
         {
 
             ICollection<SimAnimation> list = SimAnimationStore.SimAnimations;
+            int count = 0;
             string alist = String.Empty;
+            lock (list)
             foreach (SimAnimation A in list)
             {
                 foreach (string s in args)
@@ -30,13 +32,14 @@ namespace cogbot.Actions
                        alist += " ";
                        alist += A.DebugInfo();
                        alist += Environment.NewLine;
+                       count++;
                        continue;
                    } 
                 }
             }
             WriteLine("Currently: {0}", alist);
 
-            return "Shown " + list.Count + " amins";
+            return "Shown " + count + " amins";
         }
     }
 }

@@ -398,7 +398,7 @@ namespace cogbot.TheOpenSims
                 }
 
                 ClassifyAnims();
-                foreach (SimAnimation A in SimAnimations)
+                lock (SimAnimations) foreach (SimAnimation A in SimAnimations)
                 {
                    if (A.IsIncomplete())  Console.WriteLine("Animation: " + A.ToString());
                 }
@@ -481,7 +481,7 @@ namespace cogbot.TheOpenSims
         {
             FillAnimationNames();
             List<String> names = new List<String>();
-            foreach (var list in SimAnimations)
+            lock (SimAnimations) foreach (var list in SimAnimations)
             {
                 names.Add(list.Name); 
             }
@@ -532,7 +532,7 @@ namespace cogbot.TheOpenSims
             SimAnimation anim;
             if (!uuidAnim.TryGetValue(uUID, out anim))
             {
-                foreach (var A in SimAnimations)
+                lock (SimAnimations) foreach (var A in SimAnimations)
                 {
                     if (A.AnimationIDs.Contains(uUID))
                     {
@@ -546,7 +546,7 @@ namespace cogbot.TheOpenSims
         public static List<UUID> Matches(String name)
         {            
             List<UUID> matches = new List<UUID>();
-            foreach (var A in SimAnimations)
+            lock (SimAnimations) foreach (var A in SimAnimations)
             {
                 if (A.Matches(name))
                 {
@@ -875,7 +875,7 @@ namespace cogbot.TheOpenSims
         {
             if (!HasReader()) return;
             BinBVHAnimationReader r = _reader;
-            foreach (SimAnimation animation in SimAnimationStore.SimAnimations)
+            lock (SimAnimationStore.SimAnimations) foreach (SimAnimation animation in SimAnimationStore.SimAnimations)
             {
                 if (animation == this) continue;
                 if (!animation.HasReader()) continue;
@@ -911,30 +911,102 @@ namespace cogbot.TheOpenSims
                 BinBVHAnimationReader r = Reader;
                 AddName(r.ExpressionName);
 
+                SortedDictionary<JointMoveSize, JointMoveSize> stuff = new SortedDictionary<JointMoveSize, JointMoveSize>();
 
                 foreach (var c in r.joints)
                 {
-                    st += c.Name;
-                    st += "\n rotationkeys: ";
-                    foreach (var s in c.rotationkeys)
-                    {
-                        st += " " + s.key_element;
-                    }
-                    st += "\n positionkeys:";
-                    foreach (var s in c.positionkeys)
-                    {
-                        st += " " + s.key_element;
-                    }
+                    // Torso shall cover it
+                    if (c.Name=="mPelvis") continue;
+                    JointMoveSize js = new JointMoveSize(c);
+                    stuff[js]=js;
+                }
+                foreach (var c in stuff.Values)
+                {
+                    st += " " + c;
                 }
             }
             return st;
         }
 
+        public class JointMoveSize :IComparable<JointMoveSize>
+        {
+            readonly binBVHJoint joint;
+            readonly float timeLen;
+            readonly float posLen;
+
+            float Mag
+            {
+                get { return posLen/timeLen; }
+            }
+
+            public int CompareTo(JointMoveSize other)
+            {
+                if (ReferenceEquals(this, other)) return 0;
+                float f;
+                
+                f = (Mag - other.Mag);
+                if (f > 0) return 1;
+                if (f < 0) return -1;
+                
+                f = (timeLen - other.timeLen);
+                if (f > 0) return 1;
+                if (f < 0) return -1;
+
+                f = (posLen - other.posLen);
+                if (f > 0) return 1;
+                if (f < 0) return -1;
+
+                // no difference?
+                return joint.Name.GetHashCode() - other.joint.Name.GetHashCode();
+            }
+
+            public override string ToString()
+            {
+                return String.Format("{0}={1:0.0#}", joint.Name, Mag);
+                //return String.Format("{0}={1:0.0#}/{2:0.0#}", joint.Name, posLen, timeLen);
+            }
+
+            public JointMoveSize(binBVHJoint bvhJoint)
+            {
+                joint = bvhJoint;
+                timeLen = ComputeTime(bvhJoint.rotationkeys) + ComputeTime(bvhJoint.positionkeys);
+                posLen = ComputeMotion(bvhJoint.rotationkeys) + ComputeMotion(bvhJoint.positionkeys);
+            }
+
+            static float ComputeTime(binBVHJointKey[] binBVHJointKey)
+            {
+                if (binBVHJointKey.Length == 0) return 0;
+                double totalLen = binBVHJointKey[0].time;
+                if (binBVHJointKey.Length == 1) return (float)totalLen;
+                for (int i = 1; i < binBVHJointKey.Length / 2; i++)
+                {
+                    totalLen += binBVHJointKey[i].time;
+                }
+                return (float)totalLen;
+            }
+
+            static float ComputeMotion(binBVHJointKey[] binBVHJointKey)
+            {
+                if (binBVHJointKey.Length == 0) return 0;
+                Vector3 next = binBVHJointKey[0].key_element;
+                double totalLen = binBVHJointKey[0].time;
+                if (binBVHJointKey.Length == 1) return (float)totalLen;
+                for (int i = 1; i < binBVHJointKey.Length / 2; i++)
+                {
+                    Vector3 n = binBVHJointKey[i].key_element;
+                    totalLen += (next - n).LengthSquared();
+                    next = n;
+                }
+                return (float)totalLen;
+            }
+        }
+
+
         public SimAnimation(UUID anim, String name)
         {
             AnimationID = anim;
             Name = name;
-            SimAnimationStore.SimAnimations.Add(this);
+            lock (SimAnimationStore.SimAnimations) SimAnimationStore.SimAnimations.Add(this);
         }
 
         public UUID AnimationID
