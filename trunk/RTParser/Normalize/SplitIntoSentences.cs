@@ -46,9 +46,9 @@ namespace RTParser.Normalize
         /// </summary>
         /// <param name="inputString">The raw input to split</param>
         /// <returns>An array of strings representing the constituent "sentences"</returns>
-        public Unifiable[] Transform(Unifiable inputString)
+        public Unifiable[] Transform(Unifiable inputString0)
         {
-            this.inputString = inputString;
+            this.inputString = inputString0;
             return this.Transform();
         }
 
@@ -59,13 +59,13 @@ namespace RTParser.Normalize
         /// <returns>An array of strings representing the constituent "sentences"</returns>
         public Unifiable[] Transform()
         {
-            Unifiable[] tokens = (Unifiable[])this.bot.Splitters.ToArray();
-            Unifiable[] rawResult = this.inputString.Split(tokens, System.StringSplitOptions.RemoveEmptyEntries);
+            string[] tokens = (string[])this.bot.Splitters.ToArray();
+            string[] rawResult = this.inputString.AsString().Split(tokens, System.StringSplitOptions.RemoveEmptyEntries);
             List<Unifiable> tidyResult = new List<Unifiable>();
-            foreach (Unifiable rawSentence in rawResult)
+            foreach (string rawSentence in rawResult)
             {
-                Unifiable tidySentence = rawSentence.Trim();
-                if (!tidySentence.IsEmpty)
+                string tidySentence = rawSentence.Trim();
+                if (tidySentence.Length>0)
                 {
                     tidyResult.Add(tidySentence);
                 }

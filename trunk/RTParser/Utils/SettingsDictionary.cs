@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Xml;
 using System.IO;
 using RTParser.Normalize;
@@ -284,5 +285,9 @@ namespace RTParser.Utils
             }
         }
         #endregion
+
+        public void addObjectFields(Object obj)
+        {
+        }
     }
 }

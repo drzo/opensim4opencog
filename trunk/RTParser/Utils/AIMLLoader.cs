@@ -368,6 +368,14 @@ namespace RTParser.Utils
             {
                 input = input.Substring(0, input.Length - 1).Trim();
             }
+            while (input.EndsWith("."))
+            {
+                input = input.Substring(0, input.Length - 1).Trim();
+            }
+            while (input.EndsWith("!"))
+            {
+                input = input.Substring(0, input.Length - 1).Trim();
+            }
             if (isUserInput && false)
             {
                 return input;
@@ -381,7 +389,7 @@ namespace RTParser.Utils
 
             Unifiable substitutedInput = substitutor.Transform(input);
             // split the pattern into it's component words
-            Unifiable[] substitutedWords = substitutedInput.Split();
+            string[] substitutedWords = substitutedInput.AsString().Split(' ');
 
             // Normalize all words unless they're the AIML wildcards "*" and "_" during AIML loading
             foreach (Unifiable word in substitutedWords)

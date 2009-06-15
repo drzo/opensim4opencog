@@ -50,14 +50,14 @@ namespace RTParser.AIMLTagHandlers
             }
             if (templateNode.HasChildNodes)
             {
-                Unifiable[] split = with.Split();
-                if (templateNode.ChildNodes.Count == split.Length)
                 {
-                    int idx = 0;
+                    Unifiable rest = with;
                     // recursively check
                     foreach (XmlNode childNode in templateNode.ChildNodes)
                     {
-                        with = split[idx++];
+
+                        with = rest.First();
+                        rest = rest.Rest();
                         try
                         {
                             if (childNode.NodeType == XmlNodeType.Text)
@@ -73,11 +73,10 @@ namespace RTParser.AIMLTagHandlers
                             Console.WriteLine("" + e);
                         }
                     }
-                    return true;
+                    return rest.IsEmpty;
                 }
-                return false;
             }
-            return true;
+            return with.IsEmpty;
         }
 
         protected override Unifiable ProcessChange()
