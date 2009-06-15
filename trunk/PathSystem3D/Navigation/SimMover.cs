@@ -450,13 +450,20 @@ namespace PathSystem3D.Navigation
                 {
                     if (!MoverPlanes.ContainsKey(Mover))
                     {
-                        MoverPlanes[Mover] = PathStore.GetCollisionPlane(Mover.GetSimPosition().Z);
+                        _MoverPlane = MoverPlanes[Mover] = PathStore.GetCollisionPlane(Mover.GetSimPosition().Z);
+                        _MoverPlane.HeightMapNeedsUpdate = true;
+                        _MoverPlane.Users++;
                     }
                     _MoverPlane = MoverPlanes[Mover];
                     if (_MoverPlane.PathStore != Mover.GetPathStore())
                     {
-                        _MoverPlane = PathStore.GetCollisionPlane(Mover.GetSimPosition().Z);
-                        MoverPlanes[Mover] = _MoverPlane;
+                        if (_MoverPlane!=null)
+                        {
+                            _MoverPlane.Users--;
+                        }
+                        _MoverPlane = MoverPlanes[Mover] = PathStore.GetCollisionPlane(Mover.GetSimPosition().Z);
+                        _MoverPlane.HeightMapNeedsUpdate = true;
+                        _MoverPlane.Users++;
                     }
                 }
                 return _MoverPlane;
