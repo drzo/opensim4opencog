@@ -20,12 +20,7 @@ namespace cogbot.Actions
             
             if (UUIDTryParse(args,0, out target))
             {
-                Primitive targetPrim = Client.Network.CurrentSim.ObjectsPrimitives.Find(
-                    delegate(Primitive prim)
-                    {
-                        return prim.ID == target;
-                    }
-                );
+                Primitive targetPrim = WorldSystem.GetPrimitive(target, null);
 
                 if (targetPrim != null)
                 {

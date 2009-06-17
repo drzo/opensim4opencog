@@ -11,7 +11,8 @@ namespace cogbot.TheOpenSims
         SOCIAL,
         SIT,
         ANIM,
-        TOUCH
+        TOUCH,
+        MOVEMENT
     }
     public enum SimEventStatus
     {
@@ -23,6 +24,59 @@ namespace cogbot.TheOpenSims
 
     public class SimObjectEvent: BotMentalAspect
     {
+
+        public BotAction GetAction()
+        {
+            switch (EventType)
+            {
+                case SimEventType.SIT:
+                    {
+
+                        new BotObjectAction((SimActor)Parameters[0], GetSimObjectUsage());
+                        break;
+                    }
+                case SimEventType.TOUCH:
+                    {
+
+                        new BotObjectAction((SimActor)Parameters[0], GetSimObjectUsage());
+                        break;
+                    }
+                case SimEventType.ANIM:
+                    {
+
+                        new BotObjectAction((SimActor)Parameters[0], GetSimObjectUsage());
+                        break;
+                    }
+                case SimEventType.SOCIAL:
+                    {
+
+                        new BotObjectAction((SimActor)Parameters[0], GetSimObjectUsage());
+                        break;
+                    }
+                case SimEventType.MOVEMENT:
+                    {
+
+                        new BotObjectAction((SimActor)Parameters[0], GetHeading());
+                        break;
+                    }
+                default:
+                    {
+                        break;
+                    }
+            }
+            return null;
+        }
+
+        private SimObjectUsage GetHeading()
+        {
+            throw new NotImplementedException();
+        }
+
+        private SimObjectUsage GetSimObjectUsage()
+        {
+            return new SimObjectUsage(SimTypeSystem.FindObjectUse(Verb),(SimObject)Parameters[1]);
+        }
+
         public string Verb;
         public object[] Parameters;
         public SimEventType EventType;

@@ -57,6 +57,7 @@ namespace OpenMetaverse
     [Flags]
     public enum CompressedFlags : uint
     {
+        None = 0x00,
         /// <summary>Unknown</summary>
         ScratchPad = 0x01,
         /// <summary>Whether the object has a TreeSpecies</summary>
@@ -98,6 +99,23 @@ namespace OpenMetaverse
         /// <summary>Scale prims uniformly, same as selecing ctrl+shift in the
         /// viewer. Used in conjunction with Scale</summary>
         Uniform = 0x10
+    }
+
+    /// <summary>
+    /// Special values in PayPriceReply. If the price is not one of these
+    /// literal value of the price should be use
+    /// </summary>
+    public enum PayPriceType : int
+    {
+        /// <summary>
+        /// Indicates that this pay option should be hidden
+        /// </summary>
+        Hide = -1,
+        
+        /// <summary>
+        /// Indicates that this pay option should have the default value
+        /// </summary>
+        Default = -2
     }
 
     #endregion Enums
@@ -172,6 +190,13 @@ namespace OpenMetaverse
         /// 
         /// </summary>
         /// <param name="simulator"></param>
+        /// <param name="prim"></param>
+        /// <param name="props"></param>
+        public delegate void ObjectPropertiesUpdatedCallback(Simulator simulator, Primitive prim, Primitive.ObjectProperties props);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="simulator"></param>
         /// <param name="props"></param>
         /// <param name="type"></param>
         public delegate void ObjectPropertiesFamilyCallback(Simulator simulator, Primitive.ObjectProperties props,
@@ -195,7 +220,7 @@ namespace OpenMetaverse
         public delegate void NewFoliageCallback(Simulator simulator, Primitive foliage, ulong regionHandle,
             ushort timeDilation);
         /// <summary>
-        /// Called whenever an object disappears
+        /// Called whenever an object terse update is received
         /// </summary>
         /// <param name="simulator"></param>
         /// <param name="update"></param>
@@ -204,7 +229,27 @@ namespace OpenMetaverse
         public delegate void ObjectUpdatedCallback(Simulator simulator, ObjectUpdate update, ulong regionHandle,
             ushort timeDilation);
         /// <summary>
-        /// 
+        /// Called whenever an object terse update is received
+        /// This is different than the above in that the update to the prim has not happened yet
+        /// </summary>
+        /// <param name="simulator"></param>
+        /// <param name="prim"></param>
+        /// <param name="update"></param>
+        public delegate void ObjectUpdatedTerseCallback(Simulator simulator, Primitive prim, ObjectUpdate update, ulong RegionHandle, ushort TimeDilation);
+        /// <summary>
+        /// Called whenever an major object update is received
+        /// This is when major changes are happening to the contructionData changing the shape of an object
+        /// </summary>
+        /// <param name="simulator"></param>
+        /// <param name="prim"></param>
+        /// <param name="constructionData"></param>
+        /// <param name="block"></param>
+        /// <param name="update"></param>
+        /// <param name="nameValues"></param>
+        public delegate void ObjectDataBlockUpdateCallback(Simulator simulator, Primitive prim, Primitive.ConstructionData constructionData, 
+            ObjectUpdatePacket.ObjectDataBlock block, ObjectUpdate objectupdate, NameValue[] nameValues);
+        /// <summary>
+        /// Called whenever an object disappears
         /// </summary>
         /// <param name="simulator"></param>
         /// <param name="objectID"></param>
@@ -219,17 +264,19 @@ namespace OpenMetaverse
         /// on. If this is zero the avatar is not sitting on an object</param>
         public delegate void AvatarSitChanged(Simulator simulator, Avatar avatar, uint sittingOn, uint oldSeat);
 
-        public delegate void PrimitivePropertiesCallback(Simulator simulator, Primitive prim, Primitive.ObjectProperties props);
+        /// <summary>
+        /// Called when we get PayPriceReply packet after calling RequestPayPrice
+        /// </summary>
+        /// <param name="simulator">Simulator the packet was received from</param>
+        /// <param name="objectID">Object <seealso cref="UUID"/></param>
+        /// <param name="defaultPrice">Default pay price for the object, -1 means control should be disabled, -2 it should be empty</param>
+        /// <param name="buttonPrices">Array of 4 prices, -1 means button should be disabled</param>
+        public delegate void PayPriceReply(Simulator simulator, UUID objectID, int defaultPrice, int[] buttonPrices);
 
-        public delegate void PrimitiveUpdateCallback(
-            Simulator simulator, Primitive prim, ObjectUpdate props, ulong regionHandle, ushort timeDilation);
         #endregion Delegates
 
         #region Events
 
-        public event PrimitivePropertiesCallback OnPrimitiveProperties;        
-        public event PrimitiveUpdateCallback OnPrimitiveUpdate;
-        
         /// <summary>
         /// This event will be raised for every ObjectUpdate block that 
         /// contains a prim that isn't attached to an avatar.
@@ -266,7 +313,21 @@ namespace OpenMetaverse
         /// received, containing the updated position, rotation, and 
         /// movement-related vectors
         /// </summary>
+        public event ObjectUpdatedTerseCallback OnObjectTerseUpdate;
+        /// <summary>
+        /// This event will be raised when a terse object update packet is 
+        /// received, containing the updated position, rotation, and 
+        /// movement-related vectors
+        /// </summary>
         public event ObjectUpdatedCallback OnObjectUpdated;
+        #region OnOnObjectDataBlockUpdate
+
+        /// <summary>
+        /// Triggers the OnObjectDataBlockUpdate event.
+        /// </summary>
+        public event ObjectDataBlockUpdateCallback OnObjectDataBlockUpdate;
+        #endregion
+        
         /// <summary>
         /// This event will be raised when an avatar sits on an object
         /// or stands up, with a local ID of the current seat or zero.
@@ -283,11 +344,22 @@ namespace OpenMetaverse
         /// </summary>
         public event ObjectPropertiesCallback OnObjectProperties;
         /// <summary>
+        /// This event will be raised when an objects properties are updated
+        /// from the simulator
+        /// </summary>
+        public event ObjectPropertiesUpdatedCallback OnObjectPropertiesUpdated;
+        /// <summary>
         /// Thie event will be raised when an objects properties family 
         /// information is recieved from the simulator. ObjectPropertiesFamily
         /// is a subset of the fields found in ObjectProperties
         /// </summary>
         public event ObjectPropertiesFamilyCallback OnObjectPropertiesFamily;
+
+        /// <summary>
+        /// This event will be fired when we recieve pay price information
+        /// for the object after having asked for them with RequestPayPrice
+        /// </summary>
+        public event PayPriceReply OnPayPriceReply;
 
         #endregion
 
@@ -326,18 +398,19 @@ namespace OpenMetaverse
 
         protected void RegisterCallbacks()
         {
-            Client.Network.RegisterCallback(PacketType.ObjectUpdate, new NetworkManager.PacketCallback(UpdateHandler));
-            Client.Network.RegisterCallback(PacketType.ImprovedTerseObjectUpdate, new NetworkManager.PacketCallback(TerseUpdateHandler));
-            Client.Network.RegisterCallback(PacketType.ObjectUpdateCompressed, new NetworkManager.PacketCallback(CompressedUpdateHandler));
-            Client.Network.RegisterCallback(PacketType.ObjectUpdateCached, new NetworkManager.PacketCallback(CachedUpdateHandler));
-            Client.Network.RegisterCallback(PacketType.KillObject, new NetworkManager.PacketCallback(KillObjectHandler));
-            Client.Network.RegisterCallback(PacketType.ObjectPropertiesFamily, new NetworkManager.PacketCallback(ObjectPropertiesFamilyHandler));
-            Client.Network.RegisterCallback(PacketType.ObjectProperties, new NetworkManager.PacketCallback(ObjectPropertiesHandler));
+            Client.Network.RegisterCallback(PacketType.ObjectUpdate, UpdateHandler);
+            Client.Network.RegisterCallback(PacketType.ImprovedTerseObjectUpdate, TerseUpdateHandler);
+            Client.Network.RegisterCallback(PacketType.ObjectUpdateCompressed, CompressedUpdateHandler);
+            Client.Network.RegisterCallback(PacketType.ObjectUpdateCached, CachedUpdateHandler);
+            Client.Network.RegisterCallback(PacketType.KillObject, KillObjectHandler);
+            Client.Network.RegisterCallback(PacketType.ObjectPropertiesFamily, ObjectPropertiesFamilyHandler);
+            Client.Network.RegisterCallback(PacketType.ObjectProperties, ObjectPropertiesHandler);
+            Client.Network.RegisterCallback(PacketType.PayPriceReply, PayPriceReplyHandler);
 
             // If the callbacks aren't registered there's not point in doing client-side path prediction,
             // so we set it up here
-            //dmiles  todo InterpolationTimer = new Timer(new TimerCallback(InterpolationTimer_Elapsed), null, Settings.INTERPOLATION_INTERVAL,
-                //Settings.INTERPOLATION_INTERVAL);
+            InterpolationTimer = new Timer(InterpolationTimer_Elapsed, null, Settings.INTERPOLATION_INTERVAL,
+                Timeout.Infinite);
         }
 
         #region Action Methods
@@ -429,6 +502,23 @@ namespace OpenMetaverse
 
             Client.Network.SendPacket(buy, simulator);
         }
+
+        /// <summary>
+        /// Request prices that should be displayed in pay dialog. This will triggger the simulator
+        /// to send us back a PayPriceReply which can be handled by OnPayPriceReply event
+        /// </summary>
+        /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the object resides</param>
+        /// <param name="objectID"><seealso cref="UUID"/> of the object we are requesting pay price</param>
+        public void RequestPayPrice(Simulator simulator, UUID objectID)
+        {
+            RequestPayPricePacket payPriceRequest = new RequestPayPricePacket();
+
+            payPriceRequest.ObjectData = new RequestPayPricePacket.ObjectDataBlock();
+            payPriceRequest.ObjectData.ObjectID = objectID;
+
+            Client.Network.SendPacket(payPriceRequest, simulator);
+        }
+
 
         /// <summary>
         /// Select a single object. This will trigger the simulator to send us back 
@@ -1358,17 +1448,18 @@ namespace OpenMetaverse
         {
             ObjectUpdatePacket update = (ObjectUpdatePacket)packet;
             UpdateDilation(simulator, update.RegionData.TimeDilation);
-
+            
             for (int b = 0; b < update.ObjectData.Length; b++)
             {
                 ObjectUpdatePacket.ObjectDataBlock block = update.ObjectData[b];
 
-                Vector4 collisionPlane = Vector4.Zero;
-                Vector3 position;
-                Vector3 velocity;
-                Vector3 acceleration;
-                Quaternion rotation;
-                Vector3 angularVelocity;
+                ObjectUpdate objectupdate = new ObjectUpdate();
+                //Vector4 collisionPlane = Vector4.Zero;
+                //Vector3 position;
+                //Vector3 velocity;
+                //Vector3 acceleration;
+                //Quaternion rotation;
+                //Vector3 angularVelocity;
                 NameValue[] nameValues;
                 bool attachment = false;
                 PCode pcode = (PCode)block.PCode;
@@ -1453,31 +1544,31 @@ namespace OpenMetaverse
                 {
                     case 76:
                         // Collision normal for avatar
-                        collisionPlane = new Vector4(block.ObjectData, pos);
+                        objectupdate.CollisionPlane = new Vector4(block.ObjectData, pos);
                         pos += 16;
 
                         goto case 60;
                     case 60:
                         // Position
-                        position = new Vector3(block.ObjectData, pos);
+                        objectupdate.Position = new Vector3(block.ObjectData, pos);
                         pos += 12;
                         // Velocity
-                        velocity = new Vector3(block.ObjectData, pos);
+                        objectupdate.Velocity = new Vector3(block.ObjectData, pos);
                         pos += 12;
                         // Acceleration
-                        acceleration = new Vector3(block.ObjectData, pos);
+                        objectupdate.Acceleration = new Vector3(block.ObjectData, pos);
                         pos += 12;
                         // Rotation (theta)
-                        rotation = new Quaternion(block.ObjectData, pos, true);
+                        objectupdate.Rotation = new Quaternion(block.ObjectData, pos, true);
                         pos += 12;
                         // Angular velocity (omega)
-                        angularVelocity = new Vector3(block.ObjectData, pos);
+                        objectupdate.AngularVelocity = new Vector3(block.ObjectData, pos);
                         pos += 12;
 
                         break;
                     case 48:
                         // Collision normal for avatar
-                        collisionPlane = new Vector4(block.ObjectData, pos);
+                        objectupdate.CollisionPlane = new Vector4(block.ObjectData, pos);
                         pos += 16;
 
                         goto case 32;
@@ -1485,32 +1576,32 @@ namespace OpenMetaverse
                         // The data is an array of unsigned shorts
 
                         // Position
-                        position = new Vector3(
+                        objectupdate.Position = new Vector3(
                             Utils.UInt16ToFloat(block.ObjectData, pos, -0.5f * 256.0f, 1.5f * 256.0f),
                             Utils.UInt16ToFloat(block.ObjectData, pos + 2, -0.5f * 256.0f, 1.5f * 256.0f),
                             Utils.UInt16ToFloat(block.ObjectData, pos + 4, -256.0f, 3.0f * 256.0f));
                         pos += 6;
                         // Velocity
-                        velocity = new Vector3(
+                        objectupdate.Velocity = new Vector3(
                             Utils.UInt16ToFloat(block.ObjectData, pos, -256.0f, 256.0f),
                             Utils.UInt16ToFloat(block.ObjectData, pos + 2, -256.0f, 256.0f),
                             Utils.UInt16ToFloat(block.ObjectData, pos + 4, -256.0f, 256.0f));
                         pos += 6;
                         // Acceleration
-                        acceleration = new Vector3(
+                        objectupdate.Acceleration = new Vector3(
                             Utils.UInt16ToFloat(block.ObjectData, pos, -256.0f, 256.0f),
                             Utils.UInt16ToFloat(block.ObjectData, pos + 2, -256.0f, 256.0f),
                             Utils.UInt16ToFloat(block.ObjectData, pos + 4, -256.0f, 256.0f));
                         pos += 6;
                         // Rotation (theta)
-                        rotation = new Quaternion(
+                        objectupdate.Rotation = new Quaternion(
                             Utils.UInt16ToFloat(block.ObjectData, pos, -1.0f, 1.0f),
                             Utils.UInt16ToFloat(block.ObjectData, pos + 2, -1.0f, 1.0f),
                             Utils.UInt16ToFloat(block.ObjectData, pos + 4, -1.0f, 1.0f),
                             Utils.UInt16ToFloat(block.ObjectData, pos + 6, -1.0f, 1.0f));
                         pos += 8;
                         // Angular velocity (omega)
-                        angularVelocity = new Vector3(
+                        objectupdate.AngularVelocity = new Vector3(
                             Utils.UInt16ToFloat(block.ObjectData, pos, -256.0f, 256.0f),
                             Utils.UInt16ToFloat(block.ObjectData, pos + 2, -256.0f, 256.0f),
                             Utils.UInt16ToFloat(block.ObjectData, pos + 4, -256.0f, 256.0f));
@@ -1521,32 +1612,32 @@ namespace OpenMetaverse
                         // The data is an array of single bytes (8-bit numbers)
 
                         // Position
-                        position = new Vector3(
+                        objectupdate.Position = new Vector3(
                             Utils.ByteToFloat(block.ObjectData, pos, -256.0f, 256.0f),
                             Utils.ByteToFloat(block.ObjectData, pos + 1, -256.0f, 256.0f),
                             Utils.ByteToFloat(block.ObjectData, pos + 2, -256.0f, 256.0f));
                         pos += 3;
                         // Velocity
-                        velocity = new Vector3(
+                        objectupdate.Velocity = new Vector3(
                             Utils.ByteToFloat(block.ObjectData, pos, -256.0f, 256.0f),
                             Utils.ByteToFloat(block.ObjectData, pos + 1, -256.0f, 256.0f),
                             Utils.ByteToFloat(block.ObjectData, pos + 2, -256.0f, 256.0f));
                         pos += 3;
                         // Accleration
-                        acceleration = new Vector3(
+                        objectupdate.Acceleration = new Vector3(
                             Utils.ByteToFloat(block.ObjectData, pos, -256.0f, 256.0f),
                             Utils.ByteToFloat(block.ObjectData, pos + 1, -256.0f, 256.0f),
                             Utils.ByteToFloat(block.ObjectData, pos + 2, -256.0f, 256.0f));
                         pos += 3;
                         // Rotation
-                        rotation = new Quaternion(
+                        objectupdate.Rotation = new Quaternion(
                             Utils.ByteToFloat(block.ObjectData, pos, -1.0f, 1.0f),
                             Utils.ByteToFloat(block.ObjectData, pos + 1, -1.0f, 1.0f),
                             Utils.ByteToFloat(block.ObjectData, pos + 2, -1.0f, 1.0f),
                             Utils.ByteToFloat(block.ObjectData, pos + 3, -1.0f, 1.0f));
                         pos += 4;
                         // Angular Velocity
-                        angularVelocity = new Vector3(
+                        objectupdate.AngularVelocity = new Vector3(
                             Utils.ByteToFloat(block.ObjectData, pos, -256.0f, 256.0f),
                             Utils.ByteToFloat(block.ObjectData, pos + 1, -256.0f, 256.0f),
                             Utils.ByteToFloat(block.ObjectData, pos + 2, -256.0f, 256.0f));
@@ -1571,6 +1662,11 @@ namespace OpenMetaverse
                     case PCode.Prim:
                         Primitive prim = GetPrimitive(simulator, block.ID, block.FullID);
 
+                        // Textures
+                        objectupdate.Textures = new Primitive.TextureEntry(block.TextureEntry, 0,
+                            block.TextureEntry.Length);
+                        FireOnObjectDataBlockUpdate(simulator, prim, data , block , objectupdate, nameValues);
+
                         #region Update Prim Info with decoded data
                         prim.Flags = (PrimFlags)block.UpdateFlags;
 
@@ -1579,12 +1675,6 @@ namespace OpenMetaverse
                             Logger.Log("Got a ZlibCompressed ObjectUpdate, implement me!",
                                 Helpers.LogLevel.Warning, Client);
                             continue;
-                        }
-
-                        // Automatically request ObjectProperties for prim if it was rezzed selected.
-                        if ((prim.Flags & PrimFlags.CreateSelected) != 0)
-                        {
-                            SelectObject(simulator, prim.LocalID);
                         }
 
                         prim.NameValues = nameValues;
@@ -1614,17 +1704,8 @@ namespace OpenMetaverse
                         prim.PrimData = data;
 
                         // Textures, texture animations, particle system, and extra params
-                        try
-                        {
-                            prim.Textures = new Primitive.TextureEntry(block.TextureEntry, 0,
-                        block.TextureEntry.Length);
+                        prim.Textures = objectupdate.Textures;
 
-                        }
-                        catch (Exception)
-                        {
-                            
-                            //throw;
-                        }
                         prim.TextureAnim = new Primitive.TextureAnimation(block.TextureAnim, 0);
                         prim.ParticleSys = new Primitive.ParticleSystem(block.PSBlock, 0);
                         prim.SetExtraParamsFromBytes(block.ExtraParams, 0);
@@ -1649,12 +1730,12 @@ namespace OpenMetaverse
                         }
 
                         // Packed parameters
-                        prim.CollisionPlane = collisionPlane;
-                        prim.Position = position;
-                        prim.Velocity = velocity;
-                        prim.Acceleration = acceleration;
-                        prim.Rotation = rotation;
-                        prim.AngularVelocity = angularVelocity;
+                        prim.CollisionPlane = objectupdate.CollisionPlane;
+                        prim.Position = objectupdate.Position;
+                        prim.Velocity = objectupdate.Velocity;
+                        prim.Acceleration = objectupdate.Acceleration;
+                        prim.Rotation = objectupdate.Rotation;
+                        prim.AngularVelocity = objectupdate.AngularVelocity;
                         #endregion
 
                         if (attachment)
@@ -1677,12 +1758,12 @@ namespace OpenMetaverse
                             Client.Self.localID = block.ID;
 
                             // Packed parameters
-                            Client.Self.collisionPlane = collisionPlane;
-                            Client.Self.relativePosition = position;
-                            Client.Self.velocity = velocity;
-                            Client.Self.acceleration = acceleration;
-                            Client.Self.relativeRotation = rotation;
-                            Client.Self.angularVelocity = angularVelocity;
+                            Client.Self.collisionPlane = objectupdate.CollisionPlane;
+                            Client.Self.relativePosition = objectupdate.Position;
+                            Client.Self.velocity = objectupdate.Velocity;
+                            Client.Self.acceleration = objectupdate.Acceleration;
+                            Client.Self.relativeRotation = objectupdate.Rotation;
+                            Client.Self.angularVelocity = objectupdate.AngularVelocity;
 
                             #endregion
                         }
@@ -1690,16 +1771,24 @@ namespace OpenMetaverse
                         #region Create an Avatar from the decoded data
 
                         Avatar avatar = GetAvatar(simulator, block.ID, block.FullID);
+
+                        objectupdate.Avatar = true;
+                        // Textures
+                        objectupdate.Textures = new Primitive.TextureEntry(block.TextureEntry, 0,                 
+                            block.TextureEntry.Length);
+
+                        FireOnObjectDataBlockUpdate(simulator, avatar, data, block, objectupdate, nameValues);
+
                         uint oldSeatID = avatar.ParentID;
 
                         avatar.ID = block.FullID;
                         avatar.LocalID = block.ID;
-                        avatar.CollisionPlane = collisionPlane;
-                        avatar.Position = position;
-                        avatar.Velocity = velocity;
-                        avatar.Acceleration = acceleration;
-                        avatar.Rotation = rotation;
-                        avatar.AngularVelocity = angularVelocity;
+                        avatar.CollisionPlane = objectupdate.CollisionPlane;
+                        avatar.Position = objectupdate.Position;
+                        avatar.Velocity = objectupdate.Velocity;
+                        avatar.Acceleration = objectupdate.Acceleration;
+                        avatar.Rotation = objectupdate.Rotation;
+                        avatar.AngularVelocity = objectupdate.AngularVelocity;
                         avatar.NameValues = nameValues;
                         avatar.PrimData = data;
                         if (block.Data.Length > 0) Logger.Log("Unexpected Data field for an avatar update, length " + block.Data.Length, Helpers.LogLevel.Warning);
@@ -1709,8 +1798,7 @@ namespace OpenMetaverse
                         SetAvatarSittingOn(simulator, avatar, block.ParentID, oldSeatID);
 
                         // Textures
-                        avatar.Textures = new Primitive.TextureEntry(block.TextureEntry, 0,
-                            block.TextureEntry.Length);
+                        avatar.Textures = objectupdate.Textures;
 
                         #endregion Create an Avatar from the decoded data
 
@@ -1794,7 +1882,7 @@ namespace OpenMetaverse
                     uint localid = Utils.BytesToUInt(block.Data, 0);
 
                     // Check if we are interested in this update
-                    if (!Client.Settings.ALWAYS_DECODE_OBJECTS && localid != Client.Self.localID && OnObjectUpdated == null)
+                    if (!Client.Settings.ALWAYS_DECODE_OBJECTS && localid != Client.Self.localID && OnObjectUpdated == null && OnObjectTerseUpdate == null)
                         continue;
 
                     #region Decode update data
@@ -1853,8 +1941,8 @@ namespace OpenMetaverse
                         (Primitive)GetAvatar(simulator, update.LocalID, UUID.Zero) :
                         (Primitive)GetPrimitive(simulator, update.LocalID, UUID.Zero);
 
-                    if (OnPrimitiveUpdate != null) { OnPrimitiveUpdate(simulator, obj, update, terse.RegionData.RegionHandle, terse.RegionData.TimeDilation); }
-
+                    // Fire the pre-emptive notice (before we stomp the object)
+                    FireOnObjectTerseUpdate(simulator, obj, update, terse.RegionData.RegionHandle, terse.RegionData.TimeDilation);
 
                     #region Update Client.Self
                     if (update.LocalID == Client.Self.localID)
@@ -2300,8 +2388,7 @@ namespace OpenMetaverse
 
                     if (findPrim != null)
                     {
-                        if (OnPrimitiveProperties != null) { OnPrimitiveProperties(sim, findPrim, props); }
-                        findPrim.Properties = props;
+                        FireOnObjectPropertiesUpdated(sim,findPrim,props);
                         lock (sim.ObjectsPrimitives.Dictionary)
                         {
                             if (sim.ObjectsPrimitives.Dictionary.ContainsKey(findPrim.LocalID))
@@ -2357,6 +2444,25 @@ namespace OpenMetaverse
             }
 
             FireOnObjectPropertiesFamily(sim, props, requestType);
+        }
+
+        protected void PayPriceReplyHandler(Packet packet, Simulator sim)
+        {
+            if (OnPayPriceReply != null)
+            {
+                PayPriceReplyPacket p = (PayPriceReplyPacket)packet;
+                UUID objectID = p.ObjectData.ObjectID;
+                int defaultPrice = p.ObjectData.DefaultPayPrice;
+                int[] buttonPrices = new int[p.ButtonData.Length];
+
+                for (int i = 0; i < p.ButtonData.Length; i++)
+                {
+                    buttonPrices[i] = p.ButtonData[i].PayButton;
+                }
+
+                try { OnPayPriceReply(sim, objectID, defaultPrice, buttonPrices); }
+                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+            }
         }
 
         #endregion Packet Handlers
@@ -2544,11 +2650,30 @@ namespace OpenMetaverse
 
         #region Event Notification
 
+        protected void FireOnObjectDataBlockUpdate(Simulator simulator, Primitive primitive, Primitive.ConstructionData data, ObjectUpdatePacket.ObjectDataBlock block, ObjectUpdate objectupdate, NameValue[] nameValue)
+        {
+            if (OnObjectDataBlockUpdate != null)
+            {
+                try { OnObjectDataBlockUpdate(simulator, primitive, data, block, objectupdate, nameValue); }
+                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+            }
+        }
+
         protected void FireOnObjectProperties(Simulator sim, Primitive.ObjectProperties props)
         {
             if (OnObjectProperties != null)
             {
                 try { OnObjectProperties(sim, props); }
+                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+            }
+        }
+
+
+        protected void FireOnObjectPropertiesUpdated(Simulator sim,Primitive prim, Primitive.ObjectProperties props)
+        {
+            if (OnObjectPropertiesUpdated != null)
+            {
+                try { OnObjectPropertiesUpdated(sim,prim, props); }
                 catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
             }
         }
@@ -2608,6 +2733,14 @@ namespace OpenMetaverse
             }
         }
 
+        protected void FireOnObjectTerseUpdate(Simulator simulator, Primitive prim, ObjectUpdate update, ulong RegionHandle, ushort TimeDilation)
+        {
+            if (OnObjectTerseUpdate != null)
+            {
+                try { OnObjectTerseUpdate(simulator, prim, update, RegionHandle,TimeDilation); }
+                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+            }
+        }
         #endregion
 
         #region Object Tracking Link
@@ -2619,16 +2752,16 @@ namespace OpenMetaverse
         /// <param name="localID"></param>
         /// <param name="fullID"></param>
         /// <returns></returns>
-        readonly private object _GetObjectLock = new object();
         protected Primitive GetPrimitive(Simulator simulator, uint localID, UUID fullID)
         {
             if (Client.Settings.OBJECT_TRACKING)
             {
-                Primitive prim;
-
-                lock (_GetObjectLock)
+                lock (simulator.ObjectsPrimitives.Dictionary)
                 {
-                    if (simulator.ObjectsPrimitives.TryGetValue(localID, out prim))
+
+                    Primitive prim;
+
+                    if (simulator.ObjectsPrimitives.Dictionary.TryGetValue(localID, out prim))
                     {
                         return prim;
                     }
@@ -2637,9 +2770,8 @@ namespace OpenMetaverse
                         prim = new Primitive();
                         prim.LocalID = localID;
                         prim.ID = fullID;
-                        prim.RegionHandle = simulator.Handle;
-                        lock (simulator.ObjectsPrimitives.Dictionary)
-                            simulator.ObjectsPrimitives.Dictionary.Add(localID, prim);
+
+                        simulator.ObjectsPrimitives.Dictionary[localID] = prim;
 
                         return prim;
                     }
@@ -2658,16 +2790,16 @@ namespace OpenMetaverse
         /// <param name="localID"></param>
         /// <param name="fullID"></param>
         /// <returns></returns>
-        readonly private object _GetAvatarLock = new object();
         protected Avatar GetAvatar(Simulator simulator, uint localID, UUID fullID)
         {
             if (Client.Settings.AVATAR_TRACKING)
             {
-                Avatar avatar;
-
-                lock (_GetAvatarLock)
+                lock (simulator.ObjectsAvatars.Dictionary)
                 {
-                    if (simulator.ObjectsAvatars.TryGetValue(localID, out avatar))
+
+                    Avatar avatar;
+
+                    if (simulator.ObjectsAvatars.Dictionary.TryGetValue(localID, out avatar))
                     {
                         return avatar;
                     }
@@ -2676,9 +2808,8 @@ namespace OpenMetaverse
                         avatar = new Avatar();
                         avatar.LocalID = localID;
                         avatar.ID = fullID;
-                        avatar.RegionHandle = simulator.Handle;
-                        lock (simulator.ObjectsAvatars.Dictionary)
-                            simulator.ObjectsAvatars.Dictionary.Add(localID, avatar);
+
+                        simulator.ObjectsAvatars.Dictionary[localID] = avatar;
 
                         return avatar;
                     }
@@ -2694,87 +2825,103 @@ namespace OpenMetaverse
 
         protected void InterpolationTimer_Elapsed(object obj)
         {
+            if (!Client.Settings.USE_INTERPOLATION_TIMER)
+            {
+                Logger.Log("Disabling the interpolation timer", Helpers.LogLevel.Info);
+                return;
+            }
+
+            int elapsed = 0;
+
             if (Client.Network.Connected)
             {
+                int start = Environment.TickCount;
+
                 int interval = Environment.TickCount - Client.Self.lastInterpolation;
                 float seconds = (float)interval / 1000f;
 
                 // Iterate through all of the simulators
-                lock (Client.Network.Simulators)
+                Simulator[] sims = Client.Network.Simulators.ToArray();
+                for (int i = 0; i < sims.Length; i++)
                 {
-                    for (int i = 0; i < Client.Network.Simulators.Count; i++)
-                    {
-                        float adjSeconds = seconds * Client.Network.Simulators[i].Stats.Dilation;
+                    Simulator sim = sims[i];
 
-                        // Iterate through all of this sims avatars
-                        Client.Network.Simulators[i].ObjectsAvatars.ForEach(
-                            delegate(Avatar avatar)
+                    float adjSeconds = seconds * sim.Stats.Dilation;
+
+                    // Iterate through all of this sims avatars
+                    sim.ObjectsAvatars.ForEach(
+                        delegate(Avatar avatar)
+                        {
+                            #region Linear Motion
+                            // Only do movement interpolation (extrapolation) when there is a non-zero velocity but 
+                            // no acceleration
+                            if (avatar.Acceleration != Vector3.Zero && avatar.Velocity == Vector3.Zero)
                             {
+                                avatar.Position += (avatar.Velocity + avatar.Acceleration *
+                                    (0.5f * (adjSeconds - HAVOK_TIMESTEP))) * adjSeconds;
+                                avatar.Velocity += avatar.Acceleration * adjSeconds;
+                            }
+                            #endregion Linear Motion
+                        }
+                    );
+
+                    // Iterate through all of this sims primitives
+                    sim.ObjectsPrimitives.ForEach(
+                        delegate(Primitive prim)
+                        {
+                            if (prim.Joint == JointType.Invalid)
+                            {
+                                #region Angular Velocity
+                                Vector3 angVel = prim.AngularVelocity;
+                                float omega = angVel.LengthSquared();
+
+                                if (omega > 0.00001f)
+                                {
+                                    omega = (float)Math.Sqrt(omega);
+                                    float angle = omega * adjSeconds;
+                                    angVel *= 1.0f / omega;
+                                    Quaternion dQ = Quaternion.CreateFromAxisAngle(angVel, angle);
+
+                                    prim.Rotation *= dQ;
+                                }
+                                #endregion Angular Velocity
+
                                 #region Linear Motion
                                 // Only do movement interpolation (extrapolation) when there is a non-zero velocity but 
                                 // no acceleration
-                                if (avatar.Acceleration != Vector3.Zero && avatar.Velocity == Vector3.Zero)
+                                if (prim.Acceleration != Vector3.Zero && prim.Velocity == Vector3.Zero)
                                 {
-                                    avatar.Position += (avatar.Velocity + avatar.Acceleration *
+                                    prim.Position += (prim.Velocity + prim.Acceleration *
                                         (0.5f * (adjSeconds - HAVOK_TIMESTEP))) * adjSeconds;
-                                    avatar.Velocity += avatar.Acceleration * adjSeconds;
+                                    prim.Velocity += prim.Acceleration * adjSeconds;
                                 }
                                 #endregion Linear Motion
                             }
-                        );
-
-                        // Iterate through all of this sims primitives
-                        Client.Network.Simulators[i].ObjectsPrimitives.ForEach(
-                            delegate(Primitive prim)
+                            else if (prim.Joint == JointType.Hinge)
                             {
-                                if (prim.Joint == JointType.Invalid)
-                                {
-                                    #region Angular Velocity
-                                    Vector3 angVel = prim.AngularVelocity;
-                                    float omega = angVel.LengthSquared();
-
-                                    if (omega > 0.00001f)
-                                    {
-                                        omega = (float)Math.Sqrt(omega);
-                                        float angle = omega * adjSeconds;
-                                        angVel *= 1.0f / omega;
-                                        Quaternion dQ = Quaternion.CreateFromAxisAngle(angVel, angle);
-
-                                        prim.Rotation *= dQ;
-                                    }
-                                    #endregion Angular Velocity
-
-                                    #region Linear Motion
-                                    // Only do movement interpolation (extrapolation) when there is a non-zero velocity but 
-                                    // no acceleration
-                                    if (prim.Acceleration != Vector3.Zero && prim.Velocity == Vector3.Zero)
-                                    {
-                                        prim.Position += (prim.Velocity + prim.Acceleration *
-                                            (0.5f * (adjSeconds - HAVOK_TIMESTEP))) * adjSeconds;
-                                        prim.Velocity += prim.Acceleration * adjSeconds;
-                                    }
-                                    #endregion Linear Motion
-                                }
-                                else if (prim.Joint == JointType.Hinge)
-                                {
-                                    //FIXME: Hinge movement extrapolation
-                                }
-                                else if (prim.Joint == JointType.Point)
-                                {
-                                    //FIXME: Point movement extrapolation
-                                }
-                                else
-                                {
-                                    Logger.Log("Unhandled joint type " + prim.Joint, Helpers.LogLevel.Warning, Client);
-                                }
+                                //FIXME: Hinge movement extrapolation
                             }
-                        );
-                    }
+                            else if (prim.Joint == JointType.Point)
+                            {
+                                //FIXME: Point movement extrapolation
+                            }
+                            else
+                            {
+                                Logger.Log("Unhandled joint type " + prim.Joint, Helpers.LogLevel.Warning, Client);
+                            }
+                        }
+                    );
                 }
 
                 // Make sure the last interpolated time is always updated
                 Client.Self.lastInterpolation = Environment.TickCount;
+
+                elapsed = Client.Self.lastInterpolation - start;
             }
+
+            // Start the timer again. Use a minimum of a 50ms pause in between calculations
+            int delay = Math.Max(50, Settings.INTERPOLATION_INTERVAL - elapsed);
+            InterpolationTimer.Change(delay, Timeout.Infinite);
         }
     }
 }

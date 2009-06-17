@@ -21,9 +21,8 @@ namespace cogbot.Actions.Appearance
 
             string targetName = String.Format("{0} {1}", args[0], args[1]);
 
-            Avatar foundAv = Client.Network.CurrentSim.ObjectsAvatars.Find(
-                delegate(Avatar avatar) { return (avatar.Name == targetName); }
-            );
+            int argsUsed;
+            Primitive foundAv = WorldSystem.GetPrimitive(args, out argsUsed);
 
             if (foundAv != null)
             {

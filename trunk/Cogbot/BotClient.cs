@@ -202,7 +202,7 @@ namespace cogbot
             Settings.MAX_RESEND_COUNT = 10;
             Settings.LOGIN_TIMEOUT = 120 * 1000;
             Settings.LOGOUT_TIMEOUT = 16 * 1000;
-            Settings.SIMULATOR_TIMEOUT = 5 * 60000;
+            Settings.SIMULATOR_TIMEOUT = int.MaxValue;
             Settings.SEND_PINGS = false;
             //Settings.USE_LLSD_LOGIN = true;
             ////Settings.MULTIPLE_SIMS = false;
@@ -221,6 +221,7 @@ namespace cogbot
             Settings.OBJECT_TRACKING = true;
             Settings.AVATAR_TRACKING = true;
             Settings.STORE_LAND_PATCHES = true;
+            Settings.USE_INTERPOLATION_TIMER = false;
 
 
             //  Manager = Inventory;
@@ -482,7 +483,7 @@ namespace cogbot
                 else if (im.Dialog == InstantMessageDialog.MessageFromAgent ||
                     im.Dialog == InstantMessageDialog.MessageFromObject)
                 {
-                    ClientManager.DoCommandAll(im.Message, im.FromAgentID, WriteLine);
+                 //   ClientManager.DoCommandAll(im.Message, im.FromAgentID, WriteLine);
                 }
             }
             else

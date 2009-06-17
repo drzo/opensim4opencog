@@ -14,7 +14,6 @@ namespace HttpServer
     /// </summary>
     public class HttpContextFactory : IHttpContextFactory
     {
-        private readonly X509Certificate _rootCA;
         private readonly int _bufferSize;
         private readonly Queue<HttpClientContextImp> _contextQueue = new Queue<HttpClientContextImp>();
         private readonly IRequestParserFactory _factory;
@@ -26,13 +25,11 @@ namespace HttpServer
         /// <param name="writer">The writer.</param>
         /// <param name="bufferSize">Amount of bytes to read from the incoming socket stream.</param>
         /// <param name="factory">Used to create a request parser.</param>
-        /// <param name="rootCA">Root certificate that incoming client certificates were signed with</param>
-        public HttpContextFactory(ILogWriter writer, int bufferSize, IRequestParserFactory factory, X509Certificate rootCA)
+        public HttpContextFactory(ILogWriter writer, int bufferSize, IRequestParserFactory factory)
         {
             _logWriter = writer;
             _bufferSize = bufferSize;
             _factory = factory;
-            _rootCA = rootCA;
         }
 
         ///<summary>
@@ -45,9 +42,10 @@ namespace HttpServer
         /// </summary>
         /// <param name="isSecured">true if socket is running HTTPS.</param>
         /// <param name="endPoint">Client that connected</param>
+        /// <param name="clientCertificate">Client security certificate</param>
         /// <param name="stream">Network/SSL stream.</param>
         /// <returns>A context.</returns>
-        protected HttpClientContextImp CreateContext(bool isSecured, IPEndPoint endPoint, Stream stream)
+        protected HttpClientContextImp CreateContext(bool isSecured, IPEndPoint endPoint, ClientCertificate clientCertificate, Stream stream)
         {
         	HttpClientContextImp context;
             lock (_contextQueue)
@@ -56,7 +54,7 @@ namespace HttpServer
 					context = _contextQueue.Dequeue();
 				else
 				{
-					context = CreateNewContext(isSecured, endPoint, stream);
+					context = CreateNewContext(isSecured, endPoint, clientCertificate, stream);
 					context.Disconnected += OnFreeContext;
 					context.RequestReceived += OnRequestReceived;
 				}
@@ -73,11 +71,12 @@ namespace HttpServer
 		/// </summary>
 		/// <param name="isSecured">true if HTTPS is used.</param>
 		/// <param name="endPoint">Remote client</param>
+        /// <param name="clientCertificate">Client security certificate</param>
 		/// <param name="stream">Network stream, <see cref="HttpClientContextImp"/> uses <see cref="ReusableSocketNetworkStream"/>.</param>
 		/// <returns>A new context (always).</returns>
-    	protected virtual HttpClientContextImp CreateNewContext(bool isSecured, IPEndPoint endPoint, Stream stream)
+    	protected virtual HttpClientContextImp CreateNewContext(bool isSecured, IPEndPoint endPoint, ClientCertificate clientCertificate, Stream stream)
     	{
-    		return new HttpClientContextImp(isSecured, endPoint, stream, _factory, _bufferSize, _logWriter);
+    		return new HttpClientContextImp(isSecured, endPoint, stream, clientCertificate, _factory, _bufferSize, _logWriter);
     	}
 
     	private void OnRequestReceived(object sender, RequestEventArgs e)
@@ -91,22 +90,6 @@ namespace HttpServer
             imp.Cleanup();
             lock (_contextQueue)
                 _contextQueue.Enqueue(imp);
-        }
-
-        private bool ValidateClientCertificate(
-              object sender,
-              X509Certificate certificate,
-              X509Chain chain,
-              SslPolicyErrors sslPolicyErrors)
-        {
-            // Search through the certificate chain looking for our root CA
-            for (int i = 0; i < chain.ChainElements.Count; i++)
-            {
-                if (chain.ChainElements[i].Certificate.Equals(_rootCA))
-                    return true;
-            }
-
-            return false;
         }
 
         #region IHttpContextFactory Members
@@ -126,13 +109,20 @@ namespace HttpServer
 			var networkStream = new ReusableSocketNetworkStream(socket, true);
             var remoteEndPoint = (IPEndPoint) socket.RemoteEndPoint;
 
-            var sslStream = new SslStream(networkStream, false, ValidateClientCertificate);
+            ClientCertificate clientCertificate = null;
+
+            SslStream sslStream = new SslStream(networkStream, false,
+                delegate(object sender, X509Certificate receivedCertificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+                {
+                    clientCertificate = new ClientCertificate(receivedCertificate, chain, sslPolicyErrors);
+                    return !(requireClientCert && receivedCertificate == null);
+                }
+            );
+
             try
             {
-                //TODO: this may fail
                 sslStream.AuthenticateAsServer(certificate, requireClientCert, protocol, false);
-                sslStream.AuthenticateAsServer(certificate, false, protocol, false);
-                return CreateContext(true, remoteEndPoint, sslStream);
+                return CreateContext(true, remoteEndPoint, clientCertificate, sslStream);
             }
             catch (IOException err)
             {
@@ -143,6 +133,11 @@ namespace HttpServer
             {
                 if (UseTraceLogs)
                     _logWriter.Write(this, LogPrio.Trace, err.Message);
+            }
+            catch (AuthenticationException err)
+            {
+                if (UseTraceLogs)
+                    _logWriter.Write(this, LogPrio.Warning, (err.InnerException != null) ? err.InnerException.Message : err.Message);
             }
 
             return null;
@@ -165,7 +160,7 @@ namespace HttpServer
         {
 			var networkStream = new ReusableSocketNetworkStream(socket, true);
             var remoteEndPoint = (IPEndPoint) socket.RemoteEndPoint;
-            return CreateContext(false, remoteEndPoint, networkStream);
+            return CreateContext(false, remoteEndPoint, null, networkStream);
         }
 
         #endregion

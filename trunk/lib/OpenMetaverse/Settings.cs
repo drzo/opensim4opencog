@@ -105,7 +105,7 @@ namespace OpenMetaverse
         public int MAP_REQUEST_TIMEOUT = 5 * 1000;
 
         /// <summary>Number of milliseconds between sending pings to each sim</summary>
-        public const int PING_INTERVAL = 0;
+        public const int PING_INTERVAL = 2200;
 
         /// <summary>Number of milliseconds between sending camera updates</summary>
         public const int DEFAULT_AGENT_UPDATE_INTERVAL = 500;
@@ -218,6 +218,13 @@ namespace OpenMetaverse
         /// If false, a new Avatar or Primitive object will be created
         /// each time an object update packet is received</summary>
         public bool OBJECT_TRACKING = true;
+
+        /// <summary>If true, position and velocity will periodically be
+        /// interpolated (extrapolated, technically) for objects and 
+        /// avatars that are being tracked by the library. This is
+        /// necessary to increase the accuracy of speed and position
+        /// estimates for simulated objects</summary>
+        public bool USE_INTERPOLATION_TIMER = true;
 
         #endregion
         #region Parcel Tracking

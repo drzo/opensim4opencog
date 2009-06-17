@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
 using System.Security.Authentication;
@@ -99,21 +100,8 @@ namespace HttpServer
         /// <param name="factory">Factory used to create <see cref="IHttpClientContext"/>es.</param>
         /// <exception cref="ArgumentNullException"><c>address</c> is null.</exception>
         /// <exception cref="ArgumentException">Port must be a positive number.</exception>
-        HttpListener(IPAddress address, int port, IHttpContextFactory factory)
+        private HttpListener(IPAddress address, int port, IHttpContextFactory factory)
             : base(address, port, factory)
-        {
-            Init();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HttpListener"/> class.
-        /// </summary>
-        /// <param name="address">The address.</param>
-        /// <param name="port">The port.</param>
-        /// <param name="factory">The factory.</param>
-        /// <param name="certificate">The certificate.</param>
-        HttpListener(IPAddress address, int port, IHttpContextFactory factory, X509Certificate certificate)
-            : base(address, port, factory, certificate)
         {
             Init();
         }
@@ -127,7 +115,7 @@ namespace HttpServer
         /// <param name="certificate">The certificate.</param>
         /// <param name="protocol">The protocol.</param>
         /// <param name="requireClientCerts">True if client SSL certificates are required, otherwise false</param>
-        HttpListener(IPAddress address, int port, IHttpContextFactory factory, X509Certificate certificate, SslProtocols protocol,
+        private HttpListener(IPAddress address, int port, IHttpContextFactory factory, X509Certificate certificate, SslProtocols protocol,
             bool requireClientCerts)
             : base(address, port, factory, certificate, protocol, requireClientCerts)
         {
@@ -144,14 +132,14 @@ namespace HttpServer
         public static HttpListener Create(ILogWriter log, IPAddress address, int port)
         {
             RequestParserFactory requestFactory = new RequestParserFactory();
-            HttpContextFactory factory = new HttpContextFactory(log, 16384, requestFactory, null);
+            HttpContextFactory factory = new HttpContextFactory(log, 16384, requestFactory);
             HttpListener listener = new HttpListener(address, port, factory);
             listener._logWriter = log;
             return listener;
         }
 
         /// <summary>
-        /// Creates a new <see cref="HttpListener"/> instance with default factories.
+        /// Creates a new <see cref="HttpListener"/> instance with default factories in SSL (server) mode.
         /// </summary>
         /// <param name="log">Logging engine for the server. Use NullLogWriter.Instance to disable</param>
         /// <param name="address">Address that the listener should accept connections on.</param>
@@ -161,28 +149,28 @@ namespace HttpServer
         public static HttpListener Create(ILogWriter log, IPAddress address, int port, X509Certificate certificate)
         {
             RequestParserFactory requestFactory = new RequestParserFactory();
-            HttpContextFactory factory = new HttpContextFactory(log, 16384, requestFactory, null);
-            HttpListener listener = new HttpListener(address, port, factory, certificate);
+            HttpContextFactory factory = new HttpContextFactory(log, 16384, requestFactory);
+            HttpListener listener = new HttpListener(address, port, factory, certificate, SslProtocols.Default, false);
             listener._logWriter = log;
             return listener;
         }
 
         /// <summary>
-        /// Creates a new <see cref="HttpListener"/> instance with default factories.
+        /// Creates a new <see cref="HttpListener"/> instance with default factories in SSL server mode
+        /// with optional SSL client certificate checking.
         /// </summary>
-        /// <param name="log">Logging engine for the server. Use NullLogWriter.Instance to disable</param>
+        /// <param name="log">Logging engine for the server. Use NullLogWriter.Instance to disable.</param>
         /// <param name="address">Address that the listener should accept connections on.</param>
         /// <param name="port">Port that listener should accept connections on.</param>
         /// <param name="certificate">Certificate to use</param>
-        /// <param name="rootCA">Root certificate that incoming client certificates have been signed with</param>
-        /// <param name="protocol">which HTTPS protocol to use, default is TLS.</param>
+        /// <param name="protocol">HTTPS protocols to support, default is TLS and SSL3.</param>
         /// <returns>Created HTTP listener.</returns>
         /// <param name="requireClientCerts">True if client SSL certificates are required, otherwise false</param>
         public static HttpListener Create(ILogWriter log, IPAddress address, int port, X509Certificate certificate,
-            X509Certificate rootCA, SslProtocols protocol, bool requireClientCerts)
+            SslProtocols protocol, bool requireClientCerts)
         {
             RequestParserFactory requestFactory = new RequestParserFactory();
-            HttpContextFactory factory = new HttpContextFactory(log, 16384, requestFactory, rootCA);
+            HttpContextFactory factory = new HttpContextFactory(log, 16384, requestFactory);
             HttpListener listener = new HttpListener(address, port, factory, certificate, protocol, requireClientCerts);
             listener._logWriter = log;
             return listener;

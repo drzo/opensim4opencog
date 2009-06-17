@@ -579,14 +579,29 @@ namespace cogbot.TheOpenSims
             type = "Flying";
 
             PutType(type, Animations.FLYSLOW);
-            PutType(type,Animations.FLY);
-            PutType(type,FLY_ADJUST);
+            PutType(type, FLY_ADJUST);
+            PutType(type, Animations.HOVER_DOWN);
+            PutType(type, Animations.HOVER_UP);
+            PutType(type, Animations.FLY);
             PutType(type,Animations.HOVER);
-            PutType(type,Animations.HOVER_DOWN);
-            PutType(type,Animations.HOVER_UP);
             PutType(type,Animations.YOGA_FLOAT);
 
             type = "Walking";
+            PutType(type, Animations.WALK);
+            PutType(type, Animations.TURNLEFT);
+            PutType(type, Animations.TURNRIGHT);
+            PutType(type, Animations.STRIDE);
+            PutType(type, Animations.RUN);
+            PutType(type, Animations.FEMALE_WALK);
+            PutType(type, WALK_ADJUST);
+            PutType(type, Animations.CROUCHWALK);
+
+
+            type = "Moving";
+            PutType(type, Animations.FLYSLOW);
+            PutType(type, FLY_ADJUST);
+            PutType(type, Animations.HOVER_DOWN);
+            PutType(type, Animations.HOVER_UP);
             PutType(type, Animations.WALK);
             PutType(type, Animations.TURNLEFT);
             PutType(type, Animations.TURNRIGHT);
@@ -616,7 +631,8 @@ namespace cogbot.TheOpenSims
             PutType(type,Animations.STAND_4);
             PutType(type,Animations.STANDUP);
             PutType(type,Animations.AWAY);
-            PutType(type,Animations.BUSY);  ;
+            PutType(type, Animations.BUSY); 
+            PutType(type, Animations.HOVER); 
 
             type = "Jumping";
             PutType(type,Animations.JUMP);

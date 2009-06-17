@@ -248,7 +248,7 @@ namespace cogbot.TheOpenSims
                 {
                     for (int i = 0; i < 3; i++)
                     {
-                        TheBot.TurnToward(Target);
+                       // TheBot.TurnToward(Target);
                         TheBot.SetMoveTarget(Target, maxDistance);
                         Thread.Sleep(2000);
                         TheBot.StopMoving();

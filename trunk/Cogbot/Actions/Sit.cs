@@ -17,7 +17,7 @@ namespace cogbot.Actions
         {
             helpString = "Sit on the ground or on an object.";
             usageString = "To sit on ground, type \"sit\" \r\n" +
-                          "To sit on an object, type \"sit on <object name>\"" ;
+                          "To sit on an object, type \"sit on <object name>\"";
         }
 
         void Objects_OnAvatarSitChanged(Simulator simulator, Avatar avatar, uint sittingOn, uint oldSeat)
@@ -28,10 +28,10 @@ namespace cogbot.Actions
                 {
                     //probly going to standing pos
                     sittingOnGround = false;
-                   // WriteLine("$bot sat down.");
+                    // WriteLine("$bot sat down.");
                 }
                 //else
-                   // WriteLine("$bot stood up.");
+                // WriteLine("$bot stood up.");
             }
             else
             {
@@ -54,42 +54,53 @@ namespace cogbot.Actions
 
             TheBotClient.describeNext = true;
 
-            //if (Client.Self.SittingOn != 0 || sittingOnGround)
-               // return ("$bot is already sitting.");
-           //else
+            string on = args.prepPhrases["on"];
+
+            if (args.Length == 0)
             {
-                if (args.prepPhrases["on"].Length > 0)
+                sittingOnGround = WorldSystem.TheSimAvatar.SitOnGround();
+                return !sittingOnGround ? ("$bot did not yet sit on the ground.") : ("$bot sat on the ground.");
+            }
+
+            //if (Client.Self.SittingOn != 0 || sittingOnGround)
+            // return ("$bot is already sitting.");
+
+            if (on == "it")
+            {
+                int argsUsed;
+                SimAvatar master =
+                    (SimAvatar)
+                    WorldSystem.GetSimObject(WorldSystem.GetPrimitive(Client.MasterName.Split(new char[] { ' ' }),
+                                                                      out argsUsed));
+                List<SimObject> knows = master.GetKnownObjects();
+                if (knows.Count > 0)
                 {
-                    string on = args.prepPhrases["on"];
-                    Primitive prim;
-                    if (WorldSystem.tryGetPrim(on, out prim))
+                    var obj = knows[0];
+                    if (!WorldSystem.TheSimAvatar.SitOn(obj))
                     {
-                        SimObject obj = WorldSystem.GetSimObject(prim);
-                        WriteLine("Trying to sit on {0}.", obj);
-                        if (!WorldSystem.TheSimAvatar.SitOn(obj))
-                        {
-                            return ("$bot did not yet sit on " + obj);
-                        }
-                        else
-                        {
-                            sittingOnGround = false;
-                            return ("$bot did sit on " + obj);
-                        }
+                        return ("$bot did not yet sit on " + obj);
                     }
-                    else
-                    {
-                        return ("I don't know what " + on + " is.");
-                    }
-                }
-                else
-                {
-                    sittingOnGround = WorldSystem.TheSimAvatar.SitOnGround();
-                    if (!sittingOnGround) return ("$bot did not yet sit on the ground.");
-                    return ("$bot sat on the ground.");
                 }
             }
 
- 
+            if (on.Length == 0)
+            {
+                on = String.Join(" ", args.tokens);
+            }
+            Primitive prim;
+            if (WorldSystem.tryGetPrim(on, out prim))
+            {
+                SimObject obj = WorldSystem.GetSimObject(prim);
+                WriteLine("Trying to sit on {0}.", obj);
+                if (!WorldSystem.TheSimAvatar.SitOn(obj))
+                {
+                    return ("$bot did not yet sit on " + obj);
+                }
+                sittingOnGround = false;
+                return ("$bot did sit on " + obj);
+            }
+
+            return ("I don't know what " + on + " is.");
         }
     }
 }

@@ -1,6 +1,8 @@
 using System;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 
 namespace HttpServer
 {
@@ -13,6 +15,11 @@ namespace HttpServer
         /// Using SSL or other encryption method.
         /// </summary>
         bool IsSecured { get; }
+
+        /// <summary>
+        /// Gets the client's security certificate.
+        /// </summary>
+        ClientCertificate ClientCertificate { get; }
 
         /// <summary>
         /// Reference to the stream this context wraps
@@ -125,4 +132,32 @@ namespace HttpServer
         }
     }
 
+    /// <summary>
+    /// Client X.509 certificate, X.509 chain, and any SSL policy errors encountered
+    /// during the SSL stream creation
+    /// </summary>
+    public class ClientCertificate
+    {
+        /// <summary>
+        /// Client security certificate
+        /// </summary>
+        public readonly X509Certificate Certificate;
+
+        /// <summary>
+        /// Client security certificate chain
+        /// </summary>
+        public readonly X509Chain Chain;
+
+        /// <summary>
+        /// Any SSL policy errors encountered during the SSL stream creation
+        /// </summary>
+        public readonly SslPolicyErrors SslPolicyErrors;
+
+        public ClientCertificate(X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            Certificate = certificate;
+            Chain = chain;
+            SslPolicyErrors = sslPolicyErrors;
+        }
+    }
 }

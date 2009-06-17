@@ -20,24 +20,14 @@ namespace cogbot.Actions
             if (args.Length < 1)
                 return "Usage: siton UUID";
 
-            UUID target;
+            int argsUsed;
+            Primitive targetPrim = WorldSystem.GetPrimitive(args, out argsUsed);
 
-            if (UUIDTryParse(args,0, out target))
+            if (targetPrim != null)
             {
-                Primitive targetPrim = Client.Network.CurrentSim.ObjectsPrimitives.Find(
-                    delegate(Primitive prim)
-                    {
-                        return prim.ID == target;
-                    }
-                );
-
-                if (targetPrim != null)
-                {
-                    Client.Self.RequestSit(targetPrim.ID, Vector3.Zero);
-                    Client.Self.Sit();
-                    return "Requested to sit on prim " + targetPrim.ID.ToString() +
-                        " (" + targetPrim.LocalID + ")";
-                }
+                WorldSystem.TheSimAvatar.SitOn(WorldSystem.GetSimObject(targetPrim));
+                return "Requested to sit on prim " + targetPrim.ID.ToString() +
+                       " (" + targetPrim.LocalID + ")";
             }
 
             return "Couldn't find a prim to sit on with UUID " + args[0];
