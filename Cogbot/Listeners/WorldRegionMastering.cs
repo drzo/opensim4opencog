@@ -122,6 +122,10 @@ namespace cogbot.Listeners
                     }
                 }
             }
+            if (simulator==client.Network.CurrentSim)
+            {
+                client.Appearance.SetPreviousAppearance(false);
+            }
         }
 
         public void CheckConnected(Simulator simulator)
@@ -210,9 +214,10 @@ namespace cogbot.Listeners
                     client.Self.OnCameraConstraint -= Self_OnCameraConstraint;
                     client.Settings.PIPELINE_REQUEST_TIMEOUT = 60000;
 
-                    client.Objects.OnPrimitiveProperties += Objects_OnPrimitiveProperties;
-                    client.Objects.OnPrimitiveUpdate += Objects_OnPrimitiveUpdate;
+                    client.Objects.OnObjectPropertiesUpdated += Objects_OnPrimitiveProperties;
+                    client.Objects.OnObjectTerseUpdate += Objects_OnPrimitiveUpdate;
                     client.Objects.OnObjectUpdated -= Objects_OnObjectUpdated;
+                    client.Objects.OnObjectDataBlockUpdate += Objects_OnObjectDataBlockUpdate;
                 }
             }
         }
@@ -228,9 +233,10 @@ namespace cogbot.Listeners
                     client.Network.UnregisterCallback(PacketType.ViewerEffect,
                                 new NetworkManager.PacketCallback(ViewerEffectHandler));
 
-                    client.Objects.OnPrimitiveProperties -= Objects_OnPrimitiveProperties;
-                    client.Objects.OnPrimitiveUpdate -= Objects_OnPrimitiveUpdate;
+                    client.Objects.OnObjectPropertiesUpdated -= Objects_OnPrimitiveProperties;
+                    client.Objects.OnObjectTerseUpdate -= Objects_OnPrimitiveUpdate;
                     client.Objects.OnObjectUpdated -= Objects_OnObjectUpdated;
+                    client.Objects.OnObjectDataBlockUpdate -= Objects_OnObjectDataBlockUpdate;
                     RegisterThinClient();
                 }
             }

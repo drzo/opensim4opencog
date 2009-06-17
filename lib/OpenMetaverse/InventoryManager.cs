@@ -126,7 +126,7 @@ namespace OpenMetaverse
     public abstract class InventoryBase : ISerializable
     {
         /// <summary><seealso cref="OpenMetaverse.UUID"/> of item/folder</summary>
-        public readonly UUID UUID;
+        public UUID UUID;
         /// <summary><seealso cref="OpenMetaverse.UUID"/> of parent folder</summary>
         public UUID ParentUUID;
         /// <summary>Name of item/folder</summary>
@@ -720,7 +720,12 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="itemID">UUID of the folder</param>
         public InventoryFolder(UUID itemID)
-            : base(itemID) { }
+            : base(itemID) 
+        {
+            PreferredType = AssetType.Unknown;
+            Version = 1;
+            DescendentCount = 0;
+        }
 
         /// <summary>
         /// 
@@ -1390,6 +1395,7 @@ namespace OpenMetaverse
                 {
                     InventoryBase inv = Store[folderID];
                     inv.Name = newName;
+                    inv.ParentUUID = newparentID;
                     _Store.UpdateNodeFor(inv);
                 }
             }
@@ -1505,6 +1511,7 @@ namespace OpenMetaverse
                     if (_Store.Contains(itemID))
                     {
                         InventoryBase inv = _Store[itemID];
+                        inv.Name = newName;
                         inv.ParentUUID = folderID;
                         _Store.UpdateNodeFor(inv);
                     }
@@ -2249,16 +2256,13 @@ namespace OpenMetaverse
             
             _Client.Network.SendPacket(take);
         }
-
+        
         /// <summary>
         /// Rez an item from inventory to its previous simulator location
         /// </summary>
         /// <param name="simulator"></param>
-        /// <param name="rotation"></param>
-        /// <param name="position"></param>
         /// <param name="item"></param>
         /// <param name="queryID"></param>
-        /// <param name="requestObjectDetails"></param>
         /// <returns></returns>
         public UUID RequestRestoreRezFromInventory(Simulator simulator, InventoryItem item, UUID queryID)
         {

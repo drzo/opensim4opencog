@@ -58,8 +58,17 @@ namespace cogbot.Listeners
                                          chatChannel, buttons);
                             if (AcceptOffersAnimationsObjects && buttons.Count>0)
                             {
-                                const int buttonIndex = 0;
+                                int buttonIndex=0;
+                                buttonIndex = (new Random()).Next(buttons.Count);
                                 string buttonlabel = buttons[buttonIndex];
+
+                                int maxTries = buttons.Count*2;
+                                while (maxTries-->0 && (buttonlabel.ToLower().Contains("cancel") || buttonlabel.ToLower().Contains("ignore")))
+                                {
+                                    buttonIndex = (new Random()).Next(buttons.Count);
+                                    buttonlabel = buttons[buttonIndex];
+                                }
+
                                 client.Self.ReplyToScriptDialog(chatChannel, buttonIndex, buttonlabel, objectID);
                             }
                         }

@@ -267,7 +267,11 @@ namespace OpenMetaverse
         /// <summary></summary>
         Plane = 3,
         /// <summary></summary>
-        Cylinder = 4
+        Cylinder = 4,
+        /// <summary></summary>
+        Invert = 64,
+        /// <summary></summary>
+        Mirror = 128
     }
 
     /// <summary>
@@ -879,14 +883,8 @@ namespace OpenMetaverse
 
             public SculptType Type
             {
-                get
-                {
-                    return (SculptType)(type & 7);
-                }
-                set
-                {
-                    type = (byte) value;
-                }
+                get { return (SculptType)(type & 7); }
+                set { type = (byte)value; }
             }
 
             /// <summary>
@@ -894,7 +892,7 @@ namespace OpenMetaverse
             /// </summary>
             public bool Invert
             {
-                get { return ((type & 64) != 0); }
+                get { return ((type & (byte)SculptType.Invert) != 0); }
             }
 
             /// <summary>
@@ -902,7 +900,7 @@ namespace OpenMetaverse
             /// </summary>
             public bool Mirror
             {
-                get { return ((type & 128) != 0); }
+                get { return ((type & (byte)SculptType.Mirror) != 0); }
             }            
 
             /// <summary>
@@ -1321,8 +1319,16 @@ namespace OpenMetaverse
             volume["profile"] = profile;
 
             OSDMap prim = new OSDMap(9);
-            prim["name"] = OSD.FromString(Properties.Name);
-            prim["description"] = OSD.FromString(Properties.Description);
+            if (Properties != null)
+            {
+                prim["name"] = OSD.FromString(Properties.Name);
+                prim["description"] = OSD.FromString(Properties.Description);
+            }
+            else
+            {
+                prim["name"] = OSD.FromString("Object");
+                prim["description"] = OSD.FromString(String.Empty);
+            }
             prim["phantom"] = OSD.FromBoolean(((Flags & PrimFlags.Phantom) != 0));
             prim["physical"] = OSD.FromBoolean(((Flags & PrimFlags.Physics) != 0));
             prim["position"] = OSD.FromVector3(Position);

@@ -416,10 +416,13 @@ namespace OpenMetaverse
             if (!GetFolderWearables(wearOutfitParams.Param, out wearables, out attachments)) // get wearables in outfit folder
                 return; // TODO: this error condition should be passed back to the client somehow
 
-            WearablesRequestEvent.WaitOne(); // wait for current wearables
-            ReplaceOutfitWearables(wearables); // replace current wearables with outfit folder
-            UpdateAppearanceFromWearables(wearOutfitParams.Bake);
-            AddAttachments(attachments, wearOutfitParams.RemoveExistingAttachments);
+            if (WearablesRequestEvent.WaitOne(60000))
+            {
+                // wait for current wearables
+                ReplaceOutfitWearables(wearables); // replace current wearables with outfit folder
+                UpdateAppearanceFromWearables(wearOutfitParams.Bake);
+                AddAttachments(attachments, wearOutfitParams.RemoveExistingAttachments);
+            }
         }
 
         private bool GetFolderWearables(object _folder, out List<InventoryWearable> wearables, out List<InventoryBase> attachments)
@@ -832,7 +835,10 @@ namespace OpenMetaverse
 
                 RebakeLayer((BakeType)i);
             }
-            CachedResponseEvent.WaitOne();
+            if (PendingUploads.Count > 0)
+            {
+                CachedResponseEvent.WaitOne();
+            }
             Client.Assets.OnAssetUploaded -= Assets_OnAssetUploaded;
             SendAgentSetAppearance();
         }
@@ -1180,7 +1186,7 @@ namespace OpenMetaverse
                         // Try and find this value in our collection of downloaded wearables
                         foreach (WearableData data in Wearables.Dictionary.Values)
                         {
-                            if (data!=null && data.Asset != null && data.Asset.Params.ContainsKey(vp.ParamID))
+                            if (data.Asset!=null&&data.Asset.Params.ContainsKey(vp.ParamID))
                             {
                                 paramValues.Add(vp.ParamID, data.Asset.Params[vp.ParamID]);
                                 found = true;
@@ -1269,17 +1275,21 @@ namespace OpenMetaverse
             
             lock (AgentTextures)
             {
+                Client.Assets.OnAssetUploaded += Assets_OnAssetUploaded;
                 for (int i = 0; i < AgentTextures.Length; i++)
-                {    
+                {
                     if(AgentTextures[i] == data.TextureData.TextureID)
                     {
                         // Its one of our baked layers, rebake this one
                         RebakeLayer((TextureIndex)i);
-                    
-                        //Kick the appearance setting as well, this sim probably wants this too a it asked for bakes
-                        SendAgentSetAppearance();
                     }
                 }
+                if (PendingUploads.Count > 0)
+                {
+                    CachedResponseEvent.WaitOne();
+                }
+                Client.Assets.OnAssetUploaded -= Assets_OnAssetUploaded;
+                SendAgentSetAppearance();
             }
         }
 
@@ -1476,16 +1486,8 @@ namespace OpenMetaverse
 
                             if (baked)
                             {
-                                try
-                                {
-                                    UploadBake(PendingBakes[type]);
-                                    PendingBakes.Remove(type);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine(""+ex.Message);
-                                    //throw ex;
-                                }
+                                UploadBake(PendingBakes[type]);
+                                PendingBakes.Remove(type);
                             }
 
                             if (ImageDownloads.Count == 0 && PendingUploads.Count == 0)
@@ -1522,7 +1524,7 @@ namespace OpenMetaverse
                     {
                         // Setup the TextureEntry with the new baked upload
                         TextureIndex index = PendingUploads[upload.AssetID];
-                        AgentTextures[(int)index] = upload.AssetID;
+                        if (index!=TextureIndex.Unknown) AgentTextures[(int)index] = upload.AssetID;
 
                         Logger.DebugLog("Upload complete, AgentTextures " + index.ToString() + " set to " + 
                             upload.AssetID.ToString(), Client);

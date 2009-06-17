@@ -533,12 +533,13 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        private void RemoveCollisions()
+        public void RemoveCollisions()
         {
             if (_Mesh != null)
             {
                 _Mesh.RemoveCollisions();
             }
+            _Mesh = null;
         }
 
         public SimObjectType IsTypeOf(SimObjectType superType)
@@ -905,8 +906,12 @@ namespace cogbot.TheOpenSims
                     }
                     else
                     {
-                        Simulator simu = GetSimulator();
-                        pp = WorldSystem.GetPrimitive(ParentId, simu);
+                        if (RegionHandle == 0) RegionHandle = Prim.RegionHandle;
+                        if (RegionHandle != 0)
+                        {
+                            Simulator simu = GetSimulator();
+                            pp = WorldSystem.GetPrimitive(ParentId, simu);
+                        }
                     }
                     if (pp != null)
                     {
@@ -1356,6 +1361,12 @@ namespace cogbot.TheOpenSims
 
         public virtual SimRegion GetSimRegion()
         {
+            int tries = 0;
+            while (RegionHandle == 0 && tries < 2)
+            {
+                tries++;
+                RegionHandle = Prim.RegionHandle;
+            }
             return SimRegion.GetRegion(RegionHandle);
         }
 
@@ -1767,7 +1778,7 @@ namespace cogbot.TheOpenSims
         SimObjectType ObjectType { get; }
         ulong RegionHandle { get; }
         void SortByDistance(List<SimObject> sortme);
-        string SuperTypeString();
+        string SuperTypeString();                                                   
         void TeleportTo(SimRegion R, Vector3 local);
         //inherited from Object string ToString();
         void TurnToward(SimPosition targetPosition);
@@ -1795,5 +1806,7 @@ namespace cogbot.TheOpenSims
         float GetCubicMeters();
 
         List<SimObject> GetNearByObjects(double maxDistance, bool rootOnly);
+     
+        void RemoveCollisions();
     }
 }

@@ -5,6 +5,7 @@ using System.Threading;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using java.util;
+using javax.activity;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 using Random=System.Random;
@@ -16,98 +17,6 @@ using UUID=OpenMetaverse.UUID;
 
 namespace cogbot.TheOpenSims
 {
-    public class SimHeading: SimPosition
-    {
-        public override string ToString()
-        {
-            return reg.RegionName + "/" + pos.X + "/" + pos.Y + "/" + pos.Z + "@" +
-                   ZHeading*SimPathStore.RAD2DEG;
-        }
-
-        private SimRegion reg;
-        private Vector3 pos;
-        Quaternion rot;
-        public SimHeading(SimRegion reg, Vector3 pos, Quaternion rot)
-        {
-            this.reg = reg;
-            this.pos = pos;
-            this.rot = rot;
-        }
-
-        public bool IsPassable
-        {
-            get { return true; }
-            set { throw new NotImplementedException(); }
-        }
-
-        public string DistanceVectorString(SimPosition obj)
-        {
-            if (!obj.IsRegionAttached())
-            {
-                Vector3 loc = obj.GetSimPosition();
-                SimPathStore R = obj.GetPathStore();
-                return String.Format("unknown relative {0}/{1:0.00}/{2:0.00}/{3:0.00}",
-                                     R.RegionName, loc.X, loc.Y, loc.Z);
-            }
-            return DistanceVectorString(obj.GetWorldPosition());
-        }
-
-        public string DistanceVectorString(Vector3d loc3d)
-        {
-            Vector3 loc = SimPathStore.GlobalToLocal(loc3d);
-            SimPathStore R = SimPathStore.GetPathStore(loc3d);
-            return String.Format("{0:0.00}m ", Vector3d.Distance(GetWorldPosition(), loc3d))
-                   + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
-        }
-
-        public string DistanceVectorString(Vector3 loc)
-        {
-            SimRegion R = reg;
-            return String.Format("{0:0.00}m ", Vector3.Distance(GetSimPosition(), loc))
-                   + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
-        }
-
-        public Vector3 GetSimPosition()
-        {
-            return pos;
-        }
-
-        public float GetSizeDistance()
-        {
-            return 0.2f;
-        }
-
-        public bool IsRegionAttached()
-        {
-            return reg != null;
-        }
-
-        public Quaternion GetSimRotation()
-        {
-            return rot;
-        }
-
-        public Vector3d GetWorldPosition()
-        {
-            return reg.LocalToGlobal(pos);
-        }
-
-        public SimPathStore GetPathStore()
-        {
-            return reg.GetPathStore(pos);
-        }
-
-        public float ZHeading
-        {
-            get
-            {
-                Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(GetSimRotation()));
-                return (float) (Math.Atan2(-v3.X, -v3.Y) + Math.PI); // 2Pi= N, 1/2Pi = E
-            }
-        }
-    }
-
-
     public partial class SimAvatarImpl : SimObjectImpl, SimMover, SimAvatar, SimActor
     {
         public override bool IsKilled
@@ -161,20 +70,20 @@ namespace cogbot.TheOpenSims
             get
             {
                 Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(GetSimRotation()));
-                return (float) Math.Atan2(v3.Y, v3.X);
+                return (float)(Math.Atan2(-v3.X, -v3.Y) + Math.PI); // 2Pi= N, 1/2Pi = E
             }
         }
 
         public SimHeading GetHeading()
         {
-            return new SimHeading(GetSimRegion(), GetSimPosition(), GetSimRotation());
+            return new SimHeading(GetPathStore(), GetSimPosition(), GetSimRotation());
         }
 
 
         public override string DebugInfo()
         {
 
-            string s = this.GetName() + " " + GetHeading();
+            string s = String.Format("{0} {1}", GetName(), GetHeading());
             lock (ActionEventQueue) foreach (SimObjectEvent s1 in ActionEventQueue)
             {
                 s += "\n " + s1;
@@ -1479,8 +1388,42 @@ namespace cogbot.TheOpenSims
             return true;
         }
 
+        private static int InTurn = 0;
         public override bool TurnToward(Vector3 target)
         {
+            bool prev = Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK;
+            int time = Client.Self.Movement.UpdateInterval;
+            bool uen = Client.Self.Movement.AutoResetControls;
+            if (InTurn>0)
+            {
+               //throw new InvalidActivityException("two TurnTowards?"); 
+            }
+            try
+            {
+                Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
+               // Client.Self.Movement.UpdateInterval = 0;
+                Client.Self.Movement.AutoResetControls = false;
+                InTurn++;
+                return TurnToward0(target);
+            }
+            finally
+            {
+                Client.Self.Movement.UpdateInterval = time;
+                Client.Self.Movement.AutoResetControls = uen;
+                Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = prev;
+                InTurn--;
+
+            }
+        }
+
+        public bool TurnToward0(Vector3 target)
+        {
+            if (!IsControllable)
+            {
+                Debug("Cannot COntrol TurnToward " + target);
+                return false;
+            }
+
             bool changed = false;
             AgentManager.AgentMovement ClientMovement = Client.Self.Movement;
             Quaternion parentRot = Quaternion.Identity;
@@ -1497,18 +1440,98 @@ namespace cogbot.TheOpenSims
                 else
                 {
                     Primitive parent = WorldSystem.GetPrimitive(Prim.ParentID, Client.Network.CurrentSim);
-                    parentRot = parent.Rotation;
+                    if (parent == null) Debug("cant get parrent ");
+                    else
+                        parentRot = parent.Rotation;
                 }
             }
 
-            Quaternion between = Vector3.RotationBetween(Vector3.UnitX,
-                                                         Vector3.Normalize(target - Client.Self.SimPosition));
-            Quaternion rot = between*(Quaternion.Identity/parentRot);
-
-            Quaternion br = ClientMovement.BodyRotation;
-            Quaternion hr = ClientMovement.HeadRotation;
-            /// if (br != rot || hr != rot)
             {
+                int tries = 1;// int.MaxValue;
+                Vector3 lp = GetSimPosition();
+                bool needsTurn = true;
+                while (needsTurn && tries-- > 0)
+                {
+//                    ClientMovement.ResetControlFlags();
+                    double ZDir = ZHeading;
+                    Vector3 dif = target - lp;
+                    double Wanted = (Math.Atan2(-dif.X, -dif.Y) + Math.PI); // 2Pi= N, 1/2Pi = E
+                    double lr = (ZDir - Wanted)*SimPathStore.RAD2DEG;
+                    while (lr > 180) lr -= 360;
+                    while (lr < -180) lr += 360;
+                    if (lr < -20)
+                    {
+                        //ClientMovement.ResetControlFlags();
+                        ClientMovement.TurnRight = true;
+                        ClientMovement.YawNeg = true;
+                        ClientMovement.SendUpdate(true);
+                        Thread.Sleep(200);
+                        ClientMovement.TurnRight = false;
+                        ClientMovement.YawNeg = false;
+                        ClientMovement.SendUpdate(true);
+                        //ClientMovement.YawNeg = true;
+                        //ClientMovement.SendUpdate(true);
+                        //ClientMovement.TurnRight = true;
+                       // Thread.Sleep(10);
+                        double az = (ZHeading * SimPathStore.RAD2DEG + 30) / SimPathStore.RAD2DEG;
+                        float xmul = (float)Math.Cos(az);
+                        float ymul = (float)Math.Sin(az);
+                        //target = new Vector3(lp.X + xmul, lp.Y - ymul, lp.Z);
+                       // Debug("Need to turn " + lr + " for " + target);
+                    }
+                    else if ( lr > 20)
+                    {
+                        //ClientMovement.ResetControlFlags();
+                        ClientMovement.YawPos = true;
+                        ClientMovement.TurnLeft = true;
+                        ClientMovement.SendUpdate(true);
+                        Thread.Sleep(200);
+                        ClientMovement.YawPos = false;
+                        ClientMovement.TurnLeft = false;
+                        ClientMovement.SendUpdate(true);
+                        // ClientMovement.YawPos = true;
+                       //// ClientMovement.SendUpdate(true);
+                       // ClientMovement.TurnLeft = true;
+                       //// Thread.Sleep(10);
+                        double az = (ZHeading * SimPathStore.RAD2DEG - 30) / SimPathStore.RAD2DEG;
+                        float xmul = (float)Math.Cos(az);
+                        float ymul = (float)Math.Sin(az);
+                       // target = new Vector3(lp.X + xmul, lp.Y - ymul, lp.Z);
+                       // Debug("Need to turn " + lr + " for " + target);
+                    } else 
+                    {
+                        needsTurn = false;
+                    }
+                    if (lr < -170 || lr > 170)
+                    {
+                        if(IsDrivingVehical)
+                        {
+                            bool atPos = ClientMovement.AtPos;
+                            bool nudgeAtPos = ClientMovement.NudgeAtPos;
+
+                            // hit reverse for a moment
+                            ClientMovement.AtPos = false;
+                            ClientMovement.NudgeAtPos = false;
+                            ClientMovement.AtNeg = true;
+                            ClientMovement.SendUpdate(true);
+                            Thread.Sleep(200);
+                            ClientMovement.AtNeg = false;
+                            ClientMovement.SendUpdate(true);
+
+                            ClientMovement.AtPos = atPos;
+                            ClientMovement.NudgeAtPos = nudgeAtPos;
+                        }
+
+                    }
+                }
+
+                Quaternion between = Vector3.RotationBetween(Vector3.UnitX,
+                                             Vector3.Normalize(target - Client.Self.SimPosition));
+                Quaternion rot = between * (Quaternion.Identity / parentRot);
+
+                Quaternion br = ClientMovement.BodyRotation;
+                Quaternion hr = ClientMovement.HeadRotation;
+
                 changed = true;
                 ClientMovement.BodyRotation = rot;
                 ClientMovement.HeadRotation = rot;
@@ -1518,14 +1541,20 @@ namespace cogbot.TheOpenSims
                 try
                 {
                     Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
-                    SendUpdate(0);
+                    ClientMovement.SendUpdate(true);
                 }
                 finally
                 {
                     Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = prev;
                 }
             }
+
             return changed;
+        }
+
+        protected bool IsDrivingVehical
+        {
+            get { return Prim.ParentID != 0; }        
         }
 
         public override bool UpdateOccupied()
@@ -1699,12 +1728,11 @@ namespace cogbot.TheOpenSims
                 //        LogEvent(new SimObjectEvent("StandUp", SimEventType.ANIM, this, ZHeading * SimPathStore.RAD2DEG, GetSimulator().Name, GetSimPosition()));
                 //    }
                 //}
-
-                // start or stop flying
-                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "Flying",  startStops);
-
                 //start or stop moving
-                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "Walking", startStops);
+                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "Moving", startStops);
+                
+                // start or stop flying
+               // StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "Flying",  startStops);
 
                 //start or stop sleeping
                 StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "Laying", startStops);
@@ -1719,6 +1747,12 @@ namespace cogbot.TheOpenSims
                 //StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsCommunationAnim, "Commuincation", SimEventType.ANIM, startStops);
 
                // StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "OtherAnim", startStops);
+
+                bool showIndependant = false;
+                if (startStops.Count == 0)
+                {
+                    showIndependant = true;
+                }
 
                 foreach (SimObjectEvent evt in startStops)
                 {
@@ -1744,11 +1778,7 @@ namespace cogbot.TheOpenSims
                     //    evt.Verb = "MoveTo";
                     //}
                     LogEvent(evt);
-                }
-                bool showIndependant = false;
-                if (startStops.Count==0)
-                {
-                  //todo later  showIndependant = true; 
+                    if (!showIndependant) Console.WriteLine("" + evt);
                 }
 
                 for (int seq = leastCurrentSequence; seq <= mostCurrentSequence; seq++)
@@ -1840,7 +1870,7 @@ namespace cogbot.TheOpenSims
         private void StartOrStopAnimEvent(IEnumerable<UUID> RemovedThisEvent, IEnumerable<UUID> AddedThisEvent, string name, IList<SimObjectEvent> startStops)
         {
             List<UUID> e = SimAnimationStore.MeaningUUIDs(name);
-            if (e.Count==0) throw new NoSuchElementException(name);
+          //  if (e.Count==0) throw new NoSuchElementException(name);
             if (Overlaps(e, AddedThisEvent))
             {
                 startStops.Add(new SimObjectEvent(name, SimEventType.ANIM, SimEventStatus.Stop, this, GetHeading()));
@@ -1904,7 +1934,7 @@ namespace cogbot.TheOpenSims
         //BotClient GetGridClient();
         new bool IsSitting { get; set; }
         BotMentalAspect LastAction { get; set; }
-        IEnumerable<SimTypeUsage> KnownTypeUsages { get; }
+        //IEnumerable<SimTypeUsage> KnownTypeUsages { get; }
         bool SitOn(SimObject o);
 
         BotMentalAspect GetObject(string name);
@@ -1928,6 +1958,8 @@ namespace cogbot.TheOpenSims
         Avatar theAvatar { get; }
         bool IsSitting { get; }
         float ZHeading { get; }
+        IEnumerable<SimTypeUsage> KnownTypeUsages { get; }
+        BotMentalAspect LastAction { get; }
         void OnAvatarAnimations(InternalDictionary<UUID, int> anims);
 
         ICollection<UUID> GetCurrentAnims();

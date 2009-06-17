@@ -24,6 +24,7 @@ namespace HttpServer
         private readonly int _bufferSize;
         private IHttpRequest _currentRequest;
         private Stream _stream;
+        private ClientCertificate _clientCertificate;
         private object _syncRoot = new object();
 
 		/// <summary>
@@ -46,17 +47,26 @@ namespace HttpServer
         }
 
         /// <summary>
+        /// Gets the client's security certificate.
+        /// </summary>
+        public ClientCertificate ClientCertificate
+        {
+            get { return _clientCertificate; }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="HttpClientContextImp"/> class.
         /// </summary>
         /// <param name="secured">true if the connection is secured (SSL/TLS)</param>
         /// <param name="remoteEndPoint">client that connected.</param>
         /// <param name="stream">Stream used for communication</param>
+        /// <param name="clientCertificate">Client security certificate</param>
         /// <param name="parserFactory">Used to create a <see cref="IHttpRequestParser"/>.</param>
         /// <param name="bufferSize">Size of buffer to use when reading data. Must be at least 4096 bytes.</param>
         /// <exception cref="SocketException">If <see cref="Socket.BeginReceive(byte[],int,int,SocketFlags,AsyncCallback,object)"/> fails</exception>
         /// <exception cref="ArgumentException">Stream must be writable and readable.</exception>
-        public HttpClientContextImp(bool secured, IPEndPoint remoteEndPoint, Stream stream, IRequestParserFactory parserFactory,
-            int bufferSize, ILogWriter log)
+        public HttpClientContextImp(bool secured, IPEndPoint remoteEndPoint, Stream stream, ClientCertificate clientCertificate,
+            IRequestParserFactory parserFactory, int bufferSize, ILogWriter log)
         {
             Check.Require(remoteEndPoint, "remoteEndPoint");
             Check.NotEmpty(remoteEndPoint.Address.ToString(), "remoteEndPoint.Address");
@@ -77,12 +87,13 @@ namespace HttpServer
 
             HttpRequest request = new HttpRequest();
             request._remoteEndPoint = remoteEndPoint;
+            request.Secure = secured;
             _currentRequest = request;
 
             IsSecured = secured;
             _stream = stream;
+            _clientCertificate = clientCertificate;
             _buffer = new byte[bufferSize];
-
         }
 
         /// <summary>

@@ -26,31 +26,14 @@ namespace cogbot.Actions
                 return "Done.";
             }
 
-            if (UUIDTryParse(args, 0, out primID))
+            int argsUsed;
+            Primitive target = WorldSystem.GetPrimitive(args, out argsUsed);
+            if (target != null)
             {
-                Primitive target = Client.Network.CurrentSim.ObjectsPrimitives.Find(
-                    delegate(Primitive prim) { return prim.ID == primID; }
-                );
-
-                if (target==null) target = Client.Network.CurrentSim.ObjectsAvatars.Find(
-                    delegate(Avatar prim) { return prim.ID == primID; }
-                );
-
-                if (target != null)
-                {
-                    WriteLine("\n {0}", WorldSystem.describePrim(target, true));
-                    return "Done.";
-                }
-                else
-                {
-                    return "Could not find prim " + primID.ToString();
-                }
+                WriteLine("\n {0}", WorldSystem.describePrim(target, true));
+                return "Done.";
             }
-            else
-            {
-                return "Usage: priminfo [prim-uuid]";
-            }
+            return "Could not find prim " + String.Join(" ", args);
         }
-
     }
 }

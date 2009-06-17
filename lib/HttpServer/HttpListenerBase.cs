@@ -12,6 +12,31 @@ namespace HttpServer
     /// </summary>
     public abstract class HttpListenerBase
     {
+        #region Events
+
+        /// <summary>
+        /// Catch exceptions not handled by the listener.
+        /// </summary>
+        /// <remarks>
+        /// Exceptions will be thrown during debug mode if this event is not used,
+        /// exceptions will be printed to console and suppressed during release mode.
+        /// </remarks>
+        public event ExceptionHandler ExceptionThrown;
+
+        /// <summary>
+        /// A request have been received from a <see cref="IHttpClientContext"/>.
+        /// </summary>
+        public event EventHandler<RequestEventArgs> RequestReceived = delegate { };
+
+        #endregion Events
+
+        /// <summary>
+        /// Can be used to create filtering of new connections.
+        /// </summary>
+        /// <param name="socket">Accepted socket</param>
+        /// <returns>true if connection can be accepted; otherwise false.</returns>
+        protected abstract bool OnAcceptingSocket(Socket socket);
+
         protected ILogWriter _logWriter = NullLogWriter.Instance;
 
         private readonly IPAddress _address;
@@ -19,69 +44,18 @@ namespace HttpServer
         private readonly IHttpContextFactory _factory;
         private readonly int _port;
         private readonly ManualResetEvent _shutdownEvent = new ManualResetEvent(false);
-        private readonly SslProtocols _sslProtocol = SslProtocols.Tls;
+        private readonly SslProtocols _sslProtocol = SslProtocols.Default;
         private readonly bool _requireClientCerts;
         private TcpListener _listener;
         private int _pendingAccepts;
         private bool _shutdown;
 
-        /// <summary>
-        /// Listen for regular HTTP connections
-        /// </summary>
-        /// <param name="address">IP Address to accept connections on</param>
-        /// <param name="port">TCP Port to listen on, default HTTP port is 80.</param>
-        /// <param name="factory">Factory used to create <see cref="IHttpClientContext"/>es.</param>
-        /// <exception cref="ArgumentNullException"><c>address</c> is null.</exception>
-        /// <exception cref="ArgumentException">Port must be a positive number.</exception>
-        protected HttpListenerBase(IPAddress address, int port, IHttpContextFactory factory)
-        {
-            Check.Require(address, "address");
-            Check.Min(1, port, "port");
-            Check.Require(factory, "factory");
-
-            _address = address;
-            _port = port;
-            _factory = factory;
-            _factory.RequestReceived += OnRequestReceived;
-        }
-
-        private void OnRequestReceived(object sender, RequestEventArgs e)
-        {
-            RequestReceived(sender, e);
-        }
+        #region Properties
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HttpListenerBase"/> class.
+        /// True if we should turn on trace logs.
         /// </summary>
-        /// <param name="address">IP Address to accept connections on</param>
-        /// <param name="port">TCP Port to listen on, default HTTPS port is 443</param>
-        /// <param name="factory">Factory used to create <see cref="IHttpClientContext"/>es.</param>
-        /// <param name="certificate">Certificate to use</param>
-        protected HttpListenerBase(IPAddress address, int port, IHttpContextFactory factory, X509Certificate certificate)
-            : this(address, port, factory)
-        {
-            Check.Require(certificate, "certificate");
-
-            _certificate = certificate;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HttpListenerBase"/> class.
-        /// </summary>
-        /// <param name="address">IP Address to accept connections on</param>
-        /// <param name="port">TCP Port to listen on, default HTTPS port is 443</param>
-        /// <param name="factory">Factory used to create <see cref="IHttpClientContext"/>es.</param>
-        /// <param name="certificate">Certificate to use</param>
-        /// <param name="protocol">which HTTPS protocol to use, default is TLS.</param>
-        /// <param name="requireClientCerts">True if client SSL certificates are required, otherwise false</param>
-        protected HttpListenerBase(IPAddress address, int port, IHttpContextFactory factory, X509Certificate certificate,
-                                   SslProtocols protocol, bool requireClientCerts)
-            : this(address, port, factory, certificate)
-        {
-            _requireClientCerts = requireClientCerts;
-            _sslProtocol = protocol;
-        }
-
+        public bool UseTraceLogs { get; set; }
 
         /// <summary>
         /// Gives you a change to receive log entries for all internals of the HTTP library.
@@ -103,76 +77,47 @@ namespace HttpServer
             }
         }
 
+        #endregion Properties
+
         /// <summary>
-        /// True if we should turn on trace logs.
+        /// Listen for regular HTTP connections
         /// </summary>
-        public bool UseTraceLogs { get; set; }
-
-
-        /// <exception cref="Exception"><c>Exception</c>.</exception>
-        private void OnAccept(IAsyncResult ar)
+        /// <param name="address">IP Address to accept connections on</param>
+        /// <param name="port">TCP Port to listen on, default HTTP port is 80.</param>
+        /// <param name="factory">Factory used to create <see cref="IHttpClientContext"/>es.</param>
+        /// <exception cref="ArgumentNullException"><c>address</c> is null.</exception>
+        /// <exception cref="ArgumentException">Port must be a positive number.</exception>
+        protected HttpListenerBase(IPAddress address, int port, IHttpContextFactory factory)
         {
-        	bool beginAcceptCalled = false;
-            try
-            {
-                int count = Interlocked.Decrement(ref _pendingAccepts);
-                if (_shutdown)
-                {
-                    if (count == 0)
-                        _shutdownEvent.Set();
-                    return;
-                }
+            Check.Require(address, "address");
+            Check.Min(1, port, "port");
+            Check.Require(factory, "factory");
 
-                Interlocked.Increment(ref _pendingAccepts);
-                _listener.BeginAcceptSocket(OnAccept, null);
-				beginAcceptCalled = true;
-				Socket socket = _listener.EndAcceptSocket(ar);
-
-                if (!OnAcceptingSocket(socket))
-                {
-                    socket.Disconnect(true);
-                    return;
-                }
-
-                _logWriter.Write(this, LogPrio.Debug, "Accepted connection from: " + socket.RemoteEndPoint);
-
-                if (_certificate != null)
-                    _factory.CreateSecureContext(socket, _certificate, _sslProtocol, _requireClientCerts);
-                else
-                    _factory.CreateContext(socket);
-            }
-            catch (Exception err)
-            {
-                ThrowException(err);
-
-				if (!beginAcceptCalled)
-            		RetryBeginAccept();
-            }
+            _address = address;
+            _port = port;
+            _factory = factory;
+            _factory.RequestReceived += OnRequestReceived;
         }
 
-		/// <summary>
-		/// Will try to accept connections one more time.
-		/// </summary>
-		/// <exception cref="Exception">If any exceptions is thrown.</exception>
-    	private void RetryBeginAccept()
-    	{
-    		try
-    		{
-				_logWriter.Write(this, LogPrio.Error, "Trying to accept connections again.");
-				_listener.BeginAcceptSocket(OnAccept, null);
-    		}
-			catch (Exception err)
-			{
-                ThrowException(err);
-			}
-		}
-
-    	/// <summary>
-        /// Can be used to create filtering of new connections.
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HttpListenerBase"/> class.
         /// </summary>
-        /// <param name="socket">Accepted socket</param>
-        /// <returns>true if connection can be accepted; otherwise false.</returns>
-        protected abstract bool OnAcceptingSocket(Socket socket);
+        /// <param name="address">IP Address to accept connections on</param>
+        /// <param name="port">TCP Port to listen on, default HTTPS port is 443</param>
+        /// <param name="factory">Factory used to create <see cref="IHttpClientContext"/>es.</param>
+        /// <param name="certificate">Certificate to use</param>
+        /// <param name="protocol">which HTTPS protocol to use, default is TLS.</param>
+        /// <param name="requireClientCerts">True if client SSL certificates are required, otherwise false</param>
+        protected HttpListenerBase(IPAddress address, int port, IHttpContextFactory factory, X509Certificate certificate,
+                                   SslProtocols protocol, bool requireClientCerts)
+            : this(address, port, factory)
+        {
+            Check.Require(certificate, "certificate");
+
+            _certificate = certificate;
+            _requireClientCerts = requireClientCerts;
+            _sslProtocol = protocol;
+        }
 
         /// <summary>
         /// Start listen for new connections
@@ -190,7 +135,6 @@ namespace HttpServer
             _listener.BeginAcceptSocket(OnAccept, null);
         }
 
-
         /// <summary>
         /// Stop the listener
         /// </summary>
@@ -204,19 +148,68 @@ namespace HttpServer
             _listener = null;
         }
 
-        /// <summary>
-        /// Catch exceptions not handled by the listener.
-        /// </summary>
-        /// <remarks>
-        /// Exceptions will be thrown during debug mode if this event is not used,
-        /// exceptions will be printed to console and suppressed during release mode.
-        /// </remarks>
-        public event ExceptionHandler ExceptionThrown;
+        /// <exception cref="Exception"><c>Exception</c>.</exception>
+        private void OnAccept(IAsyncResult ar)
+        {
+            bool beginAcceptCalled = false;
+            try
+            {
+                int count = Interlocked.Decrement(ref _pendingAccepts);
+                if (_shutdown)
+                {
+                    if (count == 0)
+                        _shutdownEvent.Set();
+                    return;
+                }
+
+                Interlocked.Increment(ref _pendingAccepts);
+                _listener.BeginAcceptSocket(OnAccept, null);
+                beginAcceptCalled = true;
+                Socket socket = _listener.EndAcceptSocket(ar);
+
+                if (!OnAcceptingSocket(socket))
+                {
+                    socket.Disconnect(true);
+                    return;
+                }
+
+                _logWriter.Write(this, LogPrio.Debug, "Accepted connection from: " + socket.RemoteEndPoint);
+
+                IHttpClientContext clientContext;
+
+                if (_certificate != null)
+                    clientContext = _factory.CreateSecureContext(socket, _certificate, _sslProtocol, _requireClientCerts);
+                else
+                    clientContext = _factory.CreateContext(socket);
+
+                if (clientContext == null)
+                    socket.Disconnect(true);
+            }
+            catch (Exception err)
+            {
+                ThrowException(err);
+
+                if (!beginAcceptCalled)
+                    RetryBeginAccept();
+            }
+        }
 
         /// <summary>
-        /// A request have been received from a <see cref="IHttpClientContext"/>.
+        /// Will try to accept connections one more time.
         /// </summary>
-        public event EventHandler<RequestEventArgs> RequestReceived = delegate{};
+        /// <exception cref="Exception">If any exceptions is thrown.</exception>
+        private void RetryBeginAccept()
+        {
+            try
+            {
+                _logWriter.Write(this, LogPrio.Error, "Trying to accept connections again.");
+                _listener.BeginAcceptSocket(OnAccept, null);
+            }
+            catch (Exception err)
+            {
+                ThrowException(err);
+            }
+        }
 
         protected void ThrowException(Exception err)
         {
@@ -230,6 +223,11 @@ namespace HttpServer
             {
                 _logWriter.Write(this, LogPrio.Fatal, err.Message);
             }
+        }
+
+        private void OnRequestReceived(object sender, RequestEventArgs e)
+        {
+            RequestReceived(sender, e);
         }
     }
 }

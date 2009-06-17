@@ -13,12 +13,30 @@ namespace cogbot.Actions
         public string str;
         public string[] tokens;
 
+        public int Length
+        {
+            get
+            {
+                return tokens.Length;
+            }
+        }
+
+        public string this[int i]
+        {
+            get { return tokens[i]; }
+        }
+
+        public string this[string i]
+        {
+            get { return prepPhrases[i]; }
+        }
+
         public Parser(string _str)
         {
             str = _str;
             prepPhrases = new Dictionary<string, string>();
             foreach (string prep in preps)
-                prepPhrases[prep] = "";
+                prepPhrases[prep] = string.Empty;
             objectPhrase = "";
 
             string currentPrep = "";

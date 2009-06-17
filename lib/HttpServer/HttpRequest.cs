@@ -367,7 +367,7 @@ namespace HttpServer
                 case "host":
                     try
                     {
-                        _uri = new Uri(Secure ? "https://" : "http://" + value + _uriPath);
+                        _uri = new Uri((Secure ? "https://" : "http://") + value + _uriPath);
                         UriParts = _uri.AbsolutePath.Split(UriSplitters, StringSplitOptions.RemoveEmptyEntries);
                     }
                     catch (UriFormatException err)
