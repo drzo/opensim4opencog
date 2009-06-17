@@ -16,16 +16,19 @@ namespace RTParser
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public new abstract bool Equals(object obj);
-        //{
-        //    throw new NotImplementedException();
-        //}
+        public override bool Equals(object obj)
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// This should be overridden!
         /// </summary>
         /// <returns></returns>
-        public new abstract int GetHashCode();
+        public override int GetHashCode()
+        {
+            throw new NotImplementedException();
+        }
 
         public static string InnerXmlText(XmlNode templateNode)
         {
