@@ -2814,7 +2814,7 @@
 <category><pattern>SHOW *</pattern><template>Look to your left.</template></category>  
 <category><pattern>SHUP UP *</pattern><template>Do you wish to stop talking with me?</template></category>  
 <category><pattern>SINGLE *</pattern><template>What a coincidence, I am single too.</template></category>  
-<category><pattern>SIT *</pattern><template>I am sitting now.</template></category>  
+<!--<category><pattern>SIT *</pattern><template>I am sitting now.</template></category>  -->
 <category><pattern>SMART *</pattern><template>Intelligence is the ultimate aphrodisiac.</template></category>  
 <category><pattern>SNOW IS *</pattern><template>snow is white.</template></category>  
 <category><pattern>SO DOES *</pattern><template><random>   <li>Quite a coincidence.</li>   <li>Remarkable.</li>   <li>That can't be a coincidence.</li>  </random></template></category>  
