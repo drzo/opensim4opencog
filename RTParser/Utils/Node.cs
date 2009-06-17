@@ -74,7 +74,10 @@ namespace RTParser.Utils
             if (!path.IsWildCard() && path.AsString().Trim().Length == 0)
             {
                 const bool RemoveDupes = true; //slows it down but maybe important to do
-                if (this.template == null) this.template = new List<Template>();
+                if (this.template == null)
+                {
+                    this.template = new List<Template>();
+                }
                 else if (RemoveDupes)
                     lock (this.template)
                     {
