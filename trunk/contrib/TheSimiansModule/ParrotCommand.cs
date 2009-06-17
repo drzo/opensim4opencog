@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using cogbot;
+using cogbot.Actions;
 using cogbot.TheOpenSims;
 using PathSystem3D.Navigation;
 using Exception=System.Exception;
@@ -10,34 +12,131 @@ using OpenMetaverse;
 
 namespace TheSimiansModule
 {
-    //public class SimianThinkerModule : WorldObjectsModule
-    //{
-    //    static Dictionary<SimAvatar,SimThinker> Thinkers =  new Dictionary<SimAvatar, SimThinker>();
-    //    public SimianThinkerModule(BotClient _parent)
-    //        : base(_parent)
-    //    {
-            
-    //    }
-                                                                                                                                
+    class ParrotCommand : Command
+    {
+        private SimParrotActor _thinker;
+        private SimAvatar observed;
 
-    //    public override string GetModuleName()
-    //    {
-    //        return "SimianThinkerModule";
-    //    }
+        public ParrotCommand(BotClient Client)
+        {
+            Name = "parrot";
+            helpString = "Make a bot parrot all actions by another avatar.";
+            usageString = "parrot [touch/sit/uses/effects/move/anims/all [off]] Avatar Name";
+        }
 
-    //    public override void StartupListener()
-    //    {
-    //        if (!client.WorldSystem.IsRegionMaster) return;
-    //       // throw new NotImplementedException();
-    //    }
+        public SimParrotActor Thinker
+        {
+            get
+            {
+                if (_thinker == null)
+                {
+                    SimActor clientWorldSystemTheSimAvatar = Client.WorldSystem.TheSimAvatar;
+                    _thinker = new SimParrotActor(clientWorldSystemTheSimAvatar);
+                }
+                return _thinker;
+            }
+            //set { _thinker = value; }
+        }
 
-    //    public override void ShutdownListener()
-    //    {
-    //      //  throw new NotImplementedException();
-    //    }
-    //}
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        {
+            if (_thinker == null)
+            {
+                if (Client.Self.AgentID == UUID.Zero) return "waiting for Agent ID";
+            }
+            if (args.Length > 0)
+            {
+                switch (args[0])
+                {
+                    case "off":
+                        {
+                            if (_thinker == null) return "no parrot";
+                            _thinker.PauseThinking();
+                            return "turned off " + _thinker;
+                        }
+                    case "move":
+                        {
+                            if (_thinker == null) return "no parrot";
+                            Thinker.Actions["move"] = true;
+                            break; 
+                        }
+                    default:
+                        {
+                          break;  
+                        }
+                }
+                if (args[0] == "on")
+                {
+                    SimParrotActor avatar = GetSimAvatar();
+                    return "Turned on " + avatar;
+                }
 
-    public class SimThinker : BotAction, SimAborter
+                if (args[0] == "start")
+                {
+                    SimParrotActor avatar = GetSimAvatar();
+                    avatar.StartThinking();
+                    return "Started Thinking " + avatar;
+                }
+
+                if (args[0] == "needs")
+                {
+                    SimParrotActor avatar = GetSimAvatar();
+                    return avatar.CurrentNeeds.ToString();
+                }
+
+                if (args[0] == "think")
+                {
+                    SimParrotActor avatar = GetSimAvatar();
+                    if (avatar.IsThinking())
+                    {
+                        avatar.PauseThinking();
+                    }
+                    avatar.ThinkOnce();
+                    return "Think once " + avatar;
+                }
+
+                if (args[0] == "info")
+                {
+                    SimParrotActor avatar = GetSimAvatar();
+                    return "List " + avatar.DebugInfo();
+                }
+
+
+                //  if (BRM == null) return "the bot is off";
+
+                if (args[0] == "stop")
+                {
+                    SimParrotActor avatar = GetSimAvatar();
+                    avatar.PauseThinking();
+                    return "Stopped " + avatar;
+                }
+                else if (args[0] == "off")
+                {
+                    //    if (BRM == null) return "the bot was off";
+                    SimParrotActor avatar = GetSimAvatar();
+                    avatar.PauseThinking();
+                    //   BRM = null;
+                    return "Stopped " + avatar;
+                }
+
+                if (args[0] == "load")
+                {
+                    SimTypeSystem.LoadConfig(args[1]);
+                    WorldSystem.RescanTypes();
+                    return "(Re)Loaded " + args[1];
+                }
+            }
+            return usageString;
+        }
+
+        private SimParrotActor GetSimAvatar()
+        {
+            return Thinker;
+
+        }
+
+    }
+    public class ParrotAction : BotAction, SimAborter
     {
         private BotAction CurrentAction;
         private Thread avatarThinkerThread;
@@ -73,7 +172,8 @@ namespace TheSimiansModule
 
         private List<SimObject> InterestingObjects = new List<SimObject>();
 
-        public SimThinker(SimActor a) : base(String.Format("AvatarThinkerThread for {0}", a))
+        public ParrotAction(SimActor a)
+            : base(String.Format("AvatarThinkerThread for {0}", a))
         {
             Actor = a;
             Actor["CurrentNeeds"] = new BotNeeds(90.0f);
@@ -140,7 +240,7 @@ namespace TheSimiansModule
         }
         public void PauseThinking()
         {
-           Abort(); 
+            Abort();
         }
 
         public override void Abort()
@@ -165,9 +265,11 @@ namespace TheSimiansModule
 
         protected bool IsControlling
         {
-            get {
+            get
+            {
                 return Actor.CurrentAction == CurrentAction || Actor.CurrentAction == this ||
-                       Actor.CurrentAction is AbortableAction; }
+                       Actor.CurrentAction is AbortableAction;
+            }
         }
 
         public SimObject GetNextInterestingObject()
@@ -377,7 +479,7 @@ namespace TheSimiansModule
             {
                 if (someAspect is BotAction)
                 {
-                    BotAction act = (BotAction) someAspect;
+                    BotAction act = (BotAction)someAspect;
                     act.InvokeReal();
                     return;
                 }
@@ -389,10 +491,11 @@ namespace TheSimiansModule
 
                 if (someAspect is SimObject)
                 {
-                    SimObject someObject = (SimObject) someAspect;
+                    SimObject someObject = (SimObject)someAspect;
                     DoBestUse(someObject);
                 }
-            } finally
+            }
+            finally
             {
                 //if (IsThinking)
                 //    CurrentAction = this;
@@ -424,16 +527,16 @@ namespace TheSimiansModule
                 foreach (SimTypeUsage use in KnownTypeUsages)
                 {
                     lock (useObjects) foreach (SimObject obj in useObjects)
-                    {
-                         if (CurrentAction!=null)
-                         {
-                             if (obj!=CurrentAction.Target) continue;
-                         }
-                        if (obj.GetTypeUsages().Contains(use))
                         {
-                            KnownBotAcions.Add(new BotObjectAction(Actor, new SimObjectUsage(use, obj)));
+                            if (CurrentAction != null)
+                            {
+                                if (obj != CurrentAction.Target) continue;
+                            }
+                            if (obj.GetTypeUsages().Contains(use))
+                            {
+                                KnownBotAcions.Add(new BotObjectAction(Actor, new SimObjectUsage(use, obj)));
+                            }
                         }
-                    }
                 }
             return KnownBotAcions;
         }

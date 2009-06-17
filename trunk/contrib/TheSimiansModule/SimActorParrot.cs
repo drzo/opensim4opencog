@@ -12,7 +12,7 @@ namespace TheSimiansModule
 {
     //public class SimianThinkerModule : WorldObjectsModule
     //{
-    //    static Dictionary<SimAvatar,SimThinker> Thinkers =  new Dictionary<SimAvatar, SimThinker>();
+    //    static Dictionary<SimAvatar,SimParrotActor> Thinkers =  new Dictionary<SimAvatar, SimParrotActor>();
     //    public SimianThinkerModule(BotClient _parent)
     //        : base(_parent)
     //    {
@@ -37,7 +37,7 @@ namespace TheSimiansModule
     //    }
     //}
 
-    public class SimThinker : BotAction, SimAborter
+    public class SimParrotActor : BotAction, SimAborter
     {
         private BotAction CurrentAction;
         private Thread avatarThinkerThread;
@@ -73,16 +73,9 @@ namespace TheSimiansModule
 
         private List<SimObject> InterestingObjects = new List<SimObject>();
 
-        public SimThinker(SimActor a) : base(String.Format("AvatarThinkerThread for {0}", a))
+        public SimParrotActor(SimActor a) : base(String.Format("AvatarParrot for {0}", a))
         {
-            Actor = a;
-            Actor["CurrentNeeds"] = new BotNeeds(90.0f);
-            avatarHeartbeatThread = new Thread(Aging)
-                                        {
-                                            Name = String.Format("AvatarHeartbeatThread for {0}", Actor),
-                                            Priority = ThreadPriority.Lowest
-                                        };
-            avatarHeartbeatThread.Start();
+            ObservedActor = a;
         }
 
 
@@ -116,15 +109,15 @@ namespace TheSimiansModule
 
         private void Debug(string p)
         {
-            Actor.Debug(p);
+            ObservedActor.Debug(p);
         }
 
         public void StartThinking()
         {
             if (avatarThinkerThread == null)
             {
-                avatarThinkerThread = new Thread(Think) { Name = String.Format("AvatarThinkerThread for {0}", Actor) };
-                if (Actor.IsControllable)
+                avatarThinkerThread = new Thread(Think) { Name = String.Format("AvatarThinkerThread for {0}", ObservedActor) };
+                if (ObservedActor.IsControllable)
                 {
                     ///  only think for ourselves
                     avatarThinkerThread.Priority = ThreadPriority.Normal;
@@ -167,7 +160,8 @@ namespace TheSimiansModule
         {
             get {
                 return Actor.CurrentAction == CurrentAction || Actor.CurrentAction == this ||
-                       Actor.CurrentAction is AbortableAction; }
+                       Actor.CurrentAction is AbortableAction;
+            }
         }
 
         public SimObject GetNextInterestingObject()
@@ -175,8 +169,8 @@ namespace TheSimiansModule
             SimObject mostInteresting = null;
             if (InterestingObjects.Count < 2)
             {
-                InterestingObjects = Actor.GetKnownObjects();
-                InterestingObjects.Remove(Actor);
+                InterestingObjects = ObservedActor.GetKnownObjects();
+                InterestingObjects.Remove(ObservedActor);
             }
             int count = InterestingObjects.Count - 2;
             foreach (BotMentalAspect cAspect in InterestingObjects)
@@ -224,6 +218,7 @@ namespace TheSimiansModule
 
         //   public Thread avatarThinkerThread;
 
+        readonly private SimAvatar ObservedActor;
         readonly private SimActor Actor;
 
         public SimAvatar InDialogWith { get; set; }
@@ -253,7 +248,7 @@ namespace TheSimiansModule
                 }
                 catch (Exception e)
                 {
-                    Actor.Debug(e.ToString());
+                    ObservedActor.Debug(e.ToString());
                 }
             }
         }
@@ -261,7 +256,7 @@ namespace TheSimiansModule
 
         public void ThinkOnce()
         {
-            Actor.ScanNewObjects(2, Actor.SightRange, false);
+            ObservedActor.ScanNewObjects(2, ObservedActor.SightRange, false);
             CurrentAction = GetNextAction();
             Actor.CurrentAction = new AbortableAction(CurrentAction, this);
         }
@@ -288,7 +283,7 @@ namespace TheSimiansModule
 
             int show = 10;
 
-            List<SimObject> KnowsAboutList = Actor.GetKnownObjects();
+            List<SimObject> KnowsAboutList = ObservedActor.GetKnownObjects();
             lock (KnowsAboutList)
             {
                 KnowsAboutList.Sort(CompareObjects);
@@ -298,12 +293,12 @@ namespace TheSimiansModule
                     show--;
                     if (show < 0) break;
                     /// if (item is ISimAvatar) continue;
-                    s += String.Format("\n   {0} {1}", item, Actor.DistanceVectorString(item));
+                    s += String.Format("\n   {0} {1}", item, ObservedActor.DistanceVectorString(item));
                 }
             }
 
             show = 10;
-            List<SimTypeUsage> KnownTypeUsages = new List<SimTypeUsage>(Actor.KnownTypeUsages);
+            List<SimTypeUsage> KnownTypeUsages = new List<SimTypeUsage>(ObservedActor.KnownTypeUsages);
             KnownTypeUsages.Sort(CompareUsage);
             s += String.Format("\nKnownTypeUsages: {0}", KnownTypeUsages.Count);
             foreach (SimTypeUsage item in KnownTypeUsages)
@@ -316,40 +311,17 @@ namespace TheSimiansModule
 
             s += String.Format("\nCurrentNeeds: {0}", CurrentNeeds);
             s += String.Format("\nNextAction: {0}", GetNextAction());
-            s += String.Format("\nLastAction: {0}", Actor.LastAction);
+            s += String.Format("\nLastAction: {0}", ObservedActor.LastAction);
             s += String.Format("\nCurrentAction: {0}", Actor.CurrentAction);
             return s;
         }
 
-
-        public Thread avatarHeartbeatThread;
-
-        public void Aging()
-        {
-            BotNeeds OneMinute = SimTypeSystem.GetObjectType("OnMinuteTimer").GetUsageActual("OnMinuteTimer");
-            while (true)
-            {
-                Actor.ScanNewObjects(2, Actor.SightRange, false);
-                CurrentNeeds.AddFrom(OneMinute);
-                CurrentNeeds.SetRange(0.0F, 100.0F);
-                //SimPosition to = WorldObjects.Master.m_TheSimAvatar;
-                //if (to != null)
-                //{
-                //    Console.WriteLine("Aging: " + this + " " + to.DistanceVectorString(this));
-                //}
-                Thread.Sleep(60000); ///  one minute
-
-                ///  Debug(CurrentNeeds.ToString());
-            }
-        }
-
+        public Dictionary<string,bool >Actions = new Dictionary<string, bool>();
 
         public BotNeeds CurrentNeeds
         {
-            get { return (BotNeeds)Actor["CurrentNeeds"]; }
+            get { return (BotNeeds)ObservedActor["CurrentNeeds"]; }
         }
-
-
 
 
         public void DoBestUse(SimObject someObject)
@@ -360,7 +332,7 @@ namespace TheSimiansModule
             {
                 double closeness = Actor.Approach(someObject, someObject.GetSizeDistance());
                 //AgentManager ClientSelf = Client.Self;
-                Actor.Touch(someObject);
+                ObservedActor.Touch(someObject);
                 if (closeness < 3)
                 {
                     Actor.SitOn(someObject);
@@ -401,20 +373,20 @@ namespace TheSimiansModule
 
         public List<BotAction> GetPossibleActions(double maxXYDistance, double maxZDist)
         {
-            List<SimObject> KnownObjects = Actor.GetKnownObjects();
-            double myZ = Actor.GetWorldPosition().Z;
+            List<SimObject> KnownObjects = ObservedActor.GetKnownObjects();
+            double myZ = ObservedActor.GetWorldPosition().Z;
             List<SimObject> useObjects = new List<SimObject>();
             foreach (SimObject O in KnownObjects)
             {
                 if (!O.IsRegionAttached()) continue;
-                if (O.Distance(Actor) > maxXYDistance) continue;
+                if (O.Distance(ObservedActor) > maxXYDistance) continue;
                 if (Math.Abs(O.GetWorldPosition().Z - myZ) > maxZDist) continue;
                 useObjects.Add(O);
             }
             // useObjects.Sort(Actor.CompareDistance);
 
 
-            List<SimTypeUsage> KnownTypeUsages = new List<SimTypeUsage>(Actor.KnownTypeUsages);
+            List<SimTypeUsage> KnownTypeUsages = new List<SimTypeUsage>(ObservedActor.KnownTypeUsages);
             KnownTypeUsages.Sort(CompareUsage);
 
 
@@ -431,7 +403,7 @@ namespace TheSimiansModule
                          }
                         if (obj.GetTypeUsages().Contains(use))
                         {
-                            KnownBotAcions.Add(new BotObjectAction(Actor, new SimObjectUsage(use, obj)));
+                            KnownBotAcions.Add(new BotObjectAction(ObservedActor, new SimObjectUsage(use, obj)));
                         }
                     }
                 }
@@ -455,10 +427,10 @@ namespace TheSimiansModule
                 {
                     Vector3d v3d =
                         Actor.GetSimRegion().LocalToGlobal(new Vector3(MyRandom.Next(250) + 5, MyRandom.Next(250) + 5,
-                                                                       Actor.GetSimPosition().Z));
-                    Actor.Debug("MoveToLocation: " + Actor.DistanceVectorString(v3d));
+                                                                       ObservedActor.GetSimPosition().Z));
+                    ObservedActor.Debug("MoveToLocation: " + ObservedActor.DistanceVectorString(v3d));
                     SimPosition WP = SimWaypointImpl.CreateGlobal(v3d);
-                    act = new MoveToLocation(Actor, WP);
+                    act = new MoveToLocation(ObservedActor, WP);
                 }
                 return act;
             }
@@ -504,7 +476,7 @@ namespace TheSimiansModule
         }
         public override Vector3 GetUsePostion()
         {
-            if (CurrentAction == null) return Actor.GetSimPosition();
+            if (CurrentAction == null) return ObservedActor.GetSimPosition();
             return CurrentAction.GetUsePostion();
         }
 

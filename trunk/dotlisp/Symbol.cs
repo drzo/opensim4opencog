@@ -12,6 +12,7 @@ public class Symbol
 		{
 		if(globalValue != UNDEFINED)
 			return globalValue;
+        if (name == "NIL") return null;
 		throw new Exception("ERROR: undefined variable "+ name);
 		}
 

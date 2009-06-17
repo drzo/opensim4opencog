@@ -15,25 +15,49 @@
   
   <!-- Sitting in secondlife -->
   <category>
-    <pattern>SIT _</pattern>
+    <pattern>SIT</pattern>
     <template>
       <think>
         <system>sit</system>
       </think>In <system>locate</system> am sitting now.
     </template>
-  </category>
+  </category>  
   <category>
-    <pattern>SIT ON *</pattern>
+    <pattern>SIT THERE</pattern>
     <template>
+      I am going to sit on <get name="object"/>
       <think>
         <system>
-          sit on <star/>
+          sit <get name="object"/>
         </system>
       </think>
-      I am sitting on <star/> with location <system>locate</system>
+    </template>
+  </category>
+  <category>
+    <pattern>
+      SIT ON <optional>THE</optional> *
+    </pattern>
+    <template>
+      Sit on the <star/>
+      <system>
+        sit on "<star/>" 1
+      </system>
     </template>
   </category>
 
+  <!-- touch in secondlife -->
+  <category>
+    <pattern>TOUCH IT</pattern>
+    <template>
+      Ok wierdo, I am touching <get name="object"/>
+      <think>
+        <system>
+          touch <get name="object"/>
+        </system>
+      </think>
+    </template>
+  </category>
+  
   <!-- Teleport in secondlife -->
   <category>
     <pattern>TELEPORT HERE</pattern>
@@ -44,7 +68,7 @@
       <think>
         <system>
           say thread teleport 
-          <system>     KEYWORDS
+          <system>
             (enqueue (.TeleportTo thisClient.WorldSystem.TheSimAvatar  (thisClient.WorldSystem.GetObject "<id/> 1")))
           </system>
       </system>
@@ -52,13 +76,23 @@
       </template>
   </category>
 
-  <!-- Sitting in secondlife -->
+  <!-- following in secondlife -->
   <category>
     <pattern>FOLLOW NO ONE *</pattern>
     <template>
       <think>
         <system>stop-following</system>
       </think>Ok, I am on my own now.
+    </template>
+  </category>
+  <category>
+    <pattern>FOLLOW ME</pattern>
+    <template>
+      <think>
+        <system>
+          follow <get name="name"/>
+        </system>
+      </think>        
     </template>
   </category>
   <category>
@@ -69,24 +103,16 @@
       </think>Ok, I am on my own now.
     </template>
   </category>
+
+  <!-- Current action command -->
   <category>
     <pattern>WHAT ARE YOU DOING</pattern>
     <template>
       <system lang="lisp">thisClient.WorldSystem.TheSimAvatar.CurrentAction</system>
     </template>
   </category>
-  <category>
-    <pattern>
-      SIT ON <optional>THE</optional> *
-    </pattern>
-    <template>
-      <system>
-        sit on "<star/>" 1
-      </system>
-    </template>
-  </category>
 
-  <!-- simbot command -->
+  <!-- simbot module command -->
   <category>
     <pattern>WANDER ARROUND</pattern>
     <template>
