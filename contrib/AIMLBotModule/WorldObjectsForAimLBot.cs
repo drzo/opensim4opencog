@@ -98,12 +98,13 @@ namespace AIMLBotModule
 
         private void AINL_OnEffect(EffectType type, UUID sourceid, UUID targetid, Vector3d targetpos, float duration, UUID id)
         {
+            if (type == EffectType.LookAt) return;
             SetInterest(sourceid, targetid, false);
         }
 
         private void AIML_OnLookAt(UUID sourceid, UUID targetid, Vector3d targetpos, LookAtType looktype, float duration, UUID id)
         {
-           SetInterest(sourceid, targetid,false);
+          // SetInterest(sourceid, targetid,false);
         }
 
         private void AIML_OnPointAt(UUID sourceid, UUID targetid, Vector3d targetpos, PointAtType pointtype, float duration, UUID id)

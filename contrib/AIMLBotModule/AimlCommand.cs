@@ -8,7 +8,6 @@ using cogbot.Actions;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
-
 namespace AIMLBotModule
 {
     public class AimlCommand : Command
@@ -69,14 +68,14 @@ namespace AIMLBotModule
 
         #region SimEventSubscriber Members
 
-        public void OnEvent(SimEvent evt)
+        public void OnEvent(SimObjectEvent evt)
         {
-            String s = evt.GetName().ToLower();
+            String s = evt.GetVerb().ToLower();
             if (s.StartsWith("on-chat"))
             {
                 return;
             }
-            string aimlCall = string.Format("SimEvent {0} {1}", evt.GetName(), argsListString(evt.GetArgs()));
+            string aimlCall = string.Format("SimEvent {0} {1}", evt.GetVerb(), argsListString(evt.GetArgs()));
             //Console.WriteLine(aimlCall);
             //Result r = AimlBot.Chat(aimlCall,"EventSystem");
         }
