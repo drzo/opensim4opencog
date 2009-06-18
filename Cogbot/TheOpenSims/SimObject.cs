@@ -596,7 +596,7 @@ namespace cogbot.TheOpenSims
                         if (prim == null)
                         {
                             // try to request for next time
-                            WorldSystem.EnsureSelected(parent, simu);
+                            WorldObjects.EnsureSelected(parent, simu);
                             return null;
                         }
                         _Parent = WorldSystem.GetSimObject(prim, simu);
@@ -987,7 +987,7 @@ namespace cogbot.TheOpenSims
                 Primitive pUse = WorldSystem.GetPrimitive(Prim.ParentID, simu);
                 if (pUse == null)
                 {
-                    WorldSystem.EnsureSelected(Prim.ParentID, simu);
+                    WorldObjects.EnsureSelected(Prim.ParentID, simu);
                     return false;
                 }
                 _Parent = Parent;
@@ -1066,6 +1066,7 @@ namespace cogbot.TheOpenSims
                 {
                     if (LastKnownPos!=default(Vector3))return LastKnownPos;
                     Debug("Unknown parent");
+                    return thisPrim.Position;
                 }
 
                 thisPos = outerPrim.Position +
@@ -1459,6 +1460,8 @@ namespace cogbot.TheOpenSims
                 }
                 if (evt.EventType == SimEventType.EFFECT)
                 {
+                    //todo need to parse the EffectType
+                    usage.UseGrab = true; 
                  //   usage.UseAnim = evt.Verb;
                 }
                 ObjectType.AddSuperType(simTypeSystemCreateObjectUse);

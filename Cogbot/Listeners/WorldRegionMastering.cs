@@ -167,6 +167,12 @@ namespace cogbot.Listeners
                 Debug("TheSimAvatar._CurrentRegion.TheSimulator == simulator " + simulator);
             }
             base.Network_OnSimDisconnected(simulator, reason);
+            lock (client.Network.Simulators) 
+                if (!client.Network.Simulators.Contains(simulator))
+                {
+                    client.Network.Simulators.Add(simulator);
+                }
+            simulator.Resume();
         }
 
         public override void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
@@ -327,7 +333,7 @@ namespace cogbot.Listeners
             }
         }
 
-        public void EnsureSimulator(Simulator simulator)
+        static public void EnsureSimulator(Simulator simulator)
         {
             if (simulator == null) return;
             lock (_AllSimulators)
@@ -335,6 +341,40 @@ namespace cogbot.Listeners
                 if (!_AllSimulators.Contains(simulator))
                     _AllSimulators.Add(simulator);
             }
+        }
+
+        internal Simulator GetSimulator(ulong handle)
+        {
+            if (handle == 0)
+            {
+                return client.Network.CurrentSim;
+            }
+            lock (client.Network.Simulators)
+            {
+                foreach (Simulator sim in client.Network.Simulators)
+                {
+                    if (sim.Handle == handle && sim.Connected) return sim;
+                }
+            }
+            //  lock (AllSimulators)
+            {
+                foreach (Simulator sim in AllSimulators)
+                {
+                    if (sim.Handle == handle && sim.Connected) return sim;
+                }
+            }
+            return SimRegion.GetRegion(handle).TheSimulator;
+        }
+
+        private Simulator GetSimulator(Primitive Prim)
+        {
+            if (Prim != null)
+            {
+                ulong handle = Prim.RegionHandle;
+                if (handle != 0) return GetSimulator(handle);
+            }
+            Debug("GetSimulator returning current sim for " + Prim);
+            return client.Network.CurrentSim;
         }
 
 

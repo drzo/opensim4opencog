@@ -14,10 +14,10 @@ namespace cogbot.ScriptEngines
 {
     class ScriptEventListener : SimEventSubscriber
     {
-        Queue<KeyValuePair<object, SimEvent>> taskQueue = new Queue<KeyValuePair<object, SimEvent>>();
-        ScriptInterpreter taskInterperter;
-        public Thread thrJobQueue = null;
-        public WorldObjects WorldSystem;
+        readonly Queue<KeyValuePair<object, SimObjectEvent>> taskQueue = new Queue<KeyValuePair<object, SimObjectEvent>>();
+        private ScriptInterpreter taskInterperter;
+        readonly Thread thrJobQueue;
+        readonly WorldObjects WorldSystem;
         public ScriptEventListener(ScriptInterpreter interp, BotClient client)
         {
             taskInterperter = interp;
@@ -95,10 +95,10 @@ namespace cogbot.ScriptEngines
             }
         }
 
-        private KeyValuePair<object, SimEvent> taskFromCodeTree(object lispObject)
+        private KeyValuePair<object, SimObjectEvent> taskFromCodeTree(object lispObject)
         {
-            SimEvent evt = new SimEvent("enqueue", new object[] { lispObject });
-            return new KeyValuePair<object, SimEvent>(lispObject, evt);
+            SimObjectEvent evt = new SimObjectEvent("enqueue", new object[] { lispObject });
+            return new KeyValuePair<object, SimObjectEvent>(lispObject, evt);
         }
 
 
@@ -316,7 +316,7 @@ namespace cogbot.ScriptEngines
             {
                 // see if there is anything to process
                 if (taskQueue.Count == 0) return;
-                KeyValuePair<object, SimEvent> thisTask;
+                KeyValuePair<object, SimObjectEvent> thisTask;
 
                 // if so then process it
                 //Interpreter lispInterperter = new Interpreter();
@@ -385,18 +385,18 @@ namespace cogbot.ScriptEngines
 
         #region SimEventSubscriber Members
 
-        void SimEventSubscriber.OnEvent(SimEvent evt)
+        void SimEventSubscriber.OnEvent(SimObjectEvent evt)
         {
-            if (taskInterperter.IsSubscriberOf(evt.GetName()))
+            if (taskInterperter.IsSubscriberOf(evt.GetVerb()))
             {
                 object lispCode = lispCodeFromEvent(evt);
-                taskQueue.Enqueue(new KeyValuePair<object, SimEvent>(lispCode, evt));
+                taskQueue.Enqueue(new KeyValuePair<object, SimObjectEvent>(lispCode, evt));
             }
         }
 
-        private object lispCodeFromEvent(SimEvent evt)
+        private object lispCodeFromEvent(SimObjectEvent evt)
         {
-            return genLispCodeTree("(" + evt.GetName().ToLower() + " " + argsListString(evt.GetArgs())+")");
+            return genLispCodeTree("(" + evt.GetVerb().ToLower() + " " + argsListString(evt.GetArgs())+")");
         }
 
         void SimEventSubscriber.ShuttingDown()

@@ -7,6 +7,7 @@ using System.IO;
 using System.Net.Sockets;
 using System.Net;
 using System.Xml;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 using cogbot.Listeners;
 
@@ -523,10 +524,10 @@ namespace cogbot.Utilities
 
         #region SimEventSubscriber Members
 
-        void SimEventSubscriber.OnEvent(SimEvent evt)
+        void SimEventSubscriber.OnEvent(SimObjectEvent evt)
         {
             if (DisableEventStore) return;
-            whileClientIsAway.Enqueue("("+evt.GetName()+" "+parent.argsListString(evt.GetArgs())+")");
+            whileClientIsAway.Enqueue("("+evt.GetVerb()+" "+parent.argsListString(evt.GetArgs())+")");
         }
 
         void SimEventSubscriber.ShuttingDown()

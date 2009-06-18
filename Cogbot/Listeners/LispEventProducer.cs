@@ -9,7 +9,7 @@ namespace cogbot.Listeners
 {
     public class LispEventProducer : AllEvents
     {
-        private ScriptInterpreter Interpreter;
+        readonly private ScriptInterpreter Interpreter;
         public LispEventProducer(BotClient bc, ScriptInterpreter interp)
             : base(bc)
         {
@@ -60,7 +60,15 @@ namespace cogbot.Listeners
                 {
                     invokeMe = new Cons(CoerceArg(parameters[i], paramTypes[i]), invokeMe);
                 }
-                object o = Interpreter.Eval(new Cons(Interpreter.GetSymbol(eventName.ToLower()), invokeMe));
+                Cons eval = new Cons(Interpreter.GetSymbol(eventName.ToLower()), invokeMe);
+                try
+                {
+                    object o = Interpreter.Eval(eval);
+                } catch(Exception e)
+                {
+                    Console.WriteLine(eval);
+                    Console.WriteLine("Caused: " + e);
+                }
             }
             // right now most events are void but there is one that is boolean which means we may as well eturn true for all
             return true;

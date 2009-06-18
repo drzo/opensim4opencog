@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using cogbot.Listeners;
 using OpenMetaverse;
 
 namespace cogbot.TheOpenSims
@@ -24,6 +25,33 @@ namespace cogbot.TheOpenSims
 
     public class SimObjectEvent: BotMentalAspect
     {
+        public SimObjectEvent(string name, object[] paramz)
+        {
+            Verb = name;
+            Parameters = paramz;
+        }
+       // string eventName;
+       // object[] args;
+        readonly List<SimEventSubscriber> receiversSent = new List<SimEventSubscriber>();
+        //SimObjectEvent original = null;
+
+        internal void SendTo(SimEventSubscriber subscriber)
+        {
+            if (!receiversSent.Contains(subscriber))
+            {
+                receiversSent.Add(subscriber);
+                subscriber.OnEvent(this);
+            }
+        }
+
+        public string GetVerb()
+        {
+            return Verb;
+        }
+        public object[] GetArgs()
+        {
+            return Parameters;
+        }
 
         public BotAction GetAction()
         {
@@ -51,6 +79,11 @@ namespace cogbot.TheOpenSims
                     {
 
                         new BotObjectAction((SimActor)Parameters[0], GetSimObjectUsage());
+                        break;
+                    }
+                case SimEventType.EFFECT:
+                    {
+                        new BotObjectAction((SimActor)Parameters[0], GetHeading());
                         break;
                     }
                 case SimEventType.MOVEMENT:
