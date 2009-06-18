@@ -41,12 +41,12 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        public override bool CanUnify(Unifiable with)
+        public override float CanUnify(Unifiable with)
         {
             if (templateNode.NodeType == XmlNodeType.Text)
             {
                 string srch = (" " + with.ToValue() + " ").ToUpper();
-                return ((" " + templateNode.InnerText + " ").ToUpper().Equals(srch));
+                return ((" " + templateNode.InnerText + " ").ToUpper().Equals(srch)) ? STAR_TRUE : STAR_FALSE;
             }
             if (templateNode.HasChildNodes)
             {
@@ -63,20 +63,20 @@ namespace RTParser.AIMLTagHandlers
                             if (childNode.NodeType == XmlNodeType.Text)
                             {
                                 string srch = (" " + with.ToValue() + " ").ToUpper();
-                                return ((" " + childNode.InnerText + " ").ToUpper().Equals(srch));
+                                return ((" " + childNode.InnerText + " ").ToUpper().Equals(srch)) ? STAR_TRUE : STAR_FALSE;
                             }
                             AIMLTagHandler part = Proc.GetTagHandler(user, query, request, result, childNode);
-                            if (!part.CanUnify(with)) return false;
+                            if (part.CanUnify(with)>0) return STAR_FALSE;
                         }
                         catch (Exception e)
                         {
                             Console.WriteLine("" + e);
                         }
                     }
-                    return rest.IsEmpty;
+                    return rest.IsEmpty ? STAR_TRUE : STAR_FALSE;
                 }
             }
-            return with.IsEmpty;
+            return with.IsEmpty ? STAR_TRUE : STAR_FALSE;
         }
 
         protected override Unifiable ProcessChange()

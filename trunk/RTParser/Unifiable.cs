@@ -11,6 +11,9 @@ namespace RTParser
     abstract public class Unifiable
     {
 
+        public const float UNIFY_TRUE = 0;
+        public const float UNIFY_FALSE = 1;
+
         /// <summary>
         /// This should be overridden!
         /// </summary>
@@ -199,7 +202,7 @@ namespace RTParser
         public abstract bool IsLazyStar();
         public abstract bool IsLongWildCard();
         public abstract bool IsShortWildCard();
-        public abstract bool Unify(Unifiable unifiable, SubQuery query);
+        public abstract float Unify(Unifiable unifiable, SubQuery query);
 
         public virtual Unifiable ToCaseInsenitive()
         {
@@ -350,7 +353,7 @@ namespace RTParser
             return (str.Contains("*") || str.Contains("_") || str.Contains("<"));
         }
 
-        public Unifiable[] Split()
+        public Unifiable[] ToArray()
         {
             return Splitter(str); 
         }
@@ -443,7 +446,7 @@ namespace RTParser
             if (String.IsNullOrEmpty(str)) return Unifiable.Empty;
             //int i = str.IndexOfAny(BRKCHARS);
             //if (i == -1) return Create(str);
-            return Split()[0];
+            return ToArray()[0];
             //string rest = str.Substring(0, i - 1);
             //return Create(rest.Trim());
         }
@@ -478,9 +481,9 @@ namespace RTParser
         }
 
         static public SubQuery subquery;
-        public override bool Unify(Unifiable unifiable, SubQuery query)
+        public override float Unify(Unifiable other, SubQuery query)
         {
-            if (IsShortWildCard()) if (unifiable.AsString().Contains(" ")) return false;
+            if (IsShortWildCard()) if (other.AsString().Contains(" ")) return UNIFY_FALSE;
             subquery = query;
             if (IsWildCard())
             {
@@ -488,30 +491,30 @@ namespace RTParser
                 {
                     try
                     {
-                        return UnifyLazy(unifiable);
+                        return UnifyLazy(other);
                     } catch(Exception e)
                     {
                         //Console.WriteLine(""+e);
-                        return false;
+                        return UNIFY_FALSE;
                     }
                 }
-                return true;
+                return 0;
             }
-            if (unifiable.IsWildCard())
+            if (other.IsWildCard())
             {
                 // return unifiable.Unify(this, query);
             }
-            return unifiable.AsString().ToUpper() == str.ToUpper();
+            return other.AsString().ToUpper() == str.ToUpper() ? UNIFY_TRUE : UNIFY_FALSE;
         }
 
-        public virtual bool UnifyLazy(Unifiable unifiable)
+        public virtual float UnifyLazy(Unifiable unifiable)
         {
             AIMLTagHandler tagHandler = GetTagHandler();
-            if (tagHandler.CanUnify(unifiable)) return true;
+            if (tagHandler.CanUnify(unifiable) == UNIFY_TRUE) return UNIFY_TRUE;
             Unifiable outputSentence = tagHandler.CompleteProcess();///bot.GetTagHandler(templateNode, subquery, request, result, request.user);
             string value = outputSentence.AsString();
             string mustBe = unifiable.ToValue();
-            return mustBe.ToUpper() == value.ToUpper();
+            return mustBe.ToUpper() == value.ToUpper() ? UNIFY_TRUE : UNIFY_FALSE;
         }
 
         public virtual AIMLTagHandler GetTagHandler()

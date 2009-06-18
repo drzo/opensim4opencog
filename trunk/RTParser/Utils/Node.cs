@@ -243,7 +243,7 @@ namespace RTParser.Utils
             foreach (Unifiable childNodeWord in this.children.Keys)
             {
                 if (!childNodeWord.IsShortWildCard()) continue;
-                if (!childNodeWord.Unify(first, query)) continue;
+                if (childNodeWord.Unify(first, query)>0) continue;
                 Node childNode = this.children[childNodeWord];
                 // add the next word to the wildcard match 
                 Unifiable newWildcard = Unifiable.CreateAppendable();
@@ -273,7 +273,7 @@ namespace RTParser.Utils
             {
                 Node childNode = this.children[childNodeWord];
                 if (childNode.word.IsWildCard()) continue;
-                if (!childNode.word.Unify(firstWord, query)) continue;
+                if (childNode.word.Unify(firstWord, query) > 0) continue;
                 // process the matchstate - this might not make sense but the matchstate is working
                 // with a "backwards" path: "topic <topic> that <that> user input"
                 // the "classic" path looks like this: "user input <that> that <topic> topic"
@@ -312,7 +312,7 @@ namespace RTParser.Utils
                 // add the next word to the wildcard match 
                 Unifiable newWildcard = Unifiable.CreateAppendable();
                 // normal * and LazyMatch on first word
-                if (childNodeWord.Unify(first, query))
+                if (childNodeWord.Unify(first, query)==0)
                 {
                     this.storeWildCard(first, newWildcard);
                     result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);
@@ -325,7 +325,7 @@ namespace RTParser.Utils
                     if (!second.IsEmpty && childNodeWord.IsLazyStar())
                     {
                         Unifiable firstAndSecond = first + " " + second;
-                        if (childNodeWord.Unify(firstAndSecond, query))
+                        if (childNodeWord.Unify(firstAndSecond, query)==0)
                         {
                             this.storeWildCard(firstAndSecond, newWildcard);
                             result = childNode.evaluate(newPath.Rest(), query,

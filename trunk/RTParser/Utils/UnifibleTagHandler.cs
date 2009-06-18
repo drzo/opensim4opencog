@@ -4,6 +4,17 @@ namespace RTParser.Utils
 {
     public abstract class UnifibleTagHandler : RTParser.Utils.AIMLTagHandler
     {
+        internal const float OR_TRUE = 0;
+        internal const float OR_FALSE = 1;
+        internal const float STAR_TRUE = 0;
+        internal const float STAR_FALSE = 1;
+        internal const float OPT_TRUE = 0;
+        internal const float OPT_FALSE = 1;
+        internal const float ISA_TRUE = 0;
+        internal const float ISA_FALSE = 1;
+        internal const float AND_TRUE = 0;
+        internal const float AND_FALSE = 1;
+
         /// <summary>
         /// Ctor
         /// </summary>
@@ -23,7 +34,7 @@ namespace RTParser.Utils
         {
         }
 
-        public override bool CanUnify(Unifiable with)
+        public override float CanUnify(Unifiable with)
         {
             return base.CanUnify(with);
         }
