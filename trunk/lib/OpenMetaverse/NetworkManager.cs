@@ -799,48 +799,48 @@ namespace OpenMetaverse
             {
                 #region Check for timed out simulators
 
-                // Figure out which sims need to be disconnected, then fire
-                // all of the events to avoid calling DisconnectSim() inside
-                // the Simulators lock
-                List<Simulator> disconnectedSims = null;
+                //// Figure out which sims need to be disconnected, then fire
+                //// all of the events to avoid calling DisconnectSim() inside
+                //// the Simulators lock
+                //List<Simulator> disconnectedSims = null;
 
-                // Check all of the connected sims for disconnects
-                lock (Simulators)
-                {
-                    for (int i = 0; i < Simulators.Count; i++)
-                    {
-                        if (Simulators[i].DisconnectCandidate)
-                        {
-                            // Avoid initializing a new List<> every time the timer
-                            // fires with this piece of code
-                            if (disconnectedSims == null)
-                                disconnectedSims = new List<Simulator>();
+                //// Check all of the connected sims for disconnects
+                //lock (Simulators)
+                //{
+                //    for (int i = 0; i < Simulators.Count; i++)
+                //    {
+                //        if (Simulators[i].DisconnectCandidate)
+                //        {
+                //            // Avoid initializing a new List<> every time the timer
+                //            // fires with this piece of code
+                //            if (disconnectedSims == null)
+                //                disconnectedSims = new List<Simulator>();
 
-                            disconnectedSims.Add(Simulators[i]);
-                        }
-                        else
-                        {
-                            Simulators[i].DisconnectCandidate = true;
-                        }
-                    }
-                }
+                //            disconnectedSims.Add(Simulators[i]);
+                //        }
+                //        else
+                //        {
+                //            Simulators[i].DisconnectCandidate = true;
+                //        }
+                //    }
+                //}
 
-                // Actually disconnect each sim we detected as disconnected
-                if (disconnectedSims != null)
-                {
-                    for (int i = 0; i < disconnectedSims.Count; i++)
-                    {
-                        if (disconnectedSims[i] != null)
-                        {
-                            // This sim hasn't received any network traffic since the 
-                            // timer last elapsed, consider it disconnected
-                            Logger.Log("Network timeout for simulator " + disconnectedSims[i].ToString() +
-                                ", disconnecting", Helpers.LogLevel.Warning, Client);
+                //// Actually disconnect each sim we detected as disconnected
+                //if (disconnectedSims != null)
+                //{
+                //    for (int i = 0; i < disconnectedSims.Count; i++)
+                //    {
+                //        if (disconnectedSims[i] != null)
+                //        {
+                //            // This sim hasn't received any network traffic since the 
+                //            // timer last elapsed, consider it disconnected
+                //            Logger.Log("Network timeout for simulator " + disconnectedSims[i].ToString() +
+                //                ", disconnecting", Helpers.LogLevel.Warning, Client);
 
-                            DisconnectSim(disconnectedSims[i], true, DisconnectType.NetworkTimeout);
-                        }
-                    }
-                }
+                //            DisconnectSim(disconnectedSims[i], true, DisconnectType.NetworkTimeout);
+                //        }
+                //    }
+                //}
 
                 #endregion Check for timed out simulators
             }
