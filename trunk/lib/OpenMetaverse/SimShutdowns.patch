@@ -1,0 +1,139 @@
+Index: AgentManager.cs
+===================================================================
+--- AgentManager.cs	(revision 365)
++++ AgentManager.cs	(working copy)
+@@ -3119,7 +3119,7 @@
+                     teleportStat = TeleportStatus.Finished;
+ 
+                     // Disconnect from the previous sim
+-                    Client.Network.DisconnectSim(simulator, true);
++                    Client.Network.DisconnectSim(simulator, true, NetworkManager.DisconnectType.TeleportInitiated);
+ 
+                     Logger.Log("Moved to new sim " + newSimulator.ToString(), Helpers.LogLevel.Info, Client);
+                 }
+Index: NetworkManager.cs
+===================================================================
+--- NetworkManager.cs	(revision 361)
++++ NetworkManager.cs	(working copy)
+@@ -64,6 +64,8 @@
+             ClientInitiated,
+             /// <summary>The server notified us that it is disconnecting</summary>
+             ServerInitiated,
++            /// <summary>The server notified us that it is disconnecting</summary>
++            TeleportInitiated,
+             /// <summary>Either a socket was closed or network traffic timed out</summary>
+             NetworkTimeout,
+             /// <summary>The last active simulator shut down</summary>
+@@ -564,22 +566,23 @@
+         /// </summary>
+         /// <param name="sim"></param>
+         /// <param name="sendCloseCircuit"></param>
+-        public void DisconnectSim(Simulator sim, bool sendCloseCircuit)
++        public void DisconnectSim(Simulator sim, bool sendCloseCircuit,DisconnectType disconnectType)
+         {
+             if (sim != null)
+             {
+-                sim.Disconnect(sendCloseCircuit);
++                sim.Disconnect(sendCloseCircuit, disconnectType);
+ 
+                 // Fire the SimDisconnected event if a handler is registered
+                 if (OnSimDisconnected != null)
+                 {
+-                    try { OnSimDisconnected(sim, DisconnectType.NetworkTimeout); }
++                    try { OnSimDisconnected(sim, disconnectType); }
+                     catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                 }
+ 
+-                lock (Simulators) Simulators.Remove(sim);
++                if (disconnectType == DisconnectType.ClientInitiated)
++                    lock (Simulators) Simulators.Remove(sim);
+ 
+-                if (Simulators.Count == 0) Shutdown(DisconnectType.SimShutdown);
++                if (Simulators.Count == 0) Shutdown(disconnectType/* | DisconnectType.SimShutdown*/);
+             }
+             else
+             {
+@@ -606,7 +609,7 @@
+                 {
+                     if (Simulators[i] != null && Simulators[i] != CurrentSim)
+                     {
+-                        Simulators[i].Disconnect(sendCloseCircuit);
++                        Simulators[i].Disconnect(sendCloseCircuit, type);
+ 
+                         // Fire the SimDisconnected event if a handler is registered
+                         if (OnSimDisconnected != null)
+@@ -623,7 +626,7 @@
+             if (CurrentSim != null)
+             {
+                 // Kill the connection to the curent simulator
+-                CurrentSim.Disconnect(sendCloseCircuit);
++                CurrentSim.Disconnect(sendCloseCircuit,type);
+ 
+                 // Fire the SimDisconnected event if a handler is registered
+                 if (OnSimDisconnected != null)
+@@ -834,7 +837,7 @@
+                             Logger.Log("Network timeout for simulator " + disconnectedSims[i].ToString() +
+                                 ", disconnecting", Helpers.LogLevel.Warning, Client);
+ 
+-                            DisconnectSim(disconnectedSims[i], true);
++                            DisconnectSim(disconnectedSims[i], true, DisconnectType.NetworkTimeout);
+                         }
+                     }
+                 }
+@@ -1078,7 +1081,7 @@
+         {
+             Logger.DebugLog("Received a DisableSimulator packet from " + simulator + ", shutting it down", Client);
+ 
+-            DisconnectSim(simulator, false);
++            DisconnectSim(simulator, false, DisconnectType.ServerInitiated);
+         }
+ 
+         private void KickUserHandler(Packet packet, Simulator simulator)
+Index: ObjectManager.cs
+===================================================================
+--- ObjectManager.cs	(revision 365)
++++ ObjectManager.cs	(working copy)
+@@ -2771,7 +2771,7 @@
+                         prim.LocalID = localID;
+                         prim.ID = fullID;
+ 
+-                        simulator.ObjectsPrimitives.Dictionary[localID] = prim;
++                        simulator.ObjectsPrimitives.Dictionary.Add(localID, prim);
+ 
+                         return prim;
+                     }
+Index: Simulator.cs
+===================================================================
+--- Simulator.cs	(revision 365)
++++ Simulator.cs	(working copy)
+@@ -574,9 +574,21 @@
+         /// Disconnect from this simulator
+         /// </summary>
+         public void Disconnect(bool sendCloseCircuit)
++        {          
++            Disconnect(sendCloseCircuit,NetworkManager.DisconnectType.ClientInitiated);   
++        }
++        public void Disconnect(bool sendCloseCircuit, NetworkManager.DisconnectType disconnectType)
+         {
++            //lets wait until the server makes a desision
++            if (disconnectType == NetworkManager.DisconnectType.TeleportInitiated
++                || disconnectType == NetworkManager.DisconnectType.NetworkTimeout) return;
+             if (connected)
+             {
++                if (disconnectType == NetworkManager.DisconnectType.ServerInitiated)
++                {
++                    Pause();
++                    return;
++                }
+                 connected = false;
+ 
+                 // Destroy the timers
+@@ -585,7 +597,7 @@
+                 if (PingTimer != null) PingTimer.Dispose();
+ 
+                 // Kill the current CAPS system
+-                if (Caps != null)
++                if (Caps != null )
+                 {
+                     Caps.Disconnect(true);
+                     Caps = null;
