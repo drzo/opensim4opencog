@@ -13,6 +13,7 @@ using System.IO;
 using cogbot.Listeners;
 using Action=cogbot.Actions.Action;
 using cogbot.TheOpenSims;
+
 // older LibOMV
 //using TeleportFlags = OpenMetaverse.AgentManager.TeleportFlags;
 //using TeleportStatus = OpenMetaverse.AgentManager.TeleportStatus;
@@ -1212,7 +1213,7 @@ namespace cogbot
 
         public void SendNewEvent(string eventName, params object[] args)
         {
-            SimEvent evt = botPipeline.CreateEvent(eventName, args);
+            SimObjectEvent evt = botPipeline.CreateEvent(eventName, args);
             botPipeline.SendEvent(evt);
         }
 
@@ -1302,11 +1303,10 @@ namespace cogbot
             return BotLoginParams.FirstName + " " + BotLoginParams.LastName;
         }
 
-        #region SimEventSubscriber Members
 
-        void SimEventSubscriber.OnEvent(SimEvent evt)
+        void SimEventSubscriber.OnEvent(SimObjectEvent evt)
         {
-            if (evt.GetName() == "On-Execute-Command")
+            if (evt.GetVerb() == "On-Execute-Command")
             {
                 ExecuteCommand(evt.GetArgs()[0].ToString(), WriteLine);
             }
@@ -1316,7 +1316,6 @@ namespace cogbot
         {
             ((BotClient)this).ShutDown();
         }
-        #endregion
 
 
         public void Talk(string str)

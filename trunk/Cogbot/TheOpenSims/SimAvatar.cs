@@ -753,7 +753,7 @@ namespace cogbot.TheOpenSims
                 if (sit != 0)
                 {
                     Simulator simu = GetSimulator();
-                    UnPhantom = WorldSystem.GetSimObject(WorldSystem.GetPrimitive(sit, simu));
+                    UnPhantom = WorldSystem.GetSimObject(WorldSystem.GetPrimitive(sit, simu), simu);
                     UnPhantom.MakeEnterable(this);
                 }
                 Client.Self.Crouch(false);
@@ -1504,7 +1504,7 @@ namespace cogbot.TheOpenSims
                     }
                     if (lr < -170 || lr > 170)
                     {
-                        if(IsDrivingVehical)
+                        if(false && IsDrivingVehical)
                         {
                             bool atPos = ClientMovement.AtPos;
                             bool nudgeAtPos = ClientMovement.NudgeAtPos;

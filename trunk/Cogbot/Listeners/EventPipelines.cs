@@ -1,46 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 
 namespace cogbot.Listeners
 {
-
-
-    public class SimEvent
-    {
-        public SimEvent(string name, object[] paramz)
-        {
-            eventName = name;
-            args = paramz;
-        }
-        string eventName;
-        object[] args;
-        List<SimEventSubscriber> receiversSent = new List<SimEventSubscriber>();
-        SimEvent original = null;
-
-        internal void SendTo(SimEventSubscriber subscriber)
-        {
-            if (!receiversSent.Contains(subscriber))
-            {
-                receiversSent.Add(subscriber);
-                subscriber.OnEvent(this);
-            }
-        }
-
-        public override string ToString()
-        {
-            return "SimEvent " + eventName + " " + ScriptEngines.ScriptEventListener.argsListString(args);
-        }
-        public string GetName()
-        {
-            return eventName;
-        }
-        public object[] GetArgs()
-        {
-            return args;
-        }
-    }
 
 
     public class SimEventTextSubscriber:SimEventSubscriber
@@ -55,9 +20,9 @@ namespace cogbot.Listeners
 
         #region SimEventSubscriber Members
 
-        void SimEventSubscriber.OnEvent(SimEvent evt)
+        void SimEventSubscriber.OnEvent(SimObjectEvent evt)
         {
-            String eventName = evt.GetName();
+            String eventName = evt.GetVerb();
             object[] args = evt.GetArgs();
 
             String msg = From.Self.Name + ": [" + eventName.ToLower();
@@ -90,16 +55,16 @@ namespace cogbot.Listeners
     public interface SimEventSubscriber
     {
         // fired when SendEvent is invoke and this subscriber is downstream in the pipeline
-        void OnEvent(SimEvent evt);
+        void OnEvent(SimObjectEvent evt);
         void ShuttingDown();
     }
 
     public interface SimEventPublisher
     {
         // this publisher will SendEvent to some SimEventPipeline after the Event params have been casted to the correct types
-        SimEvent CreateEvent(string eventName, params object[] args);
+        SimObjectEvent CreateEvent(string eventName, params object[] args);
         // this object will propogate the event AS-IS 
-        void SendEvent(SimEvent evt);
+        void SendEvent(SimObjectEvent evt);
         void AddSubscriber(SimEventSubscriber sub);
     }
 
@@ -137,17 +102,17 @@ namespace cogbot.Listeners
 
         #region SimEventPublisher Members
 
-        public SimEvent CreateEvent(string eventName, params object[] args)
+        public SimObjectEvent CreateEvent(string eventName, params object[] args)
         {
-            return new SimEvent(eventName, args);
+            return new SimObjectEvent(eventName, args);
         }
 
         // this pipelike will fire OnEvent to the subscriber list 
-        public void SendEvent(SimEvent simEvent)
+        public void SendEvent(SimObjectEvent simObjectEvent)
         {
             foreach (SimEventSubscriber subscriber in GetSubscribers())
             {
-                simEvent.SendTo(subscriber);
+                simObjectEvent.SendTo(subscriber);
             }
         }
 
@@ -155,11 +120,11 @@ namespace cogbot.Listeners
 
         #region SimEventSubscriber Members
 
-        public void OnEvent(SimEvent simEvent)
+        public void OnEvent(SimObjectEvent simObjectEvent)
         {
             foreach (SimEventSubscriber subscriber in GetSubscribers())
             {
-                simEvent.SendTo(subscriber);
+                simObjectEvent.SendTo(subscriber);
             }
         }
 
