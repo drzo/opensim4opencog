@@ -133,14 +133,16 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="outerXML">the Unifiable to XMLize</param>
         /// <returns>The XML node</returns>
-        public virtual bool CanUnify(Unifiable with)
+        public virtual float CanUnify(Unifiable with)
         {
             string w = with.ToValue();
             Unifiable t1 = ProcessChange();
-            if (t1.Unify(with,query)) return true;
+            float score1 = t1.Unify(with,query);
+            if (score1 == 0) return score1;
             Unifiable t2 = CompleteProcess();
-            if (t2.Unify(with,query)) return true;
-            return false;
+            float score2 = t2.Unify(with, query);
+            if (score2 == 0) return score2;
+            return (score1 < score2) ? score1 : score2;
         }
 
         #endregion

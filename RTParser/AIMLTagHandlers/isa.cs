@@ -29,11 +29,11 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        public override bool CanUnify(Unifiable with)
+        public override float CanUnify(Unifiable with)
         {
             if (templateNode.NodeType==XmlNodeType.Text)
             {
-                return Proc.IsaFilter(with, templateNode.InnerText);
+                return Proc.IsaFilter(with, templateNode.InnerText) ? ISA_TRUE : ISA_FALSE;
             }
             if (templateNode.HasChildNodes)
             {
@@ -44,18 +44,18 @@ namespace RTParser.AIMLTagHandlers
                     {
                         if (childNode.NodeType == XmlNodeType.Text)
                         {
-                            return Proc.IsaFilter(with, childNode.InnerText);
+                            return Proc.IsaFilter(with, childNode.InnerText) ? ISA_TRUE : ISA_FALSE;
                         }
-                        if (!Proc.IsaFilter(with, childNode.InnerText)) return false;
+                        if (!Proc.IsaFilter(with, childNode.InnerText)) return ISA_FALSE;
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine("" + e);
                     }
                 }
-                return true;
+                return ISA_TRUE;
             }
-            return true;
+            return ISA_TRUE;
         }
 
         protected override Unifiable ProcessChange()
