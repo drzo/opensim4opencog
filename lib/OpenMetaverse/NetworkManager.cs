@@ -64,6 +64,8 @@ namespace OpenMetaverse
             ClientInitiated,
             /// <summary>The server notified us that it is disconnecting</summary>
             ServerInitiated,
+            /// <summary>The server notified us that it is disconnecting</summary>
+            TeleportInitiated,
             /// <summary>Either a socket was closed or network traffic timed out</summary>
             NetworkTimeout,
             /// <summary>The last active simulator shut down</summary>
@@ -564,22 +566,23 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="sim"></param>
         /// <param name="sendCloseCircuit"></param>
-        public void DisconnectSim(Simulator sim, bool sendCloseCircuit)
+        public void DisconnectSim(Simulator sim, bool sendCloseCircuit,DisconnectType disconnectType)
         {
             if (sim != null)
             {
-                sim.Disconnect(sendCloseCircuit);
+                sim.Disconnect(sendCloseCircuit, disconnectType);
 
                 // Fire the SimDisconnected event if a handler is registered
                 if (OnSimDisconnected != null)
                 {
-                    try { OnSimDisconnected(sim, DisconnectType.NetworkTimeout); }
+                    try { OnSimDisconnected(sim, disconnectType); }
                     catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
                 }
 
-                lock (Simulators) Simulators.Remove(sim);
+                if (disconnectType == DisconnectType.ClientInitiated)
+                    lock (Simulators) Simulators.Remove(sim);
 
-                if (Simulators.Count == 0) Shutdown(DisconnectType.SimShutdown);
+                if (Simulators.Count == 0) Shutdown(disconnectType/* | DisconnectType.SimShutdown*/);
             }
             else
             {
@@ -606,7 +609,7 @@ namespace OpenMetaverse
                 {
                     if (Simulators[i] != null && Simulators[i] != CurrentSim)
                     {
-                        Simulators[i].Disconnect(sendCloseCircuit);
+                        Simulators[i].Disconnect(sendCloseCircuit, type);
 
                         // Fire the SimDisconnected event if a handler is registered
                         if (OnSimDisconnected != null)
@@ -623,7 +626,7 @@ namespace OpenMetaverse
             if (CurrentSim != null)
             {
                 // Kill the connection to the curent simulator
-                CurrentSim.Disconnect(sendCloseCircuit);
+                CurrentSim.Disconnect(sendCloseCircuit,type);
 
                 // Fire the SimDisconnected event if a handler is registered
                 if (OnSimDisconnected != null)
@@ -834,7 +837,7 @@ namespace OpenMetaverse
                             Logger.Log("Network timeout for simulator " + disconnectedSims[i].ToString() +
                                 ", disconnecting", Helpers.LogLevel.Warning, Client);
 
-                            DisconnectSim(disconnectedSims[i], true);
+                            DisconnectSim(disconnectedSims[i], true, DisconnectType.NetworkTimeout);
                         }
                     }
                 }
@@ -1078,7 +1081,7 @@ namespace OpenMetaverse
         {
             Logger.DebugLog("Received a DisableSimulator packet from " + simulator + ", shutting it down", Client);
 
-            DisconnectSim(simulator, false);
+            DisconnectSim(simulator, false, DisconnectType.ServerInitiated);
         }
 
         private void KickUserHandler(Packet packet, Simulator simulator)

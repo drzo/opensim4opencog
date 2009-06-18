@@ -574,9 +574,21 @@ namespace OpenMetaverse
         /// Disconnect from this simulator
         /// </summary>
         public void Disconnect(bool sendCloseCircuit)
+        {          
+            Disconnect(sendCloseCircuit,NetworkManager.DisconnectType.ClientInitiated);   
+        }
+        public void Disconnect(bool sendCloseCircuit, NetworkManager.DisconnectType disconnectType)
         {
+            //lets wait until the server makes a desision
+            if (disconnectType == NetworkManager.DisconnectType.TeleportInitiated
+                || disconnectType == NetworkManager.DisconnectType.NetworkTimeout) return;
             if (connected)
             {
+                if (disconnectType == NetworkManager.DisconnectType.ServerInitiated)
+                {
+                    Pause();
+                    return;
+                }
                 connected = false;
 
                 // Destroy the timers
@@ -585,7 +597,7 @@ namespace OpenMetaverse
                 if (PingTimer != null) PingTimer.Dispose();
 
                 // Kill the current CAPS system
-                if (Caps != null)
+                if (Caps != null )
                 {
                     Caps.Disconnect(true);
                     Caps = null;
