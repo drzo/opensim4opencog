@@ -84,7 +84,7 @@ namespace cogbot.Listeners
 
         public override void Friends_OnFriendOnline(FriendInfo friend)
         {
-            if (friend.IsOnline && friend.Name.ToLower() == client.MasterName.ToLower())
+            if (friend.IsOnline && !string.IsNullOrEmpty(friend.Name) && friend.Name.ToLower() == client.MasterName.ToLower())
             {
                 lock (Name2Key) Name2Key[friend.Name.ToLower()] = friend.UUID;
                 client.Self.InstantMessage(friend.UUID, "Hello Master");

@@ -496,7 +496,12 @@ namespace cogbot.TheOpenSims
             {
                 if (_Prim0.RegionHandle != RegionHandle)
                 {
-                    ResetRegion(RegionHandle);
+                    if (RegionHandle != 0)
+                        ResetRegion(RegionHandle);
+                }
+                if (RegionHandle==0)
+                {
+                   RegionHandle = _Prim0.RegionHandle;
                 }
                 return _Prim0;
             }
@@ -564,6 +569,10 @@ namespace cogbot.TheOpenSims
             //: base(prim.ID.ToString())
             // : base(prim, SimRegion.SceneProviderFromSimulator(sim))
         {
+            if (prim.RegionHandle==0)
+            {
+                prim.RegionHandle = sim.Handle;
+            }
             RegionHandle = prim.RegionHandle;
             _Prim0 = prim;
             primRefs.Add(prim);
@@ -595,8 +604,13 @@ namespace cogbot.TheOpenSims
                         Primitive prim = WorldSystem.GetPrimitive(parent, simu);
                         if (prim == null)
                         {
-                            // try to request for next time
-                            WorldObjects.EnsureSelected(parent, simu);
+                            if (!RequestedParent)
+                            {
+                                // try to request for next time
+                                RequestedParent = true;
+                                simu.Client.Objects.RequestObject(simu, parent);
+                                WorldObjects.EnsureSelected(parent, simu);
+                            }
                             return null;
                         }
                         _Parent = WorldSystem.GetSimObject(prim, simu);
@@ -972,6 +986,7 @@ namespace cogbot.TheOpenSims
         }
 
 
+        bool RequestedParent = false;
         public bool IsRegionAttached()
         {
             if (WasKilled) return false;
@@ -987,14 +1002,22 @@ namespace cogbot.TheOpenSims
                 Primitive pUse = WorldSystem.GetPrimitive(Prim.ParentID, simu);
                 if (pUse == null)
                 {
-                    WorldObjects.EnsureSelected(Prim.ParentID, simu);
+                    if (!RequestedParent)
+                    {
+                        RequestedParent = true;
+                        simu.Client.Objects.RequestObject(simu, Prim.ParentID);
+                        WorldObjects.EnsureSelected(Prim.ParentID, simu);
+                    }
                     return false;
                 }
-                _Parent = Parent;
+                if(_Parent==null)
+                {
+                    _Parent = Parent;
+                }
             }
             if (_Parent == this)
             {
-                return false;
+                return true;
             }
             return _Parent != null && _Parent.IsRegionAttached();
         }
@@ -1084,12 +1107,12 @@ namespace cogbot.TheOpenSims
         protected Primitive GetParentPrim(Primitive thisPrim)
         {
             Primitive outerPrim = null;
-            int requests = 0;
+            int requests = 10;
             while (outerPrim == null)
             {
                 if (thisPrim == Prim && _Parent != null) return _Parent.Prim;
                 uint theLPrimParentID = thisPrim.ParentID;
-                if (theLPrimParentID == 0 || requests > 10)
+                if (theLPrimParentID == 0 || requests-- > 0)
                 {
                     Debug("Why are not we getting a parent prim?");
                     return null;
@@ -1099,7 +1122,7 @@ namespace cogbot.TheOpenSims
                 if (outerPrim == null)
                 {
                     Thread.Sleep(500);
-                    if (IsRegionAttached()) ;
+                    Debug("Probing for parent");
                     outerPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
                 }
                 requests++;                

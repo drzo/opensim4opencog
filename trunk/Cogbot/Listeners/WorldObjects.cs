@@ -180,7 +180,7 @@ namespace cogbot.Listeners
                     }
                     EnsureSelectedTimer = new Timer(ReallyEnsureSelected_Thread, null, 1000, 1000);
                     _SimPaths = new WorldPathSystem(this);
-                    _SimAnimationSystem = new SimAnimationStore(client);
+                    _simAssetSystem = new SimAssetStore(client);
                 }
                 //SetWorldMaster(false);
                 //RegisterAll();
@@ -770,7 +770,7 @@ namespace cogbot.Listeners
 
         public string GetAnimationName(UUID id)
         {
-            string name = SimAnimationSystem.GetAnimationName(id);
+            string name = SimAssetSystem.GetAnimationName(id);
             if (name != null) return name;
             lock (uuidTypeObject)
             {
@@ -1467,7 +1467,7 @@ namespace cogbot.Listeners
 
         public UUID GetAnimationUUID(string a)
         {
-            return SimAnimationSystem.GetAnimationUUID(a);
+            return SimAssetSystem.GetAssetUUID(a);
         }
 
         public SimWaypoint GetWaypoint(Vector3d gloabl)
