@@ -7,6 +7,18 @@ namespace cogbot.TheOpenSims
 {
     internal class SimAnimation : SimAsset
     {
+        private bool _NeedsRequest = true;
+        public override bool NeedsRequest
+        {
+            get
+            {
+                if (HasData()) return false;
+                if (_Name.Count > 0) return false;
+                return _NeedsRequest;
+            }
+            set { _NeedsRequest = value; }
+        }
+
         public SimAnimation(UUID uuid, string name)
             : base(uuid, name)
         {
@@ -41,7 +53,7 @@ namespace cogbot.TheOpenSims
                 {
                     try
                     {
-                        byte[] tryb = TypeData;
+                        byte[] tryb = AssetData;
                         if (tryb != null && tryb.Length > 0)
                             _reader = new BinBVHAnimationReader(tryb);
                         AnalyzeType();
@@ -115,7 +127,7 @@ namespace cogbot.TheOpenSims
         public override bool SameAsset(SimAsset animation)
         {
             if (animation==null) return false;
-            if (animation.type!=type) return false;
+            if (animation.AssetType!=AssetType) return false;
             if (HasData())
             {
                 
@@ -230,15 +242,15 @@ namespace cogbot.TheOpenSims
         public byte[] _TypeData;
         protected override void SaveFile(string tmpname)
         {
-            byte[] bs = TypeData;
+            byte[] bs = AssetData;
             if (bs != null && bs.Length > 0)
             {
-                File.WriteAllBytes(tmpname + ".anim", TypeData);
+                File.WriteAllBytes(tmpname + ".anim", AssetData);
             }
             //WorldObjects.Master.GetModuleName()
         }
 
-        override public byte[] TypeData
+        override public byte[] AssetData
         {
             get
             {

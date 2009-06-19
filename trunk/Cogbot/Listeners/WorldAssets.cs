@@ -109,19 +109,17 @@ namespace cogbot.Listeners
 
         public static void RequestAsset(UUID id, AssetType assetType, bool p)
         {
-            if (id == UUID.Zero) return;
-            //if (assetType == AssetType.Animation)
-            {
-                SimAsset sa = SimAssetStore.FindOrCreateAsset(id, assetType);
-                if (sa.TypeData != null) return;
-            }
-            if (assetType == AssetType.Texture)
-            {
-                Master.StartTextureDownload(id);
-                return;
-            }
             lock (AssetRequests)
             {
+                if (id == UUID.Zero) return;
+                if (assetType == AssetType.Texture)
+                {
+                    Master.StartTextureDownload(id);
+                    return;
+                }
+                SimAsset sa = SimAssetStore.FindOrCreateAsset(id, assetType);
+                if (!sa.NeedsRequest) return;
+                sa.NeedsRequest = false;
                 if (AssetRequests.ContainsKey(id)) return;
                 UUID req = RegionMasterTexturePipeline.RequestAsset(id, assetType, p);
                 AssetRequests[id] = req;
@@ -202,6 +200,7 @@ namespace cogbot.Listeners
             if (state == TextureRequestState.Finished)
             {
                 UUID id = asset.AssetID;
+                RegisterAsset(id,asset);
                 ImageDownload image = RegionMasterTexturePipeline.Cache.GetCachedImage(id);
                 if (image == null)
                 {

@@ -1,26 +1,58 @@
 using System;
 using OpenMetaverse;
+using OpenMetaverse.Assets;
 
 namespace cogbot.TheOpenSims
 {
     internal class SimTexture : SimAsset
     {
+        private bool _NeedsRequest = true;
+        public override bool NeedsRequest
+        {
+            get
+            {
+                if (HasData()) return false;
+                return _NeedsRequest;
+            }
+            set { _NeedsRequest = value; }
+        }
+
         public SimTexture(UUID uuid, string name)
             : base(uuid, name)
         {
+        }
+        public override bool HasData()
+        {
+            return ServerAsset != null || _TypeData != null;
         }
 
         protected override void SaveFile(string tmpname)
         {
             throw new NotImplementedException();
         }
-
-        public override byte[] TypeData
+        private byte[] _TypeData;
+        public override byte[] AssetData
         {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
+            get
+            {
+                if (_TypeData != null) return _TypeData;
+                if (ServerAsset == null) return null;
+                return ServerAsset.AssetData;
+            }
+            set
+            {
+                _TypeData = value;
+                if (ServerAsset == null)
+                {
+                    if (AssetID != UUID.Zero)
+                    {
+                        ServerAsset = new AssetTexture(AssetID, value);
+                    }
+                    return;
+                }
+                ServerAsset.AssetData = value;
+            }
         }
-
         protected override string GuessAssetName()
         {
             throw new NotImplementedException();
@@ -28,12 +60,28 @@ namespace cogbot.TheOpenSims
 
         public override float Length
         {
-            get { throw new NotImplementedException(); }
+            get { return 2; }
         }
 
         public override bool IsLoop
         {
-            get { throw new NotImplementedException(); }
+            get { return true; }
+        }
+                
+        public override bool SameAsset(SimAsset animation)
+        {
+            if (animation==null) return false;
+            if (animation.AssetType!=AssetType) return false;
+            if (HasData())
+            {
+                
+            }
+            if (animation is SimAnimation)
+            {
+//                r = animation.Reader;
+                
+            }
+            return false;
         }
     }
 }

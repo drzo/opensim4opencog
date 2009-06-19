@@ -137,10 +137,10 @@ namespace cogbot.ScriptEngines
                 return arg + ")";
             }
 
-            if (arg is AssetAnimation)
+            if ((arg is AssetAnimation) || (arg is AssetTexture) || (arg is AssetSound))
             {
-                AssetAnimation prim = (AssetAnimation)arg;
-                arg = SimAssetStore.GetAminFromAssest(prim);
+                Asset prim = (Asset)arg;
+                arg = SimAssetStore.GetSimAsset(prim);
             }
 
             if (arg is SimAsset)

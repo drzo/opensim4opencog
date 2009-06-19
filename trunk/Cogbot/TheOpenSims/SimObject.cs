@@ -1012,7 +1012,7 @@ namespace cogbot.TheOpenSims
                 }
                 if(_Parent==null)
                 {
-                    _Parent = Parent;
+                    _Parent = WorldSystem.GetSimObject(pUse);
                 }
             }
             if (_Parent == this)

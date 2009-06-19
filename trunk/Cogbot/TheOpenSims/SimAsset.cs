@@ -128,7 +128,13 @@ namespace cogbot.TheOpenSims
         internal void OnAssetDownloaded(UUID uUID, Asset asset)
         {
             SimAsset A = FindOrCreateAsset(uUID, asset.AssetType);
-            A.TypeData = asset.AssetData;
+            if (A.HasData())
+            {
+                
+            }
+            A.ServerAsset = asset;
+            //A.TypeData = asset.AssetData;
+
 
 
 
@@ -190,7 +196,7 @@ namespace cogbot.TheOpenSims
                 string usedName;
                 if (BytesFromFile(fName, out bytes, out usedName))
                 {
-                    sound.TypeData = bytes;
+                    sound.AssetData = bytes;
                     sound.Name = usedName;
                 }
                 else
@@ -1041,17 +1047,12 @@ namespace cogbot.TheOpenSims
             AddTexture(name, uuid0).Comment = p_3;
         }
 
-
-        private void AddTexture(string p, string p_2, string p_3, string p_4, string p_5)
-        {
-            AddTexture(p, p_2);
-        }
-
         static SimAsset AddTexture(string fName, string id)
         {
             fName = fName.ToLower();
             UUID uid = UUID.Parse(id);
             SimAsset texture = FindOrCreateAsset(uid, AssetType.Texture);
+            texture.NeedsRequest = false;
             texture.Name = fName;
             WorldObjects.RegisterUUID(uid, texture);
             if (Directory.Exists("texture_files/"))
@@ -1060,7 +1061,7 @@ namespace cogbot.TheOpenSims
                 string usedName;
                 if (BytesFromFile(fName, out bytes, out usedName))
                 {
-                    texture.TypeData = bytes;
+                    texture.AssetData = bytes;
                     texture.Name = usedName;
                 }
                 else
@@ -1074,20 +1075,21 @@ namespace cogbot.TheOpenSims
 
         static void AnimUUID(string p, string p_2, string p_3, string p_4, string p_5)
         {
-            AnimUUID(p, p_2);
+            AnimUUID(p, p_2).Comment = p_3+ " "+p_4+ " " + p_5;
         }
 
         static void AnimUUID(string p, string p_2, string p_3)
         {
-            AnimUUID(p, p_3);
+            AnimUUID(p, p_3).Comment = p_2;
         }
 
 
-        static void AnimUUID(string fName, string id)
+        static SimAsset AnimUUID(string fName, string id)
         {
             fName = fName.ToLower();
             UUID uid = UUID.Parse(id);
             SimAsset anim = FindOrCreateAsset(uid, AssetType.Animation);
+            anim.NeedsRequest = false;
             anim.Name = fName;
             WorldObjects.RegisterUUID(uid, anim);
             if (Directory.Exists("bvh_files/"))
@@ -1096,7 +1098,7 @@ namespace cogbot.TheOpenSims
                 string usedName;
                 if (BytesFromFile(fName, out bytes, out usedName))
                 {
-                    anim.TypeData = bytes;
+                    anim.AssetData = bytes;
                     anim.Name = usedName;
                 }
                 else
@@ -1104,6 +1106,7 @@ namespace cogbot.TheOpenSims
                     Console.WriteLine("Anim w/o BVH " + fName + " " + uid);
                 }
             }
+            return anim;
         }
 
         public static bool BytesFromFile(string fName, out byte[] bytes, out string usedName)
@@ -1144,7 +1147,7 @@ namespace cogbot.TheOpenSims
             nameNameMap[name.ToLower()] = file.ToLower();
         }
 
-        public ICollection<string> GetAnimationList()
+        public ICollection<string> GetAssetNames()
         {
             FillAnimationNames();
             List<String> names = new List<String>();
@@ -1155,7 +1158,7 @@ namespace cogbot.TheOpenSims
             return names;
         }
 
-        public String GetAnimationName(UUID uuid)
+        public String GetAssetName(UUID uuid)
         {
             FillAnimationNames();
             String name;
@@ -1197,19 +1200,23 @@ namespace cogbot.TheOpenSims
 
         public static SimAsset FindAsset(UUID uUID)
         {
-            FillAnimationNames();            
-            SimAsset anim;
-            if (!uuidAsset.TryGetValue(uUID, out anim))
+            lock (uuidAsset)
             {
-                lock (SimAssets) foreach (var A in SimAssets)
-                    {
-                        if (A.AssetIDs.Contains(uUID))
+                FillAnimationNames();
+                SimAsset anim;
+                if (!uuidAsset.TryGetValue(uUID, out anim))
+                {
+                    lock (SimAssets)
+                        foreach (var A in SimAssets)
                         {
-                            return anim;
+                            if (A.AssetIDs.Contains(uUID))
+                            {
+                                return anim;
+                            }
                         }
-                    }
+                }
+                return anim;
             }
-            return anim;
         }
 
         public static List<UUID> Matches(String name)
@@ -1226,10 +1233,10 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public static SimAsset GetAminFromAssest(AssetAnimation asset)
+        public static SimAsset GetSimAsset(Asset asset)
         {
-            SimAsset A = FindOrCreateAsset(asset.AssetID, AssetType.Animation);
-            A.TypeData = asset.AssetData;
+            SimAsset A = FindOrCreateAsset(asset.AssetID, asset.AssetType);
+            A.ServerAsset = asset;
             return A;
         }
 
@@ -1325,17 +1332,17 @@ namespace cogbot.TheOpenSims
 
 
 
-        static Dictionary<string, List<UUID>> stringList = new Dictionary<string, List<UUID>>();
+        readonly static Dictionary<string, List<UUID>> meaningToAssetIDs = new Dictionary<string, List<UUID>>();
 
         public static List<UUID> MeaningUUIDs(string name)
         {
-            lock (stringList)
+            lock (meaningToAssetIDs)
             {
-                if (stringList.ContainsKey(name))
+                if (meaningToAssetIDs.ContainsKey(name))
                 {
-                    return stringList[name];
+                    return meaningToAssetIDs[name];
                 }
-                return stringList[name] = new List<UUID>();
+                return meaningToAssetIDs[name] = new List<UUID>();
             }
         }
 
@@ -1370,31 +1377,34 @@ namespace cogbot.TheOpenSims
 
         public static SimAsset FindOrCreateAsset(UUID uUID, AssetType type)
         {
-            SimAsset anim = FindAsset(uUID);
-            if (anim == null)
+            lock (uuidAsset)
             {
-                switch(type)
+                SimAsset anim = FindAsset(uUID);
+                if (anim == null)
                 {
-                    case AssetType.Animation:
-                        anim = new SimAnimation(uUID, null);
-                        break;
-                    case AssetType.Sound:
-                        anim = new SimSound(uUID, null);
-                        break;
-                    case AssetType.SoundWAV:
-                        anim = new SimSound(uUID, null);
-                        break;
-                    case AssetType.Texture:
-                        anim = new SimTexture(uUID, null);
-                        break;
-                    default:
-                        break;
+                    switch (type)
+                    {
+                        case AssetType.Animation:
+                            anim = new SimAnimation(uUID, null);
+                            break;
+                        case AssetType.Sound:
+                            anim = new SimSound(uUID, null);
+                            break;
+                        case AssetType.SoundWAV:
+                            anim = new SimSound(uUID, null);
+                            break;
+                        case AssetType.Texture:
+                            anim = new SimTexture(uUID, null);
+                            break;
+                        default:
+                            break;
+                    }
+                    // WorldObjects.RequestAsset(uUID, AssetType.Animation, true);
+                    if (anim != null) uuidAsset[uUID] = anim;
                 }
-                // WorldObjects.RequestAsset(uUID, AssetType.Animation, true);
-                uuidAsset[uUID] = anim;
+                if (anim != null) anim.AssetType = type;
+                return anim;
             }
-            anim.type = type;
-            return anim;
         }
 
         internal readonly static List<SimAsset> SimAssets = new List<SimAsset>();
@@ -1416,10 +1426,34 @@ namespace cogbot.TheOpenSims
 
     abstract public class SimAsset : BotMentalAspect
     {
+        public abstract bool NeedsRequest{ get; set;}
+        public abstract bool SameAsset(SimAsset animation);
+        public abstract bool HasData();
+        public abstract float Length { get; }
+        public abstract bool IsLoop { get; }
+        public Asset ServerAsset { get; set; }
+        readonly public List<string> Meanings = new List<string>();
+        public string Comment;
+        public AssetType AssetType = OpenMetaverse.AssetType.Unknown;
+        protected abstract void SaveFile(string tmpname);
+        public abstract byte[] AssetData { get; set; }
+        protected abstract string GuessAssetName();
+
+        public SimAsset(UUID anim, String name)
+        {
+            AssetID = anim;
+            Name = name;
+            lock (SimAssetStore.SimAssets) SimAssetStore.SimAssets.Add(this);
+        }
 
         public bool Matches(String s)
         {
             return ToString().ToLower().Contains(s.ToLower());
+        }
+
+        public virtual string DebugInfo()
+        {
+            return ToString();
         }
 
         public override string ToString()
@@ -1480,13 +1514,6 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        protected abstract void SaveFile(string tmpname);
-
-        public abstract byte[] TypeData { get; set; }
-        protected abstract string GuessAssetName();
-
-
-
         public void AddName(string n)
         {
             if (!string.IsNullOrEmpty(n))
@@ -1495,31 +1522,29 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public SimAsset(UUID anim, String name)
-        {
-            AssetID = anim;
-            Name = name;
-            lock (SimAssetStore.SimAssets) SimAssetStore.SimAssets.Add(this);
-        }
-
         public UUID AssetID
         {
             get
             {
-                if (AssetIDs.Count == 0) return UUID.Zero;
-                return AssetIDs[0];
+                lock (AssetIDs)
+                {
+                    if (AssetIDs.Count == 0) return UUID.Zero;
+                    return AssetIDs[0];
+                }
             }
             set
             {
                 if (value == UUID.Zero) return;
-                SimAssetStore.uuidAsset[value] = this;
-                if (AssetIDs.Contains(value)) return;
-                AssetIDs.Add(value);
+                lock (SimAssetStore.uuidAsset) SimAssetStore.uuidAsset[value] = this;
+                lock (AssetIDs)
+                {
+                    if (AssetIDs.Contains(value)) return;
+                    AssetIDs.Add(value);
+                }
             }
         }
 
-        public abstract float Length { get; }
-        public abstract bool IsLoop { get;  }
+
 
         public FirstOrderTerm GetTerm()
         {
@@ -1530,16 +1555,6 @@ namespace cogbot.TheOpenSims
         {
             return !HasData() || AssetIDs.Count == 0 || _Name.Count == 0;
         }
-
-        virtual public bool HasData()
-        {
-            return false;
-        }
-
-        readonly public List<string> Meanings = new List<string>();
-        public string Comment;
-        public AssetType type;
-
 
         internal void AddType(string anims)
         {
@@ -1558,12 +1573,6 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public virtual string DebugInfo()
-        {
-            return ToString();
-        }
-
-        public abstract bool SameAsset(SimAsset animation);
     }
 
 #if PORTIT

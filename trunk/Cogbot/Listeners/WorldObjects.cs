@@ -770,7 +770,7 @@ namespace cogbot.Listeners
 
         public string GetAnimationName(UUID id)
         {
-            string name = SimAssetSystem.GetAnimationName(id);
+            string name = SimAssetSystem.GetAssetName(id);
             if (name != null) return name;
             lock (uuidTypeObject)
             {
