@@ -264,7 +264,7 @@ namespace OpenMetaverse
         {
             bool bake = (bool)thread_params;
             SendAgentWearablesRequest();
-            WearablesRequestEvent.WaitOne();
+            WearablesRequestEvent.WaitOne(Settings.WEARABLE_TIMEOUT);
             UpdateAppearanceFromWearables(bake);
         }
 
@@ -350,7 +350,7 @@ namespace OpenMetaverse
 
 
             SendAgentWearablesRequest();
-            WearablesRequestEvent.WaitOne();
+            WearablesRequestEvent.WaitOne(Settings.WEARABLE_TIMEOUT);
             ReplaceOutfitWearables(wearables);
             UpdateAppearanceFromWearables(wearParams.Bake);
             AddAttachments(attachments, wearParams.RemoveExistingAttachments);
@@ -660,7 +660,7 @@ namespace OpenMetaverse
 
             // Download assets for what we are wearing and fill in AgentTextures
             DownloadWearableAssets();
-            WearablesDownloadedEvent.WaitOne();
+            WearablesDownloadedEvent.WaitOne(Settings.WEARABLE_TIMEOUT);
 
             // Unregister the asset download callback
             Assets.OnAssetReceived -= assetCallback;
@@ -672,7 +672,7 @@ namespace OpenMetaverse
             SendAgentIsNowWearing();
 
             // Wait for cached layer check to finish
-            if (bake) CachedResponseEvent.WaitOne();
+            if (bake) CachedResponseEvent.WaitOne(Settings.WEARABLE_TIMEOUT);
 
             // Unregister the image download and asset upload callbacks
             //Assets.OnImageReceived -= imageCallback;
@@ -837,7 +837,7 @@ namespace OpenMetaverse
             }
             if (PendingUploads.Count > 0)
             {
-                CachedResponseEvent.WaitOne();
+                CachedResponseEvent.WaitOne(Settings.WEARABLE_TIMEOUT);
             }
             Client.Assets.OnAssetUploaded -= Assets_OnAssetUploaded;
             SendAgentSetAppearance();
@@ -1286,7 +1286,7 @@ namespace OpenMetaverse
                 }
                 if (PendingUploads.Count > 0)
                 {
-                    CachedResponseEvent.WaitOne();
+                    CachedResponseEvent.WaitOne(Settings.WEARABLE_TIMEOUT);
                 }
                 Client.Assets.OnAssetUploaded -= Assets_OnAssetUploaded;
                 SendAgentSetAppearance();

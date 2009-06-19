@@ -270,6 +270,8 @@ namespace OpenMetaverse
         /// <remarks>Read-only since this value is dynamically fetched at login</remarks>
         public int UPLOAD_COST { get { return priceUpload; } }
 
+        public static int WEARABLE_TIMEOUT = 2*60000;
+
         /// <summary>Maximum number of times to resend a failed packet</summary>
         public int MAX_RESEND_COUNT = 3;
 
