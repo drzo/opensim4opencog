@@ -19,11 +19,11 @@ namespace cogbot.Actions
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
 
-            ICollection<SimAnimation> list = SimAnimationStore.SimAnimations;
+            ICollection<SimAsset> list = SimAssetStore.GetAssets(AssetType.Animation);
             int count = 0;
             string alist = String.Empty;
             lock (list)
-            foreach (SimAnimation A in list)
+            foreach (SimAsset A in list)
             {
                 foreach (string s in args)
                 {

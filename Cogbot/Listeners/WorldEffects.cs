@@ -12,10 +12,10 @@ namespace cogbot.Listeners
 
         //private static List<UUID> EffectsSent = new List<UUID>();
         public static readonly List<String> SkippedEffects = new List<string>();
-        private static SimAnimationStore _SimAnimationSystem;
-        public SimAnimationStore SimAnimationSystem
+        private static SimAssetStore _simAssetSystem;
+        public SimAssetStore SimAssetSystem
         {
-            get { return _SimAnimationSystem; }
+            get { return _simAssetSystem; }
         }
 
 

@@ -325,7 +325,7 @@ namespace cogbot.TheOpenSims
             // IF UseAnim was specified
             if (!String.IsNullOrEmpty(TypeUsage.UseAnim))
             {
-                UUID animID = WorldObjects.Master.SimAnimationSystem.GetAnimationUUID(TypeUsage.UseAnim);
+                UUID animID = WorldObjects.Master.SimAssetSystem.GetAssetUUID(TypeUsage.UseAnim);
                 if (animID != UUID.Zero)
                 {
                     closure = TheBot.WithAnim(animID, closure);
@@ -336,7 +336,7 @@ namespace cogbot.TheOpenSims
             if (!animFound)
             {
                 //ELSE look for Verb coverage for an anim
-                UUID animID = WorldObjects.Master.SimAnimationSystem.GetAnimationUUID(use);
+                UUID animID = WorldObjects.Master.SimAssetSystem.GetAssetUUID(use);
                 if (animID != UUID.Zero)
                     closure = TheBot.WithAnim(animID, closure);
             }

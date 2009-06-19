@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Threading;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
-using java.util;
-using javax.activity;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 using Random=System.Random;
@@ -57,7 +55,7 @@ namespace cogbot.TheOpenSims
 
         public ThreadStart WithAnim(UUID uUID, ThreadStart threadStart)
         {
-            return WithAnim(SimAnimationStore.FindOrCreateAnimation(uUID), threadStart);
+            return WithAnim(SimAssetStore.FindOrCreateAsset(uUID, AssetType.Animation), threadStart);
         }
 
         public override void OpenNearbyClosedPassages()
@@ -283,7 +281,7 @@ namespace cogbot.TheOpenSims
                     if (Client.Self.Movement.SitOnGround) return true;
                 }
                 Dictionary<UUID, int> anims = ExpectedCurrentAnims;
-                if (SimAnimationStore.Matches(anims.Keys,"sit").Count>0) return true;
+                if (SimAssetStore.Matches(anims.Keys,"sit").Count>0) return true;
                 return theAvatar.ParentID != 0;
             }
             set
@@ -638,20 +636,20 @@ namespace cogbot.TheOpenSims
                        };
         }
 
-        public ThreadStart WithAnim(SimAnimation anim, ThreadStart closure)
+        public ThreadStart WithAnim(SimAsset anim, ThreadStart closure)
         {
             BotClient Client = GetGridClient();
-            AnimThread animThread = new AnimThread(Client.Self, anim);
+            AssetThread assetThread = new AssetThread(Client.Self, anim);
             return () =>
                        {
                            try
                            {
-                               animThread.Start();
+                               assetThread.Start();
                                closure.Invoke();
                            }
                            finally
                            {
-                               animThread.Stop();
+                               assetThread.Stop();
                            }
                        };
         }
@@ -1349,7 +1347,7 @@ namespace cogbot.TheOpenSims
                 (UUID avatarID, InternalDictionary<UUID, int> anims) =>
                     {
                         if (avatarID == theAvatar.ID)
-                            if (SimAnimationStore.IsSitAnim(anims.Dictionary.Keys))
+                            if (SimAssetStore.IsSitAnim(anims.Dictionary.Keys))
                         {
                             //int seq = anims[Animations.SIT_GROUND];
                             are.Set();
@@ -1577,7 +1575,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                return Overlaps(GetCurrentAnims(), SimAnimationStore.MeaningUUIDs("Walking"));
+                return Overlaps(GetCurrentAnims(), SimAssetStore.MeaningUUIDs("Walking"));
             }
 
         }
@@ -1585,7 +1583,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                return Overlaps(GetCurrentAnims(), SimAnimationStore.MeaningUUIDs("Flying"));
+                return Overlaps(GetCurrentAnims(), SimAssetStore.MeaningUUIDs("Flying"));
             }
         }
 
@@ -1593,7 +1591,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                return Overlaps(GetCurrentAnims(), SimAnimationStore.MeaningUUIDs("Standing"));
+                return Overlaps(GetCurrentAnims(), SimAssetStore.MeaningUUIDs("Standing"));
             }
         }
 
@@ -1601,7 +1599,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                return Overlaps(GetCurrentAnims(), SimAnimationStore.MeaningUUIDs("Sleeping"));
+                return Overlaps(GetCurrentAnims(), SimAssetStore.MeaningUUIDs("Sleeping"));
             }
         }
 
@@ -1795,7 +1793,7 @@ namespace cogbot.TheOpenSims
                                 shownRemoved.Add(uuid);
                                 if (showIndependant)
                                 {
-                                    SimAnimation a = SimAnimationStore.FindOrCreateAnimation(uuid);
+                                    SimAsset a = SimAssetStore.FindOrCreateAsset(uuid,AssetType.Animation);
                                     WorldSystem.client.SendNewEvent("On-Finished-Animation", this, a, GetHeading());
                                     LogEvent(new SimObjectEvent(a.Name, SimEventType.ANIM, SimEventStatus.Stop, this, a, GetHeading()));
                                 }
@@ -1817,7 +1815,7 @@ namespace cogbot.TheOpenSims
 
                                 if (showIndependant)
                                 {
-                                    SimAnimation a = SimAnimationStore.FindOrCreateAnimation(uuid);
+                                    SimAsset a = SimAssetStore.FindOrCreateAsset(uuid,AssetType.Animation);
                                     WorldSystem.client.SendNewEvent("On-Start-Animation", this, a, GetHeading());
                                     LogEvent(new SimObjectEvent(a.Name, SimEventType.ANIM, SimEventStatus.Start, this, a, GetHeading()));
                                 }
@@ -1833,7 +1831,7 @@ namespace cogbot.TheOpenSims
                     RemovedThisEvent.Remove(key);
                     RemovedAnims.Remove(key);
                 }
-                if (SimAnimationStore.IsSitAnim(showAdded))
+                if (SimAssetStore.IsSitAnim(showAdded))
                 {
 
                 }
@@ -1869,7 +1867,7 @@ namespace cogbot.TheOpenSims
 
         private void StartOrStopAnimEvent(IEnumerable<UUID> RemovedThisEvent, IEnumerable<UUID> AddedThisEvent, string name, IList<SimObjectEvent> startStops)
         {
-            List<UUID> e = SimAnimationStore.MeaningUUIDs(name);
+            List<UUID> e = SimAssetStore.MeaningUUIDs(name);
           //  if (e.Count==0) throw new NoSuchElementException(name);
             if (Overlaps(e, AddedThisEvent))
             {
@@ -1924,7 +1922,7 @@ namespace cogbot.TheOpenSims
         //void StopMoving();
         void TalkTo(SimAvatar avatar, BotMentalAspect talkAbout);
         void TalkTo(SimAvatar avatar, string talkAbout);
-        ThreadStart WithAnim(SimAnimation anim, ThreadStart closure);
+        ThreadStart WithAnim(SimAsset anim, ThreadStart closure);
         ThreadStart WithAnim(UUID animID, ThreadStart closure);
         ThreadStart WithGrabAt(SimObject obj, ThreadStart closure);
         ThreadStart WithSitOn(SimObject obj, ThreadStart closure);

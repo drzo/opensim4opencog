@@ -110,10 +110,10 @@ namespace cogbot.Listeners
         public static void RequestAsset(UUID id, AssetType assetType, bool p)
         {
             if (id == UUID.Zero) return;
-            if (assetType == AssetType.Animation)
+            //if (assetType == AssetType.Animation)
             {
-                SimAnimation sa = SimAnimationStore.FindOrCreateAnimation(id);
-                if (sa.BvhData != null) return;
+                SimAsset sa = SimAssetStore.FindOrCreateAsset(id, assetType);
+                if (sa.TypeData != null) return;
             }
             if (assetType == AssetType.Texture)
             {
@@ -239,11 +239,13 @@ namespace cogbot.Listeners
                 /// <summary>Texture asset, stores in JPEG2000 J2C stream format</summary>
                 case AssetType.Texture:
                     {
+                        SimAssetSystem.OnAssetDownloaded(uUID, asset);
                         break;
                     } //0,
                 /// <summary>Sound asset</summary>
                 case AssetType.Sound:
                     {
+                        SimAssetSystem.OnAssetDownloaded(uUID, asset);
                         break;
                     } //1,
                 /// <summary>Calling card for another avatar</summary>
@@ -299,6 +301,7 @@ namespace cogbot.Listeners
                 /// <summary>Uncompressed TGA texture</summary>
                 case AssetType.TextureTGA:
                     {
+                        SimAssetSystem.OnAssetDownloaded(uUID, asset);
                         break;
                     } //12,
                 /// <summary>Collection of textures and shape parameters that can
@@ -325,23 +328,26 @@ namespace cogbot.Listeners
                 /// <summary>Uncompressed sound</summary>
                 case AssetType.SoundWAV:
                     {
+                        SimAssetSystem.OnAssetDownloaded(uUID, asset);
                         break;
                     } //17,
                 /// <summary>Uncompressed TGA non-square image, not to be used as a
                 /// texture</summary>
                 case AssetType.ImageTGA:
                     {
+                        SimAssetSystem.OnAssetDownloaded(uUID, asset);
                         break;
                     } //18,
                 /// <summary>Compressed JPEG non-square image, not to be used as a
                 /// texture</summary>
                 case AssetType.ImageJPEG:
                     {
+                        SimAssetSystem.OnAssetDownloaded(uUID, asset);
                         break;
                     } //19,
                 /// <summary>Animation</summary>
                 case AssetType.Animation:
-                    SimAnimationSystem.OnAnimDownloaded(uUID, (AssetAnimation)asset);
+                    SimAssetSystem.OnAssetDownloaded(uUID, asset);
                     //20,
                     break;
                 /// <summary>Sequence of animations, sounds, chat, and pauses</summary>

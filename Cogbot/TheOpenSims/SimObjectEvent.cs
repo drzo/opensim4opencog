@@ -13,7 +13,8 @@ namespace cogbot.TheOpenSims
         SIT,
         ANIM,
         TOUCH,
-        MOVEMENT
+        MOVEMENT,
+        LISP
     }
     public enum SimEventStatus
     {
@@ -27,6 +28,7 @@ namespace cogbot.TheOpenSims
     {
         public SimObjectEvent(string name, object[] paramz)
         {
+            EventType = SimEventType.LISP;
             Verb = name;
             Parameters = paramz;
         }

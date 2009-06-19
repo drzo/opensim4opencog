@@ -140,12 +140,12 @@ namespace cogbot.ScriptEngines
             if (arg is AssetAnimation)
             {
                 AssetAnimation prim = (AssetAnimation)arg;
-                arg = SimAnimationStore.GetAminFromAssest(prim);
+                arg = SimAssetStore.GetAminFromAssest(prim);
             }
 
-            if (arg is SimAnimation)
+            if (arg is SimAsset)
             {
-                SimAnimation prim = (SimAnimation)arg;
+                SimAsset prim = (SimAsset)arg;
                 arg = "'(anim"; //+ argString(prim.ID.ToString());
                 if (prim.Name != null)
                 {
