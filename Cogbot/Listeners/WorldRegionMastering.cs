@@ -26,7 +26,7 @@ namespace cogbot.Listeners
         private readonly List<ulong> MasteringRegions = new List<ulong>();
 
 
-        internal static List<Simulator> AllSimulators
+        internal static IEnumerable<Simulator> AllSimulators
         {
             get
             {
@@ -158,21 +158,26 @@ namespace cogbot.Listeners
 
         public override void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
         {
-            if (IsMaster(simulator))
+            lock (_AllSimulators)
             {
-                Debug("SIM LOOSING ITS MASTER!" + this + " " + simulator);
-            }
-            if (TheSimAvatar.GetSimulator() == simulator)
-            {
-                Debug("TheSimAvatar._CurrentRegion.TheSimulator == simulator " + simulator);
-            }
-            base.Network_OnSimDisconnected(simulator, reason);
-            lock (client.Network.Simulators) 
-                if (!client.Network.Simulators.Contains(simulator))
+                if (IsMaster(simulator))
                 {
-                    client.Network.Simulators.Add(simulator);
+                    Debug("SIM LOOSING ITS MASTER!" + this + " " + simulator);
+                    MasteringRegions.Remove(simulator.Handle);
                 }
-            simulator.Resume();
+                if (TheSimAvatar.GetSimulator() == simulator)
+                {
+                    Debug("TheSimAvatar._CurrentRegion.TheSimulator == simulator " + simulator);
+                }
+                base.Network_OnSimDisconnected(simulator, reason);
+                _AllSimulators.Remove(simulator);
+                //lock (client.Network.Simulators) 
+                //    if (!client.Network.Simulators.Contains(simulator))
+                //    {
+                //        client.Network.Simulators.Add(simulator);
+                //    }
+                //simulator.Resume();
+            }
         }
 
         public override void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
