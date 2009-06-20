@@ -584,7 +584,7 @@ namespace OpenMetaverse
                 || disconnectType == NetworkManager.DisconnectType.NetworkTimeout) return;
             if (connected)
             {
-                if (disconnectType == NetworkManager.DisconnectType.ServerInitiated)
+                if (disconnectType != NetworkManager.DisconnectType.ServerInitiated)
                 {
                     Pause();
                     return;

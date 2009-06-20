@@ -251,7 +251,7 @@ namespace OpenMetaverse.Messages.Linden
         /// </summary>
         /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
         public void Deserialize(OSDMap map)
-        {
+        {            
             OSDArray array = (OSDArray)map["SimulatorInfo"];
             Simulators = new SimulatorInfoBlock[array.Count];
 

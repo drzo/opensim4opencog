@@ -1980,7 +1980,13 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="packet"></param>
         /// <param name="simulator"></param>
+        readonly static object CompressedUpdateHandlerLock = new object();
         protected void CompressedUpdateHandler(Packet packet, Simulator simulator)
+        {
+            lock(CompressedUpdateHandlerLock)
+                CompressedUpdateHandler0(packet,simulator);
+        }
+        protected void CompressedUpdateHandler0(Packet packet, Simulator simulator)
         {
             ObjectUpdateCompressedPacket update = (ObjectUpdateCompressedPacket)packet;
 
