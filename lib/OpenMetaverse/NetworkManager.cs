@@ -294,6 +294,7 @@ namespace OpenMetaverse
 
             // Register internal CAPS callbacks
             RegisterEventCallback("EnableSimulator", new Caps.EventQueueCallback(EnableSimulatorHandler));
+            RegisterEventCallback("DisableSimulator", new Caps.EventQueueCallback(DisableSimulatorCapsHandler));
 
             // Register the internal callbacks
             RegisterCallback(PacketType.RegionHandshake, new PacketCallback(RegionHandshakeHandler));
@@ -579,7 +580,7 @@ namespace OpenMetaverse
                     catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
                 }
 
-                if (disconnectType == DisconnectType.ClientInitiated)
+                //if (disconnectType == DisconnectType.ClientInitiated)
                     lock (Simulators) Simulators.Remove(sim);
 
                 if (Simulators.Count == 0) Shutdown(disconnectType/* | DisconnectType.SimShutdown*/);
@@ -1075,6 +1076,13 @@ namespace OpenMetaverse
                         Helpers.LogLevel.Error, Client);
                 }
             }
+        }
+
+        private void DisableSimulatorCapsHandler(string capsKey, IMessage message, Simulator simulator)
+        {
+            if (!Client.Settings.MULTIPLE_SIMS) return;
+            Logger.DebugLog("Received a CAPS Based DisableSimulator packet from " + simulator + ", shutting it down", Client);
+            DisconnectSim(simulator, false, DisconnectType.ServerInitiated);
         }
 
         private void DisableSimulatorHandler(Packet packet, Simulator simulator)
