@@ -19,11 +19,7 @@ namespace cogbot.TheOpenSims
         public AssetThread(AgentManager c, SimAsset amin0)
         {
             ClientSelf = c; //.Self;
-            //c.Client
-            //if (WorldObjects.Master.GetAnimationName(amin0).StartsWith("S"))
-            //{
-            //   repeat = false;
-            // }
+            repeat = !amin0.IsLoop;
             asset = amin0;
         }
 
@@ -1176,6 +1172,10 @@ namespace cogbot.TheOpenSims
             a = a.ToLower();
             FillAnimationNames();
             UUID partial = default(UUID);
+            if (UUID.TryParse(a,out partial))
+            {
+                return partial;
+            }
             foreach (String name in nameAsset.Keys)
             {
                 String sname = name.ToLower();
@@ -1411,7 +1411,7 @@ namespace cogbot.TheOpenSims
         internal readonly static Dictionary<string, string> nameNameMap = new Dictionary<string, string>();
         static private bool FilledInAssets;
 
-        public static ICollection<SimAsset> GetAssets(AssetType animation)
+        public static ICollection<SimAsset> GetAssets(AssetType assetType)
         {
             return SimAssets;
         }

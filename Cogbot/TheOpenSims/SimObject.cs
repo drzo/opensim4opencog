@@ -20,6 +20,7 @@ namespace cogbot.TheOpenSims
         }
 
         public ulong RegionHandle { get; set; }
+        readonly public UUID ID;
         
 
         public float GetCubicMeters()
@@ -279,13 +280,17 @@ namespace cogbot.TheOpenSims
                     bool found = false;
                     foreach (Primitive av in primRefs)
                     {
-                        if (Object.ReferenceEquals(av, prim) && av.RegionHandle == prim.RegionHandle)
+                        if (Object.ReferenceEquals(av, prim))
                         {
                             found = true;
                         }
                     }
                     if (!found)
                     {
+                        if (prim.ID!=ID)
+                        {
+                            Console.WriteLine("\n Different UUID! {0}", prim);                            
+                        }
                         primRefs.Add(prim);
                         Console.WriteLine("\n Different prims {0}", prim);
                     }
@@ -569,6 +574,7 @@ namespace cogbot.TheOpenSims
             //: base(prim.ID.ToString())
             // : base(prim, SimRegion.SceneProviderFromSimulator(sim))
         {
+            ID = prim.ID;
             if (prim.RegionHandle==0)
             {
                 prim.RegionHandle = sim.Handle;
@@ -1108,11 +1114,11 @@ namespace cogbot.TheOpenSims
         {
             Primitive outerPrim = null;
             int requests = 10;
-            while (outerPrim == null)
+            while (outerPrim == null && requests-->0)
             {
                 if (thisPrim == Prim && _Parent != null) return _Parent.Prim;
                 uint theLPrimParentID = thisPrim.ParentID;
-                if (theLPrimParentID == 0 || requests-- > 0)
+                if (theLPrimParentID == 0 || requests-- <1)
                 {
                     Debug("Why are not we getting a parent prim?");
                     return null;
@@ -1123,9 +1129,12 @@ namespace cogbot.TheOpenSims
                 {
                     Thread.Sleep(500);
                     Debug("Probing for parent");
-                    outerPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
+                    if (!RequestedParent)
+                    {
+                        outerPrim = WorldSystem.RequestMissingObject(theLPrimParentID, simu);
+                    }
                 }
-                requests++;                
+                requests--;                
             }
             return outerPrim;
         }
@@ -1263,7 +1272,7 @@ namespace cogbot.TheOpenSims
 
         public virtual void Debug(string p, params object[] args)
         {
-            WorldSystem.WriteLine(String.Format(Prim + ": " + p, args));
+            WorldSystem.WriteLine(String.Format(this + ": " + p, args));
         }
 
         public Exception Error(string p, params object[] args)

@@ -112,18 +112,18 @@ namespace cogbot.Listeners
             lock (AssetRequests)
             {
                 if (id == UUID.Zero) return;
+                SimAsset sa = SimAssetStore.FindOrCreateAsset(id, assetType);
+                if (!sa.NeedsRequest) return;
+                sa.NeedsRequest = false;
+                if (AssetRequests.ContainsKey(id)) return;
                 if (assetType == AssetType.Texture)
                 {
                     Master.StartTextureDownload(id);
                     return;
                 }
-                SimAsset sa = SimAssetStore.FindOrCreateAsset(id, assetType);
-                if (!sa.NeedsRequest) return;
-                sa.NeedsRequest = false;
-                if (AssetRequests.ContainsKey(id)) return;
                 UUID req = RegionMasterTexturePipeline.RequestAsset(id, assetType, p);
-                AssetRequests[id] = req;
                 AssetRequestType[req] = assetType;
+                AssetRequests[id] = req;
             }
         }
 
@@ -210,6 +210,7 @@ namespace cogbot.Listeners
                 {
                     TextureSuccess++;
                     RegisterUUIDMaybe(id, image);
+                    SimAssetSystem.OnAssetDownloaded(id,asset);
                     //lock (uuidTextures) uuidTextures[id] = image;
                 }
             }
