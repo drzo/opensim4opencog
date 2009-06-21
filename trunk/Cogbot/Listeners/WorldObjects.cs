@@ -374,6 +374,7 @@ namespace cogbot.Listeners
                 }
                 RegisterUUID(prim.ID, obj0);
                 lock (SimObjects) SimObjects.AddTo((SimObject)obj0);
+                SendOnAddSimObject(obj0);
             }
             return (SimObject)obj0;
         }
@@ -1067,7 +1068,14 @@ namespace cogbot.Listeners
             {
                 str += simObject.ToString();
                 str += String.Format(" {0}", TheSimAvatar.DistanceVectorString(simObject));
-                if (detailed) str += String.Format("\n GroupLeader: {0}", simObject.GetGroupLeader());
+                if (target is Avatar)
+                {
+                    str += String.Format(" {0}", target);
+                }
+                if (detailed)
+                {
+                    str += String.Format("\n GroupLeader: {0}", simObject.GetGroupLeader());
+                }
             }
             else
             {
@@ -1372,7 +1380,11 @@ namespace cogbot.Listeners
         {
             if (thePrim is Avatar) return;
             SimObject O = GetSimObject(thePrim);
-            if (O !=null) SimObjects.Remove(O);
+            if (O !=null)
+            {
+                SimObjects.Remove(O);
+                SendOnRemoveSimObject(O);
+            }
             uint objectLocalID = thePrim.LocalID;
             client.Inventory.RequestDeRezToInventory(objectLocalID, DeRezDestination.AgentInventoryTake,
                                                      client.Inventory.FindFolderForType(AssetType.TrashFolder),

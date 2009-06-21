@@ -212,7 +212,7 @@ namespace cogbot
             //manager.AddBotClientToTextForm(this);
             SetDefaultLoginDetails(TextForm.SingleInstance.config);
 
-            botPipeline.AddSubscriber(new SimEventTextSubscriber(manager, this));
+            botPipeline.AddSubscriber(new SimEventTextSubscriber(WriteLine, this));
             // SingleInstance = this;
             ///this = this;// new GridClient();
 

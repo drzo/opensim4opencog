@@ -1459,18 +1459,30 @@ namespace cogbot.TheOpenSims
         public override string ToString()
         {
             string s = String.Empty;
-            foreach (string n in _Name)
-            {
-                s += " " + n;
-            }
-            foreach (UUID n in AssetIDs)
-            {
-                s += " " + n;
-            }
+            lock (_Name)
+                foreach (string n in _Name)
+                {
+                    s += " " + n;
+                }
+            lock (AssetIDs)
+                foreach (UUID n in AssetIDs)
+                {
+                    s += " " + n;
+                }
+            lock (Meanings)
+                if (Meanings.Count > 0)
+                {
+                    s += "[";
+                    foreach (string n in Meanings)
+                    {
+                        s += " " + n;
+                    }
+                    s += "]";
+                }
             if (!HasData()) s += " NODATA";
             return s.TrimStart();
-
         }
+
         public List<UUID> AssetIDs = new List<UUID>();
 
         public List<string> _Name = new List<string>();

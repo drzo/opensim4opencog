@@ -9,7 +9,7 @@ using org.armedbear.lisp;
 namespace cogbot.ScriptEngines
 {
 
-    class CSThrowError : Primitive
+    public class CSThrowError : Primitive
     {
         LispObject previous;
         public CSThrowError(LispObject prev)
@@ -60,7 +60,7 @@ namespace cogbot.ScriptEngines
     }
 
 
-    class LateSymbolPrimitive : Primitive
+    public class LateSymbolPrimitive : Primitive
     {
         Symbol previous;
         public LateSymbolPrimitive(Symbol prev)
@@ -80,7 +80,7 @@ namespace cogbot.ScriptEngines
 
     }
 
-    class CSPrimitive : Primitive
+    public class CSPrimitive : Primitive
     {
         Delegate dynamicDelagate;
         public CSPrimitive(String symbolName, Delegate lispObjectDelagate)
