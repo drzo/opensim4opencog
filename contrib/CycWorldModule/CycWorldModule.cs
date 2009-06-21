@@ -4,13 +4,14 @@ using System.Text;
 using System.Threading;
 using cogbot;
 using cogbot.Listeners;
+using cogbot.TheOpenSims;
 using CycWorldModule.DotCYC;
 
 namespace CycWorldModule
 {
     public class CycWorldModule : WorldObjectsModule
     {
-        private SimCyclifier cyclifier;
+        readonly private SimCyclifier cyclifier;
         private static CycWorldModule cycModule;
         private CycConnectionForm cycConnectionForm;
         readonly static object oneInstanceLock = new object();
@@ -23,6 +24,9 @@ namespace CycWorldModule
                     cycModule = this;
                     _parent.ClientManager.AddTool("CycWorldModule","CycWorldModule", ShowCycForm);
                     cyclifier = new SimCyclifier(this);
+                    client.WorldSystem.OnAddSimObject += cyclifier.World_OnSimObject;
+                    client.AddBotMessageSubscriber(cyclifier);
+                    Console.WriteLine("CycWorldModule Loaded");
 
                 }
         }
@@ -50,7 +54,7 @@ namespace CycWorldModule
 
         public override void StartupListener()
         {
-            //TODO throw new NotImplementedException();
+  
         }
 
         public override void ShutdownListener()
