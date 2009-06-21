@@ -215,7 +215,7 @@ namespace cogbot.TheOpenSims
         public static bool UsePathfinder = true;
 
         public FollowerAction(SimAvatar impl, SimPosition position)
-            : base("Follow " + impl + " -> " + impl.DistanceVectorString(position))
+            : base("" + impl.GetName() + ": Follow " + position + " -> " + impl.DistanceVectorString(position))
         {
             TheBot = impl;
             maxDistance = 3;// position.GetSizeDistance();
@@ -225,7 +225,7 @@ namespace cogbot.TheOpenSims
 
         public override string ToString()
         {
-            return "Follow " + TheBot + " -> " + TheBot.DistanceVectorString(Target);
+            return "" + TheBot.GetName() + ": Follow " + Target + " -> " + TheBot.DistanceVectorString(Target);
         }
 
         public override BotNeeds ProposedChange()
@@ -236,7 +236,11 @@ namespace cogbot.TheOpenSims
         public override void InvokeReal()
         {
             // start if not already started
-            if (!FollowThread.IsAlive) FollowThread.Start();
+            if (!FollowThread.IsAlive)
+            {
+                FollowThread.Start();
+                FollowThread.Join();
+            }
         }
 
         public void FollowLoop()

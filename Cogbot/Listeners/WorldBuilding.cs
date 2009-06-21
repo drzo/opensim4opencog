@@ -17,7 +17,7 @@ namespace cogbot.Listeners
         {
             int count = SimObjects.Count;
             WriteLine("Rescaning " + count + " simobjects");
-            foreach (SimObject obj in SimObjects)
+            foreach (SimObject obj in GetAllSimObjects())
             {
                 //obj._Parent = obj.Parent;
                 obj.UpdateProperties(obj.Prim.Properties);

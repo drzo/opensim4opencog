@@ -219,15 +219,46 @@ namespace cogbot.TheOpenSims
                         try
                         {
                             actionThread.Abort();
-                            actionThread = null;
                         }
                         catch (Exception)
                         {
                         }
+                        finally
+                        {
+                            actionThread = null;
+                        }
                     }
                     if (value != null)
                     {
-                        actionThread = new Thread(() => _currentAction.InvokeReal()) { Name = _currentAction.ToString() };
+                        actionThread = new Thread(() =>
+                        {
+                            try
+                            {
+                                value.InvokeReal();
+                            }
+                            catch (Exception e)
+                            {
+                                Debug("InvokeReal: " + e);
+                                throw e;
+                            }
+                            finally
+                            {
+                                if (false) lock (actionLock)
+                                    {
+                                        if (_currentAction == value)
+                                        {
+                                            try
+                                            {
+                                                _currentAction.Abort();
+
+                                            }
+                                            catch (Exception)
+                                            {
+                                            } _currentAction = null;
+                                        }
+                                    }
+                            }
+                        }) { Name = _currentAction.ToString() };
                         actionThread.Start();
                     }
                 }

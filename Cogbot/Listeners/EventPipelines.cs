@@ -10,9 +10,9 @@ namespace cogbot.Listeners
 
     public class SimEventTextSubscriber:SimEventSubscriber
     {
-        BotClient From;
-        TextForm textForm;
-        public SimEventTextSubscriber(TextForm _text, BotClient from)
+        readonly BotClient From;
+        readonly OutputDelegate textForm;
+        public SimEventTextSubscriber(OutputDelegate _text, BotClient from)
         {
             From = from;
             textForm = _text;
@@ -42,12 +42,12 @@ namespace cogbot.Listeners
 
             msg += "]";
 
-            textForm.WriteLine(msg);
+            textForm(msg);
         }
 
         void SimEventSubscriber.ShuttingDown()
         {
-            textForm.WriteLine("SimEventTextSubscriber shuttdown for " + From);
+            textForm("SimEventTextSubscriber shuttdown for " + From);
         }
 
         #endregion

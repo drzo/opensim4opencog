@@ -143,7 +143,7 @@ namespace cogbot.TheOpenSims
         public override string DebugInfo()
         {
             string st = ToString();
-            if (!IsIncomplete())
+            if (HasData())
             {
                 BinBVHAnimationReader r = Reader;
                 AddName(r.ExpressionName);

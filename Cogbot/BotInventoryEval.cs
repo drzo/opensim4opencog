@@ -50,7 +50,7 @@ namespace cogbot
             // folder.DownloadContentsOpenSim(TimeSpan.FromSeconds(60));
             // WriteLine("    myfolder_OnContentsRetrieved [" + folder.Name + "] = " + folder.UUID.ToString()+ " with count="+folder.Contents.Count.ToString());
             List<InventoryBase> folderContents = botclient.Inventory.FolderContents(folder.UUID, botclient.Self.AgentID,
-                                                                                    true, true, InventorySortOrder.ByName, 3000);
+                                                                                    true, true, InventorySortOrder.ByName, 10000);
             if (folderContents != null)
             {
 
