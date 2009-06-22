@@ -158,7 +158,10 @@ namespace cogbot.Listeners
                     };
                 client.Inventory.OnTaskInventoryReply += callback;
                 client.Inventory.CopyScriptToTask(ScriptHolder.LocalID, scriptItem, true);
-                LocalReset.WaitOne(10000, true);
+                if (LocalReset.WaitOne(10000, false))
+                {
+                    Debug("time out on CopyScriptToTask");
+                }
                 client.Inventory.OnTaskInventoryReply -= callback;
             }
             // remove the arifact in agent inventory

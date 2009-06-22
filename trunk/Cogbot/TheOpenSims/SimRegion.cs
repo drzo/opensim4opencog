@@ -64,15 +64,77 @@ namespace cogbot.TheOpenSims
         readonly private SimPathStore PathStore;
         readonly private AutoResetEvent regionEvent = new AutoResetEvent(false);
 
-        private SimRegion(ulong Handle)
+        public static SimRegion GetRegion(UUID uuid, GridClient client)
+        {
+            if (uuid == UUID.Zero) return null;
+            foreach (var v in CurrentRegions)
+            {
+                if (uuid == v.RegionID) return v;
+            }
+            SimRegion r = null;
+            {
+                AutoResetEvent are = new AutoResetEvent(false);
+                GridManager.RegionHandleReplyCallback rrc =
+                    new GridManager.RegionHandleReplyCallback(delegate(UUID regionID, ulong regionHandle)
+                    {
+                        if (regionID == uuid)
+                        {
+                            are.Set();
+                            r = GetRegion(regionHandle, client);
+                        }
+
+                    });
+                client.Grid.OnRegionHandleReply += rrc;
+                client.Grid.RequestRegionHandle(uuid);
+                if (!are.WaitOne(10000, false))
+                {
+                    foreach (var v in CurrentRegions)
+                    {
+                        if (uuid == v.RegionID) return v;
+                    }
+                }
+                client.Grid.OnRegionHandleReply -= rrc;
+                if (r == null)
+                {
+                    return SimRegion.UNKNOWN;
+                }
+            }
+            return r;
+
+        }
+
+        private UUID _RegionID;
+        public static SimRegion UNKNOWN = new SimRegion(0, null);
+
+        protected UUID RegionID
+        {
+            get
+            {
+                if (_RegionID == UUID.Zero)
+                {
+                    Simulator sim = TheSimulator;
+                    if (sim != null) _RegionID = sim.ID;
+                    if (_RegionID == UUID.Zero)
+                    {
+                        Client.Grid.RequestMapRegion(RegionName, GridLayerType.Terrain);
+                    }
+                }
+                return _RegionID;
+            }
+        }
+
+        private SimRegion(ulong Handle, GridClient bc)
             //: base(null, default(Vector2), default(Vector3d), default(Vector3))
         {           
             RegionHandle = Handle;
+            Client = bc;
             // RegionName = gridRegionName;
             //WorldSystem = worldSystem;
             //Debug("++++++++++++++++++++++++++Created region: ");
             PathStore = SimPathStore.GetPathStore(GetGridLocation());
             PathStore.SetGroundLevel(GetGroundLevel);
+            String rname = RegionName;
+
             // if (PathStore.RegionName
             //new SimPathStore("region" + Handle + ".serz", GetGridLocation(), GetWorldPosition(), new Vector3(256, 256, float.MaxValue));
         }
@@ -164,8 +226,8 @@ namespace cogbot.TheOpenSims
                 lock (_Simulators)
                 {
                     int sc = _Simulators.Count;
-                    if (sc == 0) return null;
                     if (sc == 1) return _Simulators[0];
+                    if (sc == 0) return null;
                     Simulator best = null;
                     foreach (Simulator sim0 in _Simulators)
                     {
@@ -195,6 +257,8 @@ namespace cogbot.TheOpenSims
                         _Simulators.Add(value);
                         PathStore.WaterHeight = value.WaterHeight;
                         _GridInfo.WaterHeight = (byte) value.WaterHeight;
+                        if (value.ID != UUID.Zero) this._RegionID = value.ID;
+                        if (!string.IsNullOrEmpty(value.Name)) this.RegionName = value.Name;
                         Console.WriteLine("{0} SimWaterHeight = {1}", value.Name, PathStore.WaterHeight);
                     }
                 Simulator simulator = TheSimulator;
@@ -255,7 +319,7 @@ namespace cogbot.TheOpenSims
             {
                 Debug("GlobalToWaypoint? " + pos);
             }
-            return GetRegion(Utils.UIntsToLong(Round256(pos.X), Round256(pos.Y)));
+            return GetRegion(Utils.UIntsToLong(Round256(pos.X), Round256(pos.Y)), null);
         }
 
         /// <summary>
@@ -298,7 +362,7 @@ namespace cogbot.TheOpenSims
                 local.Y -= 256f;
                 y++;
             }
-            SimRegion R = GetRegion(Utils.UIntsToLong(x, y));
+            SimRegion R = GetRegion(Utils.UIntsToLong(x, y), null);
             local.Z = (float) gloabl.Z;
             try
             {
@@ -332,7 +396,7 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public static SimRegion GetRegion(ulong id)
+        public static SimRegion GetRegion(ulong id, GridClient bc)
         {
             if (id == 0)
             {
@@ -347,7 +411,7 @@ namespace cogbot.TheOpenSims
                 {
                  //   return null;  
                 }
-                R = new SimRegion(id);
+                R = new SimRegion(id, bc);
                 _CurrentRegions[id] = R;
                 return R;
             }
@@ -375,8 +439,9 @@ namespace cogbot.TheOpenSims
         {
             if (sim == null) return null;
             ulong Handle = sim.Handle;
-            SimRegion R = GetRegion(Handle);
+            SimRegion R = GetRegion(Handle,sim.Client);
             R.TheSimulator = sim;
+            //R.RegionHandle = Handle;
             return R;
         }
 
@@ -388,7 +453,7 @@ namespace cogbot.TheOpenSims
 
         public SimRegion GetOffsetRegion(Vector2 v2)
         {
-            return GetRegion(GetGridLocation() + v2);
+            return GetRegion(GetGridLocation() + v2, this.Client);
         }
 
         private static void SetRegion(ulong h, SimRegion value)
@@ -402,10 +467,10 @@ namespace cogbot.TheOpenSims
             _CurrentRegions[h] = value;
         }
 
-        public static SimRegion GetRegion(Vector2 v2)
+        public static SimRegion GetRegion(Vector2 v2, GridClient bc)
         {
             ulong h = HandleOf(v2);
-            return GetRegion(h);
+            return GetRegion(h, bc);
         }
 
         public static ulong HandleOf(Vector2 v2)

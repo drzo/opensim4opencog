@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
+using PathSystem3D.Navigation;
 
 namespace cogbot.Listeners
 {
@@ -16,7 +18,7 @@ namespace cogbot.Listeners
         {
             lock (UpdateQueue)
                 UpdateQueue.Enqueue(() => SendNewEvent("on-chat", message, audible, type, sourceType, fromName, id,
-                                                       ownerid, position));
+                                                       ownerid, AsLocation(client.Network.CurrentSim,position)));
         }
 
         public override void Self_OnInstantMessage(InstantMessage im, Simulator simulator)
@@ -33,7 +35,7 @@ namespace cogbot.Listeners
             }
             lock (UpdateQueue)
                 UpdateQueue.Enqueue(() => SendNewEvent("on-instantmessage", im.FromAgentName, im.Message, im.ToAgentID,
-                                                       im.Offline, im.IMSessionID, im.GroupIM, im.Position, im.Dialog,
+                                                       im.Offline, im.IMSessionID, im.GroupIM, AsLocation(im.RegionID, im.Position), im.Dialog,
                                                        im.ParentEstateID));
         }
 

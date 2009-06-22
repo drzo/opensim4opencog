@@ -1,0 +1,259 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using cogbot.TheOpenSims;
+using OpenMetaverse;
+using PathSystem3D.Navigation;
+
+namespace cogbot.Listeners
+{
+    partial class WorldObjects
+    {
+
+        private static WorldPathSystem _SimPaths;
+        public Vector3 compPos;
+
+
+        public WorldPathSystem SimPaths
+        {
+            get { return _SimPaths; }
+        }
+
+        internal SimObject GetSimObjectFromVector(Vector3d here, out double dist)
+        {
+            SimObject retObj = null;
+            dist = double.MaxValue;
+            if (here == Vector3d.Zero) return retObj;
+            foreach (SimObject obj in GetAllSimObjects())
+            {
+                if (obj.IsRegionAttached())
+                {
+                    Vector3d at = obj.GetWorldPosition();
+                    if (at == here)
+                    {
+                        dist = 0;
+                        return obj;
+                    }
+                    double ld = Vector3d.Distance(at, here);
+                    if (ld < dist)
+                    {
+                        retObj = obj;
+                        dist = ld;
+                    }
+                }
+            }
+            return retObj;
+        }
+
+        private object AsLocation(Simulator simulator, Vector3 position)
+        {
+            SimRegion r = SimRegion.GetRegion(simulator);
+            if (position == Vector3.Zero)
+            {
+                if (r == null)
+                {
+                    return SimHeading.UNKNOWN;
+                }
+                return r;
+            }
+            return new SimHeading(r.GetPathStore(position), position, Quaternion.Identity);
+        }
+
+        private object AsLocation(UUID reg, Vector3 position)
+        {
+            SimRegion r = GetRegion(reg);
+            if (position == Vector3.Zero)
+            {
+                if (r == null)
+                {
+                    if (reg == UUID.Zero)
+                    {
+                        return SimHeading.UNKNOWN;
+                    }
+                    return SimHeading.UNKNOWN;
+                    // return r;
+                }
+                return r;
+            }
+            return new SimHeading(r.GetPathStore(position), position, Quaternion.Identity);
+        }
+
+        internal SimRegion GetRegion(ulong RegionHandle)
+        {
+            return SimRegion.GetRegion(RegionHandle,client);
+        }
+
+        public SimRegion GetRegion(UUID uuid)
+        {
+            return SimRegion.GetRegion(uuid, client);
+        }
+
+        private bool tryGetBuildingPos(List<Primitive> group, out Vector3 centroid)
+        {
+            centroid = new Vector3();
+            if (group.Count < 4)
+                return false;
+            else
+            {
+                bool first = true;
+                Vector3 min = new Vector3(), max = new Vector3(), pos;
+                foreach (Primitive prim in group)
+                {
+                    if (prim != null && prim.Position != null)
+                    {
+                        pos = prim.Position;
+
+                        if (first)
+                        {
+                            min = pos;
+                            max = pos;
+                            first = false;
+                        }
+                        else
+                        {
+                            if (pos.X < min.X)
+                                min.X = pos.X;
+                            if (pos.Y < min.Y)
+                                min.Y = pos.Y;
+                            if (pos.Z < min.Z)
+                                min.Z = pos.Z;
+
+                            if (pos.X > max.X)
+                                max.X = pos.X;
+                            if (pos.Y > max.Y)
+                                max.Y = pos.Y;
+                            if (pos.Z > max.Z)
+                                max.Z = pos.Z;
+                        }
+                    }
+                }
+
+                Vector3 size = max - min;
+                if (size.X > buildingSize && size.Y > buildingSize && size.Z > buildingSize)
+                {
+                    centroid = min + (size * (float)0.5);
+                    return true;
+                }
+                else
+                    return false;
+            }
+        }
+
+        public int posComp(Vector3 v1, Vector3 v2)
+        {
+            return (int)(Vector3.Mag(client.Self.RelativePosition - v1) -
+                          Vector3.Mag(client.Self.RelativePosition - v2));
+        }
+
+        public List<Vector3> getBuildings(int num)
+        {
+            List<Vector3> ret = new List<Vector3>();
+            foreach (List<Primitive> group in primGroups.Values)
+            {
+                Vector3 pos = new Vector3();
+                if (tryGetBuildingPos(group, out pos))
+                    ret.Add(pos);
+            }
+
+            if (ret.Count <= num)
+                return ret;
+            else
+            {
+                ret.Sort(new Comparison<Vector3>(posComp));
+                return ret.GetRange(0, num);
+            }
+        }
+        public int comp(Avatar a1, Avatar a2)
+        {
+            return (int)(Vector3.Distance(a1.Position, compPos) - Vector3.Distance(a2.Position, compPos));
+        }
+
+        public List<Avatar> getAvatarsNear(Vector3 pos, int num)
+        {
+            compPos = pos;
+            List<Avatar> avatarList = new List<Avatar>();
+            foreach (SimAvatar simavatar in SimAvatars)
+            {
+                Avatar avatar = simavatar.theAvatar;
+                if (avatar.Name != client.Self.Name)
+                    avatarList.Add(avatar);
+            }
+
+            if (avatarList.Count > num)
+            {
+                avatarList.Sort(new Comparison<Avatar>(comp));
+
+                for (; searchStep * num > avatarList.Count; --searchStep) ;
+
+                List<Avatar> ret = new List<Avatar>();
+                for (int i = 0; i < num && i < avatarList.Count; i += searchStep)
+                    ret.Add(avatarList[i]);
+                searchStep = (searchStep + 1) % 4 + 1;
+                updateNumberedAvatars(ret);
+                return ret;
+            }
+            else
+            {
+                updateNumberedAvatars(avatarList);
+                return avatarList;
+            }
+        }
+        public SimPosition GetVector(string[] args, out int argsUsed)
+        {
+            argsUsed = 0;
+            if (args.Length == 0) return TheSimAvatar;
+            if (args.Length >= 2)
+            {
+                Vector3 target;
+                if (float.TryParse(args[0], out target.X) &&
+                    float.TryParse(args[1], out target.Y))
+                {
+                    argsUsed = 2;
+                    target.Z = client.Self.SimPosition.Z;
+                    if (args.Length == 3)
+                    {
+                        Single.TryParse(args[2], out target.Z);
+                        argsUsed = 3;
+                    }
+                    return SimWaypointImpl.CreateLocal(target, TheSimAvatar.GetPathStore());
+                }
+            }
+
+            int consume = args.Length;
+            Primitive prim = GetPrimitive(args, out argsUsed);
+            if (prim != null) return GetSimObject(prim);
+            return null;
+        }
+
+        public List<SimObject> GetNearByObjects(Vector3d here, object except, float maxDistance, bool rootOnly)
+        {
+            if (here.X < 256f)
+            {
+                throw new ArgumentException("GetNearByObjects is not using GetWorldPostion?");
+            }
+            List<SimObject> nearby = new List<SimObject>();
+            foreach (SimObject obj in GetAllSimObjects())
+            {
+                if (obj != except)
+                {
+                    if (rootOnly && !obj.IsRoot) continue;
+                    if (obj.IsRegionAttached() && Vector3d.Distance(obj.GetWorldPosition(), here) <= maxDistance)
+                        nearby.Add(obj);
+                }
+            }
+            ;
+            return nearby;
+        }
+
+        private float distanceHeuristic(SimObject prim)
+        {
+            if (prim != null)
+                return (float)(1.0 / Math.Exp((double)TheSimAvatar.Distance(prim))
+                               );
+            else
+                return (float)0.01;
+        }
+
+    }
+}

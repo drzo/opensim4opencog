@@ -1214,6 +1214,11 @@ namespace cogbot
         public void SendNewEvent(string eventName, params object[] args)
         {
             SimObjectEvent evt = botPipeline.CreateEvent(eventName, args);
+            SendNewEvent(evt);
+        }
+
+        public void SendNewEvent(SimObjectEvent evt)
+        {
             botPipeline.SendEvent(evt);
         }
 

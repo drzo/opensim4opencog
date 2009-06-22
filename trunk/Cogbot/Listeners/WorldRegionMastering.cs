@@ -49,8 +49,6 @@ namespace cogbot.Listeners
             get { return SimRegion.IsMaster(TheSimAvatar.GetSimulator(), client); }
         }
 
-
-
         public override void Parcels_OnSimParcelsDownloaded(Simulator simulator,
                                                             InternalDictionary<int, Parcel> simParcels, int[,] parcelMap)
         {
@@ -187,7 +185,7 @@ namespace cogbot.Listeners
 
         public override void Grid_OnGridRegion(GridRegion region)
         {
-            SimRegion R = SimRegion.GetRegion(region.RegionHandle);
+            SimRegion R = SimRegion.GetRegion(region.RegionHandle, client);
             if (R != null)
                 R.GridInfo = region;
             // base.Grid_OnGridRegion(region);
@@ -196,7 +194,7 @@ namespace cogbot.Listeners
 
         public override void Grid_OnRegionHandleReply(UUID regionID, ulong regionHandle)
         {
-            RegisterUUID(regionID, SimRegion.GetRegion(regionHandle));
+            RegisterUUID(regionID, GetRegion(regionHandle));
             base.Grid_OnRegionHandleReply(regionID, regionHandle);
         }
 
@@ -344,7 +342,10 @@ namespace cogbot.Listeners
             lock (_AllSimulators)
             {
                 if (!_AllSimulators.Contains(simulator))
+                {
                     _AllSimulators.Add(simulator);
+                    SimRegion.GetRegion(simulator);
+                }
             }
         }
 
@@ -368,7 +369,7 @@ namespace cogbot.Listeners
                     if (sim.Handle == handle && sim.Connected) return sim;
                 }
             }
-            return SimRegion.GetRegion(handle).TheSimulator;
+            return GetRegion(handle).TheSimulator;
         }
 
         private Simulator GetSimulator(Primitive Prim)

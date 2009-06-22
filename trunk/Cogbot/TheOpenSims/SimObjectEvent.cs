@@ -41,6 +41,7 @@ namespace cogbot.TheOpenSims
             EventStatus = SimEventStatus.Once;
             Verb = name;
             Parameters = paramz;
+            ParameterNames();
         }
         // string eventName;
         // object[] args;
@@ -145,6 +146,7 @@ namespace cogbot.TheOpenSims
             Parameters = flattenArray(args);
             EventType = type;
             EventStatus = status;
+            ParameterNames();
         }
 
         public string EventName
@@ -274,6 +276,14 @@ namespace cogbot.TheOpenSims
             for (int i = 0; i < Parameters.Length; i++)
             {
                 var o = Parameters[i];
+                if (o is Vector3)
+                {
+                    Console.WriteLine("Got v3 in " + this);
+                }
+                if (o == null)
+                {
+                    Console.WriteLine("Got null in " + this);
+                }
                 string s = o.GetType().Name;
                 if (s.ToLower().StartsWith("sim"))
                 {
