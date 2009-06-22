@@ -43,8 +43,6 @@ namespace cogbot.Listeners
         private static readonly Queue<ThreadStart> UpdateQueue = new Queue<ThreadStart>();
         private static readonly Dictionary<UUID, object> uuidTypeObject = new Dictionary<UUID, object>();
         private static readonly object WorldObjectsMasterLock = new object();
-        private static WorldPathSystem _SimPaths;
-
 
         private static int CountnumAvatars;
 
@@ -61,14 +59,11 @@ namespace cogbot.Listeners
         public static int burstSize = 100;
         public DateTime burstStartTime;
         public static float burstTime = 1;
-        public Vector3 compPos;
         public SimActor m_TheSimAvatar;
         public List<string> numberedAvatars;
         public List<SimObjectHeuristic> objectHeuristics;
         public Dictionary<UUID, List<Primitive>> primGroups;
         public int searchStep;
-
-
 
         public override string GetModuleName()
         {
@@ -185,12 +180,6 @@ namespace cogbot.Listeners
                 //SetWorldMaster(false);
                 //RegisterAll();
             }
-        }
-
-
-        public WorldPathSystem SimPaths
-        {
-            get { return _SimPaths; }
         }
 
         public SimActor TheSimAvatar
@@ -686,35 +675,6 @@ namespace cogbot.Listeners
             return GetSimObject(p, simulator);
         }
 
-
-
-        internal SimObject GetSimObjectFromVector(Vector3d here, out double dist)
-        {
-            SimObject retObj = null;
-            dist = double.MaxValue;
-            if (here == Vector3d.Zero) return retObj;
-            foreach (SimObject obj in GetAllSimObjects())
-            {
-                if (obj.IsRegionAttached())
-                {
-                    Vector3d at = obj.GetWorldPosition();
-                    if (at == here)
-                    {
-                        dist = 0;
-                        return obj;
-                    }
-                    double ld = Vector3d.Distance(at, here);
-                    if (ld < dist)
-                    {
-                        retObj = obj;
-                        dist = ld;
-                    }
-                }
-            }
-            return retObj;
-        }
-
-
         public Avatar GetAvatar(UUID avatarID, Simulator simulator)
         {
             Primitive prim = GetPrimitive(avatarID, simulator);
@@ -931,9 +891,10 @@ namespace cogbot.Listeners
 
         public void SendNewEvent(string eventName, params object[] args)
         {
-            if (!IsRegionMaster) return;
-            if (UseNewEventSystem)
+           // if (!IsRegionMaster) return;
+            //if (UseNewEventSystem)
             {
+                client.SendNewEvent(eventName, args);
                 return;
             }
             for (int i = 0; i < args.Length; i++)
@@ -1179,95 +1140,10 @@ namespace cogbot.Listeners
             return fitness;
         }
 
-        private float distanceHeuristic(SimObject prim)
-        {
-            if (prim != null)
-                return (float)(1.0 / Math.Exp((double)TheSimAvatar.Distance(prim))
-                               );
-            else
-                return (float)0.01;
-        }
-
 
         private float boringNamesHeuristic(SimObject prim)
         {
             return prim.ToString().Length;
-        }
-
-        private bool tryGetBuildingPos(List<Primitive> group, out Vector3 centroid)
-        {
-            centroid = new Vector3();
-            if (group.Count < 4)
-                return false;
-            else
-            {
-                bool first = true;
-                Vector3 min = new Vector3(), max = new Vector3(), pos;
-                foreach (Primitive prim in group)
-                {
-                    if (prim != null && prim.Position != null)
-                    {
-                        pos = prim.Position;
-
-                        if (first)
-                        {
-                            min = pos;
-                            max = pos;
-                            first = false;
-                        }
-                        else
-                        {
-                            if (pos.X < min.X)
-                                min.X = pos.X;
-                            if (pos.Y < min.Y)
-                                min.Y = pos.Y;
-                            if (pos.Z < min.Z)
-                                min.Z = pos.Z;
-
-                            if (pos.X > max.X)
-                                max.X = pos.X;
-                            if (pos.Y > max.Y)
-                                max.Y = pos.Y;
-                            if (pos.Z > max.Z)
-                                max.Z = pos.Z;
-                        }
-                    }
-                }
-
-                Vector3 size = max - min;
-                if (size.X > buildingSize && size.Y > buildingSize && size.Z > buildingSize)
-                {
-                    centroid = min + (size * (float)0.5);
-                    return true;
-                }
-                else
-                    return false;
-            }
-        }
-
-        public int posComp(Vector3 v1, Vector3 v2)
-        {
-            return (int)(Vector3.Mag(client.Self.RelativePosition - v1) -
-                          Vector3.Mag(client.Self.RelativePosition - v2));
-        }
-
-        public List<Vector3> getBuildings(int num)
-        {
-            List<Vector3> ret = new List<Vector3>();
-            foreach (List<Primitive> group in primGroups.Values)
-            {
-                Vector3 pos = new Vector3();
-                if (tryGetBuildingPos(group, out pos))
-                    ret.Add(pos);
-            }
-
-            if (ret.Count <= num)
-                return ret;
-            else
-            {
-                ret.Sort(new Comparison<Vector3>(posComp));
-                return ret.GetRange(0, num);
-            }
         }
 
         public string getObjectName(Primitive prim)
@@ -1291,41 +1167,6 @@ namespace cogbot.Listeners
             return SimAvatars.Count;
         }
 
-        public int comp(Avatar a1, Avatar a2)
-        {
-            return (int)(Vector3.Distance(a1.Position, compPos) - Vector3.Distance(a2.Position, compPos));
-        }
-
-        public List<Avatar> getAvatarsNear(Vector3 pos, int num)
-        {
-            compPos = pos;
-            List<Avatar> avatarList = new List<Avatar>();
-            foreach (SimAvatar simavatar in SimAvatars)
-            {
-                Avatar avatar = simavatar.theAvatar;
-                if (avatar.Name != client.Self.Name)
-                    avatarList.Add(avatar);
-            }
-
-            if (avatarList.Count > num)
-            {
-                avatarList.Sort(new Comparison<Avatar>(comp));
-
-                for (; searchStep * num > avatarList.Count; --searchStep) ;
-
-                List<Avatar> ret = new List<Avatar>();
-                for (int i = 0; i < num && i < avatarList.Count; i += searchStep)
-                    ret.Add(avatarList[i]);
-                searchStep = (searchStep + 1) % 4 + 1;
-                updateNumberedAvatars(ret);
-                return ret;
-            }
-            else
-            {
-                updateNumberedAvatars(avatarList);
-                return avatarList;
-            }
-        }
 
         public void updateNumberedAvatars(List<Avatar> avatars)
         {
@@ -1374,21 +1215,6 @@ namespace cogbot.Listeners
         public IEnumerable<SimObject> GetAllSimObjects()
         {
             return SimObjects.CopyOf();
-        }
-
-        public void DeletePrim(Primitive thePrim)
-        {
-            if (thePrim is Avatar) return;
-            SimObject O = GetSimObject(thePrim);
-            if (O !=null)
-            {
-                SimObjects.Remove(O);
-                SendOnRemoveSimObject(O);
-            }
-            uint objectLocalID = thePrim.LocalID;
-            client.Inventory.RequestDeRezToInventory(objectLocalID, DeRezDestination.AgentInventoryTake,
-                                                     client.Inventory.FindFolderForType(AssetType.TrashFolder),
-                                                     UUID.Random());
         }
 
         public Primitive RequestMissingObject(uint localID, Simulator simulator)
@@ -1482,39 +1308,6 @@ namespace cogbot.Listeners
             return SimAssetSystem.GetAssetUUID(a);
         }
 
-        public SimWaypoint GetWaypoint(Vector3d gloabl)
-        {
-            return SimRegion.GetWaypoint(gloabl);
-        }
-
-        public SimPosition GetVector(string[] args, out int argsUsed)
-        {
-            argsUsed = 0;
-            if (args.Length == 0) return TheSimAvatar;
-            if (args.Length >= 2)
-            {
-                Vector3 target;
-                if (float.TryParse(args[0], out target.X) &&
-                    float.TryParse(args[1], out target.Y))
-                {
-                    argsUsed = 2;
-                    target.Z = client.Self.SimPosition.Z;
-                    if (args.Length == 3)
-                    {
-                        Single.TryParse(args[2], out target.Z);
-                        argsUsed = 3;
-                    }
-                    return SimWaypointImpl.CreateLocal(target, TheSimAvatar.GetPathStore());
-                }
-            }
-
-            int consume = args.Length;
-            Primitive prim = GetPrimitive(args, out argsUsed);
-            if (prim != null) return GetSimObject(prim);
-            return null;
-        }
-
-
         public Primitive GetPrimitive(string[] args, out int argsUsed)
         {
             argsUsed = 0;
@@ -1554,26 +1347,6 @@ namespace cogbot.Listeners
             return matches;
         }
 
-        public List<SimObject> GetNearByObjects(Vector3d here, object except, float maxDistance, bool rootOnly)
-        {
-            if (here.X < 256f)
-            {
-                throw new ArgumentException("GetNearByObjects is not using GetWorldPostion?");
-            }
-            List<SimObject> nearby = new List<SimObject>();
-            foreach (SimObject obj in GetAllSimObjects())
-            {
-                if (obj != except)
-                {
-                    if (rootOnly && !obj.IsRoot) continue;
-                    if (obj.IsRegionAttached() && Vector3d.Distance(obj.GetWorldPosition(), here) <= maxDistance)
-                        nearby.Add(obj);
-                }
-            }
-            ;
-            return nearby;
-        }
-
         public SimObject GetSimObject(Primitive prim)
         {
             return GetSimObject(prim, null);
@@ -1584,17 +1357,6 @@ namespace cogbot.Listeners
             //todo  throw new Exception("The method or operation is not implemented.");
         }
 
-        internal void SetObjectPosition(Primitive Prim, Vector3 localPos)
-        {
-            Simulator sim = GetSimulator(Prim);
-            client.Objects.SetPosition(sim, Prim.LocalID, localPos);
-        }
-
-        internal void SetObjectRotation(Primitive Prim, Quaternion localPos)
-        {
-            Simulator sim = GetSimulator(Prim);
-            client.Objects.SetRotation(sim, Prim.LocalID, localPos);
-        }
 
         internal static void ResetSelectedObjects()
         {

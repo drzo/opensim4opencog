@@ -6,15 +6,21 @@ namespace PathSystem3D.Navigation
 {
     public class SimHeading : SimPosition
     {
+        public static SimHeading UNKNOWN = new SimHeading();
+        public SimHeading()
+        {
+        }
         public override string ToString()
         {
-            return reg.RegionName + "/" + pos.X + "/" + pos.Y + "/" + pos.Z + "@" +
+            
+            return (reg==null?"?":reg.RegionName) + "/" + pos.X + "/" + pos.Y + "/" + pos.Z + "@" +
                    ZHeading * SimPathStore.RAD2DEG;
         }
 
         readonly SimPathStore reg;
         private Vector3 pos;
         readonly Quaternion rot;
+
         public SimHeading(SimPathStore reg, Vector3 pos, Quaternion rot)
         {
             this.reg = reg;

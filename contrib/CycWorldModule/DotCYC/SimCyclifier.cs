@@ -268,7 +268,7 @@ namespace CycWorldModule.DotCYC
 
         }
 
-        readonly static public Dictionary<BotMentalAspect, CycFort> cycTerms = new Dictionary<BotMentalAspect, CycFort>();
+        readonly static public Dictionary<object, CycFort> cycTerms = new Dictionary<object, CycFort>();
 
 
         public CycFort FindOrCreateCycFort(SimObject obj)
@@ -342,6 +342,12 @@ namespace CycWorldModule.DotCYC
             return new CycNart(makeCycList(C("DateFromStringFn"), simObj.ToString()));
 
         }
+
+        public CycFort FindOrCreateCycFort(Primitive simObj)
+        {
+            return FindOrCreateCycFort(WorldObjects.Master.GetSimObject(simObj));
+        }
+
         public CycFort FindOrCreateCycFort(SimObjectEvent simObj)
         {
             lock (cycTerms)
@@ -442,16 +448,32 @@ namespace CycWorldModule.DotCYC
             }
             if (t.IsValueType)
             {
-                return C(string.Format("{0}-{1}", t.Name, parameter.ToString()));
+                try
+                {
+                    return C(string.Format("{0}-{1}", t.Name, parameter.ToString()));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("" + e);
+                }
             }
             Console.WriteLine("Cant convert " + t);
             return CYC_NULL;
         }
 
-        public CycFort FindOrCreateCycFort(SimHeading b)
+        public CycObject FindOrCreateCycFort(SimHeading b)
         {
+            if (SimHeading.UNKNOWN == b) return CYC_NULL;
             var v = b.GetWorldPosition();
             return FindOrCreateCycFort(v);
+        }
+
+        public CycFort FindOrCreateCycFort(Vector3 b)
+        {
+            return new CycNart(makeCycList(C("TheList"), 
+                new java.lang.Float(b.X), 
+                new java.lang.Float(b.Y), 
+                new java.lang.Float(b.Z)));
         }
 
 
@@ -601,6 +623,15 @@ namespace CycWorldModule.DotCYC
             return cycAccess.findOrCreate(p);
         }
 
+        public object FindOrCreateCycFort(UUID region)
+        {
+            if (region == UUID.Zero) return CYC_NULL;
+            object o = WorldObjects.Master.GetObject(region);
+            if (!(o is UUID)) return ToFort(o);
+            return "" + region;
+            //return createIndividualFn("SimRegion", region.RegionName, vocabMt.ToString(), "SimRegion " + region, "GeographicalPlace-3D");
+        }
+
         public CycFort FindOrCreateCycFort(SimRegion region)
         {
             return createIndividualFn("SimRegion", region.RegionName, vocabMt.ToString(), "SimRegion " + region, "GeographicalPlace-3D");
@@ -609,6 +640,21 @@ namespace CycWorldModule.DotCYC
         public CycFort FindOrCreateCycFort(Vector3d simObjectEvent)
         {
             return FindOrCreateCycFort(SimRegion.GlobalToLocal(simObjectEvent), SimRegion.GetRegion(simObjectEvent));
+        }
+
+        public object FindOrCreateCycFort(uint b)
+        {
+            return new java.lang.Long(b);
+        }
+
+        public object FindOrCreateCycFort(ushort b)
+        {
+            return new java.lang.Integer(b);
+        }
+
+        public object FindOrCreateCycFort(char b)
+        {
+            return new java.lang.Character(b);
         }
 
         public CycFort FindOrCreateCycFort(BotSocialAction botSocialAction)
@@ -625,10 +671,20 @@ namespace CycWorldModule.DotCYC
         {
             return createIndividualFn("SimTextEntry", te);
         }
-
-        private CycFort createIndividualFn(string p, Primitive.TextureEntry te)
+        public CycFort FindOrCreateCycFort(Avatar.AvatarProperties te)
         {
-            return createIndividualFn(p, te.ToString(), te.ToString(), "SimVocabMt", p);
+            return createIndividualFn("SimAvatarProperties", te);
+        }
+
+        private CycFort createIndividualFn(string p, object te)
+        {
+            lock (cycTerms)
+            {
+                CycFort constant;
+                if (cycTerms.TryGetValue(te, out constant)) return constant;
+                //   object[] forts = ToForts(simObj.Parameters);
+                return cycTerms[te] = createIndividualFn(p, te.ToString(), te.ToString(), "SimVocabMt", p);
+            }
         }
 
         public CycFort FindOrCreateCycFort(SimTypeUsage simTypeUsage)

@@ -7,6 +7,7 @@ using OpenMetaverse.StructuredData;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 using System.Reflection;
+using PathSystem3D.Navigation;
 
 namespace cogbot.Listeners
 {
@@ -239,6 +240,37 @@ namespace cogbot.Listeners
             return newPrim;
         }
 
+        internal void SetObjectPosition(Primitive Prim, Vector3 localPos)
+        {
+            Simulator sim = GetSimulator(Prim);
+            client.Objects.SetPosition(sim, Prim.LocalID, localPos);
+        }
+
+        internal void SetObjectRotation(Primitive Prim, Quaternion localPos)
+        {
+            Simulator sim = GetSimulator(Prim);
+            client.Objects.SetRotation(sim, Prim.LocalID, localPos);
+        }
+
+        public SimWaypoint GetWaypoint(Vector3d gloabl)
+        {
+            return SimRegion.GetWaypoint(gloabl);
+        }
+
+        public void DeletePrim(Primitive thePrim)
+        {
+            if (thePrim is Avatar) return;
+            SimObject O = GetSimObject(thePrim);
+            if (O != null)
+            {
+                SimObjects.Remove(O);
+                SendOnRemoveSimObject(O);
+            }
+            uint objectLocalID = thePrim.LocalID;
+            client.Inventory.RequestDeRezToInventory(objectLocalID, DeRezDestination.AgentInventoryTake,
+                                                     client.Inventory.FindFolderForType(AssetType.TrashFolder),
+                                                     UUID.Random());
+        }
 
     }
 }

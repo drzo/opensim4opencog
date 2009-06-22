@@ -183,7 +183,7 @@ namespace cogbot.TheOpenSims
             {
                 throw Error("GotoTarget !Client.Self.AgentID == Prim.ID");
             }
-            TeleportTo(SimRegion.GetRegion(local.GetWorldPosition()), local.GetSimPosition());
+            TeleportTo(SimRegion.GetRegion(local.GetPathStore().RegionName), local.GetSimPosition());
         }
 
         public virtual void TeleportTo(SimRegion R, Vector3 local)
@@ -1400,7 +1400,7 @@ namespace cogbot.TheOpenSims
                 tries++;
                 RegionHandle = Prim.RegionHandle;
             }
-            return SimRegion.GetRegion(RegionHandle);
+            return WorldSystem.GetRegion(RegionHandle);
         }
 
         public Vector3d GetGlobalLeftPos(int angle, double Dist)

@@ -4,6 +4,7 @@ using System.Text;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using PathSystem3D.Navigation;
 
 namespace cogbot.Listeners
 {
@@ -41,6 +42,11 @@ namespace cogbot.Listeners
                 });
         }
 
+        private SimObjectEvent SendNewEvent(SimObjectEvent param1)
+        {
+            client.SendNewEvent(param1);
+            return param1;
+        }
         /*
              * TODO
              On-Avatar-Sit-Changed
@@ -82,18 +88,17 @@ namespace cogbot.Listeners
                     }
                     else
                     {
-                        object[] eventArgs = new object[] { user, newSit, oldSit };
+                        //object[] eventArgs = new object[] { user, newSit, oldSit };
                         if (newSit != null)
-                            newSit.AddCanBeTargetOf(1,
-
+                            newSit.AddCanBeTargetOf(1,SendNewEvent(
                                                     new TheOpenSims.SimObjectEvent(newSitName,
                                                                        SimEventType.SIT, SimEventStatus.Start, avatar,
-                                                                       newSit));
+                                                                       newSit)));
                         if (oldSit != null)
-                            oldSit.AddCanBeTargetOf(1,
+                            oldSit.AddCanBeTargetOf(1,SendNewEvent(
                                                     new TheOpenSims.SimObjectEvent(oldSitName,
                                                                        SimEventType.SIT, SimEventStatus.Stop, avatar,
-                                                                       oldSit));
+                                                                       oldSit)));
                     }
                 });
         }
@@ -101,7 +106,7 @@ namespace cogbot.Listeners
         private void LogSitEvent(SimObject user, SimEventStatus updown, string p, params object[] args)
         {
             //Console.WriteLine(user + " " + p + " " + ScriptEngines.ScriptEventListener.argsListString(args));
-            user.LogEvent(new TheOpenSims.SimObjectEvent(p, SimEventType.SIT, updown, args));
+            user.LogEvent(SendNewEvent(new TheOpenSims.SimObjectEvent(p, SimEventType.SIT, updown, args)));
         }
 
 
@@ -212,6 +217,7 @@ namespace cogbot.Listeners
                 //if (so.ToString().Contains("rael")) 
                 return true;
             }
+            return true;
             return false;
         }
 
@@ -248,7 +254,19 @@ namespace cogbot.Listeners
             }
             if (targetPos.X < 256)
             {
-                p = new Vector3((float)targetPos.X, (float)targetPos.Y, (float)targetPos.Z);
+                if (targetPos==Vector3d.Zero)
+                {
+                    p = SimHeading.UNKNOWN;
+                } else
+                {
+                    if (source!=null)
+                    {
+                        p = (source.GetWorldPosition() + targetPos);
+                    } else
+                    {
+                        p = new Vector3((float)targetPos.X, (float)targetPos.Y, (float)targetPos.Z);
+                    }
+                }
             }
             else
             {
@@ -295,9 +313,14 @@ namespace cogbot.Listeners
                         RegisterUUID(id, effectType);
                         //TODO 
                         if (UseEventSource(s))
-                            SendNewEvent("on-effect", effectType, s, t, p, duration, id);
+                            SendNewEvent("on-effect", effectType, s, t, p, duration, AsEffectID(id));
                     }
                 });
+        }
+
+        private object AsEffectID(UUID id)
+        {
+            return id;
         }
 
         /*
