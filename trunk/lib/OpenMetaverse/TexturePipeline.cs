@@ -189,8 +189,14 @@ namespace OpenMetaverse
             _Client.Network.RegisterCallback(PacketType.ImageData, ImageDataHandler);
             _Client.Network.RegisterCallback(PacketType.ImagePacket, ImagePacketHandler);
             _Client.Network.RegisterCallback(PacketType.ImageNotInDatabase, ImageNotInDatabaseHandler);
-            downloadMaster.Start();
-            RefreshDownloadsTimer.Start();
+            try
+            {
+                downloadMaster.Start();
+                RefreshDownloadsTimer.Start();
+            } catch(Exception e)
+            {
+                Console.WriteLine(""+e);
+            }
         }
 
         /// <summary>
