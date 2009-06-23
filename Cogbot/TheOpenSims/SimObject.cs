@@ -1059,7 +1059,7 @@ namespace cogbot.TheOpenSims
 
         public virtual Quaternion GetSimRotation()
         {
-            //if (!IsRegionAttached()) ;// throw Error("GetSimRotation !IsRegionAttached: " + this);
+            if (!IsRegionAttached()) throw Error("GetSimRotation !IsRegionAttached: " + this);
             Quaternion transValue = Prim.Rotation;
             Primitive thisPrim = Prim;
             if (thisPrim.ParentID != 0)
@@ -1538,7 +1538,11 @@ namespace cogbot.TheOpenSims
                     if (saveevent && ActionEventQueueCount >= MaxEventSize) ActionEventQueue.Dequeue();
                 }
                 lastEvent = SE;
-                if (saveevent) ActionEventQueue.Enqueue(SE);
+                if (saveevent)
+                {
+                    ActionEventQueue.Enqueue(WorldSystem.SendNewEvent(SE));
+                    
+                }
                 LastEventByName[SE.EventName] = SE;
             }
             for (int argN = 1; argN < args0_N.Length; argN++)

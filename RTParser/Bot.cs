@@ -579,7 +579,8 @@ namespace RTParser
         public string LastLogMessage = string.Empty;
 
         public OutputDelegate outputDelegate;
-        public delegate void OutputDelegate(string str);
+
+        public delegate void OutputDelegate(string s, params object[] args);
 
         /// <summary>
         /// Writes a (timestamped) message to the Processor's log.

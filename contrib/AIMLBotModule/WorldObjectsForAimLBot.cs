@@ -12,11 +12,39 @@ namespace AIMLBotModule
 {
     public class WorldObjectsForAimLBot : WorldObjectsModule
     {
-        public static bool AcceptFriends = true;
+        /// <summary>
+        ///  false = wont respond to user until they say something like "turn chat on" 
+        ///  See next function to change the keywords
+        /// </summary>
+        public bool RespondToChatByDefaultAllUsers = true;
+        /// <summary>
+        /// Respond to group chat
+        /// </summary>
         public static bool RespondToGroup = false;
+        /// <summary>
+        /// Accept all friendship requests
+        /// </summary>
+        public static bool AcceptFriends = true;
+        /// <summary>
+        /// Send events to AIML processor
+        /// </summary>
         public static bool EventsToAIML = false;
-        public static bool ProccessUnsolisitedChat = true;
+        /// <summary>
+        /// Use animation to look like tpying
+        /// </summary>
         public static bool UseRealism = false;
+        /// <summary>
+        /// Move towards interesting objects
+        /// </summary>
+        public static bool UseAttention = true;
+        /// <summary>
+        /// Max Distance for attention objects
+        /// </summary>
+        public static double MaxDistance = 11;
+        /// <summary>
+        /// Max Distance for attention objects on Z plane
+        /// </summary>
+        public static double MaxZDistance = 1;
 
         object BotExecHandler(string cmd, User user)
         {
@@ -87,33 +115,38 @@ namespace AIMLBotModule
                 {
                     Console.Write("You: ");
                     string input = Console.ReadLine();
-                    Console.WriteLine("RTPBot: " + AIMLInterp(input, MyUser));
+                    WriteLine("RTPBot: " + AIMLInterp(input, MyUser));
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e);
+                WriteLine("" + e);
             }
         }
 
         private void AINL_OnEffect(EffectType type, UUID sourceid, UUID targetid, Vector3d targetpos, float duration, UUID id)
         {
+            if (sourceid == client.Self.AgentID) return;
             if (type == EffectType.LookAt) return;
             SetInterest(sourceid, targetid, false);
         }
 
         private void AIML_OnLookAt(UUID sourceid, UUID targetid, Vector3d targetpos, LookAtType looktype, float duration, UUID id)
         {
-          // SetInterest(sourceid, targetid,false);
+            if (sourceid == client.Self.AgentID) return;
+            if (targetid==client.Self.AgentID) SetInterest(sourceid, targetid, false);
         }
 
         private void AIML_OnPointAt(UUID sourceid, UUID targetid, Vector3d targetpos, PointAtType pointtype, float duration, UUID id)
         {
+            if (sourceid == client.Self.AgentID) return;
             SetInterest(sourceid, targetid, true);
         }
 
         private void SetInterest(UUID sourceid, UUID targetid, bool forced)
         {
+            if (targetid == client.Self.AgentID) AttendTo(null, sourceid);
+            else AttendTo(null, targetid);
             if (sourceid == UUID.Zero) return;
             if (targetid == UUID.Zero) return;
             if (targetid == sourceid) return;
@@ -127,10 +160,6 @@ namespace AIMLBotModule
             user.Predicates.addSetting("object", targetid.ToString());
         }
 
-        private void WriteLine(string str)
-        {
-            Console.WriteLine(str);
-        }
 
         private void AIML_OnFriendshipOffered(UUID agentid, string agentname, UUID imsessionid)
         {
@@ -189,8 +218,8 @@ namespace AIMLBotModule
                                                                  if (im.FromAgentID == kv.Key) groupName = kv.Value;
                                                              });
 
-                Console.WriteLine("Group IM {0}",groupName);
-                if (!myUser.RespondToChat && !ProccessUnsolisitedChat) return;
+                WriteLine("Group IM {0}",groupName);
+                if (!myUser.RespondToChat && !RespondToChatByDefaultAllUsers) return;
             }
 
             //UpdateQueue.Enqueue(() => SendNewEvent("on-instantmessage", , im.Message, im.ToAgentID,
@@ -229,7 +258,7 @@ namespace AIMLBotModule
                                         if (!myUser.RespondToChat) return;
                                         if (!RespondToGroup) return;
 
-                                        Console.WriteLine("InstantMessageGroup {0} {1} {2}",
+                                        WriteLine("InstantMessageGroup {0} {1} {2}",
                                                           im.FromAgentName + "/" + groupName, im.FromAgentID,
                                                           ting.Trim());
                                         client.Self.InstantMessageGroup(GetName(), im.FromAgentID, tsing);
@@ -253,7 +282,7 @@ namespace AIMLBotModule
 
                                         }
 
-                                        Console.WriteLine("InstantMessage {0} {1} {2}", im.FromAgentName,
+                                        WriteLine("InstantMessage {0} {1} {2}", im.FromAgentName,
                                                           im.FromAgentID, ting.Trim());
                                         client.Self.InstantMessage(im.FromAgentID, tsing, im.IMSessionID);
                                     }
@@ -265,21 +294,17 @@ namespace AIMLBotModule
 
         }
 
-        /// <summary>
-        ///  false = wont respond to user until they say something like "turn chat on" 
-        ///  See next function to change the keywords
-        /// </summary>
-        public bool RespondToChatByDefaultAllUsers = false;
-
         public WorldObjectsForAimLBot(BotClient testClient)
             : base(testClient)
         {
         }
 
+        private DateTime lastFollow = DateTime.Now;
+
         private void AIML_OnChat(string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourcetype, string fromname, UUID id, UUID ownerid, Vector3 position)
         {
 
-            if (String.IsNullOrEmpty(message) || message.Length < 3) return;
+            if (String.IsNullOrEmpty(message) || message.Length < 2) return;
             if (fromname == GetName()) return;
             if (string.IsNullOrEmpty(fromname))
             {
@@ -289,6 +314,7 @@ namespace AIMLBotModule
                     fromname = GetSimObject(prim).GetName();
                 }
             }
+            AttendTo(fromname, id);
             if (string.IsNullOrEmpty(fromname))
             {
                 fromname = "" + id;
@@ -306,7 +332,7 @@ namespace AIMLBotModule
                 return;
             }
 
-            if (!myUser.RespondToChat && !ProccessUnsolisitedChat) return;
+            if (!myUser.RespondToChat && !RespondToChatByDefaultAllUsers) return;
 
             UseRealism = true;
 
@@ -337,6 +363,52 @@ namespace AIMLBotModule
                             })).Start();
         }
 
+        private void AttendTo(string fromname, UUID fromID)
+        {
+            if (!UseAttention) return;
+            TimeSpan ts = new TimeSpan(DateTime.Now.Ticks - lastFollow.Ticks);
+            SimObject talker = WorldSystem.AsObject(fromname, fromID);
+            if (ts.TotalSeconds < 30)
+            {
+                if (talker == null) return;
+                WriteLine("too soon for {0}", talker.ToString());
+                return;
+            }
+            if (talker == null)
+            {
+               // WriteLine("cannot follow NULL");
+                return;
+            }
+            if (!talker.IsRegionAttached())
+            {
+                WriteLine("!IsRegionAttached " + talker);
+                return;
+            }
+            SimActor a = WorldSystem.TheSimAvatar;
+            if (Math.Abs(a.GetSimPosition().Z - talker.GetSimPosition().Z) > MaxZDistance)
+            {
+                WriteLine("Z Too far " + talker);
+                return;
+            }
+            double dist = talker.Distance(a);
+            if (dist > MaxDistance)
+            {
+                WriteLine("X,Y " + dist + " Too far to " + talker);
+                return;
+            }
+            if (a.CurrentAction == null || a.CurrentAction is FollowerAction)
+            {
+                FollowerAction fa = new FollowerAction(a, talker);
+                client.output("" + fa);
+                a.CurrentAction = fa;
+                lastFollow = DateTime.Now;
+            }
+        }
+
+        public void WriteLine(string s, params object[] args)
+        {
+            Console.WriteLine("AIML BOT: " + s, args);
+        }
 
         /// <summary>
         /// A psuedo-realistic chat function that uses the typing sound and

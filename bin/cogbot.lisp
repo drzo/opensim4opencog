@@ -108,11 +108,12 @@
 ;-----------------------------
 ;  (on-chat agent message) -> "(heard (agent) message)";
 ;;  System.String OpenMetaverse.ChatAudibleLevel OpenMetaverse.ChatType OpenMetaverse.ChatSourceType System.String OpenMetaverse.UUID OpenMetaverse.UUID OpenMetaverse.Vector3
-(def (on-chat message audible type sourceType agent id ownerid position)
+(def (on-chat agent message audible type sourceType  position)
     ;; (thisClient.output (@"fromLispExample: (heard {0} '{1}')" (notme agent)(str message)))
     ;(thisClient.ExecuteCommand (@"say I heard {0} '{1}')" (str agent)(str message))
     ;(thisClient.ExecuteCommand (@"say I heard {0} '{1}')" (str agent)(str message))
     ; (thisClient.ExecuteCommand (@"{0}" (str message)))
+  (setj agent (str agent))
   (if
    (notme agent)
     (progn

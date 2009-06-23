@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Text;
 using System.Threading;
 using cogbot.Listeners;
 using cogbot.ScriptEngines;
@@ -659,6 +660,78 @@ namespace cogbot.TheOpenSims
                                        u();
                                    }
                                }).Start();
+        }
+
+        public void Parcels_OnParcelInfo(ParcelInfo parcel)
+        {
+            lock (parcelsI)
+            {
+                if (parcelsI.ContainsKey(parcel.ID)) return;
+                parcelsI[parcel.ID] = parcel;
+            }
+           // Client.Parcels.GetParcelLocalID()
+           // base.Parcels_OnParcelInfo(parcel);
+        }
+
+        Dictionary<int,Parcel> parcels = new Dictionary<int, Parcel>();
+        Dictionary<UUID, ParcelInfo> parcelsI = new Dictionary<UUID, ParcelInfo>();
+        public void Parcels_OnParcelProperties(Simulator simulator, Parcel parcel, ParcelResult result, int selectedPrims, int sequenceID, bool snapSelection)
+        {
+            lock (parcels)
+            {
+                if (parcels.ContainsKey(parcel.LocalID)) return;
+                parcels[parcel.LocalID] = parcel;
+            }
+            simulator.Client.Parcels.SelectObjects(parcel.LocalID, (ObjectReturnType)31, parcel.OwnerID);
+            //ParcelSelectObjects(simulator, parcel.LocalID, parcel.OwnerID);
+            //SimRegion r = SimRegion.GetRegion(simulator);
+            //r.Parcels_OnParcelProperties(simulator, parcel, result, selectedPrims, sequenceID, snapSelection);
+        }
+        public void Parcels_OnParcelSelectedObjects(Simulator simulator, List<uint> objectIDs, bool resetList)
+        {
+            foreach (uint u in objectIDs)
+            {
+                WorldObjects.EnsureSelected(u, simulator);
+            }
+           // base.Parcels_OnParcelSelectedObjects(simulator, objectIDs, resetList);
+        }
+
+        static void ParcelSelectObjects(Simulator sim, int parcelID, UUID ownerUUID)
+        {
+            GridClient client = sim.Client;
+            int counter = 0;
+            StringBuilder result = new StringBuilder();
+            // test argument that is is a valid integer, then verify we have that parcel data stored in the dictionary
+            {
+                AutoResetEvent wait = new AutoResetEvent(false);
+                ParcelManager.ForceSelectObjects callback =
+                    delegate(Simulator simulator, List<uint> objectIDs, bool resetList)
+                    {
+                        //result.AppendLine("New List: " + resetList.ToString());
+                        for (int i = 0; i < objectIDs.Count; i++)
+                        {
+                            result.Append(objectIDs[i].ToString() + " ");
+                            counter++;
+                        }
+                        //result.AppendLine("Got " + objectIDs.Count.ToString() + " Objects in packet");
+                        if (objectIDs.Count < 251)
+                            wait.Set();
+                    };
+
+                client.Parcels.OnParcelSelectedObjects += callback;
+                client.Parcels.SelectObjects(parcelID, (ObjectReturnType)31, ownerUUID);
+
+
+                client.Parcels.ObjectOwnersRequest(sim, parcelID);
+                if (!wait.WaitOne(30000, false))
+                {
+                    result.AppendLine("Timed out waiting for packet.");
+                }
+
+                client.Parcels.OnParcelSelectedObjects -= callback;
+                result.AppendLine("Found a total of " + counter + " Objects");
+
+            }
         }
 
         public float WaterHeight()

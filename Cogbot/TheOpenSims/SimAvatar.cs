@@ -1,9 +1,7 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using cogbot.Listeners;
-using cogbot.TheOpenSims;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 using Random=System.Random;
@@ -197,70 +195,79 @@ namespace cogbot.TheOpenSims
             }
             set
             {
-                lock (actionLock)
+                try
                 {
-                    if (Object.ReferenceEquals(_currentAction, value)) return;
-                    if (_currentAction != null)
+                    lock (actionLock)
                     {
-                        LastAction = _currentAction;
-                        try
+                        if (Object.ReferenceEquals(_currentAction, value)) return;
+                        if (_currentAction != null)
                         {
-                            _currentAction.Abort();
+                            LastAction = _currentAction;
+                            try
+                            {
+                                _currentAction.Abort();
 
-                        }
-                        catch (Exception)
-                        {
+                            }
+                            catch (Exception)
+                            {
+                            }
+                            _currentAction = value;
                         }
                         _currentAction = value;
-                    }
-                    _currentAction = value;
-                    if (actionThread != null)
-                    {
-                        try
-                        {
-                            actionThread.Abort();
-                        }
-                        catch (Exception)
-                        {
-                        }
-                        finally
-                        {
-                            actionThread = null;
-                        }
-                    }
-                    if (value != null)
-                    {
-                        actionThread = new Thread(() =>
+                        if (actionThread != null)
                         {
                             try
                             {
-                                value.InvokeReal();
+                                actionThread.Abort();
                             }
-                            catch (Exception e)
+                            catch (Exception)
                             {
-                                Debug("InvokeReal: " + e);
-                                throw e;
                             }
                             finally
                             {
-                                if (false) lock (actionLock)
-                                    {
-                                        if (_currentAction == value)
-                                        {
-                                            try
-                                            {
-                                                _currentAction.Abort();
-
-                                            }
-                                            catch (Exception)
-                                            {
-                                            } _currentAction = null;
-                                        }
-                                    }
+                                actionThread = null;
                             }
-                        }) { Name = _currentAction.ToString() };
-                        actionThread.Start();
+                        }
+                        if (value != null)
+                        {
+                            actionThread = new Thread(() =>
+                                                          {
+                                                              try
+                                                              {
+                                                                  value.InvokeReal();
+                                                              }
+                                                              catch (Exception e)
+                                                              {
+                                                                  Debug("InvokeReal: " + e);
+                                                                  throw e;
+                                                              }
+                                                              finally
+                                                              {
+                                                                  if (false)
+                                                                      lock (actionLock)
+                                                                      {
+                                                                          if (_currentAction == value)
+                                                                          {
+                                                                              try
+                                                                              {
+                                                                                  _currentAction.Abort();
+
+                                                                              }
+                                                                              catch (Exception)
+                                                                              {
+                                                                              }
+                                                                              _currentAction = null;
+                                                                          }
+                                                                      }
+                                                              }
+                                                          });
+                            actionThread.Name = _currentAction.ToString();
+                            actionThread.Start();
+                        }
                     }
+                } catch(Exception e)
+                {
+                    Console.WriteLine("" + e);
                 }
             }
         }
@@ -311,7 +318,7 @@ namespace cogbot.TheOpenSims
                     if (Client.Self.SittingOn != 0) return true;
                     if (Client.Self.Movement.SitOnGround) return true;
                 }
-                Dictionary<UUID, int> anims = ExpectedCurrentAnims;
+                Dictionary<UUID, int> anims = ExpectedCurrentAnims.Dictionary;
                 if (SimAssetStore.Matches(anims.Keys,"sit").Count>0) return true;
                 return theAvatar.ParentID != 0;
             }
@@ -636,14 +643,14 @@ namespace cogbot.TheOpenSims
             {
                 animations[animation] = false;
             }
-            foreach (UUID animation in AddedAnims.Keys)
-            {
-                animations[animation] = false;
-            }
-            foreach (UUID animation in RemovedAnims.Keys)
-            {
-                animations[animation] = false;
-            }
+            //foreach (UUID animation in AddedAnims.Keys)
+            //{
+            //    animations[animation] = false;
+            //}
+            //foreach (UUID animation in RemovedAnims.Keys)
+            //{
+            //    animations[animation] = false;
+            //}
             Client.Self.Animate(animations, true);
         }
 
@@ -1597,11 +1604,6 @@ namespace cogbot.TheOpenSims
 
         #region SimAvatar Members
 
-        private readonly Dictionary<UUID, int> ExpectedCurrentAnims = new Dictionary<UUID, int>();
-        private readonly Dictionary<UUID, int> RemovedAnims = new Dictionary<UUID, int>();
-        private readonly Dictionary<UUID, int> AddedAnims = new Dictionary<UUID, int>();
-
-
         public bool IsWalking
         {
             get
@@ -1636,13 +1638,16 @@ namespace cogbot.TheOpenSims
 
         public ICollection<UUID> GetCurrentAnims()
         {
-            return ExpectedCurrentAnims.Keys;
+            return ExpectedCurrentAnims.Dictionary.Keys;
         }
 
         public IDictionary<UUID,int> GetCurrentAnimDict()
         {
-            return ExpectedCurrentAnims;
+            return ExpectedCurrentAnims.Dictionary;
         }
+
+        private readonly InternalDictionary<UUID, int> ExpectedCurrentAnims = new InternalDictionary<UUID, int>();
+
 
         /// public UUID CurrentAmin = UUID.Zero;
         /// <summary>
@@ -1651,34 +1656,28 @@ namespace cogbot.TheOpenSims
         /// <param name="anims"></param>
         public void OnAvatarAnimations(InternalDictionary<UUID, int> anims)
         {
+            Dictionary<UUID, int> RemovedAnims = new Dictionary<UUID, int>();
+            Dictionary<UUID, int> AddedAnims = new Dictionary<UUID, int>();
             bool SendAnimEvent = !WorldObjects.UseNewEventSystem;
             //if (!theAvatar.Name.Contains("rael")) return;
             lock (ExpectedCurrentAnims)
             {
-                int mostCurrentSequence = -1;
-                int leastCurrentSequence = -1;
+                int mostCurrentSequence = int.MinValue;
+                int leastCurrentSequence = int.MaxValue;
 
+                int mostCurrentSequence0 = int.MinValue;
+                int leastCurrentSequence0 = int.MaxValue;
+
+
+
+                GetSequenceNumbers(ExpectedCurrentAnims, ref leastCurrentSequence0, ref mostCurrentSequence0);
 
                 ///  first time so find the lowest number
-                leastCurrentSequence = int.MaxValue;
-                mostCurrentSequence = int.MinValue;
-                anims.ForEach(delegate(UUID key)
-                                  {
-                                      int newAnimNumber;
-                                      anims.TryGetValue(key, out newAnimNumber);
-                                      if (newAnimNumber < leastCurrentSequence)
-                                      {
-                                          leastCurrentSequence = newAnimNumber;
-                                      }
-                                      if (newAnimNumber > mostCurrentSequence)
-                                      {
-                                          mostCurrentSequence = newAnimNumber;
-                                      }
-                                      WorldObjects.RequestAsset(key, AssetType.Animation, true);
-                                  });
+                GetSequenceNumbers(anims, ref leastCurrentSequence, ref mostCurrentSequence);
 
 
-                UUID mostCurrentAnim = UUID.Zero;
+
+                UUID mostCurrentAnim;// = UUID.Zero;
                 ///  List<String> names = new List<String>();
                 List<UUID> RemovedThisEvent = new List<UUID>(GetCurrentAnims());
                 anims.ForEach(delegate(UUID key)
@@ -1729,11 +1728,11 @@ namespace cogbot.TheOpenSims
                 List<UUID> shownRemoved = new List<UUID>();
                 List<UUID> showAdded = new List<UUID>();
 
-                ICollection<UUID> AddedThisEvent = AddedAnims.Keys;
+                ICollection<UUID> AddedThisEvent = new List<UUID>(AddedAnims.Keys);
 
                 foreach (UUID key in RemovedThisEvent)
                 {
-                    ExpectedCurrentAnims.Remove(key);
+                    ExpectedCurrentAnims.Dictionary.Remove(key);
                 }
 
                 foreach (UUID list in RemovedAnims.Keys)
@@ -1742,10 +1741,6 @@ namespace cogbot.TheOpenSims
                     {
                         RemovedThisEvent.Remove(list);
                     }
-                }
-                foreach (UUID key in RemovedThisEvent)
-                {
-                    if (SendAnimEvent) WorldSystem.SendNewEvent("On-Stop-Animation", this, key, GetHeading());
                 }
 
 
@@ -1758,30 +1753,26 @@ namespace cogbot.TheOpenSims
                 //    }
                 //}
                 //start or stop moving
-                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "Moving", startStops);
+                List<UUID> RemovedThisEvent0 = new List<UUID>(RemovedThisEvent);
+                List<UUID> AddedThisEvent0 = new List<UUID>(AddedThisEvent);
+                StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "Moving", startStops);
                 
                 // start or stop flying
-               // StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "Flying",  startStops);
+                //StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "Flying",  startStops);
 
                 //start or stop sleeping
-                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "Laying", startStops);
+                StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "Laying", startStops);
 
-                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent,  "Jumping", startStops);
+                StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0,  "Jumping", startStops);
 
-                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "Sitting", startStops);
+                StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "Sitting", startStops);
 
-                StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "Standing",startStops);
+                StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "Standing",startStops);
 
                 //start or stop talking
                 //StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsCommunationAnim, "Commuincation", SimEventType.ANIM, startStops);
 
                // StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "OtherAnim", startStops);
-
-                bool showIndependant = false;
-                if (startStops.Count == 0)
-                {
-                    showIndependant = true;
-                }
 
                 foreach (SimObjectEvent evt in startStops)
                 {
@@ -1793,13 +1784,13 @@ namespace cogbot.TheOpenSims
                     if (evt.Verb == "Sitting")
                     {
                         LastEventByName[evt.EventName] = evt;
-                        continue;
+                        //continue;
                     }
-                    if (evt.EventName == "WalkingStart")
+                    if (evt.EventName == "Moving-Start")
                     {
                         LastEventByName[evt.EventName] = evt;
                         lastEvent = evt;
-                        continue;
+                        //continue;
                     }
                     //if (evt.EventName == "MovingStop")
                     //{
@@ -1807,7 +1798,6 @@ namespace cogbot.TheOpenSims
                     //    evt.Verb = "MoveTo";
                     //}
                     LogEvent(evt);
-                    if (!showIndependant) Console.WriteLine("" + evt);
                 }
 
                 for (int seq = leastCurrentSequence; seq <= mostCurrentSequence; seq++)
@@ -1818,18 +1808,13 @@ namespace cogbot.TheOpenSims
                         {
                             if (seq == RemovedAnims[uuid])
                             {
-                                if (SendAnimEvent)
-                                    WorldSystem.SendNewEvent("On-Finished-Animation", this, uuid, GetWorldPosition(),
-                                                             GetHeading());
-                                shownRemoved.Add(uuid);
-                                if (showIndependant)
+                                SimAsset a = SimAssetStore.FindOrCreateAsset(uuid, AssetType.Animation);
+                                if (RemovedThisEvent0.Contains(uuid))
                                 {
-                                    SimAsset a = SimAssetStore.FindOrCreateAsset(uuid,AssetType.Animation);
-                                    WorldSystem.client.SendNewEvent("On-Finished-Animation", this, a, GetHeading());
-                                    LogEvent(new SimObjectEvent(a.Name, SimEventType.ANIM, SimEventStatus.Stop, this, a, GetHeading()));
+                                    LogEvent(new SimObjectEvent("OnAnim", SimEventType.ANIM, SimEventStatus.Stop, this,
+                                                                a, GetHeading()));
+                                    shownRemoved.Add(uuid);
                                 }
-
-                                /// ExpectedCurrentAnims.Remove(uuid);
                             }
                         }
                     }
@@ -1839,18 +1824,13 @@ namespace cogbot.TheOpenSims
                         {
                             if (seq == AddedAnims[uuid])
                             {
-                                if (SendAnimEvent)
-                                    WorldSystem.SendNewEvent("On-Start-Animation", this, uuid, GetHeading());
-                                ExpectedCurrentAnims[uuid] = seq;
-                                showAdded.Add(uuid);
-
-                                if (showIndependant)
+                                SimAsset a = SimAssetStore.FindOrCreateAsset(uuid, AssetType.Animation);
+                                if (AddedThisEvent0.Contains(uuid))
                                 {
-                                    SimAsset a = SimAssetStore.FindOrCreateAsset(uuid,AssetType.Animation);
-                                    WorldSystem.client.SendNewEvent("On-Start-Animation", this, a, GetHeading());
-                                    LogEvent(new SimObjectEvent(a.Name, SimEventType.ANIM, SimEventStatus.Start, this, a, GetHeading()));
+                                    LogEvent(new SimObjectEvent("OnAnim", SimEventType.ANIM, SimEventStatus.Start, this,
+                                                                a, GetHeading()));
+                                    showAdded.Add(uuid);
                                 }
-                                /// RemovedAnims[uuid] = mostCurrentSequence + 1;
                             }
                         }
                     }
@@ -1872,6 +1852,8 @@ namespace cogbot.TheOpenSims
                 }
             }
 
+            //ExpectedCurrentAnims.Dictionary.Clear();
+            ExpectedCurrentAnims.Dictionary = anims.Dictionary;
             /// String newName = WorldSystem.GetAnimationName(mostCurrentAnim);
             /// {
             ///     if (oldAnim != mostCurrentAnim)
@@ -1894,27 +1876,56 @@ namespace cogbot.TheOpenSims
             /// SendNewEvent("On-Avatar-Animation", avatar, names);
         }
 
+        private static void GetSequenceNumbers(InternalDictionary<UUID, int> anims, ref int leastCurrentSequence,ref int mostCurrentSequence)
+        {
+            int mostCurrentSequence0 = int.MinValue;
+            int leastCurrentSequence0 = int.MaxValue;
+            anims.ForEach(delegate(UUID key)
+                              {
+                                  int newAnimNumber;
+                                  anims.TryGetValue(key, out newAnimNumber);
+                                  if (newAnimNumber < leastCurrentSequence0)
+                                  {
+                                      leastCurrentSequence0 = newAnimNumber;
+                                  }
+                                  if (newAnimNumber > mostCurrentSequence0)
+                                  {
+                                      mostCurrentSequence0 = newAnimNumber;
+                                  }
+                                  WorldObjects.RequestAsset(key, AssetType.Animation, true);
+                              });
+            leastCurrentSequence = leastCurrentSequence0;
+            mostCurrentSequence = mostCurrentSequence0;
+        }
+
         //private delegate bool AnimationTest(ICollection<UUID> thisEvent);
 
-        private void StartOrStopAnimEvent(IEnumerable<UUID> RemovedThisEvent, IEnumerable<UUID> AddedThisEvent, string name, IList<SimObjectEvent> startStops)
+        private void StartOrStopAnimEvent(ICollection<UUID> RemovedThisEvent, ICollection<UUID> AddedThisEvent, string name, IList<SimObjectEvent> startStops)
         {
+            bool wasStarted = false;
+            bool wasStopped = false;
             List<UUID> e = SimAssetStore.MeaningUUIDs(name);
           //  if (e.Count==0) throw new NoSuchElementException(name);
-            if (Overlaps(e, AddedThisEvent))
+            foreach (UUID list in e)
             {
-                startStops.Add(new SimObjectEvent(name, SimEventType.ANIM, SimEventStatus.Stop, this, GetHeading()));
-                return;
-            }
-
-            if (Overlaps(e, RemovedThisEvent))
-            {
-                if (!Overlaps(e, AddedThisEvent))
+                if (AddedThisEvent.Contains(list))
                 {
-                    startStops.Insert(0,
-                                      new SimObjectEvent(name, SimEventType.ANIM, SimEventStatus.Start, this,
-                                                         GetHeading()));
+                    AddedThisEvent.Remove(list);
+                    wasStarted = true;
                 }
             }
+            foreach (UUID list in e)
+            {
+                if (RemovedThisEvent.Contains(list))
+                {
+                    RemovedThisEvent.Remove(list);
+                    wasStopped = true;
+                }
+            }
+            if (wasStarted && wasStopped) return;
+            if (wasStarted) startStops.Add(new SimObjectEvent(name, SimEventType.ANIM, SimEventStatus.Start, this, GetHeading()));
+            if (wasStopped) startStops.Insert(0, new SimObjectEvent(name, SimEventType.ANIM, SimEventStatus.Stop, this, GetHeading()));
+
         }
 
         static bool Overlaps(IEnumerable<UUID> c1, IEnumerable<UUID> c2)

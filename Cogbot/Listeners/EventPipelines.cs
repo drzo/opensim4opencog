@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
+using System.Threading;
 
 namespace cogbot.Listeners
 {
@@ -112,7 +113,18 @@ namespace cogbot.Listeners
         {
             foreach (SimEventSubscriber subscriber in GetSubscribers())
             {
-                simObjectEvent.SendTo(subscriber);
+                SimEventSubscriber sub = subscriber;
+                new Thread(() =>
+                               {
+                                   try
+                                   {
+                                       simObjectEvent.SendTo(sub);
+                                   }
+                                   catch (Exception e)
+                                   {
+                                       Console.WriteLine(e);
+                                   }
+                               }).Start();
             }
         }
 
