@@ -312,7 +312,7 @@ namespace cogbot
             Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(AlertMessageHandler));
             Network.RegisterCallback(PacketType.AvatarAppearance, new NetworkManager.PacketCallback(AvatarAppearanceHandler));
 
-            Appearance.OnAppearanceUpdated += new AppearanceManager.AppearanceUpdatedCallback(Appearance_OnAppearanceUpdated);
+           //Move to effects Appearance.OnAppearanceUpdated += new AppearanceManager.AppearanceUpdatedCallback(Appearance_OnAppearanceUpdated);
 
             Inventory.OnObjectOffered += new InventoryManager.ObjectOfferedCallback(Inventory_OnInventoryObjectReceived);
             Groups.OnGroupMembers += new GroupManager.GroupMembersCallback(GroupMembersHandler);
@@ -552,12 +552,6 @@ namespace cogbot
             }
         }
 
-
-
-        void Appearance_OnAppearanceUpdated(Primitive.TextureEntry te)
-        {
-            SendNewEvent("On-Appearance-Updated", te);
-        }
 
         void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
         {
@@ -1213,6 +1207,11 @@ namespace cogbot
 
         public void SendNewEvent(string eventName, params object[] args)
         {
+            //if (eventName.StartsWith("On-Log")) return;
+            //if (eventName.StartsWith("On-Simu")) return;
+            //if (eventName.ToLower().StartsWith("on-netw")) return;
+            //if (eventName.ToLower().StartsWith("on-event-queue")) return;
+            //if (eventName.ToLower().StartsWith("on-appearance")) return;
             SimObjectEvent evt = botPipeline.CreateEvent(eventName, args);
             SendNewEvent(evt);
         }

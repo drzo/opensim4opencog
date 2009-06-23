@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
@@ -25,6 +24,11 @@ namespace cogbot.Listeners
             Avatars_OnAvatarAnimation(client.Self.AgentID, agentAnimations);
         }
 
+        public override void Appearance_OnAppearanceUpdated(Primitive.TextureEntry te)
+        {
+            SendNewEvent("On-Appearance-Updated", TheSimAvatar, te);
+        }
+
         public override void Avatars_OnAvatarAnimation(UUID avatarID, InternalDictionary<UUID, int> anims)
         {
             lock (UpdateQueue)
@@ -42,7 +46,7 @@ namespace cogbot.Listeners
                 });
         }
 
-        private SimObjectEvent SendNewEvent(SimObjectEvent param1)
+        public SimObjectEvent SendNewEvent(SimObjectEvent param1)
         {
             client.SendNewEvent(param1);
             return param1;
@@ -91,12 +95,12 @@ namespace cogbot.Listeners
                         //object[] eventArgs = new object[] { user, newSit, oldSit };
                         if (newSit != null)
                             newSit.AddCanBeTargetOf(1,SendNewEvent(
-                                                    new TheOpenSims.SimObjectEvent(newSitName,
+                                                    new SimObjectEvent(newSitName,
                                                                        SimEventType.SIT, SimEventStatus.Start, avatar,
                                                                        newSit)));
                         if (oldSit != null)
                             oldSit.AddCanBeTargetOf(1,SendNewEvent(
-                                                    new TheOpenSims.SimObjectEvent(oldSitName,
+                                                    new SimObjectEvent(oldSitName,
                                                                        SimEventType.SIT, SimEventStatus.Stop, avatar,
                                                                        oldSit)));
                     }
@@ -106,7 +110,7 @@ namespace cogbot.Listeners
         private void LogSitEvent(SimObject user, SimEventStatus updown, string p, params object[] args)
         {
             //Console.WriteLine(user + " " + p + " " + ScriptEngines.ScriptEventListener.argsListString(args));
-            user.LogEvent(SendNewEvent(new TheOpenSims.SimObjectEvent(p, SimEventType.SIT, updown, args)));
+            user.LogEvent(SendNewEvent(new SimObjectEvent(p, SimEventType.SIT, updown, args)));
         }
 
 
@@ -184,7 +188,7 @@ namespace cogbot.Listeners
                         //   WriteLine(perpAv.Name + " bumped into $bot like " + type);
                         // else if (perpAv.Name == client.Self.Name)
                         //   WriteLine("$bot bumped into " + victimAv.Name + " like " + type);   
-                        perpAv.LogEvent(new TheOpenSims.SimObjectEvent("" + type, SimEventType.SOCIAL, SimEventStatus.Once, perpAv, victimAv, magnitude));
+                        perpAv.LogEvent(new SimObjectEvent("" + type, SimEventType.SOCIAL, SimEventStatus.Once, perpAv, victimAv, magnitude));
                         SendNewEvent("on-meanCollision", type, perpAv, victimAv, magnitude);
                     }
                 });
@@ -193,21 +197,21 @@ namespace cogbot.Listeners
         static WorldObjects()
         {
 
-            SkippedEffects.Add("LookAtType.Idle");
-            SkippedEffects.Add("LookAtType.FreeLook");
+            SkippedEffects.Add("LookAtType-Idle");
+            SkippedEffects.Add("LookAtType-FreeLook");
             //SkippedEffects.Add("PointAtType.None");
         }
 
         public override void Avatars_OnPointAt(UUID sourceID, UUID targetID,
                                                Vector3d targetPos, PointAtType lookType, float duration, UUID id)
         {
-            SendEffect(sourceID, targetID, targetPos, "PointAtType." + lookType.ToString(), duration, id);
+            SendEffect(client.Network.CurrentSim, sourceID, targetID, targetPos, "PointAtType-" + lookType.ToString(), duration, id);
         }
 
         public override void Avatars_OnLookAt(UUID sourceID, UUID targetID,
                                               Vector3d targetPos, LookAtType lookType, float duration, UUID id)
         {
-            SendEffect(sourceID, targetID, targetPos, "LookAtType." + lookType.ToString(), duration, id);
+            SendEffect(client.Network.CurrentSim,sourceID, targetID, targetPos, "LookAtType-" + lookType.ToString(), duration, id);
         }
 
         public bool UseEventSource(Object so)
@@ -221,9 +225,10 @@ namespace cogbot.Listeners
             return false;
         }
 
-        public void SendEffect(UUID sourceID, UUID targetID, Vector3d targetPos, string effectType, float duration,
+        public void SendEffect(Simulator sim, UUID sourceID, UUID targetID, Vector3d targetPos, string effectType, float duration,
                                UUID id)
         {
+            if (sourceID==client.Self.AgentID) return; //not sending our own effects
             if (id != UUID.Zero)
             {
                 // if (EffectsSent.Contains(id)) return;
@@ -237,15 +242,23 @@ namespace cogbot.Listeners
             SimObject source = GetSimObjectFromUUID(sourceID);
             if (source == null)
             {
+                if (sourceID != UUID.Zero)
+                {
+                    source = GetSource(sim, sourceID, source, ref s);
+                }
                 //  RequestAsset(sourceID, AssetType.Object, true);
             }
             else
             {
-                s = source;
+                    s = source;
             }
             SimObject target = GetSimObjectFromUUID(targetID);
             if (target == null)
             {
+                if (targetID != UUID.Zero)
+                {
+                    target = GetSource(sim, targetID, target, ref t);
+                }
                 // RequestAsset(targetID, AssetType.Object, true);
             }
             else
@@ -298,22 +311,27 @@ namespace cogbot.Listeners
                         client.SendNewEvent("on-effect-targeted-self", s, p, effectType);
                         // ()/*GetObject*/(sourceID), effectType);
                     }
-                    TheOpenSims.SimObjectEvent evt = new TheOpenSims.SimObjectEvent(effectType, SimEventType.EFFECT, SimEventStatus.Once, s, t, p, duration, id);
+                    if (s is UUID)
+                    {
+                        
+                    }
+                    SimObjectEvent evt = new SimObjectEvent(effectType, SimEventType.EFFECT, SimEventStatus.Once, s, t, p, duration, AsEffectID(id));
 
                     if (source != null)
                     {
-                        source.LogEvent(evt);
+                        source.LogEvent(SendNewEvent(evt));
                     }
                     else
                     {
                         if (t is SimObject)
                         {
                             ((SimObject)t).AddCanBeTargetOf(2, evt);
-                        }
+                        }                                           
                         RegisterUUID(id, effectType);
                         //TODO 
                         if (UseEventSource(s))
-                            SendNewEvent("on-effect", effectType, s, t, p, duration, AsEffectID(id));
+                            SendNewEvent(evt);
+                            //SendNewEvent("on-effect", effectType, s, t, p, duration, AsEffectID(id));
                     }
                 });
         }
@@ -371,7 +389,7 @@ namespace cogbot.Listeners
                                               float duration, UUID id)
         {
             if (!MaintainEffects) return;
-            SendEffect(sourceID, targetID, targetPos, "EffectType." + type.ToString(), duration, id);
+            SendEffect(client.Network.CurrentSim, sourceID, targetID, targetPos, "EffectType-" + type.ToString(), duration, id);
             //SimRegion.TaintArea(targetPos);
         }
 
@@ -499,7 +517,7 @@ namespace cogbot.Listeners
                         SendNewEvent("OnViewerEffect", type, sourceAvatar, targetObject, targetPos);
                         break;
                 }
-                SendEffect(sourceAvatar, targetObject, targetPos, "EffectType." + type, 0.1f, block.ID);
+                SendEffect(simulator,sourceAvatar, targetObject, targetPos, "EffectType." + type, 0.1f, block.ID);
             }
         }
 

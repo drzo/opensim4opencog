@@ -16,9 +16,27 @@ namespace cogbot.Listeners
                                          ChatSourceType sourceType, string fromName, UUID id, UUID ownerid,
                                          Vector3 position)
         {
+            SimObject source = AsObject(fromName, id);
+            object location = AsLocation(client.Network.CurrentSim, position, source);
+            if (ownerid != id)
+            {
+                SendNewEvent("Bug", "id!=ownerID?", "on-chat", 
+                    message, audible, type, sourceType, fromName,id,ownerid, location);
+
+            }
+            if (type == ChatType.StartTyping || type == ChatType.StopTyping)
+            {
+
+                lock (UpdateQueue)
+                    UpdateQueue.Enqueue(
+                        () =>
+                        SendNewEvent(type.ToString(), audible, sourceType, source, location));
+                return;
+
+            }
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(() => SendNewEvent("on-chat", message, audible, type, sourceType, fromName, id,
-                                                       ownerid, AsLocation(client.Network.CurrentSim,position)));
+                UpdateQueue.Enqueue(() => SendNewEvent("on-chat", source, message, 
+                    audible, type, sourceType, location));
         }
 
         public override void Self_OnInstantMessage(InstantMessage im, Simulator simulator)

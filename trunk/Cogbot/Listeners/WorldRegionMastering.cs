@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using cogbot.Actions;
 using cogbot.TheOpenSims;
@@ -24,6 +25,7 @@ namespace cogbot.Listeners
         private bool IsConnected = false;
         private bool RegisterAllOnce = false;
         private readonly List<ulong> MasteringRegions = new List<ulong>();
+        private bool RequestParcelObjects;
 
 
         internal static IEnumerable<Simulator> AllSimulators
@@ -136,6 +138,10 @@ namespace cogbot.Listeners
 
         public override void Network_OnEventQueueRunning(Simulator simulator)
         {
+            if (string.IsNullOrEmpty(simulator.Name))
+            {
+               simulator.Client.Grid.RequestMapItems(simulator.Handle,GridItemType.AgentLocations,GridLayerType.Terrain); 
+            }
             base.Network_OnEventQueueRunning(simulator);
         }
 
@@ -395,5 +401,123 @@ namespace cogbot.Listeners
             //            WriteLine("TextForm Terrain_OnLandPatch: "+simulator.ToString()+"/"+x.ToString()+"/"+y.ToString()+" w="+width.ToString());
         }
 
+        public override void Parcels_OnParcelInfo(ParcelInfo parcel)
+        {
+            SimRegion r = SimRegion.GetRegion(parcel.SimName);
+            r.Parcels_OnParcelInfo(parcel);
+            base.Parcels_OnParcelInfo(parcel);
+        }
+
+        public override void Parcels_OnParcelProperties(Simulator simulator, Parcel parcel, ParcelResult result, int selectedPrims, int sequenceID, bool snapSelection)
+        {
+            SimRegion r = SimRegion.GetRegion(simulator);
+            r.Parcels_OnParcelProperties(simulator, parcel, result, selectedPrims, sequenceID, snapSelection);
+            base.Parcels_OnParcelProperties(simulator, parcel, result, selectedPrims, sequenceID, snapSelection);
+        }
+        public override void Parcels_OnParcelSelectedObjects(Simulator simulator, List<uint> objectIDs, bool resetList)
+        {
+            SimRegion r = SimRegion.GetRegion(simulator);
+            r.Parcels_OnParcelSelectedObjects(simulator, objectIDs, resetList);
+            base.Parcels_OnParcelSelectedObjects(simulator, objectIDs, resetList);
+        }
+
+        static readonly List<UUID> parcelInfoRequests = new List<UUID>();
+        public override void Parcels_OnParcelDwell(UUID parcelID, int localID, float dwell)
+        {
+            lock (parcelInfoRequests)
+            {
+                if (parcelInfoRequests.Contains(parcelID)) return;
+                parcelInfoRequests.Add(parcelID);
+            }
+            client.Parcels.InfoRequest(parcelID);
+            base.Parcels_OnParcelDwell(parcelID, localID, dwell);
+        }
+
+
+        public SimObject AsObject(string fromName, UUID id)
+        {
+            Primitive p;
+            if (id != UUID.Zero)
+            {
+                p = GetPrimitive(id, null);
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(fromName)) return null;
+                int au;
+                p = GetPrimitive(new string[] { fromName }, out au);
+            }
+            if (p != null) return GetSimObject(p);
+            Object o = null;
+            return GetSource(client.Network.CurrentSim, id, null, ref o);
+        }
+
+        private SimObject GetSource(Simulator sim, UUID sourceID, SimObject source, ref object s)
+        {
+            Primitive sp = GetPrimitive(sourceID, null);
+            if (sp != null)
+            {
+                source = GetSimObject(sp);
+            }
+            else
+            {
+                if (!RequestParcelObjects)
+                {
+                    RequestParcelObjects = true;
+                    client.Parcels.RequestAllSimParcels(sim, true, 250);
+                    client.Grid.RequestMapItems(sim.Handle, GridItemType.AgentLocations, GridLayerType.Objects);
+                }
+                client.Avatars.RequestAvatarName(sourceID);
+                client.Friends.MapFriend(sourceID);
+                UUID trans = UUID.Random();
+                client.Self.LookAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, LookAtType.Select, trans);
+                client.Self.PointAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, PointAtType.Select, trans);
+                client.Self.BeamEffect(client.Self.AgentID, sourceID, Vector3d.Zero, new Color4(255, 0, 0, 255), 1f, trans);
+                client.Self.PointAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, PointAtType.None, trans);
+                client.Self.LookAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, LookAtType.None, trans);
+                client.Self.BeamEffect(UUID.Zero, UUID.Zero, Vector3d.Zero, new Color4(255, 255, 255, 255), 0, trans); 
+                client.Self.RequestSit(sourceID,Vector3.Zero);
+                //  client.Directory.
+            }
+
+            if (source != null)
+            {
+                s = source;
+            }
+            else
+            {
+                lock (AvatarRegion)
+                    if (AvatarRegion.ContainsKey(sourceID))
+                    {
+                        Debug("found it!");
+                    }
+                    else
+                        lock (Name2Key)
+                        {
+                            foreach (KeyValuePair<string, UUID> key in Name2Key)
+                            {
+                                if (key.Value == sourceID)
+                                {
+                                    Debug("found " + key.Key);
+                                    foreach (SimAvatar set in SimAvatars.CopyOf())
+                                    {
+                                        if (set.Prim.ID== sourceID)
+                                        {
+                                            s = source = set;
+                                        } else
+                                        {
+                                            if (set.ToString().ToLower().Contains(key.Key))
+                                            {
+                                                s = source = set;
+                                            }
+                                        }
+                                                
+                                    }
+                                }
+                            }
+                        }
+            }
+            return source;
+        }
     }
 }

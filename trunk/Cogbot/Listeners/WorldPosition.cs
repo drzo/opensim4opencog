@@ -46,7 +46,7 @@ namespace cogbot.Listeners
             return retObj;
         }
 
-        private object AsLocation(Simulator simulator, Vector3 position)
+        private object AsLocation(Simulator simulator, Vector3 position, SimPosition pos)
         {
             SimRegion r = SimRegion.GetRegion(simulator);
             if (position == Vector3.Zero)
@@ -57,7 +57,12 @@ namespace cogbot.Listeners
                 }
                 return r;
             }
-            return new SimHeading(r.GetPathStore(position), position, Quaternion.Identity);
+            Quaternion rot = Quaternion.Identity;
+            if (pos!=null && pos.IsRegionAttached())
+            {
+                rot = pos.GetSimRotation();
+            }
+            return new SimHeading(r.GetPathStore(position), position, rot);
         }
 
         private object AsLocation(UUID reg, Vector3 position)

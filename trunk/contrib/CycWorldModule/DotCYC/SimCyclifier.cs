@@ -19,7 +19,17 @@ namespace CycWorldModule.DotCYC
     {
         public void OnEvent(SimObjectEvent evt)
         {
-            FindOrCreateCycFort(evt);
+            try
+            {
+                CycFort fort = FindOrCreateCycFort(evt);
+                Console.WriteLine("to fort -> " + fort);
+            }
+            catch (Exception e)
+            {
+
+                Console.WriteLine("Error to cyc -> " + evt + " " + e);
+            }
+
         }
 
         public void ShuttingDown()
@@ -36,12 +46,28 @@ namespace CycWorldModule.DotCYC
 
         public void assertGenls(CycFort a, CycFort b)
         {
-            cycAccess.assertGenls(a, b, vocabMt);
+            try
+            {
+                cycAccess.assertGenls(a, b, vocabMt);
+            }
+            catch (Exception e)
+            {
+
+                Exception(e);
+            }
         }
 
         public void assertIsa(CycFort a, CycFort b)
         {
-            cycAccess.assertIsa(a, b, vocabMt);
+            try
+            {
+                cycAccess.assertIsa(a, b, vocabMt);
+            }
+            catch (Exception e)
+            {
+
+                Exception(e);
+            }
         }
 
         public SimCyclifier(CycWorldModule tf)
@@ -50,6 +76,8 @@ namespace CycWorldModule.DotCYC
             cycConnection = tf.CycConnectionForm;
             cycAccess = cycConnection.getCycAccess();
             cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-LISPFn\"))");
+            cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-EFFECTFn\"))");
+            
             assertMt = createIndividual("SimDataMt", "#$DataMicrotheory for the simulator", "UniversalVocabularyMt",
                                         "DataMicrotheory");
             vocabMt = createIndividual("SimVocabMt", "#$VocabularyMicrotheory for the simulator",
@@ -137,9 +165,23 @@ namespace CycWorldModule.DotCYC
 
         }
 
+        private void Exception(Exception e)
+        {
+            Console.WriteLine("" + e.Message + "\n" + e.StackTrace);
+        }
+
         public bool cycAssert(string s)
         {
-            return cycAccess.converseBoolean("(fi-assert '" + s + " " + vocabMt.cyclifyWithEscapeChars() + ")");
+            try
+            {
+                return cycAccess.converseBoolean("(fi-assert '" + s + " " + vocabMt.cyclifyWithEscapeChars() + ")");
+            }
+            catch (Exception e)
+            {
+
+                Exception(e);
+                return false;
+            }
         }
 
         public void ResultIsa(string fn, string col, string comment, CycFort arg1Isa)
@@ -238,12 +280,28 @@ namespace CycWorldModule.DotCYC
 
         public void assertGaf(CycFort a, CycFort b, CycFort c)
         {
-            cycAccess.assertGaf(vocabMt, a, b, c);
+            try
+            {
+                cycAccess.assertGaf(vocabMt, a, b, c);
+            }
+            catch (Exception e)
+            {
+
+                Exception(e);
+            }
         }
 
         public void assertGaf(CycFort a, CycFort b, string c)
         {
-            cycAccess.assertGaf(vocabMt, a, b, c);
+            try
+            {
+                cycAccess.assertGaf(vocabMt, a, b, c);
+            }
+            catch (Exception e)
+            {
+
+                Exception(e);
+            }
         }
 
 
@@ -360,6 +418,13 @@ namespace CycWorldModule.DotCYC
                                               simObj.ToString(),
                                               "SimVocabMt",
                                               "SimObjectEvent");
+                bool wasNew;
+                CycFort col = createIndividual(simObj.EventName, "Event subtype of #$SimObjectEvent", "SimVocabMt", "Collection", out wasNew);
+                if (wasNew)
+                {
+                    assertGenls(col, C("SimObjectEvent"));
+                }
+                assertIsa(constant,col);
                 string[] names = simObj.ParameterNames();
                 object[] args = simObj.Parameters;
                 assertEventData(constant, "dateOfEvent", ToFort(simObj.Time));
@@ -461,19 +526,28 @@ namespace CycWorldModule.DotCYC
             return CYC_NULL;
         }
 
-        public CycObject FindOrCreateCycFort(SimHeading b)
-        {
-            if (SimHeading.UNKNOWN == b) return CYC_NULL;
-            var v = b.GetWorldPosition();
-            return FindOrCreateCycFort(v);
-        }
 
         public CycFort FindOrCreateCycFort(Vector3 b)
         {
-            return new CycNart(makeCycList(C("TheList"), 
-                new java.lang.Float(b.X), 
-                new java.lang.Float(b.Y), 
+            return new CycNart(makeCycList(C("TheList"),
+                new java.lang.Float(b.X),
+                new java.lang.Float(b.Y),
                 new java.lang.Float(b.Z)));
+        }
+
+        public object FindOrCreateCycFort(GridClient client)
+        {
+            return FindOrCreateCycFort(client.Self.AgentID);
+        }
+
+        public object FindOrCreateCycFort(cogbot.BotClient client)
+        {
+            return FindOrCreateCycFort(client.WorldSystem);
+        }
+
+        public object FindOrCreateCycFort(WorldObjects client)
+        {
+            return FindOrCreateCycFort(client.TheSimAvatar);
         }
 
 
@@ -596,11 +670,10 @@ namespace CycWorldModule.DotCYC
         {
             return FindOrCreateCycFort(SimRegion.GetRegion(sim));
         }
-        public CycFort FindOrCreateCycFort(Vector3 simObjectEvent, SimRegion region)
+        public CycFort FindOrCreateCycFort(Vector3 simObjectEvent, Object regionName)
         {
-            CycFort findOrCreateCycFort = FindOrCreateCycFort(region);
             CycList makeCycList1 = makeCycList(C("PointInRegionFn"),
-                                               region.RegionName,
+                                               regionName,
                                                FindOrCreateCycFort(simObjectEvent.X),
                                                FindOrCreateCycFort(simObjectEvent.Y),
                                                FindOrCreateCycFort(simObjectEvent.Z));
@@ -620,7 +693,15 @@ namespace CycWorldModule.DotCYC
         public CycFort C(string p)
         {
             if (simFort.ContainsKey(p)) return simFort[p];
-            return cycAccess.findOrCreate(p);
+            try
+            {
+                return cycAccess.findOrCreate(p);
+            } catch(Exception e)
+            {
+                Exception(e);
+                throw e;
+                //return CYC_NULL;
+            }
         }
 
         public object FindOrCreateCycFort(UUID region)
@@ -637,9 +718,24 @@ namespace CycWorldModule.DotCYC
             return createIndividualFn("SimRegion", region.RegionName, vocabMt.ToString(), "SimRegion " + region, "GeographicalPlace-3D");
         }
 
+        public CycFort FindOrCreateCycFort(SimPathStore region)
+        {
+            return createIndividualFn("SimRegion", region.RegionName, vocabMt.ToString(), "SimRegion " + region, "GeographicalPlace-3D");
+        }
+
+        public CycObject FindOrCreateCycFort(SimHeading b)
+        {
+            if (SimHeading.UNKNOWN == b) return CYC_NULL;
+            SimPathStore r = b.GetPathStore();
+            CycFort findOrCreateCycFort = FindOrCreateCycFort(r);
+            return FindOrCreateCycFort(b.GetSimPosition(), r.RegionName);
+        }
+
         public CycFort FindOrCreateCycFort(Vector3d simObjectEvent)
         {
-            return FindOrCreateCycFort(SimRegion.GlobalToLocal(simObjectEvent), SimRegion.GetRegion(simObjectEvent));
+            SimRegion r = SimRegion.GetRegion(simObjectEvent);
+            CycFort findOrCreateCycFort = FindOrCreateCycFort(r);
+            return FindOrCreateCycFort(SimRegion.GlobalToLocal(simObjectEvent), r.RegionName);
         }
 
         public object FindOrCreateCycFort(uint b)

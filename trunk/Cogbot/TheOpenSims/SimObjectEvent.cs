@@ -50,11 +50,12 @@ namespace cogbot.TheOpenSims
 
         internal void SendTo(SimEventSubscriber subscriber)
         {
-            if (!receiversSent.Contains(subscriber))
+            lock (receiversSent)
             {
+                if (receiversSent.Contains(subscriber)) return;
                 receiversSent.Add(subscriber);
-                subscriber.OnEvent(this);
             }
+            subscriber.OnEvent(this);
         }
 
         public string GetVerb()
@@ -156,7 +157,7 @@ namespace cogbot.TheOpenSims
 
         public string EventID
         {
-            get { return EventName + "-" + serial; }
+            get { return EventName; }
         }
 
         static object[] flattenArray(Array args)
@@ -194,7 +195,10 @@ namespace cogbot.TheOpenSims
 
         public override string ToString()
         {
-            return string.Format("{0}: {1}", EventID, ScriptEngines.ScriptEventListener.argsListString(Parameters));
+            return string.Format("{0}: {1} {2}",
+                                 EventID,
+                                 ScriptEngines.ScriptEventListener.argsListString(Parameters),
+                                 serial);
         }
 
         public FirstOrderTerm GetTerm()

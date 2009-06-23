@@ -75,7 +75,7 @@ namespace cogbot.Listeners
 
         public override void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)
         {
-            SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID, null), properties);
+            ///SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID, null), properties);
         }
 
         public void Objects_OnPrimitiveProperties(Simulator simulator, Primitive prim, Primitive.ObjectProperties props)
@@ -175,6 +175,11 @@ namespace cogbot.Listeners
 
                     }
                     //Objects_OnPrimitiveUpdate(simulator, prim, objectupdate0, simulator.Handle, 0);
+                }
+                else
+                {
+                    if (prim.RegionHandle == 0) prim.RegionHandle = simulator.Handle;
+                    SimObject O = GetSimObject(prim, simulator);
                 }
             }
             else // this code only is usefull for avatars

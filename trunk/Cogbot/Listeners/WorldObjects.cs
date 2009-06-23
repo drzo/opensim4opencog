@@ -23,7 +23,7 @@ namespace cogbot.Listeners
         public static bool MaintainAnimsInFolders = false;
         public static bool MaintainAttachments = true;
         public static bool MaintainCollisions = true;
-        public static bool MaintainEffects = true;
+        public static bool MaintainEffects = false;
         public static bool MaintainPropertiesFromQueue = false;
         public static bool MaintainObjectUpdates = false;
         public static bool MaintainSounds = true;

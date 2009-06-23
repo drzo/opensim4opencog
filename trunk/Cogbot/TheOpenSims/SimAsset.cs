@@ -1294,6 +1294,7 @@ namespace cogbot.TheOpenSims
             PutType(type, Animations.STANDUP);
             PutType(type, Animations.MEDIUM_LAND);
             PutType(type, Animations.LAND);
+            PutType(type, Animations.HOVER);
 
             type = "Laying";
             PutType(type, Animations.SLEEP);
