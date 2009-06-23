@@ -1659,6 +1659,7 @@ namespace cogbot.TheOpenSims
         private readonly InternalDictionary<UUID, int> ExpectedCurrentAnims = new InternalDictionary<UUID, int>();
 
 
+        private int AnimSequenceNumber = 0;
         /// public UUID CurrentAmin = UUID.Zero;
         /// <summary>
         ///  Nephrael Rae: [on-object-animation '(avatar "Candie Brooks") "TALK"][on-object-animation '(avatar "Candie Brooks") "STAND_1"][on-object-animation '(avatar "Candie Brooks") "e45fbdc9-af8f-9408-f742-fcb8c341d2c8"]
@@ -1674,20 +1675,16 @@ namespace cogbot.TheOpenSims
             {
                 int mostCurrentSequence = int.MinValue;
                 int leastCurrentSequence = int.MaxValue;
-
-                int mostCurrentSequence0 = int.MinValue;
-                int leastCurrentSequence0 = int.MaxValue;
-
-
-
-                GetSequenceNumbers(ExpectedCurrentAnims, ref leastCurrentSequence0, ref mostCurrentSequence0);
+                GetSequenceNumbers(ExpectedCurrentAnims.Dictionary, ref leastCurrentSequence, ref mostCurrentSequence);
 
                 ///  first time so find the lowest number
-                GetSequenceNumbers(anims, ref leastCurrentSequence, ref mostCurrentSequence);
+                int mostCurrentSequence1 = int.MinValue;
+                int leastCurrentSequence1 = int.MaxValue;
+                GetSequenceNumbers(anims.Dictionary, ref leastCurrentSequence1, ref mostCurrentSequence1);
 
 
 
-                UUID mostCurrentAnim;// = UUID.Zero;
+                //UUID mostCurrentAnim;// = UUID.Zero;
                 ///  List<String> names = new List<String>();
                 List<UUID> RemovedThisEvent = new List<UUID>(GetCurrentAnims());
                 anims.ForEach(delegate(UUID key)
@@ -1699,7 +1696,7 @@ namespace cogbot.TheOpenSims
                                       {
                                           mostCurrentSequence = newAnimNumber;
                                           WorldObjects.RequestAsset(key, AssetType.Animation, true);
-                                          mostCurrentAnim = key;
+                                          //mostCurrentAnim = key;
                                       }
                                       if (ExpectedCurrentAnims.ContainsKey(key))
                                       {
@@ -1767,17 +1764,16 @@ namespace cogbot.TheOpenSims
                 List<UUID> AddedThisEvent0 = new List<UUID>(AddedThisEvent);
                 StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "Moving", startStops);
                 
-                // start or stop flying
-                //StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "Flying",  startStops);
-
-                //start or stop sleeping
-                StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "Laying", startStops);
-
                 StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0,  "Jumping", startStops);
 
                 StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "Sitting", startStops);
 
-                StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "Standing",startStops);
+                StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "Standing", startStops);
+                // start or stop flying
+                StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "Flying", startStops);
+                //start or stop sleeping
+                StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "Laying", startStops);
+
 
                 //start or stop talking
                 //StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsCommunationAnim, "Commuincation", SimEventType.ANIM, startStops);
@@ -1786,10 +1782,15 @@ namespace cogbot.TheOpenSims
 
                 foreach (SimObjectEvent evt in startStops)
                 {
+                    if (evt.Verb == "Flying")
+                    {
+                        LastEventByName[evt.EventName] = evt;
+                        if (evt.EventStatus!=SimEventStatus.Start) continue;
+                    }
                     if (evt.Verb == "Standing")
                     {
                         LastEventByName[evt.EventName] = evt;
-                        continue;
+                        //continue;
                     }
                     if (evt.Verb == "Sitting")
                     {
@@ -1799,7 +1800,7 @@ namespace cogbot.TheOpenSims
                     if (evt.EventName == "Moving-Start")
                     {
                         LastEventByName[evt.EventName] = evt;
-                        lastEvent = evt;
+                        //lastEvent = evt;
                         //continue;
                     }
                     //if (evt.EventName == "MovingStop")
@@ -1807,39 +1808,43 @@ namespace cogbot.TheOpenSims
                     //    object old = GetLastEvent("MovingStart", 2);
                     //    evt.Verb = "MoveTo";
                     //}
-                    LogEvent(evt);
+                    if (SimEventStatus.Start==evt.EventStatus)
+                    {
+                        SetPosture(evt);                        
+                    }
+                  //  LogEvent(evt);
                 }
 
                 for (int seq = leastCurrentSequence; seq <= mostCurrentSequence; seq++)
                 {
                     if (RemovedAnims.Count > 0)
                     {
-                        foreach (UUID uuid in RemovedAnims.Keys)
+                        foreach (KeyValuePair<UUID, int> uuid in RemovedAnims)
                         {
-                            if (seq == RemovedAnims[uuid])
+                            if (seq == uuid.Value)
                             {
-                                SimAsset a = SimAssetStore.FindOrCreateAsset(uuid, AssetType.Animation);
-                                if (RemovedThisEvent0.Contains(uuid))
+                                SimAsset a = SimAssetStore.FindOrCreateAsset(uuid.Key, AssetType.Animation);
+                                if (RemovedThisEvent0.Contains(uuid.Key))
                                 {
                                     LogEvent(new SimObjectEvent("OnAnim", SimEventType.ANIM, SimEventStatus.Stop, this,
                                                                 a, GetHeading()));
-                                    shownRemoved.Add(uuid);
+                                    shownRemoved.Add(uuid.Key);
                                 }
                             }
                         }
                     }
                     if (AddedAnims.Count > 0)
                     {
-                        foreach (UUID uuid in AddedAnims.Keys)
+                        foreach (KeyValuePair<UUID, int> uuid in AddedAnims)
                         {
-                            if (seq == AddedAnims[uuid])
+                            if (seq == uuid.Value)
                             {
-                                SimAsset a = SimAssetStore.FindOrCreateAsset(uuid, AssetType.Animation);
-                                if (AddedThisEvent0.Contains(uuid))
+                                SimAsset a = SimAssetStore.FindOrCreateAsset(uuid.Key, AssetType.Animation);
+                                if (AddedThisEvent0.Contains(uuid.Key))
                                 {
                                     LogEvent(new SimObjectEvent("OnAnim", SimEventType.ANIM, SimEventStatus.Start, this,
                                                                 a, GetHeading()));
-                                    showAdded.Add(uuid);
+                                    showAdded.Add(uuid.Key);
                                 }
                             }
                         }
@@ -1886,24 +1891,46 @@ namespace cogbot.TheOpenSims
             /// SendNewEvent("On-Avatar-Animation", avatar, names);
         }
 
-        private static void GetSequenceNumbers(InternalDictionary<UUID, int> anims, ref int leastCurrentSequence,ref int mostCurrentSequence)
+        private string PostureType;
+        private SimObjectEvent LastPostureEvent;
+        readonly private object postureLock  = new object();
+        private void SetPosture(SimObjectEvent evt)
         {
-            int mostCurrentSequence0 = int.MinValue;
-            int leastCurrentSequence0 = int.MaxValue;
-            anims.ForEach(delegate(UUID key)
-                              {
-                                  int newAnimNumber;
-                                  anims.TryGetValue(key, out newAnimNumber);
-                                  if (newAnimNumber < leastCurrentSequence0)
-                                  {
-                                      leastCurrentSequence0 = newAnimNumber;
-                                  }
-                                  if (newAnimNumber > mostCurrentSequence0)
-                                  {
-                                      mostCurrentSequence0 = newAnimNumber;
-                                  }
-                                  WorldObjects.RequestAsset(key, AssetType.Animation, true);
-                              });
+            lock (postureLock)
+            {
+                if (PostureType != null)
+                {
+                    // was the same 
+                    if (PostureType == evt.Verb) return;
+                    LogEvent(new SimObjectEvent(PostureType + (IsFlying ? "-Flying" : ""), SimEventType.ANIM, SimEventStatus.Stop,
+                                                evt.Parameters));
+                    PostureType = evt.Verb;
+                    LogEvent(new SimObjectEvent(PostureType + (IsFlying ? "-Flying" : ""), SimEventType.ANIM, SimEventStatus.Start,
+                                                evt.Parameters));
+                }
+                PostureType = evt.Verb;
+                LastPostureEvent = evt;
+            }
+        }
+
+        private static void GetSequenceNumbers(IEnumerable<KeyValuePair<UUID, int>> anims, ref int leastCurrentSequence,ref int mostCurrentSequence)
+        {
+            int mostCurrentSequence0 = mostCurrentSequence;
+            int leastCurrentSequence0 = leastCurrentSequence;
+            foreach (KeyValuePair<UUID, int> i in anims)
+            {
+                int newAnimNumber = i.Value;
+                if (newAnimNumber < leastCurrentSequence0)
+                {
+                    leastCurrentSequence0 = newAnimNumber;
+                }
+                if (newAnimNumber > mostCurrentSequence0)
+                {
+                    mostCurrentSequence0 = newAnimNumber;
+                }
+                WorldObjects.RequestAsset(i.Key, AssetType.Animation, true);
+                
+            }
             leastCurrentSequence = leastCurrentSequence0;
             mostCurrentSequence = mostCurrentSequence0;
         }

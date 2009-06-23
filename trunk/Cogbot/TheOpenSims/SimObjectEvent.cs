@@ -29,6 +29,15 @@ namespace cogbot.TheOpenSims
     {
     }
 
+    public class NullType
+    {
+        public NullType(Type type)
+        {
+            Type = type;
+        }
+        public Type Type { get; set; }
+    }
+
     public class SimObjectEvent : BotMentalAspect
     {
         private static long serialCount = DateTime.UtcNow.Ticks;
@@ -214,8 +223,17 @@ namespace cogbot.TheOpenSims
         public object GetArg(int n)
         {
             if (n == 0) return Verb;
-            object o = Parameters[n - 1];
+            object o = GetValue(Parameters[n - 1]);
             return o;
+        }
+
+        static object GetValue(object parameter)
+        {
+            if (parameter is NullType || parameter == null)
+            {
+                return null;
+            }
+            return parameter;
         }
 
         internal SimObjectEvent CombinesWith(SimObjectEvent SE)
@@ -274,6 +292,12 @@ namespace cogbot.TheOpenSims
 
         private readonly static Dictionary<string, SimEventDesc> descs = new Dictionary<string, SimEventDesc>();
 
+        static Type GetType(object o)
+        {
+            if (o is NullType) return ((NullType) o).Type;
+            if  (o != null) return o.GetType();
+            return typeof (NullType);
+        }
         public String[] ParameterNames()
         {
             string[] names = new string[Parameters.Length];
@@ -288,7 +312,7 @@ namespace cogbot.TheOpenSims
                 {
                     Console.WriteLine("Got null in " + this);
                 }
-                string s = o.GetType().Name;
+                string s = GetType(o).Name;
                 if (s.ToLower().StartsWith("sim"))
                 {
                     if (!char.IsLower(s[3]))

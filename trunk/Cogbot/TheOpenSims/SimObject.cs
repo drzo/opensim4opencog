@@ -1534,7 +1534,7 @@ namespace cogbot.TheOpenSims
                             saveevent = false;
                             return false;
                         }
-                        else
+                        else if (false)
                         {
                             SimObjectEvent newEvt = lastEvent.CombinesWith(SE);
                             if (newEvt != null)

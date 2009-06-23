@@ -24,9 +24,14 @@ namespace cogbot.Listeners
             Avatars_OnAvatarAnimation(client.Self.AgentID, agentAnimations);
         }
 
+        private object AsType(Object te, Type type)
+        {
+            if (type.IsInstanceOfType(te)) return te;
+            return new NullType(type);
+        }
         public override void Appearance_OnAppearanceUpdated(Primitive.TextureEntry te)
         {
-            SendNewEvent("On-Appearance-Updated", TheSimAvatar, te);
+            SendNewEvent("On-Appearance-Updated", TheSimAvatar, AsType(te, typeof(Primitive.TextureEntry)));
         }
 
         public override void Avatars_OnAvatarAnimation(UUID avatarID, InternalDictionary<UUID, int> anims)
@@ -218,7 +223,7 @@ namespace cogbot.Listeners
         {
             if (so is SimAvatar)
             {
-                //if (so.ToString().Contains("rael")) 
+                if (so.ToString().Contains("Rajesh")) 
                 return true;
             }
             return true;
