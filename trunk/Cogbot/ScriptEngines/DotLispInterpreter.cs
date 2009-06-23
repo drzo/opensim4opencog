@@ -10,9 +10,9 @@ namespace cogbot.ScriptEngines
 
         public override bool IsSubscriberOf(string eventName)
         {
-            eventName = eventName.ToLower();
+            if (!eventName.Contains(".")) eventName = eventName.ToLower();
             DotLisp.Symbol o = dotLispInterpreter.intern(eventName);//.Read("DefinedFunction", new System.IO.StringReader(eventName));           
-            if (o.isDefined()) return true;
+            if (o!=null && o.isDefined()) return true;
             return false;
         }
 
