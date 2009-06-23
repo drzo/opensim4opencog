@@ -355,7 +355,7 @@ namespace cogbot
         private void loginToolStripMenuItem_Click(object sender, EventArgs e)
         {
             // LoginForm loginForm = new LoginForm(Client);
-            foreach (BotClient CurrentClient in Clients.Values)
+            lock (Clients) foreach (BotClient CurrentClient in Clients.Values)
             {
                 LoginForm loginForm = new LoginForm(CurrentClient, this);
                 loginForm.ShowDialog();
@@ -584,40 +584,46 @@ namespace cogbot
         }
         static public Dictionary<string, BotClient> BotByName = new Dictionary<string, BotClient>();
         public BotClient lastBotClient = null;
+        static object oneAtATime = new object();
         public BotClient CreateBotClient(string first, string last, string passwd, string simurl, string location)
         {
-            BotClient bc = new BotClient(this);
-            if (!String.IsNullOrEmpty(first))
+            lock (oneAtATime)
             {
-                bc.BotLoginParams.FirstName = first;
-            }
-            if (!String.IsNullOrEmpty(last))
-            {
-                bc.BotLoginParams.LastName = last;
-            }
-            if (!String.IsNullOrEmpty(passwd))
-            {
-                bc.BotLoginParams.Password = passwd;
-            }
-            if (!String.IsNullOrEmpty(simurl))
-            {
-                bc.BotLoginParams.URI = simurl;
-            }
-            if (String.IsNullOrEmpty(location))
-            {
-                location = "last";
-            }
-            bc.BotLoginParams.Start = location;
-            bc.Network.OnLogin += new NetworkManager.LoginCallback(delegate(LoginStatus login, string message) {
-                if (login == LoginStatus.Success)
+                BotClient bc = new BotClient(this);
+                if (!String.IsNullOrEmpty(first))
                 {
-                    Clients.Add(bc.Self.AgentID, bc);
+                    bc.BotLoginParams.FirstName = first;
                 }
-            });
-            //LoginParams loginParams = bc.Network.DefaultLoginParams(account.FirstName, account.LastName, account.Password, "BotClient", version);            
-            AddTypesToBotClient(bc);
-            bc.StartupClientLisp();
-            return bc;
+                if (!String.IsNullOrEmpty(last))
+                {
+                    bc.BotLoginParams.LastName = last;
+                }
+                if (!String.IsNullOrEmpty(passwd))
+                {
+                    bc.BotLoginParams.Password = passwd;
+                }
+                if (!String.IsNullOrEmpty(simurl))
+                {
+                    bc.BotLoginParams.URI = simurl;
+                }
+                if (String.IsNullOrEmpty(location))
+                {
+                    location = "last";
+                }
+                bc.BotLoginParams.Start = location;
+                bc.Network.OnLogin += new NetworkManager.LoginCallback(delegate(LoginStatus login, string message)
+                                                                           {
+                                                                               if (login == LoginStatus.Success)
+                                                                               {
+                                                                                   lock (Clients)
+                                                                                       Clients[bc.Self.AgentID] = bc;
+                                                                               }
+                                                                           });
+                //LoginParams loginParams = bc.Network.DefaultLoginParams(account.FirstName, account.LastName, account.Password, "BotClient", version);            
+                AddTypesToBotClient(bc);
+                bc.StartupClientLisp();
+                return bc;
+            }
         }
 
         private void AddTypesToBotClient(BotClient bc)
@@ -633,7 +639,8 @@ namespace cogbot
         {
 
             BotClient cl = lastBotClient;
-            foreach(BotClient bc in Clients.Values) {
+            lock (Clients) foreach (BotClient bc in Clients.Values)
+                {
                 if (bc.GetName().Equals(botname)) {
                     cl = bc;
                 }
@@ -670,7 +677,7 @@ namespace cogbot
         public BotClient Login(LoginDetails account)
         {
             // Check if this CurrentClient is already logged in
-            foreach (BotClient c in Clients.Values)
+            lock (Clients) foreach (BotClient c in Clients.Values)
             {
                 if (c.Self.FirstName == account.FirstName && c.Self.LastName == account.LastName)
                 {
@@ -702,7 +709,7 @@ namespace cogbot
 
             if (client.Network.Login(loginParams))
             {
-                Clients[client.Self.AgentID] = client;
+                lock (Clients) Clients[client.Self.AgentID] = client;
 
                 if (client.MasterKey == UUID.Zero)
                 {
@@ -785,7 +792,7 @@ namespace cogbot
                 DoCommandAll(input, UUID.Zero, outputDelegate);
             }
 
-            foreach (BotClient client in Clients.Values)
+            lock (Clients) foreach (BotClient client in Clients.Values)
             {
                 if (client.Network.Connected)
                     client.Network.Logout();
@@ -796,7 +803,7 @@ namespace cogbot
         {
             int online = 0;
 
-            foreach (BotClient client in Clients.Values)
+            lock (Clients) foreach (BotClient client in Clients.Values)
             {
                 if (client.Network.Connected) online++;
             }
@@ -837,7 +844,7 @@ namespace cogbot
             {
                 if (Clients.Count > 0)
                 {
-                    foreach (BotClient client in Clients.Values)
+                    lock (Clients) foreach (BotClient client in Clients.Values)
                     {
                         WriteLine(client.Commands["help"].Execute(args, UUID.Zero, WriteLine));
                         break;
@@ -887,7 +894,7 @@ namespace cogbot
         /// <param name="CurrentClient"></param>
         public void Logout(BotClient client)
         {
-            Clients.Remove(client.Self.AgentID);
+            lock (Clients) Clients.Remove(client.Self.AgentID);
             client.Network.Logout();
         }
 

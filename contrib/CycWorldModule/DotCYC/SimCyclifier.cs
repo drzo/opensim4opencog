@@ -22,7 +22,7 @@ namespace CycWorldModule.DotCYC
             try
             {
                 CycFort fort = FindOrCreateCycFort(evt);
-                Console.WriteLine("to fort -> " + fort);
+               // Console.WriteLine("to fort -> " + fort);
             }
             catch (Exception e)
             {
@@ -77,6 +77,8 @@ namespace CycWorldModule.DotCYC
             cycAccess = cycConnection.getCycAccess();
             cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-LISPFn\"))");
             cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-EFFECTFn\"))");
+            cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-ANIMFn\"))");
+            
             
             assertMt = createIndividual("SimDataMt", "#$DataMicrotheory for the simulator", "UniversalVocabularyMt",
                                         "DataMicrotheory");

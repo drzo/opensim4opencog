@@ -101,11 +101,18 @@ namespace cogbot.Listeners
             {
                 client.Settings.USE_LLSD_LOGIN = true;
             } //else
+            client.Settings.USE_LLSD_LOGIN = true;
 
-            client.Settings.USE_LLSD_LOGIN = false;
             lock (WorldObjectsMasterLock)
             {
-                if (Master == null) Master = this;
+                if (Master == null)
+                {
+                    Master = this;
+                }   else
+                {
+                    //only one rpc at a time
+                    client.Settings.USE_LLSD_LOGIN = true;
+                }
 
                 //new DebugAllEvents(client);
 
@@ -213,10 +220,11 @@ namespace cogbot.Listeners
 
         internal static BotClient BotClientFor(GridClient client)
         {
-            foreach (BotClient bc in TextForm.SingleInstance.Clients.Values)
-            {
-                if (bc.gridClient == client) return bc;
-            }
+            lock (TextForm.SingleInstance.Clients)
+                foreach (BotClient bc in TextForm.SingleInstance.Clients.Values)
+                {
+                    if (bc.gridClient == client) return bc;
+                }
             return null;
         }
 

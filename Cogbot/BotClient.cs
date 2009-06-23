@@ -343,7 +343,7 @@ namespace cogbot
             initTaskInterperter();
             if (TextForm.SingleInstance.config.startupClientLisp.Length > 1)
             {
-                scriptEventListener.enqueueLispEvent("(progn " + TextForm.SingleInstance.config.startupClientLisp + ")");
+                evalLispString("(progn " + TextForm.SingleInstance.config.startupClientLisp + ")");
             }
         }
 

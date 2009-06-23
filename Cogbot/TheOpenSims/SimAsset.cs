@@ -1014,7 +1014,7 @@ namespace cogbot.TheOpenSims
                     }
                 }
 
-                ClassifyAnims();
+                SimAnimation.ClassifyAnims();
                 lock (SimAssets) foreach (SimAsset A in SimAssets)
                     {
                         if (A.IsIncomplete()) Console.WriteLine("Animation: " + A.ToString());
@@ -1241,97 +1241,6 @@ namespace cogbot.TheOpenSims
         }
 
 
-        static void ClassifyAnims()
-        {
-            string type = "Sitting";
-            PutType(type, Animations.SIT_GROUND);
-            PutType(type, Animations.SIT);
-            PutType(type, Animations.SIT_GENERIC);
-            PutType(type, Animations.SIT_FEMALE);
-            PutType(type, Animations.CROUCH);
-            PutType(type, Animations.MOTORCYCLE_SIT);
-            PutType(type, Animations.SIT_GROUND_staticRAINED);
-
-            type = "Flying";
-
-            PutType(type, Animations.FLYSLOW);
-            PutType(type, FLY_ADJUST);
-            PutType(type, Animations.HOVER_DOWN);
-            PutType(type, Animations.HOVER_UP);
-            PutType(type, Animations.FLY);
-            PutType(type, Animations.HOVER);
-            PutType(type, Animations.YOGA_FLOAT);
-
-            type = "Walking";
-            PutType(type, Animations.WALK);
-            PutType(type, Animations.TURNLEFT);
-            PutType(type, Animations.TURNRIGHT);
-            PutType(type, Animations.STRIDE);
-            PutType(type, Animations.RUN);
-            PutType(type, Animations.FEMALE_WALK);
-            PutType(type, WALK_ADJUST);
-            PutType(type, Animations.CROUCHWALK);
-
-
-            type = "Moving";
-            PutType(type, Animations.FLYSLOW);
-            PutType(type, FLY_ADJUST);
-            PutType(type, Animations.HOVER_DOWN);
-            PutType(type, Animations.HOVER_UP);
-            PutType(type, Animations.WALK);
-            PutType(type, Animations.TURNLEFT);
-            PutType(type, Animations.TURNRIGHT);
-            PutType(type, Animations.STRIDE);
-            PutType(type, Animations.RUN);
-            PutType(type, Animations.FEMALE_WALK);
-            PutType(type, WALK_ADJUST);
-            PutType(type, Animations.CROUCHWALK);
-
-
-            type = "Stopping";
-            PutType(type, Animations.SIT_TO_STAND);
-            PutType(type, Animations.FALLDOWN);
-            PutType(type, Animations.STANDUP);
-            PutType(type, Animations.MEDIUM_LAND);
-            PutType(type, Animations.LAND);
-            PutType(type, Animations.HOVER);
-
-            type = "Laying";
-            PutType(type, Animations.SLEEP);
-            PutType(type, Animations.DEAD);
-
-            type = "Standing";
-            PutType(type, Animations.STAND);
-            PutType(type, Animations.STAND_1);
-            PutType(type, Animations.STAND_2);
-            PutType(type, Animations.STAND_3);
-            PutType(type, Animations.STAND_4);
-            PutType(type, Animations.STANDUP);
-            PutType(type, Animations.AWAY);
-            PutType(type, Animations.BUSY);
-            PutType(type, Animations.HOVER);
-
-            type = "Jumping";
-            PutType(type, Animations.JUMP);
-            PutType(type, Animations.PRE_JUMP);
-
-            type = "Communicating";
-            PutType(type, Animations.TALK);
-            PutType(type, Animations.TYPE);
-            PutType(type, Animations.SHRUG);
-            PutType(type, Animations.YES);
-            PutType(type, Animations.YES_HAPPY);
-            PutType(type, Animations.NO);
-            PutType(type, Animations.NO_UNHAPPY);
-            PutType(type, Animations.ANGRY);
-            PutType(type, Animations.LAUGH_SHORT);
-            PutType(type, Animations.CRY);
-            PutType(type, Animations.WINK);
-            PutType(type, Animations.WHISTLE);
-            PutType(type, Animations.SHOUT);
-        }
-
-
 
         readonly static Dictionary<string, List<UUID>> meaningToAssetIDs = new Dictionary<string, List<UUID>>();
 
@@ -1347,19 +1256,11 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        static void PutType(string anims, UUID uUID)
-        {
-            SimAsset a = FindAsset(uUID);
-            a.AddType(anims);
-        }
 
         static public bool IsSitAnim(ICollection<UUID> anims)
         {
             return false;
         }
-
-        readonly static UUID WALK_ADJUST = new UUID("829bc85b-02fc-ec41-be2e-74cc6dd7215d");
-        readonly static UUID FLY_ADJUST = new UUID("db95561f-f1b0-9f9a-7224-b12f71af126e");
 
         public static List<UUID> Matches(ICollection<UUID> anims, String name)
         {
