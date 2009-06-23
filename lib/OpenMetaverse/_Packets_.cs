@@ -42696,7 +42696,7 @@ namespace OpenMetaverse.Packets
             Header.ID = 256;
             Header.Reliable = true;
             AgentBlock = new AgentBlockBlock();
-            LocationBlock = null;
+            LocationBlock = new LocationBlockBlock[0];
         }
 
         public FindAgentPacket(byte[] bytes, ref int i) : this()
