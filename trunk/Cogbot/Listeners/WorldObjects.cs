@@ -1375,6 +1375,11 @@ namespace cogbot.Listeners
                 Console.WriteLine("NULL RESELECTOBJECT");
                 return;
             }
+            if (P.ParentID != 0)
+            {
+                client.Objects.SelectObjects(sim, new uint[] { P.LocalID, P.ParentID });
+                return;
+            }
             client.Objects.SelectObject(sim, P.LocalID);
         }
       }
