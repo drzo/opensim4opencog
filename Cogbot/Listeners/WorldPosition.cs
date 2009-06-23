@@ -53,6 +53,7 @@ namespace cogbot.Listeners
             {
                 if (r == null)
                 {
+                    if (pos != null && pos.IsRegionAttached()) return new SimHeading(pos); 
                     return SimHeading.UNKNOWN;
                 }
                 return r;

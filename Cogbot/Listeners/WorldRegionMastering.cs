@@ -378,7 +378,7 @@ namespace cogbot.Listeners
             return GetRegion(handle).TheSimulator;
         }
 
-        private Simulator GetSimulator(Primitive Prim)
+        public Simulator GetSimulator(Primitive Prim)
         {
             if (Prim != null)
             {

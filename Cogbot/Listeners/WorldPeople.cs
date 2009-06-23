@@ -17,6 +17,17 @@ namespace cogbot.Listeners
                                          Vector3 position)
         {
             SimObject source = AsObject(fromName, id);
+            object s1 = source;
+            object s2 = source;
+            if (source == null)
+            {
+                s1 = id;
+                s2 = id;
+            }
+            if (!string.IsNullOrEmpty(fromName))
+            {
+                s2 = fromName;
+            }
             object location = AsLocation(client.Network.CurrentSim, position, source);
             if (ownerid != id)
             {
@@ -30,12 +41,12 @@ namespace cogbot.Listeners
                 lock (UpdateQueue)
                     UpdateQueue.Enqueue(
                         () =>
-                        SendNewEvent(type.ToString(), audible, sourceType, source, location));
+                        SendNewEvent(type.ToString(), audible, sourceType, s1, location));
                 return;
 
-            }
+            }            
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(() => SendNewEvent("on-chat", source, message, 
+                UpdateQueue.Enqueue(() => SendNewEvent("on-chat", s2, message, 
                     audible, type, sourceType, location));
         }
 

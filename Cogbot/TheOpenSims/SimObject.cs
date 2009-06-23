@@ -1059,15 +1059,24 @@ namespace cogbot.TheOpenSims
 
         public virtual Quaternion GetSimRotation()
         {
-            if (!IsRegionAttached()) throw Error("GetSimRotation !IsRegionAttached: " + this);
             Quaternion transValue = Prim.Rotation;
             Primitive thisPrim = Prim;
+            if (!IsRegionAttached())
+            {
+                WorldSystem.ReSelectObject(Prim);
+                WorldSystem.RequestMissingObject(Prim.LocalID, WorldSystem.GetSimulator(RegionHandle));
+                if (Prim.ParentID==0)
+                {
+                    return transValue;
+                }
+            }
             if (thisPrim.ParentID != 0)
             {
                 Primitive outerPrim = GetParentPrim(thisPrim);
                 if (outerPrim == null)
                 {
                     //TODO no biggy here ?
+                    throw Error("GetSimRotation !IsRegionAttached: " + this);
                     return transValue;
                 }
                 transValue = outerPrim.Rotation*transValue;
@@ -1095,6 +1104,7 @@ namespace cogbot.TheOpenSims
                 {
                     if (LastKnownPos!=default(Vector3))return LastKnownPos;
                     Debug("Unknown parent");
+                    throw Error("GetSimRotation !IsRegionAttached: " + this);
                     return thisPrim.Position;
                 }
 
@@ -1522,6 +1532,7 @@ namespace cogbot.TheOpenSims
                         if (lastEvent.SameAs(SE))
                         {
                             saveevent = false;
+                            return false;
                         }
                         else
                         {

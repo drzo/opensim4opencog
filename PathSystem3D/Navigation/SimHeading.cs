@@ -10,16 +10,30 @@ namespace PathSystem3D.Navigation
         public SimHeading()
         {
         }
+        public SimHeading(SimPosition pos)
+        {
+            late = pos;
+            if (pos.IsRegionAttached())
+            {
+                InitFromPos(pos);
+            }
+        }
+
         public override string ToString()
         {
             
+            if (reg==null && late!=null && !late.IsRegionAttached() )
+            {
+                return "HEADING: " + late;
+            }
             return (reg==null?"?":reg.RegionName) + "/" + pos.X + "/" + pos.Y + "/" + pos.Z + "@" +
                    ZHeading * SimPathStore.RAD2DEG;
         }
 
-        readonly SimPathStore reg;
+        private readonly SimPosition late;
+        SimPathStore reg;
         private Vector3 pos;
-        readonly Quaternion rot;
+        Quaternion rot;
 
         public SimHeading(SimPathStore reg, Vector3 pos, Quaternion rot)
         {
@@ -63,7 +77,18 @@ namespace PathSystem3D.Navigation
 
         public Vector3 GetSimPosition()
         {
+            if (reg == null && late != null)
+            {
+                InitFromPos(late);
+            }
             return pos;
+        }
+
+        private void InitFromPos(SimPosition position)
+        {
+            this.reg = position.GetPathStore();
+            this.pos = position.GetSimPosition();
+            this.rot = position.GetSimRotation();
         }
 
         public float GetSizeDistance()
@@ -73,21 +98,33 @@ namespace PathSystem3D.Navigation
 
         public bool IsRegionAttached()
         {
+            if (reg == null && late != null)
+            {
+                InitFromPos(late);
+            }
             return reg != null;
         }
 
         public Quaternion GetSimRotation()
         {
+            if (reg == null && late != null)
+            {
+                InitFromPos(late);
+            }
             return rot;
         }
 
         public Vector3d GetWorldPosition()
         {
-            return reg.LocalToGlobal(pos);
+            return GetPathStore().LocalToGlobal(GetSimPosition());
         }
 
         public SimPathStore GetPathStore()
         {
+            if (reg == null && late != null)
+            {
+                InitFromPos(late);
+            }
             return reg;
         }
 

@@ -65,6 +65,11 @@ namespace cogbot.TheOpenSims
         {
             get
             {
+                if (!IsRegionAttached())
+                {
+                    WorldSystem.ReSelectObject(Prim);
+                    WorldSystem.RequestMissingObject(Prim.LocalID, WorldSystem.GetSimulator(RegionHandle));
+                }
                 Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(GetSimRotation()));
                 return (float)(Math.Atan2(-v3.X, -v3.Y) + Math.PI); // 2Pi= N, 1/2Pi = E
             }
@@ -72,7 +77,12 @@ namespace cogbot.TheOpenSims
 
         public SimHeading GetHeading()
         {
-            return new SimHeading(GetPathStore(), GetSimPosition(), GetSimRotation());
+            if (!IsRegionAttached())
+            {
+                WorldSystem.ReSelectObject(Prim);
+                WorldSystem.RequestMissingObject(Prim.LocalID, WorldSystem.GetSimulator(RegionHandle));
+            }
+            return new SimHeading(this);
         }
 
 

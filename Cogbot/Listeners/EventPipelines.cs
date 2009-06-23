@@ -108,9 +108,15 @@ namespace cogbot.Listeners
             return new SimObjectEvent(eventName, args);
         }
 
+        SimObjectEvent LastEvent = null;
         // this pipelike will fire OnEvent to the subscriber list 
         public void SendEvent(SimObjectEvent simObjectEvent)
         {
+            if (LastEvent !=null && simObjectEvent.SameAs(LastEvent))
+            {
+                return;
+            }
+            LastEvent = simObjectEvent;
             foreach (SimEventSubscriber subscriber in GetSubscribers())
             {
                 SimEventSubscriber sub = subscriber;
