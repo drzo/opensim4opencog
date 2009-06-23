@@ -46,9 +46,21 @@ namespace cogbot.Actions
                 catch (OutOfMemoryException) { }
                 catch (StackOverflowException) { }
                 catch (Exception) { }
-                WriteLine("done with " + cmd);
-                lock (Client.botCommandThreads)
-                    TheBotClient.botCommandThreads.Remove(Thread.CurrentThread);
+                try
+                {
+                    WriteLine("done with " + cmd);
+                }
+                catch (OutOfMemoryException) { }
+                catch (StackOverflowException) { }
+                catch (Exception) { }
+                try
+                {
+                    lock (Client.botCommandThreads)
+                        TheBotClient.botCommandThreads.Remove(Thread.CurrentThread);
+                }
+                catch (OutOfMemoryException) { }
+                catch (StackOverflowException) { }
+                catch (Exception) { }
             }));
             thread.Name = "ThreadCommnand for " + cmd;
             thread.Start();
