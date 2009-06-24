@@ -99,9 +99,9 @@ namespace cogbot.Listeners
         {
             if (Utils.GetRunningRuntime() == Utils.Runtime.Mono)
             {
-                client.Settings.USE_LLSD_LOGIN = true;
+               // client.Settings.USE_LLSD_LOGIN = true;
             } //else
-            client.Settings.USE_LLSD_LOGIN = true;
+            ///client.Settings.USE_LLSD_LOGIN = true;
 
             lock (WorldObjectsMasterLock)
             {

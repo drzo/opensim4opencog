@@ -589,7 +589,17 @@ namespace cogbot
         {
             lock (oneAtATime)
             {
-                BotClient bc = new BotClient(this);
+                string fullName = first + " " + last;
+                BotClient bc;
+                lock (BotByName)
+                {
+                    if (BotByName.TryGetValue(fullName, out bc))
+                    {
+                        output(";; Reusing " + fullName);
+                        return bc;
+                    }
+                }
+                bc = new BotClient(this);
                 if (!String.IsNullOrEmpty(first))
                 {
                     bc.BotLoginParams.FirstName = first;
@@ -649,7 +659,7 @@ namespace cogbot
         }
 
         public Dictionary<UUID, BotClient> Clients = new Dictionary<UUID, BotClient>();
-        public Dictionary<Simulator, Dictionary<uint, Primitive>> SimPrims = new Dictionary<Simulator, Dictionary<uint, Primitive>>();
+        //public Dictionary<Simulator, Dictionary<uint, Primitive>> SimPrims = new Dictionary<Simulator, Dictionary<uint, Primitive>>();
 
         public bool Running = true;
         public bool GetTextures = true; //needed for iniminfo
