@@ -363,10 +363,10 @@ namespace OpenMetaverse
             FriendInfo friend = new FriendInfo(fromAgentID, FriendRights.CanSeeOnline, 
                 FriendRights.CanSeeOnline);
 
-            lock (FriendList) if (!FriendList.ContainsKey(fromAgentID))
+            if (!FriendList.ContainsKey(fromAgentID))
                 FriendList.Add(friend.UUID, friend);
 
-            lock (FriendList) if (FriendRequests.ContainsKey(fromAgentID))
+            if (FriendRequests.ContainsKey(fromAgentID))
                 FriendRequests.Remove(fromAgentID);
 
             Client.Avatars.RequestAvatarName(fromAgentID);
@@ -385,7 +385,7 @@ namespace OpenMetaverse
             request.TransactionBlock.TransactionID = imSessionID;
             Client.Network.SendPacket(request);
 
-            lock (FriendList) if (FriendRequests.ContainsKey(fromAgentID))
+            if (FriendRequests.ContainsKey(fromAgentID))
                 FriendRequests.Remove(fromAgentID);
         }
 
@@ -434,7 +434,7 @@ namespace OpenMetaverse
 
                 Client.Network.SendPacket(request);
 
-                lock (FriendList) if (FriendList.ContainsKey(agentID))
+                if (FriendList.ContainsKey(agentID))
                     FriendList.Remove(agentID);
             }
         }
@@ -449,7 +449,7 @@ namespace OpenMetaverse
             TerminateFriendshipPacket itsOver = (TerminateFriendshipPacket)packet;
             string name = String.Empty;
 
-            lock (FriendList) if (FriendList.ContainsKey(itsOver.ExBlock.OtherID))
+            if (FriendList.ContainsKey(itsOver.ExBlock.OtherID))
             {
                 name = FriendList[itsOver.ExBlock.OtherID].Name;
                 FriendList.Remove(itsOver.ExBlock.OtherID);
@@ -547,7 +547,7 @@ namespace OpenMetaverse
             foreach (KeyValuePair<UUID, string> kvp in names)
             {
                 FriendInfo friend;
-                lock (FriendList) if (FriendList.TryGetValue(kvp.Key, out friend))
+                if (FriendList.TryGetValue(kvp.Key, out friend))
                 {
                     if (friend.Name == null)
                         newNames.Add(kvp.Key, names[kvp.Key]);
@@ -582,7 +582,7 @@ namespace OpenMetaverse
                 {
                     FriendInfo friend;
 
-                    lock (FriendList) { if (!FriendList.ContainsKey(block.AgentID))
+                    if (!FriendList.ContainsKey(block.AgentID))
                     {
                         friend = new FriendInfo(block.AgentID, FriendRights.CanSeeOnline,
                             FriendRights.CanSeeOnline);
@@ -591,7 +591,7 @@ namespace OpenMetaverse
                     else
                     {
                         friend = FriendList[block.AgentID];
-                    }}
+                    }
 
                     bool doNotify = !friend.IsOnline;
                     friend.IsOnline = true;
@@ -620,8 +620,8 @@ namespace OpenMetaverse
                 {
                     FriendInfo friend;
 
-                    lock (FriendList) {if (!FriendList.ContainsKey(block.AgentID))
-                        FriendList.Add(block.AgentID, new FriendInfo(block.AgentID, FriendRights.CanSeeOnline, FriendRights.CanSeeOnline));}
+                    if (!FriendList.ContainsKey(block.AgentID))
+                        FriendList.Add(block.AgentID, new FriendInfo(block.AgentID, FriendRights.CanSeeOnline, FriendRights.CanSeeOnline));
 
                     friend = FriendList[block.AgentID];
                     friend.IsOnline = false;
@@ -652,7 +652,7 @@ namespace OpenMetaverse
                 foreach (ChangeUserRightsPacket.RightsBlock block in rights.Rights)
                 {
                     FriendRights newRights = (FriendRights)block.RelatedRights;
-                    lock (FriendList) {if (FriendList.TryGetValue(block.AgentRelated, out friend))
+                    if (FriendList.TryGetValue(block.AgentRelated, out friend))
                     {
                         friend.TheirFriendRights = newRights;
                         if (OnFriendRights != null)
@@ -672,7 +672,7 @@ namespace OpenMetaverse
                                 catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
                             }
                         }
-                    }}
+                    }
                 }
             }
         }
@@ -762,7 +762,7 @@ namespace OpenMetaverse
                 {
                     foreach (BuddyListEntry buddy in replyData.BuddyList)
                     {
-                        lock (FriendList) FriendList[UUID.Parse(buddy.buddy_id)]=(
+                        FriendList.Add(UUID.Parse(buddy.buddy_id),
                             new FriendInfo(UUID.Parse(buddy.buddy_id),
                                 (FriendRights)buddy.buddy_rights_given,
                                 (FriendRights)buddy.buddy_rights_has));

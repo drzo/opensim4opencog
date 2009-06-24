@@ -343,7 +343,14 @@ namespace cogbot
             initTaskInterperter();
             if (TextForm.SingleInstance.config.startupClientLisp.Length > 1)
             {
-                evalLispString("(progn " + TextForm.SingleInstance.config.startupClientLisp + ")");
+                try
+                {
+                    evalLispString("(progn " + TextForm.SingleInstance.config.startupClientLisp + ")");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("" + e);
+                }
             }
         }
 
