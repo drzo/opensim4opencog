@@ -63,7 +63,7 @@ namespace cogbot.Actions
             if (query != queryid)
                 return;
 
-            resolvedMasterKey = matches[0].AgentID;
+            if (matches.Count > 0) resolvedMasterKey = matches[0].AgentID;
             keyResolution.Set();
             query = UUID.Zero;
         }
