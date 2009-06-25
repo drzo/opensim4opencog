@@ -417,7 +417,7 @@ namespace OpenMetaverse
             if (simulator == null)
             {
                 // We're not tracking this sim, create a new Simulator object
-                simulator = new Simulator(Client, endPoint, handle);
+                simulator = Simulator.Create(Client, endPoint, handle);
 
                 // Immediately add this simulator to the list of current sims. It will be removed if the
                 // connection fails
@@ -485,9 +485,14 @@ namespace OpenMetaverse
                 }
                 else
                 {
+                    if (OnSimDisconnected != null)
+                    {
+                        try { OnSimDisconnected(simulator,DisconnectType.NetworkTimeout); }
+                        catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                    }
                     // Connection failed, remove this simulator from our list and destroy it
-                    lock (Simulators) Simulators.Remove(simulator);
-                    return null;
+                    //lock (Simulators) Simulators.Remove(simulator);
+                    return simulator;
                 }
             }
             else if (setDefault)
@@ -610,7 +615,7 @@ namespace OpenMetaverse
                 {
                     if (Simulators[i] != null && Simulators[i] != CurrentSim)
                     {
-                        Simulators[i].Disconnect(sendCloseCircuit, type);
+                        Simulators[i].Disconnect(sendCloseCircuit);
 
                         // Fire the SimDisconnected event if a handler is registered
                         if (OnSimDisconnected != null)

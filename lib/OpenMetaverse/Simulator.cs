@@ -450,18 +450,46 @@ namespace OpenMetaverse
         /// <param name="client">Reference to the GridClient object</param>
         /// <param name="address">IPEndPoint of the simulator</param>
         /// <param name="handle">handle of the simulator</param>
-        public Simulator(GridClient client, IPEndPoint address, ulong handle)
+        private Simulator(GridClient client, IPEndPoint address, ulong handle)
             : base(address)
         {
             Client = client;
 
             Handle = handle;
+            ReInit();
+        }
+
+        private void ReInit()
+        {
             Estate = new EstateTools(Client);
             Network = Client.Network;
             PacketArchive = new IncomingPacketIDCollection(Settings.PACKET_ARCHIVE_SIZE);
             InBytes = new Queue<long>(Client.Settings.STATS_QUEUE_SIZE);
             OutBytes = new Queue<long>(Client.Settings.STATS_QUEUE_SIZE);
         }
+
+
+        readonly static Dictionary<GridClient, Dictionary<ulong, Simulator>> savedSims = new Dictionary<GridClient, Dictionary<ulong, Simulator>>();
+        public static Simulator Create(GridClient client, IPEndPoint point, ulong handle)
+        {
+            Dictionary<ulong, Simulator> dict;
+            lock (savedSims) if (!savedSims.TryGetValue(client, out dict))
+            {
+                dict = new Dictionary<ulong, Simulator>();
+                savedSims.Add(client, dict);
+            }
+            Simulator sim;
+            lock (dict) if (!dict.TryGetValue(handle, out sim))
+            {
+                sim = new Simulator(client, point, handle); 
+                dict.Add(handle,sim);
+            } else
+            {
+                sim.ReInit();
+            }           
+            return sim;
+
+        }   
 
         /// <summary>
         /// Called when this Simulator object is being destroyed
@@ -532,7 +560,7 @@ namespace OpenMetaverse
                 if (Client.Settings.SEND_AGENT_UPDATES)
                     Client.Self.Movement.SendUpdate(true, this);
 
-                if (!ConnectedEvent.WaitOne(Client.Settings.SIMULATOR_TIMEOUT, false))
+                if (!ConnectedEvent.WaitOne(Client.Settings.LOGIN_TIMEOUT, false))
                 {
                     Logger.Log("Giving up on waiting for RegionHandshake for " + this.ToString(),
                         Helpers.LogLevel.Warning, Client);
@@ -584,23 +612,25 @@ namespace OpenMetaverse
                 || disconnectType == NetworkManager.DisconnectType.NetworkTimeout) return;
             if (connected)
             {
-                //if (disconnectType != NetworkManager.DisconnectType.ServerInitiated)
-                //{
-                //    Pause();
-                //    return;
-                //}
                 connected = false;
+
+                if (disconnectType != NetworkManager.DisconnectType.ServerInitiated)
+                {
 
                 // Destroy the timers
                 if (AckTimer != null) AckTimer.Dispose();
+                AckTimer = null;
                 if (StatsTimer != null) StatsTimer.Dispose();
+                StatsTimer = null;
                 if (PingTimer != null) PingTimer.Dispose();
+                PingTimer = null;
 
                 // Kill the current CAPS system
                 if (Caps != null )
                 {
                     Caps.Disconnect(true);
                     Caps = null;
+                }
                 }
 
                 if (sendCloseCircuit)
