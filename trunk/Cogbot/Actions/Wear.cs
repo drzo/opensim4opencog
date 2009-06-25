@@ -18,7 +18,7 @@ namespace cogbot.Actions
         {
            // base.acceptInput(verb, args);
             string target = String.Empty;
-            bool bake = true;
+            bool bake = false;
             try
             {
                 WriteLine("wear args =(" + args.str + ").");
