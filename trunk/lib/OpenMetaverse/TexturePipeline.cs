@@ -189,14 +189,8 @@ namespace OpenMetaverse
             _Client.Network.RegisterCallback(PacketType.ImageData, ImageDataHandler);
             _Client.Network.RegisterCallback(PacketType.ImagePacket, ImagePacketHandler);
             _Client.Network.RegisterCallback(PacketType.ImageNotInDatabase, ImageNotInDatabaseHandler);
-            try
-            {
-                downloadMaster.Start();
-                RefreshDownloadsTimer.Start();
-            } catch(Exception e)
-            {
-                Console.WriteLine(""+e);
-            }
+            downloadMaster.Start();
+            RefreshDownloadsTimer.Start();
         }
 
         /// <summary>
@@ -663,7 +657,10 @@ namespace OpenMetaverse
                                        task.Transfer.ID, Helpers.LogLevel.Warning, _Client);
 
                             _Transfers.Remove(task.Transfer.ID);
-                            resetEvents[task.RequestSlot].Set(); // free up request slot
+                            if (task.RequestSlot >= 0) resetEvents[task.RequestSlot].Set(); // free up request slot
+                            else
+                                Logger.Log("Negative slot in download for " +
+                                           task.Transfer.ID, Helpers.LogLevel.Warning, _Client);
 
                             foreach (TextureDownloadCallback callback in task.Callbacks)
                                 callback(TextureRequestState.Timeout, new AssetTexture(task.RequestID, task.Transfer.AssetData));
