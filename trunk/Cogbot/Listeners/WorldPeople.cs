@@ -89,6 +89,36 @@ namespace cogbot.Listeners
             //OnEvent("On-Current-Groups", paramNamesOnCurrentGroups, paramTypesOnCurrentGroups, groups);
         }
 
+
+        public override void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)
+        {
+            //TODO SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID, null), properties);
+        }
+
+        public override void Avatars_OnAvatarInterests(UUID avatarID, Avatar.Interests interests)
+        {
+            //TODO SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID, null), interests);
+        }
+
+        public override void Avatars_OnAvatarGroups(UUID avatarID, List<AvatarGroup> avatarGroups)
+        {
+            foreach (var grp in avatarGroups)
+            {
+                //TODO SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID, null), grp);                
+            }
+        }
+        public override void Groups_OnGroupMembers(Dictionary<UUID, GroupMember> members)
+        {
+           // base.Groups_OnGroupMembers(members);
+        }
+
+        public override void Groups_OnGroupNames(Dictionary<UUID, string> groupNames)
+        {
+            ///base.Groups_OnGroupNames(groupNames);
+        }
+
+
+
         public override void Avatars_OnAvatarNameSearch(UUID queryID, Dictionary<UUID, string> avatars)
         {
             foreach (KeyValuePair<UUID, string> kvp in avatars)
