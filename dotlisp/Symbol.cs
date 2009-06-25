@@ -136,6 +136,7 @@ internal class SymbolTable
 
 	internal void internType(Type t)
 		{
+        lock (fullNamesToTypes)
 		//add the name to both the full and shortNames
 		//should be no dupes in fullNames
         //    Console.WriteLine(" internType :" + t.ToString() + " fn=" + t.FullName + " sn=" + t.Name);
