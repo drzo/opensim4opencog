@@ -78,7 +78,11 @@ public class Interpreter
 		}
 
 	public String Str(Object x)
-		{
+		{            
+        if (x is string)
+        {
+            return String.Format("\"{0}\"", x.ToString().Replace("\\", "\\\\").Replace("\"", "\\\""));
+        }	    
 		return Util.InvokeObject(strgf,x).ToString();
 		}
 
