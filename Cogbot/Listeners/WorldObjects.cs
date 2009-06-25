@@ -1,4 +1,4 @@
-using System;
+    using System;
 using System.Collections.Generic;
 using System.Threading;
 using cogbot.Actions;
@@ -19,11 +19,12 @@ namespace cogbot.Listeners
         public static bool CanPhantomize = false;
         public static bool CanUseSit = true;
         public static bool DoSimulatorsCatchUp = true;
-        public static bool MaintainAnims = true;
+        public static bool MaintainAnims = false;
         public static bool MaintainAnimsInFolders = false;
         public static bool MaintainAttachments = true;
         public static bool MaintainCollisions = true;
         public static bool MaintainEffects = false;
+        public static bool MaintainActions = true;
         public static bool MaintainPropertiesFromQueue = false;
         public static bool MaintainObjectUpdates = false;
         public static bool MaintainSounds = true;
@@ -128,7 +129,9 @@ namespace cogbot.Listeners
                 client.Settings.AVATAR_TRACKING = true;
                 client.Settings.THROTTLE_OUTGOING_PACKETS = false;
                 client.Settings.MULTIPLE_SIMS = true;
-                client.Settings.SIMULATOR_TIMEOUT = 30 * 60000;
+                client.Settings.SIMULATOR_TIMEOUT = int.MaxValue;
+                client.Settings.LOGIN_TIMEOUT = 120*1000;
+
                 client.Settings.SEND_AGENT_UPDATES = true;
 
                 client.Settings.SEND_PINGS = false;
@@ -147,19 +150,20 @@ namespace cogbot.Listeners
 
                 numberedAvatars = new List<string>();
 
+                if (RegionMasterTexturePipeline == null)
+                {
+                    RegionMasterTexturePipeline = client.Assets;
+                    //RegionMasterTexturePipeline.OnDownloadFinished += new TexturePipeline.DownloadFinishedCallback(RegionMasterTexturePipeline_OnDownloadFinished);
+                    client.Settings.USE_TEXTURE_CACHE = true;
+                }
+                else
+                {
+                    //client.Settings.USE_TEXTURE_CACHE = false;
+                }
+
 
                 if (Master == this)
                 {
-                    if (RegionMasterTexturePipeline == null)
-                    {
-                        RegionMasterTexturePipeline = client.Assets;
-                        //RegionMasterTexturePipeline.OnDownloadFinished += new TexturePipeline.DownloadFinishedCallback(RegionMasterTexturePipeline_OnDownloadFinished);
-                        client.Settings.USE_TEXTURE_CACHE = true;
-                    }
-                    else
-                    {
-                        //client.Settings.USE_TEXTURE_CACHE = false;
-                    }
 
                     {
                         //BotWorld = this;
@@ -201,6 +205,7 @@ namespace cogbot.Listeners
                             (SimActor)GetSimObject(GetAvatar(client.Self.AgentID, client.Network.CurrentSim));
                         if (m_TheSimAvatar == null)
                         {
+                            throw new NullReferenceException("m_TheSimAvatar");
                             Thread.Sleep(1000);
                             continue;
                         }
@@ -295,6 +300,9 @@ namespace cogbot.Listeners
         public void CatchUp(Simulator simulator)
         {
             List<Primitive> primsCatchup;
+            object simLock = GetSimLock(simulator);
+            //Thread.Sleep(3000);
+            if (!Monitor.TryEnter(simLock)) return; else Monitor.Exit(simLock);
             lock (simulator.ObjectsPrimitives.Dictionary)
                 primsCatchup = new List<Primitive>(simulator.ObjectsPrimitives.Dictionary.Values);
             lock (simulator.ObjectsAvatars.Dictionary)
@@ -310,6 +318,7 @@ namespace cogbot.Listeners
                     //         known = uuidTypeObject.ContainsKey(item.ID);
                     //   if (!known)
                     if (item.ParentID == 0 && SimRegion.OutOfRegion(item.Position)) continue;
+                    if (!Monitor.TryEnter(simLock)) return; else Monitor.Exit(simLock);
                     GetSimObject(item, simulator);
                 }
             }
@@ -320,6 +329,8 @@ namespace cogbot.Listeners
         {
             return "(.WorldSystem " + client + ")";
         }
+
+        static int waiters = 0;
 
         public SimObject GetSimObject(Primitive prim, Simulator simulator)
         {
@@ -339,13 +350,20 @@ namespace cogbot.Listeners
             {
                 simulator = GetSimulator(prim);
             }
-            lock (GetSimObjectLock)
-            {
-                if (!GetSimObjectLock.ContainsKey(simulator.Handle))
-                    GetSimObjectLock[simulator.Handle] = new object();
-            }
 
-            lock (GetSimObjectLock[simulator.Handle])
+            object olock = GetSimLock(simulator);
+            //waiters++;
+            //while (!Monitor.TryEnter(olock))
+            //{
+            //    if (waiters > 2)
+            //    {
+            //        Debug("waiters=" + waiters);
+            //    }
+            //    Thread.Sleep(1000);
+            //    Debug("Held Lock too long");
+            //}
+            //waiters--;
+            lock (olock)
             {
                 obj0 = GetSimObjectFromPrimUUID(prim);
                 if (obj0 != null) return obj0;
@@ -369,10 +387,10 @@ namespace cogbot.Listeners
                 {
                     obj0 = new SimObjectImpl(prim, this, simulator);
                 }
-                RegisterUUID(prim.ID, obj0);
                 lock (SimObjects) SimObjects.AddTo((SimObject)obj0);
-                SendOnAddSimObject(obj0);
+                RegisterUUID(prim.ID, obj0);
             }
+            SendOnAddSimObject(obj0);
             return (SimObject)obj0;
         }
 
@@ -389,11 +407,11 @@ namespace cogbot.Listeners
                 }
             }
             return null; // todo
-            WorldObjects WO = Master;
+            //WorldObjects WO = Master;
 
-            Primitive p = WO.GetPrimitive(id, null);
-            if (p == null) return null;
-            return WO.GetSimObject(p);
+            //Primitive p = WO.GetPrimitive(id, null);
+            //if (p == null) return null;
+            //return WO.GetSimObject(p);
             //Avatar av = null;
             //if (false /*todo deadlocker*/ && Master.tryGetAvatarById(id, out av))
             //{
@@ -445,6 +463,7 @@ namespace cogbot.Listeners
             {
                 // TODO maybe add a timer
                 Thread.Sleep(1000);
+                Debug("BlockUntilProperties " + prim);
             }
             return prim;
         }
@@ -457,6 +476,7 @@ namespace cogbot.Listeners
             {
                 // TODO maybe add a timer
                 Thread.Sleep(1000);
+                Debug("BlockUntilPrimValid " + prim);
             }
             return prim;
         }
@@ -623,7 +643,16 @@ namespace cogbot.Listeners
         public override void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle,
                                                  ushort timeDilation)
         {
+
             SimObject AV = GetSimObject(avatar, simulator);
+            if (avatar.ID==client.Self.AgentID)
+            {
+                if (AV is SimActor)
+                {
+                    m_TheSimAvatar = (SimActor)AV;
+                    m_TheSimAvatar.SetClient(client);
+                }
+            }
             AV.IsKilled = false;
             if (IsMaster(simulator))
             //lock (Objects_OnNewAvatarLock)

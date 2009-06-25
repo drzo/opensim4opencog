@@ -21,6 +21,7 @@ namespace cogbot.Listeners
 
         public override void Self_OnAnimationsChanged(InternalDictionary<UUID, int> agentAnimations)
         {
+            if (!MaintainAnims) return;
             Avatars_OnAvatarAnimation(client.Self.AgentID, agentAnimations);
         }
 
@@ -36,6 +37,7 @@ namespace cogbot.Listeners
 
         public override void Avatars_OnAvatarAnimation(UUID avatarID, InternalDictionary<UUID, int> anims)
         {
+            if (!MaintainAnims) return;
             lock (UpdateQueue)
                 UpdateQueue.Enqueue(() =>
                 {
@@ -66,6 +68,7 @@ namespace cogbot.Listeners
              */
         public override void Objects_OnAvatarSitChanged(Simulator simulator, Avatar avatar, uint sittingOn, uint oldSeat)
         {
+            if (!MaintainActions) return;
             lock (UpdateQueue)
                 UpdateQueue.Enqueue(() =>
                 {
@@ -114,6 +117,7 @@ namespace cogbot.Listeners
 
         private void LogSitEvent(SimObject user, SimEventStatus updown, string p, params object[] args)
         {
+            if (!MaintainActions) return;
             //Console.WriteLine(user + " " + p + " " + ScriptEngines.ScriptEventListener.argsListString(args));
             user.LogEvent(SendNewEvent(new SimObjectEvent(p, SimEventType.SIT, updown, args)));
         }
@@ -169,6 +173,7 @@ namespace cogbot.Listeners
 
         public override void Sound_OnAttachSoundGainChange(UUID objectID, float gain)
         {
+            if (!MaintainSounds) return;
             lock (UpdateQueue)
                 UpdateQueue.Enqueue(() =>
                 {
@@ -182,6 +187,7 @@ namespace cogbot.Listeners
         public override void Self_OnMeanCollision(MeanCollisionType type, UUID perp, UUID victim, float magnitude,
                                           DateTime time)
         {
+            if (!MaintainEffects) return;
             lock (UpdateQueue)
                 UpdateQueue.Enqueue(() =>
                 {
@@ -210,13 +216,15 @@ namespace cogbot.Listeners
         public override void Avatars_OnPointAt(UUID sourceID, UUID targetID,
                                                Vector3d targetPos, PointAtType lookType, float duration, UUID id)
         {
+            if (!MaintainEffects) return;
             SendEffect(client.Network.CurrentSim, sourceID, targetID, targetPos, "PointAtType-" + lookType.ToString(), duration, id);
         }
 
         public override void Avatars_OnLookAt(UUID sourceID, UUID targetID,
                                               Vector3d targetPos, LookAtType lookType, float duration, UUID id)
         {
-            SendEffect(client.Network.CurrentSim,sourceID, targetID, targetPos, "LookAtType-" + lookType.ToString(), duration, id);
+            if (!MaintainEffects) return;
+            SendEffect(client.Network.CurrentSim, sourceID, targetID, targetPos, "LookAtType-" + lookType.ToString(), duration, id);
         }
 
         public bool UseEventSource(Object so)
@@ -233,7 +241,8 @@ namespace cogbot.Listeners
         public void SendEffect(Simulator sim, UUID sourceID, UUID targetID, Vector3d targetPos, string effectType, float duration,
                                UUID id)
         {
-            if (sourceID==client.Self.AgentID) return; //not sending our own effects
+            if (!MaintainEffects) return;
+            if (sourceID == client.Self.AgentID) return; //not sending our own effects
             if (id != UUID.Zero)
             {
                 // if (EffectsSent.Contains(id)) return;
