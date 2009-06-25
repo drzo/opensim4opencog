@@ -16,7 +16,7 @@ namespace AIMLBotModule
         ///  false = wont respond to user until they say something like "turn chat on" 
         ///  See next function to change the keywords
         /// </summary>
-        public bool RespondToChatByDefaultAllUsers = true;
+        public bool RespondToChatByDefaultAllUsers = false;
         /// <summary>
         /// Respond to group chat
         /// </summary>
