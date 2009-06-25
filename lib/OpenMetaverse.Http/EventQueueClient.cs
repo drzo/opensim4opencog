@@ -153,6 +153,8 @@ namespace OpenMetaverse.Http
                 else if (code == HttpStatusCode.NotFound)
                 {
                     Logger.Log.InfoFormat("event queue at {0} got {1} message {2}", _Address, code, error.Message);
+                    _Running = false;
+                    _Dead = true;
                 }
                 else if (code == HttpStatusCode.BadGateway)
                 {
