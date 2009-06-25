@@ -10,7 +10,7 @@ namespace cogbot.Listeners
 {
     public partial class WorldObjects
     {
-        private static AssetManager RegionMasterTexturePipeline;
+        private AssetManager RegionMasterTexturePipeline;
         private static readonly List<UUID> TexturesSkipped = new List<UUID>();
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace cogbot.Listeners
         public byte[] TextureBytesFormUUID(UUID uUID)
         {
             ImageDownload ID = null;
-            lock (uuidTypeObject)
+            //lock (uuidTypeObject)
             {
                 object iObject;
                 if (uuidTypeObject.TryGetValue(uUID, out iObject))
@@ -107,7 +107,7 @@ namespace cogbot.Listeners
             return ID.AssetData;
         }
 
-        public static void RequestAsset(UUID id, AssetType assetType, bool p)
+        public void RequestAsset(UUID id, AssetType assetType, bool p)
         {
             lock (AssetRequests)
             {
@@ -118,7 +118,7 @@ namespace cogbot.Listeners
                 if (AssetRequests.ContainsKey(id)) return;
                 if (assetType == AssetType.Texture)
                 {
-                    Master.StartTextureDownload(id);
+                    StartTextureDownload(id);
                     return;
                 }
                 UUID req = RegionMasterTexturePipeline.RequestAsset(id, assetType, p);
@@ -190,7 +190,7 @@ namespace cogbot.Listeners
             }
             lock (TexturesSkipped) if (TexturesSkipped.Contains(id)) return null;
             TextureRequested++;
-            RegionMasterTexturePipeline.RequestImage(id, ImageType.Normal,
+            client.Assets.RequestImage(id, ImageType.Normal,
                                                      RegionMasterTexturePipeline_OnDownloadFinished);
             return null;
         }

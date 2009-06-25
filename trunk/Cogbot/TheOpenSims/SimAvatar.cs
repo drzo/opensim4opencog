@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading;
 using cogbot.Listeners;
 using OpenMetaverse;
@@ -275,7 +276,8 @@ namespace cogbot.TheOpenSims
                             actionThread.Start();
                         }
                     }
-                } catch(Exception e)
+                }
+                catch (Exception e)
                 {
                     Console.WriteLine("" + e);
                 }
@@ -1695,7 +1697,7 @@ namespace cogbot.TheOpenSims
                                       if (newAnimNumber >= mostCurrentSequence)
                                       {
                                           mostCurrentSequence = newAnimNumber;
-                                          WorldObjects.RequestAsset(key, AssetType.Animation, true);
+                                          WorldObjects.Master.RequestAsset(key, AssetType.Animation, true);
                                           //mostCurrentAnim = key;
                                       }
                                       if (ExpectedCurrentAnims.ContainsKey(key))
@@ -1915,24 +1917,27 @@ namespace cogbot.TheOpenSims
 
         private static void GetSequenceNumbers(IEnumerable<KeyValuePair<UUID, int>> anims, ref int leastCurrentSequence,ref int mostCurrentSequence)
         {
-            int mostCurrentSequence0 = mostCurrentSequence;
-            int leastCurrentSequence0 = leastCurrentSequence;
-            foreach (KeyValuePair<UUID, int> i in anims)
+            lock (anims)
             {
-                int newAnimNumber = i.Value;
-                if (newAnimNumber < leastCurrentSequence0)
+                int mostCurrentSequence0 = mostCurrentSequence;
+                int leastCurrentSequence0 = leastCurrentSequence;
+                foreach (KeyValuePair<UUID, int> i in anims)
                 {
-                    leastCurrentSequence0 = newAnimNumber;
+                    int newAnimNumber = i.Value;
+                    if (newAnimNumber < leastCurrentSequence0)
+                    {
+                        leastCurrentSequence0 = newAnimNumber;
+                    }
+                    if (newAnimNumber > mostCurrentSequence0)
+                    {
+                        mostCurrentSequence0 = newAnimNumber;
+                    }
+                    WorldObjects.Master.RequestAsset(i.Key, AssetType.Animation, true);
+
                 }
-                if (newAnimNumber > mostCurrentSequence0)
-                {
-                    mostCurrentSequence0 = newAnimNumber;
-                }
-                WorldObjects.RequestAsset(i.Key, AssetType.Animation, true);
-                
+                leastCurrentSequence = leastCurrentSequence0;
+                mostCurrentSequence = mostCurrentSequence0;
             }
-            leastCurrentSequence = leastCurrentSequence0;
-            mostCurrentSequence = mostCurrentSequence0;
         }
 
         //private delegate bool AnimationTest(ICollection<UUID> thisEvent);

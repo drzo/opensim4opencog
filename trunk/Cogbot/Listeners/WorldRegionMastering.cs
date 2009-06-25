@@ -124,7 +124,7 @@ namespace cogbot.Listeners
             }
             if (simulator==client.Network.CurrentSim)
             {
-                client.Appearance.SetPreviousAppearance(false);
+                new Thread(() => client.Appearance.SetPreviousAppearance(false)).Start();
             }
         }
 
@@ -140,7 +140,7 @@ namespace cogbot.Listeners
         {
             if (string.IsNullOrEmpty(simulator.Name))
             {
-               simulator.Client.Grid.RequestMapItems(simulator.Handle,GridItemType.AgentLocations,GridLayerType.Terrain); 
+           //    simulator.Client.Grid.RequestMapItems(simulator.Handle,GridItemType.AgentLocations,GridLayerType.Terrain); 
             }
             base.Network_OnEventQueueRunning(simulator);
         }
@@ -151,6 +151,7 @@ namespace cogbot.Listeners
             {
                 Debug("TheSimAvatar._CurrentRegion.TheSimulator == PreviousSimulator " + PreviousSimulator);
             }
+            new Thread(() => client.Appearance.SetPreviousAppearance(false)).Start();
             base.Network_OnCurrentSimChanged(PreviousSimulator);
         }
 
@@ -327,6 +328,7 @@ namespace cogbot.Listeners
                 if (isMaster) Master = this;
                 if (MasteringRegions.Count > 0 && !isMaster) throw new ArgumentException("Cant un-master!");
 
+                isMaster = true;
                 client.Settings.ALWAYS_DECODE_OBJECTS = isMaster;
                 client.Settings.ALWAYS_REQUEST_OBJECTS = isMaster;
                 client.Settings.ALWAYS_REQUEST_PARCEL_ACL = isMaster;
@@ -405,14 +407,19 @@ namespace cogbot.Listeners
         {
             SimRegion r = SimRegion.GetRegion(parcel.SimName);
             r.Parcels_OnParcelInfo(parcel);
-            base.Parcels_OnParcelInfo(parcel);
+           // base.Parcels_OnParcelInfo(parcel);
+        }
+
+        public override void Parcels_OnAccessListReply(Simulator simulator, int sequenceID, int localID, uint flags, List<ParcelManager.ParcelAccessEntry> accessEntries)
+        {
+            //base.Parcels_OnAccessListReply(simulator, sequenceID, localID, flags, accessEntries);
         }
 
         public override void Parcels_OnParcelProperties(Simulator simulator, Parcel parcel, ParcelResult result, int selectedPrims, int sequenceID, bool snapSelection)
         {
             SimRegion r = SimRegion.GetRegion(simulator);
             r.Parcels_OnParcelProperties(simulator, parcel, result, selectedPrims, sequenceID, snapSelection);
-            base.Parcels_OnParcelProperties(simulator, parcel, result, selectedPrims, sequenceID, snapSelection);
+            //base.Parcels_OnParcelProperties(simulator, parcel, result, selectedPrims, sequenceID, snapSelection);
         }
         public override void Parcels_OnParcelSelectedObjects(Simulator simulator, List<uint> objectIDs, bool resetList)
         {
@@ -430,7 +437,7 @@ namespace cogbot.Listeners
                 parcelInfoRequests.Add(parcelID);
             }
             client.Parcels.InfoRequest(parcelID);
-            base.Parcels_OnParcelDwell(parcelID, localID, dwell);
+            //base.Parcels_OnParcelDwell(parcelID, localID, dwell);
         }
 
 
@@ -464,7 +471,7 @@ namespace cogbot.Listeners
                 if (!RequestParcelObjects)
                 {
                     RequestParcelObjects = true;
-                    client.Parcels.RequestAllSimParcels(sim, true, 250);
+                    client.Parcels.RequestAllSimParcels(sim, false, 250);
                     client.Grid.RequestMapItems(sim.Handle, GridItemType.AgentLocations, GridLayerType.Objects);
                 }
                 client.Avatars.RequestAvatarName(sourceID);
@@ -476,7 +483,7 @@ namespace cogbot.Listeners
                 client.Self.PointAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, PointAtType.None, trans);
                 client.Self.LookAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, LookAtType.None, trans);
                 client.Self.BeamEffect(UUID.Zero, UUID.Zero, Vector3d.Zero, new Color4(255, 255, 255, 255), 0, trans); 
-                client.Self.RequestSit(sourceID,Vector3.Zero);
+               // client.Self.RequestSit(sourceID,Vector3.Zero);
                 //  client.Directory.
             }
 
@@ -518,6 +525,22 @@ namespace cogbot.Listeners
                         }
             }
             return source;
+        }
+
+        public static WorldObjects MasterFor(ulong handle)
+        {
+            return Master;
+        }
+
+        static object GetSimLock(Simulator simulator)
+        {
+            lock (GetSimObjectLock)
+            {
+                if (!GetSimObjectLock.ContainsKey(simulator.Handle))
+                    GetSimObjectLock[simulator.Handle] = new object();
+            }
+
+            return GetSimObjectLock[simulator.Handle];
         }
     }
 }

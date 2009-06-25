@@ -212,7 +212,7 @@ namespace cogbot.TheOpenSims
         readonly private float maxDistance;
         readonly private Thread FollowThread;
         private bool KeepFollowing = true;
-        public static bool UsePathfinder = true;
+        public static bool UsePathfinder = false;
 
         public FollowerAction(SimAvatar impl, SimPosition position)
             : base("" + impl.GetName() + ": Follow " + position + " -> " + impl.DistanceVectorString(position))
