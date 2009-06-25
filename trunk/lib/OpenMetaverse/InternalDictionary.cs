@@ -125,7 +125,7 @@ namespace OpenMetaverse
         /// </example>
         public bool TryGetValue(TKey key, out TValue value)
         {
-            lock (Dictionary)
+            //lock (Dictionary)
             {
                 return Dictionary.TryGetValue(key, out value);
             }

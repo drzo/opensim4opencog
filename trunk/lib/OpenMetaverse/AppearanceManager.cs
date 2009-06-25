@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2006-2008, openmetaverse.org
  * All rights reserved.
@@ -885,11 +884,12 @@ namespace OpenMetaverse
 
         private void SendAgentSetAppearance()
         {
+            const bool UseExtraParams = false;
             AgentSetAppearancePacket set = new AgentSetAppearancePacket();
             set.AgentData.AgentID = Client.Self.AgentID;
             set.AgentData.SessionID = Client.Self.SessionID;
             set.AgentData.SerialNum = SetAppearanceSerialNum++;
-            set.VisualParam = new AgentSetAppearancePacket.VisualParamBlock[258];
+            set.VisualParam = new AgentSetAppearancePacket.VisualParamBlock[UseExtraParams ? 258 : 218];
 
             float AgentSizeVPHeight = 0.0f;
             float AgentSizeVPHeelHeight = 0.0f;
@@ -912,7 +912,6 @@ namespace OpenMetaverse
                     // Only Group-0 parameters are sent in AgentSetAppearance packets
                     if (vp.Group == 0)
                     {
-                        set.VisualParam = new AgentSetAppearancePacket.VisualParamBlock[VisualParams.Params.Count]; 
                         set.VisualParam[vpIndex] = new AgentSetAppearancePacket.VisualParamBlock();
                         set.VisualParam[vpIndex].ParamValue = Utils.FloatToByte(vp.DefaultValue, vp.MinValue, vp.MaxValue);
 
@@ -956,12 +955,15 @@ namespace OpenMetaverse
                     }
                     else
                     {
-                        if ((vp.Wearable != null) && vp.Wearable.Equals("shape"))
+                        if (UseExtraParams)
                         {
-                            set.VisualParam[vpIndex] = new AgentSetAppearancePacket.VisualParamBlock();
-                            set.VisualParam[vpIndex].ParamValue = Utils.FloatToByte(vp.DefaultValue, vp.MinValue,
-                                                                                    vp.MaxValue);
-                            ++vpIndex;
+                            if ((vp.Wearable != null) && vp.Wearable.Equals("shape"))
+                            {
+                                set.VisualParam[vpIndex] = new AgentSetAppearancePacket.VisualParamBlock();
+                                set.VisualParam[vpIndex].ParamValue = Utils.FloatToByte(vp.DefaultValue, vp.MinValue,
+                                                                                        vp.MaxValue);
+                                ++vpIndex;
+                            }
                         }
                     }
                 }
@@ -1579,3 +1581,4 @@ namespace OpenMetaverse
         #endregion Callbacks
     }
 }
+
