@@ -738,7 +738,8 @@ namespace cogbot
             try
             {
                 if (str == null) return;
-                str = String.Format(str, args).Trim();
+                if (args != null && args.Length > 0) str = String.Format(str, args);
+                str = str.Trim();
                 if (str == "") return;
                 if (str.StartsWith("$bot")) str = str.Substring(4);
                 string toprint = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");

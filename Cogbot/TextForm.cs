@@ -386,7 +386,7 @@ namespace cogbot
             try
             {
                 if (str == null) return;
-                if (args.Length>0) str = String.Format(str, args);
+                if (args != null && args.Length > 0) str = String.Format(str, args);
                 str = str.Trim();
                 if (str == "") return;
 
