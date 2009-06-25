@@ -65,7 +65,7 @@
     (thisClient.ExecuteCommand (@"wear Clothing/HMG"))
     ;; interesting places
     ;; (thisClient.ExecuteCommand (@"teleport Desperation Andromeda/175/211/330")
-    (thisClient.ExecuteCommand (@"thread appearance"))   
+    ;;(thisClient.ExecuteCommand (@"thread appearance"))   
     )
  )
 
