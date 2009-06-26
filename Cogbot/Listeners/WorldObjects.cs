@@ -19,11 +19,11 @@ namespace cogbot.Listeners
         public static bool CanPhantomize = false;
         public static bool CanUseSit = true;
         public static bool DoSimulatorsCatchUp = true;
-        public static bool MaintainAnims = false;
+        public static bool MaintainAnims = true;
         public static bool MaintainAnimsInFolders = false;
         public static bool MaintainAttachments = true;
         public static bool MaintainCollisions = true;
-        public static bool MaintainEffects = false;
+        public static bool MaintainEffects = true;
         public static bool MaintainActions = true;
         public static bool MaintainPropertiesFromQueue = false;
         public static bool MaintainObjectUpdates = false;
@@ -336,7 +336,7 @@ namespace cogbot.Listeners
         {
             if (prim == null) return null;
             //if (prim.ID == null) return null;
-            SimObject obj0 = GetSimObjectFromPrimUUID(prim);
+            SimObject obj0 = GetSimObjectFromUUID(prim.ID);
             if (obj0 != null)
             {
                 if (simulator != null && prim.Properties == null)
@@ -365,7 +365,7 @@ namespace cogbot.Listeners
             //waiters--;
             lock (olock)
             {
-                obj0 = GetSimObjectFromPrimUUID(prim);
+                obj0 = GetSimObjectFromUUID(prim.ID);
                 if (obj0 != null) return obj0;
                 // not found
                 if (prim is Avatar)
@@ -491,12 +491,12 @@ namespace cogbot.Listeners
                 //   base.Objects_OnObjectKilled(simulator, objectID);
                 return;
             }
-            SimObject O = GetSimObjectFromPrimUUID(p);
+            SimObject O = GetSimObjectFromUUID(p.ID);
             lock (UpdateQueue)
                 UpdateQueue.Enqueue(() =>
                                         {
                                             if (O == null)
-                                                O = GetSimObjectFromPrimUUID(p);
+                                                O = GetSimObjectFromUUID(p.ID);
                                             // if (O == null)
                                             //     O = GetSimObject(p, simulator);
                                             if (O == null)
@@ -747,11 +747,12 @@ namespace cogbot.Listeners
         {
             if (id == UUID.Zero) return null;
 
-            lock (uuidTypeObject)
-                if (uuidTypeObject.ContainsKey(id))
+            object found;
+            //lock (uuidTypeObject)
+                if (uuidTypeObject.TryGetValue(id,out found))
                 {
-                    object found = uuidTypeObject[id];
-                    if (found != null)
+                    //object found = uuidTypeObject[id];
+                    //if (found != null)
                         return found;
                 }
 
@@ -770,7 +771,7 @@ namespace cogbot.Listeners
         {
             string name = SimAssetSystem.GetAssetName(id);
             if (name != null) return name;
-            lock (uuidTypeObject)
+            //lock (uuidTypeObject)
             {
                 Object assetObject;
                 if (uuidTypeObject.TryGetValue(id, out assetObject))
@@ -787,11 +788,12 @@ namespace cogbot.Listeners
     
         public Primitive GetPrimitive(UUID id, Simulator simulator)
         {
-            lock (uuidTypeObject)
+            //lock (uuidTypeObject)
             {
-                if (uuidTypeObject.ContainsKey(id))
+                object simobject;
+                if (uuidTypeObject.TryGetValue(id, out simobject))
                 {
-                    object simobject = uuidTypeObject[id];
+                    //object simobject = uuidTypeObject[id];
                     if (simobject != null && simobject is SimObject)
                         return ((SimObject)simobject).Prim;
                 }
@@ -868,12 +870,13 @@ namespace cogbot.Listeners
                     }
                 }
             }
-            lock (uuidTypeObject)
-                if (uuidTypeObject.ContainsKey(id))
+            //lock (uuidTypeObject)
+                object simobjectf;
+                if (uuidTypeObject.TryGetValue(id,out simobjectf))
                 {
-                    object simobject = uuidTypeObject[id];
-                    if (simobject != null && simobject is SimObject)
-                        return ((SimObject)simobject).Prim;
+                    //object simobject = uuidTypeObject[id];
+                    if (simobjectf != null && simobjectf is SimObject)
+                        return ((SimObject)simobjectf).Prim;
                 }
             return null;
         }

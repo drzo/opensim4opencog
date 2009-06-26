@@ -55,7 +55,7 @@ namespace cogbot.Listeners
 
             if (im.FromAgentID != UUID.Zero)
             {
-                lock (Name2Key) Name2Key[im.FromAgentName.ToLower()] = im.FromAgentID;
+                lock (Name2Key) Name2Key[im.FromAgentName] = im.FromAgentID;
                 if (im.RegionID != UUID.Zero)
                 {
                     AvatarRegion[im.FromAgentID] = im.RegionID;
@@ -123,7 +123,7 @@ namespace cogbot.Listeners
         {
             foreach (KeyValuePair<UUID, string> kvp in avatars)
             {
-                lock (Name2Key) Name2Key[kvp.Value.ToLower()] = kvp.Key;
+                lock (Name2Key) Name2Key[kvp.Value] = kvp.Key;
             }
         }
 
@@ -131,7 +131,7 @@ namespace cogbot.Listeners
         {
             foreach (KeyValuePair<UUID, string> kvp in names)
             {
-                lock (Name2Key) Name2Key[kvp.Value.ToLower()] = kvp.Key;
+                lock (Name2Key) Name2Key[kvp.Value] = kvp.Key;
             }
         }
 
@@ -139,15 +139,15 @@ namespace cogbot.Listeners
         {
             foreach (KeyValuePair<UUID, string> kvp in picks)
             {
-                lock (Name2Key) Name2Key[kvp.Value.ToLower()] = kvp.Key;
+                lock (Name2Key) Name2Key[kvp.Value] = kvp.Key;
             }
         }
 
         public override void Friends_OnFriendOnline(FriendInfo friend)
         {
-            if (friend.IsOnline && !string.IsNullOrEmpty(friend.Name) && friend.Name.ToLower() == client.MasterName.ToLower())
+            if (friend.IsOnline && !string.IsNullOrEmpty(friend.Name) && friend.Name == client.MasterName)
             {
-                lock (Name2Key) Name2Key[friend.Name.ToLower()] = friend.UUID;
+                lock (Name2Key) Name2Key[friend.Name] = friend.UUID;
                 client.Self.InstantMessage(friend.UUID, "Hello Master");
             }
             //base.Friends_OnFriendOnline(friend);
@@ -157,10 +157,10 @@ namespace cogbot.Listeners
         {
             base.Friends_OnFriendNamesReceived(names);
             bool masterFound = false;
-            string clientMasterNameToLower = client.MasterName.ToLower();
+            string clientMasterNameToLower = client.MasterName;
             foreach (KeyValuePair<UUID, string> kvp in names)
             {
-                string kvpValueToLower = kvp.Value.ToLower();
+                string kvpValueToLower = kvp.Value;
                 lock (Name2Key) Name2Key[kvpValueToLower] = kvp.Key;
                 if (clientMasterNameToLower == kvpValueToLower)
                 {
@@ -211,7 +211,7 @@ namespace cogbot.Listeners
             matchedPeople.ForEach(data =>
             {
                 lock (Name2Key)
-                    Name2Key[data.FirstName.ToLower() + " " + data.LastName.ToLower()] = data.AgentID;
+                    Name2Key[data.FirstName + " " + data.LastName] = data.AgentID;
             });
         }
 
@@ -226,16 +226,20 @@ namespace cogbot.Listeners
 
         public override void Friends_OnFriendRights(FriendInfo friend)
         {
-            lock (Name2Key) Name2Key[friend.Name.ToLower()] = friend.UUID;
+            lock (Name2Key) Name2Key[friend.Name] = friend.UUID;
             base.Friends_OnFriendRights(friend);
         }
 
         internal UUID GetUserID(string ToAvatarName)
         {
             lock (Name2Key)
-                if (Name2Key.ContainsKey(ToAvatarName.ToLower()))
+                foreach (KeyValuePair<string, UUID> kvp in Name2Key)
                 {
-                    return Name2Key[ToAvatarName.ToLower()];
+                    if (kvp.Key.ToLower() == ToAvatarName.ToLower())
+                    {
+                        return kvp.Value;
+
+                    }
                 }
             UUID found = UUID.Zero;
 
@@ -248,7 +252,7 @@ namespace cogbot.Listeners
                         if (kvp.Value.ToLower() == ToAvatarName.ToLower())
                         {
                             lock (Name2Key)
-                                Name2Key[ToAvatarName.ToLower()] =
+                                Name2Key[ToAvatarName] =
                                     kvp.Key;
                             NameSearchEvent.Set();
                             return;
@@ -258,7 +262,7 @@ namespace cogbot.Listeners
 
             bool indict;
 
-            lock (Name2Key) indict = Name2Key.ContainsKey(ToAvatarName.ToLower());
+            lock (Name2Key) indict = Name2Key.ContainsKey(ToAvatarName);
 
             if (!indict)
             {
@@ -278,9 +282,9 @@ namespace cogbot.Listeners
 
 
             lock (Name2Key)
-                if (Name2Key.ContainsKey(ToAvatarName.ToLower()))
+                if (Name2Key.ContainsKey(ToAvatarName))
                 {
-                    found = Name2Key[ToAvatarName.ToLower()];
+                    found = Name2Key[ToAvatarName];
 
                 }
 
