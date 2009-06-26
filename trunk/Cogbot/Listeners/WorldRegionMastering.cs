@@ -524,6 +524,10 @@ namespace cogbot.Listeners
                             }
                         }
             }
+            if (s==null)
+            {
+                s = sourceID;
+            }
             return source;
         }
 
