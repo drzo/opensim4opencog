@@ -11,19 +11,33 @@ namespace cogbot.Actions
             : base(Client)
         {
             helpString = "Usage: wear [outfit name] ";
-            usageString = helpString + "\r\n you can type  'wear /My Outfit/Dance Party";
+            usageString = helpString + "\r\n you can type  'wear [bake] /My Outfit/Dance Party";
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
            // base.acceptInput(verb, args);
             string target = String.Empty;
+            if (args.Length == 0) return usageString;
             bool bake = false;
+            string wear = args.str.Trim();
+            if (args[0] == "bake")
+            {
+                bake = true;
+                wear = wear.Substring(4).Trim();
+            }
+            if (args[0] == "test")
+            {
+                bake = true;
+                wear = wear.Substring(4).Trim();
+                TheBotClient.wearFolder(wear);
+                return ("wearing folder: " + wear + " " + (bake ? " (baked)" : " (not baked)"));
+            } 
             try
             {
-                WriteLine("wear args =(" + args.str + ").");
+                WriteLine("wearing folder: " + wear + " " +(bake?" (baked)":" (not baked)"));
                 Client.Appearance.WearOutfit(args.str.Split('/'), bake);
-                return "worn " + args.str;
+                return wear;
             }
             catch (InvalidOutfitException ex)
             {
