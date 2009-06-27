@@ -121,6 +121,8 @@ namespace cogbot.Listeners
                     StartTextureDownload(id);
                     return;
                 }
+                if (assetType == AssetType.Sound) return;
+                if (assetType == AssetType.SoundWAV) return;
                 UUID req = RegionMasterTexturePipeline.RequestAsset(id, assetType, p);
                 AssetRequestType[req] = assetType;
                 AssetRequests[id] = req;

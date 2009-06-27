@@ -20,7 +20,7 @@ namespace cogbot.TheOpenSims
         }
 
         public ulong RegionHandle { get; set; }
-        readonly public UUID ID;
+        public UUID ID { get; set;}
         
 
         public float GetCubicMeters()
@@ -273,6 +273,11 @@ namespace cogbot.TheOpenSims
         readonly private List<Primitive> primRefs = new List<Primitive>();
         public void ResetPrim(Primitive prim, BotClient bc, Simulator sim)
         {
+            if (_Prim0==null)
+            {
+                SetFirstPrim(prim);
+                return;
+            }
             if (prim.RegionHandle != _Prim0.RegionHandle || !Object.ReferenceEquals(prim, _Prim0))
             {
                 lock (primRefs)
@@ -570,29 +575,39 @@ namespace cogbot.TheOpenSims
         /// </summary>
         public float scaleOnNeeds = 1.11F;
 
-        public SimObjectImpl(Primitive prim, WorldObjects objectSystem, Simulator sim)
+        public SimObjectImpl(UUID id, WorldObjects objectSystem, Simulator sim)
             //: base(prim.ID.ToString())
             // : base(prim, SimRegion.SceneProviderFromSimulator(sim))
         {
-            ID = prim.ID;
-            if (prim.RegionHandle==0)
-            {
-                prim.RegionHandle = sim.Handle;
-            }
-            RegionHandle = prim.RegionHandle;
-            _Prim0 = prim;
-            primRefs.Add(prim);
+            ID = id;
+            if (sim!=null) RegionHandle = sim.Handle;
             WorldSystem = objectSystem;
-            ObjectType = SimTypeSystem.CreateInstanceType(prim.ID.ToString());
-            UpdateProperties(Prim.Properties);
+            ObjectType = SimTypeSystem.CreateInstanceType(id.ToString());
             //_CurrentRegion = SimRegion.GetRegion(sim);
             // PathStore = GetSimRegion();
             //WorldSystem.EnsureSelected(prim.ParentID,sim);
-            if (WorldObjects.MaintainCollisions && Prim.Sculpt != null)
-            {
-                objectSystem.StartTextureDownload(Prim.Sculpt.SculptTexture);
-            }
             // Parent; // at least request it
+        }
+
+        public virtual void SetFirstPrim(Primitive prim)
+        {
+            if (prim != null)
+            {
+                if (ID == UUID.Zero) ID = prim.ID;
+                _Prim0 = prim;
+                if (prim.RegionHandle != 0)
+                {
+                    RegionHandle = prim.RegionHandle;
+                }
+                primRefs.Add(prim);
+
+                UpdateProperties(prim.Properties);
+
+                if (WorldObjects.MaintainCollisions && prim.Sculpt != null)
+                {
+                    WorldSystem.StartTextureDownload(prim.Sculpt.SculptTexture);
+                }
+            }
         }
 
         protected SimObject _Parent = null; // null means unknown if we IsRoot then Parent == this;
@@ -672,6 +687,7 @@ namespace cogbot.TheOpenSims
         public virtual string DebugInfo()
         {
             string str = ToString();
+            if (_Prim0 == null) return str;
             if (Prim.ParentID != 0)
                 return Prim.ParentID + " " + str;
             return str;
@@ -873,9 +889,10 @@ namespace cogbot.TheOpenSims
         {
             if (_TOSRTING == null)
             {
+                if (_Prim0 == null) return "UNATTACHED_PRIM "+ID.ToString();
                 Primitive Prim = this.Prim;
                 _TOSRTING = "";
-                UUID ID = Prim.ID;
+                ID = Prim.ID;
                 Primitive.ConstructionData PrimData = Prim.PrimData;
                 PrimType Type = Prim.Type;
 
@@ -996,6 +1013,7 @@ namespace cogbot.TheOpenSims
         public bool IsRegionAttached()
         {
             if (WasKilled) return false;
+            if (_Prim0 == null) return false;
             if (_Prim0.RegionHandle == 0)
             {
                 return false;
@@ -1077,7 +1095,7 @@ namespace cogbot.TheOpenSims
                 if (outerPrim == null)
                 {
                     //TODO no biggy here ?
-                    throw Error("GetSimRotation !IsRegionAttached: " + this);
+                    Error("GetSimRotation !IsRegionAttached: " + this);
                     return transValue;
                 }
                 transValue = outerPrim.Rotation*transValue;
@@ -1344,6 +1362,7 @@ namespace cogbot.TheOpenSims
 
         public virtual string GetName()
         {
+            if (_Prim0 == null) return ToString() + " " + RegionHandle;
             Primitive Prim = this.Prim;
             if (Prim.Properties != null)
             {
@@ -1859,5 +1878,8 @@ namespace cogbot.TheOpenSims
         List<SimObject> GetNearByObjects(double maxDistance, bool rootOnly);
      
         void RemoveCollisions();
+
+        void SetFirstPrim(Primitive primitive);
+        UUID ID { get; }
     }
 }

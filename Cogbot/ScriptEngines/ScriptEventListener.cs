@@ -129,7 +129,7 @@ namespace cogbot.ScriptEngines
             if (arg is Avatar)
             {
                 Avatar prim = (Avatar)arg;
-                arg = "'(avatar"; //+ argString(prim.ID.ToString());
+                arg = "'(SimAvatarFn "; //+ argString(prim.ID.ToString());
                 if (prim.Name != null)
                 {
                     arg = arg + " " + argString(prim.Name);
@@ -146,7 +146,7 @@ namespace cogbot.ScriptEngines
             if (arg is SimAsset)
             {
                 SimAsset prim = (SimAsset)arg;
-                arg = "'(anim"; //+ argString(prim.ID.ToString());
+                arg = "'(SimAnimationFn "; //+ argString(prim.ID.ToString());
                 if (prim.Name != null)
                 {
                     arg = arg + " " + argString(prim.Name);
@@ -157,16 +157,29 @@ namespace cogbot.ScriptEngines
             if (arg is Primitive)
             {
                 Primitive prim = (Primitive)arg;
-                arg = "'(prim " + argString(prim.ID.ToString());
+                arg = "'(SimObjectFn  " + argString(prim.ID.ToString());
                 if (prim.Properties != null)
                 {
                     arg = arg + " " + argString(prim.Properties.Name);
                 }
                 return arg + ")";
             }
+            if (arg is SimAvatar)
+            {
+                SimAvatar prim = (SimAvatar)arg;
+                arg = "'(SimAvatarFn  " + argString(prim.GetName());
+                return arg + ")";
+            }
             if (arg is SimObject)
             {
-                return argString(((SimObject)arg).Prim);
+                SimObject prim = (SimObject)arg;
+                arg = "'(SimObjectFn  " + argString(prim.ID.ToString());
+                string name = prim.GetName();
+                if (!string.IsNullOrEmpty(name))
+                {
+                    arg = arg + " #|" + argString(name) + "|# ";
+                }
+                return arg + ")";
             }
             if (type.IsEnum)
             {

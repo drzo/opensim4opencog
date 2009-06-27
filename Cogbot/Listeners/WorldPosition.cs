@@ -66,6 +66,22 @@ namespace cogbot.Listeners
             return new SimHeading(r.GetPathStore(position), position, rot);
         }
 
+        private object AsRLocation(Simulator simulator, Vector3d targetPos, SimPosition pos)
+        {
+            Vector3 lpos = new Vector3((float)targetPos.X, (float)targetPos.Y, (float)targetPos.Z);
+            SimRegion r = SimRegion.GetRegion(simulator);
+            if (targetPos == Vector3d.Zero)
+            {
+                if (r == null)
+                {
+                    if (pos != null && pos.IsRegionAttached()) return new SimHeading(pos);
+                    return SimHeading.UNKNOWN;
+                }
+                return r;
+            }
+            return new SimHeading(pos, lpos);
+        }
+
         private object AsLocation(UUID reg, Vector3 position)
         {
             SimRegion r = GetRegion(reg);

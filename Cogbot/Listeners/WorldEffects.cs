@@ -216,6 +216,8 @@ namespace cogbot.Listeners
         public override void Avatars_OnPointAt(UUID sourceID, UUID targetID,
                                                Vector3d targetPos, PointAtType lookType, float duration, UUID id)
         {
+            // we have our own packet handler
+            client.Avatars.OnPointAt -= Avatars_OnPointAt;
             if (!MaintainEffects) return;
             SendEffect(client.Network.CurrentSim, sourceID, targetID, targetPos, "PointAtType-" + lookType.ToString(), duration, id);
         }
@@ -223,6 +225,8 @@ namespace cogbot.Listeners
         public override void Avatars_OnLookAt(UUID sourceID, UUID targetID,
                                               Vector3d targetPos, LookAtType lookType, float duration, UUID id)
         {
+            // we have our own packet handler
+            client.Avatars.OnLookAt -= Avatars_OnLookAt;
             if (!MaintainEffects) return;
             SendEffect(client.Network.CurrentSim, sourceID, targetID, targetPos, "LookAtType-" + lookType.ToString(), duration, id);
         }
@@ -231,10 +235,11 @@ namespace cogbot.Listeners
         {
             if (so is SimAvatar)
             {
-                if (so.ToString().Contains("Rajesh")) 
+                SimAvatar A = (SimAvatar) so;
+                if (A.IsRegionAttached() && A.GetName().Contains("Rajesh")) 
                 return true;
             }
-            return true;
+            //return true;
             return false;
         }
 
@@ -259,6 +264,7 @@ namespace cogbot.Listeners
                 if (sourceID != UUID.Zero)
                 {
                     source = GetSource(sim, sourceID, source, ref s);
+                    if (source==null) return;
                 }
                 //  RequestAsset(sourceID, AssetType.Object, true);
             }
@@ -272,6 +278,7 @@ namespace cogbot.Listeners
                 if (targetID != UUID.Zero)
                 {
                     target = GetSource(sim, targetID, target, ref t);
+                    if (target == null) return;
                 }
                 // RequestAsset(targetID, AssetType.Object, true);
             }
@@ -288,7 +295,13 @@ namespace cogbot.Listeners
                 {
                     if (source!=null)
                     {
+                        if (source.IsRegionAttached())
                         p = (source.GetWorldPosition() + targetPos);
+                        else
+                        {
+                            p = AsRLocation(sim,targetPos,source);
+                        }
+
                     } else
                     {
                         p = new Vector3((float)targetPos.X, (float)targetPos.Y, (float)targetPos.Z);
@@ -402,7 +415,8 @@ namespace cogbot.Listeners
         public override void Avatars_OnEffect(EffectType type, UUID sourceID, UUID targetID, Vector3d targetPos,
                                               float duration, UUID id)
         {
-            if (!MaintainEffects) return;
+            // we have our own packet handler
+            client.Avatars.OnEffect -= Avatars_OnEffect;
             SendEffect(client.Network.CurrentSim, sourceID, targetID, targetPos, "EffectType-" + type.ToString(), duration, id);
             //SimRegion.TaintArea(targetPos);
         }
@@ -413,6 +427,10 @@ namespace cogbot.Listeners
         /// </summary>
         private void ViewerEffectHandler(Packet packet, Simulator simulator)
         {
+            if (simulator != client.Network.CurrentSim)
+            {
+                //Debug("ViewerEffectHandler: from a differnt sim than current " + simulator);
+            }
             if (!MaintainEffects) return;
             ViewerEffectPacket effect = (ViewerEffectPacket)packet;
             GridClient Client = client;
@@ -452,8 +470,7 @@ namespace cogbot.Listeners
                             {
                                 try
                                 {
-                                    Avatars_OnEffect(type, sourceAvatar, targetObject, targetPos, block.Duration,
-                                                     block.ID);
+                                    SendEffect(simulator, sourceAvatar, targetObject, targetPos, "EffectType-" + type.ToString(), block.Duration, block.ID);
                                 }
                                 catch (Exception e)
                                 {
@@ -478,8 +495,7 @@ namespace cogbot.Listeners
 
                                 try
                                 {
-                                    Avatars_OnLookAt(sourceAvatar, targetObject, targetPos, lookAt, block.Duration,
-                                                     block.ID);
+                                    SendEffect(simulator, sourceAvatar, targetObject, targetPos, "LookAtType-" + lookAt.ToString(), block.Duration, block.ID);
                                 }
                                 catch (Exception e)
                                 {
@@ -503,8 +519,7 @@ namespace cogbot.Listeners
 
                                 try
                                 {
-                                    Avatars_OnPointAt(sourceAvatar, targetObject, targetPos, pointAt, block.Duration,
-                                                      block.ID);
+                                    SendEffect(client.Network.CurrentSim, sourceAvatar, targetObject, targetPos, "PointAtType-" + pointAt.ToString(), block.Duration, block.ID);
                                 }
                                 catch (Exception e)
                                 {
