@@ -14,6 +14,21 @@ namespace cogbot.Listeners
 
     public partial class WorldObjects
     {
+
+        static public NamedParam ToParameter(string p, object s)
+        {
+            return new NamedParam(p, s);
+        }
+        static public NamedParam ToParameter(string p, string type, object s)
+        {
+            return new NamedParam(new KeyValuePair<string, object>(p, type), s);
+        }
+
+        static public NamedParam AsEffectID(UUID id)
+        {
+            return new NamedParam("id", id);
+        }
+
         public void RescanTypes()
         {
             int count = SimObjects.Count;

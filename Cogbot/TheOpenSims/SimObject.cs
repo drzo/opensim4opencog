@@ -1539,7 +1539,7 @@ namespace cogbot.TheOpenSims
         public virtual bool LogEvent(SimObjectEvent SE)
         {
            // string eventName = SE.Verb;
-            object[] args1_N = SE.Parameters;
+            object[] args1_N = SE.GetArgs();
             bool saveevent = true;
             object[] args0_N = PushFrontOfArray(ref args1_N, this);
             lock (ActionEventQueue)
@@ -1554,17 +1554,17 @@ namespace cogbot.TheOpenSims
                             saveevent = false;
                             return false;
                         }
-                        else if (false)
-                        {
-                            SimObjectEvent newEvt = lastEvent.CombinesWith(SE);
-                            if (newEvt != null)
-                            {
-                                lastEvent.EventStatus = newEvt.EventStatus;
-                                lastEvent.Parameters = newEvt.Parameters;
-                                saveevent = false;
-                                SE = lastEvent;
-                            }
-                        }
+                        //else if (false)
+                        //{
+                        //    SimObjectEvent newEvt = lastEvent.CombinesWith(SE);
+                        //    if (newEvt != null)
+                        //    {
+                        //        lastEvent.EventStatus = newEvt.EventStatus;
+                        //        lastEvent.Parameters = newEvt.Parameters;
+                        //        saveevent = false;
+                        //        SE = lastEvent;
+                        //    }
+                        //}
                     }
                     if (saveevent && ActionEventQueueCount >= MaxEventSize) ActionEventQueue.Dequeue();
                 }
@@ -1714,7 +1714,13 @@ namespace cogbot.TheOpenSims
 
         public virtual bool OnEffect(string effectType, object t, object p, float duration, UUID id)
         {
-            bool noteable = LogEvent(new SimObjectEvent(effectType, SimEventType.EFFECT, SimEventStatus.Once, t, p, duration, id));
+            bool noteable = LogEvent(new SimObjectEvent(effectType, SimEventType.EFFECT, SimEventStatus.Once,
+                                                        WorldObjects.ToParameter("doneBy", this),
+                                                        WorldObjects.ToParameter("objectActedOn", t),
+                                                        WorldObjects.ToParameter("eventPartiallyOccursAt", p),
+                                                        WorldObjects.ToParameter("duration", duration),
+                                                        WorldObjects.AsEffectID(id)));
+
             //todo
             if (noteable)WorldSystem.SendNewEvent("on-effect", effectType, this, t, p, duration, id);
             return noteable;
