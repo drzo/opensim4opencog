@@ -67,6 +67,8 @@ namespace cogbot.TheOpenSims
 
         public static SimRegion GetRegion(UUID uuid, GridClient client)
         {
+            if (client == null) client = AnyClient;
+            else AnyClient = client;
             if (uuid == UUID.Zero) return null;
             foreach (var v in CurrentRegions)
             {
@@ -129,6 +131,8 @@ namespace cogbot.TheOpenSims
         {           
             RegionHandle = Handle;
             Client = bc;
+            if (bc == null) bc = AnyClient;
+            else AnyClient = bc;
             // RegionName = gridRegionName;
             //WorldSystem = worldSystem;
             //Debug("++++++++++++++++++++++++++Created region: ");
@@ -195,6 +199,10 @@ namespace cogbot.TheOpenSims
                                 if (gridRegion.RegionHandle == RegionHandle)
                                     regionEvent.Set();
                             };
+                    if (Client==null)
+                    {
+                        Client = AnyClient;
+                    }
                     Client.Grid.OnGridRegion += callback;
                     Client.Grid.RequestMapRegion(PathStore.RegionName, GridLayerType.Objects);
                     regionEvent.WaitOne(Client.Settings.MAP_REQUEST_TIMEOUT, false);
@@ -675,6 +683,8 @@ namespace cogbot.TheOpenSims
 
         Dictionary<int,Parcel> parcels = new Dictionary<int, Parcel>();
         Dictionary<UUID, ParcelInfo> parcelsI = new Dictionary<UUID, ParcelInfo>();
+        static private GridClient AnyClient;
+
         public void Parcels_OnParcelProperties(Simulator simulator, Parcel parcel, ParcelResult result, int selectedPrims, int sequenceID, bool snapSelection)
         {
             lock (parcels)

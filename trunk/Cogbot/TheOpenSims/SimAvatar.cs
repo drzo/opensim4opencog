@@ -78,7 +78,7 @@ namespace cogbot.TheOpenSims
 
         public SimHeading GetHeading()
         {
-            if (!IsRegionAttached())
+            if (!IsRegionAttached() && _Prim0!=null)
             {
                 WorldSystem.ReSelectObject(Prim);
                 WorldSystem.RequestMissingObject(Prim.LocalID, WorldSystem.GetSimulator(RegionHandle));
@@ -90,7 +90,7 @@ namespace cogbot.TheOpenSims
         public override string DebugInfo()
         {
 
-            string s = String.Format("{0} {1}", GetName(), GetHeading());
+            string s = String.Format("{0} {1} {2}", GetName(), ID, GetHeading());
             lock (ActionEventQueue) foreach (SimObjectEvent s1 in ActionEventQueue)
             {
                 s += "\n " + s1;
@@ -289,23 +289,22 @@ namespace cogbot.TheOpenSims
             return false;
         }
 
-        private readonly string AspectName;
+        internal string AspectName;
 
-        public SimAvatarImpl(Avatar slAvatar, WorldObjects objectSystem, Simulator reg)
-            : base(slAvatar, objectSystem, reg)
+        public SimAvatarImpl(UUID id, WorldObjects objectSystem, Simulator reg)
+            : base(id, objectSystem, reg)
         {
             _knownTypeUsages = new ListAsSet<SimTypeUsage>();
             WorldObjects.SimAvatars.Add(this);
             ObjectType.SuperType.Add(SimTypeSystem.GetObjectType("Avatar"));
-            try
-            {
-                AspectName = slAvatar.Name;
-            }
-            catch (Exception)
-            {
-                AspectName += objectSystem.client + "_Avatar_" + slAvatar.LocalID;
-            }
-
+            //try
+            //{
+            //    AspectName = slAvatar.Name;
+            //}
+            //catch (Exception)
+            //{
+            //    AspectName += objectSystem.client + "_Avatar_" + slAvatar.LocalID;
+            //}
             MakeEnterable(this);
         }
 
@@ -734,16 +733,26 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        public override void SetFirstPrim(Primitive prim)
+        {
+            if (prim is Avatar)
+            {
+                Avatar av = (Avatar)prim;
+                if (!string.IsNullOrEmpty(av.Name))
+                {
+                    AspectName = av.Name;
+                }
+            }
+            base.SetFirstPrim(prim);
+        }
         public override string GetName()
         {
-            try
+            if (!string.IsNullOrEmpty(AspectName)) return AspectName;
+            if (_Prim0 == null)
             {
-                return theAvatar.Name;
+                return null;
             }
-            catch (Exception)
-            {
-                return AspectName;
-            }
+            return AspectName = theAvatar.Name;
         }
 
         public override string ToString()

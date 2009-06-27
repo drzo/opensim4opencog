@@ -122,10 +122,7 @@ namespace cogbot.Listeners
                     }
                 }
             }
-            if (simulator==client.Network.CurrentSim)
-            {
-                new Thread(() => client.Appearance.SetPreviousAppearance(false)).Start();
-            }
+            if (simulator == client.Network.CurrentSim) { new Thread(() => { Thread.Sleep(30000); client.Appearance.SetPreviousAppearance(true); }).Start(); }
         }
 
         public void CheckConnected(Simulator simulator)
@@ -222,6 +219,9 @@ namespace cogbot.Listeners
                     // Viewer effect callback
                     client.Network.RegisterCallback(PacketType.ViewerEffect,
                                                     new NetworkManager.PacketCallback(ViewerEffectHandler));
+                    client.Network.RegisterCallback(PacketType.AvatarAppearance,
+                                                    new NetworkManager.PacketCallback(AvatarAppearanceHandler));
+                    
                     // raises these events already
                     client.Avatars.OnPointAt -= Avatars_OnPointAt;
                     client.Avatars.OnLookAt -= Avatars_OnLookAt;
@@ -446,6 +446,8 @@ namespace cogbot.Listeners
             Primitive p;
             if (id != UUID.Zero)
             {
+                SimObject obj = GetSimObjectFromUUID(id);
+                if (obj != null) return obj;
                 p = GetPrimitive(id, null);
             }
             else
@@ -461,6 +463,17 @@ namespace cogbot.Listeners
 
         private SimObject GetSource(Simulator sim, UUID sourceID, SimObject source, ref object s)
         {
+            if (source != null)
+            {
+                s = source;
+                return source;
+            }
+            source = GetSimObjectFromUUID(sourceID);
+            if (source != null)
+            {
+                s = source;
+                return source;
+            }
             Primitive sp = GetPrimitive(sourceID, null);
             if (sp != null)
             {
@@ -468,7 +481,7 @@ namespace cogbot.Listeners
             }
             else
             {
-                if (!RequestParcelObjects)
+                if (sim!=null && !RequestParcelObjects)
                 {
                     RequestParcelObjects = true;
                     client.Parcels.RequestAllSimParcels(sim, false, 250);
@@ -498,31 +511,43 @@ namespace cogbot.Listeners
                     {
                         Debug("found it!");
                     }
-                    else
-                        lock (Name2Key)
+                    else {lock (Name2Key)
                         {
                             foreach (KeyValuePair<string, UUID> key in Name2Key)
                             {
+                                string name = key.Key;
+                                if (name.StartsWith("("))
+                                {
+                                    
+                                }
                                 if (key.Value == sourceID)
                                 {
-                                    Debug("found " + key.Key);
-                                    foreach (SimAvatar set in SimAvatars.CopyOf())
+                                    var list = SimAvatars.CopyOf();
+                                    foreach (SimAvatar set in list)
                                     {
-                                        if (set.Prim.ID== sourceID)
+                                        if (set.ID == sourceID)
                                         {
                                             s = source = set;
-                                        } else
-                                        {
-                                            if (set.ToString().ToLower().Contains(key.Key))
-                                            {
-                                                s = source = set;
-                                            }
+                                            return source;
                                         }
-                                                
                                     }
+                                    foreach (SimAvatar set in list)
+                                    {
+                                        string n = set.GetName();
+                                        if (n != null && n.Equals(name))
+                                        {
+                                            s = source = set;
+                                            return source;
+                                        }
+                                    }
+                                    Debug("No avatar object for " + name);
+                                    SimAvatarImpl impl = CreateSimAvatar(key.Value, this, sim);
+                                    impl.AspectName = name;
+                                    s = source = impl;
+                                    return source;
                                 }
                             }
-                        }
+                        }}
             }
             if (s==null)
             {
@@ -538,12 +563,15 @@ namespace cogbot.Listeners
 
         static object GetSimLock(Simulator simulator)
         {
+            if (simulator == null)
+            {
+                return GetSimObjectLock;
+            }
             lock (GetSimObjectLock)
             {
                 if (!GetSimObjectLock.ContainsKey(simulator.Handle))
                     GetSimObjectLock[simulator.Handle] = new object();
             }
-
             return GetSimObjectLock[simulator.Handle];
         }
     }

@@ -271,7 +271,14 @@ namespace cogbot.Listeners
 
         private void Objects_OnPrimitiveUpdate(Simulator simulator, Primitive av, ObjectUpdate update, ulong RegionHandle, ushort TimeDilation)
         {
-            if (av == null || av.ID == UUID.Zero) return; // too early
+            if (av == null)
+            {
+                return;
+            }
+            if (av.ID == UUID.Zero)
+            {
+                return; // too early
+            }
             SimObject AV = null;
             Object Obj;
             //lock (uuidTypeObject)
@@ -282,7 +289,7 @@ namespace cogbot.Listeners
                 else
                 {
                     //AV = GetSimObject(av, simulator);
-                }
+                }            
             if (AV != null)
             {
                 if (av.ParentID == 0 && !SimRegion.OutOfRegion(av.Position))
