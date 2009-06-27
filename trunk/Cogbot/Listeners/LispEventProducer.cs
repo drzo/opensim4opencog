@@ -43,7 +43,10 @@ namespace cogbot.Listeners
         {
             if (Interpreter==null) return true;
             eventName = eventName.ToLower();
+            Cons eval;
+
             if (!Interpreter.IsSubscriberOf(eventName)) return true;
+
             if (EventArgsInDictionary)
             {
                 Dictionary<String, object> eventArgs = new Dictionary<string, object>();
@@ -51,7 +54,7 @@ namespace cogbot.Listeners
                 {
                     eventArgs.Add(paramNames[i], CoerceArg(parameters[i], paramTypes[i]));
                 }
-                object o = Interpreter.Eval(new Cons(eventName, new Cons(eventArgs, null)));
+                eval = new Cons(eventName, new Cons(eventArgs, null));
             }
             else
             {
@@ -60,17 +63,19 @@ namespace cogbot.Listeners
                 {
                     invokeMe = new Cons(CoerceArg(parameters[i], paramTypes[i]), invokeMe);
                 }
-                Cons eval = new Cons(Interpreter.GetSymbol(eventName.ToLower()), invokeMe);
-                try
-                {
-                    object o = Interpreter.Eval(eval);
-                } catch(Exception e)
-                {
-                    Console.WriteLine(eval);
-                    Console.WriteLine("Caused: " + e);
-                }
+                eval = new Cons(Interpreter.GetSymbol(eventName.ToLower()), invokeMe);
             }
+
             // right now most events are void but there is one that is boolean which means we may as well eturn true for all
+            try
+            {
+                object o = Interpreter.Eval(eval);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(eval);
+                Console.WriteLine("Caused: " + e);
+            }
             return true;
         }
 

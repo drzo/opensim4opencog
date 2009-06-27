@@ -92,6 +92,7 @@ namespace CycWorldModule.DotCYC
         readonly public CycFort assertMt;
         static readonly public Dictionary<string, CycFort> simFort = new Dictionary<string, CycFort>();
         readonly CycConnectionForm cycConnection;
+        readonly DateTime baseTime = new DateTime(1970, 1, 1, 0, 0, 0);
 
         public void assertGenls(CycFort a, CycFort b)
         {
@@ -124,14 +125,14 @@ namespace CycWorldModule.DotCYC
             if (!UseCyc) return;
             cycConnection = tf.CycConnectionForm;
             cycAccess = cycConnection.getCycAccess();
-            if (ClearKBBetweenSessions)
+            if (ClearKBBetweenSessions || true)
             {
                 cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-LISPFn\"))");
                 cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-EFFECTFn\"))");
-                cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-ANIMFn\"))");                
+                cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-ANIMFn\"))");
             }
-            
-            
+
+
             assertMt = createIndividual("SimDataMt", "#$DataMicrotheory for the simulator", "UniversalVocabularyMt",
                                         "DataMicrotheory");
             vocabMt = createIndividual("SimVocabMt", "#$VocabularyMicrotheory for the simulator",
@@ -151,7 +152,7 @@ namespace CycWorldModule.DotCYC
             FunctionToIndividual("SimObjectFn", "SimObject", "A primitive in the simulator");
             assertIsa(simFort["SimObject"], C("SpatiallyDisjointObjectType"));
 
-           // FunctionToCollection("SimAnimationFn", "SimAnimation", "An animation in the simulator");
+            // FunctionToCollection("SimAnimationFn", "SimAnimation", "An animation in the simulator");
 
             assertIsa(C("simEventData"), C("VariableArityPredicate"));
             assertIsa(C("SimObjectEvent"), C("Collection"));
@@ -421,7 +422,7 @@ namespace CycWorldModule.DotCYC
                 ////long lsb = 0L;
                 //System.Guid g = new System.Guid();
                 ////CUID cycid = CUID.nameUUIDFromBytes(ba);
-                constant = createIndividualFn(type,name, "" + obj.DebugInfo(), "SimVocabMt", type);
+                constant = createIndividualFn(type, name, "" + obj.DebugInfo(), "SimVocabMt", type);
                 cycTerms[obj] = constant;
                 return constant;
             }
@@ -456,15 +457,38 @@ namespace CycWorldModule.DotCYC
             }
         }
 
+        public static int TimeRep = 0;
         /// <summary>
         ///  (MilliSecondFn 34 (SecondFn 59 (MinuteFn 12 (HourFn 18 (DayFn 14 (MonthFn February (YearFn 1966))))))
         /// </summary>
-        /// <param name="simObj"></param>
+        /// <param name="dateTime"></param>
         /// <returns></returns>
-        public CycFort FindOrCreateCycFort(DateTime simObj)
+        public CycFort FindOrCreateCycFort(DateTime dateTime)
         {
-            return new CycNart(makeCycList(C("DateFromStringFn"), simObj.ToString()));
+            switch (TimeRep)
+            {
+                case 0:
+                    return new CycNart(makeCycList(C("DateFromStringFn"), dateTime.ToString("MMMM dd, yyyy HH:mm:ss.ffffZ")));
+                case 1:
+                    return new CycNart(
+                        makeCycList(C("MilliSecondFn"), FindOrCreateCycFort(dateTime.Millisecond),
+                                    makeCycList(C("SecondFn"), FindOrCreateCycFort(dateTime.Second),
+                                                makeCycList(C("MinuteFn"), FindOrCreateCycFort(dateTime.Minute),
+                                                            makeCycList(C("HourFn"), FindOrCreateCycFort(dateTime.Hour),
+                                                                        makeCycList(C("DayFn"),
+                                                                                    FindOrCreateCycFort(dateTime.Day),
+                                                                                    makeCycList(C("MonthFn"),
+                                                                                                C(dateTime.ToString("MMMM")),
+                                                                                                makeCycList(
+                                                                                                    C("YearFn"),
+                                                                                                    FindOrCreateCycFort(
+                                                                                                        dateTime.Year)))))))));
 
+                default:
+                    return
+                        new CycNart(makeCycList(C("NuSketchSketchTimeFn"),
+                                                FindOrCreateCycFort((dateTime - baseTime).Ticks/10000)));
+            }
         }
 
         public CycFort FindOrCreateCycFort(Primitive simObj)
@@ -472,31 +496,46 @@ namespace CycWorldModule.DotCYC
             return FindOrCreateCycFort(WorldObjects.Master.GetSimObject(simObj));
         }
 
-        public CycFort FindOrCreateCycFort(SimObjectEvent simObj)
+        public CycFort FindOrCreateCycFort(SimObjectEvent evt)
         {
             lock (cycTerms)
             {
                 CycFort constant;
-                if (cycTerms.TryGetValue(simObj, out constant)) return constant;
+                if (cycTerms.TryGetValue(evt, out constant)) return constant;
                 //   object[] forts = ToForts(simObj.Parameters);
-                constant = createIndividualFn("SimEvent-" + simObj.EventType,
-                                              simObj.ToString(),
-                                              simObj.ToString(),
+                constant = createIndividualFn("SimEvent-" + evt.EventType,
+                                              evt.ToEventString(),
+                                              evt.ToString(),
                                               "SimVocabMt",
                                               "SimObjectEvent");
                 bool wasNew;
-                CycFort col = createIndividual(simObj.EventName, "Event subtype of #$SimObjectEvent", "SimVocabMt", "Collection", out wasNew);
+                CycFort col = createIndividual(evt.GetVerb().Replace(" ","-"), 
+                    "Event subtype of #$SimObjectEvent", "SimVocabMt", "Collection", out wasNew);
                 if (wasNew)
                 {
                     assertGenls(col, C("SimObjectEvent"));
                 }
                 assertIsa(constant,col);
-                string[] names = simObj.ParameterNames();
-                object[] args = simObj.Parameters;
-                assertEventData(constant, "dateOfEvent", ToFort(simObj.Time));
+                string[] names = evt.ParameterNames();
+                IList<NamedParam> args = evt.Parameters;
+                string datePred;
+                switch (evt.EventStatus)
+                {
+                    case SimEventStatus.Start:
+                        datePred = (TimeRep == 2 ? "startingPoint" : "startingDate");
+                        break;
+                    case SimEventStatus.Stop:
+                        datePred = (TimeRep == 2 ? "endingPoint" : "endingDate");
+                        break;
+                    case SimEventStatus.Once:
+                    default:
+                        datePred = (TimeRep == 2 ? "timePoint" : "dateOfEvent");
+                        break;
+                }
+                assertEventData(constant, datePred, ToFort(evt.Time));
                 for (int i = 0; i < names.Length; i++)
                 {
-                    assertEventData(constant, names[i], ToFort(args[i]));
+                    assertEventData(constant, names[i], ToFort(args[i].Value));
 
                 }
                 return constant;

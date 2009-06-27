@@ -11,7 +11,7 @@ namespace cogbot.TheOpenSims
         readonly static UUID FLY_ADJUST = new UUID("db95561f-f1b0-9f9a-7224-b12f71af126e");
         internal static void ClassifyAnims()
         {
-            string type = "Sitting";
+            string type = "SittingDown";
             PutType(type, Animations.SIT_GROUND);
             PutType(type, Animations.SIT);
             PutType(type, Animations.SIT_GENERIC);
@@ -30,7 +30,7 @@ namespace cogbot.TheOpenSims
             PutType(type, Animations.HOVER);
             PutType(type, Animations.YOGA_FLOAT);
 
-            type = "Walking";
+            type = "LocomotionProcess-Animal";
             PutType(type, Animations.WALK);
             PutType(type, Animations.TURNLEFT);
             PutType(type, Animations.TURNRIGHT);
@@ -41,7 +41,7 @@ namespace cogbot.TheOpenSims
             PutType(type, Animations.CROUCHWALK);
 
 
-            type = "Moving";
+            type = "Movement-TranslationProcess";
             PutType(type, Animations.FLYSLOW);
             PutType(type, FLY_ADJUST);
             PutType(type, Animations.HOVER_DOWN);
@@ -56,7 +56,7 @@ namespace cogbot.TheOpenSims
             PutType(type, Animations.CROUCHWALK);
 
 
-            type = "Stopping";
+            type = "SimpleWholeBodyMovement";
             PutType(type, Animations.SIT_TO_STAND);
             PutType(type, Animations.FALLDOWN);
             PutType(type, Animations.STANDUP);
@@ -64,20 +64,23 @@ namespace cogbot.TheOpenSims
             PutType(type, Animations.LAND);
             PutType(type, Animations.HOVER);
 
-            type = "Laying";
+            type = "Lying-Physical";
             PutType(type, Animations.SLEEP);
             PutType(type, Animations.DEAD);
 
-            type = "Standing";
+            type = "SupportingOnesWeight";
             PutType(type, Animations.STAND);
             PutType(type, Animations.STAND_1);
             PutType(type, Animations.STAND_2);
             PutType(type, Animations.STAND_3);
             PutType(type, Animations.STAND_4);
-            PutType(type, Animations.STANDUP);
+            PutType(type,Animations.STANDUP);
             PutType(type, Animations.AWAY);
             PutType(type, Animations.BUSY);
             PutType(type, Animations.HOVER);
+            
+            PutType("StandingUp",Animations.STANDUP);
+             
 
             type = "Jumping";
             PutType(type, Animations.JUMP);

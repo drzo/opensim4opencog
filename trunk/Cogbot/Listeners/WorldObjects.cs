@@ -289,7 +289,7 @@ namespace cogbot.Listeners
         private static void Debug(string p)
         {
             if (Settings.LOG_LEVEL != Helpers.LogLevel.None)
-                Console.WriteLine(p);
+                ;// Console.WriteLine(p);
         }
 
         // these will be shared between Clients and regions
@@ -735,11 +735,16 @@ namespace cogbot.Listeners
 
         static public object GetScriptableObject(object id)
         {
+            if (id is NamedParam)
+            {
+                NamedParam kv = (NamedParam) id;
+                id = new NamedParam(kv.Key,GetScriptableObject(kv.Value));
+            }
             if (id is UUID)
             {
                 UUID uid = (UUID)id;
                 if (uid == UUID.Zero) return id;
-                return Master.GetObject(uid);
+                id = Master.GetObject(uid);
             }
             if (id is Primitive) return Master.GetSimObject((Primitive)id);
             // if (id is String) return Master.GetObject((string) id);

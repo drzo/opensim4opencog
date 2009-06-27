@@ -586,7 +586,7 @@ namespace cogbot
 
         void Network_OnEventQueueRunning(Simulator simulator)
         {
-            SendNewEvent("On-Event-Queue-Running", simulator);
+            SendNewEvent("On-Event-Queue-Running",this, simulator);
         }
 
         void Network_OnSimConnected(Simulator simulator)
@@ -1396,6 +1396,11 @@ namespace cogbot
             {
                 WriteLine(e.ToString());
             }
+        }
+
+        internal void SendNewEvent(string eventName, SimObject obj, object value)
+        {
+            throw new NotImplementedException();
         }
     }
 

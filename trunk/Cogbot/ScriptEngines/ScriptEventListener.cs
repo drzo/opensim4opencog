@@ -97,7 +97,7 @@ namespace cogbot.ScriptEngines
 
         private KeyValuePair<object, SimObjectEvent> taskFromCodeTree(object lispObject)
         {
-            SimObjectEvent evt = new SimObjectEvent("enqueue", new object[] { lispObject });
+            SimObjectEvent evt = new SimObjectEvent("enqueue",new[]{lispObject}); 
             return new KeyValuePair<object, SimObjectEvent>(lispObject, evt);
         }
 

@@ -105,7 +105,19 @@ namespace cogbot.Listeners
 
         public SimObjectEvent CreateEvent(string eventName, params object[] args)
         {
-            return new SimObjectEvent(eventName, args);
+
+            object[] Params = new object[args.Length];
+            for (int i = 0; i < args.Length; i++)
+            {
+               if (args[i] is NamedParam)
+               {
+                   Params[i] = args[i];
+               } else
+               {
+                   Params[i] = new NamedParam(null, args[i]);
+               }                
+            }
+            return new SimObjectEvent(eventName, Params);
         }
 
         SimObjectEvent LastEvent = null;

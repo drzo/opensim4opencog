@@ -41,7 +41,7 @@ namespace cogbot.TheOpenSims
     public class SimObjectEvent : BotMentalAspect
     {
         private static long serialCount = DateTime.UtcNow.Ticks;
-        public readonly long serial = serialCount++;
+        public long serial = serialCount++;
 
         public readonly DateTime Time = DateTime.UtcNow;
         public SimObjectEvent(string name, object[] paramz)
@@ -49,7 +49,18 @@ namespace cogbot.TheOpenSims
             EventType = SimEventType.LISP;
             EventStatus = SimEventStatus.Once;
             Verb = name;
-            Parameters = paramz;
+            Parameters = new NamedParam[paramz.Length];
+            for (int i = 0; i < paramz.Length; i++)
+            {
+                if (paramz[i] is NamedParam)
+                {
+                    Parameters[i] = (NamedParam) paramz[i];
+                }
+                else
+                {
+                    Parameters[i] = new NamedParam(null, paramz[i]);
+                }
+            }
             ParameterNames();
         }
         // string eventName;
@@ -73,48 +84,54 @@ namespace cogbot.TheOpenSims
         }
         public object[] GetArgs()
         {
-            return Parameters;
+            object[] os = new object[Parameters.Count];
+            int a = 0;
+            foreach (NamedParam pair in Parameters)
+            {
+                os[a++] = pair.Value;
+            }
+            return os;
         }
 
         public BotAction GetAction()
         {
             switch (EventType)
             {
-                case SimEventType.SIT:
-                    {
+                //case SimEventType.SIT:
+                //    {
 
-                        new BotObjectAction((SimActor)Parameters[0], GetSimObjectUsage());
-                        break;
-                    }
-                case SimEventType.TOUCH:
-                    {
+                //        new BotObjectAction((SimActor)Parameters[0], GetSimObjectUsage());
+                //        break;
+                //    }
+                //case SimEventType.TOUCH:
+                //    {
 
-                        new BotObjectAction((SimActor)Parameters[0], GetSimObjectUsage());
-                        break;
-                    }
-                case SimEventType.ANIM:
-                    {
+                //        new BotObjectAction((SimActor)Parameters[0], GetSimObjectUsage());
+                //        break;
+                //    }
+                //case SimEventType.ANIM:
+                //    {
 
-                        new BotObjectAction((SimActor)Parameters[0], GetSimObjectUsage());
-                        break;
-                    }
-                case SimEventType.SOCIAL:
-                    {
+                //        new BotObjectAction((SimActor)Parameters[0], GetSimObjectUsage());
+                //        break;
+                //    }
+                //case SimEventType.SOCIAL:
+                //    {
 
-                        new BotObjectAction((SimActor)Parameters[0], GetSimObjectUsage());
-                        break;
-                    }
-                case SimEventType.EFFECT:
-                    {
-                        new BotObjectAction((SimActor)Parameters[0], GetHeading());
-                        break;
-                    }
-                case SimEventType.MOVEMENT:
-                    {
+                //        new BotObjectAction((SimActor)Parameters[0], GetSimObjectUsage());
+                //        break;
+                //    }
+                //case SimEventType.EFFECT:
+                //    {
+                //        new BotObjectAction((SimActor)Parameters[0], GetHeading());
+                //        break;
+                //    }
+                //case SimEventType.MOVEMENT:
+                //    {
 
-                        new BotObjectAction((SimActor)Parameters[0], GetHeading());
-                        break;
-                    }
+                //        new BotObjectAction((SimActor)Parameters[0], GetHeading());
+                //        break;
+                //    }
                 default:
                     {
                         break;
@@ -126,14 +143,14 @@ namespace cogbot.TheOpenSims
         private SimObjectUsage GetHeading()
         {
             //            return (SimObjectUsage)GetTypeParam(typeof(SimHeading), 0);
-            foreach (object o in Parameters)
-                if (o is SimObjectUsage) return (SimObjectUsage)o;
+            foreach (var o in Parameters)
+                if (o.Value is SimObjectUsage) return (SimObjectUsage)o.Value;
             return null;
         }
 
         public object GetTypeParam(Type t, int after)
         {
-            for (int i = after; i < Parameters.Length; i++)
+            for (int i = after; i < Parameters.Count; i++)
             {
                 object o = Parameters[i];
                 if (t.IsInstanceOfType(o)) return o;
@@ -143,17 +160,27 @@ namespace cogbot.TheOpenSims
 
         private SimObjectUsage GetSimObjectUsage()
         {
-            return new SimObjectUsage(SimTypeSystem.FindObjectUse(Verb), (SimObject)Parameters[1]);
+            return new SimObjectUsage(SimTypeSystem.FindObjectUse(Verb), (SimObject)Parameters[1].Value);
         }
 
         public string Verb;
-        public object[] Parameters;
+        public IList<NamedParam> Parameters;
         public SimEventType EventType;
         public SimEventStatus EventStatus;
-        public SimObjectEvent(string eventName, SimEventType type, SimEventStatus status, params object[] args)
+
+        public SimObjectEvent(string eventName, SimEventType type, SimEventStatus status, IList<NamedParam> args)
         {
             Verb = eventName;
-            Parameters = flattenArray(args);
+            Parameters = args;
+            EventType = type;
+            EventStatus = status;
+            ParameterNames();            
+        }
+
+        public SimObjectEvent(string eventName, SimEventType type, SimEventStatus status, params NamedParam[] args)
+        {
+            Verb = eventName;
+            Parameters = args;
             EventType = type;
             EventStatus = status;
             ParameterNames();
@@ -217,7 +244,7 @@ namespace cogbot.TheOpenSims
 
         public int GetArity()
         {
-            return Parameters.Length;
+            return Parameters.Count;
         }
 
         public object GetArg(int n)
@@ -236,29 +263,29 @@ namespace cogbot.TheOpenSims
             return parameter;
         }
 
-        internal SimObjectEvent CombinesWith(SimObjectEvent SE)
-        {
-            if (this.Verb == SE.Verb)
-            {
-                if (this.EventStatus == SE.EventStatus)
-                {
-                    return new SimObjectEvent(Verb, this.EventType, this.EventStatus, this.Parameters, SE.Parameters);
-                }
-                if (this.EventStatus == SimEventStatus.Start && SE.EventStatus == SimEventStatus.Stop)
-                {
-                    return new SimObjectEvent(Verb, this.EventType, SimEventStatus.Once, this.Parameters, SE.Parameters);
-                }
-                if (this.EventStatus == SimEventStatus.Once && SE.EventStatus == SimEventStatus.Stop)
-                {
-                    return new SimObjectEvent(Verb, this.EventType, SimEventStatus.Once, this.Parameters, SE.Parameters);
-                }
-                if (this.EventStatus == SimEventStatus.Start && SE.EventStatus == SimEventStatus.Once)
-                {
-                    return new SimObjectEvent(Verb, this.EventType, SimEventStatus.Once, this.Parameters, SE.Parameters);
-                }
-            }
-            return null;
-        }
+        //internal SimObjectEvent CombinesWith(SimObjectEvent SE)
+        //{
+        //    if (this.Verb == SE.Verb)
+        //    {
+        //        if (this.EventStatus == SE.EventStatus)
+        //        {
+        //            return new SimObjectEvent(Verb, this.EventType, this.EventStatus, this.Parameters, SE.Parameters);
+        //        }
+        //        if (this.EventStatus == SimEventStatus.Start && SE.EventStatus == SimEventStatus.Stop)
+        //        {
+        //            return new SimObjectEvent(Verb, this.EventType, SimEventStatus.Once, this.Parameters, SE.Parameters);
+        //        }
+        //        if (this.EventStatus == SimEventStatus.Once && SE.EventStatus == SimEventStatus.Stop)
+        //        {
+        //            return new SimObjectEvent(Verb, this.EventType, SimEventStatus.Once, this.Parameters, SE.Parameters);
+        //        }
+        //        if (this.EventStatus == SimEventStatus.Start && SE.EventStatus == SimEventStatus.Once)
+        //        {
+        //            return new SimObjectEvent(Verb, this.EventType, SimEventStatus.Once, this.Parameters, SE.Parameters);
+        //        }
+        //    }
+        //    return null;
+        //}
 
 
         internal bool SameAs(SimObjectEvent SE)
@@ -267,15 +294,14 @@ namespace cogbot.TheOpenSims
             if (EventStatus != SE.EventStatus) return false;
             if (Parameters == null) return SE.Parameters == null;
             if (SE.Parameters == null) return Parameters == null;
-            if (Parameters.Length != SE.Parameters.Length) return false;
-            object[] other = SE.Parameters;
-            for (int i = 0; i < other.Length; i++)
+            if (Parameters.Count != SE.Parameters.Count) return false;
+            IList<NamedParam> other = SE.Parameters;
+            for (int i = 0; i < other.Count; i++)
             {
-
-                object otheri = other[i];
-                if (otheri == null)
+                NamedParam otheri = other[i];
+                if (otheri.Value == null)
                 {
-                    if (Parameters[i] != null) return false;
+                    if (Parameters[i].Value!=null) return false;
                     continue;
                 }
                 if (NonComparable(otheri.GetType())) continue;
@@ -300,19 +326,26 @@ namespace cogbot.TheOpenSims
         }
         public String[] ParameterNames()
         {
-            string[] names = new string[Parameters.Length];
-            for (int i = 0; i < Parameters.Length; i++)
+            string[] names = new string[Parameters.Count];
+            for (int i = 0; i < Parameters.Count; i++)
             {
                 var o = Parameters[i];
-                if (o is Vector3)
+                if (o.Value is Vector3)
                 {
                     Console.WriteLine("Got v3 in " + this);
                 }
-                if (o == null)
+                object key = o;
+                while (key is NamedParam)
+                {
+                    key = ((NamedParam) o).Key;
+                }
+                object v = o.Value;
+                if (v == null)
                 {
                     Console.WriteLine("Got null in " + this);
                 }
-                string s = GetType(o).Name;
+                string s = GetType(v).Name + "" + i;
+
                 if (s.ToLower().StartsWith("sim"))
                 {
                     if (!char.IsLower(s[3]))
@@ -320,12 +353,43 @@ namespace cogbot.TheOpenSims
                         s = s.Substring(3);
                     }
                 }
-
                 s = "sim" + s;
-                names[i] = s + i;
+
+                if (key is String) s = key.ToString();
+
+                names[i] = s;
             }
             return names;
         }
+
+        public string ToEventString()
+        {
+            return string.Format("{0}: {1} {2}",
+                                GetVerb(),
+                                ScriptEngines.ScriptEventListener.argsListString(Parameters),
+                                serial);
+        }
+
+        public void AddParam(string name, object value)
+        {
+           Parameters.Add(new NamedParam(name,value));
+        }
     }
 
+    public struct NamedParam 
+    {
+        public NamedParam(object k, object v)
+        {
+            Key = k;
+            Value = v;
+        }
+        readonly public object Key;
+        readonly public object Value;
+        public override string ToString()
+        {
+            if (Key==null) return string.Format("{0}", (Value ?? "NULL"));
+            return Key + "=" + Value;
+        }
+
+    }
 }

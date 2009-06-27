@@ -517,7 +517,7 @@ namespace cogbot.Listeners
                 if (!primVect.ContainsKey(prim))
                 {
                     primVect[prim] = vect;
-                    client.SendNewEvent(eventName, obj, value);
+                    SendNewEvent(eventName, obj, value);
                 }
                 else
                 {

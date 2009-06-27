@@ -414,9 +414,18 @@ namespace OpenMetaverse
             List<InventoryBase> attachments;
 
             if (!GetFolderWearables(wearOutfitParams.Param, out wearables, out attachments)) // get wearables in outfit folder
-                return; // TODO: this error condition should be passed back to the client somehow
+            {
+                Logger.Log(
+                    "GetFolderWearables did not find wearables " + 
+                    wearOutfitParams.Param + " " + wearables + " " +
+                    attachments, Helpers.LogLevel.Error, Client);
+                return;
+            } // TODO: this error condition should be passed back to the client somehow}
 
-            WearablesRequestEvent.WaitOne(); // wait for current wearables
+            if (!WearablesRequestEvent.WaitOne(120000)) // wait for current wearables 
+            {
+                Logger.Log("StartWearOutfitFolder timed out after 2 minutes", Helpers.LogLevel.Error, Client);
+            }
             ReplaceOutfitWearables(wearables); // replace current wearables with outfit folder
             UpdateAppearanceFromWearables(wearOutfitParams.Bake);
             AddAttachments(attachments, wearOutfitParams.RemoveExistingAttachments);

@@ -1487,6 +1487,11 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        public string GetMeaning()
+        {
+            lock (Meanings) if (Meanings.Count > 0) return Meanings[Meanings.Count - 1];
+            return null;
+        }
     }
 
 #if PORTIT
