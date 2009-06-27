@@ -30,7 +30,8 @@ namespace PathSystem3D.Navigation
                    ZHeading * SimPathStore.RAD2DEG;
         }
 
-        private readonly SimPosition late;
+        private SimPosition late;
+        private Vector3 lateV3;
         SimPathStore reg;
         private Vector3 pos;
         Quaternion rot;
@@ -40,6 +41,16 @@ namespace PathSystem3D.Navigation
             this.reg = reg;
             this.pos = pos;
             this.rot = rot;
+        }
+
+        public SimHeading(SimPosition pos, Vector3 vector3)
+        {
+            late = pos;
+            lateV3 = vector3;
+            if (pos.IsRegionAttached())
+            {
+                InitFromPos(pos);
+            }
         }
 
         public bool IsPassable
@@ -87,8 +98,10 @@ namespace PathSystem3D.Navigation
         private void InitFromPos(SimPosition position)
         {
             this.reg = position.GetPathStore();
-            this.pos = position.GetSimPosition();
+            this.pos = position.GetSimPosition() + lateV3;
             this.rot = position.GetSimRotation();
+            late = null;
+            lateV3 = Vector3.Zero;
         }
 
         public float GetSizeDistance()
@@ -100,7 +113,8 @@ namespace PathSystem3D.Navigation
         {
             if (reg == null && late != null)
             {
-                InitFromPos(late);
+                if (late.IsRegionAttached()) 
+                    InitFromPos(late);
             }
             return reg != null;
         }
@@ -135,6 +149,15 @@ namespace PathSystem3D.Navigation
                 Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(GetSimRotation()));
                 return (float)(Math.Atan2(-v3.X, -v3.Y) + Math.PI); // 2Pi= N, 1/2Pi = E
             }
+        }
+
+        public SimPosition GetRoot()
+        {
+            return late;
+        }
+        public Vector3 GetOffset()
+        {
+            return lateV3;
         }
     }
 }
