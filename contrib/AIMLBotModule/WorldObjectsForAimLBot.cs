@@ -20,7 +20,7 @@ namespace AIMLBotModule
         /// <summary>
         /// Respond to group chat
         /// </summary>
-        public static bool RespondToGroup = false;
+        public static bool RespondToGroup = true;
         /// <summary>
         /// Accept all friendship requests
         /// </summary>
@@ -150,9 +150,9 @@ namespace AIMLBotModule
             if (sourceid == UUID.Zero) return;
             if (targetid == UUID.Zero) return;
             if (targetid == sourceid) return;
-            SimObject source = WorldSystem.GetSimObject(WorldSystem.GetPrimitive(sourceid, null));
+            SimObject source = WorldObjects.GetSimObjectFromUUID(sourceid);
             if (source == null) return;
-            SimObject target = WorldSystem.GetSimObject(WorldSystem.GetPrimitive(targetid, null));
+            SimObject target = WorldObjects.GetSimObjectFromUUID(targetid);
             if (target == null) return;
             User user = GetMyUser(source.GetName());
             user.Predicates.addSetting("it", targetid.ToString());
@@ -210,12 +210,17 @@ namespace AIMLBotModule
             {
                 return;
             }
+            UUID groupID=UUID.Zero;
             if (im.GroupIM)
             {
                 Group group;
                 client.Groups.GroupName2KeyCache.ForEach(delegate(KeyValuePair<UUID, string> kv)
                                                              {
-                                                                 if (im.FromAgentID == kv.Key) groupName = kv.Value;
+                                                                 if (im.FromAgentID == kv.Key)
+                                                                 {
+                                                                     groupName = kv.Value;
+                                                                     groupID = kv.Key;
+                                                                 }
                                                              });
 
                 WriteLine("Group IM {0}",groupName);
