@@ -485,11 +485,11 @@ namespace OpenMetaverse
                 }
                 else
                 {
-                    if (OnSimDisconnected != null)
-                    {
-                        try { OnSimDisconnected(simulator,DisconnectType.NetworkTimeout); }
-                        catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
-                    }
+                    //if (OnSimDisconnected != null)
+                    //{
+                    //    try { OnSimDisconnected(simulator,DisconnectType.NetworkTimeout); }
+                    //    catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                    //}
                     // Connection failed, remove this simulator from our list and destroy it
                     //lock (Simulators) Simulators.Remove(simulator);
                     return simulator;
