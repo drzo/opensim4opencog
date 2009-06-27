@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
@@ -11,13 +12,59 @@ using CUID = org.opencyc.util.UUID;
 //using CycFort = org.opencyc.cycobject.CycObject;
 using OpenMetaverse.Assets;
 using PathSystem3D.Navigation;
+using Exception=System.Exception;
+using Object=System.Object;
 
 namespace CycWorldModule.DotCYC
 {
 
     public class SimCyclifier : SimEventSubscriber
     {
+        private readonly Thread EventQueueHandler;
+        readonly Queue<SimObjectEvent> EventQueue = new Queue<SimObjectEvent>();
+
         public void OnEvent(SimObjectEvent evt)
+        {
+            lock (EventQueue)
+            {
+                EventQueue.Enqueue(evt);
+            }
+        }
+
+        void EventQueue_Handler()
+        {
+            SimObjectEvent evt = null;
+            while(true)
+            {
+               // int eventQueueCountLast = 0;
+                int eventQueueCount = 0;
+                lock (EventQueue)
+                {
+                    eventQueueCount = EventQueue.Count;
+                    if (eventQueueCount > 0)
+                    {
+                        evt = EventQueue.Dequeue();
+                    } else
+                    {
+                        evt = null;
+                    }
+                }
+                if (eventQueueCount > 250)
+                {
+                    Console.WriteLine("eventQueueCount=" + eventQueueCount);
+                }
+                if (evt!=null)
+                {
+                    OnEvent0(evt);
+                } else
+                {
+                    Thread.Sleep(500);
+                }
+               // eventQueueCountLast = eventQueueCount;
+            }
+        }
+
+        public void OnEvent0(SimObjectEvent evt)
         {
             try
             {
@@ -27,6 +74,7 @@ namespace CycWorldModule.DotCYC
             catch (Exception e)
             {
 
+                Exception(e);
                 Console.WriteLine("Error to cyc -> " + evt + " " + e);
             }
 
@@ -38,6 +86,7 @@ namespace CycWorldModule.DotCYC
         }
 
         public static bool UseCyc = true;
+        public static bool ClearKBBetweenSessions = false;
         readonly public CycAccess cycAccess;
         readonly public CycFort vocabMt;
         readonly public CycFort assertMt;
@@ -75,9 +124,12 @@ namespace CycWorldModule.DotCYC
             if (!UseCyc) return;
             cycConnection = tf.CycConnectionForm;
             cycAccess = cycConnection.getCycAccess();
-            cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-LISPFn\"))");
-            cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-EFFECTFn\"))");
-            cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-ANIMFn\"))");
+            if (ClearKBBetweenSessions)
+            {
+                cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-LISPFn\"))");
+                cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-EFFECTFn\"))");
+                cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-ANIMFn\"))");                
+            }
             
             
             assertMt = createIndividual("SimDataMt", "#$DataMicrotheory for the simulator", "UniversalVocabularyMt",
@@ -147,7 +199,8 @@ namespace CycWorldModule.DotCYC
                 "#$SimRegionCoordinateSystemFn Takes a #$SimRegion and returns a example: (#$SimRegionCoordinateSystemFn (#$SimRegionFn \"LogicMoo\")) => #$ThreeDimensionalCoordinateSystem",
                 simFort["SimRegion"]);
 
-            createIndividual("PointInRegionFn", "creates region 3d points", "SimVocabMt", "QuaternaryFunction");
+            createIndividual("PointInRegionFn", "Creates region 3D #$Point relative to (#$SimRegionFn :ARG1)", "SimVocabMt", "QuaternaryFunction");
+            assertIsa(C("PointInRegionFn"), C("TotalFunction"));
             //assertGaf(C("isa"), simFort["PointInRegionFn"], C(""));
             assertGaf(C("arg1Isa"), simFort["PointInRegionFn"], C("IDString"));
             assertGaf(C("arg2Isa"), simFort["PointInRegionFn"], C("NumericInterval"));
@@ -158,13 +211,25 @@ namespace CycWorldModule.DotCYC
                 + " (#$PointIn3DCoordinateSystemFn (#$SimRegionCoordinateSystemFn"
                 + " (#$SimRegionFn :ARG1)) :ARG2 :ARG3 :ARG4 ))");
 
+            createIndividual("PointRelativeToFn", "Creates Local 3D #$Point relative to the #$SpatialThing-Localized in :ARG1", "SimVocabMt", "QuaternaryFunction");
+            assertIsa(C("PointRelativeToFn"), C("QuaternaryFunction"));
+            assertIsa(C("PointRelativeToFn"), C("TotalFunction"));
+            assertGaf(C("arg1Isa"), simFort["PointRelativeToFn"], C("SpatialThing-Localized"));
+            assertGaf(C("arg2Isa"), simFort["PointRelativeToFn"], C("NumericInterval"));
+            assertGaf(C("arg3Isa"), simFort["PointRelativeToFn"], C("NumericInterval"));
+            assertGaf(C("arg4Isa"), simFort["PointRelativeToFn"], C("NumericInterval"));
+            assertGaf(C("resultIsa"), C("PointRelativeToFn"), C("Point"));
+
+
             cycAssert("(#$pointInSystem (#$PointInRegionFn ?STR ?X ?Y ?Z) (#$SimRegionCoordinateSystemFn (#$SimRegionFn ?STR)))");
             cycAssert("(#$pointInSystem (#$PointInRegionFn \"Daxlandia\" 128 120 27) (#$SimRegionCoordinateSystemFn (#$SimRegionFn \"Daxlandia\")))");
 
 
-
-
-
+            if (EventQueueHandler == null)
+            {
+                EventQueueHandler = new Thread(EventQueue_Handler);
+                EventQueueHandler.Start();
+            }
         }
 
         private void Exception(Exception e)
@@ -337,7 +402,6 @@ namespace CycWorldModule.DotCYC
             {
                 CycFort constant;
                 if (cycTerms.TryGetValue(obj, out constant)) return constant;
-                UUID id = obj.Prim.ID;
                 string name;
                 string type;
                 if (obj is SimAvatar)
@@ -348,7 +412,7 @@ namespace CycWorldModule.DotCYC
                 else
                 {
                     type = "SimObject";
-                    name = id.ToString();
+                    name = obj.ID.ToString();
                 }
 
                 //byte[] ba = id.GetBytes();
@@ -464,21 +528,34 @@ namespace CycWorldModule.DotCYC
             return createIndividual(p, "sim event property", "SimVocabMt", "BinaryPredicate");
         }
 
+
         public CycFort createIndividualFn(string typename, string name, string comment, string simvocabmt, string simobjecttype)
         {
             bool newlyCreated;
             CycFort fn = createIndividual(typename + "Fn", comment,
-                                                    simvocabmt, "UnaryFunction", out newlyCreated);
+                                          simvocabmt, "UnaryFunction", out newlyCreated);
             if (newlyCreated)
             {
                 assertGaf(C("isa"), fn, C("ReifiableFunction"));
                 assertGaf(C("resultIsa"), fn, C(simobjecttype));
             }
-            CycFort indv = new CycNart(CycList.list(fn, name));
-            if (!IndividualExists(indv))
+            CycFort indv;
+            bool b = typename.StartsWith("SimEvent");
+            if (b) // right now we dont intern Events
             {
-                assertGaf(C("comment"), indv,comment);
+                indv = new CycNart(CycList.list(fn, name));
             }
+            else
+                lock (cycTerms)
+                {
+                    {
+                        string nv = name + "-" + typename;
+                        if (cycTerms.TryGetValue(nv, out indv)) return indv;
+                        indv = new CycNart(CycList.list(fn, name));
+                        cycTerms[nv] = indv;
+                        assertGaf(C("comment"), indv, comment);
+                    }
+                }
             return indv;
         }
 
@@ -717,20 +794,32 @@ namespace CycWorldModule.DotCYC
 
         public CycFort FindOrCreateCycFort(SimRegion region)
         {
-            return createIndividualFn("SimRegion", region.RegionName, vocabMt.ToString(), "SimRegion " + region, "GeographicalPlace-3D");
+            return createIndividualFn("SimRegion", region.RegionName, "SimRegion " + region, vocabMt.ToString(), "GeographicalPlace-3D");
         }
 
         public CycFort FindOrCreateCycFort(SimPathStore region)
         {
-            return createIndividualFn("SimRegion", region.RegionName, vocabMt.ToString(), "SimRegion " + region, "GeographicalPlace-3D");
+            return createIndividualFn("SimRegion", region.RegionName, "SimRegion " + region, vocabMt.ToString(), "GeographicalPlace-3D");
         }
 
         public CycObject FindOrCreateCycFort(SimHeading b)
         {
             if (SimHeading.UNKNOWN == b) return CYC_NULL;
-            SimPathStore r = b.GetPathStore();
-            CycFort findOrCreateCycFort = FindOrCreateCycFort(r);
-            return FindOrCreateCycFort(b.GetSimPosition(), r.RegionName);
+            if (b.IsRegionAttached())
+            {
+                SimPathStore r = b.GetPathStore();
+                CycFort findOrCreateCycFort = FindOrCreateCycFort(r);
+                return FindOrCreateCycFort(b.GetSimPosition(), r.RegionName);
+            } else
+            {
+                object arg1 = ToFort(b.GetRoot());
+                Vector3 offset = b.GetOffset();
+                //return "PointRelativeToFn";
+                return new CycNart(makeCycList(C("PointRelativeToFn"), arg1,
+                                               FindOrCreateCycFort(offset.X),
+                                               FindOrCreateCycFort(offset.Y),
+                                               FindOrCreateCycFort(offset.Z)));
+            }
         }
 
         public CycFort FindOrCreateCycFort(Vector3d simObjectEvent)
