@@ -490,6 +490,11 @@ namespace OpenMetaverse
             FindAgentPacket stalk = new FindAgentPacket();
             stalk.AgentBlock.Hunter = Client.Self.AgentID;
             stalk.AgentBlock.Prey = friendID;
+            stalk.AgentBlock.SpaceIP = 0; // Will be filled in by the simulator
+            stalk.LocationBlock = new FindAgentPacket.LocationBlockBlock[1];
+            stalk.LocationBlock[0] = new FindAgentPacket.LocationBlockBlock();
+            stalk.LocationBlock[0].GlobalX = 0.0; // Filled in by the simulator
+            stalk.LocationBlock[0].GlobalY = 0.0;
 
             Client.Network.SendPacket(stalk);
         }
@@ -618,12 +623,16 @@ namespace OpenMetaverse
 
                 foreach (OfflineNotificationPacket.AgentBlockBlock block in notification.AgentBlock)
                 {
-                    FriendInfo friend;
+                    FriendInfo friend = new FriendInfo(block.AgentID, FriendRights.CanSeeOnline, FriendRights.CanSeeOnline);
 
-                    if (!FriendList.ContainsKey(block.AgentID))
-                        FriendList.Add(block.AgentID, new FriendInfo(block.AgentID, FriendRights.CanSeeOnline, FriendRights.CanSeeOnline));
+                    lock (FriendList.Dictionary)
+                    {
+                        if (!FriendList.Dictionary.ContainsKey(block.AgentID))
+                            FriendList.Dictionary[block.AgentID] = friend;
 
-                    friend = FriendList[block.AgentID];
+                        friend = FriendList.Dictionary[block.AgentID];
+                    }
+
                     friend.IsOnline = false;
 
                     if (OnFriendOffline != null)

@@ -688,10 +688,6 @@ namespace OpenMetaverse
             if (packet.Header.AppendedAcks || (packet.Header.AckList != null && packet.Header.AckList.Length > 0))
                 Logger.Log("Attempting to send packet " + packet.Type + " with ACKs appended before serialization", Helpers.LogLevel.Error);
 
-            if (packet.Type==PacketType.ObjectGrab)
-            {
-                
-            }
             if (packet.HasVariableBlocks)
             {
                 byte[][] datas;
@@ -1119,7 +1115,9 @@ namespace OpenMetaverse
             ResendUnacked();
 
             // Start the ACK handling functions again after NETWORK_TICK_INTERVAL milliseconds
-            AckTimer.Change(Settings.NETWORK_TICK_INTERVAL, Timeout.Infinite);
+            Timer timer = AckTimer;
+            if (timer != null)
+                timer.Change(Settings.NETWORK_TICK_INTERVAL, Timeout.Infinite);
         }
 
         private void StatsTimer_Elapsed(object obj)

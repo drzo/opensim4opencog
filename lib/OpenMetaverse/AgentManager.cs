@@ -2285,9 +2285,8 @@ namespace OpenMetaverse
                 return false;
 
             teleportStat = TeleportStatus.None;
-            simName = simName.ToLower();
 
-            if (simName != Client.Network.CurrentSim.Name.ToLower())
+            if (simName != Client.Network.CurrentSim.Name)
             {
                 // Teleporting to a foreign sim
                 GridRegion region;
@@ -3117,9 +3116,6 @@ namespace OpenMetaverse
                 {
                     teleportMessage = "Teleport finished";
                     teleportStat = TeleportStatus.Finished;
-
-                    // Disconnect from the previous sim
-                   // Client.Network.DisconnectSim(simulator, true, NetworkManager.DisconnectType.TeleportInitiated);
 
                     Logger.Log("Moved to new sim " + newSimulator.ToString(), Helpers.LogLevel.Info, Client);
                 }
