@@ -20459,7 +20459,7 @@ namespace OpenMetaverse.Packets
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = new ObjectDataBlock();
-            SurfaceInfo = new SurfaceInfoBlock[0];   
+            SurfaceInfo = null;
         }
 
         public ObjectGrabPacket(byte[] bytes, ref int i) : this()
@@ -42696,7 +42696,7 @@ namespace OpenMetaverse.Packets
             Header.ID = 256;
             Header.Reliable = true;
             AgentBlock = new AgentBlockBlock();
-            LocationBlock = new LocationBlockBlock[0];
+            LocationBlock = null;
         }
 
         public FindAgentPacket(byte[] bytes, ref int i) : this()
@@ -76767,8 +76767,8 @@ namespace OpenMetaverse.Packets
             Header.ID = 5;
             Header.Reliable = true;
             AgentData = new AgentDataBlock();
-            AnimationList = null;// new AnimationListBlock[0];
-            PhysicalAvatarEventList = null;// new PhysicalAvatarEventListBlock[0];
+            AnimationList = null;
+            PhysicalAvatarEventList = null;
         }
 
         public AgentAnimationPacket(byte[] bytes, ref int i) : this()
