@@ -42,6 +42,10 @@ namespace AIMLBotModule
         /// </summary>
         public static double MaxDistance = 11;
         /// <summary>
+        /// Max Distance for attention objects
+        /// </summary>
+        public static double MaxAvDistance = 21;
+        /// <summary>
         /// Max Distance for attention objects on Z plane
         /// </summary>
         public static double MaxZDistance = 1;
@@ -153,8 +157,10 @@ namespace AIMLBotModule
             SimObject source = WorldObjects.GetSimObjectFromUUID(sourceid);
             if (source == null) return;
             SimObject target = WorldObjects.GetSimObjectFromUUID(targetid);
-            if (target == null) return;
-            User user = GetMyUser(source.GetName());
+            if (target == null) return;            
+            string name = source.GetName();
+            if (string.IsNullOrEmpty(name)) return;
+            User user = GetMyUser(name);
             user.Predicates.addSetting("it", targetid.ToString());
             user.Predicates.addSetting("what", targetid.ToString());
             user.Predicates.addSetting("object", targetid.ToString());
@@ -386,17 +392,27 @@ namespace AIMLBotModule
             }
             if (!talker.IsRegionAttached())
             {
-                WriteLine("!IsRegionAttached " + talker);
+                WriteLine("Talker: !IsRegionAttached " + talker);
                 return;
             }
             SimActor a = WorldSystem.TheSimAvatar;
+            if (!a.IsRegionAttached())
+            {
+                WriteLine("!IsRegionAttached " + talker);
+                return;
+            }
             if (Math.Abs(a.GetSimPosition().Z - talker.GetSimPosition().Z) > MaxZDistance)
             {
                 WriteLine("Z Too far " + talker);
                 return;
             }
             double dist = talker.Distance(a);
-            if (dist > MaxDistance)
+            if (talker is SimAvatar && dist > MaxAvDistance)
+            {
+                WriteLine("X,Y " + dist + " Too far to " + talker);
+                return;
+            }
+            else if (dist < MaxDistance)
             {
                 WriteLine("X,Y " + dist + " Too far to " + talker);
                 return;

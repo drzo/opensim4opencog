@@ -41,6 +41,23 @@ namespace cogbot.Listeners
             }
         }
 
+        static readonly List<PacketType> PacketTypeRegional = new List<PacketType>
+                                                                  {
+                                                                      PacketType.ViewerEffect,
+                                                                      PacketType.SoundTrigger,
+                                                                      PacketType.AvatarAnimation,
+                                                                      PacketType.AgentAnimation
+                                                                  };
+
+        private bool Network_SkipEvent(PacketType type, Simulator sim)
+        {
+            if (PacketTypeRegional.Contains(type))
+            {
+                if (!IsMaster(sim)) return true;
+            }
+            return false;
+        }
+
         public bool IsMaster(Simulator simulator)
         {
             return SimRegion.IsMaster(simulator, client);
@@ -72,7 +89,7 @@ namespace cogbot.Listeners
         {
             if (!RequestedGridInfos)
             {
-                int Range = 0;
+                int Range = 1;
                 RequestedGridInfos = true;
                 uint X;
                 uint Y;
@@ -122,7 +139,11 @@ namespace cogbot.Listeners
                     }
                 }
             }
-            if (simulator == client.Network.CurrentSim) { new Thread(() => { Thread.Sleep(30000); client.Appearance.SetPreviousAppearance(true); }).Start(); }
+            if (simulator==client.Network.CurrentSim)
+            {
+                new Thread(() => client.Appearance.SetPreviousAppearance(true)).Start();
+            }
+            //if (simulator == client.Network.CurrentSim) { new Thread(() => { Thread.Sleep(30000); client.Appearance.SetPreviousAppearance(true); }).Start(); }
         }
 
         public void CheckConnected(Simulator simulator)
@@ -135,6 +156,7 @@ namespace cogbot.Listeners
 
         public override void Network_OnEventQueueRunning(Simulator simulator)
         {
+            //if (simulator == client.Network.CurrentSim) { new Thread(() => client.Appearance.WearOutfit(new string[] { "Clothing", "Default" })).Start(); }
             if (string.IsNullOrEmpty(simulator.Name))
             {
            //    simulator.Client.Grid.RequestMapItems(simulator.Handle,GridItemType.AgentLocations,GridLayerType.Terrain); 
@@ -148,7 +170,14 @@ namespace cogbot.Listeners
             {
                 Debug("TheSimAvatar._CurrentRegion.TheSimulator == PreviousSimulator " + PreviousSimulator);
             }
-            new Thread(() => client.Appearance.SetPreviousAppearance(false)).Start();
+            if (PreviousSimulator != null)
+            {
+                new Thread(() => client.Appearance.SetPreviousAppearance(false)).Start();
+            }
+            else
+            {
+//                new Thread(() => client.Appearance.WearOutfit(new string[] { "Clothing", "Default", "IRobot" })).Start();
+            }
             base.Network_OnCurrentSimChanged(PreviousSimulator);
         }
 
@@ -221,19 +250,39 @@ namespace cogbot.Listeners
                                                     new NetworkManager.PacketCallback(ViewerEffectHandler));
                     client.Network.RegisterCallback(PacketType.AvatarAppearance,
                                                     new NetworkManager.PacketCallback(AvatarAppearanceHandler));
+                    client.Network.RegisterCallback(PacketType.MeanCollisionAlert,
+                                                    new NetworkManager.PacketCallback(MeanCollisionAlertHandler));
+
+                    client.Network.RegisterCallback(PacketType.AvatarAnimation, new NetworkManager.PacketCallback(AvatarAnimationHandler));
+
+                    client.Network.RegisterCallback(PacketType.AttachedSound, new NetworkManager.PacketCallback(AttachedSoundHandler));
+                    client.Network.RegisterCallback(PacketType.AttachedSoundGainChange, new NetworkManager.PacketCallback(AttachedSoundGainChangeHandler));
+                    client.Network.RegisterCallback(PacketType.PreloadSound, new NetworkManager.PacketCallback(PreloadSoundHandler));
+                    client.Network.RegisterCallback(PacketType.SoundTrigger, new NetworkManager.PacketCallback(SoundTriggerHandler));
+
                     
                     // raises these events already
+                    client.Self.OnMeanCollision -= Self_OnMeanCollision;
                     client.Avatars.OnPointAt -= Avatars_OnPointAt;
                     client.Avatars.OnLookAt -= Avatars_OnLookAt;
                     client.Avatars.OnEffect -= Avatars_OnEffect;
                     client.Assets.OnUploadProgress -= Assets_OnUploadProgress; // On-Upload-Progress
                     client.Self.OnCameraConstraint -= Self_OnCameraConstraint;
+                    client.Sound.OnAttachSound -= Sound_OnAttachSound;
+                    client.Sound.OnAttachSoundGainChange -= Sound_OnAttachSoundGainChange;
+                    client.Sound.OnSoundTrigger -= Sound_OnSoundTrigger;
+                    client.Sound.OnPreloadSound -= Sound_OnPreloadSound;
+                    client.Avatars.OnAvatarAnimation -= Avatars_OnAvatarAnimation;
+
+
                     client.Settings.PIPELINE_REQUEST_TIMEOUT = 60000;
 
                     client.Objects.OnObjectPropertiesUpdated += Objects_OnPrimitiveProperties;
                     client.Objects.OnObjectTerseUpdate += Objects_OnPrimitiveUpdate;
                     client.Objects.OnObjectUpdated -= Objects_OnObjectUpdated;
                     client.Objects.OnObjectDataBlockUpdate += Objects_OnObjectDataBlockUpdate;
+
+
                 }
             }
         }
@@ -280,13 +329,13 @@ namespace cogbot.Listeners
             client.Self.OnMoneyBalanceReplyReceived += Self_OnMoneyBalanceReplyReceived;
             client.Self.OnAgentDataUpdated += Self_OnAgentDataUpdated;
             client.Self.OnAnimationsChanged += Self_OnAnimationsChanged;
-            client.Self.OnMeanCollision += Self_OnMeanCollision;
+            client.Self.OnMeanCollision -= Self_OnMeanCollision;
             client.Self.OnRegionCrossed += Self_OnRegionCrossed;
             client.Self.OnGroupChatJoin += Self_OnGroupChatJoin;
             client.Self.OnGroupChatLeft += Self_OnGroupChatLeft;
             client.Self.OnAlertMessage += Self_OnAlertMessage;
             client.Self.OnScriptControlChange += Self_OnScriptControlChange;
-            //client.Self.OnCameraConstraint += Self_OnCameraConstraint;
+            client.Self.OnCameraConstraint -= Self_OnCameraConstraint;
             client.Self.OnScriptSensorReply += Self_OnScriptSensorReply;
             client.Self.OnAvatarSitResponse += Self_OnAvatarSitResponse;
             client.Self.OnChatSessionMemberAdded += Self_OnChatSessionMemberAdded;

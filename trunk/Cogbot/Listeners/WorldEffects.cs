@@ -22,7 +22,7 @@ namespace cogbot.Listeners
         public override void Self_OnAnimationsChanged(InternalDictionary<UUID, int> agentAnimations)
         {
             if (!MaintainAnims) return;
-            Avatars_OnAvatarAnimation(client.Self.AgentID, agentAnimations);
+            // Avatars_OnAvatarAnimation(client.Self.AgentID, agentAnimations);
         }
 
         private object AsType(Object te, Type type)
@@ -33,6 +33,26 @@ namespace cogbot.Listeners
         public override void Appearance_OnAppearanceUpdated(Primitive.TextureEntry te)
         {
             SendNewEvent("On-Appearance-Updated", TheSimAvatar, AsType(te, typeof(Primitive.TextureEntry)));
+        }
+
+        /// <summary>
+        /// Process incoming avatar animations
+        /// </summary>
+        /// <param name="packet"></param>
+        /// <param name="sim"></param>
+        private void AvatarAnimationHandler(Packet packet, Simulator sim)
+        {
+
+            if (!IsMaster(sim)) return;
+            AvatarAnimationPacket anims = (AvatarAnimationPacket)packet;
+
+            InternalDictionary<UUID, int> signaledAnims = new InternalDictionary<UUID, int>();
+
+            for (int i = 0; i < anims.AnimationList.Length; i++)
+                signaledAnims.Dictionary.Add(anims.AnimationList[i].AnimID, anims.AnimationList[i].AnimSequenceID);
+
+            Avatars_OnAvatarAnimation(anims.Sender.ID, signaledAnims);
+
         }
 
         public override void Avatars_OnAvatarAnimation(UUID avatarID, InternalDictionary<UUID, int> anims)
@@ -68,6 +88,7 @@ namespace cogbot.Listeners
              */
         public override void Objects_OnAvatarSitChanged(Simulator simulator, Avatar avatar, uint sittingOn, uint oldSeat)
         {
+            if (!IsMaster(simulator)) return;
             if (!MaintainActions) return;
             lock (UpdateQueue)
                 UpdateQueue.Enqueue(() =>
@@ -108,14 +129,14 @@ namespace cogbot.Listeners
                         //object[] eventArgs = new object[] { user, newSit, oldSit };
                         if (oldSit != null)
                             oldSit.AddCanBeTargetOf(1, SendNewEvent(
-                                                           new SimObjectEvent(newSitName,
-                                                                              SimEventType.SIT, SimEventStatus.Stop,
+                                                           new SimObjectEvent(SimEventStatus.Stop, newSitName,
+                                                                              SimEventType.SIT,
                                                                               ToParameter("doneBy", avatar),
                                                                               ToParameter("objectActedOn", oldSit))));
                         if (newSit != null)
                             newSit.AddCanBeTargetOf(1, SendNewEvent(
-                                                           new SimObjectEvent(newSitName,
-                                                                              SimEventType.SIT, SimEventStatus.Start,
+                                                           new SimObjectEvent(SimEventStatus.Start, newSitName,
+                                                                              SimEventType.SIT,
                                                                               ToParameter("doneBy", avatar),
                                                                               ToParameter("objectActedOn", newSit))));
                     }
@@ -126,7 +147,7 @@ namespace cogbot.Listeners
         {
             if (!MaintainActions) return;
             //Console.WriteLine(user + " " + p + " " + ScriptEngines.ScriptEventListener.argsListString(args));
-            user.LogEvent(SendNewEvent(new SimObjectEvent(p, SimEventType.SIT, updown, args)));
+            user.LogEvent(SendNewEvent(new SimObjectEvent(updown, p, SimEventType.SIT, args)));
         }
 
 
@@ -191,6 +212,25 @@ namespace cogbot.Listeners
         }
 
 
+        private void MeanCollisionAlertHandler(Packet packet, Simulator sim)
+        {
+            if (!IsMaster(sim)) return;
+            {
+                MeanCollisionAlertPacket collision = (MeanCollisionAlertPacket)packet;
+
+                for (int i = 0; i < collision.MeanCollision.Length; i++)
+                {
+                    MeanCollisionAlertPacket.MeanCollisionBlock block = collision.MeanCollision[i];
+
+                    DateTime time = Utils.UnixTimeToDateTime(block.Time);
+                    MeanCollisionType type = (MeanCollisionType)block.Type;
+
+                    Self_OnMeanCollision(type, block.Perp, block.Victim, block.Mag, time);
+                }
+            }
+        }
+
+
         public override void Self_OnMeanCollision(MeanCollisionType type, UUID perp, UUID victim, float magnitude,
                                           DateTime time)
         {
@@ -206,8 +246,8 @@ namespace cogbot.Listeners
                         //   WriteLine(perpAv.Name + " bumped into $bot like " + type);
                         // else if (perpAv.Name == client.Self.Name)
                         //   WriteLine("$bot bumped into " + victimAv.Name + " like " + type);   
-                        perpAv.LogEvent(new SimObjectEvent("" + type, SimEventType.SOCIAL,
-                            SimEventStatus.Once,
+                        perpAv.LogEvent(new SimObjectEvent(SimEventStatus.Once,
+                            "" + type, SimEventType.SOCIAL,
                             ToParameter("primaryObjectMoving", perpAv),
                             ToParameter("objectActedOn", victimAv),
                             ToParameter("initialSpeedOfPrimaryObjectMoving", "MetersPerSecond", magnitude)));
@@ -246,9 +286,9 @@ namespace cogbot.Listeners
         {
             if (so is SimAvatar)
             {
-                SimAvatar A = (SimAvatar) so;
-                if (A.IsRegionAttached() && A.GetName().Contains("Rajesh")) 
-                return true;
+                SimAvatar A = (SimAvatar)so;
+                if (A.IsRegionAttached() && A.GetName().Contains("Rajesh"))
+                    return true;
             }
             //return true;
             return false;
@@ -257,7 +297,9 @@ namespace cogbot.Listeners
         public void SendEffect(Simulator sim, UUID sourceID, UUID targetID, Vector3d targetPos, string effectType, float duration,
                                UUID id)
         {
-            if (!(client.MasterKey==targetID || targetID == client.MasterKey)) return;
+            if (!IsMaster(sim)) return;
+            if (client.MasterKey == UUID.Zero) return;
+            if (!(client.MasterKey == targetID || sourceID == client.MasterKey)) return;
             if (!MaintainEffects) return;
             if (sourceID == client.Self.AgentID) return; //not sending our own effects
             if (id != UUID.Zero)
@@ -269,20 +311,20 @@ namespace cogbot.Listeners
             object t = targetID;
             object p = targetPos;
 
-            if (SkippedEffects.Contains(effectType)) return;
+            //if (SkippedEffects.Contains(effectType)) return;
             SimObject source = GetSimObjectFromUUID(sourceID);
             if (source == null)
             {
                 if (sourceID != UUID.Zero)
                 {
                     source = GetSource(sim, sourceID, source, ref s);
-                    if (source==null) return;
+                    if (source == null) return;
                 }
                 //  RequestAsset(sourceID, AssetType.Object, true);
             }
             else
             {
-                    s = source;
+                s = source;
             }
             SimObject target = GetSimObjectFromUUID(targetID);
             if (target == null)
@@ -298,23 +340,28 @@ namespace cogbot.Listeners
             {
                 t = target;
             }
+
+            SimObject ST = target;
+            if (ST == null) ST = source;
             if (targetPos.X < 256)
             {
-                if (targetPos==Vector3d.Zero)
+                if (targetPos == Vector3d.Zero)
                 {
                     p = SimHeading.UNKNOWN;
-                } else
+                }
+                else
                 {
-                    if (source!=null)
+                    if (ST != null)
                     {
-                        if (source.IsRegionAttached())
-                        p = (source.GetWorldPosition() + targetPos);
+                        if (ST.IsRegionAttached())
+                            p = (ST.GetWorldPosition() + targetPos);
                         else
                         {
-                            p = AsRLocation(sim,targetPos,source);
+                            p = AsRLocation(sim, targetPos, ST);
                         }
 
-                    } else
+                    }
+                    else
                     {
                         p = new Vector3((float)targetPos.X, (float)targetPos.Y, (float)targetPos.Z);
                     }
@@ -336,6 +383,17 @@ namespace cogbot.Listeners
                         //p = targetPos;
                     }
                 }
+                else
+                {
+                    if (targetID == UUID.Zero)
+                    {
+                        // now we have a target
+                        t = targetPos;
+
+                        // todo should we revert back to position?
+                        //p = targetPos;
+                    }
+                }
             }
 
             lock (UpdateQueue)
@@ -349,7 +407,7 @@ namespace cogbot.Listeners
                         //WriteLine("  (TARGET IS SELF)");
                         SendNewEvent("on-effect-targeted-self",
                                             ToParameter("doneBy", s),
-                                            // ToParameter("objectActedOn", t),
+                            // ToParameter("objectActedOn", t),
                                             ToParameter("eventPartiallyOccursAt", p),
                                             ToParameter("duration", duration),
                                             ToParameter("effectType", effectType));
@@ -357,30 +415,32 @@ namespace cogbot.Listeners
                     }
                     if (s is UUID)
                     {
-                        
+
                     }
-                    SimObjectEvent evt = new SimObjectEvent(effectType, SimEventType.EFFECT, SimEventStatus.Once,
-                        ToParameter("doneBy", s),
-                        ToParameter("objectActedOn", t),
-                        ToParameter("eventPartiallyOccursAt", p),
-                        ToParameter("duration", duration),
-                        AsEffectID(id));
+
 
                     if (source != null)
                     {
-                        source.LogEvent(SendNewEvent(evt));
+                        source.OnEffect(effectType, t, p, duration, id);
                     }
                     else
                     {
+                        SimObjectEvent evt = new SimObjectEvent(SimEventStatus._UNKNOWN, effectType, SimEventType.EFFECT,
+                                                                ToParameter("doneBy", s),
+                                                                ToParameter("objectActedOn", t),
+                                                                ToParameter("eventPartiallyOccursAt", p),
+                                                                ToParameter("duration", duration),
+                                                                AsEffectID(id));
+
                         if (t is SimObject)
                         {
                             ((SimObject)t).AddCanBeTargetOf(2, evt);
-                        }                                           
+                        }
                         RegisterUUID(id, effectType);
                         //TODO 
                         if (UseEventSource(s))
                             SendNewEvent(evt);
-                            //SendNewEvent("on-effect", effectType, s, t, p, duration, AsEffectID(id));
+                        //SendNewEvent("on-effect", effectType, s, t, p, duration, AsEffectID(id));
                     }
                 });
         }
@@ -444,6 +504,7 @@ namespace cogbot.Listeners
         /// </summary>
         private void ViewerEffectHandler(Packet packet, Simulator simulator)
         {
+            if (!IsMaster(simulator)) return;
             if (simulator != client.Network.CurrentSim)
             {
                 //Debug("ViewerEffectHandler: from a differnt sim than current " + simulator);
@@ -563,7 +624,7 @@ namespace cogbot.Listeners
                         SendNewEvent("OnViewerEffect", type, sourceAvatar, targetObject, targetPos);
                         break;
                 }
-                SendEffect(simulator,sourceAvatar, targetObject, targetPos, "EffectType." + type, 0.1f, block.ID);
+                SendEffect(simulator, sourceAvatar, targetObject, targetPos, "EffectType." + type, 0.1f, block.ID);
             }
         }
 

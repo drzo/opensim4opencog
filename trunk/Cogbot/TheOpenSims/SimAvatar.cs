@@ -375,10 +375,6 @@ namespace cogbot.TheOpenSims
             //    if (Client.Settings.OBJECT_TRACKING)
             //        return Client.Self.SimPosition;
             //}
-            if (theAvatar.ParentID == 0)
-            {
-                return LastKnownPos = theAvatar.Position;
-            }
             return base.GetSimPosition();
         }
 
@@ -1771,19 +1767,19 @@ namespace cogbot.TheOpenSims
                 //    }
                 //}
                 //start or stop moving
-                List<UUID> RemovedThisEvent0 = new List<UUID>(RemovedThisEvent);
-                List<UUID> AddedThisEvent0 = new List<UUID>(AddedThisEvent);
-                StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "Movement-TranslationProcess", startStops);
+                List<UUID> RemovedThisEventUnsent = new List<UUID>(RemovedThisEvent);
+                List<UUID> AddedThisEventUnsent = new List<UUID>(AddedThisEvent);
+                StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "Movement-TranslationProcess", startStops);
                 
-                StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0,  "Jumping", startStops);
+                StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent,  "Jumping", startStops);
 
-                StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "SittingDown", startStops);
+                StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "SittingDown", startStops);
 
-                StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "SupportingOnesWeight", startStops);
+                StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "SupportingOnesWeight", startStops);
                 // start or stop flying
-                StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "Flying", startStops);
+                StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "Flying", startStops);
                 //start or stop sleeping
-                StartOrStopAnimEvent(RemovedThisEvent0, AddedThisEvent0, "Lying-Physical", startStops);
+                StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "Lying-Physical", startStops);
 
 
                 //start or stop talking
@@ -1834,7 +1830,7 @@ namespace cogbot.TheOpenSims
                         {
                             if (seq == uuid.Value)
                             {
-                                if (RemovedThisEvent0.Contains(uuid.Key))
+                                if (RemovedThisEventUnsent.Contains(uuid.Key))
                                 {
                                     LogEvent(AnimEvent(uuid.Key, SimEventStatus.Stop));
                                     shownRemoved.Add(uuid.Key);
@@ -1849,7 +1845,7 @@ namespace cogbot.TheOpenSims
                             if (seq == uuid.Value)
                             {
                                 SimAsset a = SimAssetStore.FindOrCreateAsset(uuid.Key, AssetType.Animation);
-                                if (AddedThisEvent0.Contains(uuid.Key))
+                                if (AddedThisEventUnsent.Contains(uuid.Key))
                                 {
                                     LogEvent(AnimEvent(uuid.Key, SimEventStatus.Start));
                                     showAdded.Add(uuid.Key);
@@ -1904,7 +1900,7 @@ namespace cogbot.TheOpenSims
             SimAsset a = SimAssetStore.FindOrCreateAsset(uuid, AssetType.Animation);
 
             object m = a.GetMeaning();
-            SimObjectEvent oe= new SimObjectEvent("OnAnim", SimEventType.ANIM, status,
+            SimObjectEvent oe = new SimObjectEvent(status, "OnAnim", SimEventType.ANIM,
                                       WorldObjects.ToParameter("doneBy", this),
                                       WorldObjects.ToParameter("isa", a),
                                       WorldObjects.ToParameter("eventOccursAt", GetHeading()));
@@ -1923,14 +1919,14 @@ namespace cogbot.TheOpenSims
                 {
                     // was the same 
                     if (PostureType == evt.Verb) return;
-                    SimObjectEvent ending = new SimObjectEvent(PostureType + (IsFlying ? "-Flying" : ""),
-                                                                 SimEventType.ANIM, SimEventStatus.Stop,                                               
+                    SimObjectEvent ending = new SimObjectEvent(SimEventStatus.Stop, PostureType + (IsFlying ? "-Flying" : ""),
+                                                                 SimEventType.ANIM,                                                
                                                                  evt.Parameters);
                     ending.serial = LastPostureEvent.serial;
                     LogEvent(ending);
                     PostureType = evt.Verb;
-                    SimObjectEvent starting = new SimObjectEvent(PostureType + (IsFlying ? "-Flying" : ""),
-                                                               SimEventType.ANIM, SimEventStatus.Start,
+                    SimObjectEvent starting = new SimObjectEvent(SimEventStatus.Start, PostureType + (IsFlying ? "-Flying" : ""),
+                                                               SimEventType.ANIM,
                                                                evt.Parameters);
                     starting.serial = evt.serial;
                     LogEvent(starting);
@@ -1991,11 +1987,11 @@ namespace cogbot.TheOpenSims
             }
             if (wasStarted && wasStopped) return;
             if (wasStarted)
-                startStops.Add(new SimObjectEvent(name, SimEventType.ANIM, SimEventStatus.Start,
+                startStops.Add(new SimObjectEvent(SimEventStatus.Start, name, SimEventType.ANIM, 
                                                   WorldObjects.ToParameter("doneBy", this),
                                                   WorldObjects.ToParameter("eventOccursAt", GetHeading())));
             if (wasStopped)
-                startStops.Insert(0, new SimObjectEvent(name, SimEventType.ANIM, SimEventStatus.Stop,
+                startStops.Insert(0, new SimObjectEvent(SimEventStatus.Stop, name, SimEventType.ANIM, 
                                                         WorldObjects.ToParameter("doneBy", this),
                                                         WorldObjects.ToParameter("eventOccursAt", GetHeading())));
 

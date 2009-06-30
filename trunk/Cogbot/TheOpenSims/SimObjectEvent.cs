@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using cogbot.Listeners;
 using OpenMetaverse;
@@ -44,25 +45,7 @@ namespace cogbot.TheOpenSims
         public long serial = serialCount++;
 
         public readonly DateTime Time = DateTime.UtcNow;
-        public SimObjectEvent(string name, object[] paramz)
-        {
-            EventType = SimEventType.LISP;
-            EventStatus = SimEventStatus.Once;
-            Verb = name;
-            Parameters = new NamedParam[paramz.Length];
-            for (int i = 0; i < paramz.Length; i++)
-            {
-                if (paramz[i] is NamedParam)
-                {
-                    Parameters[i] = (NamedParam) paramz[i];
-                }
-                else
-                {
-                    Parameters[i] = new NamedParam(null, paramz[i]);
-                }
-            }
-            ParameterNames();
-        }
+
         // string eventName;
         // object[] args;
         readonly List<SimEventSubscriber> receiversSent = new List<SimEventSubscriber>();
@@ -152,8 +135,8 @@ namespace cogbot.TheOpenSims
         {
             for (int i = after; i < Parameters.Count; i++)
             {
-                object o = Parameters[i];
-                if (t.IsInstanceOfType(o)) return o;
+                var o = Parameters[i];
+                if (t.IsInstanceOfType(o.Value)) return o.Value;
             }
             return null;
         }
@@ -164,25 +147,34 @@ namespace cogbot.TheOpenSims
         }
 
         public string Verb;
-        public IList<NamedParam> Parameters;
+        public List<NamedParam> Parameters;
         public SimEventType EventType;
         public SimEventStatus EventStatus;
 
-        public SimObjectEvent(string eventName, SimEventType type, SimEventStatus status, IList<NamedParam> args)
+        public SimObjectEvent(SimEventStatus status, string eventName, SimEventType type, IEnumerable<NamedParam> args)
         {
             Verb = eventName;
-            Parameters = args;
+            Parameters = new List<NamedParam>(args);
             EventType = type;
             EventStatus = status;
-            ParameterNames();            
+            ParameterNames();
         }
 
-        public SimObjectEvent(string eventName, SimEventType type, SimEventStatus status, params NamedParam[] args)
+        public SimObjectEvent(SimEventStatus status, string eventName, SimEventType type, params NamedParam[] args)
         {
             Verb = eventName;
-            Parameters = args;
+            Parameters = new List<NamedParam>(args);
             EventType = type;
             EventStatus = status;
+            ParameterNames();
+        }
+
+        public SimObjectEvent(string name, IEnumerable paramz)
+        {
+            EventType = SimEventType.LISP;
+            EventStatus = SimEventStatus.Once;
+            Verb = name;
+            Parameters = NamedParam.ObjectsToParams(paramz);
             ParameterNames();
         }
 
@@ -256,6 +248,7 @@ namespace cogbot.TheOpenSims
 
         static object GetValue(object parameter)
         {
+            if (parameter is NamedParam) parameter = ((NamedParam)parameter).Value;
             if (parameter is NullType || parameter == null)
             {
                 return null;
@@ -301,7 +294,7 @@ namespace cogbot.TheOpenSims
                 NamedParam otheri = other[i];
                 if (otheri.Value == null)
                 {
-                    if (Parameters[i].Value!=null) return false;
+                    if (Parameters[i].Value != null) return false;
                     continue;
                 }
                 if (NonComparable(otheri.GetType())) continue;
@@ -320,10 +313,12 @@ namespace cogbot.TheOpenSims
 
         static Type GetType(object o)
         {
-            if (o is NullType) return ((NullType) o).Type;
-            if  (o != null) return o.GetType();
-            return typeof (NullType);
+            if (o is NamedParam) o = ((NamedParam)o).Value;
+            if (o is NullType) return ((NullType)o).Type;
+            if (o != null) return o.GetType();
+            return typeof(NullType);
         }
+
         public String[] ParameterNames()
         {
             string[] names = new string[Parameters.Count];
@@ -332,32 +327,41 @@ namespace cogbot.TheOpenSims
                 var o = Parameters[i];
                 if (o.Value is Vector3)
                 {
-                    Console.WriteLine("Got v3 in " + this);
+                    Console.WriteLine("Got v3 in {0}", this);
                 }
                 object key = o;
+
                 while (key is NamedParam)
                 {
-                    key = ((NamedParam) o).Key;
+                    key = ((NamedParam)key).Key;
                 }
                 object v = o.Value;
+
                 if (v == null)
                 {
-                    Console.WriteLine("Got null in " + this);
+                    Console.WriteLine("Got null in {0}", this);
                 }
-                string s = GetType(v).Name + "" + i;
 
-                if (s.ToLower().StartsWith("sim"))
+                // we already nave a good name
+                if (key is String)
                 {
-                    if (!char.IsLower(s[3]))
-                    {
-                        s = s.Substring(3);
-                    }
+                    names[i] = key.ToString();
                 }
-                s = "sim" + s;
+                else
+                {
+                    // otherwise we make one up
+                    string s = GetType(o).Name + "" + i;
 
-                if (key is String) s = key.ToString();
+                    if (s.ToLower().StartsWith("sim"))
+                    {
+                        if (!char.IsLower(s[3]))
+                        {
+                            s = s.Substring(3);
+                        }
+                    }
+                    names[i] = string.Format("sim{0}", s);
+                }
 
-                names[i] = s;
             }
             return names;
         }
@@ -372,11 +376,11 @@ namespace cogbot.TheOpenSims
 
         public void AddParam(string name, object value)
         {
-           Parameters.Add(new NamedParam(name,value));
+            Parameters.Add(new NamedParam(name, value));
         }
     }
 
-    public struct NamedParam 
+    public struct NamedParam
     {
         public NamedParam(object k, object v)
         {
@@ -387,8 +391,60 @@ namespace cogbot.TheOpenSims
         readonly public object Value;
         public override string ToString()
         {
-            if (Key==null) return string.Format("{0}", (Value ?? "NULL"));
+            if (Key == null) return string.Format("{0}", (Value ?? "NULL"));
             return Key + "=" + Value;
+        }
+
+        public static bool operator ==(NamedParam p1,NamedParam p2)
+        {
+            return p1.Equals(p2);
+        }
+
+        public static bool operator !=(NamedParam p1, NamedParam p2)
+        {
+            return !(p1 == p2);
+        }
+
+        // override object.Equals
+        public override bool Equals(object obj)
+        {
+            //       
+            // See the full list of guidelines at
+            //   http://go.microsoft.com/fwlink/?LinkID=85237  
+            // and also the guidance for operator== at
+            //   http://go.microsoft.com/fwlink/?LinkId=85238
+            //
+
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return Equals(Value,obj);
+            }
+            return Equals(Value,((NamedParam) obj).Value);
+
+        }
+
+        // override object.GetHashCode
+        public override int GetHashCode()
+        {
+            // TODO: write your implementation of GetHashCode() here
+            return base.GetHashCode();
+        }
+
+        public static List<NamedParam> ObjectsToParams(IEnumerable paramz)
+        {
+            List<NamedParam> Parameters = new List<NamedParam>();
+            foreach (var v in paramz)
+            {
+                if (v is NamedParam)
+                {
+                    Parameters.Add((NamedParam)v);
+                }
+                else
+                {
+                    Parameters.Add(new NamedParam(null, v));
+                }
+            }
+            return Parameters;
         }
 
     }

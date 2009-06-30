@@ -987,7 +987,9 @@ namespace cogbot.TheOpenSims
                 AnimUUID("pelvis_fix", "0c5dd2a2-514d-8893-d44d-05beffad208b", "LLPelvisFixMotion in newview/llvoavatar.cpp", "0", "Makes corrections to keep avatar standing upright. Joints moved: pelvis");
                 AnimUUID("target", "0e4896cb-fba4-926c-f355-8720189d5b55", "LLTargetingMotion in llcharacter/lltargetingmotion.cpp", "2", "Move body with look at position, used during aim_* animations above. Joints moved: pelvis, torso, right wrist");
                 AnimUUID("walk_adjust", "829bc85b-02fc-ec41-be2e-74cc6dd7215d", "LLWalkAdjustMotion in llcharacter/llkeyframewalkmotion.cpp", "2", "Makes walking corrections for terrain, turns. Joints moved: pelvis, left ankle, right ankle");
-
+                
+                //common extras i've noticed
+                AnimUUID("drinking_or_snowcone", "758547a2-7212-d533-43e3-1666eda1705e");
 
                 DownloadAnimFolder();
 
@@ -1181,11 +1183,11 @@ namespace cogbot.TheOpenSims
                 String sname = name.ToLower();
                 if (sname.Equals(a))
                 {
-                    return nameAsset[name].AssetIDs[0];
+                    return nameAsset[name].AssetID;
                 }
                 if (sname.Contains(a))
                 {
-                    partial = nameAsset[name].AssetIDs[0];
+                    partial = nameAsset[name].AssetID;
                 }
             }
             return partial;
@@ -1409,7 +1411,7 @@ namespace cogbot.TheOpenSims
                         _Name.Add(ExpressionName);
                         return ExpressionName;
                     }
-                    string tmpname = "" + AssetIDs[0];
+                    string tmpname = "" + AssetID;
                     if (AssetIDs.Count == 1)
                     {
                         SaveFile(tmpname);
@@ -1458,6 +1460,10 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        protected static string UnknownName
+        {
+            get { return null; }
+        }
 
 
         public FirstOrderTerm GetTerm()

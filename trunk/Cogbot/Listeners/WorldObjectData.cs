@@ -93,7 +93,7 @@ namespace cogbot.Listeners
                 Objects_OnObjectProperties11(simulator, prim, props);
             else
                 lock (PropertyQueue)
-                    PropertyQueue.Enqueue(delegate() { Objects_OnObjectProperties11(simulator, prim, props); });
+                    PropertyQueue.AddLast(delegate() { Objects_OnObjectProperties11(simulator, prim, props); });
         }
 
         public override void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties props)
@@ -102,7 +102,7 @@ namespace cogbot.Listeners
             CheckConnected(simulator);
             //NeverSelect(props.LocalID, simulator);
             lock (PropertyQueue)
-                PropertyQueue.Enqueue(delegate() { Objects_OnObjectProperties11(simulator, null, props); });
+                PropertyQueue.AddLast(delegate() { Objects_OnObjectProperties11(simulator, null, props); });
         }
 
         public void Objects_OnObjectProperties11(Simulator simulator, Primitive prim, Primitive.ObjectProperties props)
@@ -155,8 +155,8 @@ namespace cogbot.Listeners
             Primitive.ConstructionData data, ObjectUpdatePacket.ObjectDataBlock block,
             ObjectUpdate objectupdate0, NameValue[] nameValues)
         {
-            //if (!MaintainObjectUpdates) return;
-           // return;            
+            if (!IsMaster(simulator)) return;
+            // return;            
             if (!objectupdate0.Avatar)
             {
 
@@ -271,6 +271,7 @@ namespace cogbot.Listeners
 
         private void Objects_OnPrimitiveUpdate(Simulator simulator, Primitive av, ObjectUpdate update, ulong RegionHandle, ushort TimeDilation)
         {
+            if (!IsMaster(simulator)) return;
             if (av == null)
             {
                 return;
@@ -332,6 +333,7 @@ namespace cogbot.Listeners
         public void Objects_OnObjectUpdated1(Simulator simulator, Primitive objectUpdated, ObjectUpdate update, ulong regionHandle,
                                              ushort timeDilation)
         {
+            if (!IsMaster(simulator)) return;
             if (objectUpdated != null)
             {
                 //lock (objectUpdated)

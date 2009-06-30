@@ -85,6 +85,7 @@ namespace cogbot.Listeners
             foreach (UUID key in groups.Keys)
             {
                 Group g = groups[key];
+                AddName2Key(g.Name, key);
                 RegisterUUID(key, g);
             }
             //OnEvent("On-Current-Groups", paramNamesOnCurrentGroups, paramTypesOnCurrentGroups, groups);
@@ -150,13 +151,17 @@ namespace cogbot.Listeners
                 //TODO SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID, null), grp);                
             }
         }
-        public override void Groups_OnGroupMembers(Dictionary<UUID, GroupMember> members)
+        public override void Groups_OnGroupMembers(UUID requestID, UUID groupID, int totalCount, Dictionary<UUID, GroupMember> members)
         {
-           // base.Groups_OnGroupMembers(members);
+           // base.Groups_OnGroupMembers(requestID, totalCount, members);
         }
 
         public override void Groups_OnGroupNames(Dictionary<UUID, string> groupNames)
         {
+            foreach (KeyValuePair<UUID, string> kvp in groupNames)
+            {
+                AddName2Key(kvp.Value, kvp.Key);
+            }
             ///base.Groups_OnGroupNames(groupNames);
         }
 

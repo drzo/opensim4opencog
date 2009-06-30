@@ -15,23 +15,33 @@ namespace cogbot.Actions
         Primitive.ObjectProperties Properties;
         bool GotPermissions = false;
         UUID SelectedObject = UUID.Zero;
+        private bool registedDelegates = false;
 
         Dictionary<UUID, Primitive> PrimsWaiting = new Dictionary<UUID, Primitive>();
         AutoResetEvent AllPropertiesReceived = new AutoResetEvent(false);
 
         public ExportCommand(BotClient testClient)
         {
-            testClient.Objects.OnObjectPropertiesFamily += new ObjectManager.ObjectPropertiesFamilyCallback(Objects_OnObjectPropertiesFamily);
-            testClient.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
-            testClient.Avatars.OnPointAt += new AvatarManager.PointAtCallback(Avatars_OnPointAt);
 
             Name = "export";
             Description = "Exports an object to an xml file. Usage: export uuid outputfile.xml";
             Category = CommandCategory.Objects;
         }
 
+        void RegisterCallbacks()
+        {
+            if (registedDelegates) return;
+            registedDelegates = true;
+            Client.Objects.OnObjectPropertiesFamily +=
+                new ObjectManager.ObjectPropertiesFamilyCallback(Objects_OnObjectPropertiesFamily);
+            Client.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
+            Client.Avatars.OnPointAt += new AvatarManager.PointAtCallback(Avatars_OnPointAt);
+
+        }
+
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            RegisterCallbacks();
             if (args.Length != 2 && !(args.Length == 1 && SelectedObject != UUID.Zero))
                 return "Usage: export uuid outputfile.xml";
 

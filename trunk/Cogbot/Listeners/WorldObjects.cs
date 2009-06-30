@@ -25,7 +25,7 @@ namespace cogbot.Listeners
         public static bool MaintainCollisions = true;
         public static bool MaintainEffects = true;
         public static bool MaintainActions = true;
-        public static bool MaintainPropertiesFromQueue = false;
+        public static bool MaintainPropertiesFromQueue = true;
         public static bool MaintainObjectUpdates = false;
         public static bool MaintainSounds = true;
         public static bool UseNewEventSystem = true;
@@ -38,7 +38,7 @@ namespace cogbot.Listeners
         private static readonly Dictionary<Simulator, List<uint>> primsSelected = new Dictionary<Simulator, List<uint>>();
         private static readonly Dictionary<Simulator, List<uint>> primsSelectedOutbox = new Dictionary<Simulator, List<uint>>();
 
-        private static readonly Queue<ThreadStart> PropertyQueue = new Queue<ThreadStart>();
+        private static readonly LinkedList<ThreadStart> PropertyQueue = new LinkedList<ThreadStart>();
         private static readonly object SelectObjectsTimerLock = new object();
         private static readonly List<ThreadStart> ShutdownHooks = new List<ThreadStart>();
         private static readonly Queue<ThreadStart> UpdateQueue = new Queue<ThreadStart>();
@@ -104,6 +104,7 @@ namespace cogbot.Listeners
             } //else
             ///client.Settings.USE_LLSD_LOGIN = true;
 
+            client.Network.PacketEvents.SkipEvent += Network_SkipEvent;
             lock (WorldObjectsMasterLock)
             {
                 if (Master == null)
@@ -208,7 +209,7 @@ namespace cogbot.Listeners
                         if (m_TheSimAvatar == null)
                         {
                             SimAvatarImpl impl;
-                            m_TheSimAvatar = impl = new SimAvatarImpl(id, this, client.Network.CurrentSim);
+                            m_TheSimAvatar = impl = CreateSimAvatar(id, this, client.Network.CurrentSim);
                             impl.AspectName = client.GetName();
                         }
                     }
@@ -275,7 +276,8 @@ namespace cogbot.Listeners
                 {
                     lock (PropertyQueue)
                     {
-                        P = PropertyQueue.Dequeue();
+                        P = PropertyQueue.First.Value;
+                        PropertyQueue.RemoveFirst();
                         Properties = PropertyQueue.Count;
                     }
                     P();
@@ -304,12 +306,9 @@ namespace cogbot.Listeners
             object simLock = GetSimLock(simulator);
             //Thread.Sleep(3000);
             if (!Monitor.TryEnter(simLock)) return; else Monitor.Exit(simLock);
-            lock (simulator.ObjectsPrimitives.Dictionary)
-                primsCatchup = new List<Primitive>(simulator.ObjectsPrimitives.Dictionary.Values);
-            lock (simulator.ObjectsAvatars.Dictionary)
-            {
-                simulator.ObjectsAvatars.ForEach(a => primsCatchup.Add(a));
-            }
+            primsCatchup = new List<Primitive>(simulator.ObjectsPrimitives.Count + simulator.ObjectsAvatars.Count);
+            simulator.ObjectsPrimitives.ForEach(a => primsCatchup.Add(a));
+            simulator.ObjectsAvatars.ForEach(a => primsCatchup.Add(a));
             bool known = false;
             foreach (Primitive item in primsCatchup)
             {
@@ -384,15 +383,13 @@ namespace cogbot.Listeners
                         Debug("  - - -#$%#$%#$%% - ------- - Unweird Avatar " + prim);
                     }
                     obj0 = CreateSimAvatar(prim.ID, this, simulator);
-                    obj0.SetFirstPrim(prim);
-
                 }
                 else
                 {
                     obj0 = CreateSimObject(prim.ID, this, simulator);
-                    obj0.SetFirstPrim(prim);
                 }
             }
+            obj0.SetFirstPrim(prim);
             SendOnAddSimObject(obj0);
             return (SimObject)obj0;
         }
@@ -605,25 +602,37 @@ namespace cogbot.Listeners
                 if (IsMaster(simulator))
                 {
                     prim.RegionHandle = regionHandle;
-                    SimObject O = GetSimObject(prim, simulator);
-                    O.ResetPrim(prim, client, simulator);
+                    if (MaintainPropertiesFromQueue)
+                    {
+                        lock (PropertyQueue) PropertyQueue.AddFirst(() => InternPrim(simulator, prim));
+                    }
+                    else
+                    {
+                        InternPrim(simulator, prim);
+                    }
                     // Make an initial "ObjectUpdate" for later diff-ing
-                    if (MaintainObjectUpdates)
-                        LastObjectUpdate[O] = updatFromPrim0(prim);
+                    EnsureSelected(prim.LocalID, simulator);
+                    EnsureSelected(prim.ParentID, simulator);
                 }
             }
-            EnsureSelected(prim.LocalID, simulator);
-            EnsureSelected(prim.ParentID, simulator);
 
             //CalcStats(prim);
             //UpdateTextureQueue(prim.Textures);
         }
 
+        private void InternPrim(Simulator simulator, Primitive prim)
+        {
+            SimObject O = GetSimObject(prim, simulator);
+            O.ResetPrim(prim, client, simulator);
+            if (MaintainObjectUpdates)
+                LastObjectUpdate[O] = updatFromPrim0(prim);
+        }
 
 
         public override void Objects_OnNewAttachment(Simulator simulator, Primitive prim, ulong regionHandle,
                                                      ushort timeDilation)
         {
+            if (!IsMaster(simulator)) return;
             if (ScriptHolder == null && prim.ParentID != 0 && prim.ParentID == client.Self.LocalID)
             {
                 EnsureSelected(prim.LocalID, simulator);
@@ -646,7 +655,6 @@ namespace cogbot.Listeners
         public override void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle,
                                                  ushort timeDilation)
         {
-
             SimObject AV = GetSimObject(avatar, simulator);
             if (avatar.ID == client.Self.AgentID)
             {
@@ -908,11 +916,13 @@ namespace cogbot.Listeners
             }
             EnsureSimulator(simulator);
             Primitive prim;
+            lock (simulator.ObjectsPrimitives.Dictionary)
             if (simulator.ObjectsPrimitives.TryGetValue(id, out prim))
             {
                 return prim;
             }
             Avatar av;
+            lock (simulator.ObjectsAvatars.Dictionary)
             if (simulator.ObjectsAvatars.TryGetValue(id, out av))
             {
                 return av;

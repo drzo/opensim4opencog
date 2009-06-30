@@ -126,10 +126,11 @@ namespace cogbot.Actions.Movement
         {
             if (args.Length == 0)
             {
-                foreach (SimRegion R in SimRegion.CurrentRegions)
-                {
-                    R.ShowDebugger();
-                }
+                //foreach (SimRegion R in SimRegion.CurrentRegions)
+                //{
+                //    R.ShowDebugger();
+                //}
+                SimRegion.GetRegion(Client.Network.CurrentSim).ShowDebugger();
             }
             else
             {

@@ -297,7 +297,7 @@ namespace cogbot.TheOpenSims
                             Console.WriteLine("\n Different UUID! {0}", prim);                            
                         }
                         primRefs.Add(prim);
-                        Console.WriteLine("\n Different prims {0}", prim);
+                        //Console.WriteLine("\n Different prims {0}", prim);
                     }
                 }
                 _Prim0 = prim;
@@ -1714,15 +1714,15 @@ namespace cogbot.TheOpenSims
 
         public virtual bool OnEffect(string effectType, object t, object p, float duration, UUID id)
         {
-            bool noteable = LogEvent(new SimObjectEvent(effectType, SimEventType.EFFECT, SimEventStatus.Once,
-                                                        WorldObjects.ToParameter("doneBy", this),
-                                                        WorldObjects.ToParameter("objectActedOn", t),
-                                                        WorldObjects.ToParameter("eventPartiallyOccursAt", p),
-                                                        WorldObjects.ToParameter("duration", duration),
-                                                        WorldObjects.AsEffectID(id)));
-
+            SimObjectEvent newSimObjectEvent = new SimObjectEvent(SimEventStatus._UNKNOWN, effectType, SimEventType.EFFECT,
+                                                                    WorldObjects.ToParameter("doneBy", this),
+                                                                    WorldObjects.ToParameter("objectActedOn", t),
+                                                                    WorldObjects.ToParameter("eventPartiallyOccursAt", p),
+                                                                    WorldObjects.ToParameter("duration", duration),
+                                                                    WorldObjects.AsEffectID(id));
+            bool noteable = LogEvent(newSimObjectEvent);
             //todo
-            if (noteable)WorldSystem.SendNewEvent("on-effect", effectType, this, t, p, duration, id);
+            if (noteable) WorldSystem.SendNewEvent(newSimObjectEvent);
             return noteable;
             //throw new NotImplementedException();
         }
@@ -1875,7 +1875,7 @@ namespace cogbot.TheOpenSims
 
         void OnSound(UUID soundID, float gain);
 
-        //bool OnEffect(string effectType, object t, object p, float duration, UUID id);
+        bool OnEffect(string effectType, object t, object p, float duration, UUID id);
 
         SimObject GetGroupLeader();
 

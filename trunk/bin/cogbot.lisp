@@ -51,27 +51,33 @@
     )
  )
 
+
+ (def (on-network-connected &opt reason message)
+   ;; too early for snything usefull
+   )
+    
  ;;Nephrael Rae: [on-object-animation '(avatar "Candie Brooks") "TALK"][on-object-animation '(avatar "Candie Brooks") "STAND_1"][on-object-animation '(avatar "Candie Brooks") "e45fbdc9-af8f-9408-f742-fcb8c341d2c8"]
  ;--------------------------------------
  ; Here the bot is officially connected (I think), so you could 
  ; have it perform a initial inworld tasks like wearing some clothes
  ;-------------------------------------
- (def (on-network-connected &opt reason message)
+ (def (on-first-sim-connected &opt reason message)
   (progn
     ;; (thisClient.output (@"fromLispExample: (on-network-connected )" ) )
     ;; annoys people sometimes in SL  (thisClient.ExecuteCommand (@"say Hello World"))   
     ;;(thisClient.ExecuteCommand (@"teleport Nakama/128.08/111.95/22.06"))
     ;; this works but the next is faster (thisClient.ExecuteCommand (@"use HMG to wear"))
-    (thisClient.ExecuteCommand (@"wear Clothing/HMG"))
     ;; interesting places
-    ;; (thisClient.ExecuteCommand (@"teleport Desperation Andromeda/175/211/330")
-    ;;(thisClient.ExecuteCommand (@"thread appearance"))   
+    ;; (thisClient.ExecuteCommand (@"teleport Desperation Andromeda/175/211/330"))
+    ;;(thisClient.ExecuteCommand (@"thread appearance"))
+    ;;(thisClient.ExecuteCommand (@"thread wear bake Clothing/Default/IRobot"))
     )
  )
 
 (def (on-simulator-connected simulator)
   (progn
-    ;; (thisClient.output (@"fromLispExample: (on-simulator-connected {0} )" (str simulator)) )
+    ;; (thisClient.output (@"fromLispExample: (on-simulator-connected {0} )" (str simulator)))
+
     )
  )
  
@@ -457,8 +463,9 @@
 
 ;;  OpenMetaverse.Simulator
 (def (on-current-sim-changed PreviousSimulator)
- ;; (progn (thisClient.WriteLine (@"fromLispExample:  {0}"  PreviousSimulator)))
-)
+ (progn (thisClient.WriteLine (@"fromLispExample: on-current-sim-changed {0}"  PreviousSimulator)) 
+ 
+ ))
 
 
 ;;  OpenMetaverse.Simulator
