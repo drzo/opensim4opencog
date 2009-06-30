@@ -49,6 +49,8 @@ namespace cogbot
         public GroupManager Groups { get { return gridClient.Groups; } }
         /// <summary>Asset subsystem</summary>
         public AssetManager Assets { get { return gridClient.Assets; } }
+        /// <summary>Asset subsystem</summary>
+        public EstateTools Estate { get { return gridClient.Estate; } }
         /// <summary>Appearance subsystem</summary>
         public AppearanceManager Appearance { get { return gridClient.Appearance; } }
         /// <summary>Inventory subsystem</summary>
@@ -402,9 +404,9 @@ namespace cogbot
             }
         }
 
-        private void GroupMembersHandler(Dictionary<UUID, GroupMember> members)
+        private void GroupMembersHandler(UUID requestID, UUID groupID, int totalCount, Dictionary<UUID, GroupMember> members)
         {
-            WriteLine(String.Format("Got {0} group members.", members.Count));
+            WriteLine(String.Format("Got {0} group members out of {1}.", members.Count, totalCount));
             GroupMembers = members;
         }
 
@@ -723,10 +725,11 @@ namespace cogbot
                 if (str == null) return;
                 if (str == "") return;
                 if (str.StartsWith("$bot")) str = str.Substring(4);
-                string toprint = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
-                string SelfName = String.Format("{0} ", GetName());
-                toprint = toprint.Replace("$bot", SelfName);
-                ClientManager.WriteLine(SelfName + ": " + toprint);
+                str = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
+                string SelfName = String.Format("{0}", GetName());
+                str = str.Replace("$bot", SelfName);
+                if (str.StartsWith(SelfName)) str = str.Substring(SelfName.Length + 1);
+                ClientManager.WriteLine(SelfName + ": " + str);
             }
             catch (Exception)
             {
@@ -742,10 +745,11 @@ namespace cogbot
                 str = str.Trim();
                 if (str == "") return;
                 if (str.StartsWith("$bot")) str = str.Substring(4);
-                string toprint = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
-                string SelfName = String.Format("{0} ", GetName());
-                toprint = toprint.Replace("$bot", SelfName);
-                ClientManager.WriteLine(SelfName + ": " + toprint);
+                str = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
+                string SelfName = String.Format("{0}", GetName());
+                str = str.Replace("$bot", SelfName);
+                if (str.StartsWith(SelfName)) str = str.Substring(SelfName.Length + 1);
+                ClientManager.WriteLine(SelfName + ": " + str);
             }
             catch (Exception)
             {
@@ -1004,7 +1008,12 @@ namespace cogbot
         private void initTaskInterperter()
         {
             try
+
             {
+                if (lispTaskInterperter != null)
+                {
+                    return;
+                }
                 WriteLine("Start Loading TaskInterperter ... '" + taskInterperterType + "' \n");
                 lispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
                 lispTaskInterperter.LoadFile("boot.lisp");

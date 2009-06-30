@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using OpenMetaverse; //using libsecondlife;
 
 namespace cogbot.Actions
@@ -16,36 +17,49 @@ namespace cogbot.Actions
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
-           // base.acceptInput(verb, args);
-            string target = String.Empty;
-            if (args.Length == 0) return usageString;
-            bool bake = false;
-            string wear = args.str.Trim();
-            if (args[0] == "bake")
-            {
-                bake = true;
-                wear = wear.Substring(4).Trim();
-            }
-            if (args[0] == "test")
-            {
-                bake = true;
-                wear = wear.Substring(4).Trim();
-                TheBotClient.wearFolder(wear);
-                return ("wearing folder: " + wear + " " + (bake ? " (baked)" : " (not baked)"));
-            } 
+            AutoResetEvent are = new AutoResetEvent(false);
+            AppearanceManager.AppearanceUpdatedCallback callback = (Primitive.TextureEntry te) => are.Set();
             try
             {
-                WriteLine("wearing folder: " + wear + " " +(bake?" (baked)":" (not baked)"));
-                Client.Appearance.WearOutfit(args.str.Split('/'), bake);
-                return wear;
+                Client.Appearance.OnAppearanceUpdated += callback;
+                // base.acceptInput(verb, args);
+                string target = String.Empty;
+                if (args.Length == 0) return usageString;
+                bool bake = false;
+                string wear = args.str.Trim();
+                if (args[0] == "bake")
+                {
+                    bake = true;
+                    wear = wear.Substring(4).Trim();
+                }
+                if (args[0] == "test")
+                {
+                    bake = true;
+                    wear = wear.Substring(4).Trim();
+                    TheBotClient.wearFolder(wear);
+                    if (!are.WaitOne(AppearanceManager.WEARABLE_TIMEOUT * 2))
+                        return "Timeout wearing " + wear + " " + (bake ? " (baked)" : " (not baked)");
+                    else
+                        return ("wearing folder: " + wear + " " + (bake ? " (baked)" : " (not baked)"));
+                }
+                try
+                {
+                    WriteLine("wearing folder: " + wear + " " + (bake ? " (baked)" : " (not baked)"));
+                    Client.Appearance.WearOutfit(wear.Split('/'), bake);
+                    if (!are.WaitOne(AppearanceManager.WEARABLE_TIMEOUT * 2))
+                        return "Timeout wearing " + wear + " " + (bake ? " (baked)" : " (not baked)");
+                    else
+                        return wear;
+                }
+                catch (InvalidOutfitException ex)
+                {
+                    return "(Invalid outfit (" + ex.Message + ")" + args.str + ".";
+                }
             }
-            catch (InvalidOutfitException ex)
+            finally
             {
-                return "(Invalid outfit (" + ex.Message + ")" + args.str+".";
+                Client.Appearance.OnAppearanceUpdated -= callback;
             }
-
-
-
         }
     }
 }

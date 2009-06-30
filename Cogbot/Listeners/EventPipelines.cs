@@ -9,7 +9,7 @@ namespace cogbot.Listeners
 {
 
 
-    public class SimEventTextSubscriber:SimEventSubscriber
+    public class SimEventTextSubscriber : SimEventSubscriber
     {
         readonly BotClient From;
         readonly OutputDelegate textForm;
@@ -105,26 +105,14 @@ namespace cogbot.Listeners
 
         public SimObjectEvent CreateEvent(string eventName, params object[] args)
         {
-
-            object[] Params = new object[args.Length];
-            for (int i = 0; i < args.Length; i++)
-            {
-               if (args[i] is NamedParam)
-               {
-                   Params[i] = args[i];
-               } else
-               {
-                   Params[i] = new NamedParam(null, args[i]);
-               }                
-            }
-            return new SimObjectEvent(eventName, Params);
+            return new SimObjectEvent(eventName, args);
         }
 
         SimObjectEvent LastEvent = null;
         // this pipelike will fire OnEvent to the subscriber list 
         public void SendEvent(SimObjectEvent simObjectEvent)
         {
-            if (LastEvent !=null && simObjectEvent.SameAs(LastEvent))
+            if (LastEvent != null && simObjectEvent.SameAs(LastEvent))
             {
                 return;
             }
@@ -166,7 +154,7 @@ namespace cogbot.Listeners
         public void AddSubscriber(SimEventSubscriber sub)
         {
             lock (subscribers) if (!subscribers.Contains(sub))
-                subscribers.Add(sub);
+                    subscribers.Add(sub);
         }
 
         #endregion

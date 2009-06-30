@@ -259,6 +259,11 @@ namespace cogbot.TheOpenSims
                     }
                     if (UsePathfinder && TheBot.Distance(Target) > maxDistance + 2)
                         TheBot.GotoTarget(Target);
+                }   
+                else
+                {
+                    TheBot.TurnToward(Target);
+                    Thread.Sleep(1000); // total 3 seconds
                 }
             }
         }

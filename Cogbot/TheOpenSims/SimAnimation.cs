@@ -143,7 +143,7 @@ namespace cogbot.TheOpenSims
                 _Name.Add(n);
                 return n;
             }
-            return null;
+            return UnknownName;
         }
 
         public BinBVHAnimationReader _reader;
@@ -347,6 +347,7 @@ namespace cogbot.TheOpenSims
             byte[] bs = AssetData;
             if (bs != null && bs.Length > 0)
             {
+                Console.WriteLine("saving anim file " + tmpname);
                 File.WriteAllBytes(tmpname + ".anim", AssetData);
             }
             //WorldObjects.Master.GetModuleName()

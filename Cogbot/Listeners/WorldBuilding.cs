@@ -17,11 +17,16 @@ namespace cogbot.Listeners
 
         static public NamedParam ToParameter(string p, object s)
         {
+            while (s is NamedParam)
+            {
+                NamedParam nv = (NamedParam)s;
+                s = nv.Value;
+            }
             return new NamedParam(p, s);
         }
         static public NamedParam ToParameter(string p, string type, object s)
         {
-            return new NamedParam(new KeyValuePair<string, object>(p, type), s);
+            return new NamedParam(new NamedParam(p, type), s);
         }
 
         static public NamedParam AsEffectID(UUID id)

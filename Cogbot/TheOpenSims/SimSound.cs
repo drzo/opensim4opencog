@@ -14,7 +14,7 @@ namespace cogbot.TheOpenSims
 
         protected override void SaveFile(string tmpname)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Not implemented save sound file " + tmpname);
         }
 
         private byte[] _TypeData;
@@ -54,7 +54,7 @@ namespace cogbot.TheOpenSims
             ServerAsset.Decode();
             AssetSound S = (AssetSound)ServerAsset;
             AssetData = S.AssetData;
-            return null;
+            return UnknownName;
         }
 
         public override float Length

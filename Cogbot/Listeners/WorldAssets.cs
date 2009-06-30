@@ -109,23 +109,25 @@ namespace cogbot.Listeners
 
         public void RequestAsset(UUID id, AssetType assetType, bool p)
         {
-            lock (AssetRequests)
+            if (id == UUID.Zero) return;
+            SimAsset sa = SimAssetStore.FindOrCreateAsset(id, assetType);
+            if (!sa.NeedsRequest) return;
+            if (assetType == AssetType.Sound) return;
+            if (assetType == AssetType.SoundWAV) return;
+            sa.NeedsRequest = false;
+            lock (AssetRequests) if (AssetRequests.ContainsKey(id)) return;
             {
-                if (id == UUID.Zero) return;
-                SimAsset sa = SimAssetStore.FindOrCreateAsset(id, assetType);
-                if (!sa.NeedsRequest) return;
-                sa.NeedsRequest = false;
-                if (AssetRequests.ContainsKey(id)) return;
                 if (assetType == AssetType.Texture)
                 {
                     StartTextureDownload(id);
                     return;
                 }
-                if (assetType == AssetType.Sound) return;
-                if (assetType == AssetType.SoundWAV) return;
                 UUID req = RegionMasterTexturePipeline.RequestAsset(id, assetType, p);
-                AssetRequestType[req] = assetType;
-                AssetRequests[id] = req;
+                lock (AssetRequests)
+                {
+                    AssetRequestType[req] = assetType;
+                    AssetRequests[id] = req;
+                }
             }
         }
 

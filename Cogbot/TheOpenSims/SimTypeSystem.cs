@@ -412,7 +412,9 @@ namespace cogbot.TheOpenSims
             {
                 string objName = " " + props.Name.ToLower() + " | " + props.Description.ToLower() + " ";
 
-                lock (objectTypes)
+                List<SimObjectType> objectTypes = new List<SimObjectType>();
+                lock (SimTypeSystem.objectTypes)
+                    objectTypes.AddRange(SimTypeSystem.objectTypes);
                     foreach (SimObjectType otype in objectTypes)
                     {
                         foreach (Regex smatch in otype.NoMatch)

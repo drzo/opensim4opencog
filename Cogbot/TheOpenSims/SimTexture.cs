@@ -28,7 +28,7 @@ namespace cogbot.TheOpenSims
 
         protected override void SaveFile(string tmpname)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Not implemented save texture file " + tmpname);
         }
         private byte[] _TypeData;
         public override byte[] AssetData
@@ -55,7 +55,7 @@ namespace cogbot.TheOpenSims
         }
         protected override string GuessAssetName()
         {
-            throw new NotImplementedException();
+            return UnknownName;
         }
 
         public override float Length

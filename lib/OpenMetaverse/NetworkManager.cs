@@ -269,7 +269,7 @@ namespace OpenMetaverse
         /// <summary>Handlers for incoming capability events</summary>
         internal CapsEventDictionary CapsEvents;
         /// <summary>Handlers for incoming packets</summary>
-        internal PacketEventDictionary PacketEvents;
+        public PacketEventDictionary PacketEvents;
         /// <summary>Incoming packets that are awaiting handling</summary>
         internal BlockingQueue<IncomingPacket> PacketInbox = new BlockingQueue<IncomingPacket>(Settings.PACKET_INBOX_SIZE);
         /// <summary>Outgoing packets that are awaiting handling</summary>
