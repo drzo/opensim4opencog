@@ -1083,7 +1083,7 @@ namespace OpenMetaverse
             InternalStatusCode = status;
             InternalLoginMessage = message;
 
-            Logger.DebugLog("Login status: " + status.ToString() + ": " + message, Client);
+            Logger.Log("Login status: " + status.ToString() + ": " + message, Client);
 
             // If we reached a login resolution trigger the event
             if (status == LoginStatus.Success || status == LoginStatus.Failed)

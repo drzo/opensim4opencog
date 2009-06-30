@@ -287,8 +287,6 @@ namespace OpenMetaverse
         /// <summary></summary>
         public bool IsEstateManager;
         /// <summary></summary>
-        public EstateTools Estate;
-        /// <summary></summary>
         public RegionFlags Flags;
         /// <summary></summary>
         public SimAccess Access;
@@ -460,8 +458,7 @@ namespace OpenMetaverse
         }
 
         private void ReInit()
-        {
-            Estate = new EstateTools(Client);
+        {            
             Network = Client.Network;
             PacketArchive = new IncomingPacketIDCollection(Settings.PACKET_ARCHIVE_SIZE);
             InBytes = new Queue<long>(Client.Settings.STATS_QUEUE_SIZE);
