@@ -15,6 +15,13 @@ namespace cogbot.Actions
     {
     }
     /// <summary>
+    /// An interface for commands is only invoked on Grid mastering bots
+    /// Such as Directory info requests (10 bots doing the command at once will create problems)   
+    /// </summary>
+    public interface GridMasterCommand
+    {
+    }
+    /// <summary>
     /// An interface for commands that do not target any specific bots
     ///  Such as pathsystem maintainance or application commands
     /// </summary>
@@ -89,7 +96,7 @@ namespace cogbot.Actions
             get
             {
                 if (m_Client != null) return m_Client;
-                return cogbot.Listeners.WorldObjects.Master.client;
+                return cogbot.Listeners.WorldObjects.GridMaster.client;
             }
             set
             {
@@ -109,7 +116,7 @@ namespace cogbot.Actions
         {
             get
             {
-                if (m_Client == null) return cogbot.Listeners.WorldObjects.Master;
+                if (m_Client == null) return cogbot.Listeners.WorldObjects.GridMaster;
                 return m_Client.WorldSystem;
             }
         }

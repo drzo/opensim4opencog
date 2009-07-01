@@ -130,13 +130,13 @@ namespace OpenMetaverse
         /// <summary>An array of worker slots which shows the availablity status of the slot</summary>
         private readonly int[] threadpoolSlots;
         /// <summary>The primary thread which manages the requests.</summary>
-        private readonly Thread downloadMaster;
+        private Thread downloadMaster;
         /// <summary>true if the TexturePipeline is currently running</summary>
         bool _Running;
         /// <summary>A synchronization object used by the primary thread</summary>
-        private object lockerObject = new object();
+        readonly private object lockerObject = new object();
         /// <summary>A refresh timer used to increase the priority of stalled requests</summary>
-        private readonly System.Timers.Timer RefreshDownloadsTimer =
+        private System.Timers.Timer RefreshDownloadsTimer =
             new System.Timers.Timer(Settings.PIPELINE_REFRESH_INTERVAL);
 
         /// <summary>Current number of pending and in-process transfers</summary>
@@ -168,12 +168,6 @@ namespace OpenMetaverse
             client.Network.OnConnected += delegate { Startup(); };
             client.Network.OnDisconnected += delegate { Shutdown(); };
 
-            // Instantiate master thread that manages the request pool
-            downloadMaster = new Thread(DownloadThread);
-            downloadMaster.Name = "TexturePipeline";
-            downloadMaster.IsBackground = true;
-
-            RefreshDownloadsTimer.Elapsed += RefreshDownloadsTimer_Elapsed;
         }
 
         /// <summary>
@@ -185,6 +179,21 @@ namespace OpenMetaverse
                 return;
 
             _Running = true;
+
+            if (downloadMaster==null)
+            {
+                // Instantiate master thread that manages the request pool
+                downloadMaster = new Thread(DownloadThread);
+                downloadMaster.Name = "TexturePipeline";
+                downloadMaster.IsBackground = true;
+            }
+            if (RefreshDownloadsTimer==null)
+            {
+                RefreshDownloadsTimer =
+                    new System.Timers.Timer(Settings.PIPELINE_REFRESH_INTERVAL);
+                RefreshDownloadsTimer.Elapsed += RefreshDownloadsTimer_Elapsed;
+            }
+
 
             _Client.Network.RegisterCallback(PacketType.ImageData, ImageDataHandler);
             _Client.Network.RegisterCallback(PacketType.ImagePacket, ImagePacketHandler);
@@ -205,6 +214,8 @@ namespace OpenMetaverse
                         TotalTime, NetworkTime, Math.Round(TotalBytes / NetworkTime.TotalSeconds / 60, 2), TotalBytes), Helpers.LogLevel.Debug);
 #endif
             RefreshDownloadsTimer.Stop();
+            RefreshDownloadsTimer = null;
+            downloadMaster = null;
 
             _Client.Network.UnregisterCallback(PacketType.ImageNotInDatabase, ImageNotInDatabaseHandler);
             _Client.Network.UnregisterCallback(PacketType.ImageData, ImageDataHandler);

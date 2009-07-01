@@ -1255,8 +1255,7 @@ namespace cogbot.TheOpenSims
             if (!IsRegionAttached())
             {
                 List<SimObject> objs = new List<SimObject>();
-                _Parent = Parent;
-                if (Parent != null && Parent != this)
+                if (_Parent != null && Parent != this)
                 {
                     objs.Add(Parent);
                 }

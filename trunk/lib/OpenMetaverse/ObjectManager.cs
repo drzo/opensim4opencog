@@ -2863,6 +2863,10 @@ namespace OpenMetaverse
         protected void InterpolationTimer_Elapsed(object obj)
         {
             int elapsed = 0;
+            if (!Client.Settings.USE_INTERPOLATION_TIMER)
+            {         
+                return;
+            }
 
             if (Client.Network.Connected)
             {

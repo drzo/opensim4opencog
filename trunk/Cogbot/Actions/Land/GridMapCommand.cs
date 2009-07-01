@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class GridMapCommand : Command, RegionMasterCommand
+    public class GridMapCommand : Command, GridMasterCommand
     {
         public GridMapCommand(BotClient testClient)
         {

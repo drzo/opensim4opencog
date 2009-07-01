@@ -7,7 +7,7 @@ using System.Text;
 
 namespace cogbot.Actions
 {
-    public class GroupsCommand : Command , RegionMasterCommand
+    public class GroupsCommand : Command, GridMasterCommand
     {        
         ManualResetEvent GetCurrentGroupsEvent = new ManualResetEvent(false);
         Dictionary<UUID, Group> groups = new Dictionary<UUID, Group>();

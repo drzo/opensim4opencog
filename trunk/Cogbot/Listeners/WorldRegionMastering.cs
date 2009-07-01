@@ -19,12 +19,12 @@ namespace cogbot.Listeners
         /// <summary>
         /// This is all bot simulator references: the Count would be Bots*Regions
         /// </summary>
-        private static readonly List<Simulator> _AllSimulators = new List<Simulator>();
-        public static WorldObjects Master;
+        private static readonly ListAsSet<Simulator> _AllSimulators = new ListAsSet<Simulator>();
+        public static WorldObjects GridMaster;
         private static bool RequestedGridInfos = false;
         private bool IsConnected = false;
         private bool RegisterAllOnce = false;
-        private readonly List<ulong> MasteringRegions = new List<ulong>();
+        private readonly ListAsSet<ulong> MasteringRegions = new ListAsSet<ulong>();
         private bool RequestParcelObjects;
 
 
@@ -60,12 +60,17 @@ namespace cogbot.Listeners
 
         public bool IsMaster(Simulator simulator)
         {
-            return SimRegion.IsMaster(simulator, client);
+            lock (MasteringRegions) return MasteringRegions.Contains(simulator.Handle);
         }
 
         public bool IsRegionMaster
         {
-            get { return SimRegion.IsMaster(TheSimAvatar.GetSimulator(), client); }
+            get { return IsMaster(client.Network.CurrentSim); }
+        }
+
+        public bool IsGridMaster
+        {
+            get { return GridMaster == this; }
         }
 
         public override void Parcels_OnSimParcelsDownloaded(Simulator simulator,
@@ -166,53 +171,114 @@ namespace cogbot.Listeners
 
         public override void Network_OnCurrentSimChanged(Simulator PreviousSimulator)
         {
+            base.Network_OnCurrentSimChanged(PreviousSimulator);
             if (TheSimAvatar.GetSimulator() == PreviousSimulator)
             {
                 Debug("TheSimAvatar._CurrentRegion.TheSimulator == PreviousSimulator " + PreviousSimulator);
             }
+
             if (PreviousSimulator != null)
             {
+                LeaveSimulator(PreviousSimulator);
                 new Thread(() => client.Appearance.SetPreviousAppearance(false)).Start();
             }
             else
             {
 //                new Thread(() => client.Appearance.WearOutfit(new string[] { "Clothing", "Default", "IRobot" })).Start();
             }
-            base.Network_OnCurrentSimChanged(PreviousSimulator);
+            EnsureSimulator(client.Network.CurrentSim);
         }
 
-
-        public void TrackPrim(Simulator[] sims, ulong regionHandle, uint parentID)
+        private void LeaveSimulator(Simulator simulator)
         {
-           // GetSimulator()
+            if (IsMaster(simulator))
+            {
+                Debug("SIM LOOSING ITS MASTER!" + this + " " + simulator);
+                MasteringRegions.Remove(simulator.Handle);
+                FindNewMaster(simulator.Handle);
+            }
+            if (TheSimAvatar.GetSimulator() == simulator)
+            {
+                Debug("TheSimAvatar._CurrentRegion.TheSimulator == simulator " + simulator);
+            }
+        }
+
+        private void FindNewMaster(ulong handle)
+        {
+            SimRegion R = SimRegion.GetRegion(handle);
+            lock (_AllSimulators)
+            {
+                foreach (var simulator in _AllSimulators)
+                {
+                    if (simulator.Client == client.gridClient) continue;
+                    if (simulator.Handle != handle) continue;
+                    GridClient cl = simulator.Client;
+                    R.SetMaster(cl);
+                    BotClient bc = BotClientFor(cl);
+                    if (SimRegion.IsMaster(simulator, bc.gridClient))
+                    {
+                        bc.WorldSystem.MasteringRegions.Add(handle);
+                    }
+                    else
+                    {
+                        bc.WorldSystem.MasteringRegions.Add(handle);
+                    }
+                    Debug("Found a new client for region " + R + " as " + cl);
+                    return;
+                }
+                foreach (var simulator in _AllSimulators)
+                {
+                    if (simulator.Client == client.gridClient) continue;
+                    if (simulator.Handle != handle) continue;
+                    GridClient cl = simulator.Client;
+                    BotClient bc = BotClientFor(cl);
+                    if (SimRegion.IsMaster(simulator, bc.gridClient))
+                    {
+                        bc.WorldSystem.MasteringRegions.Add(handle);
+                    }
+                    if (!cl.Network.Simulators.Contains(simulator)) continue;
+                    R.SetMaster(cl);
+                    Debug("Found a new client for region " + R + " as " + cl);
+                    return;
+                }
+            }
+            Debug("Now client for region " + R);
+        }
+
+        public override void Self_OnRegionCrossed(Simulator oldSim, Simulator newSim)
+        {
+            if (oldSim != null)
+            {
+                LeaveSimulator(oldSim);
+            }
+            EnsureSimulator(newSim);
+            base.Self_OnRegionCrossed(oldSim, newSim);
         }
 
         public override void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
         {
+            base.Network_OnSimDisconnected(simulator, reason);
             lock (_AllSimulators)
             {
-                if (IsMaster(simulator))
-                {
-                    Debug("SIM LOOSING ITS MASTER!" + this + " " + simulator);
-                    MasteringRegions.Remove(simulator.Handle);
-                }
-                if (TheSimAvatar.GetSimulator() == simulator)
-                {
-                    Debug("TheSimAvatar._CurrentRegion.TheSimulator == simulator " + simulator);
-                }
-                base.Network_OnSimDisconnected(simulator, reason);
                 _AllSimulators.Remove(simulator);
-                //lock (client.Network.Simulators) 
-                //    if (!client.Network.Simulators.Contains(simulator))
-                //    {
-                //        client.Network.Simulators.Add(simulator);
-                //    }
-                //simulator.Resume();
+                SimRegion.GetRegion(simulator).RemoveSim(simulator);
+                LeaveSimulator(simulator);
             }
         }
 
         public override void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
         {
+            lock (_AllSimulators)
+            {
+                foreach (var simulator in _AllSimulators)
+                {
+                    if (simulator.Client!=client.gridClient) continue;
+                    _AllSimulators.Remove(simulator);
+                    SimRegion.GetRegion(simulator).RemoveSim(simulator);
+                    LeaveSimulator(simulator);
+                }
+
+            }
             base.Network_OnDisconnected(reason, message);
         }
 
@@ -245,34 +311,46 @@ namespace cogbot.Listeners
                      client.Sound.OnSoundTrigger -= Sound_OnSoundTrigger;
                      client.Sound.OnPreloadSound -= Sound_OnPreloadSound;
                      */
-                    // Viewer effect callback
-                    client.Network.RegisterCallback(PacketType.ViewerEffect,
-                                                    new NetworkManager.PacketCallback(ViewerEffectHandler));
-                    client.Network.RegisterCallback(PacketType.AvatarAppearance,
-                                                    new NetworkManager.PacketCallback(AvatarAppearanceHandler));
-                    client.Network.RegisterCallback(PacketType.MeanCollisionAlert,
-                                                    new NetworkManager.PacketCallback(MeanCollisionAlertHandler));
 
-                    client.Network.RegisterCallback(PacketType.AvatarAnimation, new NetworkManager.PacketCallback(AvatarAnimationHandler));
-
+                    // Sound manager
                     client.Network.RegisterCallback(PacketType.AttachedSound, new NetworkManager.PacketCallback(AttachedSoundHandler));
                     client.Network.RegisterCallback(PacketType.AttachedSoundGainChange, new NetworkManager.PacketCallback(AttachedSoundGainChangeHandler));
                     client.Network.RegisterCallback(PacketType.PreloadSound, new NetworkManager.PacketCallback(PreloadSoundHandler));
                     client.Network.RegisterCallback(PacketType.SoundTrigger, new NetworkManager.PacketCallback(SoundTriggerHandler));
 
-                    
-                    // raises these events already
-                    client.Self.OnMeanCollision -= Self_OnMeanCollision;
-                    client.Avatars.OnPointAt -= Avatars_OnPointAt;
-                    client.Avatars.OnLookAt -= Avatars_OnLookAt;
-                    client.Avatars.OnEffect -= Avatars_OnEffect;
-                    client.Assets.OnUploadProgress -= Assets_OnUploadProgress; // On-Upload-Progress
-                    client.Self.OnCameraConstraint -= Self_OnCameraConstraint;
                     client.Sound.OnAttachSound -= Sound_OnAttachSound;
                     client.Sound.OnAttachSoundGainChange -= Sound_OnAttachSoundGainChange;
                     client.Sound.OnSoundTrigger -= Sound_OnSoundTrigger;
                     client.Sound.OnPreloadSound -= Sound_OnPreloadSound;
+
+
+                    // Mean collision
+                    client.Network.RegisterCallback(PacketType.MeanCollisionAlert,
+                                                    new NetworkManager.PacketCallback(MeanCollisionAlertHandler));
+                    client.Self.OnMeanCollision -= Self_OnMeanCollision;
+
+
+
+                    // Viewer effect callback
+                    client.Network.RegisterCallback(PacketType.ViewerEffect,
+                                                    new NetworkManager.PacketCallback(ViewerEffectHandler));
+                    client.Avatars.OnPointAt -= Avatars_OnPointAt;
+                    client.Avatars.OnLookAt -= Avatars_OnLookAt;
+                    client.Avatars.OnEffect -= Avatars_OnEffect;
+
+
+                    // Avatar appearance
+                    client.Network.RegisterCallback(PacketType.AvatarAppearance,
+                                                    new NetworkManager.PacketCallback(AvatarAppearanceHandler));
+
+
+                    client.Network.RegisterCallback(PacketType.AvatarAnimation, new NetworkManager.PacketCallback(AvatarAnimationHandler));
                     client.Avatars.OnAvatarAnimation -= Avatars_OnAvatarAnimation;
+
+                    
+                    // raises these events already
+                    client.Assets.OnUploadProgress -= Assets_OnUploadProgress; // On-Upload-Progress
+                    client.Self.OnCameraConstraint -= Self_OnCameraConstraint;
 
 
                     client.Settings.PIPELINE_REQUEST_TIMEOUT = 60000;
@@ -374,7 +452,7 @@ namespace cogbot.Listeners
         {
             lock (WorldObjectsMasterLock)
             {
-                if (isMaster) Master = this;
+                if (isMaster) GridMaster = this;
                 if (MasteringRegions.Count > 0 && !isMaster) throw new ArgumentException("Cant un-master!");
 
                 isMaster = true;
@@ -393,17 +471,20 @@ namespace cogbot.Listeners
             }
         }
 
-        static public void EnsureSimulator(Simulator simulator)
+        public void EnsureSimulator(Simulator simulator)
         {
             if (simulator == null) return;
             lock (_AllSimulators)
             {
-                if (!_AllSimulators.Contains(simulator))
+
+                foreach (Simulator set in _AllSimulators)
                 {
-                    _AllSimulators.Add(simulator);
-                    SimRegion.GetRegion(simulator);
+                    if (set.Handle==simulator.Handle && set.Client==simulator.Client) return;
                 }
+                _AllSimulators.Add(simulator);
+                SimRegion.GetRegion(simulator);
             }
+
         }
 
         internal Simulator GetSimulator(ulong handle)
@@ -607,7 +688,7 @@ namespace cogbot.Listeners
 
         public static WorldObjects MasterFor(ulong handle)
         {
-            return Master;
+            return GridMaster;
         }
 
         static object GetSimLock(Simulator simulator)

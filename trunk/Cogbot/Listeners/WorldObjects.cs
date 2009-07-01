@@ -107,9 +107,9 @@ namespace cogbot.Listeners
             client.Network.PacketEvents.SkipEvent += Network_SkipEvent;
             lock (WorldObjectsMasterLock)
             {
-                if (Master == null)
+                if (GridMaster == null)
                 {
-                    Master = this;
+                    GridMaster = this;
                 }
                 else
                 {
@@ -164,7 +164,7 @@ namespace cogbot.Listeners
                 }
 
 
-                if (Master == this)
+                if (GridMaster == this)
                 {
 
                     {
@@ -752,9 +752,9 @@ namespace cogbot.Listeners
             {
                 UUID uid = (UUID)id;
                 if (uid == UUID.Zero) return id;
-                id = Master.GetObject(uid);
+                id = GridMaster.GetObject(uid);
             }
-            if (id is Primitive) return Master.GetSimObject((Primitive)id);
+            if (id is Primitive) return GridMaster.GetSimObject((Primitive)id);
             // if (id is String) return Master.GetObject((string) id);
             return id;
         }

@@ -261,7 +261,18 @@ namespace cogbot.TheOpenSims
             {
                 if (value == null) return;
                 lock (_Simulators)
-                    if (!_Simulators.Contains(value))
+                {
+                    bool found = false;
+                    foreach (Simulator simulator in _Simulators)
+                    {
+                        if (simulator.Client == value.Client)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found)
                     {
                         _Simulators.Add(value);
                         PathStore.WaterHeight = value.WaterHeight;
@@ -270,11 +281,22 @@ namespace cogbot.TheOpenSims
                         if (!string.IsNullOrEmpty(value.Name)) this.RegionName = value.Name;
                         Console.WriteLine("{0} SimWaterHeight = {1}", value.Name, PathStore.WaterHeight);
                     }
-                Simulator simulator = TheSimulator;
-                if (simulator == value) return;
+                }
+                Simulator simulator0 = TheSimulator;
+                if (simulator0 == value && Client==null) return;
                 SetMaster((GridClient) value.Client);
             }
         }
+
+
+        public void RemoveSim(Simulator simulator)
+        {
+            lock(_Simulators)
+            {
+                _Simulators.Remove(simulator);
+            }
+        }
+
 
         public string RegionName
         {
@@ -404,6 +426,11 @@ namespace cogbot.TheOpenSims
             return ((uint) global/256)*256;
         }
 
+
+        internal static SimRegion GetRegion(ulong handle)
+        {
+            return GetRegion(handle, null);
+        }
 
         public static SimRegion GetRegion(ulong id, GridClient bc)
         {
@@ -1139,7 +1166,7 @@ namespace cogbot.TheOpenSims
 
         public byte[] TextureBytesToUUID(UUID uUID)
         {
-            return WorldObjects.Master.TextureBytesFormUUID(uUID);
+            return WorldObjects.GridMaster.TextureBytesFormUUID(uUID);
         }
 
 
@@ -1408,5 +1435,6 @@ namespace cogbot.TheOpenSims
             Utils.LongToUInts(handle, out regionX, out regionY);
             return new Vector3d(regionX + objectLoc.X, regionY + objectLoc.Y, objectLoc.Z);
         }
+
     }
 }
