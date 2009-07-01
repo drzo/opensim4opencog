@@ -32,7 +32,7 @@ namespace cogbot.Listeners
         }
         public override void Appearance_OnAppearanceUpdated(Primitive.TextureEntry te)
         {
-            SendNewEvent("On-Appearance-Updated", TheSimAvatar, AsType(te, typeof(Primitive.TextureEntry)));
+            client.SendNetworkEvent("On-Appearance-Updated", AsType(te, typeof(Primitive.TextureEntry)));
         }
 
         /// <summary>
@@ -73,9 +73,9 @@ namespace cogbot.Listeners
                 });
         }
 
-        public SimObjectEvent SendNewEvent(SimObjectEvent param1)
+        public SimObjectEvent SendNewRegionEvent(SimObjectEvent param1)
         {
-            client.SendNewEvent(param1);
+            client.SendPipelineEvent(param1);
             return param1;
         }
         /*
@@ -122,19 +122,19 @@ namespace cogbot.Listeners
                                         ToParameter("doneBy", user),
                                         ToParameter("objectActedOn", newSit));
                         if (sittingOn + oldSeat == 0)
-                            LogSitEvent(user, SimEventStatus._UNKNOWN, "SitChangedUnknown", ToParameter("doneBy", user));
+                            LogSitEvent(user, SimEventStatus.Once, "SitChangedUnknown", ToParameter("doneBy", user));
                     }
                     else
                     {
                         //object[] eventArgs = new object[] { user, newSit, oldSit };
                         if (oldSit != null)
-                            oldSit.AddCanBeTargetOf(1, SendNewEvent(
+                            oldSit.AddCanBeTargetOf(1, SendNewRegionEvent(
                                                            new SimObjectEvent(SimEventStatus.Stop, newSitName,
                                                                               SimEventType.SIT,
                                                                               ToParameter("doneBy", avatar),
                                                                               ToParameter("objectActedOn", oldSit))));
                         if (newSit != null)
-                            newSit.AddCanBeTargetOf(1, SendNewEvent(
+                            newSit.AddCanBeTargetOf(1, SendNewRegionEvent(
                                                            new SimObjectEvent(SimEventStatus.Start, newSitName,
                                                                               SimEventType.SIT,
                                                                               ToParameter("doneBy", avatar),
@@ -147,7 +147,7 @@ namespace cogbot.Listeners
         {
             if (!MaintainActions) return;
             //Console.WriteLine(user + " " + p + " " + ScriptEngines.ScriptEventListener.argsListString(args));
-            user.LogEvent(SendNewEvent(new SimObjectEvent(updown, p, SimEventType.SIT, args)));
+            user.LogEvent(SendNewRegionEvent(new SimObjectEvent(updown, p, SimEventType.SIT, args)));
         }
 
 
@@ -173,8 +173,8 @@ namespace cogbot.Listeners
                     if (objectID != UUID.Zero) OnObjectSound(objectID, soundID, gain);
                     else
                     {
-                        SendNewEvent("On-Sound-Position-Trigger", soundID,
-                                     ownerID, parentID, gain, regionHandle, position);
+                        SendNewRegionEvent(SimEventType.EFFECT, "On-Sound-Position-Trigger", soundID, 
+                            ownerID, parentID, gain, regionHandle, position);
                     }
                 });
         }
@@ -206,7 +206,7 @@ namespace cogbot.Listeners
                 UpdateQueue.Enqueue(() =>
                 {
                     OnObjectSound(objectID, UUID.Zero, gain);
-                    SendNewEvent("On-Attach-Sound-Gain-Change", objectID, gain);
+                    SendNewRegionEvent(SimEventType.EFFECT, "On-Attach-Sound-Gain-Change", objectID, gain);
                 });
             //base.Sound_OnAttachSoundGainChange(objectID, gain);
         }
@@ -246,12 +246,13 @@ namespace cogbot.Listeners
                         //   WriteLine(perpAv.Name + " bumped into $bot like " + type);
                         // else if (perpAv.Name == client.Self.Name)
                         //   WriteLine("$bot bumped into " + victimAv.Name + " like " + type);   
-                        perpAv.LogEvent(new SimObjectEvent(SimEventStatus.Once,
-                            "" + type, SimEventType.SOCIAL,
-                            ToParameter("primaryObjectMoving", perpAv),
-                            ToParameter("objectActedOn", victimAv),
-                            ToParameter("initialSpeedOfPrimaryObjectMoving", "MetersPerSecond", magnitude)));
-                        SendNewEvent("on-meanCollision", type, perpAv, victimAv, magnitude);
+                        SimObjectEvent newSimObjectEvent = new SimObjectEvent(SimEventStatus.Once,
+                                                    "" + type, SimEventType.SOCIAL,
+                                                    ToParameter("primaryObjectMoving", perpAv),
+                                                    ToParameter("objectActedOn", victimAv),
+                                                    ToParameter("initialSpeedOfPrimaryObjectMoving", "MetersPerSecond", magnitude));
+                        perpAv.LogEvent(newSimObjectEvent);
+                        SendNewRegionEvent(newSimObjectEvent);
                     }
                 });
         }
@@ -317,7 +318,7 @@ namespace cogbot.Listeners
             {
                 if (sourceID != UUID.Zero)
                 {
-                    source = GetSource(sim, sourceID, source, ref s);
+                    source = GetSource(sim, sourceID, source, ref s, PCode.Avatar);
                     if (source == null) return;
                 }
                 //  RequestAsset(sourceID, AssetType.Object, true);
@@ -331,7 +332,7 @@ namespace cogbot.Listeners
             {
                 if (targetID != UUID.Zero)
                 {
-                    target = GetSource(sim, targetID, target, ref t);
+                    target = GetSource(sim, targetID, target, ref t, PCode.None);
                     if (target == null) return;
                 }
                 // RequestAsset(targetID, AssetType.Object, true);
@@ -363,7 +364,7 @@ namespace cogbot.Listeners
                     }
                     else
                     {
-                        p = new Vector3((float)targetPos.X, (float)targetPos.Y, (float)targetPos.Z);
+                        p = new Vector3((float) targetPos.X, (float) targetPos.Y, (float) targetPos.Z);
                     }
                 }
             }
@@ -398,51 +399,55 @@ namespace cogbot.Listeners
 
             lock (UpdateQueue)
                 UpdateQueue.Enqueue(() =>
-                {
-                    //if (source != null) source;
-                    // WriteLine("TextForm Avatars_OnLookAt: " + sourceID.ToString() + " to " + targetID.ToString() + " at " + targetID.ToString() + " with type " + lookType.ToString() + " duration " + duration.ToString());
-                    if (targetID == client.Self.AgentID)
-                    {
-                        // if (lookType == LookAtType.Idle) return;
-                        //WriteLine("  (TARGET IS SELF)");
-                        SendNewEvent("on-effect-targeted-self",
-                                            ToParameter("doneBy", s),
-                            // ToParameter("objectActedOn", t),
-                                            ToParameter("eventPartiallyOccursAt", p),
-                                            ToParameter("duration", duration),
-                                            ToParameter("effectType", effectType));
-                        // ()/*GetObject*/(sourceID), effectType);
-                    }
-                    if (s is UUID)
-                    {
+                                        {
+                                            //if (source != null) source;
+                                            // WriteLine("TextForm Avatars_OnLookAt: " + sourceID.ToString() + " to " + targetID.ToString() + " at " + targetID.ToString() + " with type " + lookType.ToString() + " duration " + duration.ToString());
+                                            if (targetID == client.Self.AgentID)
+                                            {
+                                                // if (lookType == LookAtType.Idle) return;
+                                                //WriteLine("  (TARGET IS SELF)");
+                                                client.SendPersonalEvent(SimEventType.EFFECT,
+                                                                         "on-effect-targeted-self",
+                                                                         ToParameter("doneBy", s),
+                                                                         ToParameter("objectActedOn", TheSimAvatar),
+                                                                         ToParameter("eventPartiallyOccursAt", p),
+                                                                         ToParameter("simDuration", duration),
+                                                                         ToParameter("effectType", effectType));
+                                                // ()/*GetObject*/(sourceID), effectType);
+                                            }
+                                            if (s is UUID)
+                                            {
 
-                    }
+                                            }
 
 
-                    if (source != null)
-                    {
-                        source.OnEffect(effectType, t, p, duration, id);
-                    }
-                    else
-                    {
-                        SimObjectEvent evt = new SimObjectEvent(SimEventStatus._UNKNOWN, effectType, SimEventType.EFFECT,
-                                                                ToParameter("doneBy", s),
-                                                                ToParameter("objectActedOn", t),
-                                                                ToParameter("eventPartiallyOccursAt", p),
-                                                                ToParameter("duration", duration),
-                                                                AsEffectID(id));
+                                            if (source != null)
+                                            {
+                                                source.OnEffect(effectType, t, p, duration, id);
+                                            }
+                                            else
+                                            {
+                                                SimObjectEvent evt = new SimObjectEvent(SimEventStatus.Once, effectType,
+                                                                                        SimEventType.EFFECT,
+                                                                                        ToParameter("doneBy", s),
+                                                                                        ToParameter("objectActedOn", t),
+                                                                                        ToParameter(
+                                                                                            "eventPartiallyOccursAt", p),
+                                                                                        ToParameter("simDuration",
+                                                                                                    duration),
+                                                                                        AsEffectID(id));
 
-                        if (t is SimObject)
-                        {
-                            ((SimObject)t).AddCanBeTargetOf(2, evt);
-                        }
-                        RegisterUUID(id, effectType);
-                        //TODO 
-                        if (UseEventSource(s))
-                            SendNewEvent(evt);
-                        //SendNewEvent("on-effect", effectType, s, t, p, duration, AsEffectID(id));
-                    }
-                });
+                                                if (t is SimObject)
+                                                {
+                                                    ((SimObject) t).AddCanBeTargetOf(2, evt);
+                                                }
+                                                RegisterUUID(id, effectType);
+                                                //TODO 
+                                                if (UseEventSource(s))
+                                                    SendNewRegionEvent(evt);
+                                                //SendNewEvent("on-effect", effectType, s, t, p, duration, AsEffectID(id));
+                                            }
+                                        });
         }
 
         /*
@@ -621,7 +626,7 @@ namespace cogbot.Listeners
                     case EffectType.Cloth:
                     case EffectType.Glow:
                     default:
-                        SendNewEvent("OnViewerEffect", type, sourceAvatar, targetObject, targetPos);
+                        SendNewRegionEvent(SimEventType.EFFECT, "OnViewerEffect", type, sourceAvatar, targetObject, targetPos);
                         break;
                 }
                 SendEffect(simulator, sourceAvatar, targetObject, targetPos, "EffectType." + type, 0.1f, block.ID);

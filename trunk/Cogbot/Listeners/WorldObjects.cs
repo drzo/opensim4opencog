@@ -202,6 +202,10 @@ namespace cogbot.Listeners
                 if (m_TheSimAvatar == null)
                 {
                     UUID id = client.Self.AgentID;
+                    if (id==UUID.Zero)
+                    {
+                        throw new ArgumentException(""+client);
+                    }
                     m_TheSimAvatar = (SimActor)GetSimObjectFromUUID(id);
                     if (m_TheSimAvatar == null)
                     {
@@ -947,28 +951,9 @@ namespace cogbot.Listeners
             return null;
         }
 
-        public void SendNewEvent(string eventName, params object[] args)
+        public void SendNewRegionEvent(SimEventType type, string eventName, params object[] args)
         {
-            // if (!IsRegionMaster) return;
-            //if (UseNewEventSystem)
-            {
-                client.SendNewEvent(eventName, args);
-                return;
-            }
-            for (int i = 0; i < args.Length; i++)
-            {
-                object arg = args[i];
-                //     if (arg is UUID)
-                {
-                    object o = GetScriptableObject(arg);
-                    if (o == null)
-                    {
-                        o = arg;
-                    }
-                    args[i] = o;
-                }
-            }
-            client.SendNewEvent(eventName, args);
+            client.SendPipelineEvent(new SimObjectEvent(type, eventName, args));
         }
 
         public void CalcStats(SimObject prim)
@@ -1142,9 +1127,9 @@ namespace cogbot.Listeners
             if (prim.Properties.Name != null)
             {
                 //botenqueueLispTask("(on-prim-description '(" + prim.Properties.Name + ") '" + prim.Properties.Description + "' )");
-                SendNewEvent("on-prim-dist", prim, Vector3.Distance(client.Self.SimPosition, prim.Position));
-                SendNewEvent("on-prim-pos", prim, prim.Position);
-                SendNewEvent("on-prim-description", prim, "" + prim.Properties.Description);
+                client.SendPersonalEvent(SimEventType.MOVEMENT, "on-prim-dist", prim, Vector3.Distance(client.Self.SimPosition, prim.Position));
+                SendNewRegionEvent(SimEventType.MOVEMENT, "on-prim-pos", prim, prim.Position);
+                SendNewRegionEvent(SimEventType.EFFECT, "on-prim-description", prim, "" + prim.Properties.Description);
                 //WriteLine(prim.Properties.Name + ": " + prim.Properties.Description);
                 //if (prim.Sound != UUID.Zero)
                 //    WriteLine("This object makes sound.");

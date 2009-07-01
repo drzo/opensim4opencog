@@ -519,20 +519,20 @@ namespace cogbot.Listeners
                 if (!primVect.ContainsKey(prim))
                 {
                     primVect[prim] = vect;
-                    SendNewEvent(eventName, obj, value);
+                    SendNewRegionEvent(SimEventType.MOVEMENT, eventName, obj, value);
                 }
                 else
                 {
                     Vector3 v3 = primVect[prim] - vect;
                     if (v3.Length() > 0.5)
                     {
-                        client.SendNewEvent(eventName, obj, value);
+                        SendNewRegionEvent(SimEventType.MOVEMENT, eventName, obj, value);
                         primVect[prim] = vect;
                     }
                 }
                 return;
             }
-            client.SendNewEvent(eventName,obj,value);
+            SendNewRegionEvent(SimEventType.MOVEMENT, eventName, obj, value);
         }
 
         public static ObjectUpdate updatFromSimObject(SimObject from)
@@ -632,9 +632,9 @@ namespace cogbot.Listeners
             //     verb = "sitting";
             //WriteLine(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
             //WriteLine(avatar.Name + " is " + Vector3.Distance(Client.Self.SimPosition, avatar.Position).ToString() + " distant.");
-            SendNewEvent("on-avatar-dist", avatar, Vector3.Distance(client.Self.SimPosition, avatar.Position));
-            SendNewEvent("on-avatar-pos", avatar, avatar.Position);
-            SendNewEvent("on-avatar-description", avatar, avatar.GroupName);
+            client.SendPersonalEvent(SimEventType.MOVEMENT, "on-avatar-dist", avatar, Vector3.Distance(client.Self.SimPosition, avatar.Position));
+            client.SendPersonalEvent(SimEventType.MOVEMENT, "on-avatar-pos", avatar, avatar.Position);
+            SendNewRegionEvent(SimEventType.EFFECT, "on-avatar-description", avatar, avatar.GroupName);
             //  botenqueueLispTask("(on-avatar-posture (@\"" + avatar.Name + "\") (@\"" + verb + "\") )");
 
             /*

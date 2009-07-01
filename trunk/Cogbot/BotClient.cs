@@ -534,7 +534,7 @@ namespace cogbot
                 else
                     WriteLine("Disconnected from server. " + reason);
 
-                SendNewEvent("on-network-disconnected", reason, message);
+                SendNetworkEvent("On-Network-Disconnected", reason, message);
 
                 WriteLine("Bad Names: " + BoringNamesCount);
                 WriteLine("Good Names: " + GoodNamesCount);
@@ -553,7 +553,7 @@ namespace cogbot
 
                 //  describeAll();
                 //  describeSituation();
-                SendNewEvent("on-network-connected");
+                SendNetworkEvent("On-Network-Connected");
 
             }
             catch (Exception e)
@@ -564,7 +564,7 @@ namespace cogbot
 
         void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
         {
-            SendNewEvent("On-Sim-Disconnected", simulator, reason);
+            SendNetworkEvent("On-Sim-Disconnected", this, simulator, reason);
         }
 
         void client_OnLogMessage(object message, Helpers.LogLevel level)
@@ -583,29 +583,29 @@ namespace cogbot
                     Console.WriteLine(msg);
                 return;
             }
-            SendNewEvent("On-Log-Message", message, level);
+            SendNetworkEvent("On-Log-Message", message, level);
         }
 
         void Network_OnEventQueueRunning(Simulator simulator)
         {
-            SendNewEvent("On-Event-Queue-Running",this, simulator);
+            SendNetworkEvent("On-Event-Queue-Running", simulator);
         }
 
         void Network_OnSimConnected(Simulator simulator)
         {
-            SendNewEvent("On-Simulator-Connected", simulator);
+            SendNetworkEvent("On-Simulator-Connected", simulator);
             //            SendNewEvent("on-simulator-connected",simulator);
         }
 
         bool Network_OnSimConnecting(Simulator simulator)
         {
-            SendNewEvent("On-simulator-Connecing", simulator);
+            SendNetworkEvent("On-Simulator-Connecing", simulator);
             return true;
         }
 
         void Network_OnLogoutReply(List<UUID> inventoryItems)
         {
-            SendNewEvent("On-Logout-Reply", inventoryItems);
+            SendNetworkEvent("On-Logout-Reply", inventoryItems);
         }
 
         //=====================
@@ -1109,18 +1109,18 @@ namespace cogbot
             {
                 WriteLine("Not able to login");
                 // SendNewEvent("on-login-fail",login,message);
-                SendNewEvent("On-Login-Fail", login, message);
+                SendNetworkEvent("On-Login-Fail", login, message);
                 if (LoginRetries-- >= 0) Login();
             }
             else if (login == LoginStatus.Success)
             {
                 WriteLine("Logged in successfully");
-                SendNewEvent("On-Login-Success", login, message);
+                SendNetworkEvent("On-Login-Success", login, message);
                 //                SendNewEvent("on-login-success",login,message);
             }
             else
             {
-                SendNewEvent("On-Login", login, message);
+                SendNetworkEvent("On-Login", login, message);
             }
 
         }
@@ -1222,18 +1222,26 @@ namespace cogbot
             botPipeline.AddSubscriber(tcpServer);
         }
 
-        public void SendNewEvent(string eventName, params object[] args)
+        public void SendNetworkEvent(string eventName, params object[] args)
         {
-            //if (eventName.StartsWith("On-Log")) return;
-            //if (eventName.StartsWith("On-Simu")) return;
-            //if (eventName.ToLower().StartsWith("on-netw")) return;
-            //if (eventName.ToLower().StartsWith("on-event-queue")) return;
-            //if (eventName.ToLower().StartsWith("on-appearance")) return;
-            SimObjectEvent evt = botPipeline.CreateEvent(eventName, args);
-            SendNewEvent(evt);
+            SendPersonalEvent(SimEventType.NETWORK,eventName,args);
         }
 
-        public void SendNewEvent(SimObjectEvent evt)
+
+        public void SendPersonalEvent(SimEventType type, string eventName, params object[] args)
+        {
+            if (args.Length > 0)
+            {
+                if (args[0] is BotClient)
+                {
+                    args[0] = ((BotClient)args[0]).GetAvatar();
+                }
+            }
+            SimObjectEvent evt = botPipeline.CreateEvent(type, eventName, args);
+            SendPipelineEvent(evt);
+        }
+
+        public void SendPipelineEvent(SimObjectEvent evt)
         {
             botPipeline.SendEvent(evt);
         }
@@ -1414,10 +1422,12 @@ namespace cogbot
             }
         }
 
-        internal void SendNewEvent(string eventName, SimObject obj, object value)
+        internal object GetAvatar()
         {
-            throw new NotImplementedException();
+            if (gridClient.Self.AgentID != UUID.Zero) return WorldSystem.TheSimAvatar;
+            return this;
         }
+
     }
 
 }
