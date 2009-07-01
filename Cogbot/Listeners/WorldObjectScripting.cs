@@ -32,8 +32,8 @@ namespace cogbot.Listeners
                             ObjectOwner: Serena Vale
                          */
 
-                        SendNewEvent("On-Script-Question", simulator, taskID, itemID, objectName, objectOwner,
-                                     questions);
+                        client.SendPersonalEvent(SimEventType.SCRIPT, "On-Script-Question", simulator, taskID, itemID, objectName, objectOwner,
+                                      questions);
                         /*
                              TaskID: 552f9165-0dd8-9124-f9bb-20fa3cb18382
                              ItemID: 8fe015cb-bf46-5e1c-8975-f2cbca4762d9
@@ -53,7 +53,7 @@ namespace cogbot.Listeners
                 UpdateQueue.Enqueue(
                     () =>
                         {
-                            SendNewEvent("On-Script-Dialog", message, objectName, imageID, objectID, firstName,
+                            client.SendPersonalEvent(SimEventType.SCRIPT, "On-Script-Dialog", message, objectName, imageID, objectID, firstName,
                                          lastName,
                                          chatChannel, buttons);
                             if (AcceptOffersAnimationsObjects && buttons.Count>0)

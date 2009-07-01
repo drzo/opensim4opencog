@@ -97,7 +97,7 @@ namespace cogbot.ScriptEngines
 
         private KeyValuePair<object, SimObjectEvent> taskFromCodeTree(object lispObject)
         {
-            SimObjectEvent evt = new SimObjectEvent("enqueue",new[]{lispObject}); 
+            SimObjectEvent evt = new SimObjectEvent(SimEventType.UNKNOWN,"enqueue",new[]{lispObject}); 
             return new KeyValuePair<object, SimObjectEvent>(lispObject, evt);
         }
 
@@ -122,6 +122,14 @@ namespace cogbot.ScriptEngines
         {
             if (arg == null) return "NIL";
             Type type = arg.GetType();
+            if (arg is BotClient)
+            {
+                arg = ((BotClient)arg).GetAvatar();
+            }
+            if (arg is WorldObjects)
+            {
+                arg = ((WorldObjects)arg).TheSimAvatar;
+            }
             if (arg is Simulator)
             {
                 return "'(simulator " + argString(((Simulator)arg).Name) + ")";

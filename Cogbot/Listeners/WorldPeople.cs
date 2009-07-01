@@ -17,38 +17,58 @@ namespace cogbot.Listeners
                                          ChatSourceType sourceType, string fromName, UUID id, UUID ownerid,
                                          Vector3 position)
         {
-            SimObject source = AsObject(fromName, id);
+            PCode pCode = PCode.None;
+            if (sourceType == ChatSourceType.Agent)
+            {
+                pCode = PCode.Avatar;
+            }
+            if (sourceType == ChatSourceType.Object)
+            {
+                pCode = PCode.Prim;
+            }
+            SimObject source = AsObject(fromName, id, pCode);
             object s1 = source;
-            object s2 = source;
             if (source == null)
             {
                 s1 = id;
-                s2 = id;
             }
             if (!string.IsNullOrEmpty(fromName))
             {
-                s2 = fromName;
+                s1 = fromName;
             }
+            if (source != null) s1 = source;
             object location = AsLocation(client.Network.CurrentSim, position, source);
             if (ownerid != id)
             {
-                SendNewEvent("Bug", "id!=ownerID?", "on-chat", 
-                    message, audible, type, sourceType, fromName,id,ownerid, location);
+                SendNewRegionEvent(SimEventType.NETWORK, "Bug", "id!=ownerID?", "on-chat",
+                                   message, audible, type, sourceType, fromName, id, ownerid, location);
 
             }
-            if (type == ChatType.StartTyping || type == ChatType.StopTyping)
-            {
+            if (string.IsNullOrEmpty(message))
+               // if (type == ChatType.StartTyping || type == ChatType.StopTyping)
+                {
 
-                lock (UpdateQueue)
-                    UpdateQueue.Enqueue(
-                        () =>
-                        SendNewEvent(type.ToString(), audible, sourceType, s1, location));
-                return;
+                    lock (UpdateQueue)
+                        UpdateQueue.Enqueue(
+                            () =>
+                            SendNewRegionEvent(SimEventType.SOCIAL, "ChatType-" + type.ToString(),
+                                               audible,
+                                               sourceType,
+                                               type,
+                                               ToParameter("senderOfInfo", s1),
+                                               ToParameter("eventPrimarilyOccursAt", location)));
+                    return;
 
-            }            
+                }
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(() => SendNewEvent("on-chat", s2, message, 
-                    audible, type, sourceType, location));
+                UpdateQueue.Enqueue(() =>
+                                    SendNewRegionEvent(SimEventType.SOCIAL, "ChatType-" + type.ToString(),
+                                                       ToParameter("senderOfInfo", s1),
+                                                       ToParameter("infoTransferred-NLString", message),
+                                                       audible,
+                                                       type,
+                                                       sourceType,
+                                                       ToParameter("eventPrimarilyOccursAt", location)));
         }
 
         public override void Self_OnInstantMessage(InstantMessage im, Simulator simulator)
@@ -63,15 +83,36 @@ namespace cogbot.Listeners
                     Debug("Avatar region " + im.FromAgentName + " " + im.RegionID);
                 }
             }
+            PCode pcode = PCode.None;
+            object s = im.FromAgentName;
+            if (string.IsNullOrEmpty(im.FromAgentName) || im.FromAgentName == "Object")
+            {
+                s = im.FromAgentID;
+                pcode = PCode.Prim;
+            } else
+            {
+                pcode = PCode.Avatar;
+            }
+            SimObject source = AsObject(im.FromAgentName, im.FromAgentID, pcode);
+            if (source != null) s = source;
+            object location = AsLocation(im.RegionID, im.Position);
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(() => SendNewEvent("on-instantmessage", im.FromAgentName, im.Message, im.ToAgentID,
-                                                       im.Offline, im.IMSessionID, im.GroupIM, AsLocation(im.RegionID, im.Position), im.Dialog,
-                                                       im.ParentEstateID));
+                UpdateQueue.Enqueue(() =>
+                                    SendNewRegionEvent(SimEventType.SOCIAL, "on-instantmessage",
+                                                 ToParameter("senderOfInfo", s),
+                                                 ToParameter("infoTransferred-NLString", im.Message),
+                                                 im.ToAgentID,
+                                                 im.Offline,
+                                                 im.IMSessionID,
+                                                 (im.GroupIM ? "GroupIM" : "IndividualIM"),
+                                                 ToParameter("eventPrimarilyOccursAt", location),
+                                                 im.Dialog,
+                                                 im.ParentEstateID));
         }
 
         public override void Self_OnAlertMessage(string msg)
         {
-            lock (UpdateQueue) UpdateQueue.Enqueue(() => SendNewEvent("On-Alert-Message", client.gridClient, msg));
+            lock (UpdateQueue) UpdateQueue.Enqueue(() => SendNewRegionEvent(SimEventType.UNKNOWN, "On-Alert-Message", client.gridClient, msg));
         }
 
 
@@ -315,7 +356,7 @@ namespace cogbot.Listeners
             base.Friends_OnFriendRights(friend);
         }
 
-        internal UUID GetUserID(string ToAvatarName)
+        public UUID GetUserID(string ToAvatarName)
         {
             UUID found;
             // case sensitive

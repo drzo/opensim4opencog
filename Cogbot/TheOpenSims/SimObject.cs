@@ -1570,7 +1570,7 @@ namespace cogbot.TheOpenSims
                 lastEvent = SE;
                 if (saveevent)
                 {
-                    ActionEventQueue.Enqueue(WorldSystem.SendNewEvent(SE));
+                    ActionEventQueue.Enqueue(WorldSystem.SendNewRegionEvent(SE));
                     
                 }
                 LastEventByName[SE.EventName] = SE;
@@ -1713,15 +1713,15 @@ namespace cogbot.TheOpenSims
 
         public virtual bool OnEffect(string effectType, object t, object p, float duration, UUID id)
         {
-            SimObjectEvent newSimObjectEvent = new SimObjectEvent(SimEventStatus._UNKNOWN, effectType, SimEventType.EFFECT,
+            SimObjectEvent newSimObjectEvent = new SimObjectEvent(SimEventStatus.Once, effectType, SimEventType.EFFECT,
                                                                     WorldObjects.ToParameter("doneBy", this),
                                                                     WorldObjects.ToParameter("objectActedOn", t),
                                                                     WorldObjects.ToParameter("eventPartiallyOccursAt", p),
-                                                                    WorldObjects.ToParameter("duration", duration),
+                                                                    WorldObjects.ToParameter("simDuration", duration),
                                                                     WorldObjects.AsEffectID(id));
             bool noteable = LogEvent(newSimObjectEvent);
             //todo
-            if (noteable) WorldSystem.SendNewEvent(newSimObjectEvent);
+            if (noteable) WorldSystem.SendNewRegionEvent(newSimObjectEvent);
             return noteable;
             //throw new NotImplementedException();
         }

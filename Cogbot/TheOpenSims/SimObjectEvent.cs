@@ -16,11 +16,11 @@ namespace cogbot.TheOpenSims
         ANIM,
         TOUCH,
         MOVEMENT,
-        LISP
+        SCRIPT,
+        NETWORK
     }
     public enum SimEventStatus
     {
-        _UNKNOWN,
         Start,
         Once,
         Stop
@@ -169,9 +169,8 @@ namespace cogbot.TheOpenSims
             ParameterNames();
         }
 
-        public SimObjectEvent(string name, IEnumerable paramz)
+        public SimObjectEvent(SimEventType type, string name, IEnumerable paramz)
         {
-            EventType = SimEventType.LISP;
             EventStatus = SimEventStatus.Once;
             Verb = name;
             Parameters = NamedParam.ObjectsToParams(paramz);

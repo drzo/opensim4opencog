@@ -115,8 +115,14 @@ namespace cogbot.Listeners
             }
         }
 
+        List<Simulator> ConnectedHook = new List<Simulator>();
         public void Network_OnSimConnectedHook(Simulator simulator)
         {
+            ConnectedHook.Add(simulator);
+            if (RunningHook.Contains(simulator))
+            {
+                Debug("RUNNING ALREADY");
+            }
             base.Network_OnSimConnected(simulator);
             lock (WorldObjectsMasterLock)
             {
@@ -144,10 +150,6 @@ namespace cogbot.Listeners
                     }
                 }
             }
-            if (simulator==client.Network.CurrentSim)
-            {
-                new Thread(() => client.Appearance.SetPreviousAppearance(true)).Start();
-            }
             //if (simulator == client.Network.CurrentSim) { new Thread(() => { Thread.Sleep(30000); client.Appearance.SetPreviousAppearance(true); }).Start(); }
         }
 
@@ -159,14 +161,25 @@ namespace cogbot.Listeners
             }
         }
 
+        List<Simulator> RunningHook = new List<Simulator>();
         public override void Network_OnEventQueueRunning(Simulator simulator)
         {
+            RunningHook.Add(simulator);
+            if (ConnectedHook.Contains(simulator))
+            {
+                Debug("CONNECTED ALREADY");
+            }
+
             //if (simulator == client.Network.CurrentSim) { new Thread(() => client.Appearance.WearOutfit(new string[] { "Clothing", "Default" })).Start(); }
             if (string.IsNullOrEmpty(simulator.Name))
             {
            //    simulator.Client.Grid.RequestMapItems(simulator.Handle,GridItemType.AgentLocations,GridLayerType.Terrain); 
             }
             base.Network_OnEventQueueRunning(simulator);
+            if (simulator == client.Network.CurrentSim)
+            {
+                new Thread(() => client.Appearance.SetPreviousAppearance(true)).Start();
+            }
         }
 
         public override void Network_OnCurrentSimChanged(Simulator PreviousSimulator)
@@ -571,7 +584,7 @@ namespace cogbot.Listeners
         }
 
 
-        public SimObject AsObject(string fromName, UUID id)
+        public SimObject AsObject(string fromName, UUID id, PCode isAvatar)
         {
             Primitive p;
             if (id != UUID.Zero)
@@ -588,10 +601,20 @@ namespace cogbot.Listeners
             }
             if (p != null) return GetSimObject(p);
             Object o = null;
-            return GetSource(client.Network.CurrentSim, id, null, ref o);
+            if (isAvatar==PCode.None && !string.IsNullOrEmpty(fromName))
+            {
+                if (!fromName.Contains(" "))
+                {
+                    isAvatar = PCode.Prim;
+                }  else
+                {
+                    isAvatar = PCode.Avatar;  
+                }
+            }
+            return GetSource(client.Network.CurrentSim, id, null, ref o, isAvatar);
         }
 
-        private SimObject GetSource(Simulator sim, UUID sourceID, SimObject source, ref object s)
+        private SimObject GetSource(Simulator sim, UUID sourceID, SimObject source, ref object s, PCode isAvatar)
         {
             if (source != null)
             {
@@ -678,6 +701,14 @@ namespace cogbot.Listeners
                                 }
                             }
                         }}
+            }
+            if (isAvatar==PCode.Prim)
+            {
+
+                SimObject impl = CreateSimObject(sourceID, this, sim);
+                s = source = impl;
+                return source;
+
             }
             if (s==null)
             {
