@@ -1049,17 +1049,15 @@ namespace OpenMetaverse
                 if (sittingOn != 0)
                 {
                     Primitive parent;
-                    lock (Client.Network.CurrentSim.ObjectsPrimitives.Dictionary)
-                    if (Client.Network.CurrentSim != null && Client.Network.CurrentSim.ObjectsPrimitives.TryGetValue(sittingOn, out parent))
+                    if (Client.Network.CurrentSim != null)
                     {
-                        return parent.Position + Vector3.Transform(relativePosition, Matrix4.CreateFromQuaternion(parent.Rotation));
+                        lock (Client.Network.CurrentSim.ObjectsPrimitives.Dictionary)
+                            if (Client.Network.CurrentSim.ObjectsPrimitives.TryGetValue(sittingOn, out parent))
+                                return parent.Position + Vector3.Transform(relativePosition, Matrix4.CreateFromQuaternion(parent.Rotation));
                     }
-                    else
-                    {
-                        Logger.Log("Currently sitting on object " + sittingOn + " which is not tracked, SimPosition will be inaccurate",
-                            Helpers.LogLevel.Warning, Client);
-                        return relativePosition;
-                    }
+                    Logger.Log("Currently sitting on object " + sittingOn + " which is not tracked, SimPosition will be inaccurate",
+                        Helpers.LogLevel.Warning, Client);
+                    return relativePosition;
                 }
                 else
                 {
@@ -1077,16 +1075,15 @@ namespace OpenMetaverse
                 if (sittingOn != 0)
                 {
                     Primitive parent;
-                    if (Client.Network.CurrentSim != null && Client.Network.CurrentSim.ObjectsPrimitives.TryGetValue(sittingOn, out parent))
+                    if (Client.Network.CurrentSim != null)
                     {
-                        return relativeRotation * parent.Rotation;
+                        lock (Client.Network.CurrentSim.ObjectsPrimitives.Dictionary)
+                            if (Client.Network.CurrentSim.ObjectsPrimitives.TryGetValue(sittingOn, out parent))
+                                return relativeRotation*parent.Rotation;
                     }
-                    else
-                    {
-                        Logger.Log("Currently sitting on object " + sittingOn + " which is not tracked, SimRotation will be inaccurate",
-                            Helpers.LogLevel.Warning, Client);
-                        return relativeRotation;
-                    }
+                    Logger.Log("Currently sitting on object " + sittingOn + " which is not tracked, SimRotation will be inaccurate",
+                        Helpers.LogLevel.Warning, Client);
+                    return relativeRotation;
                 }
                 else
                 {

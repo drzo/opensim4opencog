@@ -8,7 +8,7 @@ namespace cogbot.Actions
     /// <summary>
     /// Display a list of all agent locations in a specified region
     /// </summary>
-    public class AgentLocationsCommand : Command, RegionMasterCommand
+    public class AgentLocationsCommand : Command, GridMasterCommand
     {
         public AgentLocationsCommand(BotClient testClient)
         {

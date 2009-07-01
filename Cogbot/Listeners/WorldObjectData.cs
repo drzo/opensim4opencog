@@ -56,7 +56,7 @@ namespace cogbot.Listeners
                         // lock (AllSimulators)
                         foreach (Simulator S in AllSimulators)
                         {
-                            Master.CatchUp(S);
+                            GridMaster.CatchUp(S);
                         }
                         int thisCount = SimObjects.Count;
                         if (beforeCatchUp != thisCount)

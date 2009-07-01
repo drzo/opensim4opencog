@@ -247,7 +247,7 @@ namespace cogbot.ScriptEngines
             if (arg is UUID)
             {
             //   if (true) return argString(arg.ToString());
-                object found = WorldObjects.Master.GetObject((UUID)arg);
+                object found = WorldObjects.GridMaster.GetObject((UUID)arg);
                 if (found == null || found is UUID)
                 {
                     return argString(arg.ToString());

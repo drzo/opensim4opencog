@@ -3,7 +3,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class GridLayerCommand : Command, RegionMasterCommand
+    public class GridLayerCommand : Command, GridMasterCommand
     {
         bool registeredCallback = false;
         public GridLayerCommand(BotClient testClient)

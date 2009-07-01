@@ -493,7 +493,7 @@ namespace CycWorldModule.DotCYC
 
         public CycFort FindOrCreateCycFort(Primitive simObj)
         {
-            return FindOrCreateCycFort(WorldObjects.Master.GetSimObject(simObj));
+            return FindOrCreateCycFort(WorldObjects.GridMaster.GetSimObject(simObj));
         }
 
         public CycFort FindOrCreateCycFort(SimObjectEvent evt)
@@ -825,7 +825,7 @@ namespace CycWorldModule.DotCYC
         public object FindOrCreateCycFort(UUID region)
         {
             if (region == UUID.Zero) return CYC_NULL;
-            object o = WorldObjects.Master.GetObject(region);
+            object o = WorldObjects.GridMaster.GetObject(region);
             if (!(o is UUID)) return ToFort(o);
             return "" + region;
             //return createIndividualFn("SimRegion", region.RegionName, vocabMt.ToString(), "SimRegion " + region, "GeographicalPlace-3D");

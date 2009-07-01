@@ -428,11 +428,11 @@ namespace cogbot.TheOpenSims
 
         public override Quaternion GetSimRotation()
         {
-            if (IsControllable)
-            {
-                if (Client.Settings.OBJECT_TRACKING)
-                    return Client.Self.SimRotation;
-            }
+            //if (IsControllable)
+            //{
+            //    if (Client.Settings.OBJECT_TRACKING)
+            //        return Client.Self.SimRotation;
+            //}
             /// lock (Prim)
             {
                 //if (theAvatar.RegionHandle != _CurrentRegion.RegionHandle)
@@ -1702,7 +1702,7 @@ namespace cogbot.TheOpenSims
                                       if (newAnimNumber >= mostCurrentSequence)
                                       {
                                           mostCurrentSequence = newAnimNumber;
-                                          WorldObjects.Master.RequestAsset(key, AssetType.Animation, true);
+                                          WorldObjects.GridMaster.RequestAsset(key, AssetType.Animation, true);
                                           //mostCurrentAnim = key;
                                       }
                                       if (ExpectedCurrentAnims.ContainsKey(key))
@@ -1953,7 +1953,7 @@ namespace cogbot.TheOpenSims
                     {
                         mostCurrentSequence0 = newAnimNumber;
                     }
-                    WorldObjects.Master.RequestAsset(i.Key, AssetType.Animation, true);
+                    WorldObjects.GridMaster.RequestAsset(i.Key, AssetType.Animation, true);
 
                 }
                 leastCurrentSequence = leastCurrentSequence0;

@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class FindSimCommand : Command, RegionMasterCommand
+    public class FindSimCommand : Command, GridMasterCommand
     {
         public FindSimCommand(BotClient testClient)
         {

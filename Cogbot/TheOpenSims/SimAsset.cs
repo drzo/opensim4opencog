@@ -103,7 +103,7 @@ namespace cogbot.TheOpenSims
 
         static  void DownloadAnimFolder()
         {
-            BotClient Client = WorldObjects.Master.client;
+            BotClient Client = WorldObjects.GridMaster.client;
             Client.AnimationFolder = Client.Inventory.FindFolderForType(AssetType.Animation);
             List<InventoryBase> contents = Client.Inventory.FolderContents(Client.AnimationFolder, Client.Self.AgentID,
                 true, true, InventorySortOrder.ByName, 30000);

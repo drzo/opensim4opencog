@@ -1287,6 +1287,13 @@ namespace cogbot
                 if (Commands != null && Commands.ContainsKey(verb))
                 {
                     Action act = Commands[verb];
+                    if (act is GridMasterCommand)
+                    {
+                        if (!WorldSystem.IsGridMaster)
+                        {
+                            return String.Empty;
+                        }
+                    }
                     if (act is RegionMasterCommand)
                     {
                         if (!WorldSystem.IsRegionMaster)
