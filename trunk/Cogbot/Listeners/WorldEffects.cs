@@ -59,7 +59,7 @@ namespace cogbot.Listeners
         {
             if (!MaintainAnims) return;
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(() =>
+                UpdateQueue.AddLast(() =>
                 {
                     SimAvatar avatar = (SimAvatar)GetSimObjectFromUUID(avatarID);
                     if (avatar == null)
@@ -91,7 +91,7 @@ namespace cogbot.Listeners
             if (!IsMaster(simulator)) return;
             if (!MaintainActions) return;
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(() =>
+                UpdateQueue.AddLast(() =>
                 {
                     SimObject user = GetSimObject(avatar, simulator);
                     SimObject newSit = GetSimObject(sittingOn, simulator);
@@ -168,7 +168,7 @@ namespace cogbot.Listeners
 
             RequestAsset(soundID, AssetType.Sound, true);
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(() =>
+                UpdateQueue.AddLast(() =>
                 {
                     if (objectID != UUID.Zero) OnObjectSound(objectID, soundID, gain);
                     else
@@ -194,7 +194,7 @@ namespace cogbot.Listeners
             if (!MaintainSounds) return;
             RequestAsset(soundID, AssetType.Sound, true);
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(() => OnObjectSound(objectID, soundID, gain));
+                UpdateQueue.AddLast(() => OnObjectSound(objectID, soundID, gain));
             //SendNewEvent("On-Attach-Sound", soundID, ownerID, objectID, gain, flags);
             //base.Sound_OnAttachSound(soundID, ownerID, objectID, gain, flags);
         }
@@ -203,7 +203,7 @@ namespace cogbot.Listeners
         {
             if (!MaintainSounds) return;
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(() =>
+                UpdateQueue.AddLast(() =>
                 {
                     OnObjectSound(objectID, UUID.Zero, gain);
                     SendNewRegionEvent(SimEventType.EFFECT, "On-Attach-Sound-Gain-Change", objectID, gain);
@@ -236,7 +236,7 @@ namespace cogbot.Listeners
         {
             if (!MaintainEffects) return;
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(() =>
+                UpdateQueue.AddLast(() =>
                 {
                     SimObject perpAv, victimAv;
                     if (TryGetSimObject(perp, out perpAv) &&
@@ -401,7 +401,7 @@ namespace cogbot.Listeners
             }
 
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(() =>
+                UpdateQueue.AddLast(() =>
                                         {
                                             //if (source != null) source;
                                             // WriteLine("TextForm Avatars_OnLookAt: " + sourceID.ToString() + " to " + targetID.ToString() + " at " + targetID.ToString() + " with type " + lookType.ToString() + " duration " + duration.ToString());

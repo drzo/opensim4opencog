@@ -21,7 +21,7 @@ namespace cogbot.Listeners
                                                    string objectOwner, ScriptPermission questions)
         {
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(
+                UpdateQueue.AddLast(
                     () =>
                     {
                         /*
@@ -50,7 +50,7 @@ namespace cogbot.Listeners
                                                  List<string> buttons)
         {
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(
+                UpdateQueue.AddLast(
                     () =>
                         {
                             client.SendPersonalEvent(SimEventType.SCRIPT, "On-Script-Dialog", message, objectName, imageID, objectID, firstName,

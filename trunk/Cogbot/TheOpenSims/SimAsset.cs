@@ -99,6 +99,16 @@ namespace cogbot.TheOpenSims
         public SimAssetStore(BotClient GC)
         {
             Client = GC;
+            FillAnimationNames();
+            Client.Network.OnSimConnected += Ensure_Downloaded;
+        }
+
+        private bool downloadedAnims = false;
+        private void Ensure_Downloaded(Simulator simulator)
+        {
+            if (downloadedAnims) return;
+            downloadedAnims = true;
+            DownloadAnimFolder();
         }
 
         static  void DownloadAnimFolder()
@@ -991,8 +1001,6 @@ namespace cogbot.TheOpenSims
                 //common extras i've noticed
                 AnimUUID("drinking_or_snowcone", "758547a2-7212-d533-43e3-1666eda1705e");
 
-                DownloadAnimFolder();
-
                 foreach (FieldInfo fi in typeof(Animations).GetFields())
                 {
                     AnimUUID(fi.Name, ((UUID)fi.GetValue(null)).ToString());
@@ -1017,6 +1025,7 @@ namespace cogbot.TheOpenSims
                 }
 
                 SimAnimation.ClassifyAnims();
+
                 lock (SimAssets) foreach (SimAsset A in SimAssets)
                     {
                         if (A.IsIncomplete()) Console.WriteLine("Animation: " + A.ToString());

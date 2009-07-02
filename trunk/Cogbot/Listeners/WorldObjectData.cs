@@ -42,7 +42,8 @@ namespace cogbot.Listeners
                             DequeueProperties();
                             lock (UpdateQueue)
                             {
-                                U = UpdateQueue.Dequeue();
+                                U = UpdateQueue.First.Value;
+                                UpdateQueue.RemoveFirst();
                                 queuedUpdatesCount = UpdateQueue.Count;
                             }
                             U();
@@ -87,13 +88,14 @@ namespace cogbot.Listeners
                 }
             }
             CheckConnected(simulator);
+            EnsureSimulator(simulator);
             NeverSelect(prim.LocalID, simulator);
 
             if (!MaintainPropertiesFromQueue)
                 Objects_OnObjectProperties11(simulator, prim, props);
             else
-                lock (PropertyQueue)
-                    PropertyQueue.AddLast(delegate() { Objects_OnObjectProperties11(simulator, prim, props); });
+                lock (UpdateQueue)
+                    UpdateQueue.AddFirst(delegate() { Objects_OnObjectProperties11(simulator, prim, props); });
         }
 
         public override void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties props)
@@ -308,7 +310,7 @@ namespace cogbot.Listeners
                 }
             if (!MaintainObjectUpdates) return;
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(() => Objects_OnObjectUpdated1(simulator, av,  updatFromSimObject(AV), RegionHandle, TimeDilation));
+                UpdateQueue.AddLast(() => Objects_OnObjectUpdated1(simulator, av, updatFromSimObject(AV), RegionHandle, TimeDilation));
             }
         }
 

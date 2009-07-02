@@ -228,7 +228,7 @@ namespace cogbot.Listeners
                 }
                 foreach (var simulator in _AllSimulators)
                 {
-                    if (simulator.Client == client.gridClient) continue;
+                 //   if (simulator.Client == client.gridClient) continue;
                     if (simulator.Handle != handle) continue;
                     GridClient cl = simulator.Client;
                     BotClient bc = BotClientFor(cl);
@@ -249,7 +249,7 @@ namespace cogbot.Listeners
         {
             if (oldSim != null)
             {
-                LeaveSimulator(oldSim);
+               LeaveSimulator(oldSim);
             }
             EnsureSimulator(newSim);
             base.Self_OnRegionCrossed(oldSim, newSim);
