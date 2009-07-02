@@ -21,8 +21,8 @@ namespace cogbot.TheOpenSims
     }
     public enum SimEventStatus
     {
-        Start,
         Once,
+        Start,
         Stop
     }
 
@@ -171,6 +171,7 @@ namespace cogbot.TheOpenSims
 
         public SimObjectEvent(SimEventType type, string name, IEnumerable paramz)
         {
+            EventType = type;
             EventStatus = SimEventStatus.Once;
             Verb = name;
             Parameters = NamedParam.ObjectsToParams(paramz);

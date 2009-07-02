@@ -83,9 +83,16 @@ namespace cogbot.Listeners
                     Debug("Avatar region " + im.FromAgentName + " " + im.RegionID);
                 }
             }
+            bool Conference = false;
+            bool GroupIM = im.GroupIM || client.Groups.GroupName2KeyCache.ContainsKey(im.IMSessionID);
+            if (im.Dialog==InstantMessageDialog.SessionSend)
+            {
+                if (!GroupIM) Conference = true;
+            }
+
             PCode pcode = PCode.None;
             object s = im.FromAgentName;
-            if (string.IsNullOrEmpty(im.FromAgentName) || im.FromAgentName == "Object")
+            if (string.IsNullOrEmpty(im.FromAgentName) || im.FromAgentName == "Object" || !im.FromAgentName.Contains(" "))
             {
                 s = im.FromAgentID;
                 pcode = PCode.Prim;
@@ -93,26 +100,37 @@ namespace cogbot.Listeners
             {
                 pcode = PCode.Avatar;
             }
+            InstantMessageDialog d = im.Dialog;
+            if (d == InstantMessageDialog.StartTyping || d == InstantMessageDialog.StopTyping)
+            {
+                pcode = PCode.Avatar;
+            }
+            if (!Conference && GroupIM)
+            {
+
+                //"recipientOfInfo-Intended";
+
+            }
             SimObject source = AsObject(im.FromAgentName, im.FromAgentID, pcode);
             if (source != null) s = source;
             object location = AsLocation(im.RegionID, im.Position);
             lock (UpdateQueue)
                 UpdateQueue.Enqueue(() =>
-                                    SendNewRegionEvent(SimEventType.SOCIAL, "on-instantmessage",
+                                    client.SendPersonalEvent(SimEventType.SOCIAL, "InstantMessageDialog-" + im.Dialog.ToString() + (GroupIM ? "-Group" : ""),
                                                  ToParameter("senderOfInfo", s),
                                                  ToParameter("infoTransferred-NLString", im.Message),
-                                                 im.ToAgentID,
+                                                 ToParameter("recipientOfInfo-Intended", im.ToAgentID),                                                  
                                                  im.Offline,
                                                  im.IMSessionID,
-                                                 (im.GroupIM ? "GroupIM" : "IndividualIM"),
                                                  ToParameter("eventPrimarilyOccursAt", location),
-                                                 im.Dialog,
+                                                 //(im.GroupIM ? "GroupIM" : ""),
+                                                 //im.Dialog,
                                                  im.ParentEstateID));
         }
 
         public override void Self_OnAlertMessage(string msg)
         {
-            lock (UpdateQueue) UpdateQueue.Enqueue(() => SendNewRegionEvent(SimEventType.UNKNOWN, "On-Alert-Message", client.gridClient, msg));
+            lock (UpdateQueue) UpdateQueue.Enqueue(() => SendNewRegionEvent(SimEventType.SCRIPT, "On-Alert-Message", client.gridClient, msg));
         }
 
 

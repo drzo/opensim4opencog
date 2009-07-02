@@ -225,6 +225,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        private Simulator bestSimulator;
         /// <summary>
         ///Getter gets the best simulator and the setter adds the simulator to the known collection
         /// </summary>
@@ -232,34 +233,34 @@ namespace cogbot.TheOpenSims
         {
             get
             {
+                if (bestSimulator != null) return bestSimulator;
                 lock (_Simulators)
                 {
                     int sc = _Simulators.Count;
                     if (sc == 1) return _Simulators[0];
                     if (sc == 0) return null;
-                    Simulator best = null;
                     foreach (Simulator sim0 in _Simulators)
                     {
                         if (!sim0.Connected)
                         {
-                            if (best != null) continue;
+                            if (bestSimulator != null) continue;
                         }
                         if (!sim0.IsRunning)
                         {
-                            if (best != null) continue;
+                            if (bestSimulator != null) continue;
                         }
                         if (!S.Client.Settings.OBJECT_TRACKING)
                         {
-                            if (best != null) continue;
+                            if (bestSimulator != null) continue;
                         }
-                        best = sim0;
+                        bestSimulator = sim0;
                     }
-                    return best;
+                    return bestSimulator;
                 }
             }
             set
             {
-                if (value == null) return;
+                if (value == null || bestSimulator == value) return;
                 lock (_Simulators)
                 {
                     bool found = false;
@@ -282,8 +283,8 @@ namespace cogbot.TheOpenSims
                         Console.WriteLine("{0} SimWaterHeight = {1}", value.Name, PathStore.WaterHeight);
                     }
                 }
-                Simulator simulator0 = TheSimulator;
-                if (simulator0 == value && Client==null) return;
+                bestSimulator = TheSimulator;
+                if (bestSimulator == value && Client==null) return;
                 SetMaster((GridClient) value.Client);
             }
         }

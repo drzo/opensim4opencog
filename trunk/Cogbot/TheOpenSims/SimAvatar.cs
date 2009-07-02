@@ -66,11 +66,6 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                if (!IsRegionAttached())
-                {
-                    WorldSystem.ReSelectObject(Prim);
-                    WorldSystem.RequestMissingObject(Prim.LocalID, WorldSystem.GetSimulator(RegionHandle));
-                }
                 Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(GetSimRotation()));
                 return (float)(Math.Atan2(-v3.X, -v3.Y) + Math.PI); // 2Pi= N, 1/2Pi = E
             }
@@ -80,8 +75,9 @@ namespace cogbot.TheOpenSims
         {
             if (!IsRegionAttached() && _Prim0!=null)
             {
-                WorldSystem.ReSelectObject(Prim);
-                WorldSystem.RequestMissingObject(Prim.LocalID, WorldSystem.GetSimulator(RegionHandle));
+                WorldSystem.ReSelectObject(_Prim0);
+                Simulator sim = WorldSystem.GetSimulator(RegionHandle);
+                EnsureParentRequested(sim);
             }
             return new SimHeading(this);
         }
@@ -373,7 +369,7 @@ namespace cogbot.TheOpenSims
             //if (Client!=null && Client.Self.AgentID == Prim.ID)
             //{
             //    if (Client.Settings.OBJECT_TRACKING)
-            //        return Client.Self.SimPosition;
+            //        return GetSimPosition();
             //}
             return base.GetSimPosition();
         }
@@ -979,7 +975,7 @@ namespace cogbot.TheOpenSims
                     //ClientMovement.UpdateInterval = 0; /// 100
                     SimRegion R = GetSimRegion();
                     float WaterHeight = R.WaterHeight();
-                    float selfZ = ClientSelf.SimPosition.Z;
+                    double selfZ = worldPosition.Z;
                     double UpDown = realTargetZ - selfZ;
 
                     double ZDist = Math.Abs(UpDown);
@@ -1471,6 +1467,7 @@ namespace cogbot.TheOpenSims
 
         public bool TurnToward0(Vector3 target)
         {
+            //my philosophy is if the body and Head roation is facing hood ornimant.. the controls right/left are applicable .. is someone screws up and makes my avatar stand on it head backwards.. thats still fine i can still locate the hood ornimant.. i just have to hit the opposite directions left/right.. there is no guesswork.. just math.. sometimes whne i want my avatar to ratote left.. and hes in a car.. the only choice i have is the buttons.. the head roation is useless.. so basically libomv declares.. if your sitting on something.. dont expect stuff to work. what bothrs me is why does it do what i want and probably anyone else who wants a bot to dirve a prim wants.. .. whats all this trouble about sitting ona  prim and gettign world position
             if (!IsControllable)
             {
                 Debug("Cannot COntrol TurnToward " + target);
@@ -1483,20 +1480,16 @@ namespace cogbot.TheOpenSims
 
             if (Client.Self.SittingOn > 0)
             {
-                if (!Client.Network.CurrentSim.ObjectsPrimitives.ContainsKey(Client.Self.SittingOn))
+                Primitive parent = WorldSystem.GetPrimitive(Client.Self.SittingOn, Client.Network.CurrentSim);
+                if (parent == null)
                 {
                     Logger.Log("Attempted TurnToward but parent prim is not in dictionary", Helpers.LogLevel.Warning,
                                Client);
-                    return false;
+                    parent = WorldSystem.GetPrimitive(Prim.ParentID, Client.Network.CurrentSim);
                 }
-
+                if (parent == null) Debug("cant get parrent ");
                 else
-                {
-                    Primitive parent = WorldSystem.GetPrimitive(Prim.ParentID, Client.Network.CurrentSim);
-                    if (parent == null) Debug("cant get parrent ");
-                    else
-                        parentRot = parent.Rotation;
-                }
+                    parentRot = parent.Rotation;
             }
 
             {
@@ -1579,7 +1572,7 @@ namespace cogbot.TheOpenSims
                 }
 
                 Quaternion between = Vector3.RotationBetween(Vector3.UnitX,
-                                             Vector3.Normalize(target - Client.Self.SimPosition));
+                                             Vector3.Normalize(target - GetSimPosition()));
                 Quaternion rot = between * (Quaternion.Identity / parentRot);
 
                 Quaternion br = ClientMovement.BodyRotation;
@@ -1588,7 +1581,7 @@ namespace cogbot.TheOpenSims
                 changed = true;
                 ClientMovement.BodyRotation = rot;
                 ClientMovement.HeadRotation = rot;
-                ClientMovement.Camera.LookAt(Client.Self.SimPosition, target);
+                ClientMovement.Camera.LookAt(GetSimPosition(), target);
 
                 bool prev = Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK;
                 try

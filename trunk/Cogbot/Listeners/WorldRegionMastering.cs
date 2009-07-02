@@ -115,14 +115,8 @@ namespace cogbot.Listeners
             }
         }
 
-        List<Simulator> ConnectedHook = new List<Simulator>();
         public void Network_OnSimConnectedHook(Simulator simulator)
         {
-            ConnectedHook.Add(simulator);
-            if (RunningHook.Contains(simulator))
-            {
-                Debug("RUNNING ALREADY");
-            }
             base.Network_OnSimConnected(simulator);
             lock (WorldObjectsMasterLock)
             {
@@ -160,16 +154,9 @@ namespace cogbot.Listeners
                 Network_OnSimConnectedHook(simulator);
             }
         }
-
-        List<Simulator> RunningHook = new List<Simulator>();
+                                          
         public override void Network_OnEventQueueRunning(Simulator simulator)
         {
-            RunningHook.Add(simulator);
-            if (ConnectedHook.Contains(simulator))
-            {
-                Debug("CONNECTED ALREADY");
-            }
-
             //if (simulator == client.Network.CurrentSim) { new Thread(() => client.Appearance.WearOutfit(new string[] { "Clothing", "Default" })).Start(); }
             if (string.IsNullOrEmpty(simulator.Name))
             {
@@ -236,7 +223,7 @@ namespace cogbot.Listeners
                     {
                         bc.WorldSystem.MasteringRegions.Add(handle);
                     }
-                    Debug("Found a new client for region " + R + " as " + cl);
+                    Debug("Found a strong new client for region " + R + " as " + cl);
                     return;
                 }
                 foreach (var simulator in _AllSimulators)
@@ -255,7 +242,7 @@ namespace cogbot.Listeners
                     return;
                 }
             }
-            Debug("Now client for region " + R);
+            Debug("UHT OH, No client is Mastering for region " + R);
         }
 
         public override void Self_OnRegionCrossed(Simulator oldSim, Simulator newSim)
@@ -495,9 +482,8 @@ namespace cogbot.Listeners
                     if (set.Handle==simulator.Handle && set.Client==simulator.Client) return;
                 }
                 _AllSimulators.Add(simulator);
-                SimRegion.GetRegion(simulator);
             }
-
+            SimRegion.GetRegion(simulator);
         }
 
         internal Simulator GetSimulator(ulong handle)
@@ -537,7 +523,8 @@ namespace cogbot.Listeners
 
         public override void Terrain_OnLandPatch(Simulator simulator, int x, int y, int width, float[] data)
         {
-            Console.Write(",");
+            client.Terrain.OnLandPatch -= Terrain_OnLandPatch;
+            //Console.Write(",");
             //SimRegion R = SimRegion.GetRegion(simulator);
             //base.Terrain_OnLandPatch(simulator, x, y, width, null);
 

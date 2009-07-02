@@ -619,27 +619,22 @@ namespace cogbot.TheOpenSims
                 if (_Parent == null)
                 {
                     uint parent = Prim.ParentID;
-                    if (parent != 0)
+                    if (parent == 0)
+                    {
+                        _Parent = this;
+                    }
+                    else
                     {
                         Simulator simu = GetSimulator();
                         Primitive prim = WorldSystem.GetPrimitive(parent, simu);
                         if (prim == null)
                         {
-                            if (!RequestedParent)
-                            {
-                                // try to request for next time
-                                RequestedParent = true;
-                                simu.Client.Objects.RequestObject(simu, parent);
-                                WorldObjects.EnsureSelected(parent, simu);
-                            }
-                            return null;
+                            // try to request for next time
+                            EnsureParentRequested(simu);
+                            return _Parent;
                         }
                         _Parent = WorldSystem.GetSimObject(prim, simu);
                         _Parent.AddChild(this);
-                    }
-                    else
-                    {
-                        _Parent = this;
                     }
                 }
                 return _Parent;
@@ -1021,17 +1016,18 @@ namespace cogbot.TheOpenSims
             if (IsRoot) return true;
             if (_Parent == null)
             {
+                if (Prim.ParentID==0)
+                {
+                    _Parent = this;
+                    return true;
+                }
                 Simulator simu = GetSimulator();
                 if (simu == null) return false;
+                EnsureParentRequested(simu);
+                return false;
                 Primitive pUse = WorldSystem.GetPrimitive(Prim.ParentID, simu);
                 if (pUse == null)
                 {
-                    if (!RequestedParent)
-                    {
-                        RequestedParent = true;
-                        simu.Client.Objects.RequestObject(simu, Prim.ParentID);
-                        WorldObjects.EnsureSelected(Prim.ParentID, simu);
-                    }
                     return false;
                 }
                 if(_Parent==null)
@@ -1045,6 +1041,16 @@ namespace cogbot.TheOpenSims
                 return true;
             }
             return _Parent != null && _Parent.IsRegionAttached();
+        }
+
+        protected void EnsureParentRequested(Simulator simu)
+        {
+            if (!RequestedParent)
+            {
+                RequestedParent = true;
+                simu.Client.Objects.RequestObject(simu, Prim.ParentID);
+                simu.Client.Objects.SelectObject(simu, Prim.ParentID);
+            }
         }
 
         public virtual Simulator GetSimulator()
@@ -1083,11 +1089,12 @@ namespace cogbot.TheOpenSims
             if (!IsRegionAttached())
             {
                 WorldSystem.ReSelectObject(Prim);
-                WorldSystem.RequestMissingObject(Prim.LocalID, WorldSystem.GetSimulator(RegionHandle));
                 if (Prim.ParentID==0)
                 {
                     return transValue;
                 }
+                //WorldSystem.RequestMissingObject(Prim.LocalID, WorldSystem.GetSimulator(RegionHandle));
+                //WorldSystem.client.Objects.RequestObject(WorldSystem.GetSimulator(RegionHandle), Prim.LocalID);
             }
             if (thisPrim.ParentID != 0)
             {
@@ -1570,7 +1577,7 @@ namespace cogbot.TheOpenSims
                 lastEvent = SE;
                 if (saveevent)
                 {
-                    ActionEventQueue.Enqueue(WorldSystem.SendNewRegionEvent(SE));
+                    ActionEventQueue.Enqueue(WorldSystem.SendPipelineEvent(SE));
                     
                 }
                 LastEventByName[SE.EventName] = SE;
@@ -1721,9 +1728,8 @@ namespace cogbot.TheOpenSims
                                                                     WorldObjects.AsEffectID(id));
             bool noteable = LogEvent(newSimObjectEvent);
             //todo
-            if (noteable) WorldSystem.SendNewRegionEvent(newSimObjectEvent);
+            // LogEvent will send noteables already if (noteable) WorldSystem.SendPipelineEvent(newSimObjectEvent);
             return noteable;
-            //throw new NotImplementedException();
         }
 
         private bool IsSolidCachedKnown, IsSolidCachedTrue;

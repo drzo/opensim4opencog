@@ -73,7 +73,7 @@ namespace cogbot.Listeners
                 });
         }
 
-        public SimObjectEvent SendNewRegionEvent(SimObjectEvent param1)
+        public SimObjectEvent SendPipelineEvent(SimObjectEvent param1)
         {
             client.SendPipelineEvent(param1);
             return param1;
@@ -128,13 +128,13 @@ namespace cogbot.Listeners
                     {
                         //object[] eventArgs = new object[] { user, newSit, oldSit };
                         if (oldSit != null)
-                            oldSit.AddCanBeTargetOf(1, SendNewRegionEvent(
+                            oldSit.AddCanBeTargetOf(1, SendPipelineEvent(
                                                            new SimObjectEvent(SimEventStatus.Stop, newSitName,
                                                                               SimEventType.SIT,
                                                                               ToParameter("doneBy", avatar),
                                                                               ToParameter("objectActedOn", oldSit))));
                         if (newSit != null)
-                            newSit.AddCanBeTargetOf(1, SendNewRegionEvent(
+                            newSit.AddCanBeTargetOf(1, SendPipelineEvent(
                                                            new SimObjectEvent(SimEventStatus.Start, newSitName,
                                                                               SimEventType.SIT,
                                                                               ToParameter("doneBy", avatar),
@@ -147,7 +147,7 @@ namespace cogbot.Listeners
         {
             if (!MaintainActions) return;
             //Console.WriteLine(user + " " + p + " " + ScriptEngines.ScriptEventListener.argsListString(args));
-            user.LogEvent(SendNewRegionEvent(new SimObjectEvent(updown, p, SimEventType.SIT, args)));
+            user.LogEvent(SendPipelineEvent(new SimObjectEvent(updown, p, SimEventType.SIT, args)));
         }
 
 
@@ -247,12 +247,11 @@ namespace cogbot.Listeners
                         // else if (perpAv.Name == client.Self.Name)
                         //   WriteLine("$bot bumped into " + victimAv.Name + " like " + type);   
                         SimObjectEvent newSimObjectEvent = new SimObjectEvent(SimEventStatus.Once,
-                                                    "" + type, SimEventType.SOCIAL,
+                                                    "MeanCollisionType-" + type, SimEventType.SOCIAL,
                                                     ToParameter("primaryObjectMoving", perpAv),
                                                     ToParameter("objectActedOn", victimAv),
                                                     ToParameter("initialSpeedOfPrimaryObjectMoving", "MetersPerSecond", magnitude));
                         perpAv.LogEvent(newSimObjectEvent);
-                        SendNewRegionEvent(newSimObjectEvent);
                     }
                 });
         }
@@ -326,6 +325,10 @@ namespace cogbot.Listeners
             else
             {
                 s = source;
+            }
+            if (source is SimObjectImpl && !(source is SimAvatar))
+            {
+                Debug("Write source is Object " + source);
             }
             SimObject target = GetSimObjectFromUUID(targetID);
             if (target == null)
@@ -444,7 +447,7 @@ namespace cogbot.Listeners
                                                 RegisterUUID(id, effectType);
                                                 //TODO 
                                                 if (UseEventSource(s))
-                                                    SendNewRegionEvent(evt);
+                                                    SendPipelineEvent(evt);
                                                 //SendNewEvent("on-effect", effectType, s, t, p, duration, AsEffectID(id));
                                             }
                                         });
