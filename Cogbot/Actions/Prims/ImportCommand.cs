@@ -105,7 +105,7 @@ namespace cogbot.Actions
                         currentPrim = linkset.RootPrim;
                         // HACK: Import the structure just above our head
                         // We need a more elaborate solution for importing with relative or absolute offsets
-                        linkset.RootPrim.Position = Client.Self.SimPosition;
+                        linkset.RootPrim.Position = GetSimPosition();
                         linkset.RootPrim.Position.Z += 3.0f;
                         currentPosition = linkset.RootPrim.Position;
 

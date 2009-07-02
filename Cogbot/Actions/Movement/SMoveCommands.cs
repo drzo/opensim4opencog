@@ -472,7 +472,7 @@ namespace cogbot.Actions.Movement
             if (float.TryParse(args[0], out local.X) &&
                 float.TryParse(args[1], out local.Y))
             {
-                local.Z = Client.Self.SimPosition.Z;
+                local.Z = GetSimPosition().Z;
                 Vector3d target = WorldSystem.TheSimAvatar.GetPathStore().LocalToGlobal(local);
                 simObject = SimWaypointImpl.CreateGlobal(target);
                 if (args.Length == 3) Single.TryParse(args[2], out distance);
@@ -514,7 +514,7 @@ namespace cogbot.Actions.Movement
                 uint x, y;
                 Utils.LongToUInts(Client.Network.CurrentSim.Handle, out x, out y);
                 Vector2 v2 = new Vector2(target.X, target.Y);
-                Vector2 cp = new Vector2(Client.Self.SimPosition.X, Client.Self.SimPosition.Y);
+                Vector2 cp = new Vector2(GetSimPosition().X, GetSimPosition().Y);
                 float d = Vector2.Distance(v2, cp);
                 float dl = d;
                 bool autoOff = false;
@@ -523,10 +523,10 @@ namespace cogbot.Actions.Movement
                     if (autoOff)
                     {
                         Client.Self.Movement.TurnToward(target);
-                        Client.Self.AutoPilot((ulong)(x + target.X), (ulong)(y + target.Y), Client.Self.SimPosition.Z);
+                        Client.Self.AutoPilot((ulong)(x + target.X), (ulong)(y + target.Y), GetSimPosition().Z);
                         autoOff = false;
                     }
-                    cp = new Vector2(Client.Self.SimPosition.X, Client.Self.SimPosition.Y);
+                    cp = new Vector2(GetSimPosition().X, GetSimPosition().Y);
                     d = Vector2.Distance(v2, cp);
                     if (dl < d)
                     {
@@ -578,7 +578,7 @@ namespace cogbot.Actions.Movement
                 }
                 else
                 {
-                    local.Z = Client.Self.SimPosition.Z;
+                    local.Z = GetSimPosition().Z;
                 }
                 Vector3d target = WorldSystem.TheSimAvatar.GetPathStore().LocalToGlobal(local);
                 simObject = SimWaypointImpl.CreateGlobal(target);

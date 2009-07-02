@@ -29,7 +29,7 @@ namespace cogbot.Actions
                 if ((WorldSystem).tryGetAvatar(args.prepPhrases["is"], out avatar))
                 {
                     //Client.Self.Movement.Camera.AtAxis
-                    Vector3 myPos = Client.Self.SimPosition;
+                    Vector3 myPos =base.GetSimPosition();
                     Vector3 forward = new Vector3(1, 0, 0);
                     Vector3 offset = Vector3.Normalize(avatar.Position - myPos);
                     Quaternion newRot2 = Vector3.RotationBetween(forward, offset);

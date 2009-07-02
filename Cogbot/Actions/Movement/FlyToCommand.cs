@@ -77,7 +77,7 @@ namespace cogbot.Actions.Movement
                     //Client.Self.Movement.SendUpdate(false);
                     Debug("Fly z ");
                 }
-                else if (Vector3.Distance(target, Client.Self.SimPosition) <= 2.0)
+                else if (Vector3.Distance(target, GetSimPosition()) <= 2.0)
                 {
                     EndFlyto();
                     Debug("At Target");
@@ -94,7 +94,7 @@ namespace cogbot.Actions.Movement
         {
             bool res = false;
 
-            myPos = Client.Self.SimPosition;
+            myPos = GetSimPosition();
             myPos0.X = myPos.X;
             myPos0.Y = myPos.Y;
             diff = Vector2.Distance(target0, myPos0);
@@ -131,7 +131,7 @@ namespace cogbot.Actions.Movement
         {
             Client.Self.Movement.UpPos = false;
             Client.Self.Movement.UpNeg = false;
-            float diffz = (target.Z - Client.Self.SimPosition.Z);
+            float diffz = (target.Z - GetSimPosition().Z);
             if (diffz >= 20.0)
                 Client.Self.Movement.UpPos = true;
             else if (diffz <= -20.0)

@@ -184,7 +184,10 @@ namespace cogbot.Actions
         {
             return usageString;
         }
-
+        protected Vector3 GetSimPosition()
+        {
+            return TheSimAvatar.GetSimPosition();
+        }
         public virtual string GetDescription()
         {
             return helpString + "  Usage: " + usageString;

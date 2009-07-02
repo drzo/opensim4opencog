@@ -28,7 +28,7 @@ namespace cogbot.Actions
             sim.ObjectsPrimitives.ForEach(
                 delegate(Primitive prim)
                 {
-                    float distance = Vector3.Distance(Client.Self.SimPosition, prim.Position);
+                    float distance = Vector3.Distance(GetSimPosition(), prim.Position);
 
                     if (closest == null || distance < closestDistance)
                     {

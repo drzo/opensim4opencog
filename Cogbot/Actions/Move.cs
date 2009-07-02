@@ -44,7 +44,7 @@ namespace cogbot.Actions
                 Primitive prim;
                 Avatar avatar;
                 moveDist = 5;
-                PrevPosition = client.Self.SimPosition;
+                PrevPosition = GetSimPosition();
 
                 string[] tokens = args.objectPhrase.Split(null);
                 if ((verb == "west") || (verb == "east") || (verb == "north") || (verb == "south"))
@@ -198,28 +198,28 @@ namespace cogbot.Actions
                 //WriteLine("Prev: " + PrevPosition.ToString() + " Now: " + CurrentClient.Self.SimPosition.ToString());
                 if (moveTo == "west")
                 {
-                    if (!((PrevPosition.X - Client.Self.SimPosition.X) > precision))
+                    if (!((PrevPosition.X - GetSimPosition().X) > precision))
                     {
                         WriteLine("$bot bumped into something, Please try moving in a different direction!");
                     }
                 }
                 else if (moveTo == "east")
                 {
-                    if (!((Client.Self.SimPosition.X - PrevPosition.X) > precision))
+                    if (!((GetSimPosition().X - PrevPosition.X) > precision))
                     {
                         WriteLine("$bot bumped into something, Please try moving in a different direction!");
                     }
                 }
                 else if (moveTo == "north")
                 {
-                    if (!((Client.Self.SimPosition.Y - PrevPosition.Y) > precision))
+                    if (!((GetSimPosition().Y - PrevPosition.Y) > precision))
                     {
                         WriteLine("$bot bumped into something, Please try moving in a different direction!");
                     }
                 }
                 else if (moveTo == "south")
                 {
-                    if (!((PrevPosition.Y - Client.Self.SimPosition.Y) > precision))
+                    if (!((PrevPosition.Y - GetSimPosition().Y) > precision))
                     {
                         WriteLine("$bot bumped into something, Please try moving in a different direction!");
                     }

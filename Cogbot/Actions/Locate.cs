@@ -17,7 +17,7 @@ namespace cogbot.Actions
         {
            // base.acceptInput(verb, args);
 
-            return ("$bot is in " + Client.Network.CurrentSim.Name + "/" + (int)Client.Self.SimPosition.X + "/" + (int)Client.Self.SimPosition.Y + "/" + (int)Client.Self.SimPosition.Z);
+            return ("$bot is in " + Client.Network.CurrentSim.Name + "/" + (int)GetSimPosition().X + "/" + (int)GetSimPosition().Y + "/" + (int)GetSimPosition().Z);
         }
     }
 }

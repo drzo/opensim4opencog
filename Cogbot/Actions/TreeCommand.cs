@@ -24,7 +24,7 @@ namespace cogbot.Actions
 		            string treeName = args[0].Trim(new char[] { ' ' });
 		            Tree tree = (Tree)Enum.Parse(typeof(Tree), treeName);
 
-		            Vector3 treePosition = Client.Self.SimPosition;
+		            Vector3 treePosition = GetSimPosition();
 		            treePosition.Z += 3.0f;
 
 		            Client.Objects.AddTree(Client.Network.CurrentSim, new Vector3(0.5f, 0.5f, 0.5f),
