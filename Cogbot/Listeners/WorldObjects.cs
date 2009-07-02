@@ -18,7 +18,7 @@ namespace cogbot.Listeners
 
         public static bool CanPhantomize = false;
         public static bool CanUseSit = true;
-        public static bool DoSimulatorsCatchUp = true;
+        public static bool DoSimulatorsCatchUp = false;
         public static bool MaintainAnims = true;
         public static bool MaintainAnimsInFolders = false;
         public static bool MaintainAttachments = true;
@@ -35,13 +35,13 @@ namespace cogbot.Listeners
 
         private static readonly Dictionary<ulong, object> GetSimObjectLock = new Dictionary<ulong, object>();
 
-        private static readonly Dictionary<Simulator, List<uint>> primsSelected = new Dictionary<Simulator, List<uint>>();
-        private static readonly Dictionary<Simulator, List<uint>> primsSelectedOutbox = new Dictionary<Simulator, List<uint>>();
+        private static readonly Dictionary<ulong, List<uint>> primsSelected = new Dictionary<ulong, List<uint>>();
+        private static readonly Dictionary<ulong, List<uint>> primsSelectedOutbox = new Dictionary<ulong, List<uint>>();
 
         private static readonly LinkedList<ThreadStart> PropertyQueue = new LinkedList<ThreadStart>();
         private static readonly object SelectObjectsTimerLock = new object();
         private static readonly List<ThreadStart> ShutdownHooks = new List<ThreadStart>();
-        private static readonly Queue<ThreadStart> UpdateQueue = new Queue<ThreadStart>();
+        private static readonly LinkedList<ThreadStart> UpdateQueue = new LinkedList<ThreadStart>();
         private static readonly Dictionary<UUID, object> uuidTypeObject = new Dictionary<UUID, object>();
         private static readonly object WorldObjectsMasterLock = new object();
 
@@ -252,7 +252,7 @@ namespace cogbot.Listeners
                 int tick = Environment.TickCount;
                 lock (UpdateQueue)
                 {
-                    UpdateQueue.Enqueue(() => Console.WriteLine("\nUpdate lag {0}ms", (Environment.TickCount - tick)));
+                    UpdateQueue.AddLast(() => Console.WriteLine("\nUpdate lag {0}ms", (Environment.TickCount - tick)));
                 }
                 Thread.Sleep(30000);
             }
@@ -393,6 +393,8 @@ namespace cogbot.Listeners
                     obj0 = CreateSimObject(prim.ID, this, simulator);
                 }
             }
+            if (prim.RegionHandle == 0)
+                prim.RegionHandle = simulator.Handle;
             obj0.SetFirstPrim(prim);
             SendOnAddSimObject(obj0);
             return (SimObject)obj0;
@@ -496,42 +498,44 @@ namespace cogbot.Listeners
                 return;
             }
             SimObject O = GetSimObjectFromUUID(p.ID);
+            if (O==null)
+            {
+                return;
+            }
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(() =>
+                UpdateQueue.AddLast(() =>
                                         {
-                                            if (O == null)
-                                                O = GetSimObjectFromUUID(p.ID);
-                                            // if (O == null)
-                                            //     O = GetSimObject(p, simulator);
-                                            if (O == null)
-                                            {
-                                                //  SendNewEvent("on-prim-killed", p);
-                                                return;
-                                            }
+                                            //if (O == null)
+                                            //    O = GetSimObjectFromUUID(p.ID);
+                                            //if (O == null)
+                                            //    O = GetSimObject(p, simulator);
+                                            //if (O == null)
+                                            //{
+                                            //    SendNewEvent("on-prim-killed", p);
+                                            //    return;
+                                            //}
                                             if (Settings.LOG_LEVEL != Helpers.LogLevel.Info)
                                                 Debug("Killing object: " + O);
-                                            if (!(O is SimAvatar))
                                             {
                                                 {
-                                                    O.IsKilled = true;
-                                                    lock (SimAvatars)
-                                                        foreach (SimAvatar A in SimAvatars)
+                                                    if (O.KilledPrim(p,simulator))
+                                                    {
+                                                        lock (SimAvatars)
+                                                            foreach (SimAvatar A in SimAvatars)
+                                                            {
+                                                                A.RemoveObject(O);
+                                                            }
+                                                        if (O is SimAvatar)
                                                         {
-                                                            A.RemoveObject(O);
+                                                            lock (SimAvatars)
+                                                            {
+                                                              //  SimAvatars.Remove((SimAvatar)O);
+                                                                Debug("Killing Avatar: " + O);
+                                                            }
                                                         }
-                                                    //lock (SimObjects) SimObjects.Remove(O);
-                                                }
-                                            }
-                                            else
-                                            {
-                                                if (simulator == O.GetSimulator())
-                                                {
-                                                    Debug("Killing Avatar: " + O);
-                                                    O.IsKilled = true;
-                                                }
-                                                else
-                                                {
-                                                    Debug("NOT Killing Avatar: " + O);
+                                                        //lock (SimObjects) SimObjects.Remove(O);                                     
+                                                    }
+                                                    
                                                 }
                                             }
                                         });
@@ -645,7 +649,7 @@ namespace cogbot.Listeners
             }
             if (!MaintainAttachments) return;
             Objects_OnNewPrim(simulator, prim, regionHandle, timeDilation);
-            lock (UpdateQueue) UpdateQueue.Enqueue(() => GetSimObject(prim, simulator).IsAttachment = true);
+            lock (UpdateQueue) UpdateQueue.AddLast(() => GetSimObject(prim, simulator).IsAttachment = true);
         }
 
         public override void Avatars_OnAvatarAppearance(UUID avatarID, bool isTrial,
@@ -718,7 +722,7 @@ namespace cogbot.Listeners
             }
             if (p == null)
             {
-                client.Objects.RequestObject(simulator, sittingOn);
+                RequestObject(simulator, sittingOn);
                 client.Objects.SelectObject(simulator, sittingOn);
                 p = GetPrimitive(sittingOn, simulator);
                 if (p != null) return GetSimObject(p, simulator);
@@ -920,7 +924,6 @@ namespace cogbot.Listeners
                 }
                 return null;
             }
-            EnsureSimulator(simulator);
             Primitive prim;
             lock (simulator.ObjectsPrimitives.Dictionary)
             if (simulator.ObjectsPrimitives.TryGetValue(id, out prim))
@@ -933,23 +936,24 @@ namespace cogbot.Listeners
             {
                 return av;
             }
-            ulong handle = simulator.Handle;
-            EnsureSelected(id, simulator);
+            RequestObject(simulator,id);
+            //ulong handle = simulator.Handle;
+            //EnsureSelected(id, simulator);
             //lock (AllSimulators)
-            foreach (Simulator sim in AllSimulators)
-            {
-                if (sim.Handle == handle && sim != simulator)
-                {
-                    if (sim.ObjectsPrimitives.TryGetValue(id, out prim))
-                    {
-                        return prim;
-                    }
-                    if (sim.ObjectsAvatars.TryGetValue(id, out av))
-                    {
-                        return av;
-                    }
-                }
-            }
+            //foreach (Simulator sim in AllSimulators)
+            //{
+            //    if (sim.Handle == handle && sim != simulator)
+            //    {
+            //        if (sim.ObjectsPrimitives.TryGetValue(id, out prim))
+            //        {
+            //            return prim;
+            //        }
+            //        if (sim.ObjectsAvatars.TryGetValue(id, out av))
+            //        {
+            //            return av;
+            //        }
+            //    }
+            //}
             return null;
         }
 
@@ -1265,14 +1269,32 @@ namespace cogbot.Listeners
             return SimObjects.CopyOf();
         }
 
-        public Primitive RequestMissingObject(uint localID, Simulator simulator)
+        //public Primitive RequestMissingObject(uint localID, Simulator simulator)
+        //{
+        //    if (localID == 0) return null;
+        //    EnsureSelected(localID, simulator);
+        //    client.Objects.RequestObject(simulator, localID);
+        //    Thread.Sleep(500);
+        //    Primitive prim = GetPrimitive(localID, simulator);
+        //    return prim;
+        //}
+        readonly static Dictionary<ulong, List<uint>> RequestedObjects = new Dictionary<ulong, List<uint>>();
+        internal static void RequestObject(Simulator simulator, uint id)
         {
-            if (localID == 0) return null;
-            EnsureSelected(localID, simulator);
-            client.Objects.RequestObject(simulator, localID);
-            Thread.Sleep(500);
-            Primitive prim = GetPrimitive(localID, simulator);
-            return prim;
+            List<uint> uints;
+            lock (RequestedObjects)
+            {
+                if (!RequestedObjects.TryGetValue(simulator.Handle, out uints))
+                {
+                    RequestedObjects[simulator.Handle] = uints = new List<uint>();
+                }
+            }
+            lock (uints)
+            {
+                if (uints.Contains(id)) return;
+                uints.Add(id);
+            }
+            simulator.Client.Objects.RequestObject(simulator, id);
         }
 
         public static void EnsureSelected(uint LocalID, Simulator simulator)
@@ -1283,18 +1305,19 @@ namespace cogbot.Listeners
 
         public static bool NeverSelect(uint LocalID, Simulator simulator)
         {
+            ulong Handle = simulator.Handle;
             if (LocalID != 0)
                 lock (primsSelected)
                 {
-                    if (!primsSelected.ContainsKey(simulator))
+                    if (!primsSelected.ContainsKey(Handle))
                     {
-                        primsSelected[simulator] = new List<uint>();
+                        primsSelected[Handle] = new List<uint>();
                     }
-                    lock (primsSelected[simulator])
+                    lock (primsSelected[Handle])
                     {
-                        if (!primsSelected[simulator].Contains(LocalID))
+                        if (!primsSelected[Handle].Contains(LocalID))
                         {
-                            primsSelected[simulator].Add(LocalID);
+                            primsSelected[Handle].Add(LocalID);
                             return true;
                         }
                     }
@@ -1304,14 +1327,15 @@ namespace cogbot.Listeners
 
         private static void ReallyEnsureSelected(Simulator simulator, uint LocalID)
         {
+            ulong Handle = simulator.Handle;
             lock (primsSelectedOutbox)
             {
-                if (!primsSelectedOutbox.ContainsKey(simulator))
+                if (!primsSelectedOutbox.ContainsKey(Handle))
                 {
-                    primsSelectedOutbox[simulator] = new List<uint>();
+                    primsSelectedOutbox[Handle] = new List<uint>();
                 }
-                lock (primsSelectedOutbox[simulator])
-                    primsSelectedOutbox[simulator].Add(LocalID);
+                lock (primsSelectedOutbox[Handle])
+                    primsSelectedOutbox[Handle].Add(LocalID);
             }
         }
 
@@ -1328,22 +1352,29 @@ namespace cogbot.Listeners
             }
             lock (primsSelectedOutbox)
             {
-                foreach (Simulator simulator in new List<Simulator>(primsSelectedOutbox.Keys))
+                foreach (ulong simulator in new List<ulong>(primsSelectedOutbox.Keys))
                 {
+                    uint[] askFor;
                     lock (primsSelectedOutbox[simulator])
                     {
                         List<uint> uints = primsSelectedOutbox[simulator];
                         if (uints.Count > 200)
                         {
-                            simulator.Client.Objects.SelectObjects(simulator, uints.GetRange(0, 200).ToArray());
+                            askFor = uints.GetRange(0, 200).ToArray();
                             uints.RemoveRange(0, 200);
                         }
                         else if (uints.Count > 0)
                         {
                             primsSelectedOutbox[simulator] = new List<uint>();
-                            simulator.Client.Objects.SelectObjects(simulator, uints.ToArray());
+                            askFor = uints.ToArray();
+                        }
+                        else
+                        {
+                            continue;
                         }
                     }
+                    Simulator S = SimRegion.GetRegion(simulator).TheSimulator;
+                    S.Client.Objects.SelectObjects(S, askFor);
                 }
             }
             lock (SelectObjectsTimerLock)

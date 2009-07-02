@@ -49,7 +49,7 @@ namespace cogbot.Listeners
                 {
 
                     lock (UpdateQueue)
-                        UpdateQueue.Enqueue(
+                        UpdateQueue.AddLast(
                             () =>
                             SendNewRegionEvent(SimEventType.SOCIAL, "ChatType-" + type.ToString(),
                                                audible,
@@ -61,7 +61,7 @@ namespace cogbot.Listeners
 
                 }
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(() =>
+                UpdateQueue.AddLast(() =>
                                     SendNewRegionEvent(SimEventType.SOCIAL, "ChatType-" + type.ToString(),
                                                        ToParameter("senderOfInfo", s1),
                                                        ToParameter("infoTransferred-NLString", message),
@@ -115,7 +115,7 @@ namespace cogbot.Listeners
             if (source != null) s = source;
             object location = AsLocation(im.RegionID, im.Position);
             lock (UpdateQueue)
-                UpdateQueue.Enqueue(() =>
+                UpdateQueue.AddLast(() =>
                                     client.SendPersonalEvent(SimEventType.SOCIAL, "InstantMessageDialog-" + im.Dialog.ToString() + (GroupIM ? "-Group" : ""),
                                                  ToParameter("senderOfInfo", s),
                                                  ToParameter("infoTransferred-NLString", im.Message),
@@ -130,7 +130,7 @@ namespace cogbot.Listeners
 
         public override void Self_OnAlertMessage(string msg)
         {
-            lock (UpdateQueue) UpdateQueue.Enqueue(() => SendNewRegionEvent(SimEventType.SCRIPT, "On-Alert-Message", client.gridClient, msg));
+            lock (UpdateQueue) UpdateQueue.AddLast(() => SendNewRegionEvent(SimEventType.SCRIPT, "On-Alert-Message", client.gridClient, msg));
         }
 
 

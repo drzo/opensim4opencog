@@ -725,6 +725,21 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        public override bool KilledPrim(Primitive prim, Simulator simulator)
+        {
+            //Debug("AVATAR KilledPrim " + prim);
+            return base.KilledPrim(prim, simulator);
+        }
+
+        public override void ResetPrim(Primitive prim, BotClient bc, Simulator sim)
+        {
+            //if (!ReferenceEquals(_Prim0,prim))
+            //{
+            //    Debug("AVATAR ResetPrim " + prim);
+            //}
+            base.ResetPrim(prim, bc, sim);
+        }
+
         public override void SetFirstPrim(Primitive prim)
         {
             if (prim is Avatar)
@@ -736,6 +751,7 @@ namespace cogbot.TheOpenSims
                 }
             }
             base.SetFirstPrim(prim);
+          //  Debug("AVATAR SetFirstPrim " + prim);
         }
         public override string GetName()
         {
@@ -1478,9 +1494,18 @@ namespace cogbot.TheOpenSims
             AgentManager.AgentMovement ClientMovement = Client.Self.Movement;
             Quaternion parentRot = Quaternion.Identity;
 
-            if (Client.Self.SittingOn > 0)
+            Avatar Prim = theAvatar;
+            if (Prim.ParentID != 0)
             {
-                Primitive parent = WorldSystem.GetPrimitive(Client.Self.SittingOn, Client.Network.CurrentSim);
+                Primitive parent = null;
+                if (_Parent!=null)
+                {
+                    parent = _Parent.Prim;
+                }
+                if (parent == null)
+                {
+                    parent = WorldSystem.GetPrimitive(Prim.ParentID, Client.Network.CurrentSim);
+                }
                 if (parent == null)
                 {
                     Logger.Log("Attempted TurnToward but parent prim is not in dictionary", Helpers.LogLevel.Warning,
