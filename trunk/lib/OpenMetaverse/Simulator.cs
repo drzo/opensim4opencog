@@ -467,6 +467,7 @@ namespace OpenMetaverse
 
 
         readonly static Dictionary<GridClient, Dictionary<ulong, Simulator>> savedSims = new Dictionary<GridClient, Dictionary<ulong, Simulator>>();
+        readonly static Dictionary<ulong, Simulator> firstSim = new Dictionary<ulong, Simulator>();
         public static Simulator Create(GridClient client, IPEndPoint point, ulong handle)
         {
             Dictionary<ulong, Simulator> dict;
@@ -474,11 +475,20 @@ namespace OpenMetaverse
             {
                 dict = new Dictionary<ulong, Simulator>();
                 savedSims.Add(client, dict);
-            }
+            } 
             Simulator sim;
-            lock (dict) if (!dict.TryGetValue(handle, out sim))
+            lock (firstSim) lock (dict) if (!dict.TryGetValue(handle, out sim))
             {
-                sim = new Simulator(client, point, handle); 
+                sim = new Simulator(client, point, handle);
+                if (!firstSim.ContainsKey(handle))
+                {
+                    firstSim[handle] = sim;  
+                } else
+                {
+                    Simulator S = firstSim[handle];
+                    sim.ObjectsAvatars.Dictionary = S.ObjectsAvatars.Dictionary;
+                    sim.ObjectsPrimitives.Dictionary = S.ObjectsPrimitives.Dictionary;
+                }
                 dict.Add(handle,sim);
             } else
             {

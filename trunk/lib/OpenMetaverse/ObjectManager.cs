@@ -409,7 +409,7 @@ namespace OpenMetaverse
 
             // If the callbacks aren't registered there's not point in doing client-side path prediction,
             // so we set it up here
-            if (Client.Settings.USE_INTERPOLATION_TIMER)
+            if (Settings.USE_INTERPOLATION_TIMER)
             {
                 InterpolationTimer = new Timer(InterpolationTimer_Elapsed, null, Settings.INTERPOLATION_INTERVAL,
                     Timeout.Infinite);
@@ -1787,7 +1787,7 @@ namespace OpenMetaverse
                     #region Avatar
                     case PCode.Avatar:
                         // Update some internals if this is our avatar
-                        if (block.FullID == Client.Self.AgentID)
+                        if (block.FullID == Client.Self.AgentID && simulator == Client.Network.CurrentSim)
                         {
                             #region Update Client.Self
 
@@ -2598,7 +2598,7 @@ namespace OpenMetaverse
         /// <param name="oldSeatID"></param>
         protected void SetAvatarSittingOn(Simulator sim, Avatar av, uint localid, uint oldSeatID)
         {
-            if (av.LocalID == Client.Self.localID) Client.Self.sittingOn = localid;
+            if (Client.Network.CurrentSim == sim && av.LocalID == Client.Self.localID) Client.Self.sittingOn = localid;
             av.ParentID = localid;
 
             if (OnAvatarSitChanged != null && oldSeatID != localid)
@@ -2807,6 +2807,7 @@ namespace OpenMetaverse
                         prim = new Primitive();
                         prim.LocalID = localID;
                         prim.ID = fullID;
+                        prim.RegionHandle = simulator.Handle;
 
                         simulator.ObjectsPrimitives.Dictionary[localID] = prim;
 
@@ -2845,6 +2846,7 @@ namespace OpenMetaverse
                         avatar = new Avatar();
                         avatar.LocalID = localID;
                         avatar.ID = fullID;
+                        avatar.RegionHandle = simulator.Handle;
 
                         simulator.ObjectsAvatars.Dictionary[localID] = avatar;
 
@@ -2863,10 +2865,6 @@ namespace OpenMetaverse
         protected void InterpolationTimer_Elapsed(object obj)
         {
             int elapsed = 0;
-            if (!Client.Settings.USE_INTERPOLATION_TIMER)
-            {         
-                return;
-            }
 
             if (Client.Network.Connected)
             {
