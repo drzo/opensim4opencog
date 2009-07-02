@@ -232,7 +232,7 @@ namespace cogbot.Listeners
                     float.TryParse(args[1], out target.Y))
                 {
                     argsUsed = 2;
-                    target.Z = client.Self.SimPosition.Z;
+                    target.Z = TheSimAvatar.GetSimPosition().Z;
                     if (args.Length == 3)
                     {
                         Single.TryParse(args[2], out target.Z);

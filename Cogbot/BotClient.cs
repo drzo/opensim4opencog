@@ -66,7 +66,7 @@ namespace cogbot
         /// for specific data stream types</summary>
         public AgentThrottle Throttle { get { return gridClient.Throttle; } }
 
-        public GridClient gridClient = new GridClient();
+        readonly public GridClient gridClient;
         // TODO's
         // Play Animations
         // private static UUID type_anim_uuid = new UUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
@@ -183,7 +183,10 @@ namespace cogbot
             //            manager.AddTextFormCommands(this);
             //          RegisterAllCommands(Assembly.GetExecutingAssembly());
 
+            Settings.USE_INTERPOLATION_TIMER = false;
             Settings.LOG_LEVEL = Helpers.LogLevel.Info;
+
+            gridClient = new GridClient();
             //   Settings.LOG_RESENDS = false;
             //   Settings.ALWAYS_DECODE_OBJECTS = true;
             //   Settings.ALWAYS_REQUEST_OBJECTS = true;
@@ -224,7 +227,6 @@ namespace cogbot
             Settings.OBJECT_TRACKING = true;
             Settings.AVATAR_TRACKING = true;
             Settings.STORE_LAND_PATCHES = true;
-            Settings.USE_INTERPOLATION_TIMER = false;
 
 
             //  Manager = Inventory;
@@ -1238,6 +1240,7 @@ namespace cogbot
                 }
             }
             SimObjectEvent evt = botPipeline.CreateEvent(type, eventName, args);
+            evt.AddParam("recipientOfInfo", GetAvatar());
             SendPipelineEvent(evt);
         }
 

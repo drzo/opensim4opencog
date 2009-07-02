@@ -1101,7 +1101,7 @@ namespace cogbot.TheOpenSims
                 }
                 else
                 {
-                    Console.WriteLine("Anim w/o BVH " + fName + " " + uid);
+                   // Console.WriteLine("Anim w/o BVH " + fName + " " + uid);
                 }
             }
             return anim;

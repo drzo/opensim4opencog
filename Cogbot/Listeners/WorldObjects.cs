@@ -608,7 +608,9 @@ namespace cogbot.Listeners
                     prim.RegionHandle = regionHandle;
                     if (MaintainPropertiesFromQueue)
                     {
-                        lock (PropertyQueue) PropertyQueue.AddFirst(() => InternPrim(simulator, prim));
+                        if (prim.ParentID==0)
+                            lock (PropertyQueue) PropertyQueue.AddFirst(() => InternPrim(simulator, prim));
+                        else lock (PropertyQueue) PropertyQueue.AddLast(() => InternPrim(simulator, prim));
                     }
                     else
                     {
@@ -1115,7 +1117,6 @@ namespace cogbot.Listeners
 
         public void describePrimToAI(Primitive prim, Simulator simulator)
         {
-            if (true) return;
             if (prim is Avatar)
             {
                 Avatar avatar = (Avatar)prim;
@@ -1123,12 +1124,16 @@ namespace cogbot.Listeners
                 return;
             }
             //if (!primsKnown.Contains(prim))	return;
+            if (true) return;
+            //botenqueueLispTask("(on-prim-description '(" + prim.Properties.Name + ") '" + prim.Properties.Description + "' )");
+            SimObject A = GetSimObject(prim);
+            //WriteLine(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
+            //WriteLine(avatar.Name + " is " + Vector3.Distance(GetSimPosition(), avatar.Position).ToString() + " distant.");
+            client.SendPersonalEvent(SimEventType.MOVEMENT, "on-prim-dist", A, A.Distance(TheSimAvatar));
+            SendNewRegionEvent(SimEventType.MOVEMENT, "on-prim-pos", A, A.GetWorldPosition());
             BlockUntilProperties(prim, simulator);
             if (prim.Properties.Name != null)
             {
-                //botenqueueLispTask("(on-prim-description '(" + prim.Properties.Name + ") '" + prim.Properties.Description + "' )");
-                client.SendPersonalEvent(SimEventType.MOVEMENT, "on-prim-dist", prim, Vector3.Distance(client.Self.SimPosition, prim.Position));
-                SendNewRegionEvent(SimEventType.MOVEMENT, "on-prim-pos", prim, prim.Position);
                 SendNewRegionEvent(SimEventType.EFFECT, "on-prim-description", prim, "" + prim.Properties.Description);
                 //WriteLine(prim.Properties.Name + ": " + prim.Properties.Description);
                 //if (prim.Sound != UUID.Zero)
@@ -1265,7 +1270,7 @@ namespace cogbot.Listeners
             if (localID == 0) return null;
             EnsureSelected(localID, simulator);
             client.Objects.RequestObject(simulator, localID);
-            Thread.Sleep(1000);
+            Thread.Sleep(500);
             Primitive prim = GetPrimitive(localID, simulator);
             return prim;
         }
