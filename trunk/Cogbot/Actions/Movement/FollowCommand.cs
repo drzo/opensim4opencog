@@ -122,7 +122,7 @@ namespace cogbot.Actions
 
                             if (Client.Network.Simulators[i] == Client.Network.CurrentSim)
                             {
-                                distance = Vector3.Distance(targetAv.Position, Client.Self.SimPosition);
+                                distance = Vector3.Distance(targetAv.Position, GetSimPosition());
                             }
                             else
                             {

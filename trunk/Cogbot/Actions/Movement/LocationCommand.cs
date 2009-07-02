@@ -18,7 +18,7 @@ namespace cogbot.Actions
 		public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
             return "$bot CurrentSim: '" + Client.Network.CurrentSim.ToString() + "' Position: " + 
-                Client.Self.SimPosition.ToString();
+                GetSimPosition().ToString();
 		}
     }
 }

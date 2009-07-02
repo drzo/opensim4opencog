@@ -32,7 +32,7 @@ namespace cogbot.Actions
             string searchString = (args.Length > 1)? args[1] : "";
 
             // *** get current location ***
-            Vector3 location = Client.Self.SimPosition;
+            Vector3 location = GetSimPosition();
 
             try
             {
