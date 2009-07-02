@@ -138,19 +138,20 @@ namespace AIMLBotModule
         private void AIML_OnLookAt(UUID sourceid, UUID targetid, Vector3d targetpos, LookAtType looktype, float duration, UUID id)
         {
             if (sourceid == client.Self.AgentID) return;
-            if (targetid==client.Self.AgentID) SetInterest(sourceid, targetid, false);
+            //if (targetid==client.Self.AgentID) SetInterest(sourceid, targetid, false);
         }
 
         private void AIML_OnPointAt(UUID sourceid, UUID targetid, Vector3d targetpos, PointAtType pointtype, float duration, UUID id)
         {
+            if (PointAtType.None == pointtype) return;
             if (sourceid == client.Self.AgentID) return;
             SetInterest(sourceid, targetid, true);
         }
 
         private void SetInterest(UUID sourceid, UUID targetid, bool forced)
         {
-            if (targetid == client.Self.AgentID) AttendTo(null, sourceid);
-            else AttendTo(null, targetid);
+            if (targetid == client.Self.AgentID) AttendTo(null, sourceid,PCode.Avatar);
+            else AttendTo(null, targetid,PCode.None);
             if (sourceid == UUID.Zero) return;
             if (targetid == UUID.Zero) return;
             if (targetid == sourceid) return;
@@ -325,7 +326,16 @@ namespace AIMLBotModule
                     fromname = GetSimObject(prim).GetName();
                 }
             }
-            AttendTo(fromname, id);
+            PCode pCode = PCode.None;
+            if (sourcetype == ChatSourceType.Agent)
+            {
+                pCode = PCode.Avatar;
+            }
+            if (sourcetype == ChatSourceType.Object)
+            {
+                pCode = PCode.Prim;
+            }
+            AttendTo(fromname, id, pCode);
             if (string.IsNullOrEmpty(fromname))
             {
                 fromname = "" + id;
@@ -374,11 +384,11 @@ namespace AIMLBotModule
                             })).Start();
         }
 
-        private void AttendTo(string fromname, UUID fromID)
+        private void AttendTo(string fromname, UUID fromID, PCode isAvatar)
         {
             if (!UseAttention) return;
             TimeSpan ts = new TimeSpan(DateTime.Now.Ticks - lastFollow.Ticks);
-            SimObject talker = WorldSystem.AsObject(fromname, fromID);
+            SimObject talker = WorldSystem.AsObject(fromname, fromID, isAvatar);
             if (ts.TotalSeconds < 30)
             {
                 if (talker == null) return;
@@ -412,7 +422,7 @@ namespace AIMLBotModule
                 WriteLine("X,Y " + dist + " Too far to " + talker);
                 return;
             }
-            else if (dist < MaxDistance)
+            else if (dist > MaxDistance)
             {
                 WriteLine("X,Y " + dist + " Too far to " + talker);
                 return;
@@ -490,9 +500,37 @@ namespace AIMLBotModule
 
         public Unifiable AIMLInterp(string input, User myUser)
         {
+            string removeName = RemoveNameFromString(input);
+            if (!string.IsNullOrEmpty(removeName))
+            {
+                if (!GetName().ToLower().Contains(removeName.ToLower())) return Unifiable.Empty;
+                input = input.Substring(removeName.Length);
+            }
+            input = input.Trim();
+            if (input.Length==0)
+            {
+                return Unifiable.Empty; 
+            }
             Request r = new Request(input, myUser, MyBot);
             Result res = MyBot.Chat(r);
             return res.Output;
+        }
+
+        private string RemoveNameFromString(string input)
+        {
+            int f = 0;
+            int indexOf = input.IndexOf(' ', 0);
+            if (indexOf == -1) return null;
+            indexOf = input.IndexOf(' ', indexOf);
+            if (indexOf == -1) indexOf = input.IndexOf(',', indexOf);
+            if (indexOf == -1) return null;
+            String removeName = input.Substring(0, indexOf); //get the name proposal
+            indexOf = removeName.IndexOf(' ', indexOf); // get first space
+            if (indexOf == -1) return null; // need at least one space
+            indexOf = removeName.IndexOf(' ', indexOf); //get second space
+            if (indexOf != -1) return null; // two spaces .. not a name
+            if (WorldSystem.GetUserID(removeName) != UUID.Zero) return removeName;
+            return null;
         }
 
         public override string GetModuleName()
