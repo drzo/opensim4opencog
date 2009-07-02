@@ -337,6 +337,7 @@ namespace OpenMetaverse
         }
         private void ConfirmOuterModifierIsLocking()
         {
+            return;
             System.Diagnostics.StackTrace st = new System.Diagnostics.StackTrace(2);
             System.Diagnostics.StackFrame sf = st.GetFrame(0);
             MethodBase mb = sf.GetMethod();

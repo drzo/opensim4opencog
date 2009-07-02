@@ -1101,10 +1101,15 @@ namespace OpenMetaverse.Messages.Linden
             public UUID GroupInsigniaID;
             public string GroupName;
             public GroupPowers GroupPowers;
-            public bool ListInProfile;
+        }
+
+        public class NewGroupData
+        {
+            public bool? ListInProfile;
         }
 
         public GroupData[] GroupDataBlock;
+        public NewGroupData[] NewGroupDataBlock;
 
         /// <summary>
         /// Serialize the object
@@ -1126,18 +1131,28 @@ namespace OpenMetaverse.Messages.Linden
 
             for (int i = 0; i < GroupDataBlock.Length; i++)
             {
-                OSDMap group = new OSDMap(7);
+                OSDMap group = new OSDMap(6);
                 group["AcceptNotices"] = OSD.FromBoolean(GroupDataBlock[i].AcceptNotices);
                 group["Contribution"] = OSD.FromInteger(GroupDataBlock[i].Contribution);
                 group["GroupID"] = OSD.FromUUID(GroupDataBlock[i].GroupID);
                 group["GroupInsigniaID"] = OSD.FromUUID(GroupDataBlock[i].GroupInsigniaID);
                 group["GroupName"] = OSD.FromString(GroupDataBlock[i].GroupName);
                 group["GroupPowers"] = OSD.FromLong((long)GroupDataBlock[i].GroupPowers);
-                group["ListInProfile"] = OSD.FromBoolean(GroupDataBlock[i].ListInProfile);
                 groupDataArray.Add(group);
             }
 
             map["GroupData"] = groupDataArray;
+
+            OSDArray newGroupDataArray = new OSDArray(NewGroupDataBlock.Length);
+
+            for (int i = 0; i < NewGroupDataBlock.Length; i++)
+            {
+                OSDMap group = new OSDMap(1);
+                group["ListInProfile"] = OSD.FromBoolean(NewGroupDataBlock[i].ListInProfile.Value);
+                newGroupDataArray.Add(group);
+            }
+
+            map["NewGroupData"] = newGroupDataArray;
 
             return map;
         }
@@ -1154,8 +1169,6 @@ namespace OpenMetaverse.Messages.Linden
 
             OSDArray groupArray = (OSDArray)map["GroupData"];
 
-            //OSDArray newGroupDataArray = (OSDArray)map["NewGroupData"];
-
             GroupDataBlock = new GroupData[groupArray.Count];
 
             for (int i = 0; i < groupArray.Count; i++)
@@ -1170,9 +1183,36 @@ namespace OpenMetaverse.Messages.Linden
                 groupData.GroupInsigniaID = groupMap["GroupInsigniaID"].AsUUID();
                 groupData.GroupName = groupMap["GroupName"].AsString();
                 groupData.GroupPowers = (GroupPowers)groupMap["GroupPowers"].AsLong();
-                groupData.ListInProfile = groupMap["ListInProfile"].AsBoolean();
                 groupData.AcceptNotices = groupMap["AcceptNotices"].AsBoolean();
                 GroupDataBlock[i] = groupData;
+            }
+
+            // If request for current groups came very close to login
+            // the Linden sim will return no NewGroupData block, but
+            // it will instead set all ListInProfile fields to false
+            if (map.ContainsKey("NewGroupData"))
+            {
+                OSDArray newGroupArray = (OSDArray)map["NewGroupData"];
+
+                NewGroupDataBlock = new NewGroupData[newGroupArray.Count];
+
+                for (int i = 0; i < newGroupArray.Count; i++)
+                {
+                    OSDMap newGroupMap = (OSDMap)newGroupArray[i];
+                    NewGroupData newGroupData = new NewGroupData();
+                    newGroupData.ListInProfile = newGroupMap["ListInProfile"].AsBoolean();
+                    NewGroupDataBlock[i] = newGroupData;
+                }
+            }
+            else
+            {
+                NewGroupDataBlock = new NewGroupData[GroupDataBlock.Length];
+                for (int i = 0; i < NewGroupDataBlock.Length; i++)
+                {
+                    NewGroupData newGroupData = new NewGroupData();
+                    newGroupData.ListInProfile = false;
+                    NewGroupDataBlock[i] = newGroupData;
+                }
             }
         }
     }
