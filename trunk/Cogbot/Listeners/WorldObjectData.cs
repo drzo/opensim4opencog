@@ -16,65 +16,6 @@ namespace cogbot.Listeners
         private static readonly Dictionary<SimObject, Vector3> primVect = new Dictionary<SimObject, Vector3>();
 
 
-        private static void TrackUpdates()
-        {
-            Thread.Sleep(30000);
-            int lastUpdateCount = 0;
-
-            while (true)
-            {
-                Thread.Sleep(10);
-                {
-                    int found = DequeueProperties();
-                    ThreadStart U;
-                    int queuedUpdatesCount = 0;
-                    int didUpdate = 0;
-                    lock (UpdateQueue)
-                    {
-                        queuedUpdatesCount = UpdateQueue.Count;
-                    }
-                    if (queuedUpdatesCount > 0)
-                    {
-                        //todo          Debug("Start Processing Updates: " + queuedUpdatesCount);
-
-                        while (queuedUpdatesCount > 0)
-                        {
-                            DequeueProperties();
-                            lock (UpdateQueue)
-                            {
-                                U = UpdateQueue.First.Value;
-                                UpdateQueue.RemoveFirst();
-                                queuedUpdatesCount = UpdateQueue.Count;
-                            }
-                            U();
-                            didUpdate++;
-                        }
-                        //todo      Debug("Done processing Updates: " + didUpdate);
-                    }
-                    if (didUpdate == 0 && DoSimulatorsCatchUp)
-                    {
-                        int beforeCatchUp = SimObjects.Count;
-                        // lock (AllSimulators)
-                        foreach (Simulator S in AllSimulators)
-                        {
-                            GridMaster.CatchUp(S);
-                        }
-                        int thisCount = SimObjects.Count;
-                        if (beforeCatchUp != thisCount)
-                        {
-                            Debug("Simulator catchup found: " + beforeCatchUp + " -> " + thisCount);
-                            Thread.Sleep(100);
-                        }
-                    }
-                    if (didUpdate + found == 0)
-                    {
-                        Thread.Sleep(100);
-                        continue;
-                    }
-                }
-            }
-        }
-
         public void Objects_OnPrimitiveProperties(Simulator simulator, Primitive prim, Primitive.ObjectProperties props)
         {
             if (ScriptHolder == null && prim.ParentID != 0 && prim.ParentID == client.Self.LocalID)

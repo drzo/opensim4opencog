@@ -252,8 +252,10 @@ namespace cogbot.TheOpenSims
                 {
                     for (int i = 0; i < 3; i++)
                     {
+                        if (Target.IsRegionAttached())
                        // TheBot.TurnToward(Target);
                         TheBot.SetMoveTarget(Target, maxDistance);
+                        else Console.WriteLine(""+this+" Not regions attached " + Target);
                         Thread.Sleep(2000);
                         TheBot.StopMoving();
                     }

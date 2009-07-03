@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
 using cogbot.Listeners;
+using cogbot.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Mesher;
 using PathSystem3D.Navigation;
@@ -525,6 +526,10 @@ namespace cogbot.TheOpenSims
         {
             get
             {
+                if (_Prim0 == null)
+                {
+                    return null;
+                }
                 if (_Prim0.RegionHandle != RegionHandle)
                 {
                     if (RegionHandle != 0)
@@ -964,6 +969,7 @@ namespace cogbot.TheOpenSims
                     Primitive pp = null;
                     if (_Parent != null)
                     {
+                        //if (_Parent._Prim0!=null)
                         pp = _Parent.Prim;
                     }
                     else
@@ -1189,47 +1195,11 @@ namespace cogbot.TheOpenSims
                 uint theLPrimParentID = Prim.ParentID;
                 WorldObjects.RequestObject(simu, theLPrimParentID);
                 WorldObjects.EnsureSelected(theLPrimParentID, simu);
-                lock (TaskParent)
-                {
-                    TaskParent.AddFirst(() => TaskGetParent(theLPrimParentID, simu));
-                    if (TaskParentThreads == null)
-                    {
-                        TaskParentThreads = new Thread(() =>
-                        {
-                            while (true)
-                            {
-                                ThreadStart Next = null;
-                                int count = 0;
-                                lock (TaskParent)
-                                {
-                                    count = TaskParent.Count;
-                                    if (count > 0)
-                                    {
-                                        Next = TaskParent.First.Value;
-                                        TaskParent.RemoveFirst();
-                                    }
-                                }
-                                if (count == 0)
-                                {
-                                    Thread.Sleep(400);
-                                    continue;
-                                }
-                                if (Next != null) Next();
-                                if (count == 1)
-                                {
-                                    Thread.Sleep(400);
-                                    continue;
-                                }
-                            }
-                        });
-                        TaskParentThreads.Start();
-                    }
-                }
-
+                ParentGrabber.AddFirst(() => TaskGetParent(theLPrimParentID, simu));
             }
         }
-        static readonly LinkedList<ThreadStart> TaskParent = new LinkedList<ThreadStart>();
-        private static Thread TaskParentThreads;
+
+        private static readonly TaskQueueHandler ParentGrabber = new TaskQueueHandler("ParentGrabber", 0);
 
         private void TaskGetParent(uint theLPrimParentID, Simulator simu)
         {
@@ -1242,7 +1212,7 @@ namespace cogbot.TheOpenSims
             }
             else
             {
-                lock (TaskParent) TaskParent.AddLast(() => TaskGetParent(theLPrimParentID, simu));
+                ParentGrabber.AddLast(() => TaskGetParent(theLPrimParentID, simu));
             }
         }
 

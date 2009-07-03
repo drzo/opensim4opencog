@@ -73,7 +73,6 @@ namespace cogbot.Listeners
 
         public override void Self_OnInstantMessage(InstantMessage im, Simulator simulator)
         {
-
             if (im.FromAgentID != UUID.Zero)
             {
                 AddName2Key(im.FromAgentName, im.FromAgentID);
@@ -140,13 +139,13 @@ namespace cogbot.Listeners
 
         public override void Groups_OnCurrentGroups(Dictionary<UUID, Group> groups)
         {
-            base.Groups_OnCurrentGroups(groups);
             foreach (UUID key in groups.Keys)
             {
                 Group g = groups[key];
                 AddName2Key(g.Name, key);
                 RegisterUUID(key, g);
             }
+            base.Groups_OnCurrentGroups(groups);
             //OnEvent("On-Current-Groups", paramNamesOnCurrentGroups, paramTypesOnCurrentGroups, groups);
         }
 

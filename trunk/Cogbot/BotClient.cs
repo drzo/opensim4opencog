@@ -571,6 +571,7 @@ namespace cogbot
 
         void client_OnLogMessage(object message, Helpers.LogLevel level)
         {
+            if (!WorldSystem.IsGridMaster) return;
             string msg = "" + level + " " + message;
 
             if (msg.Contains("esend")) return;
