@@ -488,6 +488,11 @@ namespace OpenMetaverse
                     Simulator S = firstSim[handle];
                     sim.ObjectsAvatars.Dictionary = S.ObjectsAvatars.Dictionary;
                     sim.ObjectsPrimitives.Dictionary = S.ObjectsPrimitives.Dictionary;
+                    sim.ParcelMap = S.ParcelMap;
+                    sim.AvatarPositions.Dictionary = S.AvatarPositions.Dictionary;
+                    sim.Name = S.Name;
+                    sim.Parcels.Dictionary = S.Parcels.Dictionary;
+                    sim.WaterHeight = S.WaterHeight;
                 }
                 dict.Add(handle,sim);
             } else
