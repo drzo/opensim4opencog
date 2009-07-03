@@ -300,7 +300,7 @@ namespace RTParser
 
         public override string AsString()
         {
-            return str;
+            return str.Trim();
         }
 
         public override Unifiable ToCaseInsenitive()
@@ -401,11 +401,11 @@ namespace RTParser
         {
             if (p==null) return;
             if (str == "")
-                str = p.AsString();
+                str = p.AsString().Trim();
             else
             {
                 str += " ";
-                str += p.AsString();
+                str += p.AsString().Trim();
             }
         }
 
