@@ -747,7 +747,7 @@ namespace RTParser
                 }
 
                 //todo pick and chose the queries
-                Console.WriteLine("Found " + result.SubQueries.Count + " queries");
+                if (result.SubQueries.Count != 1) Console.WriteLine("Found " + result.SubQueries.Count + " queries");
 
                 // process the templates into appropriate output
                 foreach (SubQuery query in result.SubQueries)
