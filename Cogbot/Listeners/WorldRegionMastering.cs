@@ -272,7 +272,15 @@ namespace cogbot.Listeners
             {
                 foreach (var simulator in _AllSimulators)
                 {
-                    if (simulator.Client!=client.gridClient) continue;
+                    if (simulator.Client!=client.gridClient)
+                    {
+                        if (GridMaster==this && simulator.Connected)
+                        {
+                            GridMaster = BotClientFor(simulator.Client).WorldSystem;
+                            Debug("Changed GridMaster to " + GridMaster);
+                        }
+                        continue;
+                    }
                     _AllSimulators.Remove(simulator);
                     SimRegion.GetRegion(simulator).RemoveSim(simulator);
                     LeaveSimulator(simulator);

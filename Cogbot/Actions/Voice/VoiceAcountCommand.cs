@@ -7,7 +7,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class VoiceAccountCommand : Command
+    public class VoiceAccountCommand : Command, RegionMasterCommand
     {
         private AutoResetEvent ProvisionEvent = new AutoResetEvent(false);
         private string VoiceAccount = null;

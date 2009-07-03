@@ -8,6 +8,7 @@ using OpenMetaverse.Assets;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 using PathSystem3D.Navigation;
+using cogbot.Utilities;
 
 namespace cogbot.Listeners
 {
@@ -38,10 +39,11 @@ namespace cogbot.Listeners
         private static readonly Dictionary<ulong, List<uint>> primsSelected = new Dictionary<ulong, List<uint>>();
         private static readonly Dictionary<ulong, List<uint>> primsSelectedOutbox = new Dictionary<ulong, List<uint>>();
 
-        private static readonly LinkedList<ThreadStart> PropertyQueue = new LinkedList<ThreadStart>();
+        private static readonly TaskQueueHandler PropertyQueue = new TaskQueueHandler("PropertyQueue", 0);
         private static readonly object SelectObjectsTimerLock = new object();
         private static readonly List<ThreadStart> ShutdownHooks = new List<ThreadStart>();
-        private static readonly LinkedList<ThreadStart> UpdateQueue = new LinkedList<ThreadStart>();
+        private static readonly TaskQueueHandler UpdateQueue = new TaskQueueHandler("UpdateQueue", 0);
+        private static readonly TaskQueueHandler CatchUpQueue = new TaskQueueHandler("Simulator catchup",30000);
         private static readonly Dictionary<UUID, object> uuidTypeObject = new Dictionary<UUID, object>();
         private static readonly object WorldObjectsMasterLock = new object();
 
@@ -49,9 +51,6 @@ namespace cogbot.Listeners
 
         public static readonly ListAsSet<SimAvatar> SimAvatars = new ListAsSet<SimAvatar>();
         public static readonly ListAsSet<SimObject> SimObjects = new ListAsSet<SimObject>();
-
-        private static Thread TrackUpdateLagThread;
-        private static Thread TrackUpdatesThread;
 
         private static Timer EnsureSelectedTimer;
         private static bool inTimer = false;
@@ -109,7 +108,14 @@ namespace cogbot.Listeners
             {
                 if (GridMaster == null)
                 {
-                    GridMaster = this;
+                    GridMaster = this; 
+                    if (DoSimulatorsCatchUp)
+                    {
+                        CatchUpQueue.AddFirst(()=>
+                                                  {
+                                                      DoCatchup();
+                                                  });
+                    }
                 }
                 else
                 {
@@ -171,21 +177,6 @@ namespace cogbot.Listeners
                         //BotWorld = this;
                         SimTypeSystem.LoadDefaultTypes();
                     }
-                    if (TrackUpdatesThread == null)
-                    {
-                        TrackUpdatesThread = new Thread(TrackUpdates) { Name = "Track Updates/Properties" };
-                        //TrackPathsThread.Priority = ThreadPriority.Lowest;
-                        TrackUpdatesThread.Start();
-                    }
-                    if (TrackUpdateLagThread == null)
-                    {
-                        TrackUpdateLagThread = new Thread(Lagometer)
-                                                   {
-                                                       Name = "Lagometer thread",
-                                                       Priority = ThreadPriority.Lowest
-                                                   };
-                        TrackUpdateLagThread.Start();
-                    }
                     EnsureSelectedTimer = new Timer(ReallyEnsureSelected_Thread, null, 1000, 1000);
                     _SimPaths = new WorldPathSystem(this);
                     _simAssetSystem = new SimAssetStore(client);
@@ -193,6 +184,15 @@ namespace cogbot.Listeners
                 //SetWorldMaster(false);
                 //RegisterAll();
             }
+        }
+
+        private void DoCatchup()
+        {
+            foreach (Simulator S in AllSimulators)
+            {
+                GridMaster.CatchUp(S);
+            }
+            CatchUpQueue.AddLast(()=>DoCatchup());
         }
 
         public SimActor TheSimAvatar
@@ -244,52 +244,9 @@ namespace cogbot.Listeners
             //base.Self_OnCameraConstraint(collidePlane);
         }
 
-
-        private static void Lagometer()
-        {
-            while (true)
-            {
-                int tick = Environment.TickCount;
-                lock (UpdateQueue)
-                {
-                    UpdateQueue.AddLast(() => Console.WriteLine("\nUpdate lag {0}ms", (Environment.TickCount - tick)));
-                }
-                Thread.Sleep(30000);
-            }
-        }
-
         public void SetSimAvatar(SimActor simAvatar)
         {
             m_TheSimAvatar = simAvatar;
-        }
-
-        private static int DequeueProperties()
-        {
-            int didProps = 0;
-            ThreadStart P;
-            int Properties = 0;
-            lock (PropertyQueue)
-            {
-                Properties = PropertyQueue.Count;
-            }
-            if (Properties > 0)
-            {
-                //todo   Debug("Start Processing Properties: " + Properties);
-
-                while (Properties > 0)
-                {
-                    lock (PropertyQueue)
-                    {
-                        P = PropertyQueue.First.Value;
-                        PropertyQueue.RemoveFirst();
-                        Properties = PropertyQueue.Count;
-                    }
-                    P();
-                    didProps++;
-                }
-                //todo Debug("Done processing Properties: " + didProps);
-            }
-            return didProps;
         }
 
         private static void Debug(string p)

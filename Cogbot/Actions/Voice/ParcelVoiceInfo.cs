@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class ParcelVoiceInfoCommand : Command
+    public class ParcelVoiceInfoCommand : Command, RegionMasterCommand
     {
         private AutoResetEvent ParcelVoiceInfoEvent = new AutoResetEvent(false);
         private string VoiceRegionName = null;
