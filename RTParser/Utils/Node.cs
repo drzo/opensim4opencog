@@ -67,7 +67,8 @@ namespace RTParser.Utils
         {
             if (template == null)
             {
-                throw new XmlException("The category with a pattern: " + path + " found in file: " + filename + " has an empty template tag. ABORTING");
+                throw new XmlException("The category with a pattern: " + path + " found in file: " + filename +
+                                       " has an empty template tag. ABORTING");
             }
 
             // check we're not at the leaf node
@@ -111,7 +112,7 @@ namespace RTParser.Utils
             // split the input into its component words
             //Unifiable[] words0 = path./*Trim().*/Split();//" ".ToCharArray());
 
-            Unifiable firstRaw = path.First();// words0[0];
+            Unifiable firstRaw = path.First(); // words0[0];
             string w = firstRaw.AsString();
 
             if (w.Contains("COMEHERE"))
@@ -132,18 +133,24 @@ namespace RTParser.Utils
 
             // concatenate the rest of the sentence into a suffix (to act as the
             // path argument in the child nodemapper)
-            Unifiable newPath = path.Rest();// Unifiable.Join(" ", words0, 1, words0.Length - 1);
+            Unifiable newPath = path.Rest(); // Unifiable.Join(" ", words0, 1, words0.Length - 1);
             // path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length).Trim();
 
             // o.k. check we don't already have a child with the key from this sentence
             // if we do then pass the handling of this sentence down the branch to the 
-            // child nodemapper otherwise the child nodemapper doesn't yet exist, so create a new one
-            if (this.children.ContainsKey(firstWord))
+            // child nodemapper otherwise the child nodemapper doesn't yet exist, so create a new one  \
+            bool found = false;
+            foreach (var c in this.children)
             {
-                Node childNode = this.children[firstWord];
-                childNode.addCategoryTag(newPath, template, guard, filename);
+                if (c.Key.AsString() == firstWord.AsString())
+                {
+                    Node childNode = c.Value;
+                    childNode.addCategoryTag(newPath, template, guard, filename);
+                    found = true;
+                    break;
+                }
             }
-            else
+            if (!found)
             {
                 Node childNode = new Node(this);
                 childNode.word = firstWord;
@@ -240,11 +247,12 @@ namespace RTParser.Utils
 
             // first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
-            foreach (Unifiable childNodeWord in this.children.Keys)
+            foreach (KeyValuePair<Unifiable, Node> childNodeKV in this.children)
             {
+                Unifiable childNodeWord = childNodeKV.Key;
                 if (!childNodeWord.IsShortWildCard()) continue;
                 if (childNodeWord.Unify(first, query)>0) continue;
-                Node childNode = this.children[childNodeWord];
+                Node childNode = childNodeKV.Value;
                 // add the next word to the wildcard match 
                 Unifiable newWildcard = Unifiable.CreateAppendable();
                 this.storeWildCard(first, newWildcard);
@@ -269,9 +277,9 @@ namespace RTParser.Utils
             // second option - the nodemapper may have contained a "_" child, but led to no match
             // or it didn't contain a "_" child at all. So get the child nodemapper from this 
             // nodemapper that matches the first word of the input sentence.
-            foreach (Unifiable childNodeWord in this.children.Keys)
+            foreach (var childNodeKV in this.children)
             {
-                Node childNode = this.children[childNodeWord];
+                Node childNode = childNodeKV.Value;
                 if (childNode.word.IsWildCard()) continue;
                 if (childNode.word.Unify(firstWord, query) > 0) continue;
                 // process the matchstate - this might not make sense but the matchstate is working
@@ -301,11 +309,12 @@ namespace RTParser.Utils
             // third option - the input part of the path might have been matched so far but hasn't
             // returned a match, so check to see it contains the "*" wildcard. "*" comes last in
             // precedence in the AIML alphabet.
-            foreach (Unifiable childNodeWord in this.children.Keys)
+            foreach (var childNodeKV in this.children)
             {
+                Unifiable childNodeWord = childNodeKV.Key;
                 int matchLen = 0;
                 if (!childNodeWord.IsLongWildCard()) continue;
-                Node childNode = this.children[childNodeWord];
+                Node childNode = childNodeKV.Value;
                 // o.k. look for the path in the child node denoted by "*"
                 //Node childNode = (Node)this.children["*"];
                 List<Template> result = null;
