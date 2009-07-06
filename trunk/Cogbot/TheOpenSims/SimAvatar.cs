@@ -247,23 +247,15 @@ namespace cogbot.TheOpenSims
                                                               catch (Exception e)
                                                               {
                                                                   Debug("InvokeReal: " + e);
-                                                                  throw e;
+                                                                //  throw e;
                                                               }
                                                               finally
                                                               {
-                                                                  if (false)
                                                                       lock (actionLock)
                                                                       {
                                                                           if (_currentAction == value)
                                                                           {
-                                                                              try
-                                                                              {
-                                                                                  _currentAction.Abort();
-
-                                                                              }
-                                                                              catch (Exception)
-                                                                              {
-                                                                              }
+                                                                              LastAction = value;
                                                                               _currentAction = null;
                                                                           }
                                                                       }
@@ -698,8 +690,22 @@ namespace cogbot.TheOpenSims
 
         public void ExecuteLisp(SimObjectUsage botObjectAction, Object lisp)
         {
+            if (lisp==null) return;
+            if (lisp is SimTypeUsage)
+            {
+                SimTypeUsage u = (SimTypeUsage) lisp;
+                if (u.LispScript!=null)
+                {
+                    ExecuteLisp(botObjectAction, u.LispScript);
+                }
+                foreach (SimObjectType ot in botObjectAction.Target.ObjectType.SuperType)
+                {
+                    
+                }
+                return;
+            }
+
             BotClient Client = GetGridClient();
-            if (lisp != null)
             {
                 Client.Intern("TheBot", this);
                 Client.Intern("TheTarget", botObjectAction.Target);

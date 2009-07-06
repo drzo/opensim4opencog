@@ -1074,6 +1074,11 @@ namespace cogbot
                 {
                     initTaskInterperter();
                 }
+                if (lispCode is String)
+                {
+                    StringReader stringCodeReader = new StringReader(lispCode.ToString());
+                    lispCode = lispTaskInterperter.Read("evalLispString", stringCodeReader);       
+                }
                 WriteLine("Eval> " + lispCode);
                 if (lispTaskInterperter.Eof(lispCode))
                     return lispCode.ToString();
@@ -1363,7 +1368,7 @@ namespace cogbot
             Self.Chat(str, 0, ChatType.Normal);
         }
 
-        internal void Intern(string n, object v)
+        public void Intern(string n, object v)
         {
             if (lispTaskInterperter == null)
             {
@@ -1372,6 +1377,15 @@ namespace cogbot
             lispTaskInterperter.Intern(n, v);
         }
 
+
+        public void InternType(Type t)
+        {
+            if (lispTaskInterperter == null)
+            {
+                initTaskInterperter();
+            }
+            lispTaskInterperter.InternType(t);
+        }
 
         private void RegisterListener(Listener listener)
         {

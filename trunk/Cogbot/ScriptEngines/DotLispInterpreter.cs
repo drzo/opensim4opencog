@@ -23,6 +23,11 @@ namespace cogbot.ScriptEngines
             return o;
         }
 
+        public override void InternType(Type t)
+        {
+            dotLispInterpreter.InternType(t);
+        }
+
         public DotLispInterpreter()
         {
             dotLispInterpreter = new DotLisp.Interpreter();

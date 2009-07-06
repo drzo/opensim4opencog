@@ -50,6 +50,13 @@ namespace AIMLBotModule
         /// </summary>
         public static double MaxZDistance = 1;
 
+        /// <summary>
+        /// REgister the Lisp Version of TalkToObject
+        /// </summary>
+        public static bool RegisterTalkToCmd = true;
+        readonly static object RegisterTalkToCmdLock = new object();
+
+
         object BotExecHandler(string cmd, User user)
         {
             User prev = MyUser;
@@ -84,11 +91,41 @@ namespace AIMLBotModule
             }
         }
 
+        static public void TalkToObject(SimActor av, SimObject obj)
+        {
+            try
+            {
+                ((WorldObjectsForAimLBot)av["AIMLBotModule"]).TalkToObject0(av, obj);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("" + e);
+            }
+        }
+        private void TalkToObject0(SimActor av, SimObject obj)
+        {
+            string objName = obj.GetName();
+            StringChat(String.Format("{0}, {1}", objName, AIMLInterp("RANDOM PICKUP LINE", GetMyUser(objName))));
+        }
+
         public RTPBot MyBot;
         public User MyUser;
- 
+
         public override void StartupListener()
         {
+            lock (RegisterTalkToCmdLock)
+            {
+                if (RegisterTalkToCmd)
+                {
+                    RegisterTalkToCmd = false;
+                    SimTypeUsage u = SimTypeSystem.CreateTypeUsage("TalkToObject");
+                    u.SpecifiedProperties.Add("LispScript");
+                    u.LispScript = "(AIMLBotModule:WorldObjectsForAimLBot:TalkToObject TheBot TheTarget)";
+                    u = SimTypeSystem.CreateTypeUsage("KissTheObject");
+                    u.SpecifiedProperties.Add("LispScript");
+                    u.LispScript = "(AIMLBotModule:WorldObjectsForAimLBot:TalkToObject TheBot TheTarget)";
+                }
+            }
             try
             {
                 MyBot = new RTPBot();
@@ -150,15 +187,15 @@ namespace AIMLBotModule
 
         private void SetInterest(UUID sourceid, UUID targetid, bool forced)
         {
-            if (targetid == client.Self.AgentID) AttendTo(null, sourceid,PCode.Avatar);
-            else AttendTo(null, targetid,PCode.None);
+            if (targetid == client.Self.AgentID) AttendTo(null, sourceid, PCode.Avatar);
+            else AttendTo(null, targetid, PCode.None);
             if (sourceid == UUID.Zero) return;
             if (targetid == UUID.Zero) return;
             if (targetid == sourceid) return;
             SimObject source = WorldObjects.GetSimObjectFromUUID(sourceid);
             if (source == null) return;
             SimObject target = WorldObjects.GetSimObjectFromUUID(targetid);
-            if (target == null) return;            
+            if (target == null) return;
             string name = source.GetName();
             if (string.IsNullOrEmpty(name)) return;
             User user = GetMyUser(name);
@@ -178,16 +215,19 @@ namespace AIMLBotModule
         {
             if (login == LoginStatus.Success)
             {
-                MyBot.GlobalSettings.addSetting("name",                                                
+                MyBot.GlobalSettings.addSetting("name",
                     String.Format("{0} {1}", client.BotLoginParams.FirstName, client.BotLoginParams.LastName));
                 MyBot.GlobalSettings.addSetting("firstname", client.BotLoginParams.FirstName);
                 MyBot.GlobalSettings.addSetting("lastname", client.BotLoginParams.LastName);
+                client.WorldSystem.TheSimAvatar["AIMLBotModule"] = this;
+                client.WorldSystem.TheSimAvatar["MyBot"] = MyBot;
+                client.InternType(this.GetType());
             }
         }
 
         public void SetChatOnOff(string username, bool value)
         {
-                MyBot.SetChatOnOff(username,value);
+            MyBot.SetChatOnOff(username, value);
         }
 
         private User GetMyUser(string fromname)
@@ -206,18 +246,18 @@ namespace AIMLBotModule
         public void AIML_OnInstantMessage(InstantMessage im, Simulator simulator)
         {
             if (im.FromAgentName == GetName()) return;
-            if (im.FromAgentName == "System" || im.FromAgentName=="Second Life") return;
+            if (im.FromAgentName == "System" || im.FromAgentName == "Second Life") return;
             User myUser = GetMyUser(im.FromAgentName);
             myUser.Predicates.addSetting("host", im.FromAgentID.ToString());
-           // myUser.Predicates.addObjectFields(im);
-            
+            // myUser.Predicates.addObjectFields(im);
+
             bool UseThrottle = im.GroupIM;
             string groupName = null;
             if (im.Dialog == InstantMessageDialog.StartTyping || im.Dialog == InstantMessageDialog.StopTyping)
             {
                 return;
             }
-            UUID groupID=UUID.Zero;
+            UUID groupID = UUID.Zero;
             if (im.GroupIM)
             {
                 Group group;
@@ -230,7 +270,7 @@ namespace AIMLBotModule
                                                                  }
                                                              });
 
-                WriteLine("Group IM {0}",groupName);
+                WriteLine("Group IM {0}", groupName);
                 if (!myUser.RespondToChat && !RespondToChatByDefaultAllUsers) return;
             }
 
@@ -317,11 +357,12 @@ namespace AIMLBotModule
         {
 
             if (String.IsNullOrEmpty(message) || message.Length < 2) return;
+            if (sourcetype == ChatSourceType.System) return;
             if (fromname == GetName()) return;
             if (string.IsNullOrEmpty(fromname))
             {
                 Primitive prim = WorldSystem.GetPrimitive(id, null);
-                if (prim!=null)
+                if (prim != null)
                 {
                     fromname = GetSimObject(prim).GetName();
                 }
@@ -372,16 +413,25 @@ namespace AIMLBotModule
                                     WriteLine("AIML_OnChat Reply is quietly: " + resp);
                                     return;
                                 }
-                                foreach (string ting in resp.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries))
-                                {
-                                    string sting = ting.Trim();
-                                    if (UseRealism)
-                                        Chat(client, sting, type, 6);
-                                    else client.Self.Chat(sting, 0, type);
-                                    UseRealism = false;
-                                }
+                                StringChat(resp, type);
                                 myUser.LastResponseGivenTime = Environment.TickCount;
                             })).Start();
+        }
+
+        public void StringChat(string resp)
+        {
+            StringChat(resp, ChatType.Normal);
+        }
+        private void StringChat(string resp, ChatType type)
+        {
+            foreach (string ting in resp.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string sting = ting.Trim();
+                if (UseRealism)
+                    Chat(client, sting, type, 6);
+                else client.Self.Chat(sting, 0, type);
+                UseRealism = false;
+            }
         }
 
         private bool MessageTurnsOnChat(string message)
@@ -413,7 +463,7 @@ namespace AIMLBotModule
             }
             if (talker == null)
             {
-               // WriteLine("cannot follow NULL");
+                // WriteLine("cannot follow NULL");
                 return;
             }
             if (!talker.IsRegionAttached())
@@ -523,9 +573,9 @@ namespace AIMLBotModule
                 input = input.Substring(removeName.Length);
             }
             input = input.Trim();
-            if (input.Length==0)
+            if (input.Length == 0)
             {
-                return Unifiable.Empty; 
+                return Unifiable.Empty;
             }
             Request r = new Request(input, myUser, MyBot);
             Result res = MyBot.Chat(r);
