@@ -1485,6 +1485,18 @@ namespace PathSystem3D.Navigation
             set { _AddedCount = value; }
         }
 
+        private CollisionIndex[,] _MeshIndex;
+
+        public CollisionIndex[,] MeshIndex
+        {
+            get
+            {
+                if (_MeshIndex == null)
+                    _MeshIndex = new CollisionIndex[MAPSPACE, MAPSPACE];
+                return _MeshIndex;
+            }
+        }
+
         public override string ToString()
         {
             return String.Format("{0}: {1}", GetType().Name,RegionName);// +" Level=" + SimZAverage;
@@ -1559,8 +1571,6 @@ namespace PathSystem3D.Navigation
         {
             return GetCollisionPlane(Z).ByteMatrix;
         }
-
-        public CollisionIndex[,] MeshIndex;
 
         //readonly string RegionName;
         //readonly byte[,] paths = PathFinding.PathFinderDemo.Instance
@@ -1845,7 +1855,6 @@ namespace PathSystem3D.Navigation
             StepSize = 1f/POINTS_PER_METER;
             _Max256 = XY256 - StepSize;
             MAPSPACE = (int) XY256*((int) POINTS_PER_METER);
-            SetMapSpace(MAPSPACE);
             if (Size.X != Size.Y) throw new Exception("X and Y must be the same for " + this);
 #if COLLIDER_ODE            
             odeScene = (OdeScene) odePhysics.GetScene(RegionName);
@@ -1859,13 +1868,6 @@ namespace PathSystem3D.Navigation
 #endif
             //CreateDefaultRoutes();
             //  CurrentPlane = new CollisionPlane(MAPSPACE,MAPSPACE,0);
-        }
-
-
-        internal void SetMapSpace(int MAPSPACE)
-        {
-            if (MeshIndex == null)
-                MeshIndex = new CollisionIndex[MAPSPACE, MAPSPACE];
         }
 
         //private float RangeCheckX(float PtY)
@@ -2231,6 +2233,7 @@ namespace PathSystem3D.Navigation
 
         public void TaintMatrix()
         {
+            CollisionIndex[,] MeshIndex = this.MeshIndex;
             //lock (mWaypoints)
             for (int x = 0; x < MAPSPACE; x++)
             {
