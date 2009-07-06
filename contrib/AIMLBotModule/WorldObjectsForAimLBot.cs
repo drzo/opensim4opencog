@@ -36,7 +36,7 @@ namespace AIMLBotModule
         /// <summary>
         /// Move towards interesting objects
         /// </summary>
-        public static bool UseAttention = true;
+        public static bool UseAttention = false;
         /// <summary>
         /// Max Distance for attention objects
         /// </summary>
@@ -342,7 +342,7 @@ namespace AIMLBotModule
             }
             User myUser = GetMyUser(fromname);
             // todo hard coded to be changed
-            if (!myUser.RespondToChat && (message.Contains("chat on") || client.Self.Name.Contains(message)))
+            if (!myUser.RespondToChat && MessageTurnsOnChat(message))
             {
                 myUser.RespondToChat = true;
                 return;
@@ -382,6 +382,22 @@ namespace AIMLBotModule
                                 }
                                 myUser.LastResponseGivenTime = Environment.TickCount;
                             })).Start();
+        }
+
+        private bool MessageTurnsOnChat(string message)
+        {
+            message = message.ToLower();
+            if (message.Contains("chat on")) return true;
+            string n = client.Self.Name;
+            if (string.IsNullOrEmpty(n)) return false;
+            n = n.ToLower().Trim();
+            if (n == "") return false;
+            if (message.Contains(n)) return true;
+            foreach (var c in n.Split(' '))
+            {
+                if (message.Contains(c)) return true;
+            }
+            return false;
         }
 
         private void AttendTo(string fromname, UUID fromID, PCode isAvatar)
