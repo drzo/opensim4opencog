@@ -322,9 +322,13 @@ namespace cogbot.TheOpenSims
                     }
                 }
                 _Prim0 = prim;
+                if (needUpdate)
+                {
+                    UpdateProperties(prim.Properties);
+                }
                 ResetRegion(prim.RegionHandle);
             }
-            ResetRegion(sim.Handle);
+            if (sim!=null) ResetRegion(sim.Handle);
         }
 
         public virtual void ResetRegion(ulong regionHandle)
@@ -548,7 +552,7 @@ namespace cogbot.TheOpenSims
         //    get { return base.Prim; }
         //    set { Prim = value; }
         //}
-        public SimObjectType ObjectType { get; private set; }
+        public SimObjectType ObjectType { get; set; }
         public WorldObjects WorldSystem;
         private bool MadeNonPhysical = false;
         private bool MadePhantom = false;
@@ -636,7 +640,7 @@ namespace cogbot.TheOpenSims
 
                 UpdateProperties(prim.Properties);
 
-                if (WorldObjects.MaintainCollisions && prim.Sculpt != null)
+                if (WorldObjects.MaintainSimCollisions(prim.RegionHandle) && prim.Sculpt != null)
                 {
                     WorldSystem.StartTextureDownload(prim.Sculpt.SculptTexture);
                 }
@@ -829,7 +833,10 @@ namespace cogbot.TheOpenSims
 
         public virtual void UpdateObject(ObjectUpdate objectUpdate, ObjectUpdate objectUpdateDiff)
         {
-            UpdateProperties(Properties);
+            if (needUpdate)
+            {
+                UpdateProperties(Properties);
+            }
             UpdateOccupied();
             _TOSRTING = null;
         }
@@ -1124,6 +1131,7 @@ namespace cogbot.TheOpenSims
         protected Vector3 LastKnownPos;
         public virtual Vector3 GetSimPosition()
         {
+            if (_Prim0 == null) return LastKnownPos;
             Primitive thisPrim = Prim;
             Vector3 thisPos = thisPrim.Position;
             //if (!IsRegionAttached()) return Prim.Position; 
@@ -1152,7 +1160,7 @@ namespace cogbot.TheOpenSims
                 Debug("-------------------------" + this + " shouldnt be at " + thisPos);
                 //   WorldSystem.DeletePrim(thePrim);
             }
-            return thisPos;
+            return LastKnownPos = thisPos;
         }
 
         protected Primitive GetParentPrim(Primitive thisPrim)
@@ -1212,7 +1220,7 @@ namespace cogbot.TheOpenSims
             }
             else
             {
-                ParentGrabber.AddLast(() => TaskGetParent(theLPrimParentID, simu));
+                ParentGrabber.Enqueue(() => TaskGetParent(theLPrimParentID, simu));
             }
         }
 
@@ -1465,6 +1473,7 @@ namespace cogbot.TheOpenSims
                 }
 
             }
+            if (_Prim0 == null) return 1;
             return Prim.Scale.X * Prim.Scale.Y;
         }
 

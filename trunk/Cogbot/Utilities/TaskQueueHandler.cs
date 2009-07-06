@@ -11,11 +11,12 @@ namespace cogbot.Utilities
         readonly private string Name;
         static private readonly TimeSpan PING_TIME = new TimeSpan(0,0,0,30); //30 seconds
         private ulong processed = 0;
-        ulong sequence = 0;
+        ulong sequence = 1;
         private ulong GoodPings = 0;
         private bool Busy;
         private ulong LastBusy = 0;
         readonly int WAIT_AFTER;
+        AutoResetEvent WaitingOn = new AutoResetEvent(false);
         readonly LinkedList<ThreadStart> EventQueue = new LinkedList<ThreadStart>();
         public TaskQueueHandler(string str, int msWaitBetween)
         {
@@ -28,12 +29,15 @@ namespace cogbot.Utilities
         }
 
         readonly ThreadStart NOTHING = default(ThreadStart);
+        private DateTime BusyStart;
 
         void EventQueue_Handler()
         {
             while (true)
             {
-                ThreadStart evt = NOTHING;
+                Busy = false;
+
+                ThreadStart evt;
                 // int eventQueueCountLast = 0;
                 int eventQueueCount;
                 lock (EventQueue)
@@ -53,9 +57,10 @@ namespace cogbot.Utilities
                 if (evt != null && evt != NOTHING)
                 {
                     Busy = true;
+                    BusyStart = DateTime.UtcNow;
                     sequence++;
                     try
-                    {                                                
+                    {
                         evt();
                         processed++;
                         Busy = false;
@@ -69,7 +74,15 @@ namespace cogbot.Utilities
                 }
                 else
                 {
-                    Thread.Sleep(200);
+                    lock (EventQueue)
+                    {
+                        if (EventQueue.Count > 0)
+                        {
+                            continue;
+                        }
+                        WaitingOn.Reset();
+                    }
+                    WaitingOn.WaitOne();
                 }
                 Busy = false;
             }
@@ -84,12 +97,15 @@ namespace cogbot.Utilities
                 {
                     if (LastBusy == sequence)
                     {
-                        Console.WriteLine("Task Longer than " + PING_TIME.TotalSeconds + " secs");
+                        TimeSpan t = DateTime.UtcNow - BusyStart;
+                        Console.WriteLine("\n[TASK {0}] TOOK LONGER THAN {1} secs = {2} in Queue={3}",
+                                          Name, PING_TIME.TotalSeconds, t.TotalSeconds, EventQueue.Count);
                     }
                     LastBusy = sequence;
                 }
                 DateTime oldnow = DateTime.UtcNow;
-                AddLast(() =>
+                int count = EventQueue.Count;
+                Enqueue(() =>
                 {
                     DateTime now = DateTime.UtcNow;
                     TimeSpan timeSpan = now - oldnow;
@@ -101,7 +117,8 @@ namespace cogbot.Utilities
                     }
                     else
                     {
-                        Console.WriteLine("[{0}] LAG {1} secs after {2} GoodPing(s)", Name, timeSpan.TotalSeconds, GoodPings);
+                        Console.WriteLine("[TASK {0}] {1} secs for {2} after {3} GoodPing(s)",
+                                          Name, timeSpan.TotalSeconds, count, GoodPings);
                         GoodPings = 0;
                     }
                 }
@@ -116,13 +133,7 @@ namespace cogbot.Utilities
             lock (EventQueue)
             {
                 EventQueue.AddLast(evt);
-            }
-        }
-        public void AddLast(ThreadStart evt)
-        {
-            lock (EventQueue)
-            {
-                EventQueue.AddLast(evt);
+                WaitingOn.Set();
             }
         }
         public void AddFirst(ThreadStart evt)
@@ -130,6 +141,7 @@ namespace cogbot.Utilities
             lock (EventQueue)
             {
                 EventQueue.AddFirst(evt);
+                WaitingOn.Set();
             }
         }
     }

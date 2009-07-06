@@ -34,18 +34,16 @@ namespace cogbot.Listeners
 
             if (!MaintainPropertiesFromQueue)
                 Objects_OnObjectProperties11(simulator, prim, props);
-            else
-                lock (UpdateQueue)
-                    UpdateQueue.AddFirst(delegate() { Objects_OnObjectProperties11(simulator, prim, props); });
+            else                
+                PropertyQueue.Enqueue(() => Objects_OnObjectProperties11(simulator, prim, props));
         }
 
         public override void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties props)
         {
             throw new InvalidOperationException("Objects_OnObjectProperties");
             CheckConnected(simulator);
-            //NeverSelect(props.LocalID, simulator);
-            lock (PropertyQueue)
-                PropertyQueue.AddLast(delegate() { Objects_OnObjectProperties11(simulator, null, props); });
+            //NeverSelect(props.LocalID, simulator);                
+            PropertyQueue.Enqueue(delegate() { Objects_OnObjectProperties11(simulator, null, props); });
         }
 
         public void Objects_OnObjectProperties11(Simulator simulator, Primitive prim, Primitive.ObjectProperties props)
@@ -250,8 +248,7 @@ namespace cogbot.Listeners
                     }
                 }
             if (!MaintainObjectUpdates) return;
-            lock (UpdateQueue)
-                UpdateQueue.AddLast(() => Objects_OnObjectUpdated1(simulator, av, updatFromSimObject(AV), RegionHandle, TimeDilation));
+                EventQueue.Enqueue(() => Objects_OnObjectUpdated1(simulator, av, updatFromSimObject(AV), RegionHandle, TimeDilation));
             }
         }
 

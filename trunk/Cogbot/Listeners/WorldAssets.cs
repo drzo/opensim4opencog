@@ -10,7 +10,7 @@ namespace cogbot.Listeners
 {
     public partial class WorldObjects
     {
-        private AssetManager RegionMasterTexturePipeline;
+        private readonly AssetManager RegionMasterTexturePipeline;
         private static readonly List<UUID> TexturesSkipped = new List<UUID>();
 
         /// <summary>

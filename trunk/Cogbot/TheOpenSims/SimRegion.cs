@@ -62,7 +62,18 @@ namespace cogbot.TheOpenSims
         private GridClient Client;
         private int GetGroundLevelTried = 0;
         private bool GridInfoKnown = false;
-        readonly private SimPathStore PathStore;
+        private SimPathStore PathStore
+        {
+            get
+            {
+                if (_PathStore==null)
+                {
+                    _PathStore = SimPathStore.GetPathStore(GetGridLocation());
+                    _PathStore.SetGroundLevel(GetGroundLevel);
+                }
+                return _PathStore;
+            }
+        }
         readonly private AutoResetEvent regionEvent = new AutoResetEvent(false);
 
         public static SimRegion GetRegion(UUID uuid, GridClient client)
@@ -136,9 +147,8 @@ namespace cogbot.TheOpenSims
             // RegionName = gridRegionName;
             //WorldSystem = worldSystem;
             //Debug("++++++++++++++++++++++++++Created region: ");
-            PathStore = SimPathStore.GetPathStore(GetGridLocation());
-            PathStore.SetGroundLevel(GetGroundLevel);
             String rname = RegionName;
+
 
             // if (PathStore.RegionName
             //new SimPathStore("region" + Handle + ".serz", GetGridLocation(), GetWorldPosition(), new Vector3(256, 256, float.MaxValue));
@@ -219,7 +229,7 @@ namespace cogbot.TheOpenSims
                     PathStore.WaterHeight = value.WaterHeight;
                     Console.WriteLine("{0} WaterHeight = {1}", value.Name, PathStore.WaterHeight);
                 }
-                PathStore.RegionName = _GridInfo.Name;
+                //PathStore.RegionName = _GridInfo.Name;
                 regionEvent.Set();
                 //  Client.Grid.RequestMapRegion(PathStore.RegionName, GridLayerType.Terrain);
             }
@@ -303,7 +313,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                if (PathStore.RegionName == null)
+                if (_PathStore != null && PathStore.RegionName == null)
                 {
                     Simulator sim = TheSimulator;
                     if (sim != null && !String.IsNullOrEmpty(sim.Name))
@@ -311,15 +321,19 @@ namespace cogbot.TheOpenSims
                 }
                 if (!String.IsNullOrEmpty(_GridInfo.Name))
                 {
-                    PathStore.RegionName = _GridInfo.Name;
+                    if (_PathStore != null) PathStore.RegionName = _GridInfo.Name;
+                    return _GridInfo.Name;
                 }
-                if (PathStore.RegionName != null) return PathStore.RegionName;
+                if (_PathStore != null && PathStore.RegionName != null)
+                {
+                    return PathStore.RegionName;
+                }
                 return "region" + RegionHandle;
             }
             set
             {
                 _GridInfo.Name = value;
-                PathStore.RegionName = value;
+                if (_PathStore != null) PathStore.RegionName = value;
             }
         }
 
@@ -712,6 +726,7 @@ namespace cogbot.TheOpenSims
         Dictionary<int,Parcel> parcels = new Dictionary<int, Parcel>();
         Dictionary<UUID, ParcelInfo> parcelsI = new Dictionary<UUID, ParcelInfo>();
         static private GridClient AnyClient;
+        private SimPathStore _PathStore;
 
         public void Parcels_OnParcelProperties(Simulator simulator, Parcel parcel, ParcelResult result, int selectedPrims, int sequenceID, bool snapSelection)
         {

@@ -671,8 +671,7 @@ namespace cogbot.TheOpenSims
 
         internal static SimObjectType CreateInstanceType(string name)
         {
-            SimObjectType type = GetObjectType(name);
-            type.IsInstanceType = true;
+            SimObjectType type = new SimObjectType(name) {IsInstanceType = true};
             return type;
         }
 
