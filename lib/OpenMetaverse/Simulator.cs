@@ -470,37 +470,44 @@ namespace OpenMetaverse
         readonly static Dictionary<ulong, Simulator> firstSim = new Dictionary<ulong, Simulator>();
         public static Simulator Create(GridClient client, IPEndPoint point, ulong handle)
         {
-            Dictionary<ulong, Simulator> dict;
-            lock (savedSims) if (!savedSims.TryGetValue(client, out dict))
-            {
-                dict = new Dictionary<ulong, Simulator>();
-                savedSims.Add(client, dict);
-            } 
-            Simulator sim;
-            lock (firstSim) lock (dict) if (!dict.TryGetValue(handle, out sim))
-            {
-                sim = new Simulator(client, point, handle);
-                if (!firstSim.ContainsKey(handle))
-                {
-                    firstSim[handle] = sim;  
-                } else
-                {
-                    Simulator S = firstSim[handle];
-                    sim.ObjectsAvatars.Dictionary = S.ObjectsAvatars.Dictionary;
-                    sim.ObjectsPrimitives.Dictionary = S.ObjectsPrimitives.Dictionary;
-                    sim.ParcelMap = S.ParcelMap;
-                    sim.AvatarPositions.Dictionary = S.AvatarPositions.Dictionary;
-                    sim.Name = S.Name;
-                    sim.Parcels.Dictionary = S.Parcels.Dictionary;
-                    sim.WaterHeight = S.WaterHeight;
-                }
-                dict.Add(handle,sim);
-            } else
-            {
-                sim.ReInit();
-            }           
-            return sim;
+            Dictionary<ulong, Simulator> dict = null;
 
+            lock (savedSims)
+            {
+                if (!savedSims.TryGetValue(client, out dict))
+                {
+                    dict = new Dictionary<ulong, Simulator>();
+                    savedSims.Add(client, dict);
+                }
+                Simulator sim;
+                lock (firstSim)
+                    lock (dict)
+                        if (!dict.TryGetValue(handle, out sim))
+                        {
+                            sim = new Simulator(client, point, handle);
+                            if (!firstSim.ContainsKey(handle))
+                            {
+                                firstSim[handle] = sim;
+                            }
+                            else
+                            {
+                                Simulator S = firstSim[handle];
+                                sim.ObjectsAvatars.Dictionary = S.ObjectsAvatars.Dictionary;
+                                sim.ObjectsPrimitives.Dictionary = S.ObjectsPrimitives.Dictionary;
+                                sim.ParcelMap = S.ParcelMap;
+                                sim.AvatarPositions.Dictionary = S.AvatarPositions.Dictionary;
+                                sim.Name = S.Name;
+                                sim.Parcels.Dictionary = S.Parcels.Dictionary;
+                                sim.WaterHeight = S.WaterHeight;
+                            }
+                            dict.Add(handle, sim);
+                        }
+                        else
+                        {
+                            sim.ReInit();
+                        }
+                return sim;
+            }
         }   
 
         /// <summary>
