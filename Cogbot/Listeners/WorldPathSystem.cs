@@ -27,7 +27,7 @@ namespace cogbot.Listeners
                 if ((!gc.Settings.AVATAR_TRACKING)) Error("client.Settings.AVATAR_TRACKING != true");
                 if ((!gc.Settings.ALWAYS_DECODE_OBJECTS)) Error("client.Settings.ALWAYS_DECODE_OBJECTS != true");
                 if ((!gc.Settings.OBJECT_TRACKING)) Error("client.Settings.OBJECT_TRACKING != true");
-                if (TrackPathsThread == null && WorldObjects.MaintainCollisions)
+                if (TrackPathsThread == null)
                 {
                     TrackPathsThread = new Thread(TrackPaths);
                     TrackPathsThread.Name = "Track paths";
@@ -53,6 +53,7 @@ namespace cogbot.Listeners
             while (true)
             {
                 Thread.Sleep(10000);
+                if (!WorldObjects.MaintainCollisions) continue;
                 int thisCount = SimObjects.Count;
 
                 if (thisCount == lastCount)
@@ -69,6 +70,7 @@ namespace cogbot.Listeners
                 int realUpdates = 0;
                 foreach (SimObject O in SimObjects.CopyOf())
                 {
+                    if (!WorldObjects.MaintainSimCollisions(O.RegionHandle)) continue;
                     if (O.IsRegionAttached())
                     {
                         if (O.UpdateOccupied())

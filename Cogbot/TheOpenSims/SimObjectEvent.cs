@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using cogbot.Listeners;
+using cogbot.ScriptEngines;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
@@ -42,7 +43,17 @@ namespace cogbot.TheOpenSims
     public class SimObjectEvent : BotMentalAspect
     {
         private static long serialCount = DateTime.UtcNow.Ticks;
-        public long serial = serialCount++;
+        private long _serial = serialCount++;
+        public long serial
+        {
+            get { return _serial; }
+            set
+            {
+            	_serial = value;
+                _EVETSTRING = null;
+                ToEventString();
+            }
+        } 
 
         public readonly DateTime Time = DateTime.UtcNow;
 
@@ -363,15 +374,25 @@ namespace cogbot.TheOpenSims
                 }
 
             }
+            ToEventString();
             return names;
         }
 
+        private string _EVETSTRING;
         public string ToEventString()
         {
-            return string.Format("{0}: {1} {2}",
-                                GetVerb(),
-                                ScriptEngines.ScriptEventListener.argsListString(Parameters),
-                                serial);
+            if (_EVETSTRING != null) return _EVETSTRING;
+            _EVETSTRING = string.Format("{0}: {1}", GetVerb(), serial);
+            foreach (var c in Parameters)
+            {
+                object cValue = c.Value;
+                if (cValue is SimHeading) continue;
+                if (cValue is Vector3) continue;
+                if (cValue is Vector3d) continue;
+                if (cValue is ValueType) continue;
+                _EVETSTRING += " " + ScriptEventListener.argString(cValue);
+            }
+            return _EVETSTRING;
         }
 
         public void AddParam(string name, object value)

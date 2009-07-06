@@ -56,6 +56,10 @@ namespace cogbot.TheOpenSims
             PutType(type, Animations.CROUCHWALK);
 
 
+            PutType("StandingUp", Animations.STANDUP);
+            PutType("StandingUp", Animations.SIT_TO_STAND);
+
+
             type = "SimpleWholeBodyMovement";
             PutType(type, Animations.SIT_TO_STAND);
             PutType(type, Animations.FALLDOWN);
@@ -68,7 +72,7 @@ namespace cogbot.TheOpenSims
             PutType(type, Animations.SLEEP);
             PutType(type, Animations.DEAD);
 
-            type = "SupportingOnesWeight";
+            type = "StandingStill";
             PutType(type, Animations.STAND);
             PutType(type, Animations.STAND_1);
             PutType(type, Animations.STAND_2);
@@ -78,8 +82,7 @@ namespace cogbot.TheOpenSims
             PutType(type, Animations.AWAY);
             PutType(type, Animations.BUSY);
             PutType(type, Animations.HOVER);
-            
-            PutType("StandingUp",Animations.STANDUP);
+
              
 
             type = "Jumping";

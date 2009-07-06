@@ -185,7 +185,7 @@ namespace cogbot.TheOpenSims
         private BotAction _currentAction;
         private Thread actionThread = null;
         private readonly object actionLock = new object();
-        public BotMentalAspect LastAction { get; set;}
+        public BotAction LastAction { get; set; }
         
         /// <summary>
         ///  Current action 
@@ -212,7 +212,8 @@ namespace cogbot.TheOpenSims
                             LastAction = _currentAction;
                             try
                             {
-                                _currentAction.Abort();
+                                _currentAction = null;
+                                LastAction.Abort();
 
                             }
                             catch (Exception)
@@ -1659,7 +1660,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                return Overlaps(GetCurrentAnims(), SimAssetStore.MeaningUUIDs("SupportingOnesWeight"));
+                return Overlaps(GetCurrentAnims(), SimAssetStore.MeaningUUIDs("StandingStill"));
             }
         }
 
@@ -1684,6 +1685,8 @@ namespace cogbot.TheOpenSims
         private readonly InternalDictionary<UUID, int> ExpectedCurrentAnims = new InternalDictionary<UUID, int>();
 
 
+
+        public static bool mergeEvents = true;
         private int AnimSequenceNumber = 0;
         /// public UUID CurrentAmin = UUID.Zero;
         /// <summary>
@@ -1711,7 +1714,7 @@ namespace cogbot.TheOpenSims
 
                 //UUID mostCurrentAnim;// = UUID.Zero;
                 ///  List<String> names = new List<String>();
-                List<UUID> RemovedThisEvent = new List<UUID>(GetCurrentAnims());
+                Dictionary<UUID, int> RemovedThisEvent = new Dictionary<UUID, int>(ExpectedCurrentAnims.Dictionary);
                 anims.ForEach(delegate(UUID key)
                                   {
                                       RemovedThisEvent.Remove(key);
@@ -1760,16 +1763,16 @@ namespace cogbot.TheOpenSims
                 List<UUID> shownRemoved = new List<UUID>();
                 List<UUID> showAdded = new List<UUID>();
 
-                ICollection<UUID> AddedThisEvent = new List<UUID>(AddedAnims.Keys);
+                Dictionary<UUID, int> AddedThisEvent = new Dictionary<UUID, int>(AddedAnims);
 
-                foreach (UUID key in RemovedThisEvent)
+                foreach (UUID key in RemovedThisEvent.Keys)
                 {
                     ExpectedCurrentAnims.Dictionary.Remove(key);
                 }
 
                 foreach (UUID list in RemovedAnims.Keys)
                 {
-                    if (RemovedThisEvent.Contains(list))
+                    if (RemovedThisEvent.ContainsKey(list))
                     {
                         RemovedThisEvent.Remove(list);
                     }
@@ -1785,59 +1788,63 @@ namespace cogbot.TheOpenSims
                 //    }
                 //}
                 //start or stop moving
-                List<UUID> RemovedThisEventUnsent = new List<UUID>(RemovedThisEvent);
-                List<UUID> AddedThisEventUnsent = new List<UUID>(AddedThisEvent);
-                StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "Movement-TranslationProcess", startStops);
-                
-                StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent,  "Jumping", startStops);
-
-                StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "SittingDown", startStops);
-
-                StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "SupportingOnesWeight", startStops);
-                // start or stop flying
-                StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "Flying", startStops);
-                //start or stop sleeping
-                StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "Lying-Physical", startStops);
-
-
-                //start or stop talking
-                //StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsCommunationAnim, "Commuincation", SimEventType.ANIM, startStops);
-
-               // StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "OtherAnim", startStops);
-
-                foreach (SimObjectEvent evt in startStops)
+                Dictionary<UUID, int> RemovedThisEventUnsent = new Dictionary<UUID, int>(RemovedThisEvent);
+                Dictionary<UUID, int> AddedThisEventUnsent = new Dictionary<UUID, int>(AddedThisEvent);
+                if (mergeEvents)
                 {
-                    if (evt.Verb == "Flying")
+                    StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "Movement-TranslationProcess",
+                                         startStops);
+
+                    StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "Jumping", startStops);
+
+                    StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "SittingDown", startStops);
+
+                    StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "StandingStill", startStops);
+                    // start or stop flying
+                    StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "Flying", startStops);
+                    //start or stop sleeping
+                    StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "Lying-Physical", startStops);
+
+
+                    //start or stop talking
+                    //StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsCommunationAnim, "Commuincation", SimEventType.ANIM, startStops);
+
+                    // StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "OtherAnim", startStops);
+
+                    foreach (SimObjectEvent evt in startStops)
                     {
-                        LastEventByName[evt.EventName] = evt;
-                        if (evt.EventStatus!=SimEventStatus.Start) continue;
+                        if (evt.Verb == "Flying")
+                        {
+                            LastEventByName[evt.EventName] = evt;
+                            if (evt.EventStatus != SimEventStatus.Start) continue;
+                        }
+                        if (evt.Verb == "StandingStill")
+                        {
+                            LastEventByName[evt.EventName] = evt;
+                            //continue;
+                        }
+                        if (evt.Verb == "SittingDown")
+                        {
+                            LastEventByName[evt.EventName] = evt;
+                            //continue;
+                        }
+                        if (evt.EventName == "Movement-TranslationProcess-Start")
+                        {
+                            LastEventByName[evt.EventName] = evt;
+                            //lastEvent = evt;
+                            //continue;
+                        }
+                        //if (evt.EventName == "MovingStop")
+                        //{
+                        //    object old = GetLastEvent("MovingStart", 2);
+                        //    evt.Verb = "MoveTo";
+                        //}
+                        if (SimEventStatus.Start == evt.EventStatus)
+                        {
+                            SetPosture(evt);
+                        }
+                        //  LogEvent(evt);
                     }
-                    if (evt.Verb == "SupportingOnesWeight")
-                    {
-                        LastEventByName[evt.EventName] = evt;
-                        //continue;
-                    }
-                    if (evt.Verb == "SittingDown")
-                    {
-                        LastEventByName[evt.EventName] = evt;
-                        //continue;
-                    }
-                    if (evt.EventName == "Movement-TranslationProcess-Start")
-                    {
-                        LastEventByName[evt.EventName] = evt;
-                        //lastEvent = evt;
-                        //continue;
-                    }
-                    //if (evt.EventName == "MovingStop")
-                    //{
-                    //    object old = GetLastEvent("MovingStart", 2);
-                    //    evt.Verb = "MoveTo";
-                    //}
-                    if (SimEventStatus.Start==evt.EventStatus)
-                    {
-                        SetPosture(evt);                        
-                    }
-                  //  LogEvent(evt);
                 }
 
                 for (int seq = leastCurrentSequence; seq <= mostCurrentSequence; seq++)
@@ -1848,9 +1855,9 @@ namespace cogbot.TheOpenSims
                         {
                             if (seq == uuid.Value)
                             {
-                                if (RemovedThisEventUnsent.Contains(uuid.Key))
+                                if (RemovedThisEventUnsent.ContainsKey(uuid.Key))
                                 {
-                                    LogEvent(AnimEvent(uuid.Key, SimEventStatus.Stop));
+                                    LogEvent(AnimEvent(uuid.Key, SimEventStatus.Stop, seq));
                                     shownRemoved.Add(uuid.Key);
                                 }
                             }
@@ -1862,10 +1869,9 @@ namespace cogbot.TheOpenSims
                         {
                             if (seq == uuid.Value)
                             {
-                                SimAsset a = SimAssetStore.FindOrCreateAsset(uuid.Key, AssetType.Animation);
-                                if (AddedThisEventUnsent.Contains(uuid.Key))
+                                if (AddedThisEventUnsent.ContainsKey(uuid.Key))
                                 {
-                                    LogEvent(AnimEvent(uuid.Key, SimEventStatus.Start));
+                                    LogEvent(AnimEvent(uuid.Key, SimEventStatus.Start, seq));
                                     showAdded.Add(uuid.Key);
                                 }
                             }
@@ -1913,15 +1919,35 @@ namespace cogbot.TheOpenSims
             /// SendNewEvent("On-Avatar-Animation", avatar, names);
         }
 
-        private SimObjectEvent AnimEvent(UUID uuid,SimEventStatus status)
+        private SimObjectEvent AnimEvent(UUID uuid,SimEventStatus status, int serial)
         {
             SimAsset a = SimAssetStore.FindOrCreateAsset(uuid, AssetType.Animation);
 
+            string headingString;
+            switch (status)
+            {
+                case SimEventStatus.Start:
+                    {
+                        headingString = "eventOccursAt";
+                        break;
+                    }
+                case SimEventStatus.Stop:
+                    {
+                        headingString = "toLocation";
+                        break;
+                    }
+                default:
+                    {
+                        headingString = "eventOccursAt";
+                        break;
+                    }
+            }
             object m = a.GetMeaning();
             SimObjectEvent oe = new SimObjectEvent(status, "OnAnim", SimEventType.ANIM,
                                       WorldObjects.ToParameter("doneBy", this),
                                       WorldObjects.ToParameter("isa", a),
-                                      WorldObjects.ToParameter("eventOccursAt", GetHeading()));
+                                      WorldObjects.ToParameter(headingString, GetHeading()));
+            oe.serial = serial;
             if (m != null) oe.AddParam("isa", m);
             return oe;
         }
@@ -1937,16 +1963,16 @@ namespace cogbot.TheOpenSims
                 {
                     // was the same 
                     if (PostureType == evt.Verb) return;
-                    SimObjectEvent ending = new SimObjectEvent(SimEventStatus.Stop, PostureType + (IsFlying ? "-Flying" : ""),
-                                                                 SimEventType.ANIM,                                                
-                                                                 evt.Parameters);
-                    ending.serial = LastPostureEvent.serial;
+                    SimObjectEvent ending = new SimObjectEvent(
+                        SimEventStatus.Stop,
+                        PostureType + (IsFlying ? "-Flying" : ""),
+                        SimEventType.ANIM, evt.Parameters) {serial = LastPostureEvent.serial};
                     LogEvent(ending);
                     PostureType = evt.Verb;
-                    SimObjectEvent starting = new SimObjectEvent(SimEventStatus.Start, PostureType + (IsFlying ? "-Flying" : ""),
-                                                               SimEventType.ANIM,
-                                                               evt.Parameters);
-                    starting.serial = evt.serial;
+                    SimObjectEvent starting = new SimObjectEvent(
+                        SimEventStatus.Start,
+                        PostureType + (IsFlying ? "-Flying" : ""),
+                        SimEventType.ANIM, evt.Parameters) {serial = evt.serial};
                     LogEvent(starting);
                 }
                 PostureType = evt.Verb;
@@ -1981,38 +2007,45 @@ namespace cogbot.TheOpenSims
 
         //private delegate bool AnimationTest(ICollection<UUID> thisEvent);
 
-        private void StartOrStopAnimEvent(ICollection<UUID> RemovedThisEvent, ICollection<UUID> AddedThisEvent, string name, IList<SimObjectEvent> startStops)
+        private void StartOrStopAnimEvent(IDictionary<UUID, int> RemovedThisEvent, IDictionary<UUID, int> AddedThisEvent, string name, IList<SimObjectEvent> startStops)
         {
-            bool wasStarted = false;
-            bool wasStopped = false;
+            int wasStarted = 0;
+            int wasStopped = 0;
             List<UUID> e = SimAssetStore.MeaningUUIDs(name);
-          //  if (e.Count==0) throw new NoSuchElementException(name);
+            //  if (e.Count==0) throw new NoSuchElementException(name);
             foreach (UUID list in e)
             {
-                if (AddedThisEvent.Contains(list))
+                if (AddedThisEvent.ContainsKey(list))
                 {
+                    wasStarted = AddedThisEvent[list];
                     AddedThisEvent.Remove(list);
-                    wasStarted = true;
                 }
             }
             foreach (UUID list in e)
             {
-                if (RemovedThisEvent.Contains(list))
+                if (RemovedThisEvent.ContainsKey(list))
                 {
+                    wasStopped = RemovedThisEvent[list];
                     RemovedThisEvent.Remove(list);
-                    wasStopped = true;
                 }
             }
-            if (wasStarted && wasStopped) return;
-            if (wasStarted)
-                startStops.Add(new SimObjectEvent(SimEventStatus.Start, name, SimEventType.ANIM, 
-                                                  WorldObjects.ToParameter("doneBy", this),
-                                                  WorldObjects.ToParameter("eventOccursAt", GetHeading())));
-            if (wasStopped)
-                startStops.Insert(0, new SimObjectEvent(SimEventStatus.Stop, name, SimEventType.ANIM, 
-                                                        WorldObjects.ToParameter("doneBy", this),
-                                                        WorldObjects.ToParameter("eventOccursAt", GetHeading())));
-
+            if (wasStarted != 0 && wasStopped != 0) return;
+            if (wasStarted!=0)
+            {
+                SimObjectEvent simEvent = new SimObjectEvent(SimEventStatus.Start, name, SimEventType.ANIM,
+                                                             WorldObjects.ToParameter("doneBy", this),
+                                                             WorldObjects.ToParameter("eventOccursAt", GetHeading()));
+                simEvent.serial = wasStarted;
+                startStops.Add(simEvent);
+            }
+            if (wasStopped!=0)
+            {
+                SimObjectEvent simEvent = new SimObjectEvent(SimEventStatus.Stop, name, SimEventType.ANIM,
+                                                             WorldObjects.ToParameter("doneBy", this),
+                                                             WorldObjects.ToParameter("toLocation", GetHeading()));
+                simEvent.serial = wasStopped;
+                startStops.Insert(0, simEvent);
+            }
         }
 
         static bool Overlaps(IEnumerable<UUID> c1, IEnumerable<UUID> c2)
@@ -2060,7 +2093,7 @@ namespace cogbot.TheOpenSims
         void SetClient(BotClient Client);
         //BotClient GetGridClient();
         new bool IsSitting { get; set; }
-        BotMentalAspect LastAction { get; set; }
+        BotAction LastAction { get; set; }
         //IEnumerable<SimTypeUsage> KnownTypeUsages { get; }
         bool SitOn(SimObject o);
 
@@ -2086,7 +2119,7 @@ namespace cogbot.TheOpenSims
         bool IsSitting { get; }
         float ZHeading { get; }
         IEnumerable<SimTypeUsage> KnownTypeUsages { get; }
-        BotMentalAspect LastAction { get; }
+        BotAction LastAction { get; }
         void OnAvatarAnimations(InternalDictionary<UUID, int> anims);
 
         ICollection<UUID> GetCurrentAnims();

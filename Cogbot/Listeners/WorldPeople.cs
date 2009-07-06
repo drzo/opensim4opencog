@@ -45,30 +45,28 @@ namespace cogbot.Listeners
 
             }
             if (string.IsNullOrEmpty(message))
-               // if (type == ChatType.StartTyping || type == ChatType.StopTyping)
-                {
+            // if (type == ChatType.StartTyping || type == ChatType.StopTyping)
+            {
 
-                    lock (UpdateQueue)
-                        UpdateQueue.AddLast(
-                            () =>
-                            SendNewRegionEvent(SimEventType.SOCIAL, "ChatType-" + type.ToString(),
-                                               audible,
-                                               sourceType,
-                                               type,
-                                               ToParameter("senderOfInfo", s1),
-                                               ToParameter("eventPrimarilyOccursAt", location)));
-                    return;
+                EventQueue.Enqueue(
+                    () =>
+                    SendNewRegionEvent(SimEventType.SOCIAL, "ChatType-" + type.ToString(),
+                                       audible,
+                                       sourceType,
+                                       type,
+                                       ToParameter("senderOfInfo", s1),
+                                       ToParameter("eventPrimarilyOccursAt", location)));
+                return;
 
-                }
-            lock (UpdateQueue)
-                UpdateQueue.AddLast(() =>
-                                    SendNewRegionEvent(SimEventType.SOCIAL, "ChatType-" + type.ToString(),
-                                                       ToParameter("senderOfInfo", s1),
-                                                       ToParameter("infoTransferred-NLString", message),
-                                                       audible,
-                                                       type,
-                                                       sourceType,
-                                                       ToParameter("eventPrimarilyOccursAt", location)));
+            }
+            EventQueue.Enqueue(() =>
+                                SendNewRegionEvent(SimEventType.SOCIAL, "ChatType-" + type.ToString(),
+                                                   ToParameter("senderOfInfo", s1),
+                                                   ToParameter("infoTransferred-NLString", message),
+                                                   audible,
+                                                   type,
+                                                   sourceType,
+                                                   ToParameter("eventPrimarilyOccursAt", location)));
         }
 
         public override void Self_OnInstantMessage(InstantMessage im, Simulator simulator)
@@ -84,7 +82,7 @@ namespace cogbot.Listeners
             }
             bool Conference = false;
             bool GroupIM = im.GroupIM || client.Groups.GroupName2KeyCache.ContainsKey(im.IMSessionID);
-            if (im.Dialog==InstantMessageDialog.SessionSend)
+            if (im.Dialog == InstantMessageDialog.SessionSend)
             {
                 if (!GroupIM) Conference = true;
             }
@@ -95,7 +93,8 @@ namespace cogbot.Listeners
             {
                 s = im.FromAgentID;
                 pcode = PCode.Prim;
-            } else
+            }
+            else
             {
                 pcode = PCode.Avatar;
             }
@@ -113,23 +112,22 @@ namespace cogbot.Listeners
             SimObject source = AsObject(im.FromAgentName, im.FromAgentID, pcode);
             if (source != null) s = source;
             object location = AsLocation(im.RegionID, im.Position);
-            lock (UpdateQueue)
-                UpdateQueue.AddLast(() =>
-                                    client.SendPersonalEvent(SimEventType.SOCIAL, "InstantMessageDialog-" + im.Dialog.ToString() + (GroupIM ? "-Group" : ""),
-                                                 ToParameter("senderOfInfo", s),
-                                                 ToParameter("infoTransferred-NLString", im.Message),
-                                                 ToParameter("recipientOfInfo-Intended", im.ToAgentID),                                                  
-                                                 im.Offline,
-                                                 im.IMSessionID,
-                                                 ToParameter("eventPrimarilyOccursAt", location),
-                                                 //(im.GroupIM ? "GroupIM" : ""),
-                                                 //im.Dialog,
-                                                 im.ParentEstateID));
+            EventQueue.Enqueue(() =>
+                                client.SendPersonalEvent(SimEventType.SOCIAL, "InstantMessageDialog-" + im.Dialog.ToString() + (GroupIM ? "-Group" : ""),
+                                             ToParameter("senderOfInfo", s),
+                                             ToParameter("infoTransferred-NLString", im.Message),
+                                             ToParameter("recipientOfInfo-Intended", im.ToAgentID),
+                                             im.Offline,
+                                             im.IMSessionID,
+                                             ToParameter("eventPrimarilyOccursAt", location),
+                                    //(im.GroupIM ? "GroupIM" : ""),
+                                    //im.Dialog,
+                                             im.ParentEstateID));
         }
 
         public override void Self_OnAlertMessage(string msg)
         {
-            lock (UpdateQueue) UpdateQueue.AddLast(() => SendNewRegionEvent(SimEventType.SCRIPT, "On-Alert-Message", client.gridClient, msg));
+            EventQueue.Enqueue(() => SendNewRegionEvent(SimEventType.SCRIPT, "On-Alert-Message", client.gridClient, msg));
         }
 
 
@@ -211,7 +209,7 @@ namespace cogbot.Listeners
         }
         public override void Groups_OnGroupMembers(UUID requestID, UUID groupID, int totalCount, Dictionary<UUID, GroupMember> members)
         {
-           // base.Groups_OnGroupMembers(requestID, totalCount, members);
+            // base.Groups_OnGroupMembers(requestID, totalCount, members);
         }
 
         public override void Groups_OnGroupNames(Dictionary<UUID, string> groupNames)
@@ -269,7 +267,7 @@ namespace cogbot.Listeners
                 return;
             }
             string n = value.Trim();
-            if (n.Length<3)
+            if (n.Length < 3)
             {
                 Debug("AddName2Key: " + value + " " + id);
                 return;
@@ -306,7 +304,7 @@ namespace cogbot.Listeners
             foreach (KeyValuePair<UUID, string> kvp in names)
             {
                 string kvpValueToLower = kvp.Value;
-                AddName2Key(kvpValueToLower,kvp.Key);
+                AddName2Key(kvpValueToLower, kvp.Key);
                 if (clientMasterNameToLower == kvpValueToLower)
                 {
                     masterFound = true;
@@ -355,7 +353,7 @@ namespace cogbot.Listeners
         {
             matchedPeople.ForEach(data =>
             {
-                   AddName2Key(data.FirstName + " " + data.LastName, data.AgentID);
+                AddName2Key(data.FirstName + " " + data.LastName, data.AgentID);
             });
         }
 
@@ -363,7 +361,7 @@ namespace cogbot.Listeners
         {
             matchedGroups.ForEach(data =>
             {
-                AddName2Key(data.GroupName,data.GroupID);
+                AddName2Key(data.GroupName, data.GroupID);
             });
         }
 

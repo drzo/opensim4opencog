@@ -94,7 +94,7 @@ namespace cogbot.Listeners
         {
             if (!RequestedGridInfos)
             {
-                int Range = 1;
+                int Range = 0;
                 RequestedGridInfos = true;
                 uint X;
                 uint Y;
@@ -131,7 +131,17 @@ namespace cogbot.Listeners
                     //client.Grid.RequestMapRegion(simulator.Name, GridLayerType.LandForSale);
                     //client.Grid.RequestMapItems(simulator.Handle,OpenMetaverse.GridItemType.Classified,GridLayerType.Terrain);
                     MasteringRegions.Add(simulator.Handle);
-                    RequestGridInfos(simulator.Handle);
+                    if (simulator == client.Network.CurrentSim)
+                    {
+                        lock (MaintainSimCollisionsList)
+                        {
+                            if (!MaintainSimCollisionsList.Contains(simulator.Handle))
+                            {
+                                MaintainSimCollisionsList.Add(simulator.Handle);
+                            }
+                        }
+                    }
+                    //RequestGridInfos(simulator.Handle);
                 }
                 else
                 {
@@ -247,11 +257,11 @@ namespace cogbot.Listeners
 
         public override void Self_OnRegionCrossed(Simulator oldSim, Simulator newSim)
         {
+            EnsureSimulator(newSim);
             if (oldSim != null)
             {
                LeaveSimulator(oldSim);
             }
-            EnsureSimulator(newSim);
             base.Self_OnRegionCrossed(oldSim, newSim);
         }
 
@@ -264,6 +274,13 @@ namespace cogbot.Listeners
                 SimRegion.GetRegion(simulator).RemoveSim(simulator);
                 LeaveSimulator(simulator);
             }
+            if (simulator == client.Network.CurrentSim)
+                PropertyQueue.AddFirst(() =>
+                                           {
+                                               Debug("CLOSE for region " + simulator);
+                                               client.Login();
+                                           }
+                    );
         }
 
         public override void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
@@ -729,6 +746,12 @@ namespace cogbot.Listeners
                     GetSimObjectLock[simulator.Handle] = new object();
             }
             return GetSimObjectLock[simulator.Handle];
+        }
+
+        private static readonly List<ulong> MaintainSimCollisionsList = new List<ulong>();
+        public static bool MaintainSimCollisions(ulong handle)
+        {
+            lock (MaintainSimCollisionsList) return MaintainSimCollisionsList.Contains(handle);
         }
     }
 }

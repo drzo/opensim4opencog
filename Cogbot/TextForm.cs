@@ -395,12 +395,15 @@ namespace cogbot
                 if (IsDisposed) return; // for (un)clean exits
                 if (this.InvokeRequired)
                 {
-                    new Thread(() => this.Invoke(new OutputDelegate(doOutput), str, new object[0])).Start();
+                    //new Thread(() =>
+                        this.Invoke(new OutputDelegate(doOutput), str, new object[0]);
+                    //).Start();
                                        
                 }
                 else
                 {
-                    new Thread(() => this.Invoke(new OutputDelegate(doOutput), str, new object[0])).Start();//  new Thread(() => doOutput(str)).Start();
+                   // new Thread(() => this.Invoke(new OutputDelegate(doOutput), str, new object[0])).Start();//  new Thread(() => doOutput(str)).Start();
+                    doOutput(str);
                 }
             }
             catch (Exception e)

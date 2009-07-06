@@ -20,60 +20,58 @@ namespace cogbot.Listeners
         public override void Self_OnScriptQuestion(Simulator simulator, UUID taskID, UUID itemID, string objectName,
                                                    string objectOwner, ScriptPermission questions)
         {
-            lock (UpdateQueue)
-                UpdateQueue.AddLast(
-                    () =>
-                    {
-                        /*
-                            TaskID: 552f9165-0dd8-9124-f9bb-20fa3cb18382
-                            ItemID: 8fe015cb-bf46-5e1c-8975-f2cbca4762d9
-                            Questions: 16
-                            ObjectName: DanceBall
-                            ObjectOwner: Serena Vale
-                         */
+            EventQueue.Enqueue(
+                () =>
+                {
+                    /*
+                        TaskID: 552f9165-0dd8-9124-f9bb-20fa3cb18382
+                        ItemID: 8fe015cb-bf46-5e1c-8975-f2cbca4762d9
+                        Questions: 16
+                        ObjectName: DanceBall
+                        ObjectOwner: Serena Vale
+                     */
 
-                        client.SendPersonalEvent(SimEventType.SCRIPT, "On-Script-Question", simulator, taskID, itemID, objectName, objectOwner,
-                                      questions);
-                        /*
-                             TaskID: 552f9165-0dd8-9124-f9bb-20fa3cb18382
-                             ItemID: 8fe015cb-bf46-5e1c-8975-f2cbca4762d9
-                             Questions: 16
-                         */
-                        if (AcceptOffersAnimationsObjects)
-                            client.Self.ScriptQuestionReply(simulator, itemID, taskID, questions);
-                    }
-                    );
+                    client.SendPersonalEvent(SimEventType.SCRIPT, "On-Script-Question", simulator, taskID, itemID, objectName, objectOwner,
+                                  questions);
+                    /*
+                         TaskID: 552f9165-0dd8-9124-f9bb-20fa3cb18382
+                         ItemID: 8fe015cb-bf46-5e1c-8975-f2cbca4762d9
+                         Questions: 16
+                     */
+                    if (AcceptOffersAnimationsObjects)
+                        client.Self.ScriptQuestionReply(simulator, itemID, taskID, questions);
+                }
+                );
         }
 
         public override void Self_OnScriptDialog(string message, string objectName, UUID imageID, UUID objectID,
                                                  string firstName, string lastName, int chatChannel,
                                                  List<string> buttons)
         {
-            lock (UpdateQueue)
-                UpdateQueue.AddLast(
-                    () =>
+            EventQueue.Enqueue(
+                () =>
+                {
+                    client.SendPersonalEvent(SimEventType.SCRIPT, "On-Script-Dialog", message, objectName, imageID, objectID, firstName,
+                                 lastName,
+                                 chatChannel, buttons);
+                    if (AcceptOffersAnimationsObjects && buttons.Count > 0)
+                    {
+                        int buttonIndex = (new Random()).Next(buttons.Count);
+                        string buttonlabel = buttons[buttonIndex];
+
+                        int maxTries = buttons.Count * 2;
+                        string buttonlabelToLower = buttonlabel.ToLower();
+                        while (maxTries-- > 0 && (buttonlabelToLower.Contains("cancel") || buttonlabelToLower.Contains("ignore") || buttonlabelToLower.Contains("mute")))
                         {
-                            client.SendPersonalEvent(SimEventType.SCRIPT, "On-Script-Dialog", message, objectName, imageID, objectID, firstName,
-                                         lastName,
-                                         chatChannel, buttons);
-                            if (AcceptOffersAnimationsObjects && buttons.Count>0)
-                            {
-                                int buttonIndex = (new Random()).Next(buttons.Count);
-                                string buttonlabel = buttons[buttonIndex];
-
-                                int maxTries = buttons.Count*2;
-                                string buttonlabelToLower = buttonlabel.ToLower();
-                                while (maxTries-- > 0 && (buttonlabelToLower.Contains("cancel") || buttonlabelToLower.Contains("ignore") || buttonlabelToLower.Contains("mute")))
-                                {
-                                    buttonIndex = (new Random()).Next(buttons.Count);
-                                    buttonlabel = buttons[buttonIndex];
-                                    buttonlabelToLower = buttonlabel.ToLower();
-                                }
-
-                                client.Self.ReplyToScriptDialog(chatChannel, buttonIndex, buttonlabel, objectID);
-                            }
+                            buttonIndex = (new Random()).Next(buttons.Count);
+                            buttonlabel = buttons[buttonIndex];
+                            buttonlabelToLower = buttonlabel.ToLower();
                         }
-                    );
+
+                        client.Self.ReplyToScriptDialog(chatChannel, buttonIndex, buttonlabel, objectID);
+                    }
+                }
+                );
         }
 
         public override void Self_OnScriptControlChange(ScriptControlChange controls, bool pass, bool take)
@@ -135,7 +133,7 @@ namespace cogbot.Listeners
                                               if (GetScriptRunning(ScriptHolder.ID, ib.UUID))
                                               {
                                                   SetScriptRunning(ScriptHolder.ID, ib.UUID, false);
-                                                  Console.WriteLine(String.Format("{0}",GetScriptRunning(ScriptHolder.ID,ib.UUID)));
+                                                  Console.WriteLine(String.Format("{0}", GetScriptRunning(ScriptHolder.ID, ib.UUID)));
                                               }
                                               break;
                                           }
@@ -356,5 +354,4 @@ namespace cogbot.Listeners
             return created;
         }
     }
-
 }
