@@ -289,6 +289,15 @@ namespace cogbot.ScriptEngines
             java.lang.Class ic = ikvm.runtime.Util.getInstanceTypeFromClass(globalcogbotTextForm.GetType());
             Intern(p, globalcogbotTextForm, allExceptFor, ic, 2);
         }
+
+        public override void InternType(Type t)
+        {
+            java.lang.Class ic = ikvm.runtime.Util.getInstanceTypeFromClass(t);
+            Intern(null, null, allExceptFor, ic, 2);
+
+          //  dotLispInterpreter.InternType(t);
+        }
+
         public Symbol Intern(string p, object globalcogbotTextForm, List<object> exceptFor, java.lang.Class ic, int depth)
         {
             Package pkg = CurrentPackage();

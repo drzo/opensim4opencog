@@ -90,7 +90,7 @@
     <template>
       <think>
         <system>
-          follow <get name="name"/>
+          follow <get name="name"/> 1
         </system>
       </think>        
     </template>

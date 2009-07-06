@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using cogbot.TheOpenSims;
 using PathSystem3D.Navigation;
@@ -326,6 +327,18 @@ namespace TheSimiansModule
 
         public void Aging()
         {
+
+            BotNeeds CurrentNeeds = this.CurrentNeeds;
+
+            // Initially randomize
+            if (false)foreach (FieldInfo c in CurrentNeeds.GetType().GetFields())
+            {
+                if (c.FieldType == typeof (float))
+                {
+                    CurrentNeeds.SetValue(c, CurrentNeeds, MyRandom.Next(100));
+                }
+            }
+
             BotNeeds OneMinute = SimTypeSystem.GetObjectType("OnMinuteTimer").GetUsageActual("OnMinuteTimer");
             while (true)
             {
@@ -427,7 +440,7 @@ namespace TheSimiansModule
                     {
                          if (CurrentAction!=null)
                          {
-                             if (obj!=CurrentAction.Target) continue;
+                             if (obj==CurrentAction.Target) continue;
                          }
                         if (obj.GetTypeUsages().Contains(use))
                         {

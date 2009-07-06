@@ -399,7 +399,7 @@ namespace cogbot.TheOpenSims
             TheBot.Debug(TheBot + " " + ToString() + "\n\t " +
                 TheBot.DistanceVectorString(Target)
                 + "=> " + difNeeds.ShowNonZeroNeeds());
-            if (TheBot is SimActor) ((SimActor)TheBot).ExecuteLisp(this, TypeUsage.LispScript);
+            if (TheBot is SimActor) ((SimActor)TheBot).ExecuteLisp(this, TypeUsage);
             Thread.Sleep(TypeUsage.totalTimeMS);
         }
 
@@ -464,8 +464,9 @@ namespace cogbot.TheOpenSims
         public bool UseGrab = false;
         // if "KICK" or another Anim the avatar will play this anim
         public String UseAnim = null;
-        // if set the client will attempt to run
-        public Object LispScript = null; // the lisp code that does the animation effects
+        /// if set the client will attempt to run
+        /// the lisp code that does the animation effects
+        public Object LispScript = null; 
 
         public string ToDebugString()
         {

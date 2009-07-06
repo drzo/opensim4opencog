@@ -8,6 +8,11 @@ namespace cogbot.ScriptEngines
     {
         DotLisp.Interpreter dotLispInterpreter;
 
+        public override void InternType(Type t)
+        {
+            dotLispInterpreter.InternType(t);
+        }
+
         public override object GetSymbol(string eventName)
         {
             eventName = eventName.ToLower();

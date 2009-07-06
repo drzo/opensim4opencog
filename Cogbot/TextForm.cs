@@ -588,7 +588,7 @@ namespace cogbot
         }
         static public Dictionary<string, BotClient> BotByName = new Dictionary<string, BotClient>();
         public BotClient lastBotClient = null;
-        static object oneAtATime = new object();
+        readonly static object oneAtATime = new object();
         public BotClient CreateBotClient(string first, string last, string passwd, string simurl, string location)
         {
             lock (oneAtATime)
