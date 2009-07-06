@@ -105,7 +105,9 @@ namespace AIMLBotModule
         private void TalkToObject0(SimActor av, SimObject obj)
         {
             string objName = obj.GetName();
-            StringChat(String.Format("{0}, {1}", objName, AIMLInterp("RANDOM PICKUP LINE", GetMyUser(objName))));
+            MyUser = GetMyUser(objName);
+            MyUser.RespondToChat = true;
+            StringChat(String.Format("{0}, {1}", objName, AIMLInterp("RANDOM PICKUP LINE", MyUser)));
         }
 
         public RTPBot MyBot;
@@ -388,7 +390,7 @@ namespace AIMLBotModule
                 myUser.RespondToChat = true;
                 return;
             }
-            if (myUser.RespondToChat && message.Contains("chat off"))
+            if (myUser.RespondToChat && MessageTurnsOffChat(message))
             {
                 myUser.RespondToChat = false;
                 return;
@@ -416,6 +418,15 @@ namespace AIMLBotModule
                                 StringChat(resp, type);
                                 myUser.LastResponseGivenTime = Environment.TickCount;
                             })).Start();
+        }
+
+        private bool MessageTurnsOffChat(string message)
+        {
+            message = message.ToLower();
+            if (message.Contains("chat off")) return true;
+            if (message.Contains("shut")) return true;
+            if (message.Contains("bye")) return true;
+            return false;
         }
 
         public void StringChat(string resp)
