@@ -260,13 +260,13 @@ namespace cogbot.Listeners
             return newPrim;
         }
 
-        internal void SetObjectPosition(Primitive Prim, Vector3 localPos)
+        public void SetObjectPosition(Primitive Prim, Vector3 localPos)
         {
             Simulator sim = GetSimulator(Prim);
             client.Objects.SetPosition(sim, Prim.LocalID, localPos);
         }
 
-        internal void SetObjectRotation(Primitive Prim, Quaternion localPos)
+        public void SetObjectRotation(Primitive Prim, Quaternion localPos)
         {
             Simulator sim = GetSimulator(Prim);
             client.Objects.SetRotation(sim, Prim.LocalID, localPos);

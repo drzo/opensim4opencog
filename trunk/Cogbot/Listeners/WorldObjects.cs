@@ -858,6 +858,12 @@ namespace cogbot.Listeners
             return null;
         }
 
+        public Primitive GetPrimitive(String str)
+        {
+            int argsUsed;
+            return GetPrimitive(new [] {str}, out argsUsed);
+        }
+
         public Primitive GetPrimitive(uint id, Simulator simulator)
         {
             if (simulator == null)

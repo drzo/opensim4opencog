@@ -247,11 +247,11 @@ namespace cogbot.TheOpenSims
                                                               catch (Exception e)
                                                               {
                                                                   Debug("InvokeReal: " + e);
-                                                                //  throw e;
+                                                                  //  throw e;
                                                               }
                                                               finally
                                                               {
-                                                                      lock (actionLock)
+                                                                      //lock (actionLock)
                                                                       {
                                                                           if (_currentAction == value)
                                                                           {
@@ -304,7 +304,7 @@ namespace cogbot.TheOpenSims
 
         public override bool IsRoot
         {
-            get { return theAvatar.ParentID == 0; }
+            get { return theAvatar == null || theAvatar.ParentID == 0; }
         }
 
         ///  public override ISimObject Parent {  get { return this; }   }
@@ -1042,7 +1042,7 @@ namespace cogbot.TheOpenSims
                     IsBlocked = false;
                     if (lastDistance <= curDist)
                     {
-                        if (Prim.Velocity == Vector3.Zero)
+                        if (_Prim0!=null && Prim.Velocity == Vector3.Zero)
                             IsBlocked = true;
                         if (ApproachPosition!=null)
                         {
