@@ -459,7 +459,8 @@ namespace cogbot
                 //WriteLine(text);
                 consoleInputText.Text = "";
 
-                WriteLine(ExecuteCommand(text,WriteLine));
+                //new Thread(()=>
+                    WriteLine(ExecuteCommand(text,WriteLine));//).Start();
 
                 //if (describeNext)
                 //{
@@ -956,6 +957,16 @@ namespace cogbot
             stripMenuItem.Click += threadStart;
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {stripMenuItem});
             ResumeLayout();
+        }
+
+        private void consoleInputText_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void submitButton_Click(object sender, EventArgs e)
+        {
+            acceptConsoleInput();
         }
     }
 

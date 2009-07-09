@@ -4,12 +4,12 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class PrimInfoCommand : Command, RegionMasterCommand
+    public class DeRezCommand : Command, RegionMasterCommand
     {
-        public PrimInfoCommand(BotClient testClient)
+        public DeRezCommand(BotClient testClient)
         {
-            Name = "priminfo";
-            Description = "Dumps information about a specified prim. " + "Usage: priminfo [prim-uuid]";
+            Name = "derez";
+            Description = "De-Rezes a specified prim. " + "Usage: derez [prim-uuid]";
             Category = CommandCategory.Objects;
         }
 
@@ -19,18 +19,15 @@ namespace cogbot.Actions
 
             if (args.Length < 1)
             {
-                foreach (SimObject O in WorldSystem.TheSimAvatar.GetNearByObjects(10, true))
-                {
-                    WriteLine("\n {0}", WorldSystem.describePrim(O.Prim, false));
-                }
-                return "Done.";
+                return Description;
             }
 
             int argsUsed;
             Primitive target = WorldSystem.GetPrimitive(args, out argsUsed);
             if (target != null)
             {
-                WriteLine("\n {0}", WorldSystem.describePrim(target, true));
+                WorldSystem.DeletePrim(target);
+                WriteLine("\n {0}", target);
                 return "Done.";
             }
             return "Could not find prim " + String.Join(" ", args);
