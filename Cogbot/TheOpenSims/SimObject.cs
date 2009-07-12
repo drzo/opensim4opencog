@@ -290,6 +290,22 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        readonly Dictionary<string ,object > infoMap = new Dictionary<string, object>();
+        public Dictionary<string, object> GetInfoMap()
+        {
+            return infoMap;
+        }
+
+        public void SetInfoMap(string key, object value)
+        {
+            if (value == null)
+            {
+                if (!infoMap.ContainsKey(key)) infoMap[key] = value;
+                return;
+            }                    
+            infoMap[key] = value;
+        }
+
         readonly private List<Primitive> primRefs = new List<Primitive>();
         public virtual void ResetPrim(Primitive prim, BotClient bc, Simulator sim)
         {
@@ -1528,9 +1544,9 @@ namespace cogbot.TheOpenSims
             List<SimObject> UnEnterables = new List<SimObject>();
             foreach (SimObject O in GetNearByObjects(3, false))
             {
+                O.UpdateOccupied();
                 if (!O.IsPhantom)
                 {
-                    O.UpdateOccupied();
                     if (O.IsTypeOf(DOOR) != null)
                     {
                         O.MakeEnterable(this);
@@ -1945,5 +1961,8 @@ namespace cogbot.TheOpenSims
         UUID ID { get; }
         Primitive.ObjectProperties Properties { get; set; }
         bool KilledPrim(Primitive primitive, Simulator simulator);
+
+        Dictionary<string, object> GetInfoMap();
+        void SetInfoMap(string key,Object value);
     }
 }

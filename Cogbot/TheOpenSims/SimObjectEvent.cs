@@ -18,7 +18,8 @@ namespace cogbot.TheOpenSims
         TOUCH,
         MOVEMENT,
         SCRIPT,
-        NETWORK
+        NETWORK,
+        DATA_UPDATE
     }
     public enum SimEventStatus
     {

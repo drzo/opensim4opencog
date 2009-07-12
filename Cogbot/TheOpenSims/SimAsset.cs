@@ -124,7 +124,7 @@ namespace cogbot.TheOpenSims
                     InventoryItem II = (InventoryItem)IB;
                     if (II.AssetType == AssetType.Animation)
                     {
-                        SetAssetName(II.AssetUUID, II.Name);
+                        SetAssetName(II.AssetUUID, II.Name,AssetType.Animation);
                     }
                 }
             }
@@ -1178,11 +1178,11 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public UUID GetAssetUUID(string a)
+        public UUID GetAssetUUID(string a, AssetType type)
         {
             a = a.ToLower();
             FillAnimationNames();
-            UUID partial = default(UUID);
+            UUID partial;// = default(UUID);
             if (UUID.TryParse(a,out partial))
             {
                 return partial;
@@ -1190,22 +1190,24 @@ namespace cogbot.TheOpenSims
             foreach (String name in nameAsset.Keys)
             {
                 String sname = name.ToLower();
+                SimAsset aset = nameAsset[name];
                 if (sname.Equals(a))
                 {
-                    return nameAsset[name].AssetID;
+                    partial = aset.AssetID;
+                    if (type == aset.AssetType) return partial;
                 }
                 if (sname.Contains(a))
                 {
-                    partial = nameAsset[name].AssetID;
+                    if (partial==UUID.Zero) partial = aset.AssetID;
                 }
             }
             return partial;
         }
 
-        static public void SetAssetName(UUID uUID, string s)
+        static public void SetAssetName(UUID uUID, string s, AssetType type)
         {
             FillAnimationNames();
-            SimAsset anim = FindOrCreateAsset(uUID, AssetType.Animation);
+            SimAsset anim = FindOrCreateAsset(uUID, type);
             anim.Name = s;
         }
 
@@ -1446,6 +1448,7 @@ namespace cogbot.TheOpenSims
                 if (!_Name.Contains(n)) _Name.Add(n);
             }
         }
+
 
         public UUID AssetID
         {

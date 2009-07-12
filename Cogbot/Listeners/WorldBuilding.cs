@@ -15,6 +15,46 @@ namespace cogbot.Listeners
     public partial class WorldObjects
     {
 
+        public static Dictionary<string, object> GetMemberValues(Object properties)
+        {
+            Dictionary<string, object> dict = new Dictionary<string, object>();
+            if (properties == null)
+            {
+                return dict;
+            }
+            Type t = properties.GetType();
+            foreach (FieldInfo o in t.GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
+            {
+                try
+                {
+                    var v = o.GetValue(properties);
+                    if (v != null) dict[o.Name] = v;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("" + e);
+                }
+            }
+            foreach (PropertyInfo o in t.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
+            {
+              if (o.CanRead)
+              {
+                  if (!dict.ContainsKey(o.Name))
+                  {
+                      try
+                      {
+                          dict[o.Name] = o.GetValue(properties, null);
+                      }
+                      catch (Exception e)
+                      {
+                          Console.WriteLine("" + e);
+                      }
+                  }
+              }
+            }
+            return dict;
+        }
+
         static public NamedParam ToParameter(string p, object s)
         {
             while (s is NamedParam)
