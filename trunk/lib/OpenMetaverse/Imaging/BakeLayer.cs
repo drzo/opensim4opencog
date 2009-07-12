@@ -125,8 +125,7 @@ namespace OpenMetaverse.Imaging
                     }
                 }
 
-                //_textures.Add(index, texture);
-                _textures[index] = texture;
+                _textures.Add(index, texture);
                 Logger.DebugLog(String.Format("Added texture {0} (ID: {1}) to bake {2}", index, texture.AssetID, _bakeType), _client);
             }
 

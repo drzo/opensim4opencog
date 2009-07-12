@@ -60,7 +60,7 @@ namespace OpenMetaverse
         /// <summary>Equivalent to a 404 error</summary>
         UnknownSource = -2,
         /// <summary>Client does not have permission for that resource</summary>
-        InsufficientPermissiosn = -3,
+        InsufficientPermissions = -3,
         /// <summary>Unknown status</summary>
         Unknown = -4
     }
@@ -208,9 +208,9 @@ namespace OpenMetaverse
     {
         public ulong XferID;
         public UUID VFileID;
-        public AssetType Type;
         public uint PacketNum;
         public string Filename = String.Empty;
+        public TransferError Error = TransferError.None;
 
         public XferDownload()
             : base()
@@ -375,8 +375,9 @@ namespace OpenMetaverse
             Client.Network.RegisterCallback(PacketType.ConfirmXferPacket, new NetworkManager.PacketCallback(ConfirmXferPacketHandler));
             Client.Network.RegisterCallback(PacketType.AssetUploadComplete, new NetworkManager.PacketCallback(AssetUploadCompleteHandler));
 
-            // Xfer packet for downloading misc assets
+            // Xfer packets for downloading misc assets
             Client.Network.RegisterCallback(PacketType.SendXferPacket, new NetworkManager.PacketCallback(SendXferPacketHandler));
+            Client.Network.RegisterCallback(PacketType.AbortXfer, new NetworkManager.PacketCallback(AbortXferHandler));
 
             // Simulator is responding to a request to download a file
             Client.Network.RegisterCallback(PacketType.InitiateDownload, new NetworkManager.PacketCallback(InitiateDownloadPacketHandler));
@@ -392,13 +393,26 @@ namespace OpenMetaverse
         /// <returns>The transaction ID generated for this transfer</returns>
         public UUID RequestAsset(UUID assetID, AssetType type, bool priority)
         {
+            return RequestAsset(assetID, type, priority, SourceType.Asset);
+        }
+
+        /// <summary>
+        /// Request an asset download
+        /// </summary>
+        /// <param name="assetID">Asset UUID</param>
+        /// <param name="type">Asset type, must be correct for the transfer to succeed</param>
+        /// <param name="priority">Whether to give this transfer an elevated priority</param>
+        /// <param name="sourceType">Source location of the requested asset</param>
+        /// <returns>The transaction ID generated for this transfer</returns>
+        public UUID RequestAsset(UUID assetID, AssetType type, bool priority, SourceType sourceType)
+        {
             AssetDownload transfer = new AssetDownload();
             transfer.ID = UUID.Random();
             transfer.AssetID = assetID;
             //transfer.AssetType = type; // Set in TransferInfoHandler.
             transfer.Priority = 100.0f + (priority ? 1.0f : 0.0f);
             transfer.Channel = ChannelType.Asset;
-            transfer.Source = SourceType.Asset;
+            transfer.Source = sourceType;
             transfer.Simulator = Client.Network.CurrentSim;
 
             // Add this transfer to the dictionary
@@ -1270,6 +1284,34 @@ namespace OpenMetaverse
                         catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
                     }
                 }
+            }
+        }
+
+        private void AbortXferHandler(Packet packet, Simulator simulator)
+        {
+            AbortXferPacket abort = (AbortXferPacket)packet;
+            XferDownload download = null;
+
+            // Lame ulong to UUID conversion, please go away Xfer system
+            UUID transferID = new UUID(abort.XferID.ID);
+
+            lock (Transfers)
+            {
+                Transfer transfer;
+                if (Transfers.TryGetValue(transferID, out transfer))
+                {
+                    download = (XferDownload)transfer;
+                    Transfers.Remove(transferID);
+                }
+            }
+
+            if (download != null && OnXferReceived != null)
+            {
+                download.Success = false;
+                download.Error = (TransferError)abort.XferID.Result;
+
+                try { OnXferReceived(download); }
+                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
             }
         }
 

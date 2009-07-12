@@ -35,6 +35,7 @@ using OpenMetaverse.Http;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Interfaces;
 using OpenMetaverse.Messages.Linden;
+using OpenMetaverse.Assets;
 
 namespace OpenMetaverse
 {
@@ -1049,11 +1050,15 @@ namespace OpenMetaverse
                 if (sittingOn != 0)
                 {
                     Primitive parent;
-                    if (Client.Network.CurrentSim != null)
+                    if (Client.Network.CurrentSim != null && Client.Network.CurrentSim.ObjectsPrimitives.TryGetValue(sittingOn, out parent))
                     {
-                        lock (Client.Network.CurrentSim.ObjectsPrimitives.Dictionary)
-                            if (Client.Network.CurrentSim.ObjectsPrimitives.TryGetValue(sittingOn, out parent))
-                                return parent.Position + Vector3.Transform(relativePosition, Matrix4.CreateFromQuaternion(parent.Rotation));
+                        return parent.Position + Vector3.Transform(relativePosition, Matrix4.CreateFromQuaternion(parent.Rotation));
+                    }
+                    else
+                    {
+                        Logger.Log("Currently sitting on object " + sittingOn + " which is not tracked, SimPosition will be inaccurate",
+                            Helpers.LogLevel.Warning, Client);
+                        return relativePosition;
                     }
                     Logger.Log("Currently sitting on object " + sittingOn + " which is not tracked, SimPosition will be inaccurate",
                         Helpers.LogLevel.Warning, Client);
@@ -1144,6 +1149,7 @@ namespace OpenMetaverse
         private int balance;
         private UUID activeGroup;
         private GroupPowers activeGroupPowers;
+        private Dictionary<UUID, AssetGesture> gestureCache = new Dictionary<UUID, AssetGesture>();
         #endregion Private Members
 
         /// <summary>
@@ -2152,6 +2158,112 @@ namespace OpenMetaverse
         }
 
         #endregion Money
+
+        #region Gestures
+        /// <summary>
+        /// Plays a gesture
+        /// </summary>
+        /// <param name="guestureID">Asset <seealso cref="UUID"/> of the gesture</param>
+        public void PlayGesture(UUID gestureID)
+        {
+            Thread t = new Thread(new ThreadStart(delegate()
+                {
+                    // First fetch the guesture
+                    AssetGesture gesture = null;
+                    AutoResetEvent gotAsset = new AutoResetEvent(false);
+
+                    AssetManager.AssetReceivedCallback callback =
+                        delegate(AssetDownload transfer, Asset asset)
+                        {
+                            if (transfer.AssetID != gestureID) return;
+
+                            if (transfer.Success)
+                            {
+                                gesture = (AssetGesture)asset;
+                            }
+
+                            gotAsset.Set();
+                        };
+
+                    if (gestureCache.ContainsKey(gestureID))
+                    {
+                        gesture = gestureCache[gestureID];
+                    }
+                    else
+                    {
+                        Client.Assets.OnAssetReceived += callback;
+                        Client.Assets.RequestAsset(gestureID, AssetType.Gesture, true);
+                        gotAsset.WaitOne(30 * 1000, false);
+                        Client.Assets.OnAssetReceived -= callback;
+
+                        if (gesture != null && gesture.Decode())
+                        {
+                            lock (gestureCache)
+                            {
+                                if (!gestureCache.ContainsKey(gestureID))
+                                {
+                                    gestureCache[gestureID] = gesture;
+                                }
+                            }
+                        }
+                    }
+
+                    // We got it, now we play it
+                    if (gesture != null)
+                    {
+                        for (int i = 0; i < gesture.Sequence.Count; i++)
+                        {
+                            GestureStep step = gesture.Sequence[i];
+
+                            switch (step.GestureStepType)
+                            {
+                                case GestureStepType.Chat:
+                                    Chat(((GestureStepChat)step).Text, 0, ChatType.Normal);
+                                    break;
+
+                                case GestureStepType.Animation:
+                                    GestureStepAnimation anim = (GestureStepAnimation)step;
+
+                                    if (anim.AnimationStart)
+                                    {
+                                        if (SignaledAnimations.ContainsKey(anim.ID))
+                                        {
+                                            AnimationStop(anim.ID, true);
+                                        }
+                                        AnimationStart(anim.ID, true);
+                                    }
+                                    else
+                                    {
+                                        AnimationStop(anim.ID, true);
+                                    }
+                                    break;
+
+                                case GestureStepType.Sound:
+                                    Client.Sound.SoundTrigger(((GestureStepSound)step).ID);
+                                    break;
+
+                                case GestureStepType.Wait:
+                                    GestureStepWait wait = (GestureStepWait)step;
+                                    if (wait.WaitForTime)
+                                    {
+                                        Thread.Sleep((int)(1000f * wait.WaitTime));
+                                    }
+                                    if (wait.WaitForAnimation)
+                                    {
+                                        // TODO: implement waiting for all animations to end that were triggered
+                                        // during playing of this guesture sequence
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+                }));
+
+            t.IsBackground = true;
+            t.Name = "Gesture thread: " + gestureID;
+            t.Start();
+        }
+        #endregion
 
         #region Animations
 
