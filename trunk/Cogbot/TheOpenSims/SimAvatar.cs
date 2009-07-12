@@ -39,17 +39,16 @@ namespace cogbot.TheOpenSims
         public override void ThreadJump()
         {
             ///  all the anims here are mainly so we can see what the bot is doing
-            (new Thread(() =>
-                        WithAnim(Animations.SHRUG, () =>
-                                                       {
-                                                           //Client.Self.Fly(false);
-                                                           Client.Self.AnimationStart(Animations.WORRY, true);
-                                                           Thread.Sleep(10);
-                                                           Client.Self.Jump(true);
-                                                           Thread.Sleep(500);
-                                                           Client.Self.Jump(false);
-                                                           Client.Self.AnimationStop(Animations.WORRY, true);
-                                                       }))).Start();
+            (new Thread(
+                WithAnim(Animations.SHRUG,
+                         WithAnim(Animations.WORRY, () =>
+                                                        {
+                                                            //Client.Self.Fly(false);
+                                                            Thread.Sleep(10);
+                                                            Client.Self.Jump(true);
+                                                            Thread.Sleep(500);
+                                                            Client.Self.Jump(false);
+                                                        })))).Start();
         }
 
         public ThreadStart WithAnim(UUID uUID, ThreadStart threadStart)
@@ -59,7 +58,7 @@ namespace cogbot.TheOpenSims
 
         public override void OpenNearbyClosedPassages()
         {
-            WithAnim(Animations.AFRAID, base.OpenNearbyClosedPassages);
+            WithAnim(Animations.AFRAID, base.OpenNearbyClosedPassages).Invoke();
         }
 
         public float ZHeading

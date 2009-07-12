@@ -192,12 +192,33 @@ namespace cogbot.Listeners
 
         public override void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)
         {
+            SimAvatar A = CreateSimAvatar(avatarID,this,null);
+            Dictionary<string, object> from = GetMemberValues(properties);
+            foreach (KeyValuePair<string, object> o in from)
+            {
+                A.SetInfoMap(o.Key,o.Value);                
+            }
+            if (properties.Partner!=UUID.Zero)
+            {
+                CreateSimAvatar(properties.Partner, this, null);
+            }
+            if (properties.ProfileImage!=UUID.Zero)
+            {
+                //RequestAsset(properties.ProfileImage, AssetType.ImageJPEG, true);
+            }
+            SendNewRegionEvent(SimEventType.DATA_UPDATE, "OnAvatarDataUpdate", A);
             //TODO SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID, null), properties);
         }
 
-        public override void Avatars_OnAvatarInterests(UUID avatarID, Avatar.Interests interests)
+        public override void Avatars_OnAvatarInterests(UUID avatarID, Avatar.Interests properties)
         {
-            //TODO SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID, null), interests);
+            SimAvatar A = CreateSimAvatar(avatarID, this, null);
+            Dictionary<string, object> from = GetMemberValues(properties);
+            foreach (KeyValuePair<string, object> o in from)
+            {
+                A.SetInfoMap(o.Key, o.Value);
+            }
+            SendNewRegionEvent(SimEventType.DATA_UPDATE, "OnAvatarDataUpdate", A);
         }
 
         public override void Avatars_OnAvatarGroups(UUID avatarID, List<AvatarGroup> avatarGroups)

@@ -65,7 +65,7 @@ namespace cogbot.Actions
                     time = 0;
                     a = a.Substring(1);
                 }
-                UUID anim = WorldSystem.GetAnimationUUID(a);
+                UUID anim = WorldSystem.GetAssetUUID(a, AssetType.Animation);
 
                 if (anim == UUID.Zero)
                 {

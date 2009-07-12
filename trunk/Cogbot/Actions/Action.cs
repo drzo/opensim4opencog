@@ -70,7 +70,7 @@ namespace cogbot.Actions
                 target = prim.ID;
                 if (target != UUID.Zero) return true;
             }
-            target = WorldSystem.GetAnimationUUID(p);
+            target = WorldSystem.GetAssetUUID(p, AssetType.Unknown);
             if (target != UUID.Zero) return true;
             return false;
         }

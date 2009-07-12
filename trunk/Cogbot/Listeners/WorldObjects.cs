@@ -1344,9 +1344,9 @@ namespace cogbot.Listeners
         }
 
 
-        public UUID GetAnimationUUID(string a)
+        public UUID GetAssetUUID(string a, AssetType type)
         {
-            return SimAssetSystem.GetAssetUUID(a);
+            return SimAssetSystem.GetAssetUUID(a, type);
         }
 
         public Primitive GetPrimitive(string[] args, out int argsUsed)
@@ -1437,6 +1437,7 @@ namespace cogbot.Listeners
                             if (obj0 == null) obj0 = new SimAvatarImpl(uuid, objects, simulator);
                             SimAvatars.Add((SimAvatar)obj0);
                             client.Avatars.RequestAvatarProperties(uuid);
+                            client.Avatars.RequestAvatarPicks(uuid);
                             SimObjects.AddTo(obj0);
                             RegisterUUID(uuid, obj0);
                             return (SimAvatarImpl)obj0;
