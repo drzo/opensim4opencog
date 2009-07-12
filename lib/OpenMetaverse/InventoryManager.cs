@@ -26,6 +26,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Text;
@@ -234,6 +235,10 @@ namespace OpenMetaverse
         /// <summary>Time and date this inventory item was created, stored as
         /// UTC (Coordinated Universal Time)</summary>
         public DateTime CreationDate;
+        /// <summary>Used to update the AssetID in requests sent to the server</summary>
+        public UUID TransactionID;
+        /// <summary>The <seealso cref="OpenMetaverse.UUID"/> of the previous owner of the item</summary>
+        public UUID LastOwnerID;
 
         /// <summary>
         ///  Construct a new InventoryItem object
@@ -254,11 +259,11 @@ namespace OpenMetaverse
         /// 
         /// </summary>
         /// <returns></returns>
-        override public void GetObjectData(SerializationInfo info, StreamingContext ctxt) 
+        override public void GetObjectData(SerializationInfo info, StreamingContext ctxt)
         {
-            base.GetObjectData(info,ctxt);
-            info.AddValue("AssetUUID",AssetUUID,typeof(UUID));
-            info.AddValue("Permissions", Permissions,typeof(Permissions));
+            base.GetObjectData(info, ctxt);
+            info.AddValue("AssetUUID", AssetUUID, typeof(UUID));
+            info.AddValue("Permissions", Permissions, typeof(Permissions));
             info.AddValue("AssetType", AssetType);
             info.AddValue("InventoryType", InventoryType);
             info.AddValue("CreatorID", CreatorID);
@@ -268,7 +273,8 @@ namespace OpenMetaverse
             info.AddValue("SalePrice", SalePrice);
             info.AddValue("SaleType", SaleType);
             info.AddValue("Flags", Flags);
-            info.AddValue("CreationDate", CreationDate);  
+            info.AddValue("CreationDate", CreationDate);
+            info.AddValue("LastOwnerID", LastOwnerID);
         }
 
         /// <summary>
@@ -289,6 +295,7 @@ namespace OpenMetaverse
            SaleType = (SaleType)info.GetValue("SaleType", typeof(SaleType));
            Flags = (uint)info.GetValue("Flags", typeof(uint));
            CreationDate = (DateTime)info.GetValue("CreationDate", typeof(DateTime));
+           LastOwnerID = (UUID)info.GetValue("LastOwnerID", typeof(UUID));
         }
 
         /// <summary>
@@ -301,7 +308,7 @@ namespace OpenMetaverse
             return AssetUUID.GetHashCode() ^ Permissions.GetHashCode() ^ AssetType.GetHashCode() ^
                 InventoryType.GetHashCode() ^ Description.GetHashCode() ^ GroupID.GetHashCode() ^
                 GroupOwned.GetHashCode() ^ SalePrice.GetHashCode() ^ SaleType.GetHashCode() ^
-                Flags.GetHashCode() ^ CreationDate.GetHashCode();
+                Flags.GetHashCode() ^ CreationDate.GetHashCode() ^ LastOwnerID.GetHashCode();
         }
 
         /// <summary>
@@ -344,7 +351,8 @@ namespace OpenMetaverse
                 && o.InventoryType == InventoryType
                 && o.Permissions.Equals(Permissions)
                 && o.SalePrice == SalePrice
-                && o.SaleType == SaleType;
+                && o.SaleType == SaleType
+                && o.LastOwnerID == LastOwnerID;
         }
     }
 
@@ -489,6 +497,15 @@ namespace OpenMetaverse
         {
             get { return (InventoryItemFlags)(Flags & ~0xFF); }
             set { Flags = (uint)value | (Flags & 0xFF); }
+        }
+
+        /// <summary>
+        /// Gets or sets the object attachment point, the lower byte of the Flags value
+        /// </summary>
+        public AttachmentPoint AttachPoint
+        {
+            get { return (AttachmentPoint)(Flags & 0xFF); }
+            set { Flags = (uint)value | (Flags & 0xFFFFFF00); }
         }
     }
 
@@ -809,6 +826,9 @@ namespace OpenMetaverse
     /// </summary>
     public class InventoryManager
     {
+        /// <summary>Used for converting shadow_id to asset_id</summary>
+        public static readonly UUID MAGIC_ID = new UUID("3c115e51-04f4-523c-9fa6-98aff1034730");
+
         protected struct InventorySearch
         {
             public UUID Folder;
@@ -2058,7 +2078,7 @@ namespace OpenMetaverse
                 block.OwnerMask = (uint)item.Permissions.OwnerMask;
                 block.SalePrice = item.SalePrice;
                 block.SaleType = (byte)item.SaleType;
-                block.TransactionID = UUID.Zero;
+                block.TransactionID = item.TransactionID;
                 block.Type = (sbyte)item.AssetType;
 
                 update.InventoryData[i] = block;
@@ -2087,7 +2107,7 @@ namespace OpenMetaverse
 
                 // Make the request
                 CapsClient request = new CapsClient(url);
-                request.OnComplete += new CapsClient.CompleteCallback(UploadNotecardAssetResponse);
+                request.OnComplete += UploadNotecardAssetResponse;
                 request.UserData = new object[] { new KeyValuePair<NotecardUploadedAssetCallback, byte[]>(callback, data), notecardID };
                 request.BeginGetResponse(query, OSDFormat.Xml, _Client.Settings.CAPS_TIMEOUT);
             }
@@ -2110,7 +2130,7 @@ namespace OpenMetaverse
 
             if(url != null)
             {
-                UpdateScriptAgentMessage msg = new UpdateScriptAgentMessage();
+                UpdateScriptAgentRequestMessage msg = new UpdateScriptAgentRequestMessage();
                 msg.ItemID = itemID;
                 msg.Target = mono ? "mono" : "lsl2";
                 
@@ -2739,6 +2759,16 @@ namespace OpenMetaverse
         }
 
         /// <summary>
+        /// Reverses a cheesy XORing with a fixed UUID to convert a shadow_id to an asset_id
+        /// </summary>
+        /// <param name="shadowID">Obfuscated shadow_id value</param>
+        /// <returns>Deobfuscated asset_id value</returns>
+        public static UUID DecryptShadowID(UUID shadowID)
+        {
+            return shadowID ^ MAGIC_ID;
+        }
+
+        /// <summary>
         /// Wrapper for creating a new <seealso cref="InventoryItem"/> object
         /// </summary>
         /// <param name="type">The type of item from the <seealso cref="InventoryType"/> enum</param>
@@ -3043,7 +3073,9 @@ namespace OpenMetaverse
                                 }
                                 else if (key == "shadow_id")
                                 {
-                                    //FIXME:
+                                    UUID shadowID;
+                                    if (UUID.TryParse(value, out shadowID))
+                                        assetID = DecryptShadowID(shadowID);
                                 }
                                 else if (key == "asset_id")
                                 {
@@ -3091,6 +3123,7 @@ namespace OpenMetaverse
                         item.GroupOwned = groupOwned;
                         item.Name = name;
                         item.OwnerID = ownerID;
+                        item.LastOwnerID = lastOwnerID;
                         item.ParentUUID = parentID;
                         item.Permissions = perms;
                         item.SalePrice = salePrice;
@@ -3405,6 +3438,9 @@ namespace OpenMetaverse
                     // assign default folder for type
                     item.ParentUUID = FindFolderForType(item.AssetType);
 
+                    Logger.Log("Received an item through UpdateCreateInventoryItem with no parent folder, assigning to folder " +
+                        item.ParentUUID, Helpers.LogLevel.Info);
+
                     // send update to the sim
                     RequestUpdateItem(item);
                 }
@@ -3549,7 +3585,7 @@ namespace OpenMetaverse
                     continue;
                 }
 
-                InventoryItem item = CreateInventoryItem((InventoryType)dataBlock.InvType,dataBlock.ItemID);
+                InventoryItem item = CreateInventoryItem((InventoryType)dataBlock.InvType, dataBlock.ItemID);
                 item.AssetType = (AssetType)dataBlock.Type;
                 item.AssetUUID = dataBlock.AssetID;
                 item.CreationDate = Utils.UnixTimeToDateTime(dataBlock.CreationDate);
@@ -3558,6 +3594,7 @@ namespace OpenMetaverse
                 item.Flags = dataBlock.Flags;
                 item.GroupID = dataBlock.GroupID;
                 item.GroupOwned = dataBlock.GroupOwned;
+                item.InventoryType = (InventoryType)dataBlock.InvType;
                 item.Name = Utils.BytesToString(dataBlock.Name);
                 item.OwnerID = dataBlock.OwnerID;
                 item.ParentUUID = dataBlock.FolderID;
@@ -3569,6 +3606,7 @@ namespace OpenMetaverse
                     dataBlock.OwnerMask);
                 item.SalePrice = dataBlock.SalePrice;
                 item.SaleType = (SaleType)dataBlock.SaleType;
+                item.UUID = dataBlock.ItemID;
 
                 _Store[item.UUID] = item;
 
@@ -3730,41 +3768,67 @@ namespace OpenMetaverse
 
         private void UploadNotecardAssetResponse(CapsClient client, OSD result, Exception error)
         {
-            OSDMap contents = (OSDMap)result;
+            OSDMap contents = result as OSDMap;
             KeyValuePair<NotecardUploadedAssetCallback, byte[]> kvp = (KeyValuePair<NotecardUploadedAssetCallback, byte[]>)(((object[])client.UserData)[0]);
             NotecardUploadedAssetCallback callback = kvp.Key;
             byte[] itemData = (byte[])kvp.Value;
 
-            string status = contents["state"].AsString();
-
-            if (status == "upload")
+            if (error == null && contents != null)
             {
-                string uploadURL = contents["uploader"].AsString();
+                string status = contents["state"].AsString();
 
-                // This makes the assumption that all uploads go to CurrentSim, to avoid
-                // the problem of HttpRequestState not knowing anything about simulators
-                CapsClient upload = new CapsClient(new Uri(uploadURL));
-                upload.OnComplete += new CapsClient.CompleteCallback(UploadNotecardAssetResponse);
-                upload.UserData = new object[2] { kvp, (UUID)(((object[])client.UserData)[1]) };
-                upload.BeginGetResponse(itemData, "application/octet-stream", _Client.Settings.CAPS_TIMEOUT);
-            }
-            else if (status == "complete")
-            {
-                if (contents.ContainsKey("new_asset"))
+                if (status == "upload")
                 {
-                    try { callback(true, String.Empty, (UUID)(((object[])client.UserData)[1]), contents["new_asset"].AsUUID()); }
-                    catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, _Client, e); }
+                    Uri uploadURL = contents["uploader"].AsUri();
+
+                    if (uploadURL != null)
+                    {
+                        // This makes the assumption that all uploads go to CurrentSim, to avoid
+                        // the problem of HttpRequestState not knowing anything about simulators
+                        CapsClient upload = new CapsClient(uploadURL);
+                        upload.OnComplete += UploadNotecardAssetResponse;
+                        upload.UserData = new object[2] { kvp, (UUID)(((object[])client.UserData)[1]) };
+                        upload.BeginGetResponse(itemData, "application/octet-stream", _Client.Settings.CAPS_TIMEOUT);
+                    }
+                    else
+                    {
+                        try { callback(false, "Missing uploader URL", UUID.Zero, UUID.Zero); }
+                        catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, _Client, e); }
+                    }
+                }
+                else if (status == "complete")
+                {
+                    if (contents.ContainsKey("new_asset"))
+                    {
+                        try { callback(true, String.Empty, (UUID)(((object[])client.UserData)[1]), contents["new_asset"].AsUUID()); }
+                        catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, _Client, e); }
+                    }
+                    else
+                    {
+                        try { callback(false, "Failed to parse asset and item UUIDs", UUID.Zero, UUID.Zero); }
+                        catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, _Client, e); }
+                    }
                 }
                 else
                 {
-                    try { callback(false, "Failed to parse asset and item UUIDs", UUID.Zero, UUID.Zero); }
+                    try { callback(false, status, UUID.Zero, UUID.Zero); }
                     catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, _Client, e); }
                 }
             }
             else
             {
-                // Failure
-                try { callback(false, status, UUID.Zero, UUID.Zero); }
+                string message = "Unrecognized or empty response";
+
+                if (error != null)
+                {
+                    if (error is WebException)
+                        message = ((HttpWebResponse)((WebException)error).Response).StatusDescription;
+
+                    if (message == null || message == "None")
+                        message = error.Message;
+                }
+
+                try { callback(false, message, UUID.Zero, UUID.Zero); }
                 catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, _Client, e); }
             }
         }

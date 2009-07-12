@@ -492,7 +492,7 @@ namespace OpenMetaverse
                 InternalDictionary<UUID, int> signaledAnims = new InternalDictionary<UUID, int>();
                 
                 for(int i=0; i < anims.AnimationList.Length; i++)
-                    signaledAnims.Dictionary.Add(anims.AnimationList[i].AnimID, anims.AnimationList[i].AnimSequenceID);
+                    signaledAnims.Add(anims.AnimationList[i].AnimID, anims.AnimationList[i].AnimSequenceID);
 
                 try { OnAvatarAnimation(anims.Sender.ID, signaledAnims); }
                 catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }

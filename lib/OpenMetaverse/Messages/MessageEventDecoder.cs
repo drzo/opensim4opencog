@@ -81,6 +81,9 @@ namespace OpenMetaverse.Messages
                 case "DirLandReply": message = new DirLandReplyMessage(); break;
                 case "ScriptRunningReply": message = new ScriptRunningReplyMessage(); break;
                 case "SearchStatRequest": message = new SearchStatRequestMessage(); break;
+                case "AgentDropGroup": message = new AgentDropGroupMessage(); break;
+                case "ForceCloseChatterBoxSession": message = new ForceCloseChatterBoxSessionMessage(); break;
+                case "UploadBakedTexture": message = new UploadBakedTextureMessage(); break;
                 //case "ProductInfoRequest": message = new ProductInfoRequestMessage(); break;
 
                 // Capabilities TODO:

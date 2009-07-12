@@ -1047,7 +1047,7 @@ namespace OpenMetaverse
         private void DisableSimulatorCapsHandler(string capsKey, IMessage message, Simulator simulator)
         {
             if (!Client.Settings.MULTIPLE_SIMS) return;
-            Logger.Log("Received a CAPS Based DisableSimulator packet from " + simulator + ", shutting it down", Client);
+            Logger.DebugLog("Received a CAPS Based DisableSimulator packet from " + simulator + ", shutting it down", Client);
             DisconnectSim(simulator, false, DisconnectType.ServerInitiated);
         }
 

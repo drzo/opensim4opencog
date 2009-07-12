@@ -82,10 +82,6 @@ namespace OpenMetaverse
             Log(message, level, null, null);
         }
 
-        public static void Log(object message, GridClient client)
-        {
-            Log(message, Helpers.LogLevel.Info,  client);
-        }
         /// <summary>
         /// Send a log message to the logging engine
         /// </summary>
@@ -186,11 +182,6 @@ namespace OpenMetaverse
 
                 LogInstance.Debug(message);
             }
-        }
-
-        public static void Log(string message)
-        {
-            Log(message, Helpers.LogLevel.Info);
         }
     }
 }

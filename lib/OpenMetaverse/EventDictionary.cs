@@ -139,7 +139,7 @@ namespace OpenMetaverse
             
             if (packetType != PacketType.Default && packetType != PacketType.PacketAck)
             {
-                Logger.Log("No handler registered for packet event " + packetType, Client);
+                Logger.Log("No handler registered for packet event " + packetType, Helpers.LogLevel.Warning, Client);
             }
         }
 
@@ -182,7 +182,7 @@ namespace OpenMetaverse
 
             if (packetType != PacketType.Default && packetType != PacketType.PacketAck)
             {
-                Logger.Log("No handler registered for packet event " + packetType, Client);
+                Logger.Log("No handler registered for packet event " + packetType, Helpers.LogLevel.Warning, Client);
             }
         }
 
