@@ -143,16 +143,10 @@ namespace OpenMetaverse.Http
                 if (error is WebException && ((WebException)error).Response != null)
                     code = ((HttpWebResponse)((WebException)error).Response).StatusCode;
 
-                if ( code == HttpStatusCode.Gone)
+                if (code == HttpStatusCode.NotFound || code == HttpStatusCode.Gone)
                 {
                     Logger.Log.InfoFormat("Closing event queue at {0} due to missing caps URI", _Address);
 
-                    _Running = false;
-                    _Dead = true;
-                }
-                else if (code == HttpStatusCode.NotFound)
-                {
-                    Logger.Log.InfoFormat("event queue at {0} got {1} message {2}", _Address, code, error.Message);
                     _Running = false;
                     _Dead = true;
                 }
