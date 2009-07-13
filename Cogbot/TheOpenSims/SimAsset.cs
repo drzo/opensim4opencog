@@ -99,34 +99,50 @@ namespace cogbot.TheOpenSims
         public SimAssetStore(BotClient GC)
         {
             Client = GC;
-            FillAnimationNames();
+            FillAssetNames();
             Client.Network.OnSimConnected += Ensure_Downloaded;
         }
 
-        private bool downloadedAnims = false;
+        private bool downloadedAssetFolders = false;
         private void Ensure_Downloaded(Simulator simulator)
         {
-            if (downloadedAnims) return;
-            downloadedAnims = true;
-            DownloadAnimFolder();
+            if (downloadedAssetFolders) return;
+            downloadedAssetFolders = true;
+            DownloadAssetFolders();
         }
 
-        static  void DownloadAnimFolder()
+        static  void DownloadAssetFolders()
         {
             BotClient Client = WorldObjects.GridMaster.client;
             Client.AnimationFolder = Client.Inventory.FindFolderForType(AssetType.Animation);
-            List<InventoryBase> contents = Client.Inventory.FolderContents(Client.AnimationFolder, Client.Self.AgentID,
+            List<InventoryBase> contents = Client.Inventory.FolderContents(Client.Inventory.Store.LibraryFolder.UUID, Client.Self.AgentID,
                 true, true, InventorySortOrder.ByName, 30000);
-            if (contents!=null) foreach (InventoryBase IB in contents)
-            {
-                if (IB is InventoryItem)
+            if (contents != null) foreach (InventoryBase IB in contents)
                 {
-                    InventoryItem II = (InventoryItem)IB;
-                    if (II.AssetType == AssetType.Animation)
-                    {
-                        SetAssetName(II.AssetUUID, II.Name,AssetType.Animation);
-                    }
+                    LoadFolder(IB,Client);
                 }
+            contents = Client.Inventory.FolderContents(Client.Inventory.Store.RootFolder.UUID, Client.Self.AgentID,
+               true, true, InventorySortOrder.ByName, 30000);
+            if (contents != null) foreach (InventoryBase IB in contents)
+                {
+                    LoadFolder(IB,Client);
+                }
+        }
+
+        private static void LoadFolder(InventoryBase IB, BotClient Client)
+        {
+            if (IB is InventoryItem)
+            {
+                InventoryItem II = (InventoryItem)IB;
+
+                SetAssetName(II.AssetUUID, II.Name, II.AssetType);
+                return;
+            }
+            List<InventoryBase> contents = Client.Inventory.FolderContents(IB.UUID, Client.Self.AgentID,
+                true, true, InventorySortOrder.ByName, 30000);
+            if (contents != null) foreach (InventoryBase IBO in contents)
+            {
+                LoadFolder(IBO, Client);
             }
         }
 
@@ -139,6 +155,7 @@ namespace cogbot.TheOpenSims
                 
             }
             A.ServerAsset = asset;
+            InternAsset(A);
             //A.TypeData = asset.AssetData;
 
 
@@ -177,6 +194,11 @@ namespace cogbot.TheOpenSims
 
         }
 
+        static void InternAsset(SimAsset asset)
+        {
+            WorldObjects.GridMaster.SendNewRegionEvent(SimEventType.DATA_UPDATE,"OnAssetInfo",asset);
+        }
+
 
         static void AddSound(string p, string p_2, string p_3, string p_4, string p_5)
         {
@@ -210,9 +232,10 @@ namespace cogbot.TheOpenSims
                     Console.WriteLine("Sound w/o BVH " + fName + " " + uid);
                 }
             }
+            InternAsset(sound);
         }
 
-        static internal void FillAnimationNames()
+        static internal void FillAssetNames()
         {           
             lock (uuidAsset)
             {
@@ -1028,7 +1051,7 @@ namespace cogbot.TheOpenSims
 
                 lock (SimAssets) foreach (SimAsset A in SimAssets)
                     {
-                        if (A.IsIncomplete()) Console.WriteLine("Animation: " + A.ToString());
+                        if (A.IsIncomplete()) Console.WriteLine("Asset: " + A.ToString());
                     }
             }
         }
@@ -1076,6 +1099,7 @@ namespace cogbot.TheOpenSims
                     Console.WriteLine("Texture w/o BVH " + fName + " " + uid);
                 }
             }
+            InternAsset(texture);
             return texture;
         }
 
@@ -1113,6 +1137,7 @@ namespace cogbot.TheOpenSims
                    // Console.WriteLine("Anim w/o BVH " + fName + " " + uid);
                 }
             }
+            InternAsset(anim);
             return anim;
         }
 
@@ -1156,7 +1181,7 @@ namespace cogbot.TheOpenSims
 
         public ICollection<string> GetAssetNames()
         {
-            FillAnimationNames();
+            FillAssetNames();
             List<String> names = new List<String>();
             lock (SimAssets) foreach (var list in SimAssets)
                 {
@@ -1167,7 +1192,7 @@ namespace cogbot.TheOpenSims
 
         public String GetAssetName(UUID uuid)
         {
-            FillAnimationNames();
+            FillAssetNames();
             String name;
             SimAsset anim;
             if (uuidAsset.TryGetValue(uuid, out anim))
@@ -1181,7 +1206,7 @@ namespace cogbot.TheOpenSims
         public UUID GetAssetUUID(string a, AssetType type)
         {
             a = a.ToLower();
-            FillAnimationNames();
+            FillAssetNames();
             UUID partial;// = default(UUID);
             if (UUID.TryParse(a,out partial))
             {
@@ -1206,16 +1231,17 @@ namespace cogbot.TheOpenSims
 
         static public void SetAssetName(UUID uUID, string s, AssetType type)
         {
-            FillAnimationNames();
+            FillAssetNames();
             SimAsset anim = FindOrCreateAsset(uUID, type);
             anim.Name = s;
+            InternAsset(anim);
         }
 
         public static SimAsset FindAsset(UUID uUID)
         {
             lock (uuidAsset)
             {
-                FillAnimationNames();
+                FillAssetNames();
                 SimAsset anim;
                 if (!uuidAsset.TryGetValue(uUID, out anim))
                 {
@@ -1250,6 +1276,7 @@ namespace cogbot.TheOpenSims
         {
             SimAsset A = FindOrCreateAsset(asset.AssetID, asset.AssetType);
             A.ServerAsset = asset;
+            InternAsset(A);
             return A;
         }
 
@@ -1318,6 +1345,7 @@ namespace cogbot.TheOpenSims
                     if (anim != null) uuidAsset[uUID] = anim;
                 }
                 if (anim != null) anim.AssetType = type;
+                InternAsset(anim);
                 return anim;
             }
         }
@@ -1346,7 +1374,20 @@ namespace cogbot.TheOpenSims
         public abstract bool HasData();
         public abstract float Length { get; }
         public abstract bool IsLoop { get; }
-        public Asset ServerAsset { get; set; }
+        private Asset _ServerAsset;
+        public Asset ServerAsset
+        {
+            get { return _ServerAsset; }
+            set
+            {
+                _ServerAsset = value;
+                if (value != null)
+                {
+                    AssetType = value.AssetType;
+                    AssetID = value.AssetID;
+                }
+            }
+        }
         readonly public List<string> Meanings = new List<string>();
         public string Comment;
         public AssetType AssetType = OpenMetaverse.AssetType.Unknown;

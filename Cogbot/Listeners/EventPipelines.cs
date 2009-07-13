@@ -23,6 +23,7 @@ namespace cogbot.Listeners
 
         void SimEventSubscriber.OnEvent(SimObjectEvent evt)
         {
+            if (evt.EventType == SimEventType.DATA_UPDATE) return;
             String eventName = evt.GetVerb();
             object[] args = evt.GetArgs();
 
@@ -108,6 +109,7 @@ namespace cogbot.Listeners
             return new SimObjectEvent(type, eventName, args);
         }
 
+        static private bool UseQueue = false;
         SimObjectEvent LastEvent = null;
         // this pipelike will fire OnEvent to the subscriber list 
         public void SendEvent(SimObjectEvent simObjectEvent)
@@ -120,7 +122,7 @@ namespace cogbot.Listeners
             foreach (SimEventSubscriber subscriber in GetSubscribers())
             {
                 SimEventSubscriber sub = subscriber;
-                new Thread(() =>
+                ThreadStart start =()=>
                                {
                                    try
                                    {
@@ -130,7 +132,15 @@ namespace cogbot.Listeners
                                    {
                                        Console.WriteLine(e);
                                    }
-                               }).Start();
+                               };
+                if (UseQueue)
+                {
+                    new Thread(start).Start();
+                }
+                else start.Invoke();
+                
+                
+                
             }
         }
 

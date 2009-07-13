@@ -127,6 +127,7 @@ namespace cogbot.TheOpenSims
         public SimAnimation(UUID uuid, string name)
             : base(uuid, name)
         {
+            AssetType = OpenMetaverse.AssetType.Animation;
         }
 
         public bool SameAnims(BinBVHAnimationReader bvh1, BinBVHAnimationReader bvh2)

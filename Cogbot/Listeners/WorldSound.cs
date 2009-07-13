@@ -7,6 +7,7 @@ namespace cogbot.Listeners
     {
         protected void AttachedSoundHandler(Packet packet, Simulator simulator)
         {
+            if (!MaintainSounds) return;
             if (!IsMaster(simulator)) return;
             AttachedSoundPacket sound = (AttachedSoundPacket)packet;
             Sound_OnAttachSound(sound.DataBlock.SoundID, sound.DataBlock.OwnerID, sound.DataBlock.ObjectID, sound.DataBlock.Gain, (SoundFlags)sound.DataBlock.Flags);
@@ -14,6 +15,7 @@ namespace cogbot.Listeners
 
         protected void AttachedSoundGainChangeHandler(Packet packet, Simulator simulator)
         {
+            if (!MaintainSounds) return;
             if (!IsMaster(simulator)) return;
 
             AttachedSoundGainChangePacket change = (AttachedSoundGainChangePacket)packet;
@@ -23,6 +25,7 @@ namespace cogbot.Listeners
 
         protected void PreloadSoundHandler(Packet packet, Simulator simulator)
         {
+            if (!MaintainSounds) return;
             if (!IsMaster(simulator)) return;
 
             PreloadSoundPacket preload = (PreloadSoundPacket)packet;
@@ -35,6 +38,7 @@ namespace cogbot.Listeners
 
         protected void SoundTriggerHandler(Packet packet, Simulator simulator)
         {
+            if (!MaintainSounds) return;
             if (!IsMaster(simulator)) return;
 
             SoundTriggerPacket trigger = (SoundTriggerPacket)packet;
