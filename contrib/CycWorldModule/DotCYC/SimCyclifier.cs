@@ -17,17 +17,64 @@ using Object=System.Object;
 
 namespace CycWorldModule.DotCYC
 {
+    public class CycTypeInfo
+    {
+        readonly public CycFort cycFort;
+        readonly Type CType;
+
+        public CycTypeInfo(CycFort fort, Type type)
+        {
+            cycFort = fort;
+            CType = type;
+            SimCyclifier.typeFort[type] = this;
+            if (type.IsEnum)
+            {
+                SetupEnum();
+            }
+        }
+
+        private void SetupEnum()
+        {
+            SimCyclifier simCyclifier = SimCyclifier.Master;
+
+            simCyclifier.assertIsa(cycFort, C("Collection"));
+            simCyclifier.assertIsa(cycFort, C("SimEnumCollection"));
+            simCyclifier.assertGaf(C("comment"), cycFort, "The sim enum for " + CType);
+            if (CType.IsEnum)
+            {
+                foreach (FieldInfo fort in CType.GetFields(BindingFlags.Public | BindingFlags.Static))
+                {
+                    //if (fort.GetValue(null))        
+                    string v = string.Format("{0}-{1}", CType.Name, fort.Name);
+                    CycFort cv = C(v);
+                    simCyclifier.assertIsa(cv, C("Collection"));
+                    simCyclifier.assertGaf(C("genls"), cv, cycFort);
+                    simCyclifier.assertGaf(C("comment"), cv, "The sim enum value for " + fort);
+                }
+            }
+        }
+
+        private CycFort C(string collection)
+        {
+            return SimCyclifier.Master.C(collection);
+        }
+    }
     public class SimCyclifier : SimEventSubscriber
     {
         private static TaskQueueHandler taskQueueHandler = new TaskQueueHandler("SimCyclifier", 0);
         static readonly List<String> SkipVerbs = new List<string>() { "on-log-message", "on-login", "on-event-queue-running", "on-sim-connecting" };
 
-        static SimCyclifier Master;
+        public static SimCyclifier Master;
 
         public void OnEvent(SimObjectEvent evt)
         {
             if (evt.EventType == SimEventType.NETWORK) return;
-            if (SkipVerbs.Contains(evt.Verb.ToLower())) return;
+            //if (SkipVerbs.Contains(evt.Verb.ToLower())) return;
+            if (!UseQueue)
+            {
+                OnEvent0(evt);
+                return;
+            }
             taskQueueHandler.Enqueue(() => OnEvent0(evt));
         }
 
@@ -35,6 +82,14 @@ namespace CycWorldModule.DotCYC
         {
             try
             {
+                if (evt.EventType == SimEventType.DATA_UPDATE)
+                {
+                    foreach (var v in evt.GetArgs())
+                    {
+                        Master.ToFort(v);
+                    }
+                    return;
+                }
                 CycFort fort = Master.FindOrCreateCycFort(evt);
                 // Debug("to fort -> " + fort);
             }
@@ -119,7 +174,7 @@ namespace CycWorldModule.DotCYC
                                        "VocabularyMicrotheory");
 
 
-            if (ClearKBBetweenSessions || true)
+            if (ClearKBBetweenSessions)
             {
                 cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-LISPFn\"))");
                 cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-EFFECTFn\"))");
@@ -147,17 +202,26 @@ namespace CycWorldModule.DotCYC
 
             assertIsa(C("simEventData"), C("VariableArityPredicate"));
             assertIsa(C("SimObjectEvent"), C("Collection"));
+            assertIsa(C("SimProperty"), C("Collection"));
+            assertIsa(C("SimPredicate"), C("Collection"));
+            assertGenls(C("SimPredicate"), C("Predicate"));
+            assertGenls(C("SimProperty"), C("BinaryPredicate"));
+            assertGenls(C("SimProperty"), C("SimPredicate"));
+            assertIsa(C("SimObjectType"), C("Collection"));
             assertGenls(C("SimObjectEvent"), C("Event"));
             FunctionToCollection("SimAssetFn", "SimAsset", "Simulator assets that denote a feature set");
+            assertIsa(C("SimAssetFn"), C("CollectionDenotingFunction"));
 
 
             // visit libomv
-            if (cycAccess.find("SimEnumCollection") == null)
+            if (true || cycAccess.find("SimEnumCollection") == null)
             {
                 Debug("Loading SimEnumCollection Collections ");
                 assertIsa(C("SimEnumCollection"), C("Collection"));
                 assertGaf(C("comment"), C("SimEnumCollection"), "Enums collected from SecondLife");
                 VisitAssembly(Assembly.GetAssembly(typeof(AssetType)));
+                VisitAssembly(Assembly.GetAssembly(typeof(Vector4)));
+                VisitAssembly(Assembly.GetAssembly(typeof(AgentManager)));
             }
             else
             {
@@ -219,7 +283,24 @@ namespace CycWorldModule.DotCYC
 
             cycAssert("(#$pointInSystem (#$PointInRegionFn ?STR ?X ?Y ?Z) (#$SimRegionCoordinateSystemFn (#$SimRegionFn ?STR)))");
             cycAssert("(#$pointInSystem (#$PointInRegionFn \"Daxlandia\" 128 120 27) (#$SimRegionCoordinateSystemFn (#$SimRegionFn \"Daxlandia\")))");
+            ProbeNewAssets();
+        }
 
+        static int lastAssetCount = 0;
+        static void ProbeNewAssets()
+        {
+            ICollection<SimAsset> v = SimAssetStore.GetAssets(AssetType.Unknown);
+            lock (v)
+                if (v.Count != lastAssetCount)
+                {
+                    lastAssetCount = v.Count;
+                    {
+                        foreach (SimAsset asset in v)
+                        {
+                            Master.ToFort(asset);
+                        }
+                    }
+                }
         }
 
         private void VisitAssembly(Assembly assembly)
@@ -233,7 +314,7 @@ namespace CycWorldModule.DotCYC
                 }
                 catch (Exception e)
                 {
-                    Debug("" + e);
+                    Exception(e);
                 }
             }
 
@@ -282,11 +363,11 @@ namespace CycWorldModule.DotCYC
             {
                 string fn = type.Name;
                 if (fn.StartsWith("Asset")) fn = fn.Substring(5);
-                string col = "Sim" + fn;
+                string col = string.Format("Sim{0}", fn);
                 string comment =
                     "A spec of #$SimAsset that is a #$PartiallyTangibleTypeByPhysicalFeature from the simulator's type " +
                     type.FullName + " such as #$BlueColor or #$BlowingAKiss animation";
-                fn = "Sim" + fn + "Fn";
+                fn = string.Format("Sim{0}Fn", fn);
                 FunctionToCollection(fn, col, comment);
                 assertGaf(C("genlFuncs"), simFort[fn], simFort["SimAssetFn"]);
                 assertGenls(simFort[col], simFort["SimAsset"]);
@@ -303,41 +384,27 @@ namespace CycWorldModule.DotCYC
                 }
                 catch (Exception e)
                 {
-                    Debug("" + e);
+                    Exception(e);
                 }
             }
         }
 
-        static readonly Dictionary<Type, CycFort> typeFort = new Dictionary<Type, CycFort>();
+        internal static readonly Dictionary<Type, CycTypeInfo> typeFort = new Dictionary<Type, CycTypeInfo>();
 
         private CycFort VisitEnumType(Type type)
         {
             lock (typeFort)
             {
-                CycFort cn;
-                if (typeFort.TryGetValue(type, out cn)) return cn;
-                string name = "Sim" + type.Name;
+                CycTypeInfo ctype;
+                if (typeFort.TryGetValue(type, out ctype)) return ctype.cycFort;
+                string name = string.Format("Sim{0}", type.Name);
                 if (name.StartsWith("SimSim"))
                 {
                     name = name.Substring(3);
                 }
-                cn = C(name);
-                assertIsa(cn, C("Collection"));
-                assertIsa(cn, C("SimEnumCollection"));
-                assertGaf(C("comment"), cn, "The sim enum for " + type);
-                typeFort[type] = cn;
-                if (type.IsEnum)
-                {
-                    foreach (FieldInfo fort in type.GetFields(BindingFlags.Public | BindingFlags.Static))
-                    {
-                        string v = type.Name + "-" + fort.Name;
-                        CycFort cv = C(v);
-                        assertIsa(cv, C("Collection"));
-                        assertGaf(C("genls"), cv, cn);
-                        assertGaf(C("comment"), cv, "The sim enum value for " + fort);
-                    }
-                }
-                return null;
+                CycFort cn = C(name);
+                ctype = new CycTypeInfo(cn, type);
+                return cn;
             }
         }
 
@@ -420,13 +487,27 @@ namespace CycWorldModule.DotCYC
 
         readonly static public Dictionary<object, CycFort> cycTerms = new Dictionary<object, CycFort>();
 
+        readonly static public Dictionary<Object, int> hashChanges = new Dictionary<Object, int>();
+
+
 
         public CycFort FindOrCreateCycFort(SimObject obj)
         {
             lock (cycTerms)
             {
                 CycFort constant;
-                if (cycTerms.TryGetValue(obj, out constant)) return constant;
+                if (cycTerms.TryGetValue(obj, out constant))
+                {
+                    if (hashChanges.ContainsKey(obj))
+                    {
+                        if (hashChanges[obj] == obj.GetInfoMap().Count)
+                        {
+                            return constant;
+                        }
+                    }
+                    SaveInfoMap(constant, obj);
+                    return constant;
+                }
                 string name;
                 string type;
                 if (obj is SimAvatar)
@@ -449,9 +530,49 @@ namespace CycWorldModule.DotCYC
 
                 constant = createIndividualFn(type, name, String.Format("{0} {1}", obj.GetName(), obj.ID), "SimVocabMt",
                                               type);
+                if (obj is SimAvatar)
+                {
+                    // assertGaf(C("comment"), constant, obj.DebugInfo());
+                }
+                else
+                {
+                    assertGaf(C("comment"), constant, obj.DebugInfo());
+                }
+                SaveInfoMap(constant, obj);
                 cycTerms[obj] = constant;
                 return constant;
             }
+        }
+
+        private void SaveInfoMap(CycFort constant, SimObject obj)
+        {
+            lock (hashChanges)
+            {
+                ICollection<NamedParam> infomap = obj.GetInfoMap();
+                lock (infomap)
+                {
+                    infomap = new List<NamedParam>(infomap);
+                }
+                foreach (NamedParam o in infomap)
+                {
+                    assertEventData(constant, ToPropName(o.Key.ToString()), o.Value);
+                }
+                hashChanges[obj] = infomap.Count;
+            }
+        }
+
+        private string ToPropName(string key)
+        {
+            if (key.StartsWith("sim"))
+            {
+                return key;
+            }
+            if (key.ToLower().StartsWith("sim"))
+            {
+                return "sim" + key;
+            }
+            return string.Format("sim{0}{1}", key.Substring(0,1).ToUpper(), key.Substring(1));
+
         }
 
         public CycFort FindOrCreateCycFort(SimAsset simObj)
@@ -526,6 +647,10 @@ namespace CycWorldModule.DotCYC
         {
             lock (cycTerms)
             {
+                if (evt.EventType == SimEventType.DATA_UPDATE)
+                {
+                    return null;
+                }
                 CycFort constant;
                 if (cycTerms.TryGetValue(evt, out constant)) return constant;
                 //   object[] forts = ToForts(simObj.Parameters);
@@ -589,18 +714,21 @@ namespace CycWorldModule.DotCYC
                                 o = new CycNart(C("SimAvatarFn"), o.ToString());
                             }
                         }
-                        assertEventData(constant, list.Key.ToString(), ToFort(o));
+                        assertEventData(constant, list.Key.ToString(), o);
                     }
                     else
                     {
                         o = args[i].Value;
                         if (o.GetType().IsEnum)
                         {
-                            assertIsa(constant, (CycFort)ToFort(o));
+                            ForEachEnumValue(delegate(CycFort f)
+                                              {
+                                                  assertIsa(constant, f);
+                                              }, o);
                         }
                         else
                         {
-                            assertEventData(constant, names[i], ToFort(o));
+                            assertEventData(constant, names[i], o);
                         }
                     }
                 }
@@ -608,9 +736,250 @@ namespace CycWorldModule.DotCYC
             }
         }
 
+        static System.Collections.IEnumerable Unfold(object value)
+        {
+            IList<object> results = new List<object>();
+            var type = value.GetType();
+            var utype = Enum.GetUnderlyingType(type);
+            var values = Enum.GetValues(type);
+            if (utype == typeof(byte) || utype == typeof(sbyte) || utype == typeof(Int16) || utype == typeof(UInt16) || utype == typeof(Int32))
+            {
+                var num = (Int32)Convert.ChangeType(value, typeof(Int32));
+                foreach (var val in values)
+                {
+                    var v = (Int32)Convert.ChangeType(val, typeof(Int32));
+                    if ((v & num) == v) results.Add(Enum.ToObject(value.GetType(), val));
+                }
+            }
+            else if (utype == typeof(UInt32))
+            {
+                var num = (UInt32)value;
+                foreach (var val in values)
+                {
+                    var v = (UInt32)Convert.ChangeType(val, typeof(UInt32));
+                    if ((v & num) == v) results.Add(Enum.ToObject(value.GetType(), val));
+                }
+            }
+            else if (utype == typeof(Int64))
+            {
+                var num = (Int64)value;
+                foreach (var val in values)
+                {
+                    var v = (Int64)Convert.ChangeType(val, typeof(Int64));
+                    if ((v & num) == v) results.Add(Enum.ToObject(value.GetType(), val));
+                }
+            }
+            else if (utype == typeof(UInt64))
+            {
+                var num = (UInt64)value;
+                foreach (var val in values)
+                {
+                    var v = (UInt64)Convert.ChangeType(val, typeof(UInt64));
+                    if ((v & num) == v) results.Add(Enum.ToObject(value.GetType(), val));
+                }
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
+            return results;
+        }
+
+        private delegate void WithEnum(CycFort p);
+        private void ForEachEnumValue(WithEnum withValue, object p)
+        {
+            Type pType = p.GetType();
+            Array pTypeValues = System.Enum.GetValues(pType);
+            if (p is byte)
+            {
+                byte b = (byte) p;
+                if (b == 0)
+                {
+                    withValue((CycFort) ToFort(p));
+                }
+                foreach (object v in pTypeValues)
+                {
+                    byte bv = (byte) v;
+                    if (bv >= b)
+                    {
+                        withValue((CycFort) ToFort(v));
+                        b -= bv;
+                    }
+                    if (b == 0) return;
+                }
+                return;
+            }
+            if (p is sbyte)
+            {
+                sbyte b = (sbyte) p;
+                if (b == 0)
+                {
+                    withValue((CycFort) ToFort(p));
+                }
+                foreach (object v in pTypeValues)
+                {
+                    sbyte bv = (sbyte) v;
+                    if (bv >= b)
+                    {
+                        withValue((CycFort) ToFort(v));
+                        b -= bv;
+                    }
+                    if (b == 0) return;
+                }
+                return;
+            }
+            if (p is UInt16)
+            {
+                ushort b = (UInt16) p;
+                if (b == 0)
+                {
+                    withValue((CycFort) ToFort(p));
+                }
+                foreach (object v in pTypeValues)
+                {
+                    ushort bv = (ushort) v;
+                    if (bv >= b)
+                    {
+                        withValue((CycFort) ToFort(v));
+                        b -= bv;
+                    }
+                    if (b == 0) return;
+                }
+                return;
+            }
+            if (p is Int16)
+            {
+                short b = (Int16) p;
+                if (b == 0)
+                {
+                    withValue((CycFort) ToFort(p));
+                }
+                foreach (object v in pTypeValues)
+                {
+                    short bv = (short) v;
+                    if (bv >= b)
+                    {
+                        withValue((CycFort) ToFort(v));
+                        b -= bv;
+                    }
+                    if (b == 0) return;
+                }
+                return;
+            }
+            if (p is UInt32)
+            {
+                uint b = (UInt32) p;
+                if (b == 0)
+                {
+                    withValue((CycFort) ToFort(p));
+                }
+                foreach (object v in pTypeValues)
+                {
+                    uint bv = (uint) v;
+                    if (bv >= b)
+                    {
+                        withValue((CycFort) ToFort(v));
+                        b -= bv;
+                    }
+                    if (b == 0) return;
+                }
+                return;
+            }
+            if (p is Int32)
+            {
+                int b = (Int32) p;
+                if (b == 0)
+                {
+                    withValue((CycFort) ToFort(p));
+                }
+                foreach (object v in pTypeValues)
+                {
+                    int bv = (int) v;
+                    if (bv >= b)
+                    {
+                        withValue((CycFort) ToFort(v));
+                        b -= bv;
+                    }
+                    if (b == 0) return;
+                }
+                return;
+            }
+            if (p is UInt64)
+            {
+                ulong b = (UInt64) p;
+                if (b == 0)
+                {
+                    withValue((CycFort) ToFort(p));
+                }
+                foreach (object v in pTypeValues)
+                {
+                    ulong bv = (ulong) v;
+                    if (bv >= b)
+                    {
+                        withValue((CycFort) ToFort(v));
+                        b -= bv;
+                    }
+                    if (b == 0) return;
+                }
+                return;
+            }
+            if (p is Int64)
+            {
+                long b = (Int64) p;
+                if (b == 0)
+                {
+                    withValue((CycFort) ToFort(p));
+                }
+                foreach (object v in pTypeValues)
+                {
+                    long bv = (long) v;
+                    if (bv >= b)
+                    {
+                        withValue((CycFort) ToFort(v));
+                        b -= bv;
+                    }
+                    if (b == 0) return;
+                }
+                return;
+            }
+            string s = p.ToString();
+            foreach(var unfold in Unfold(p))
+            {
+                withValue((CycFort)ToFort(unfold));
+                return;
+            }
+
+            if (p is IConvertible)
+            {
+                withValue((CycFort)ToFort(p));
+                return;
+            }
+
+            if (p is Enum)
+            {
+                withValue((CycFort)ToFort(p));
+                return;
+            }
+            withValue((CycFort)ToFort(p));
+        }
+
         private void assertEventData(CycFort constant, string name, object fort)
         {
-            CycList list = makeCycList(createEventProperty(name), constant, fort);
+            CycFort prop = createSimProperty(name);
+            if (fort != null)
+            {
+                Type t = fort.GetType();
+                if (t.IsEnum)
+                {
+
+                    ForEachEnumValue(delegate(CycFort f)
+                                      {
+                                          assertGaf(prop, constant,f);
+                                      },fort);
+                    return;
+                }
+            }
+            CycList list = makeCycList(prop, constant,ToFort(fort));
             try
             {
                 string ast = list.cyclifyWithEscapeChars();
@@ -623,14 +992,14 @@ namespace CycWorldModule.DotCYC
             catch (java.lang.RuntimeException re)
             {
                 re.printStackTrace();
-                Debug("" + re);
+                Exception(re);
             }
 
         }
 
-        private object createEventProperty(string p)
+        private CycFort createSimProperty(string p)
         {
-            return createIndividual(p, "sim event property", "SimVocabMt", "BinaryPredicate");
+            return createIndividual(p, "sim #$BinaryPredicate", "SimVocabMt", "SimProperty");
         }
 
 
@@ -703,7 +1072,7 @@ namespace CycWorldModule.DotCYC
                 }
                 catch (Exception e)
                 {
-                    Debug("" + e);
+                    Exception(e);
                 }
             }
             Debug("Cant convert " + t);
@@ -801,7 +1170,7 @@ namespace CycWorldModule.DotCYC
                                                     catch (Exception e)
                                                     {
                                                         string errr = "" + e;
-                                                        Debug(errr);
+                                                        Exception(e);
                                                         return errr;
                                                     }
                                                 };
@@ -820,6 +1189,8 @@ namespace CycWorldModule.DotCYC
         }
 
         public static int nullCount = 0;
+        static public bool UseQueue = true;
+
         public static CycObject CYC_NULL
         {
             get { return new CycVariable("NULL-" + (nullCount++)); }
