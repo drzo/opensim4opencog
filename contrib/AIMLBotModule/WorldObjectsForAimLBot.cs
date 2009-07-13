@@ -107,7 +107,9 @@ namespace AIMLBotModule
             string objName = obj.GetName();
             MyUser = GetMyUser(objName);
             MyUser.RespondToChat = true;
-            StringChat(String.Format("{0}, {1}", objName, AIMLInterp("RANDOM PICKUP LINE", MyUser)));
+            String str = String.Format("{0}, {1}", objName, AIMLInterp("RANDOM PICKUP LINE", MyUser)).Trim();
+            while (str.EndsWith("?")) str = str.Substring(0, str.Length - 1).Trim();
+            StringChat(str);
         }
 
         public RTPBot MyBot;
