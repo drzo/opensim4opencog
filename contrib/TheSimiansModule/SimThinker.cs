@@ -117,6 +117,7 @@ namespace TheSimiansModule
 
         private void Debug(string p)
         {
+            if (debugWindow != null && !debugWindow.IsDisposed) debugWindow.WriteLine(p);
             Actor.Debug(p);
         }
 
@@ -331,7 +332,7 @@ namespace TheSimiansModule
             BotNeeds CurrentNeeds = this.CurrentNeeds;
 
             // Initially randomize
-            if (false)foreach (FieldInfo c in CurrentNeeds.GetType().GetFields())
+            foreach (FieldInfo c in CurrentNeeds.GetType().GetFields())
             {
                 if (c.FieldType == typeof (float))
                 {
@@ -537,6 +538,20 @@ namespace TheSimiansModule
             {
                 if (CurrentAction != null) CurrentAction.Target = value;
             }
+        }
+
+        private SimThinkerDebug debugWindow;
+        internal void ShowDebug()
+        {
+            if (debugWindow == null || debugWindow.IsDisposed)
+            {
+                debugWindow = new SimThinkerDebug(Actor.GetGridClient());
+                debugWindow.Show();
+            }   else
+            {
+                debugWindow.Show();
+            }
+            
         }
     }
 }

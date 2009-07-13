@@ -40,6 +40,12 @@ namespace TheSimiansModule
             }
             if (args.Length > 0)
             {
+                if (args[0] == "debug")
+                {
+                    SimThinker avatar = GetSimAvatar();
+                    avatar.ShowDebug();                    
+                }
+
                 if (args[0] == "on")
                 {
                     SimThinker avatar = GetSimAvatar();
