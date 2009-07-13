@@ -28,7 +28,9 @@ namespace cogbot.Listeners
         public static bool MaintainActions = true;
         public static bool MaintainPropertiesFromQueue = true;
         public static bool MaintainObjectUpdates = false;
-        public static bool MaintainSounds = true;
+        public static bool MaintainSounds = false;
+        static public bool MaintainAvatarMetaData = true;
+        static public bool MaintainGroupMetaData = true;
         public static bool UseNewEventSystem = true;
         public static bool SimplifyBoxes = false; // true takes longer startup but speeds up runtime path finding
         public static bool SendAllEvents = MaintainObjectUpdates;

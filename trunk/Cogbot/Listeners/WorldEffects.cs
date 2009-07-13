@@ -212,6 +212,8 @@ namespace cogbot.Listeners
             SimObject O = GetSimObjectFromUUID(objectID);
             if (O==null)
             {
+                //GetSource()
+                return null;
                 O = CreateSimObject(objectID,this, null);                
             }
             return O;

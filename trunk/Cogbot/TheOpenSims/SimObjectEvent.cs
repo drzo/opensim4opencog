@@ -408,9 +408,28 @@ namespace cogbot.TheOpenSims
         {
             Key = k;
             Value = v;
+            _Type = null;
+        }
+        public NamedParam(object k, Type type, object v)
+        {
+            Key = k;
+            Value = v;
+            _Type = type;
         }
         readonly public object Key;
         readonly public object Value;
+        public Type _Type;
+
+        public Type Type
+        {
+            get
+            {
+                if (_Type != null) return _Type;
+                if (Value is NullType) return ((NullType) Value).Type;
+                return Value.GetType();
+            }
+        }
+
         public override string ToString()
         {
             if (Key == null) return string.Format("{0}", (Value ?? "NULL"));

@@ -15,9 +15,9 @@ namespace cogbot.Listeners
     public partial class WorldObjects
     {
 
-        public static Dictionary<string, object> GetMemberValues(Object properties)
+        public static List<NamedParam> GetMemberValues(Object properties)
         {
-            Dictionary<string, object> dict = new Dictionary<string, object>();
+            List<NamedParam> dict = new List<NamedParam>();
             if (properties == null)
             {
                 return dict;
@@ -28,7 +28,8 @@ namespace cogbot.Listeners
                 try
                 {
                     var v = o.GetValue(properties);
-                    if (v != null) dict[o.Name] = v;
+                    if (v == null) v = new NullType(o.FieldType);
+                    dict.Add(new NamedParam(o.Name, o.FieldType, v));
                 }
                 catch (Exception e)
                 {
@@ -39,16 +40,15 @@ namespace cogbot.Listeners
             {
               if (o.CanRead)
               {
-                  if (!dict.ContainsKey(o.Name))
+                  try
                   {
-                      try
-                      {
-                          dict[o.Name] = o.GetValue(properties, null);
-                      }
-                      catch (Exception e)
-                      {
-                          Console.WriteLine("" + e);
-                      }
+                      var v = o.GetValue(properties, null);
+                      if (v == null) v = new NullType(o.PropertyType);
+                      dict.Add(new NamedParam(o.Name, o.PropertyType, v));
+                  }
+                  catch (Exception e)
+                  {
+                      Console.WriteLine("" + e);
                   }
               }
             }

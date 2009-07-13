@@ -12,7 +12,6 @@ namespace cogbot.Listeners
     partial class WorldObjects
     {
 
-
         public override void Self_OnChat(string message, ChatAudibleLevel audible, ChatType type,
                                          ChatSourceType sourceType, string fromName, UUID id, UUID ownerid,
                                          Vector3 position)
@@ -192,31 +191,38 @@ namespace cogbot.Listeners
 
         public override void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)
         {
-            SimAvatar A = CreateSimAvatar(avatarID,this,null);
-            Dictionary<string, object> from = GetMemberValues(properties);
-            foreach (KeyValuePair<string, object> o in from)
+            SimAvatar A = CreateSimAvatar(avatarID, this, null);
+            List<NamedParam> from = GetMemberValues(properties);
+            foreach (var o in from)
             {
-                A.SetInfoMap(o.Key,o.Value);                
+                A.SetInfoMap(o.Key.ToString(), o.Type, o.Value);
             }
-            if (properties.Partner!=UUID.Zero)
+            UUID propertiesPartner = properties.Partner;
+            if (propertiesPartner != UUID.Zero)
             {
-                CreateSimAvatar(properties.Partner, this, null);
+                SimAvatarImpl AA = CreateSimAvatar(propertiesPartner, this, null);
+                if (AA.GetName() == null)
+                {
+                    String s = GetUserName(propertiesPartner);
+                    AA.AspectName = s;
+                }
             }
-            if (properties.ProfileImage!=UUID.Zero)
+            if (properties.ProfileImage != UUID.Zero)
             {
-                //RequestAsset(properties.ProfileImage, AssetType.ImageJPEG, true);
+               // RequestAsset(properties.ProfileImage, AssetType.ImageJPEG, true);
             }
             SendNewRegionEvent(SimEventType.DATA_UPDATE, "OnAvatarDataUpdate", A);
             //TODO SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID, null), properties);
         }
 
+
         public override void Avatars_OnAvatarInterests(UUID avatarID, Avatar.Interests properties)
         {
             SimAvatar A = CreateSimAvatar(avatarID, this, null);
-            Dictionary<string, object> from = GetMemberValues(properties);
-            foreach (KeyValuePair<string, object> o in from)
+            List<NamedParam> from = GetMemberValues(properties);
+            foreach (var o in from)
             {
-                A.SetInfoMap(o.Key, o.Value);
+                A.SetInfoMap(o.Key.ToString(), o.Type, o.Value);
             }
             SendNewRegionEvent(SimEventType.DATA_UPDATE, "OnAvatarDataUpdate", A);
         }
@@ -439,6 +445,72 @@ namespace cogbot.Listeners
             lock (Name2Key) if (Name2Key.TryGetValue(ToAvatarName, out found)) return found;
 
             return found;
+        }
+
+        public String GetUserName(UUID found)
+        {
+
+            SimObject obj0 = GetSimObjectFromUUID(found);
+            if (obj0 != null)
+            {
+                string s = obj0.GetName();
+                if (!string.IsNullOrEmpty(s))
+                {
+                    if (s.Trim() != "") return s;
+                }
+            }
+            SimAvatarImpl AA = CreateSimAvatar(found, this, null);
+            // case insensitive
+            lock (Name2Key)
+                foreach (KeyValuePair<string, UUID> kvp in Name2Key)
+                {
+                    if (kvp.Value == found)
+                    {
+                        return kvp.Key;
+
+                    }
+                }
+            {
+                ManualResetEvent NameSearchEvent = new ManualResetEvent(false);
+                AvatarManager.AvatarNamesCallback callback =
+                    new AvatarManager.AvatarNamesCallback((avatars) =>
+                    {
+                        foreach (KeyValuePair<UUID, string> kvp in avatars)
+                        {
+                            AddName2Key(kvp.Value, kvp.Key);
+                            if (kvp.Key == found)
+                            {
+                                AA.AspectName = kvp.Value;
+                                NameSearchEvent.Set();
+                                return;
+                            }
+                        }
+                    });
+                try
+                {
+                    client.Avatars.OnAvatarNames += callback;
+                    // Send the Query
+                    client.Avatars.RequestAvatarName(found);
+                    NameSearchEvent.WaitOne(10000, false);
+                }
+                finally
+                {
+                    client.Avatars.OnAvatarNames -= callback;
+                }
+            }
+
+            lock (Name2Key)
+                foreach (KeyValuePair<string, UUID> kvp in Name2Key)
+                {
+                    if (kvp.Value == found)
+                    {
+                        AA.AspectName = kvp.Key;
+                        return kvp.Key;
+
+                    }
+                }
+
+            return AA.GetName();
         }
 
     }

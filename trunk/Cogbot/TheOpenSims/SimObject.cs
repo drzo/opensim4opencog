@@ -290,20 +290,17 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        readonly Dictionary<string ,object > infoMap = new Dictionary<string, object>();
-        public Dictionary<string, object> GetInfoMap()
+        readonly List<NamedParam> infoMap = new List<NamedParam>();
+        public List<NamedParam> GetInfoMap()
         {
             return infoMap;
         }
 
-        public void SetInfoMap(string key, object value)
+        public void SetInfoMap(string key, Type type, object value)
         {
-            if (value == null)
-            {
-                if (!infoMap.ContainsKey(key)) infoMap[key] = value;
-                return;
-            }                    
-            infoMap[key] = value;
+            if (value == null) value = new NullType(type);
+            lock (infoMap)
+                infoMap.Add(new NamedParam(key, type, value));
         }
 
         readonly private List<Primitive> primRefs = new List<Primitive>();
@@ -1962,7 +1959,7 @@ namespace cogbot.TheOpenSims
         Primitive.ObjectProperties Properties { get; set; }
         bool KilledPrim(Primitive primitive, Simulator simulator);
 
-        Dictionary<string, object> GetInfoMap();
-        void SetInfoMap(string key,Object value);
+        List<NamedParam> GetInfoMap();
+        void SetInfoMap(string key,Type type, Object value);
     }
 }
