@@ -404,30 +404,30 @@ namespace cogbot.Listeners
 
         public virtual void Groups_OnGroupProfile(Group group) { OnEvent("On-Group-Profile", paramNamesOnGroupProfile, paramTypesOnGroupProfile, group); }
 
-        public static readonly string[] paramNamesOnGroupMembers = new string[] { "requestID", "groupID", "totalMembers", "members" };
-        static public readonly Type[] paramTypesOnGroupMembers = new Type[] { typeof(UUID), typeof(UUID), typeof(int), typeof(Dictionary<UUID, GroupMember>) };
+        public static readonly string[] paramNamesOnGroupMembers = new string[] { "requestID", "groupID", "members" };
+        static public readonly Type[] paramTypesOnGroupMembers = new Type[] { typeof(UUID), typeof(UUID), typeof(Dictionary<UUID, GroupMember>) };
 
-        public virtual void Groups_OnGroupMembers(UUID requestID, UUID groupID, int totalCount, Dictionary<UUID, GroupMember> members)
+        public virtual void Groups_OnGroupMembers(UUID requestID, UUID groupID, Dictionary<UUID, GroupMember> members)
         {
             OnEvent("On-Group-Members", paramNamesOnGroupMembers, paramTypesOnGroupMembers, 
-                requestID, groupID, totalCount, members);
+                requestID, groupID,  members);
         }
 
-        static public readonly string[] paramNamesOnGroupRoles = new string[] {"requestID", "groupID", "roleCount" ,"roles" };
-        static public readonly Type[] paramTypesOnGroupRoles = new Type[] { typeof(UUID), typeof(UUID), typeof(int), typeof(Dictionary<UUID, GroupRole>) };
+        static public readonly string[] paramNamesOnGroupRoles = new string[] {"requestID", "groupID", "roles" };
+        static public readonly Type[] paramTypesOnGroupRoles = new Type[] { typeof(UUID), typeof(UUID), typeof(Dictionary<UUID, GroupRole>) };
 
-        public virtual void Groups_OnGroupRoles(UUID requestID, UUID groupID, int roleCount, Dictionary<UUID, GroupRole> roles) { OnEvent("On-Group-Roles", paramNamesOnGroupRoles, paramTypesOnGroupRoles,requestID, groupID, roleCount, roles); }
+        public virtual void Groups_OnGroupRoles(UUID requestID, UUID groupID, Dictionary<UUID, GroupRole> roles) { OnEvent("On-Group-Roles", paramNamesOnGroupRoles, paramTypesOnGroupRoles, requestID, groupID, roles); }
 
-        static public readonly string[] paramNamesOnGroupRolesMembers = new string[] { "requestID", "groupID", "totalPairs", "rolesMembers" };
-        static public readonly Type[] paramTypesOnGroupRolesMembers = new Type[] { typeof(UUID), typeof(UUID), typeof(int), typeof(List<KeyValuePair<UUID, UUID>>) };
+        static public readonly string[] paramNamesOnGroupRolesMembers = new string[] { "requestID", "groupID", "rolesMembers" };
+        static public readonly Type[] paramTypesOnGroupRolesMembers = new Type[] { typeof(UUID), typeof(UUID),  typeof(List<KeyValuePair<UUID, UUID>>) };
 
-        public virtual void Groups_OnGroupRolesMembers(UUID requestID, UUID groupID, uint totalPairs, List<KeyValuePair<UUID, UUID>> rolesMembers) 
-        { OnEvent("On-Group-Roles-Members", paramNamesOnGroupRolesMembers, paramTypesOnGroupRolesMembers,requestID, groupID, totalPairs, rolesMembers); }
+        public virtual void Groups_OnGroupRolesMembers(UUID requestID, UUID groupID, List<KeyValuePair<UUID, UUID>> rolesMembers) 
+        { OnEvent("On-Group-Roles-Members", paramNamesOnGroupRolesMembers, paramTypesOnGroupRolesMembers,requestID, groupID, rolesMembers); }
 
-        static public readonly string[] paramNamesOnGroupTitles = new string[] { "groupID", "titles" };
-        static public readonly Type[] paramTypesOnGroupTitles = new Type[] { typeof(UUID), typeof(Dictionary<UUID, GroupTitle>) };
+        static public readonly string[] paramNamesOnGroupTitles = new string[] { "requestID", "groupID", "titles" };
+        static public readonly Type[] paramTypesOnGroupTitles = new Type[] { typeof(UUID), typeof(UUID), typeof(Dictionary<UUID, GroupTitle>) };
 
-        public virtual void Groups_OnGroupTitles(UUID groupID, Dictionary<UUID, GroupTitle> titles) { OnEvent("On-Group-Titles", paramNamesOnGroupTitles, paramTypesOnGroupTitles,groupID, titles); }
+        public virtual void Groups_OnGroupTitles(UUID requestID, UUID groupID, Dictionary<UUID, GroupTitle> titles) { OnEvent("On-Group-Titles", paramNamesOnGroupTitles, paramTypesOnGroupTitles, requestID, groupID, titles); }
 
         static public readonly string[] paramNamesOnGroupAccountSummary = new string[] { "groupID", "summary" };
         static public readonly Type[] paramTypesOnGroupAccountSummary = new Type[] { typeof(UUID), typeof(GroupAccountSummary) };

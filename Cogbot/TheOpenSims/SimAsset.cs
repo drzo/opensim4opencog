@@ -94,13 +94,37 @@ namespace cogbot.TheOpenSims
         internal static readonly Dictionary<UUID, SimAsset> uuidAsset = new Dictionary<UUID, SimAsset>();
         internal static readonly Dictionary<string, SimAsset> nameAsset = new Dictionary<string, SimAsset>();
 
-        readonly BotClient Client;
+        internal readonly BotClient Client;
 
+        List<UUID> BusyUpdating = new List<UUID>();
         public SimAssetStore(BotClient GC)
         {
             Client = GC;
             FillAssetNames();
             Client.Network.OnSimConnected += Ensure_Downloaded;
+            Client.Inventory.OnItemReceived += Inventory_OnItemReceived;
+            Client.Inventory.OnFolderUpdated += Inventory_OnFolderUpdated;
+        }
+
+        private void Inventory_OnFolderUpdated(UUID folderid)
+        {
+            lock (BusyUpdating) if (BusyUpdating.Contains(folderid)) return;
+            new Thread(() =>
+                           {
+
+                               lock (BusyUpdating) BusyUpdating.Add(folderid);
+
+                               List<InventoryBase> contents = Client.Inventory.FolderContents(folderid, Client.Self.AgentID,
+                                    true, true, InventorySortOrder.ByName, 30000);
+                               if (contents != null) contents.ForEach(LoadFolder);
+                               lock (BusyUpdating) BusyUpdating.Remove(folderid);
+                           }).Start();
+
+        }
+
+        private void Inventory_OnItemReceived(InventoryItem item)
+        {
+            new Thread(() => LoadFolder(item));
         }
 
         private bool downloadedAssetFolders = false;
@@ -108,42 +132,35 @@ namespace cogbot.TheOpenSims
         {
             if (downloadedAssetFolders) return;
             downloadedAssetFolders = true;
-            DownloadAssetFolders();
+            new Thread(DownloadAssetFolders).Start();
         }
 
-        static  void DownloadAssetFolders()
-        {
-            BotClient Client = WorldObjects.GridMaster.client;
+         void DownloadAssetFolders()
+        {           
             Client.AnimationFolder = Client.Inventory.FindFolderForType(AssetType.Animation);
-            List<InventoryBase> contents = Client.Inventory.FolderContents(Client.Inventory.Store.LibraryFolder.UUID, Client.Self.AgentID,
-                true, true, InventorySortOrder.ByName, 30000);
-            if (contents != null) foreach (InventoryBase IB in contents)
-                {
-                    LoadFolder(IB,Client);
-                }
-            contents = Client.Inventory.FolderContents(Client.Inventory.Store.RootFolder.UUID, Client.Self.AgentID,
-               true, true, InventorySortOrder.ByName, 30000);
-            if (contents != null) foreach (InventoryBase IB in contents)
-                {
-                    LoadFolder(IB,Client);
-                }
+            Inventory_OnFolderUpdated(Client.Inventory.Store.LibraryFolder.UUID);
+            Inventory_OnFolderUpdated(Client.Inventory.Store.RootFolder.UUID);
         }
 
-        private static void LoadFolder(InventoryBase IB, BotClient Client)
+        private void LoadFolder(InventoryBase IB)
         {
             if (IB is InventoryItem)
             {
                 InventoryItem II = (InventoryItem)IB;
 
-                SetAssetName(II.AssetUUID, II.Name, II.AssetType);
+                SimAsset A = SetAssetName(II.AssetUUID, II.Name, II.AssetType);
+                A.Item = II;
                 return;
             }
-            List<InventoryBase> contents = Client.Inventory.FolderContents(IB.UUID, Client.Self.AgentID,
-                true, true, InventorySortOrder.ByName, 30000);
-            if (contents != null) foreach (InventoryBase IBO in contents)
-            {
-                LoadFolder(IBO, Client);
-            }
+            Inventory_OnFolderUpdated(IB.UUID);
+            //lock (BusyUpdating) BusyUpdating.Add(IB.UUID);
+            //List<InventoryBase> contents = Client.Inventory.FolderContents(IB.UUID, Client.Self.AgentID,
+            //    true, true, InventorySortOrder.ByName, 30000);
+            //if (contents != null) foreach (InventoryBase IBO in contents)
+            //{
+            //    LoadFolder(IBO);
+            //}
+            //lock (BusyUpdating) BusyUpdating.Remove(IB.UUID);
         }
 
 
@@ -817,7 +834,7 @@ namespace cogbot.TheOpenSims
                         string name = Path.GetFileNameWithoutExtension(Path.GetFileName(files)).ToLower();
                         if (nameAsset.ContainsKey(name)) continue;
                         Console.WriteLine("Sound w/o UUID " + name);
-                        SimSound sound = new SimSound(UUID.Zero, name);
+                        SimSound sound = new SimSound(UUID.Zero, name, AssetType.Sound);
                         nameAsset[name] = sound;
                     }
                 }
@@ -1229,12 +1246,13 @@ namespace cogbot.TheOpenSims
             return partial;
         }
 
-        static public void SetAssetName(UUID uUID, string s, AssetType type)
+        static public SimAsset SetAssetName(UUID uUID, string s, AssetType type)
         {
             FillAssetNames();
             SimAsset anim = FindOrCreateAsset(uUID, type);
             anim.Name = s;
             InternAsset(anim);
+            return anim;
         }
 
         public static SimAsset FindAsset(UUID uUID)
@@ -1330,15 +1348,39 @@ namespace cogbot.TheOpenSims
                             anim = new SimAnimation(uUID, null);
                             break;
                         case AssetType.Sound:
-                            anim = new SimSound(uUID, null);
-                            break;
-                        case AssetType.SoundWAV:
-                            anim = new SimSound(uUID, null);
+                        case AssetType.SoundWAV:                         
+                            anim = new SimSound(uUID, null, type);
                             break;
                         case AssetType.Texture:
-                            anim = new SimTexture(uUID, null);
+                        case AssetType.ImageJPEG:
+                        case AssetType.ImageTGA:
+                        case AssetType.TextureTGA:
+                            anim = new SimTexture(uUID, null, type);
+                            break;
+                        case AssetType.Gesture:
+                            anim = new SimGesture(uUID, null);
+                            break;
+                        case AssetType.LSLText:
+                        case AssetType.LSLBytecode:
+                            anim = new SimScript(uUID, null, type);
+                            break;
+                        case AssetType.Notecard:
+                            anim = new SimNotecard(uUID, null);
+                            break;
+                        case AssetType.CallingCard:
+                            anim = new SimCallingCard(uUID, null);
+                            break;
+                        case AssetType.Clothing:
+                            anim = new SimClothing(uUID, null);
+                            break;
+                        case AssetType.Bodypart:
+                            anim = new SimBodypart(uUID, null);
+                            break;
+                        case AssetType.Landmark:
+                            anim = new SimLandmark(uUID, null);
                             break;
                         default:
+                            throw new NotImplementedException("FindOrCreateAsset " + type);
                             break;
                     }
                     // WorldObjects.RequestAsset(uUID, AssetType.Animation, true);
@@ -1366,16 +1408,21 @@ namespace cogbot.TheOpenSims
         }
     }
 
-
     abstract public class SimAsset : BotMentalAspect
     {
-        public abstract bool NeedsRequest{ get; set;}
-        public abstract bool SameAsset(SimAsset animation);
-        public abstract bool HasData();
-        public abstract float Length { get; }
-        public abstract bool IsLoop { get; }
-        private Asset _ServerAsset;
-        public Asset ServerAsset
+     //   public abstract bool NeedsRequest{ get; set;}
+   //     public abstract bool SameAsset(SimAsset animation);
+    //    public abstract bool HasData();
+   //     public abstract float Length { get; }
+     //   public abstract bool IsLoop { get; }
+        protected Asset _ServerAsset;
+
+        public SimAssetStore Store
+        {
+            get { return WorldObjects.GridMaster.SimAssetSystem; }
+        }
+
+        public virtual Asset ServerAsset
         {
             get { return _ServerAsset; }
             set
@@ -1390,15 +1437,23 @@ namespace cogbot.TheOpenSims
         }
         readonly public List<string> Meanings = new List<string>();
         public string Comment;
+        public InventoryItem Item;
         public AssetType AssetType = OpenMetaverse.AssetType.Unknown;
-        protected abstract void SaveFile(string tmpname);
-        public abstract byte[] AssetData { get; set; }
+        //protected abstract void SaveFile(string tmpname);
+        //public abstract byte[] AssetData { get; set; }
         protected abstract string GuessAssetName();
 
         public SimAsset(UUID anim, String name)
         {
             AssetID = anim;
             Name = name;
+            lock (SimAssetStore.SimAssets) SimAssetStore.SimAssets.Add(this);
+        }
+        public SimAsset(UUID anim, String name, AssetType type)
+        {
+            AssetID = anim;
+            Name = name;
+            AssetType = type;
             lock (SimAssetStore.SimAssets) SimAssetStore.SimAssets.Add(this);
         }
 
@@ -1513,9 +1568,16 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        protected static string UnknownName
+        protected string UnknownName
         {
-            get { return null; }
+            get
+            {
+                if (Item!=null)
+                {
+                    return Item.Name;
+                }
+                return null;
+            }
         }
 
 
@@ -1550,6 +1612,122 @@ namespace cogbot.TheOpenSims
         {
             lock (Meanings) if (Meanings.Count > 0) return Meanings[Meanings.Count - 1];
             return null;
+        }
+
+        protected virtual void SaveFile(string tmpname)
+        {
+            if (!HasData()) return;
+            Console.WriteLine("Not implemented save {0} file {1}", this, tmpname);
+        }
+
+        private byte[] _TypeData;
+        public virtual byte[] AssetData
+        {
+            get
+            {
+                if (_TypeData != null) return _TypeData;
+                if (ServerAsset == null) return null;
+                return ServerAsset.AssetData;
+            }
+            set
+            {
+                if (_TypeData != null)
+                {
+
+                }
+                _TypeData = value;
+                if (ServerAsset == null)
+                {
+                    if (AssetID != UUID.Zero)
+                    {
+                        ServerAsset = CreateAssetWrapper(AssetType,AssetID,value);
+                    }
+                    return;
+                }
+                else
+                {
+                    ServerAsset.AssetData = value;
+                }
+            }
+        }
+
+        private Asset CreateAssetWrapper(AssetType type, UUID uuid, byte[] data)
+        {
+            Asset asset;
+
+            switch (type)
+            {
+                case AssetType.Animation:
+                    asset = new AssetAnimation(uuid, data);
+                    break;
+                case AssetType.Gesture:
+                    asset = new AssetGesture(uuid, data);
+                    break;
+                case AssetType.Landmark:
+                    asset = new AssetLandmark(uuid, data);
+                    break;
+                case AssetType.Bodypart:
+                    asset = new AssetBodypart(uuid, data);
+                    break;
+                case AssetType.Clothing:
+                    asset = new AssetClothing(uuid, data);
+                    break;
+                case AssetType.LSLBytecode:
+                    asset = new AssetScriptBinary(uuid, data);
+                    break;
+                case AssetType.LSLText:
+                    asset = new AssetScriptText(uuid, data);
+                    break;
+                case AssetType.Notecard:
+                    asset = new AssetNotecard(uuid, data);
+                    break;
+                case AssetType.Sound:
+                    asset = new AssetSound(uuid, data);
+                    break;
+                case AssetType.Texture:
+                    asset = new AssetTexture(uuid, data);
+                    break;
+                default:
+                     throw new NotImplementedException( "Unimplemented asset type: " + type);
+            }
+            return asset;
+        }
+
+        public virtual float Length
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public virtual bool IsLoop
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public virtual bool HasData()
+        {
+            return ServerAsset != null || _TypeData != null;
+        }
+
+        private bool _NeedsRequest = true;
+        public virtual bool NeedsRequest
+        {
+            get
+            {
+                if (HasData()) return false;
+                return _NeedsRequest;
+            }
+            set { _NeedsRequest = value; }
+        }
+
+        public virtual bool SameAsset(SimAsset asset)
+        {
+            if (asset == null) return false;
+            if (asset.AssetType != AssetType) return false;
+            if (HasData())
+            {
+
+            }
+            return false;
         }
     }
 

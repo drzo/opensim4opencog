@@ -17,10 +17,11 @@ namespace cogbot.TheOpenSims
             set { _NeedsRequest = value; }
         }
 
-        public SimTexture(UUID uuid, string name)
-            : base(uuid, name)
+        public SimTexture(UUID uuid, string name, AssetType type)
+            : base(uuid, name, type)
         {
         }
+
         public override bool HasData()
         {
             return ServerAsset != null || _TypeData != null;
@@ -68,15 +69,15 @@ namespace cogbot.TheOpenSims
             get { return true; }
         }
                 
-        public override bool SameAsset(SimAsset animation)
+        public override bool SameAsset(SimAsset asset)
         {
-            if (animation==null) return false;
-            if (animation.AssetType!=AssetType) return false;
+            if (asset==null) return false;
+            if (asset.AssetType!=AssetType) return false;
             if (HasData())
             {
                 
             }
-            if (animation is SimAnimation)
+            if (asset is SimAnimation)
             {
 //                r = animation.Reader;
                 

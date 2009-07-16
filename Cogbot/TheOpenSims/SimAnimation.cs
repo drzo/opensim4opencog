@@ -230,15 +230,15 @@ namespace cogbot.TheOpenSims
                 }
         }
 
-        public override bool SameAsset(SimAsset animation)
+        public override bool SameAsset(SimAsset asset)
         {
-            if (animation==null) return false;
-            if (animation.AssetType!=AssetType) return false;
+            if (asset==null) return false;
+            if (asset.AssetType!=AssetType) return false;
             if (HasData())
             {
                 
             }
-            if (animation is SimAnimation)
+            if (asset is SimAnimation)
             {
 //                r = animation.Reader;
                 

@@ -1850,6 +1850,10 @@ namespace cogbot.TheOpenSims
         {
             get
             {
+                if (!dict.ContainsKey(s))
+                {
+                    return null;
+                }
                 return dict[s];
             }
             set
