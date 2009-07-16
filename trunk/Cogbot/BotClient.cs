@@ -94,9 +94,10 @@ namespace cogbot
             {
                 Network.Login(BotLoginParams.FirstName, BotLoginParams.LastName,
                               BotLoginParams.Password, "OnRez", BotLoginParams.Start, "UNR");
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
-                
+
             }
         }
 
@@ -117,7 +118,7 @@ namespace cogbot
             get
             {
                 return MasterKey != UUID.Zero;
-            }   
+            }
         }
         public VoiceManager VoiceManager;
         // Shell-like inventory commands need to be aware of the 'current' inventory folder.
@@ -168,6 +169,9 @@ namespace cogbot
         public List<string> muteList;
         public bool muted = false;
 
+        private UUID GroupMembersRequestID;
+        public Dictionary<UUID, Group> GroupsCache = null;
+        private ManualResetEvent GroupsEvent = new ManualResetEvent(false);
         /// <summary>
         /// 
         /// </summary>
@@ -316,7 +320,7 @@ namespace cogbot
             Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(AlertMessageHandler));
             Network.RegisterCallback(PacketType.AvatarAppearance, new NetworkManager.PacketCallback(AvatarAppearanceHandler));
 
-           //Move to effects Appearance.OnAppearanceUpdated += new AppearanceManager.AppearanceUpdatedCallback(Appearance_OnAppearanceUpdated);
+            //Move to effects Appearance.OnAppearanceUpdated += new AppearanceManager.AppearanceUpdatedCallback(Appearance_OnAppearanceUpdated);
 
             Inventory.OnObjectOffered += new InventoryManager.ObjectOfferedCallback(Inventory_OnInventoryObjectReceived);
             Groups.OnGroupMembers += new GroupManager.GroupMembersCallback(GroupMembersHandler);
@@ -337,7 +341,7 @@ namespace cogbot
             updateTimer.Start();
             searcher = new BotInventoryEval(this);
             initTaskInterperter();
-            lispEventProducer = new LispEventProducer(this,lispTaskInterperter);
+            lispEventProducer = new LispEventProducer(this, lispTaskInterperter);
         }
 
         private LispEventProducer lispEventProducer;
@@ -406,9 +410,9 @@ namespace cogbot
             }
         }
 
-        private void GroupMembersHandler(UUID requestID, UUID groupID, int totalCount, Dictionary<UUID, GroupMember> members)
+        private void GroupMembersHandler(UUID requestID, UUID groupID, Dictionary<UUID, GroupMember> members)
         {
-            WriteLine(String.Format("Got {0} group members out of {1}.", members.Count, totalCount));
+            WriteLine(String.Format("Got {0} group members.", members.Count));
             GroupMembers = members;
         }
 
@@ -423,6 +427,49 @@ namespace cogbot
         {
             AlertMessagePacket message = (AlertMessagePacket)packet;
             WriteLine("[AlertMessage] " + Utils.BytesToString(message.AlertData.Message));
+        }
+
+        public void ReloadGroupsCache()
+        {
+            GroupManager.CurrentGroupsCallback callback =
+                    new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
+            Groups.OnCurrentGroups += callback;
+            Groups.RequestCurrentGroups();
+            GroupsEvent.WaitOne(10000, false);
+            Groups.OnCurrentGroups -= callback;
+            GroupsEvent.Reset();
+        }
+
+        public UUID GroupName2UUID(String groupName)
+        {
+            UUID tryUUID;
+            if (UUID.TryParse(groupName, out tryUUID))
+                return tryUUID;
+            if (null == GroupsCache)
+            {
+                ReloadGroupsCache();
+                if (null == GroupsCache)
+                    return UUID.Zero;
+            }
+            lock (GroupsCache)
+            {
+                if (GroupsCache.Count > 0)
+                {
+                    foreach (Group currentGroup in GroupsCache.Values)
+                        if (currentGroup.Name.ToLower() == groupName.ToLower())
+                            return currentGroup.ID;
+                }
+            }
+            return UUID.Zero;
+        }
+
+        private void Groups_OnCurrentGroups(Dictionary<UUID, Group> pGroups)
+        {
+            if (null == GroupsCache)
+                GroupsCache = pGroups;
+            else
+                lock (GroupsCache) { GroupsCache = pGroups; }
+            GroupsEvent.Set();
         }
 
 
@@ -465,18 +512,18 @@ namespace cogbot
                     int found = groupName.IndexOf("Group:");
                     if (found > 0) groupName = groupName.Substring(found + 6);
                     found = groupName.IndexOf(":");
-                    if (found>0)
+                    if (found > 0)
                     {
                         groupName = groupName.Substring(0, found).Trim();
                         ExecuteCommand("joingroup " + groupName);
                     }
-                 
+
                 }
             }
 
             bool groupIM = im.GroupIM && GroupMembers != null && GroupMembers.ContainsKey(im.FromAgentID) ? true : false;
 
-            if (im.FromAgentID == MasterKey || (GroupCommands && groupIM) || im.FromAgentName==MasterName)
+            if (im.FromAgentID == MasterKey || (GroupCommands && groupIM) || im.FromAgentName == MasterName)
             {
                 // Received an IM from someone that is authenticated
                 WriteLine(String.Format("<{0} ({1})> {2}: {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM", im.Dialog,
@@ -490,12 +537,12 @@ namespace cogbot
                 else if (im.Dialog == InstantMessageDialog.FriendshipOffered)
                 {
                     WriteLine("Accepting Friendship.");
-                    Friends.AcceptFriendship(im.FromAgentID,im.IMSessionID);
+                    Friends.AcceptFriendship(im.FromAgentID, im.IMSessionID);
                 }
                 else if (im.Dialog == InstantMessageDialog.MessageFromAgent ||
                     im.Dialog == InstantMessageDialog.MessageFromObject)
                 {
-                 //   ClientManager.DoCommandAll(im.Message, im.FromAgentID, WriteLine);
+                    //   ClientManager.DoCommandAll(im.Message, im.FromAgentID, WriteLine);
                 }
             }
             else
@@ -737,7 +784,7 @@ namespace cogbot
             catch (Exception)
             {
             }
-            
+
         }
         public void WriteLine(string str, params object[] args)
         {
@@ -1011,7 +1058,6 @@ namespace cogbot
         private void initTaskInterperter()
         {
             try
-
             {
                 if (lispTaskInterperter != null)
                 {
@@ -1077,7 +1123,7 @@ namespace cogbot
                 if (lispCode is String)
                 {
                     StringReader stringCodeReader = new StringReader(lispCode.ToString());
-                    lispCode = lispTaskInterperter.Read("evalLispString", stringCodeReader);       
+                    lispCode = lispTaskInterperter.Read("evalLispString", stringCodeReader);
                 }
                 WriteLine("Eval> " + lispCode);
                 if (lispTaskInterperter.Eof(lispCode))
@@ -1232,7 +1278,7 @@ namespace cogbot
 
         public void SendNetworkEvent(string eventName, params object[] args)
         {
-            SendPersonalEvent(SimEventType.NETWORK,eventName,args);
+            SendPersonalEvent(SimEventType.NETWORK, eventName, args);
         }
 
 
@@ -1389,7 +1435,7 @@ namespace cogbot
 
         private void RegisterListener(Listener listener)
         {
-           // listeners[listener.GetModuleName()] = listener;
+            // listeners[listener.GetModuleName()] = listener;
             listener.StartupListener();
         }
 
@@ -1425,7 +1471,7 @@ namespace cogbot
                     ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
                     try
                     {
-                        Listener command = (Listener)info.Invoke(new object[] { this }); 
+                        Listener command = (Listener)info.Invoke(new object[] { this });
                         RegisterListener(command);
                     }
                     catch (Exception e)
@@ -1449,4 +1495,3 @@ namespace cogbot
     }
 
 }
-

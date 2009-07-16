@@ -234,7 +234,7 @@ namespace cogbot.Listeners
                 //TODO SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID, null), grp);                
             }
         }
-        public override void Groups_OnGroupMembers(UUID requestID, UUID groupID, int totalCount, Dictionary<UUID, GroupMember> members)
+        public override void Groups_OnGroupMembers(UUID requestID, UUID groupID, Dictionary<UUID, GroupMember> members)
         {
             // base.Groups_OnGroupMembers(requestID, totalCount, members);
         }

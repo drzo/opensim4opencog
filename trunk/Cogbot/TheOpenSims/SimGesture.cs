@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Text;
+using cogbot.Listeners;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
@@ -15,6 +18,26 @@ namespace cogbot.TheOpenSims
         protected override void SaveFile(string tmpname)
         {
             Console.WriteLine("Not implemented save gesture file " + tmpname);
+        }
+
+        public AssetGesture GetGesture()
+        {
+            return (AssetGesture)ServerAsset;
+        }
+
+        public override Asset ServerAsset
+        {
+            get { return _ServerAsset; }
+            set
+            {
+                _ServerAsset = value;
+                GetParts();
+                if (value != null)
+                {
+                    AssetType = value.AssetType;
+                    AssetID = value.AssetID;
+                }
+            }
         }
 
         private byte[] _TypeData;
@@ -48,14 +71,153 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        private void tbtnReupload_Click(object sender, EventArgs e)
+        {
+            AssetGesture gestureAsset = GetGesture();
+            GridClient client = WorldObjects.GridMaster.client;
+            InventoryItem gesture = Item;
+            UpdateStatus("Creating new item...");
+
+            client.Inventory.RequestCreateItem(gesture.ParentUUID, "Copy of " + gesture.Name, gesture.Description, AssetType.Gesture, UUID.Random(), InventoryType.Gesture, PermissionMask.All,
+                delegate(bool success, InventoryItem item)
+                {
+                    if (success)
+                    {
+                        UpdateStatus("Uploading data...");
+
+                        client.Inventory.RequestUploadGestureAsset(gestureAsset.AssetData, item.UUID,
+                            delegate(bool assetSuccess, string status, UUID itemID, UUID assetID)
+                            {
+                                if (assetSuccess)
+                                {
+                                    gesture.AssetUUID = assetID;
+                                    UpdateStatus("OK");
+                                }
+                                else
+                                {
+                                    UpdateStatus("Asset failed");
+                                }
+                            }
+                        );
+                    }
+                    else
+                    {
+                        UpdateStatus("Inv. failed");
+                    }
+                }
+            );
+        }
+
+        private void UpdateStatus(string s)
+        {
+           // throw new NotImplementedException();
+        }
+
         protected override string GuessAssetName()
         {
+            if (Item != null)
+            {
+                return Item.Name;
+            }
+            String s = "";
             if (ServerAsset == null) return null;
             ServerAsset.Decode();
+            AssetGesture gestureAsset = GetGesture();
+            for (int i = 0; i < gestureAsset.Sequence.Count; i++)
+            {
+                s += (gestureAsset.Sequence[i].ToString().Trim() + Environment.NewLine);
+            }
+            if (!string.IsNullOrEmpty(s)) return s;
             AssetGesture S = (AssetGesture)ServerAsset;
             AssetData = S.AssetData;
             return UnknownName;
         }
+
+        public List<SimAsset> GetParts()
+        {
+
+            AssetGesture gestureAsset = GetGesture();
+            //            StringBuilder sb = new StringBuilder();
+            //sb.Append("2\n");
+            Name  = gestureAsset.Trigger;
+            //sb.Append(TriggerKey + "\n");
+            //sb.Append(TriggerKeyMask + "\n");
+            //sb.Append(Trigger + "\n");
+            Name = gestureAsset.ReplaceWith;//sb.Append(ReplaceWith + "\n");
+
+            List<GestureStep> Sequence = gestureAsset.Sequence;
+            int count = 0;
+            if (Sequence != null)
+            {
+                count = Sequence.Count;
+            }
+            List<SimAsset> parts = new List<SimAsset>(count);
+            //sb.Append(count + "\n");
+
+            for (int i = 0; i < count; i++)
+            {
+                GestureStep step = Sequence[i];
+                // sb.Append((int)step.GestureStepType + "\n");
+                SimAsset asset;
+
+                switch (step.GestureStepType)
+                {
+                    case GestureStepType.EOF:
+                        goto Finish;
+
+                    case GestureStepType.Animation:
+                        GestureStepAnimation animstep = (GestureStepAnimation) step;
+                        asset = SimAssetStore.FindOrCreateAsset(animstep.ID, AssetType.Animation);
+                        asset.Name = animstep.Name;
+                        if (animstep.AnimationStart)
+                        {
+                            parts.Add(asset);
+                            //                            sb.Append("0\n");
+                        }
+                        else
+                        {
+                            //             sb.Append("1\n");
+                        }
+                        break;
+
+                    case GestureStepType.Sound:
+                        GestureStepSound soundstep = (GestureStepSound) step;
+                        asset = SimAssetStore.FindOrCreateAsset(soundstep.ID, AssetType.Sound);
+                        asset.Name = soundstep.Name;
+                        parts.Add(asset);
+                        break;
+
+                    case GestureStepType.Chat:
+                        GestureStepChat chatstep = (GestureStepChat) step;
+                        Name = chatstep.Text;
+                        //sb.Append(chatstep.Text + "\n");
+                        //sb.Append("0\n");
+                        break;
+
+                    case GestureStepType.Wait:
+                        GestureStepWait waitstep = (GestureStepWait) step;
+                        //sb.AppendFormat("{0:0.000000}\n", waitstep.WaitTime);
+                        //int waitflags = 0;
+
+                        //if (waitstep.WaitForTime)
+                        //{
+                        //    waitflags |= 0x01;
+                        //}
+
+                        //if (waitstep.WaitForAnimation)
+                        //{
+                        //    waitflags |= 0x02;
+                        //}
+
+                        //sb.Append(waitflags + "\n");
+                        break;
+                }
+            }
+            Finish:
+
+            return parts;
+        }
+
 
         public override float Length
         {
@@ -64,39 +226,7 @@ namespace cogbot.TheOpenSims
 
         public override bool IsLoop
         {
-            get { throw new NotImplementedException(); }
-        }
-
-        public override bool HasData()
-        {
-            return ServerAsset != null || _TypeData != null;
-        }
-
-        private bool _NeedsRequest = true;
-        public override bool NeedsRequest
-        {
-            get
-            {
-                if (HasData()) return false;
-                return _NeedsRequest;
-            }
-            set { _NeedsRequest=value; }
-        }
-
-        public override bool SameAsset(SimAsset animation)
-        {
-            if (animation==null) return false;
-            if (animation.AssetType!=AssetType) return false;
-            if (HasData())
-            {
-                
-            }
-            if (animation is SimGesture)
-            {
-//                r = animation.Reader;
-                
-            }
-            return false;
-        }
+            get { return false; }
+        }     
     }
 }

@@ -7,8 +7,8 @@ namespace cogbot.TheOpenSims
     internal class SimSound : SimAsset
     {
 
-        public SimSound(UUID uuid, string name)
-            : base(uuid, name)
+        public SimSound(UUID uuid, string name, AssetType type)
+            : base(uuid, name, type)
         {
         }
 
@@ -64,7 +64,11 @@ namespace cogbot.TheOpenSims
 
         public override bool IsLoop
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                AssetSound S = (AssetSound)ServerAsset;         
+                throw new NotImplementedException();
+            }
         }
 
         public override bool HasData()
@@ -83,15 +87,15 @@ namespace cogbot.TheOpenSims
             set { _NeedsRequest=value; }
         }
 
-        public override bool SameAsset(SimAsset animation)
+        public override bool SameAsset(SimAsset asset)
         {
-            if (animation==null) return false;
-            if (animation.AssetType!=AssetType) return false;
+            if (asset==null) return false;
+            if (asset.AssetType!=AssetType) return false;
             if (HasData())
             {
                 
             }
-            if (animation is SimAnimation)
+            if (asset is SimAnimation)
             {
 //                r = animation.Reader;
                 
