@@ -96,29 +96,33 @@ namespace RTParser.Utils
         /// <param name="pathToSettings">The file containing the settings</param>
         public void loadSettings(string pathToSettings)
         {
-            if (pathToSettings.Length > 0)
+            lock (orderedKeys)
             {
-                FileInfo fi = new FileInfo(pathToSettings);
-                if (fi.Exists)
+                if (pathToSettings.Length > 0)
                 {
-                    XmlDocument xmlDoc = new XmlDocument();
-                    try
+                    FileInfo fi = new FileInfo(pathToSettings);
+                    if (fi.Exists)
                     {
-                        xmlDoc.Load(pathToSettings);
-                        this.loadSettings(xmlDoc);
-                    } catch(Exception e)
+                        XmlDocument xmlDoc = new XmlDocument();
+                        try
+                        {
+                            xmlDoc.Load(pathToSettings);
+                            this.loadSettings(xmlDoc);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("loadSettings: " + pathToSettings + "\n" + e);
+                        }
+                    }
+                    else
                     {
-                        Console.WriteLine("loadSettings: " + pathToSettings + "\n" + e);
+                        throw new FileNotFoundException(pathToSettings);
                     }
                 }
                 else
                 {
-                    throw new FileNotFoundException(pathToSettings);
+                    throw new FileNotFoundException();
                 }
-            }
-            else
-            {
-                throw new FileNotFoundException();
             }
         }
 
@@ -136,23 +140,26 @@ namespace RTParser.Utils
         /// <param name="settingsAsXML">The settings as an XML document</param>
         public void loadSettings(XmlDocument settingsAsXML)
         {
-            // empty the hash
-            this.clearSettings();
-
-            XmlNodeList rootChildren = settingsAsXML.DocumentElement.ChildNodes;
-
-            foreach (XmlNode myNode in rootChildren)
+            lock (orderedKeys)
             {
-                if (myNode.NodeType==XmlNodeType.Comment) continue;
-                if ((myNode.Name == "item") & (myNode.Attributes.Count == 2))
+                // empty the hash
+                this.clearSettings();
+
+                XmlNodeList rootChildren = settingsAsXML.DocumentElement.ChildNodes;
+
+                foreach (XmlNode myNode in rootChildren)
                 {
-                    if ((myNode.Attributes[0].Name == "name") & (myNode.Attributes[1].Name == "value"))
+                    if (myNode.NodeType == XmlNodeType.Comment) continue;
+                    if ((myNode.Name == "item") & (myNode.Attributes.Count == 2))
                     {
-                        string name = myNode.Attributes["name"].Value;
-                        Unifiable value = Unifiable.Create(myNode.Attributes["value"].Value);
-                        if (name.Length > 0)
+                        if ((myNode.Attributes[0].Name == "name") & (myNode.Attributes[1].Name == "value"))
                         {
-                            this.addSetting(name, value);
+                            string name = myNode.Attributes["name"].Value;
+                            Unifiable value = Unifiable.Create(myNode.Attributes["value"].Value);
+                            if (name.Length > 0)
+                            {
+                                this.addSetting(name, value);
+                            }
                         }
                     }
                 }
@@ -167,12 +174,15 @@ namespace RTParser.Utils
         /// <param name="value">The value associated with this setting</param>
         public void addSetting(string name, Unifiable value)
         {
-            string key = MakeCaseInsensitive.TransformInput(Unifiable.Create(name));
-            if (key.Length > 0)
+            lock (orderedKeys)
             {
-                this.removeSetting(key);
-                this.orderedKeys.Add(key);
-                this.settingsHash.Add(MakeCaseInsensitive.TransformInput(key), value);
+                string key = MakeCaseInsensitive.TransformInput(Unifiable.Create(name));
+                if (key.Length > 0)
+                {
+                    this.removeSetting(key);
+                    this.orderedKeys.Add(key);
+                    this.settingsHash.Add(MakeCaseInsensitive.TransformInput(key), value);
+                }
             }
         }
 
@@ -182,9 +192,12 @@ namespace RTParser.Utils
         /// <param name="name">The name of the setting to remove</param>
         public void removeSetting(string name)
         {
-            string normalizedName = MakeCaseInsensitive.TransformInput(name);
-            this.orderedKeys.Remove(normalizedName);
-            this.removeFromHash(normalizedName);
+            lock (orderedKeys)
+            {
+                string normalizedName = MakeCaseInsensitive.TransformInput(name);
+                this.orderedKeys.Remove(normalizedName);
+                this.removeFromHash(normalizedName);
+            }
         }
 
         /// <summary>
@@ -193,8 +206,11 @@ namespace RTParser.Utils
         /// <param name="name">the key for the Dictionary<,></param>
         private void removeFromHash(string name)
         {
-            string normalizedName = MakeCaseInsensitive.TransformInput(name);
-            this.settingsHash.Remove(normalizedName);
+            lock (orderedKeys)
+            {
+                string normalizedName = MakeCaseInsensitive.TransformInput(name);
+                this.settingsHash.Remove(normalizedName);
+            }
         }
 
         /// <summary>
@@ -205,11 +221,14 @@ namespace RTParser.Utils
         /// <param name="value">the new value</param>
         public void updateSetting(string name, Unifiable value)
         {
-            string key = MakeCaseInsensitive.TransformInput(name);
-            if (this.orderedKeys.Contains(key))
+            lock (orderedKeys)
             {
-                this.removeFromHash(key);
-                this.settingsHash.Add(MakeCaseInsensitive.TransformInput(key), value);
+                string key = MakeCaseInsensitive.TransformInput(name);
+                if (this.orderedKeys.Contains(key))
+                {
+                    this.removeFromHash(key);
+                    this.settingsHash.Add(MakeCaseInsensitive.TransformInput(key), value);
+                }
             }
         }
 
@@ -218,8 +237,11 @@ namespace RTParser.Utils
         /// </summary>
         public void clearSettings()
         {
-            this.orderedKeys.Clear();
-            this.settingsHash.Clear();
+            lock (orderedKeys)
+            {
+                this.orderedKeys.Clear();
+                this.settingsHash.Clear();
+            }
         }
 
         /// <summary>
@@ -229,15 +251,18 @@ namespace RTParser.Utils
         /// <returns>the value of the setting</returns>
         public Unifiable grabSetting(string name)
         {
-            string normalizedName = MakeCaseInsensitive.TransformInput(name);
-            if (this.containsSettingCalled(normalizedName))
+            lock (orderedKeys)
             {
-                return (Unifiable)this.settingsHash[normalizedName];
-            }
-            else
-            {
-                if (bot.GlobalSettings == this) return Unifiable.Empty;
-                return bot.GetBotSetting(name);
+                string normalizedName = MakeCaseInsensitive.TransformInput(name);
+                if (this.containsSettingCalled(normalizedName))
+                {
+                    return (Unifiable) this.settingsHash[normalizedName];
+                }
+                else
+                {
+                    if (bot.GlobalSettings == this) return Unifiable.Empty;
+                    return bot.GetBotSetting(name);
+                }
             }
         }
 
@@ -248,14 +273,17 @@ namespace RTParser.Utils
         /// <returns>Existential truth value</returns>
         public bool containsSettingCalled(string name)
         {
-            string normalizedName = MakeCaseInsensitive.TransformInput(name);
-            if (normalizedName.Length > 0)
+            lock (orderedKeys)
             {
-                return this.orderedKeys.Contains(normalizedName);
-            }
-            else
-            {
-                return false;
+                string normalizedName = MakeCaseInsensitive.TransformInput(name);
+                if (normalizedName.Length > 0)
+                {
+                    return this.orderedKeys.Contains(normalizedName);
+                }
+                else
+                {
+                    return false;
+                }
             }
         }
 
@@ -267,9 +295,12 @@ namespace RTParser.Utils
         {
             get
             {
-                string[] result = new string[this.orderedKeys.Count];
-                this.orderedKeys.CopyTo(result, 0);
-                return result;
+                lock (orderedKeys)
+                {
+                    string[] result = new string[this.orderedKeys.Count];
+                    this.orderedKeys.CopyTo(result, 0);
+                    return result;
+                }
             }
         }
 
@@ -279,9 +310,12 @@ namespace RTParser.Utils
         /// <param name="target">The target to recieve the values from this SettingsDictionary</param>
         public void Clone(SettingsDictionary target)
         {
-            foreach (string key in this.orderedKeys)
+            lock (orderedKeys)
             {
-                target.addSetting(key, this.grabSetting(key));
+                foreach (string key in this.orderedKeys)
+                {
+                    target.addSetting(key, this.grabSetting(key));
+                }
             }
         }
         #endregion
