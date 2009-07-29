@@ -13,13 +13,11 @@ namespace cogbot.Actions
         AutoResetEvent DownloadHandle = new AutoResetEvent(false);
         bool Success;
 
-        AssetManager.AssetReceivedCallback callback;
         public DownloadCommand(BotClient testClient)
         {
             Name = "download";
             Description = "Downloads the specified asset. Usage: download [uuid] [assetType]";
             Category = CommandCategory.Inventory;
-            callback = new AssetManager.AssetReceivedCallback(Assets_OnAssetReceived);
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -27,13 +25,12 @@ namespace cogbot.Actions
             if (args.Length != 2)
                 return "Usage: download [uuid] [assetType]";
 
-            Client.Assets.OnAssetReceived += callback;
             Success = false;
             AssetID = UUID.Zero;
             assetType = AssetType.Unknown;
             DownloadHandle.Reset();
 
-            if (UUIDTryParse(args,0, out AssetID))
+            if (UUID.TryParse(args[0], out AssetID))
             {
                 int typeInt;
                 if (Int32.TryParse(args[1], out typeInt) && typeInt >= 0 && typeInt <= 22)
@@ -41,7 +38,7 @@ namespace cogbot.Actions
                     assetType = (AssetType)typeInt;
 
                     // Start the asset download
-                    Client.Assets.RequestAsset(AssetID, assetType, true);
+                    Client.Assets.RequestAsset(AssetID, assetType, true, Assets_OnAssetReceived);
 
                     if (DownloadHandle.WaitOne(120 * 1000, false))
                     {
@@ -84,7 +81,7 @@ namespace cogbot.Actions
                         Logger.Log(ex.Message, Helpers.LogLevel.Error, ex);
                     }
                 }
-                Client.Assets.OnAssetReceived -= callback;
+
                 DownloadHandle.Set();
             }
         }

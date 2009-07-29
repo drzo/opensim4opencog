@@ -146,6 +146,7 @@ namespace AIMLBotModule
                 client.Self.OnChat += AIML_OnChat;
                 client.Self.OnInstantMessage += AIML_OnInstantMessage;
                 client.Network.OnLogin += AIML_OnLogin;
+                client.Network.OnEventQueueRunning += AIML_OnEventQueueRunning;
                 client.Friends.OnFriendshipOffered += AIML_OnFriendshipOffered;
                 client.Avatars.OnPointAt += AIML_OnPointAt;
                 client.Avatars.OnLookAt += AIML_OnLookAt;
@@ -215,18 +216,30 @@ namespace AIMLBotModule
             //else client.Friends.DeclineFriendship(agentid, imsessionid);
         }
 
+        private void AIML_OnEventQueueRunning(Simulator simulator)
+        {
+            ReadSimSettings();
+        }
+
         private void AIML_OnLogin(LoginStatus login, string message)
         {
             if (login == LoginStatus.Success)
             {
-                MyBot.GlobalSettings.addSetting("name",
-                    String.Format("{0} {1}", client.BotLoginParams.FirstName, client.BotLoginParams.LastName));
-                MyBot.GlobalSettings.addSetting("firstname", client.BotLoginParams.FirstName);
-                MyBot.GlobalSettings.addSetting("lastname", client.BotLoginParams.LastName);
-                client.WorldSystem.TheSimAvatar["AIMLBotModule"] = this;
-                client.WorldSystem.TheSimAvatar["MyBot"] = MyBot;
-                client.InternType(this.GetType());
+                ReadSimSettings();
             }
+        }
+
+        private void ReadSimSettings()
+        {
+            MyBot.GlobalSettings.addSetting("name",
+                                            String.Format("{0} {1}", client.BotLoginParams.FirstName,
+                                                          client.BotLoginParams.LastName));
+            MyBot.GlobalSettings.addSetting("firstname", client.BotLoginParams.FirstName);
+            MyBot.GlobalSettings.addSetting("lastname", client.BotLoginParams.LastName);
+            client.WorldSystem.TheSimAvatar["AIMLBotModule"] = this;
+            client.WorldSystem.TheSimAvatar["MyBot"] = MyBot;
+            client.InternType(this.GetType());
+
         }
 
         public void SetChatOnOff(string username, bool value)

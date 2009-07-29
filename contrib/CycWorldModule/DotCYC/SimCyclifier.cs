@@ -90,6 +90,11 @@ namespace CycWorldModule.DotCYC
                     }
                     return;
                 }
+                if (evt.EventType == SimEventType.EFFECT)
+                {
+                    if (evt.Verb == "LookAtType-Idle") return;
+                    if (evt.Verb == "LookAtType-FreeLook") return;
+                }
                 CycFort fort = Master.FindOrCreateCycFort(evt);
                 // Debug("to fort -> " + fort);
             }
@@ -214,10 +219,12 @@ namespace CycWorldModule.DotCYC
 
 
             // visit libomv
-            if (true || cycAccess.find("SimEnumCollection") == null)
+            if (cycAccess.find("SimEnumCollection") == null)
             {
                 Debug("Loading SimEnumCollection Collections ");
                 assertIsa(C("SimEnumCollection"), C("Collection"));
+                assertGenls(C("SimEnumCollection"), C("Collection"));
+                assertIsa(C("SimEnumCollection"), C("CollectionType"));
                 assertGaf(C("comment"), C("SimEnumCollection"), "Enums collected from SecondLife");
                 VisitAssembly(Assembly.GetAssembly(typeof(AssetType)));
                 VisitAssembly(Assembly.GetAssembly(typeof(Vector4)));
@@ -514,6 +521,14 @@ namespace CycWorldModule.DotCYC
                 {
                     type = "SimAvatar";
                     name = obj.GetName();
+                    if (name == null)
+                    {
+                        name = WorldObjects.GridMaster.GetUserName(obj.ID);
+                    }
+                    if (name==null)
+                    {
+                        name = obj.ID.ToString();
+                    }
                 }
                 else
                 {
@@ -581,7 +596,8 @@ namespace CycWorldModule.DotCYC
             {
                 CycFort constant;
                 if (cycTerms.TryGetValue(simObj, out constant)) return constant;
-                constant = createIndividualFn("Sim" + simObj.AssetType, simObj.Name, simObj.DebugInfo(), "SimVocabMt", "Sim" + simObj.AssetType);
+                constant = createIndividualColFn("Sim" + simObj.AssetType, simObj.Name, simObj.DebugInfo(), "SimVocabMt", "Sim" + simObj.AssetType);
+                assertGaf(C("comment"),constant,simObj.DebugInfo());
                 cycTerms[simObj] = constant;
                 return constant;
             }
@@ -1012,6 +1028,36 @@ namespace CycWorldModule.DotCYC
             {
                 assertGaf(C("isa"), fn, C("ReifiableFunction"));
                 assertGaf(C("resultIsa"), fn, C(simobjecttype));
+            }
+            CycFort indv;
+            bool b = typename.StartsWith("SimEvent");
+            if (b) // right now we dont intern Events
+            {
+                indv = new CycNart(CycList.list(fn, name));
+            }
+            else
+                lock (cycTerms)
+                {
+                    {
+                        string nv = name + "-" + typename;
+                        if (cycTerms.TryGetValue(nv, out indv)) return indv;
+                        indv = new CycNart(CycList.list(fn, name));
+                        cycTerms[nv] = indv;
+                        assertGaf(C("comment"), indv, comment);
+                    }
+                }
+            return indv;
+        }
+
+        public CycFort createIndividualColFn(string typename, string name, string comment, string simvocabmt, string simobjecttype)
+        {
+            bool newlyCreated;
+            CycFort fn = createIndividual(typename + "Fn", comment,
+                                          simvocabmt, "UnaryFunction", out newlyCreated);
+            if (newlyCreated)
+            {
+                assertGaf(C("isa"), fn, C("ReifiableFunction"));
+                assertGaf(C("resultGenl"), fn, C(simobjecttype));
             }
             CycFort indv;
             bool b = typename.StartsWith("SimEvent");

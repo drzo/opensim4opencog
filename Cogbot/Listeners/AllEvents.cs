@@ -684,9 +684,9 @@ namespace cogbot.Listeners
             client.Groups.OnGroupDropped += Groups_OnGroupDropped;
             client.Groups.OnGroupMemberEjected += Groups_OnGroupMemberEjected;
             client.Groups.OnGroupNoticesList += Groups_OnGroupNoticesList;
-            client.Assets.OnAssetReceived += Assets_OnAssetReceived;
+            //client.Assets.OnAssetReceived += Assets_OnAssetReceived;
             client.Assets.OnXferReceived += Assets_OnXferReceived;
-            if (TextForm.DownloadTextures)
+            if (ClientManager.DownloadTextures)
             {
                //todo client.Assets.OnImageReceived += Assets_OnImageReceived;
                 client.Assets.OnImageRecieveProgress += Assets_OnImageReceiveProgress;
@@ -803,7 +803,7 @@ namespace cogbot.Listeners
             client.Groups.OnGroupDropped -= Groups_OnGroupDropped;
             client.Groups.OnGroupMemberEjected -= Groups_OnGroupMemberEjected;
             client.Groups.OnGroupNoticesList -= Groups_OnGroupNoticesList;
-            client.Assets.OnAssetReceived -= Assets_OnAssetReceived;
+           // client.Assets.OnAssetReceived -= Assets_OnAssetReceived;
             client.Assets.OnXferReceived -= Assets_OnXferReceived;
             //todo client.Assets.OnImageReceived -= Assets_OnImageReceived;
             client.Assets.OnImageRecieveProgress -= Assets_OnImageReceiveProgress;

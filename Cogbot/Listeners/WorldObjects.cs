@@ -21,10 +21,10 @@ namespace cogbot.Listeners
         public static bool CanUseSit = true;
         public static bool DoSimulatorsCatchUp = false;
         public static bool MaintainAnims = true;
-        public static bool MaintainAnimsInFolders = false;
+        public static bool MaintainAnimsInFolders = true;
         public static bool MaintainAttachments = true;
         public static bool MaintainCollisions = true;
-        public static bool MaintainEffects = false;
+        public static bool MaintainEffects = true;
         public static bool MaintainActions = true;
         public static bool MaintainPropertiesFromQueue = true;
         public static bool MaintainObjectUpdates = false;
@@ -149,6 +149,7 @@ namespace cogbot.Listeners
 
                 client.Network.OnSimConnected += Network_OnSimConnectedHook;
                 client.Inventory.OnScriptRunning += Inventory_OnScriptRunning;
+                _simAssetSystem = new SimAssetStore(client);
 
 
                 burstStartTime = DateTime.Now;
@@ -161,13 +162,12 @@ namespace cogbot.Listeners
                 {
                     RegionMasterTexturePipeline = client.Assets;
                     //RegionMasterTexturePipeline.OnDownloadFinished += new TexturePipeline.DownloadFinishedCallback(RegionMasterTexturePipeline_OnDownloadFinished);
-                    client.Settings.USE_TEXTURE_CACHE = true;
+                    client.Settings.USE_ASSET_CACHE = true;
                 }
                 else
                 {
                     //client.Settings.USE_TEXTURE_CACHE = false;
                 }
-
 
                 if (GridMaster == this)
                 {
@@ -178,7 +178,6 @@ namespace cogbot.Listeners
                     }
                     EnsureSelectedTimer = new Timer(ReallyEnsureSelected_Thread, null, 1000, 1000);
                     _SimPaths = new WorldPathSystem(this);
-                    _simAssetSystem = new SimAssetStore(client);
                 }
                 //SetWorldMaster(false);
                 //RegisterAll();
@@ -230,8 +229,8 @@ namespace cogbot.Listeners
 
         internal static BotClient BotClientFor(GridClient client)
         {
-            lock (TextForm.SingleInstance.Clients)
-                foreach (BotClient bc in TextForm.SingleInstance.Clients.Values)
+            lock (ClientManager.SingleInstance.Clients)
+                foreach (BotClient bc in ClientManager.SingleInstance.Clients.Values)
                 {
                     if (bc.gridClient == client) return bc;
                 }

@@ -7,15 +7,13 @@ using System.ComponentModel;
 using System.Xml;
 using System.Xml.Serialization;
 using OpenMetaverse;
-using OpenMetaverse.Assets;
 using OpenMetaverse.Packets;
-using cogbot.Actions;
+using OpenMetaverse.Assets;
 
 namespace cogbot.Actions
 {
     public class QueuedDownloadInfo
     {
-        public UUID TransferID;
         public UUID AssetID;
         public UUID ItemID;
         public UUID TaskID;
@@ -33,13 +31,12 @@ namespace cogbot.Actions
             TaskID = task;
             OwnerID = owner;
             Type = type;
-            TransferID = UUID.Zero;
             WhenRequested = DateTime.Now;
             IsRequested = false;
         }
     }
 
-    public class BackupCommand : Command , RegionMasterCommand
+    public class BackupCommand : Command
     {
         /// <summary>Maximum number of transfer requests to send to the server</summary>
         private const int MAX_TRANSFERS = 10;
@@ -58,8 +55,6 @@ namespace cogbot.Actions
         private int TextItemsFound;
         private int TextItemsTransferred;
         private int TextItemErrors;
-
-        AssetManager.AssetReceivedCallback callback;
 
         #region Properties
 
@@ -115,18 +110,12 @@ namespace cogbot.Actions
         public BackupCommand(BotClient testClient)
         {
             Name = "backuptext";
-            Description = "Backup inventory to a folder on your hard drive. Usage: " + Name + " [to <directory>] | [abort] | [status]";            
+            Description = "Backup inventory to a folder on your hard drive. Usage: " + Name + " [to <directory>] | [abort] | [status]";
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            StringBuilder sbResult = new StringBuilder();
 
-            if (callback == null)
-            {
-                callback = new AssetManager.AssetReceivedCallback(Assets_OnAssetReceived);
-                Client.Assets.OnAssetReceived += callback;
-            }
             if (args.Length == 1 && args[0] == "status")
             {
                 return BackgroundBackupStatus;
@@ -172,7 +161,7 @@ namespace cogbot.Actions
         void bwQueueRunner_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             QueueWorker = null;
-            WriteLine(BackgroundBackupStatus);
+            Console.WriteLine(BackgroundBackupStatus);
         }
 
         void bwQueueRunner_DoWork(object sender, DoWorkEventArgs e)
@@ -190,8 +179,8 @@ namespace cogbot.Actions
                         {
                             Logger.DebugLog(Name + ": timeout on asset " + qdi.AssetID.ToString(), Client);
                             // submit request again
-                            qdi.TransferID = Client.Assets.RequestInventoryAsset(
-                                qdi.AssetID, qdi.ItemID, qdi.TaskID, qdi.OwnerID, qdi.Type, true);
+                            Client.Assets.RequestInventoryAsset(
+                                qdi.AssetID, qdi.ItemID, qdi.TaskID, qdi.OwnerID, qdi.Type, true, Assets_OnAssetReceived);
                             qdi.WhenRequested = DateTime.Now;
                             qdi.IsRequested = true;
                         }
@@ -207,8 +196,8 @@ namespace cogbot.Actions
                         QueuedDownloadInfo qdi = PendingDownloads.Dequeue();
                         qdi.WhenRequested = DateTime.Now;
                         qdi.IsRequested = true;
-                        qdi.TransferID = Client.Assets.RequestInventoryAsset(
-                            qdi.AssetID, qdi.ItemID, qdi.TaskID, qdi.OwnerID, qdi.Type, true);
+                        Client.Assets.RequestInventoryAsset(
+                            qdi.AssetID, qdi.ItemID, qdi.TaskID, qdi.OwnerID, qdi.Type, true, Assets_OnAssetReceived);
 
                         lock (CurrentDownloads) CurrentDownloads.Add(qdi);
                     }
@@ -226,10 +215,8 @@ namespace cogbot.Actions
 
         void bwBackup_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            WriteLine(Name + ": Inventory walking thread done.");
+            Console.WriteLine(Name + ": Inventory walking thread done.");
             BackupWorker = null;
-            Client.Assets.OnAssetReceived -= callback;
-            callback = null;
         }
 
         private void bwBackup_DoWork(object sender, DoWorkEventArgs e)
@@ -259,7 +246,6 @@ namespace cogbot.Actions
         /// <param name="sPathSoFar">path so far, in the form @"c:\here" -- this needs to be "clean" for the current filesystem</param>
         private void BackupFolder(InventoryNode folder, string sPathSoFar)
         {
-            StringBuilder sbRequests = new StringBuilder();
 
             // FIXME:
             //Client.Inventory.RequestFolderContents(folder.Data.UUID, Client.Self.AgentID, true, true, false, 
@@ -286,7 +272,7 @@ namespace cogbot.Actions
                         }
 
                         string sExtension = (ii.AssetType == AssetType.LSLText) ? ".lsl" : ".txt";
-                        // make the WriteLine file
+                        // make the output file
                         string sPath = sPathSoFar + @"\" + MakeValid(ii.Name.Trim()) + sExtension;
 
                         // create the new qdi
@@ -326,16 +312,15 @@ namespace cogbot.Actions
                 // see if we have this in our transfer list
                 QueuedDownloadInfo r = CurrentDownloads.Find(delegate(QueuedDownloadInfo q)
                 {
-                    return q.TransferID == asset.ID;
+                    return q.AssetID == asset.AssetID;
                 });
 
-                if (r != null && r.TransferID == asset.ID)
+                if (r != null && r.AssetID == asset.AssetID)
                 {
                     if (asset.Success)
                     {
                         // create the directory to put this in
-                        String dirname = Path.GetDirectoryName(r.FileName);
-                        if (!Directory.Exists(dirname)) Directory.CreateDirectory(dirname);
+                        Directory.CreateDirectory(Path.GetDirectoryName(r.FileName));
 
                         // write out the file
                         File.WriteAllBytes(r.FileName, asset.AssetData);
@@ -345,7 +330,7 @@ namespace cogbot.Actions
                     else
                     {
                         TextItemErrors++;
-                        WriteLine("{0}: Download of asset {1} ({2}) failed with status {3}", Name, r.FileName,
+                        Console.WriteLine("{0}: Download of asset {1} ({2}) failed with status {3}", Name, r.FileName,
                             r.AssetID.ToString(), asset.Status.ToString());
                     }
 

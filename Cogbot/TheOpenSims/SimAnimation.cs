@@ -265,7 +265,7 @@ namespace cogbot.TheOpenSims
                 }
                 foreach (var c in stuff.Values)
                 {
-                    st += " " + c;
+                    st += " " + c.ToString();
                 }
             }
             return st;
@@ -279,7 +279,7 @@ namespace cogbot.TheOpenSims
 
             float Mag
             {
-                get { return posLen / timeLen; }
+                get { return posLen /* / timeLen */; }
             }
 
             public int CompareTo(JointMoveSize other)
@@ -332,9 +332,12 @@ namespace cogbot.TheOpenSims
             {
                 if (binBVHJointKey.Length == 0) return 0;
                 Vector3 next = binBVHJointKey[0].key_element;
-                double totalLen = binBVHJointKey[0].time;
-                if (binBVHJointKey.Length == 1) return (float)totalLen;
-                for (int i = 1; i < binBVHJointKey.Length / 2; i++)
+                double totalLen = 0;
+                if (binBVHJointKey.Length == 1)
+                {
+                    return next.LengthSquared();
+                }
+                for (int i = 1; i < binBVHJointKey.Length; i++)
                 {
                     Vector3 n = binBVHJointKey[i].key_element;
                     totalLen += (next - n).LengthSquared();
@@ -348,6 +351,10 @@ namespace cogbot.TheOpenSims
         public byte[] _TypeData;
         protected override void SaveFile(string tmpname)
         {
+            if (Item==null)
+            {
+                Item = SimGesture.SaveAnimation(this);
+            }
             byte[] bs = AssetData;
             if (bs != null && bs.Length > 0)
             {

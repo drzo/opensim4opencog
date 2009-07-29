@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
+using OpenMetaverse.Interfaces;
 using OpenMetaverse.Packets;
 using PathSystem3D.Navigation;
 
@@ -201,15 +202,15 @@ namespace cogbot.Listeners
             if (propertiesPartner != UUID.Zero)
             {
                 SimAvatarImpl AA = CreateSimAvatar(propertiesPartner, this, null);
-                if (AA.GetName() == null)
-                {
-                    String s = GetUserName(propertiesPartner);
-                    AA.AspectName = s;
-                }
+                //if (AA.GetName() == null)
+                //{
+                //    String s = GetUserName(propertiesPartner);
+                //    AA.AspectName = s;
+                //}
             }
             if (properties.ProfileImage != UUID.Zero)
             {
-               // RequestAsset(properties.ProfileImage, AssetType.ImageJPEG, true);
+               // RequestAsset(properties.ProfileImage, AssetType.Texture, true);
             }
             SendNewRegionEvent(SimEventType.DATA_UPDATE, "OnAvatarDataUpdate", A);
             //TODO SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID, null), properties);
@@ -513,5 +514,14 @@ namespace cogbot.Listeners
             return AA.GetName();
         }
 
+        private void AgentGroupDataUpdateHandler(string capskey, IMessage message, Simulator simulator)
+        {
+            //throw new NotImplementedException();
+        }
+
+        private void AgentGroupDataUpdatePT(Packet packet, Simulator simulator)
+        {
+            //throw new NotImplementedException();
+        }
     }
 }

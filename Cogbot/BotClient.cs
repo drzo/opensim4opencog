@@ -20,7 +20,7 @@ using cogbot.TheOpenSims;
 
 namespace cogbot
 {
-    public class BotClient : SimEventSubscriber
+    public class BotClient: SimEventSubscriber
     {
 
         public static implicit operator GridClient(BotClient m)
@@ -84,10 +84,10 @@ namespace cogbot
         int LoginRetries = 2; // for the times we are "already logged in"
         public void Login()
         {
-            //if (TextForm.simulator.periscopeClient == null)
+            //if (ClientManager.simulator.periscopeClient == null)
             //{
-            //    TextForm.simulator.periscopeClient = this;
-            //    TextForm.simulator.Start();
+            //    ClientManager.simulator.periscopeClient = this;
+            //    ClientManager.simulator.Start();
             //    Settings.LOG_LEVEL = Helpers.LogLevel.Info;
             //}
             try
@@ -131,11 +131,11 @@ namespace cogbot
         readonly private System.Timers.Timer updateTimer;
 
         public Listeners.WorldObjects WorldSystem;
-        //   static public TextForm SingleInstance = null;
+        //   static public ClientManager SingleInstance = null;
         public static int debugLevel = 2;
-        public bool GetTextures = TextForm.DownloadTextures;
+        public bool GetTextures = cogbot.ClientManager.DownloadTextures;
 
-        //  public cogbot.TextForm ClientManager;
+        //  public cogbot.ClientManager ClientManager;
         //  public VoiceManager VoiceManager;
         // Shell-like inventory commands need to be aware of the 'current' inventory folder.
 
@@ -163,8 +163,8 @@ namespace cogbot
         //public InventoryManager Manager;
         // public Configuration config;
         public String taskInterperterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
-        ScriptEventListener scriptEventListener = null;
-        public TextForm ClientManager;
+        ScriptEventListener scriptEventListener = null;        
+        readonly public ClientManager ClientManager;
 
         public List<string> muteList;
         public bool muted = false;
@@ -172,14 +172,36 @@ namespace cogbot
         private UUID GroupMembersRequestID;
         public Dictionary<UUID, Group> GroupsCache = null;
         private ManualResetEvent GroupsEvent = new ManualResetEvent(false);
+
         /// <summary>
         /// 
         /// </summary>
-        public BotClient(TextForm manager)
+        public BotClient(ClientManager manager, GridClient g)
         {
             ClientManager = manager;
-            manager.lastBotClient = this;
+            gridClient = g;
+            SetDefaultLoginDetails(ClientManager.config);
+            manager.LastBotClient = this;
+            try
+            {
+                //WriteLine("Start Loading TaskInterperter ... '" + taskInterperterType + "' \n");
+                LispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
+                LispTaskInterperter.LoadFile("boot.lisp");
+                LispTaskInterperter.LoadFile("extra.lisp");
+                LispTaskInterperter.LoadFile("cogbot.lisp");
+                LispTaskInterperter.Intern("clientManager", ClientManager);
+                scriptEventListener = new ScriptEventListener(LispTaskInterperter, this);
+                botPipeline.AddSubscriber(scriptEventListener);
 
+              //  WriteLine("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
+                // load the initialization string
+            }
+            catch (Exception e)
+            {
+                WriteLine("!Exception: " + e.GetBaseException().Message);
+                WriteLine("error occured: " + e.Message);
+                WriteLine("        Stack: " + e.StackTrace.ToString());
+            }
 
             updateTimer = new System.Timers.Timer(500);
             updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(updateTimer_Elapsed);
@@ -190,7 +212,6 @@ namespace cogbot
             Settings.USE_INTERPOLATION_TIMER = false;
             Settings.LOG_LEVEL = Helpers.LogLevel.Info;
 
-            gridClient = new GridClient();
             //   Settings.LOG_RESENDS = false;
             //   Settings.ALWAYS_DECODE_OBJECTS = true;
             //   Settings.ALWAYS_REQUEST_OBJECTS = true;
@@ -219,7 +240,6 @@ namespace cogbot
 
             VoiceManager = new VoiceManager(gridClient);
             //manager.AddBotClientToTextForm(this);
-            SetDefaultLoginDetails(TextForm.SingleInstance.config);
 
             botPipeline.AddSubscriber(new SimEventTextSubscriber(WriteLine, this));
             // SingleInstance = this;
@@ -308,10 +328,10 @@ namespace cogbot
 
 
             // Start the server
-            lock (TextForm.SingleInstance.config)
+            lock (ClientManager.config)
             {
-                thisTcpPort = TextForm.nextTcpPort;
-                TextForm.nextTcpPort += TextForm.SingleInstance.config.tcpPortOffset;
+                thisTcpPort = ClientManager.nextTcpPort;
+                ClientManager.nextTcpPort += ClientManager.config.tcpPortOffset;
                 Utilities.TcpServer UtilitiesTcpServer = new Utilities.TcpServer(thisTcpPort, this);
                 UtilitiesTcpServer.startSocketListener();
             }
@@ -340,20 +360,20 @@ namespace cogbot
 
             updateTimer.Start();
             searcher = new BotInventoryEval(this);
-            initTaskInterperter();
-            lispEventProducer = new LispEventProducer(this, lispTaskInterperter);
+
+            lispEventProducer = new LispEventProducer(this, LispTaskInterperter);
+
         }
 
         private LispEventProducer lispEventProducer;
 
         public void StartupClientLisp()
         {
-            initTaskInterperter();
-            if (TextForm.SingleInstance.config.startupClientLisp.Length > 1)
+            if (ClientManager.config.startupClientLisp.Length > 1)
             {
                 try
                 {
-                    evalLispString("(progn " + TextForm.SingleInstance.config.startupClientLisp + ")");
+                    evalLispString("(progn " + ClientManager.config.startupClientLisp + ")");
                 }
                 catch (Exception e)
                 {
@@ -770,6 +790,7 @@ namespace cogbot
 
         public void WriteLine(string str)
         {
+            Console.WriteLine(str);
             try
             {
                 if (str == null) return;
@@ -1052,37 +1073,8 @@ namespace cogbot
         }
 
 
-        public ScriptInterpreter lispTaskInterperter;
+        public readonly ScriptInterpreter LispTaskInterperter;
         readonly private List<Type> registeredTypes = new List<Type>();
-
-        private void initTaskInterperter()
-        {
-            try
-            {
-                if (lispTaskInterperter != null)
-                {
-                    return;
-                }
-                WriteLine("Start Loading TaskInterperter ... '" + taskInterperterType + "' \n");
-                lispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
-                lispTaskInterperter.LoadFile("boot.lisp");
-                lispTaskInterperter.LoadFile("extra.lisp");
-                lispTaskInterperter.LoadFile("cogbot.lisp");
-                lispTaskInterperter.Intern("clientManager", ClientManager);
-                scriptEventListener = new ScriptEventListener(lispTaskInterperter, this);
-                botPipeline.AddSubscriber(scriptEventListener);
-
-                WriteLine("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
-                // load the initialization string
-            }
-            catch (Exception e)
-            {
-                WriteLine("!Exception: " + e.GetBaseException().Message);
-                WriteLine("error occured: " + e.Message);
-                WriteLine("        Stack: " + e.StackTrace.ToString());
-            }
-
-        }
 
         public void enqueueLispTask(object p)
         {
@@ -1097,10 +1089,10 @@ namespace cogbot
                 Object r = null;
                 //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
                 StringReader stringCodeReader = new StringReader(lispCode);
-                r = lispTaskInterperter.Read("evalLispString", stringCodeReader);
-                if (lispTaskInterperter.Eof(r))
+                r = LispTaskInterperter.Read("evalLispString", stringCodeReader);
+                if (LispTaskInterperter.Eof(r))
                     return r.ToString();
-                return lispTaskInterperter.Str(evalLispCode(r));
+                return LispTaskInterperter.Str(evalLispCode(r));
             }
             catch (Exception e)
             {
@@ -1116,19 +1108,15 @@ namespace cogbot
             try
             {
                 if (lispCode == null) return null;
-                if (lispTaskInterperter == null)
-                {
-                    initTaskInterperter();
-                }
                 if (lispCode is String)
                 {
                     StringReader stringCodeReader = new StringReader(lispCode.ToString());
-                    lispCode = lispTaskInterperter.Read("evalLispString", stringCodeReader);
+                    lispCode = LispTaskInterperter.Read("evalLispString", stringCodeReader);
                 }
                 WriteLine("Eval> " + lispCode);
-                if (lispTaskInterperter.Eof(lispCode))
+                if (LispTaskInterperter.Eof(lispCode))
                     return lispCode.ToString();
-                return lispTaskInterperter.Eval(lispCode);
+                return LispTaskInterperter.Eval(lispCode);
             }
             catch (Exception e)
             {
@@ -1156,7 +1144,7 @@ namespace cogbot
                 // Start in the inventory root folder.
                 CurrentDirectory = Inventory.Store.RootFolder;//.RootFolder;
             }
-            //            WriteLine("TextForm Network_OnLogin : [" + login.ToString() + "] " + message);
+            //            WriteLine("ClientManager Network_OnLogin : [" + login.ToString() + "] " + message);
             //SendNewEvent("On-Login", login, message);
 
             if (login == LoginStatus.Failed)
@@ -1416,21 +1404,13 @@ namespace cogbot
 
         public void Intern(string n, object v)
         {
-            if (lispTaskInterperter == null)
-            {
-                initTaskInterperter();
-            }
-            lispTaskInterperter.Intern(n, v);
+            LispTaskInterperter.Intern(n, v);
         }
 
 
         public void InternType(Type t)
         {
-            if (lispTaskInterperter == null)
-            {
-                initTaskInterperter();
-            }
-            lispTaskInterperter.InternType(t);
+            LispTaskInterperter.InternType(t);
         }
 
         private void RegisterListener(Listener listener)

@@ -12,7 +12,7 @@ namespace cogbot.Listeners
 
         //private static List<UUID> EffectsSent = new List<UUID>();
         public static readonly List<String> SkippedEffects = new List<string>();
-        private static SimAssetStore _simAssetSystem;
+        private readonly SimAssetStore _simAssetSystem;
         public SimAssetStore SimAssetSystem
         {
             get { return _simAssetSystem; }
@@ -294,6 +294,8 @@ namespace cogbot.Listeners
             if (so is SimAvatar)
             {
                 SimAvatar A = (SimAvatar)so;
+                if (!A.IsRegionAttached()) return false;
+                if (A.Distance(TheSimAvatar) < 30) return true;
                 if (A.IsRegionAttached() && A.GetName().Contains("Rajesh"))
                     return true;
             }
@@ -304,11 +306,11 @@ namespace cogbot.Listeners
         public void SendEffect(Simulator sim, UUID sourceID, UUID targetID, Vector3d targetPos, string effectType, float duration,
                                UUID id)
         {
+            if (!MaintainEffects) return;
+            if (sourceID == client.Self.AgentID) return; //not sending our own effects
             if (!IsMaster(sim)) return;
             if (client.MasterKey == UUID.Zero) return;
             if (!(client.MasterKey == targetID || sourceID == client.MasterKey)) return;
-            if (!MaintainEffects) return;
-            if (sourceID == client.Self.AgentID) return; //not sending our own effects
             if (id != UUID.Zero)
             {
                 // if (EffectsSent.Contains(id)) return;
@@ -351,7 +353,7 @@ namespace cogbot.Listeners
             {
                 t = target;
             }
-
+            double dist;
             SimObject ST = target;
             if (ST == null) ST = source;
             if (targetPos.X < 256)
@@ -380,7 +382,6 @@ namespace cogbot.Listeners
             }
             else
             {
-                double dist;
                 SimObject posTarget = GetSimObjectFromVector(targetPos, out dist);
                 if (dist < 0.5)
                 {
@@ -410,7 +411,7 @@ namespace cogbot.Listeners
                 EventQueue.Enqueue(() =>
                                         {
                                             //if (source != null) source;
-                                            // WriteLine("TextForm Avatars_OnLookAt: " + sourceID.ToString() + " to " + targetID.ToString() + " at " + targetID.ToString() + " with type " + lookType.ToString() + " duration " + duration.ToString());
+                                            // WriteLine("ClientManager Avatars_OnLookAt: " + sourceID.ToString() + " to " + targetID.ToString() + " at " + targetID.ToString() + " with type " + lookType.ToString() + " duration " + duration.ToString());
                                             if (targetID == client.Self.AgentID)
                                             {
                                                 // if (lookType == LookAtType.Idle) return;

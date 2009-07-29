@@ -723,7 +723,7 @@ namespace cogbot.TheOpenSims
             get
             {
                 if (WasKilled) return false;
-                if (Prim.ParentID == 0) return true;
+                if (Prim==null || Prim.ParentID == 0) return true;
                 // _Parent = Parent;
                 return false;
             }

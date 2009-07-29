@@ -20,11 +20,17 @@ namespace cogbot
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-
-            Application.Run(new TextForm());
+            using (TextForm textForm = new TextForm())
+            {
+                ClientManager manager = new ClientManager();
+                manager.outputDelegate = new OutputDelegate(textForm.WriteLine);
+                manager.StartUpLisp();
+                Application.Run(textForm);
+            }
         }
 
-     }
+    }
+
      public class CommandLineArgumentsException : Exception
      {
      }
@@ -43,7 +49,7 @@ namespace cogbot
          {
              Arguments arguments = new Arguments(args);
 
-             TextForm manager;
+             ClientManager manager;
              List<LoginDetails> accounts = new List<LoginDetails>();
              LoginDetails account;
              bool groupCommands = false;
@@ -169,7 +175,7 @@ namespace cogbot
              }
 
              // Login the accounts and run the input loop
-             manager = new TextForm(accounts, getTextures);
+             manager = new ClientManager(accounts, getTextures);
 
              if (!String.IsNullOrEmpty(scriptFile))
                  manager.DoCommandAll("script " + scriptFile, UUID.Zero, Console.WriteLine);

@@ -16,12 +16,7 @@ namespace cogbot.Listeners
         /// <summary>
         /// Assets that WorldObjects requested
         /// </summary>
-        private static readonly Dictionary<UUID, UUID> AssetRequests = new Dictionary<UUID, UUID>();
-
-        /// <summary>
-        /// Locked on AssetRequests
-        /// </summary>
-        private static readonly Dictionary<UUID, AssetType> AssetRequestType = new Dictionary<UUID, AssetType>();
+       private static readonly Dictionary<UUID, AssetType> AssetRequestType = new Dictionary<UUID, AssetType>();
 
         public Asset GetAsset(UUID id)
         {
@@ -35,7 +30,7 @@ namespace cogbot.Listeners
                 }
             }
             //RequestAsset(id, AssetType.Object, true);
-            //IAssetProvider assetProvider = null;// TextForm.simulator.Assets;
+            //IAssetProvider assetProvider = null;// ClientManager.simulator.Assets;
             //if (assetProvider == null)
             //{
             //    Debug("Asset Provider still off line for " + id);
@@ -115,18 +110,17 @@ namespace cogbot.Listeners
             if (assetType == AssetType.Sound) return;
             if (assetType == AssetType.SoundWAV) return;
             sa.NeedsRequest = false;
-            lock (AssetRequests) if (AssetRequests.ContainsKey(id)) return;
+            lock (AssetRequestType) if (AssetRequestType.ContainsKey(id)) return;
             {
                 if (assetType == AssetType.Texture)
                 {
                     StartTextureDownload(id);
                     return;
                 }
-                UUID req = RegionMasterTexturePipeline.RequestAsset(id, assetType, p);
-                lock (AssetRequests)
+                RegionMasterTexturePipeline.RequestAsset(id, assetType, p, Assets_OnAssetReceived);
+                lock (AssetRequestType)
                 {
-                    AssetRequestType[req] = assetType;
-                    AssetRequests[id] = req;
+                    AssetRequestType[id] = assetType;
                 }
             }
         }
@@ -142,8 +136,8 @@ namespace cogbot.Listeners
         {
             if (asset == null)
             {
-                lock (AssetRequests)
-                    if (AssetRequests.ContainsValue(transfer.ID))
+                lock (AssetRequestType)
+                    if (AssetRequestType.ContainsKey(transfer.AssetID))
                     {
                         Debug("Failed transfer for " + AssetRequestType[transfer.ID] +
                               " " + transfer.ID + " ");
@@ -154,16 +148,16 @@ namespace cogbot.Listeners
                     }
                 return;
             }
-            lock (AssetRequests)
-                if (AssetRequests.ContainsValue(transfer.ID))
+            lock (AssetRequestType)
+                if (AssetRequestType.ContainsKey(asset.AssetID))
                 {
-                    AssetType assetRequestType = AssetRequestType[transfer.ID];
+                    AssetType assetRequestType = AssetRequestType[transfer.AssetID];
                     if (assetRequestType == asset.AssetType)
                         Debug("Transfer succeeded for " + assetRequestType +
-                              " " + transfer.ID + " ");
+                              " " + transfer.AssetID + " ");
                     else
                         Debug("Transfer succeeded weirdly as " + asset.AssetType + " for " + assetRequestType +
-                              " " + transfer.ID + " ");
+                              " " + transfer.AssetID + " ");
                 }
                 else
                 {
@@ -188,7 +182,7 @@ namespace cogbot.Listeners
 
         public ImageDownload StartTextureDownload(UUID id)
         {
-            if (RegionMasterTexturePipeline.Cache.HasImage(id))
+            if (RegionMasterTexturePipeline.Cache.HasAsset(id))
             {
                 return RegionMasterTexturePipeline.Cache.GetCachedImage(id);
             }

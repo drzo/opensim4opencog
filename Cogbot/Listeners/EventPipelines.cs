@@ -163,6 +163,7 @@ namespace cogbot.Listeners
 
         public void AddSubscriber(SimEventSubscriber sub)
         {
+            if (sub == null) throw new NullReferenceException();
             lock (subscribers) if (!subscribers.Contains(sub))
                     subscribers.Add(sub);
         }

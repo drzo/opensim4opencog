@@ -38,12 +38,9 @@ namespace cogbot.Utilities
                 Busy = false;
 
                 ThreadStart evt;
-                // int eventQueueCountLast = 0;
-                int eventQueueCount;
                 lock (EventQueue)
                 {
-                    eventQueueCount = EventQueue.Count;
-                    if (eventQueueCount > 0)
+                    if (EventQueue.Count > 0)
                     {
                         evt = EventQueue.First.Value;
                         EventQueue.RemoveFirst();
@@ -70,7 +67,7 @@ namespace cogbot.Utilities
                         Console.WriteLine("" + e);
                     }
                     Busy = false;
-                    Thread.Sleep(WAIT_AFTER);
+                    if (WAIT_AFTER > 1) Thread.Sleep(WAIT_AFTER);
                 }
                 else
                 {
@@ -80,13 +77,29 @@ namespace cogbot.Utilities
                         {
                             continue;
                         }
-                        WaitingOn.Reset();
+                        Reset();
                     }
-                    WaitingOn.WaitOne();
+                    WaitOne();
                 }
                 Busy = false;
             }
         }
+
+        private void WaitOne()
+        {
+            WaitingOn.WaitOne();// Thread.Sleep(100);
+        }
+
+        private void Reset()
+        {
+            WaitingOn.Reset();
+        }
+        private void Set()
+        {
+            WaitingOn.Set();
+        }
+
+        public static bool DebugQueue = false;
 
         void EventQueue_Ping()
         {
@@ -98,7 +111,7 @@ namespace cogbot.Utilities
                     if (LastBusy == sequence)
                     {
                         TimeSpan t = DateTime.UtcNow - BusyStart;
-                        Console.WriteLine("\n[TASK {0}] TOOK LONGER THAN {1} secs = {2} in Queue={3}",
+                        if (DebugQueue) Console.WriteLine("\n[TASK {0}] TOOK LONGER THAN {1} secs = {2} in Queue={3}",
                                           Name, PING_TIME.TotalSeconds, t.TotalSeconds, EventQueue.Count);
                     }
                     LastBusy = sequence;
@@ -117,7 +130,7 @@ namespace cogbot.Utilities
                     }
                     else
                     {
-                        Console.WriteLine("[TASK {0}] {1} secs for {2} after {3} GoodPing(s)",
+                        if (DebugQueue) Console.WriteLine("[TASK {0}] {1} secs for {2} after {3} GoodPing(s)",
                                           Name, timeSpan.TotalSeconds, count, GoodPings);
                         GoodPings = 0;
                     }
@@ -133,15 +146,16 @@ namespace cogbot.Utilities
             lock (EventQueue)
             {
                 EventQueue.AddLast(evt);
-                WaitingOn.Set();
+                Set();
             }
         }
+
         public void AddFirst(ThreadStart evt)
         {
             lock (EventQueue)
             {
                 EventQueue.AddFirst(evt);
-                WaitingOn.Set();
+                Set();
             }
         }
     }
