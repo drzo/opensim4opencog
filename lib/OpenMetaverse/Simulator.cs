@@ -233,7 +233,7 @@ namespace OpenMetaverse
         /// <summary>A public reference to the client that this Simulator object
         /// is attached to</summary>
         public GridClient Client;
-        /// <summary></summary>
+        /// <summary>A Unique Cache identifier for this simulator</summary>
         public UUID ID = UUID.Zero;
         /// <summary>The capabilities for this simulator</summary>
         public Caps Caps = null;
@@ -284,7 +284,7 @@ namespace OpenMetaverse
         public UUID TerrainDetail2 = UUID.Zero;
         /// <summary></summary>
         public UUID TerrainDetail3 = UUID.Zero;
-        /// <summary></summary>
+        /// <summary>true if your agent has Estate Manager rights on this region</summary>
         public bool IsEstateManager;
         /// <summary></summary>
         public RegionFlags Flags;
@@ -583,6 +583,7 @@ namespace OpenMetaverse
                 {
                     Logger.Log("Giving up on waiting for RegionHandshake for " + this.ToString(),
                         Helpers.LogLevel.Warning, Client);
+                    return false;
                 }
 
                 return true;
@@ -638,14 +639,15 @@ namespace OpenMetaverse
 
                 // Destroy the timers
                 if (AckTimer != null) AckTimer.Dispose();
-                AckTimer = null;
                 if (StatsTimer != null) StatsTimer.Dispose();
-                StatsTimer = null;
                 if (PingTimer != null) PingTimer.Dispose();
+
+                AckTimer = null;
+                StatsTimer = null;
                 PingTimer = null;
 
                 // Kill the current CAPS system
-                if (Caps != null )
+                if (Caps != null)
                 {
                     Caps.Disconnect(true);
                     Caps = null;
@@ -1134,9 +1136,8 @@ namespace OpenMetaverse
             ResendUnacked();
 
             // Start the ACK handling functions again after NETWORK_TICK_INTERVAL milliseconds
-            Timer timer = AckTimer;
-            if (timer != null)
-                timer.Change(Settings.NETWORK_TICK_INTERVAL, Timeout.Infinite);
+            try { AckTimer.Change(Settings.NETWORK_TICK_INTERVAL, Timeout.Infinite); }
+            catch (Exception) { }
         }
 
         private void StatsTimer_Elapsed(object obj)

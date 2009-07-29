@@ -235,6 +235,8 @@ namespace OpenMetaverse
         /// <param name="simulator"></param>
         /// <param name="prim"></param>
         /// <param name="update"></param>
+        /// <param name="RegionHandle"></param>
+        /// <param name="TimeDilation"></param>
         public delegate void ObjectUpdatedTerseCallback(Simulator simulator, Primitive prim, ObjectUpdate update, ulong RegionHandle, ushort TimeDilation);
         /// <summary>
         /// Called whenever an major object update is received
@@ -243,9 +245,9 @@ namespace OpenMetaverse
         /// <param name="simulator"></param>
         /// <param name="prim"></param>
         /// <param name="constructionData"></param>
-        /// <param name="block"></param>
-        /// <param name="update"></param>
-        /// <param name="nameValues"></param>
+        /// <param name="block"></param>     
+        /// <param name="objectupdate"></param>
+        /// <param name="nameValues"></param>        
         public delegate void ObjectDataBlockUpdateCallback(Simulator simulator, Primitive prim, Primitive.ConstructionData constructionData, 
             ObjectUpdatePacket.ObjectDataBlock block, ObjectUpdate objectupdate, NameValue[] nameValues);
         /// <summary>
@@ -389,10 +391,29 @@ namespace OpenMetaverse
         protected ObjectManager(GridClient client, bool registerCallbacks)
         {
             Client = client;
+            Client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
+            Client.Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
 
             if (registerCallbacks)
             {
                 RegisterCallbacks();
+            }
+        }
+
+        void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
+        {
+            if (InterpolationTimer != null)
+            {
+                InterpolationTimer.Dispose();
+                InterpolationTimer = null;
+            }
+        }
+
+        void Network_OnConnected(object sender)
+        {
+            if (Client.Settings.USE_INTERPOLATION_TIMER)
+            {
+                InterpolationTimer = new Timer(InterpolationTimer_Elapsed, null, Settings.INTERPOLATION_INTERVAL, Timeout.Infinite);
             }
         }
 
@@ -406,14 +427,6 @@ namespace OpenMetaverse
             Client.Network.RegisterCallback(PacketType.ObjectPropertiesFamily, ObjectPropertiesFamilyHandler);
             Client.Network.RegisterCallback(PacketType.ObjectProperties, ObjectPropertiesHandler);
             Client.Network.RegisterCallback(PacketType.PayPriceReply, PayPriceReplyHandler);
-
-            // If the callbacks aren't registered there's not point in doing client-side path prediction,
-            // so we set it up here
-            if (Settings.USE_INTERPOLATION_TIMER)
-            {
-                InterpolationTimer = new Timer(InterpolationTimer_Elapsed, null, Settings.INTERPOLATION_INTERVAL,
-                    Timeout.Infinite);
-            }
         }
 
         #region Action Methods
@@ -1712,6 +1725,12 @@ namespace OpenMetaverse
                             Logger.Log("Got a ZlibCompressed ObjectUpdate, implement me!",
                                 Helpers.LogLevel.Warning, Client);
                             continue;
+                        }
+
+                        // Automatically request ObjectProperties for prim if it was rezzed selected.
+                        if ((prim.Flags & PrimFlags.CreateSelected) != 0)
+                        {
+                            SelectObject(simulator, prim.LocalID);
                         }
 
                         prim.NameValues = nameValues;
