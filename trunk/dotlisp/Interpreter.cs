@@ -68,14 +68,19 @@ public class Interpreter
 		addTypesFrom(a);
 		}
 
-	void addTypesFrom(Assembly a)
-		{
-		Type[] types = a.GetTypes();
-		foreach(Type t in types)
-			{
-			symbolTable.internType(t);
-			}
-		}
+    void addTypesFrom(Assembly a)
+    {
+        try
+        {
+            Type[] types = a.GetTypes();
+            foreach (Type t in types)
+            {
+                symbolTable.internType(t);
+            }
+        } catch (Exception e) {
+            Console.WriteLine(a + " " + e);
+        }
+    }
 
 	public String Str(Object x)
 		{            
