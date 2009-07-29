@@ -385,6 +385,9 @@ namespace cogbot.Listeners
                     client.Objects.OnObjectUpdated -= Objects_OnObjectUpdated;
                     client.Objects.OnObjectDataBlockUpdate += Objects_OnObjectDataBlockUpdate;
 
+                    client.Network.RegisterEventCallback("AgentGroupDataUpdate", new Caps.EventQueueCallback(AgentGroupDataUpdateHandler));
+                    // deprecated in simulator v1.27
+                    client.Network.RegisterCallback(PacketType.AgentGroupDataUpdate, new NetworkManager.PacketCallback(AgentGroupDataUpdatePT));
 
                 }
             }
@@ -555,7 +558,7 @@ namespace cogbot.Listeners
 
             //throw new NotImplementedException();
             //   SendNewEvent("On-Land-Patch", x, y, width, BVHData);
-            //            WriteLine("TextForm Terrain_OnLandPatch: "+simulator.ToString()+"/"+x.ToString()+"/"+y.ToString()+" w="+width.ToString());
+            //            WriteLine("ClientManager Terrain_OnLandPatch: "+simulator.ToString()+"/"+x.ToString()+"/"+y.ToString()+" w="+width.ToString());
         }
 
         public override void Parcels_OnParcelInfo(ParcelInfo parcel)

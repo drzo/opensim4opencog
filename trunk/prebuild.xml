@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<Prebuild xmlns="http://dnpb.sourceforge.net/schemas/prebuild-1.7.xsd" version="1.7">
+<Prebuild xmlns="prebuild-1.7.xsd" version="1.7">
   <Solution name="Cogbot" activeConfig="Debug" version="0.6.0-$Rev: 5161 $">
       <Configuration name="Debug">
         <Options>
@@ -14,6 +14,7 @@
           <DebugInformation>true</DebugInformation>
           <IncrementalBuild>true</IncrementalBuild>
           <NoStdLib>false</NoStdLib>
+          <PlatformTarget>x86</PlatformTarget>
         </Options>
       </Configuration>
       <Configuration name="Release">
@@ -29,6 +30,7 @@
           <DebugInformation>false</DebugInformation>
           <IncrementalBuild>true</IncrementalBuild>
           <NoStdLib>false</NoStdLib>
+          <PlatformTarget>x86</PlatformTarget>
         </Options>
       </Configuration>
 
@@ -86,6 +88,7 @@
           <Options>
             <OutputPath>../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverseTypes.XML</XmlDocFile>
+            <PlatformTarget>x86</PlatformTarget>
           </Options>
         </Configuration>
 
@@ -396,9 +399,9 @@
        </Configuration>
 
        <ReferencePath>../bin/</ReferencePath>
-       <Reference name="log4net.dll" localCopy="true"/>
+       <Reference name="log4net.dll" localCopy="false"/>
        <Reference name="PathSystem3D" localCopy="false"/>
-       <Reference name="Mono.Security.dll" localCopy="true"/>
+       <Reference name="Mono.Security.dll" localCopy="false"/>
        <Reference name="OpenMetaverse" localCopy="false"/>
        <Reference name="OpenMetaverseTypes" localCopy="false"/>
        <Reference name="OpenMetaverse.Utilities" localCopy="false"/>
@@ -417,6 +420,7 @@
        <Reference name="ABCL.Net.dll" localCopy="false"/>
        <Reference name="IKVM.Runtime.dll" localCopy="false"/>
        <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+       <Reference name="Radegast" localCopy="false"/>
          <!--   
        <Reference name=" Khendys.Controls.ExRichTextBox.dll" localCopy="false"/>
        <Reference name=" Interop.IWshRuntimeLibrary.dll" localCopy="false"/>
@@ -436,10 +440,6 @@
            <Match path="Properties" pattern="*.cs" recurse="true"/>
            <Match path="Tutorials" pattern="*.cs" recurse="true"/>
            <Match path="Utilities" pattern="*.cs" recurse="true"/>
-           <Match path="DotCYC" pattern="CycConnectionForm.resx" recurse="false" subType="Settings"  buildAction="EmbeddedResource"/>
-           <Match path="DotCYC" pattern="CycConnectionForm.cs" recurse="false" subType="Form"/>
-           <Match path="DotCYC" pattern="CycConnectionForm.Designer.cs" recurse="false"  subType="Form"/>
-           <Match path="DotCYC" pattern="*.cs" recurse="false"/>
            <Match path="ScriptEngines" pattern="*.cs" recurse="true"/>
            <Match path="TheOpenSims" pattern="*.cs" recurse="true"/>
        </Files>
@@ -492,6 +492,8 @@
 
      <ReferencePath>../../bin/</ReferencePath>
      <Reference name="Cogbot" localCopy="false"/>
+     <Reference name="System.Drawing" localCopy="false"/>
+     <Reference name="System.Windows.Forms" localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
      <Reference name="OpenMetaverse" localCopy="false"/>
      <Reference name="OpenMetaverseTypes" localCopy="false"/>
@@ -539,6 +541,112 @@
      </Files>
 </Project>
 
+
+  <Project name="FashionBotModule" path="contrib/FashionBotModule" type="Library">
+     <Configuration name="Debug">
+       <Options>
+           <OutputPath>../../bin/</OutputPath>
+       </Options>
+     </Configuration>
+     <Configuration name="Release">
+       <Options>
+           <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
+           <OutputPath>../../bin/</OutputPath>
+       </Options>
+     </Configuration>
+
+     <ReferencePath>../../bin/</ReferencePath>
+     <Reference name="Cogbot" localCopy="false"/>
+     <Reference name="PathSystem3D" localCopy="false"/>
+     <Reference name="System.Drawing" localCopy="false"/>
+     <Reference name="System.Windows.Forms" localCopy="false"/>
+     <Reference name="System.Data" localCopy="false"/>
+     <Reference name="OpenMetaverse" localCopy="false"/>
+     <Reference name="OpenMetaverseTypes" localCopy="false"/>
+     <Reference name="System" localCopy="false"/>
+     <Reference name="DotLisp" localCopy="false"/>
+     <Reference name="OpenCyc.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+     <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+     <Files>
+         <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
+         <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+     </Files>
+</Project>
+
+  <Project name="Radegast" path="lib/Radegast" type="Exe">
+     <Configuration name="Debug">
+       <Options>
+         <OutputPath>../../bin/</OutputPath>
+       </Options>
+     </Configuration>
+     <Configuration name="Release">
+       <Options>
+         <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
+         <OutputPath>../../bin/</OutputPath>
+         <PlatformTarget>x86</PlatformTarget>
+       </Options>
+     </Configuration>
+
+     <ReferencePath>../../bin/</ReferencePath>
+     <Reference name="PathSystem3D" localCopy="false"/>
+     <Reference name="System.Drawing" localCopy="false"/>
+     <Reference name="System.Windows.Forms" localCopy="false"/>
+     <Reference name="OpenMetaverse" localCopy="false"/>
+     <Reference name="OpenMetaverseTypes" localCopy="false"/>
+     <Reference name="OpenMetaverse.StructuredData"/>
+     <Reference name="System.Data" localCopy="false"/>
+     <Reference name="AIMLbot" localCopy="false" />
+     <Reference name="log4net" localCopy="false" />
+     <Reference name="Nini" localCopy="false"/>
+     <Reference name="System" localCopy="false" />
+     <Reference name="System.Web" localCopy="false" />
+     <Reference name="System.Windows.Forms" localCopy="false" />
+     <Reference name="System.Xml" localCopy="false" />
+     <Reference name="Tao.OpenGl" localCopy="false"/>
+     <Reference name="Tao.Platform.Windows" localCopy="false" />
+     <Reference name="Tools" localCopy="false" />
+     <Files>
+         <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+         <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="AssemblyInfo.cs"/></Match>
+         <Match path="Properties" pattern="*.cs"  recurse="true"  subType="Form"/>
+     </Files>
+</Project>
+
+
+  <Project name="CogbotRadegastPluginModule" path="contrib/CogbotRadegastPluginModule" type="Library">
+     <Configuration name="Debug">
+       <Options>
+         <OutputPath>../../bin/</OutputPath>
+       </Options>
+     </Configuration>
+     <Configuration name="Release">
+       <Options>
+         <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
+         <OutputPath>../../bin/</OutputPath>
+         <PlatformTarget>x86</PlatformTarget>
+       </Options>
+     </Configuration>
+
+     <ReferencePath>../../bin/</ReferencePath>
+     <Reference name="Cogbot" localCopy="false"/>
+     <Reference name="PathSystem3D" localCopy="false"/>
+     <Reference name="System.Drawing" localCopy="false"/>
+     <Reference name="System.Windows.Forms" localCopy="false"/>
+     <Reference name="System.Data" localCopy="false"/>
+     <Reference name="OpenMetaverse" localCopy="false"/>
+     <Reference name="OpenMetaverseTypes" localCopy="false"/>
+     <Reference name="Radegast" localCopy="false"/>
+     <Reference name="System" localCopy="false"/>
+     <Reference name="DotLisp" localCopy="false"/>
+     <Reference name="OpenCyc.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+     <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+     <Files>
+         <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
+         <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+     </Files>
+</Project>
 
 
   </Solution>

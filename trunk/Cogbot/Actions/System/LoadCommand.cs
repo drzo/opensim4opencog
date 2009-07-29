@@ -29,8 +29,16 @@ namespace cogbot.Actions
             {
                 loadfilename += ".dll";
             }
-            TextForm.SingleInstance.RegisterAssembly(Assembly.LoadFile(loadfilename));
-            return "Assembly " + filename + " loaded.";
+            try
+            {
+                Assembly assembly = Assembly.LoadFile(loadfilename);
+                ClientManager.SingleInstance.RegisterAssembly(assembly);
+                return "Assembly " + filename + " loaded.";
+            }
+            catch (Exception e)
+            {                
+                   return "FAILED: load " + filename + " " +e;
+            }
 		}
     }
 }

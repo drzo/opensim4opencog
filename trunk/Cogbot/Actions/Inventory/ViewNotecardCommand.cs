@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using OpenMetaverse;
+using OpenMetaverse.Packets;
 using OpenMetaverse.Assets;
 
 namespace cogbot.Actions
@@ -6,7 +9,7 @@ namespace cogbot.Actions
     public class ViewNotecardCommand : Command
     {
         /// <summary>
-        /// BotClient command to download and display a notecard asset
+        /// TestClient command to download and display a notecard asset
         /// </summary>
         /// <param name="testClient"></param>
         public ViewNotecardCommand(BotClient testClient)
@@ -30,7 +33,7 @@ namespace cogbot.Actions
                 return "Usage: viewnote [notecard asset uuid]";
             }
             UUID note;
-            if (!UUIDTryParse(args,0, out note))
+            if (!UUID.TryParse(args[0], out note))
             {
                 return "First argument expected agent UUID.";
             }
@@ -39,35 +42,29 @@ namespace cogbot.Actions
 
             System.Text.StringBuilder result = new System.Text.StringBuilder();
 
-
-            // define a delegate to handle the reply
-            AssetManager.AssetReceivedCallback del = delegate(AssetDownload transfer, Asset asset)
-            {
-                if (transfer.Success)
-                {
-                    result.AppendFormat("Raw Notecard Data: " + System.Environment.NewLine + " {0}", Utils.BytesToString(asset.AssetData));
-                    waitEvent.Set();
-                }
-            };
-
             // verify asset is loaded in store
             if (Client.Inventory.Store.Contains(note))
             {
                 // retrieve asset from store
                 InventoryItem ii = (InventoryItem)Client.Inventory.Store[note];
-                // subscribe to reply event
-                Client.Assets.OnAssetReceived += del;
 
                 // make request for asset
-                Client.Assets.RequestInventoryAsset(ii, true);
+                Client.Assets.RequestInventoryAsset(ii, true,
+                    delegate(AssetDownload transfer, Asset asset)
+                    {
+                        if (transfer.Success)
+                        {
+                            result.AppendFormat("Raw Notecard Data: " + System.Environment.NewLine + " {0}", Utils.BytesToString(asset.AssetData));
+                            waitEvent.Set();
+                        }
+                    }
+                );
 
                 // wait for reply or timeout
                 if (!waitEvent.WaitOne(10000, false))
                 {
                     result.Append("Timeout waiting for notecard to download.");
                 }
-                // unsubscribe from reply event
-                Client.Assets.OnAssetReceived -= del;
             }
             else
             {

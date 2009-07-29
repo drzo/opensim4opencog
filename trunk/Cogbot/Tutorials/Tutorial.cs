@@ -12,7 +12,7 @@ namespace cogbot.Tutorials
     {
         public XmlReader XMLTutorial;
 
-        protected TextForm parent;
+        protected ClientManager parent;
         protected GridClient client;
         protected string helpString;
         protected string usageString;
@@ -23,7 +23,7 @@ namespace cogbot.Tutorials
         private int CommandCnt = 0;
         private int prevMode; 
 
-        public Tutorial(string TutorialPath, TextForm _parent, BotClient botclient)
+        public Tutorial(string TutorialPath, ClientManager _parent, BotClient botclient)
         {
             helpString = "No information for what this tutorial will teach.";
             usageString = "No usage instruction for this tutorial.";

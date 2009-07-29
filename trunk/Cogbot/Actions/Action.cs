@@ -104,11 +104,11 @@ namespace cogbot.Actions
             }
         }
 
-        public static TextForm ClientManager
+        public static ClientManager ClientManager
         {
             get
             {
-                return TextForm.SingleInstance;
+                return ClientManager.SingleInstance;
             }
         }
 

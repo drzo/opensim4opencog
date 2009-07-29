@@ -9,6 +9,7 @@ namespace cogbot.TheOpenSims
 {
     internal class SimGesture : SimAsset
     {
+        static readonly Dictionary<UUID,SimGesture> AnimationGestures = new Dictionary<UUID, SimGesture>();
 
         public SimGesture(UUID uuid, string name)
             : base(uuid, name)
@@ -153,7 +154,7 @@ namespace cogbot.TheOpenSims
             }
             List<SimAsset> parts = new List<SimAsset>(count);
             //sb.Append(count + "\n");
-
+            _Length = 0;
             for (int i = 0; i < count; i++)
             {
                 GestureStep step = Sequence[i];
@@ -173,6 +174,7 @@ namespace cogbot.TheOpenSims
                         {
                             parts.Add(asset);
                             //                            sb.Append("0\n");
+                            _Length += asset.Length;
                         }
                         else
                         {
@@ -185,6 +187,7 @@ namespace cogbot.TheOpenSims
                         asset = SimAssetStore.FindOrCreateAsset(soundstep.ID, AssetType.Sound);
                         asset.Name = soundstep.Name;
                         parts.Add(asset);
+                        _Length += asset.Length;
                         break;
 
                     case GestureStepType.Chat:
@@ -192,41 +195,62 @@ namespace cogbot.TheOpenSims
                         Name = chatstep.Text;
                         //sb.Append(chatstep.Text + "\n");
                         //sb.Append("0\n");
+                        _Length += 10;
                         break;
 
                     case GestureStepType.Wait:
                         GestureStepWait waitstep = (GestureStepWait) step;
                         //sb.AppendFormat("{0:0.000000}\n", waitstep.WaitTime);
-                        //int waitflags = 0;
+                        int waitflags = 0;
 
-                        //if (waitstep.WaitForTime)
-                        //{
-                        //    waitflags |= 0x01;
-                        //}
-
-                        //if (waitstep.WaitForAnimation)
-                        //{
-                        //    waitflags |= 0x02;
-                        //}
-
+                        if (waitstep.WaitForTime)
+                        {
+                            waitflags |= 0x01;
+                            _Length += waitstep.WaitTime;
+                        }
+                        if (waitstep.WaitForAnimation)
+                        {
+                            waitflags |= 0x02;
+                            _Length += 10;
+                        }
                         //sb.Append(waitflags + "\n");
                         break;
                 }
             }
             Finish:
 
+            if (parts.Count==1)
+            {
+                SimAsset A = parts[0];
+                if (A is SimAnimation)
+                {
+                    AnimationGestures[A.AssetID] = this;
+                    if (A.Item == null) A.Item = Item;
+                }
+            }
             return parts;
         }
 
+        private float _Length = 1000f;
 
         public override float Length
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                GetParts();
+                return _Length;
+            }
         }
 
         public override bool IsLoop
         {
             get { return false; }
-        }     
+        }
+
+        public static InventoryItem SaveAnimation(SimAnimation animation)
+        {
+            return null;
+         //   throw new NotImplementedException();
+        }
     }
 }

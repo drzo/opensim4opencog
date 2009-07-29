@@ -423,7 +423,7 @@ namespace cogbot.ScriptEngines
 
         public override object Eval(object p)
         {
-            TextForm.debugLevel = 2;
+            ClientManager.debugLevel = 2;
             getInterpreter();
             Console.WriteLine("ABCL EVAL: " + ToStr(p));
             try

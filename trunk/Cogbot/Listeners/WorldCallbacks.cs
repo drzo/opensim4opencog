@@ -12,8 +12,10 @@ using PathSystem3D.Navigation;
 namespace cogbot.Listeners
 {
 
+    public delegate void OnAddSimObjectCallback(SimObject obj);
     public partial class WorldObjects
     {
+
         #region OnAddSimObject
         /// <summary>
         /// Triggers the OnNewSimObject event.

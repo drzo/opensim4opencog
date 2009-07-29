@@ -10,7 +10,7 @@ namespace cogbot.Tutorials
     {
         private int CommandIdx = 0;
 
-        public Tutorial1(TextForm parent, BotClient botcleint)
+        public Tutorial1(ClientManager parent, BotClient botcleint)
             : base(Directory.GetParent(Directory.GetCurrentDirectory()) + "\\XMLTutorials\\tutorial1.xml", parent,botcleint)
         {
             helpString = "Teaches you how to navigate using basic commands move, sit, stand";

@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using cogbot.Listeners;
+using cogbot.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
@@ -96,6 +97,9 @@ namespace cogbot.TheOpenSims
 
         internal readonly BotClient Client;
 
+        TaskQueueHandler taskQueue = new TaskQueueHandler("SimAssetStore",1);
+       
+
         List<UUID> BusyUpdating = new List<UUID>();
         public SimAssetStore(BotClient GC)
         {
@@ -103,28 +107,48 @@ namespace cogbot.TheOpenSims
             FillAssetNames();
             Client.Network.OnSimConnected += Ensure_Downloaded;
             Client.Inventory.OnItemReceived += Inventory_OnItemReceived;
+            Client.Inventory.OnTaskItemReceived += Inventory_OnTaskItemReceived;
             Client.Inventory.OnFolderUpdated += Inventory_OnFolderUpdated;
         }
 
         private void Inventory_OnFolderUpdated(UUID folderid)
         {
             lock (BusyUpdating) if (BusyUpdating.Contains(folderid)) return;
-            new Thread(() =>
-                           {
+            LoadFolderId(folderid);
+         //   lock (BusyUpdating) if (BusyUpdating.Remove(folderid)) return;
+        }
 
-                               lock (BusyUpdating) BusyUpdating.Add(folderid);
+        private void Inventory_OnTaskItemReceived(UUID itemid, UUID folderid, UUID creatorid, UUID assetid, InventoryType type)
+        {
+            if (type == InventoryType.Object) return;
+         //   SimAsset A = SetAssetName(assetid, null, type);
+            LoadFolderId(folderid);
+            lock (BusyUpdating) if (BusyUpdating.Remove(folderid)) return;
+        }
 
-                               List<InventoryBase> contents = Client.Inventory.FolderContents(folderid, Client.Self.AgentID,
-                                    true, true, InventorySortOrder.ByName, 30000);
-                               if (contents != null) contents.ForEach(LoadFolder);
-                               lock (BusyUpdating) BusyUpdating.Remove(folderid);
-                           }).Start();
+        private void LoadFolderId(UUID folderid)
+        {
+            if (folderid == UUID.Zero) return;
+            lock (BusyUpdating) if (BusyUpdating.Contains(folderid)) return;
+            taskQueue.Enqueue(() =>
+                                  {
+
+                                      lock (BusyUpdating) BusyUpdating.Add(folderid);
+
+                                      List<InventoryBase> contents = Client.Inventory.FolderContents(folderid,
+                                                                                                     Client.Self.AgentID,
+                                                                                                     true, true,
+                                                                                                     InventorySortOrder.
+                                                                                                         ByName, 10000);
+                                      if (contents != null) contents.ForEach(LoadFolder);
+                                  //    lock (BusyUpdating) BusyUpdating.Remove(folderid);
+                                  });
 
         }
 
         private void Inventory_OnItemReceived(InventoryItem item)
         {
-            new Thread(() => LoadFolder(item));
+            taskQueue.Enqueue(() => LoadFolder(item));
         }
 
         private bool downloadedAssetFolders = false;
@@ -132,14 +156,14 @@ namespace cogbot.TheOpenSims
         {
             if (downloadedAssetFolders) return;
             downloadedAssetFolders = true;
-            new Thread(DownloadAssetFolders).Start();
+            taskQueue.Enqueue((DownloadAssetFolders));
         }
 
          void DownloadAssetFolders()
         {           
             Client.AnimationFolder = Client.Inventory.FindFolderForType(AssetType.Animation);
-            Inventory_OnFolderUpdated(Client.Inventory.Store.LibraryFolder.UUID);
-            Inventory_OnFolderUpdated(Client.Inventory.Store.RootFolder.UUID);
+            LoadFolderId(Client.Inventory.Store.LibraryFolder.UUID);
+            LoadFolderId(Client.Inventory.Store.RootFolder.UUID);
         }
 
         private void LoadFolder(InventoryBase IB)
@@ -147,12 +171,13 @@ namespace cogbot.TheOpenSims
             if (IB is InventoryItem)
             {
                 InventoryItem II = (InventoryItem)IB;
-
+                if (II.AssetType == AssetType.Object) return;
                 SimAsset A = SetAssetName(II.AssetUUID, II.Name, II.AssetType);
                 A.Item = II;
                 return;
             }
-            Inventory_OnFolderUpdated(IB.UUID);
+            LoadFolderId(IB.UUID);
+            lock (BusyUpdating) if (BusyUpdating.Remove(IB.UUID)) return;
             //lock (BusyUpdating) BusyUpdating.Add(IB.UUID);
             //List<InventoryBase> contents = Client.Inventory.FolderContents(IB.UUID, Client.Self.AgentID,
             //    true, true, InventorySortOrder.ByName, 30000);
@@ -253,10 +278,10 @@ namespace cogbot.TheOpenSims
         }
 
         static internal void FillAssetNames()
-        {           
+        {
+            if (FilledInAssets) return;
             lock (uuidAsset)
-            {
-                if (FilledInAssets) return;
+            {          
                 FilledInAssets = true;
                 AddTexture("alpha_gradient", "e97cf410-8e61-7005-ec06-629eba4cd1fb","Used for generating the texture for the ground dynamically. Also used for creating the *invisiprim* that hides avatars, prims with alpha values less than 1.0 and particle effects");
                 AddTexture("alpha_gradient_2d", "38b86f85-2575-52a9-a531-23108d8da837",
@@ -1616,7 +1641,7 @@ namespace cogbot.TheOpenSims
 
         protected virtual void SaveFile(string tmpname)
         {
-            if (!HasData()) return;
+          //  if (!HasData()) return;
             Console.WriteLine("Not implemented save {0} file {1}", this, tmpname);
         }
 
@@ -1713,7 +1738,12 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                if (HasData()) return false;
+                if (!_NeedsRequest) return false;
+                if (HasData())
+                {
+                    _NeedsRequest = false;
+                    return false;
+                }
                 return _NeedsRequest;
             }
             set { _NeedsRequest = value; }
