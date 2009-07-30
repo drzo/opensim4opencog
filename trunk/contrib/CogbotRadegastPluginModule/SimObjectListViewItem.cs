@@ -13,13 +13,13 @@ namespace CogbotRagegastPluginModule
         public SimObjectListViewItem(SimObject o)
         {
             _simObject = o;
-            this.Tag = o;//.ID;
+            this.Tag = o.ID;
             this.Text = o.ToString();
         }
 
         public override string ToString()
         {
-            return _simObject.ToString();   
+            return this.Text.ToString();// _simObject.ToString();   
         }
 
         public SimObject TheSimObject
