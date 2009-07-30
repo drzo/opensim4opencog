@@ -25,22 +25,34 @@ namespace CogbotRagegastPluginModule
 
             RadegastInstance = inst;
             clientManager = new ClientManager();
-            chatConsole = new CogbotTabWindow(inst, clientManager);
-            chatConsole.Dock = DockStyle.Fill;
-            chatConsole.Visible = false;
-
-            //toolStripContainer1.ContentPanel.Controls.Add(chatConsole);
-
-            tab = inst.TabConsole.AddTab("Cogbot Main", "Cogbot", chatConsole);
+            chatConsole = new CogbotTabWindow(inst, clientManager)
+                              {
+                                  Dock = DockStyle.Fill,
+                                  Visible = false
+                              };
+            tab = inst.TabConsole.AddTab("Cogbot", "Cogbot", chatConsole);
             tab.AllowClose = false;
-            tab.AllowDetach = false;
-            clientManager.outputDelegate = chatConsole.WriteLine;
-           // control = ClientManager.SingleInstance;
-//            control.SelectIMInput();       
+            tab.AllowDetach = true;
+
+            clientManager.outputDelegate = WriteLine;
             inst.Client.Network.OnSimConnecting += Network_OnSimConnecting;
             clientManager.StartUpLisp();
         }
 
+        private void WriteLine(string str, object[] args)
+        {
+            MergeSplitWorkArround();
+            chatConsole.WriteLine(str, args);
+        }
+
+        private bool _mergeSplitWorkArrounded = false;
+        private void MergeSplitWorkArround()
+        {
+            if (_mergeSplitWorkArrounded) return;
+            _mergeSplitWorkArrounded = false;
+            //RadegastInstance.TabConsole.tabs["chat"].MergeWith(tab);
+            //RadegastInstance.TabConsole.SplitTab(tab);
+        }
         private bool Network_OnSimConnecting(Simulator simulator)
         {
             return true;

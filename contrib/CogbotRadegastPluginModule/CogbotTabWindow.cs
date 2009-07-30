@@ -291,7 +291,7 @@ namespace CogbotRagegastPluginModule
                 lvwObjects.Invoke(new OnAddSimObjectCallback(WorldSystem_OnAddSimObject), obj);
                 return;
             }
-            lvwObjects.Items.Add(new SimObjectListViewItem(obj));
+            //lvwObjects.Items.Add(new SimObjectListViewItem(obj));
         }
 
         private void netcom_ClientLoggedOut(object sender, EventArgs e)
@@ -358,7 +358,7 @@ namespace CogbotRagegastPluginModule
             else if (e.Control)
                 ProcessChatInput(cbxInput.Text, ChatType.Shout);
             else
-                ProcessChatInput(cbxInput.Text, ChatType.Normal);
+                WriteLine(GridMaster.client.ExecuteCommand(cbxInput.Text));
         }
 
         private void ProcessChatInput(string input, ChatType type)
@@ -397,7 +397,7 @@ namespace CogbotRagegastPluginModule
 
         private void btnSay_Click(object sender, EventArgs e)
         {
-            ProcessChatInput(cbxInput.Text, ChatType.Normal);
+            WriteLine(GridMaster.client.ExecuteCommand(cbxInput.Text));
         }
 
         private void btnShout_Click(object sender, EventArgs e)
