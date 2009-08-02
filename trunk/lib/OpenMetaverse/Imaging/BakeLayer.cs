@@ -42,11 +42,11 @@ namespace OpenMetaverse.Imaging
     {
         public AssetTexture BakedTexture { get { return _bakedTexture; } }
         public Dictionary<int, float> ParamValues { get { return _paramValues; } }
-        public Dictionary<AppearanceManager.TextureIndex, AssetTexture> Textures { get { return _textures; } }
+        public Dictionary<AvatarTextureIndex, AssetTexture> Textures { get { return _textures; } }
         public int TextureCount { get { return _textureCount; } }
         public int BakeWidth { get { return _bakeWidth; } }
         public int BakeHeight { get { return _bakeHeight; } }
-        public AppearanceManager.BakeType BakeType { get { return _bakeType; } }
+        public BakeType BakeType { get { return _bakeType; } }
 
         /// <summary>Reference to the GridClient object</summary>
         protected GridClient _client;
@@ -55,7 +55,7 @@ namespace OpenMetaverse.Imaging
         /// <summary>Appearance parameters the drive the baking process</summary>
         protected Dictionary<int, float> _paramValues;
         /// <summary>Wearable textures</summary>
-        protected Dictionary<AppearanceManager.TextureIndex, AssetTexture> _textures = new Dictionary<AppearanceManager.TextureIndex, AssetTexture>();
+        protected Dictionary<AvatarTextureIndex, AssetTexture> _textures = new Dictionary<AvatarTextureIndex, AssetTexture>();
         /// <summary>Total number of textures in the bake</summary>
         protected int _textureCount;
         /// <summary>Width of the final baked image and scratchpad</summary>
@@ -63,7 +63,7 @@ namespace OpenMetaverse.Imaging
         /// <summary>Height of the final baked image and scratchpad</summary>
         protected int _bakeHeight;
         /// <summary>Bake type</summary>
-        protected AppearanceManager.BakeType _bakeType;
+        protected BakeType _bakeType;
 
         /// <summary>
         /// Default constructor
@@ -74,13 +74,13 @@ namespace OpenMetaverse.Imaging
         /// composed of</param>
         /// <param name="paramValues">Appearance parameters the drive the 
         /// baking process</param>
-        public Baker(GridClient client, AppearanceManager.BakeType bakeType, int textureCount, Dictionary<int, float> paramValues)
+        public Baker(GridClient client, BakeType bakeType, int textureCount, Dictionary<int, float> paramValues)
         {
             _client = client;
             _bakeType = bakeType;
             _textureCount = textureCount;
 
-            if (bakeType == AppearanceManager.BakeType.Eyes)
+            if (bakeType == BakeType.Eyes)
             {
                 _bakeWidth = 128;
                 _bakeHeight = 128;
@@ -108,7 +108,7 @@ namespace OpenMetaverse.Imaging
         /// called for the texture, otherwise false</param>
         /// <returns>True if this texture is completely baked and JPEG2000 data 
         /// is available, otherwise false</returns>
-        public bool AddTexture(AppearanceManager.TextureIndex index, AssetTexture texture, bool needsDecode)
+        public bool AddTexture(AvatarTextureIndex index, AssetTexture texture, bool needsDecode)
         {
             lock (_textures)
             {
@@ -140,7 +140,7 @@ namespace OpenMetaverse.Imaging
             }
         }
 
-        public bool MissingTexture(AppearanceManager.TextureIndex index)
+        public bool MissingTexture(AvatarTextureIndex index)
         {
             Logger.DebugLog(String.Format("Missing texture {0} in bake {1}", index, _bakeType), _client);
             _textureCount--;
@@ -161,18 +161,18 @@ namespace OpenMetaverse.Imaging
             _bakedTexture = new AssetTexture(new ManagedImage(_bakeWidth, _bakeHeight,
                 ManagedImage.ImageChannels.Color | ManagedImage.ImageChannels.Alpha | ManagedImage.ImageChannels.Bump));
 
-            if (_bakeType == AppearanceManager.BakeType.Eyes)
+            if (_bakeType == BakeType.Eyes)
             {
                 InitBakedLayerColor(255, 255, 255);
-                DrawLayer(AppearanceManager.TextureIndex.EyesIris);
+                DrawLayer(AvatarTextureIndex.EyesIris);
             }
-            else if (_bakeType == AppearanceManager.BakeType.Head)
+            else if (_bakeType == BakeType.Head)
             {
                 // FIXME: Need to use the visual parameters to determine the base skin color in RGB but
                 // it's not apparent how to define RGB levels from the skin color parameters, so
                 // for now use a grey foundation for the skin
                 InitBakedLayerColor(128, 128, 128);
-                DrawLayer(AppearanceManager.TextureIndex.HeadBodypaint);
+                DrawLayer(AvatarTextureIndex.HeadBodypaint);
 
                 // HACK: Bake the eyelashes in if we have them
                 ManagedImage eyelashes = LoadAlphaLayer("head_alpha.tga");
@@ -187,7 +187,7 @@ namespace OpenMetaverse.Imaging
                     Logger.Log("head_alpha.tga resource not found, skipping eyelashes", Helpers.LogLevel.Info);
                 }
             }
-            else if (_bakeType == AppearanceManager.BakeType.Skirt)
+            else if (_bakeType == BakeType.Skirt)
             {
                 float skirtRed = 1.0f, skirtGreen = 1.0f, skirtBlue = 1.0f;
 
@@ -203,44 +203,44 @@ namespace OpenMetaverse.Imaging
                 }
 
                 InitBakedLayerColor((byte)(skirtRed * 255.0f), (byte)(skirtGreen * 255.0f), (byte)(skirtBlue * 255.0f));
-                DrawLayer(AppearanceManager.TextureIndex.Skirt);
+                DrawLayer(AvatarTextureIndex.Skirt);
             }
-            else if (_bakeType == AppearanceManager.BakeType.UpperBody)
+            else if (_bakeType == BakeType.UpperBody)
             {
                 InitBakedLayerColor(128, 128, 128);
-                DrawLayer(AppearanceManager.TextureIndex.UpperBodypaint);
-                DrawLayer(AppearanceManager.TextureIndex.UpperUndershirt);
-                DrawLayer(AppearanceManager.TextureIndex.UpperGloves);
-                DrawLayer(AppearanceManager.TextureIndex.UpperShirt);
-                DrawLayer(AppearanceManager.TextureIndex.UpperJacket);
+                DrawLayer(AvatarTextureIndex.UpperBodypaint);
+                DrawLayer(AvatarTextureIndex.UpperUndershirt);
+                DrawLayer(AvatarTextureIndex.UpperGloves);
+                DrawLayer(AvatarTextureIndex.UpperShirt);
+                DrawLayer(AvatarTextureIndex.UpperJacket);
             }
-            else if (_bakeType == AppearanceManager.BakeType.LowerBody)
+            else if (_bakeType == BakeType.LowerBody)
             {
                 InitBakedLayerColor(128, 128, 128);
-                DrawLayer(AppearanceManager.TextureIndex.LowerBodypaint);
-                DrawLayer(AppearanceManager.TextureIndex.LowerUnderpants);
-                DrawLayer(AppearanceManager.TextureIndex.LowerSocks);
-                DrawLayer(AppearanceManager.TextureIndex.LowerShoes);
-                DrawLayer(AppearanceManager.TextureIndex.LowerPants);
-                DrawLayer(AppearanceManager.TextureIndex.LowerJacket);
+                DrawLayer(AvatarTextureIndex.LowerBodypaint);
+                DrawLayer(AvatarTextureIndex.LowerUnderpants);
+                DrawLayer(AvatarTextureIndex.LowerSocks);
+                DrawLayer(AvatarTextureIndex.LowerShoes);
+                DrawLayer(AvatarTextureIndex.LowerPants);
+                DrawLayer(AvatarTextureIndex.LowerJacket);
             }
-            else if (_bakeType == AppearanceManager.BakeType.Hair)
+            else if (_bakeType == BakeType.Hair)
             {
                 InitBakedLayerColor(255, 255, 255);
-                DrawLayer(AppearanceManager.TextureIndex.Hair);
+                DrawLayer(AvatarTextureIndex.Hair);
             }
 
             _bakedTexture.Encode();
         }
 
-        private bool DrawLayer(AppearanceManager.TextureIndex textureIndex)
+        private bool DrawLayer(AvatarTextureIndex avatarAvatarTextureIndex)
         {
             AssetTexture texture;
             bool useSourceAlpha = 
-                (textureIndex == AppearanceManager.TextureIndex.HeadBodypaint ||
-                textureIndex == AppearanceManager.TextureIndex.Skirt);
+                (avatarAvatarTextureIndex == AvatarTextureIndex.HeadBodypaint ||
+                avatarAvatarTextureIndex == AvatarTextureIndex.Skirt);
 
-            if (_textures.TryGetValue(textureIndex, out texture))
+            if (_textures.TryGetValue(avatarAvatarTextureIndex, out texture))
                 return DrawLayer(texture.Image, useSourceAlpha);
             else
                 return false;
@@ -426,39 +426,39 @@ namespace OpenMetaverse.Imaging
             
         }
 
-        public static AppearanceManager.BakeType BakeTypeFor(AppearanceManager.TextureIndex index)
+        public static BakeType BakeTypeFor(AvatarTextureIndex index)
         {
             switch (index)
             {
-                case AppearanceManager.TextureIndex.HeadBodypaint:
-                    return AppearanceManager.BakeType.Head;
+                case AvatarTextureIndex.HeadBodypaint:
+                    return BakeType.Head;
 
-                case AppearanceManager.TextureIndex.UpperBodypaint:
-                case AppearanceManager.TextureIndex.UpperGloves:
-                case AppearanceManager.TextureIndex.UpperUndershirt:
-                case AppearanceManager.TextureIndex.UpperShirt:
-                case AppearanceManager.TextureIndex.UpperJacket:
-                    return AppearanceManager.BakeType.UpperBody;
+                case AvatarTextureIndex.UpperBodypaint:
+                case AvatarTextureIndex.UpperGloves:
+                case AvatarTextureIndex.UpperUndershirt:
+                case AvatarTextureIndex.UpperShirt:
+                case AvatarTextureIndex.UpperJacket:
+                    return BakeType.UpperBody;
 
-                case AppearanceManager.TextureIndex.LowerBodypaint:
-                case AppearanceManager.TextureIndex.LowerUnderpants:
-                case AppearanceManager.TextureIndex.LowerSocks:
-                case AppearanceManager.TextureIndex.LowerShoes:
-                case AppearanceManager.TextureIndex.LowerPants:
-                case AppearanceManager.TextureIndex.LowerJacket:
-                    return AppearanceManager.BakeType.LowerBody;
+                case AvatarTextureIndex.LowerBodypaint:
+                case AvatarTextureIndex.LowerUnderpants:
+                case AvatarTextureIndex.LowerSocks:
+                case AvatarTextureIndex.LowerShoes:
+                case AvatarTextureIndex.LowerPants:
+                case AvatarTextureIndex.LowerJacket:
+                    return BakeType.LowerBody;
 
-                case AppearanceManager.TextureIndex.EyesIris:
-                    return AppearanceManager.BakeType.Eyes;
+                case AvatarTextureIndex.EyesIris:
+                    return BakeType.Eyes;
 
-                case AppearanceManager.TextureIndex.Skirt:
-                    return AppearanceManager.BakeType.Skirt;
+                case AvatarTextureIndex.Skirt:
+                    return BakeType.Skirt;
 
-                case AppearanceManager.TextureIndex.Hair:
-                    return AppearanceManager.BakeType.Hair;
+                case AvatarTextureIndex.Hair:
+                    return BakeType.Hair;
 
                 default:
-                    return AppearanceManager.BakeType.Unknown;
+                    return BakeType.Unknown;
             }
         }
     }
