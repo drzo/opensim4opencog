@@ -42,7 +42,7 @@ namespace cogbot.Actions
                     return String.Format("Moved folder {0} to Trash", found[0].Name);
                 }
             }
-            catch (InvalidOutfitException ex)
+            catch (Exception ex)
             {
                 return "Folder Not Found: (" + ex.Message + ")";
             }
