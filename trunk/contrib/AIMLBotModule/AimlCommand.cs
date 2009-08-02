@@ -2,15 +2,15 @@ using System;
 using System.Collections;
 using System.Reflection;
 using cogbot;
+using cogbot.Actions;
 using cogbot.Listeners;
 using RTParser;
-using cogbot.Actions;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
 namespace AIMLBotModule
 {
-    public class AimlCommand : Command
+    public class AimlCommand : cogbot.Actions.Command
     {
 
         public AimlCommand(BotClient testClient)
