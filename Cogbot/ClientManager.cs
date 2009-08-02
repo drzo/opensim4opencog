@@ -7,7 +7,8 @@ using System.Threading;
 using cogbot.ScriptEngines;
 using OpenMetaverse;
 using cogbot.Actions;
-
+using Action = cogbot.Actions.Action;
+using Radegast;
 namespace cogbot
 {
     public delegate void DescribeDelegate(bool detailed, OutputDelegate WriteLine);
@@ -94,7 +95,7 @@ namespace cogbot
 
             //Manager = CurrentClient.Inventory;
             //Inventory = Manager.Store;
-            groupActions = new Dictionary<string, Action>();
+            groupActions = new Dictionary<string, cogbot.Actions.Action>();
             //groupActions["login"] = new Login(null);
 
 
@@ -179,7 +180,7 @@ namespace cogbot
         }
 
 
-    
+
         public void SetOnlyOneCurrentBotClient(string currentBotClient)
         {
             if (String.IsNullOrEmpty(currentBotClient))
@@ -402,7 +403,7 @@ namespace cogbot
         /// <param name="message">Error message on failure, MOTD on success.</param>
         public void LoginHandler(LoginStatus login, string message)
         {
-           // EnableIt();
+            // EnableIt();
         }
 
         static public Dictionary<string, BotClient> BotByName = new Dictionary<string, BotClient>();
@@ -430,7 +431,7 @@ namespace cogbot
                     if (_wasFirstGridClient)
                     {
                         _wasFirstGridClient = false;
-                        gridClient = Radegast.RadegastInstance.GlobalInstance.Client;
+                        gridClient = RadegastInstance.GlobalInstance.Client;
                     }
                     else
                     {
@@ -466,16 +467,16 @@ namespace cogbot
                 }
                 else
                     bc.Network.OnLogin += new NetworkManager.LoginCallback(delegate(LoginStatus login, string message)
-                                                                               {
-                                                                                   if (login == LoginStatus.Success)
-                                                                                   {
-                                                                                       lock (Clients)
-                                                                                           Clients[bc.Self.AgentID] = bc;
-                                                                                   }
-                                                                               });
+                    {
+                        if (login == LoginStatus.Success)
+                        {
+                            lock (Clients)
+                                Clients[bc.Self.AgentID] = bc;
+                        }
+                    });
                 //LoginParams loginParams = bc.Network.DefaultLoginParams(account.FirstName, account.LastName, account.Password, "BotClient", version);            
                 AddTypesToBotClient(bc);
-               // bc.StartupClientLisp();
+                // bc.StartupClientLisp();
                 return bc;
             }
         }
@@ -528,12 +529,12 @@ namespace cogbot
         {
             initTaskInterperter();
             new Thread(() =>
-                           {
-                               if (config.startupLisp.Length > 1)
-                               {
-                                   evalLispString("(progn " + config.startupLisp + ")");
-                               }
-                           }).Start();
+            {
+                if (config.startupLisp.Length > 1)
+                {
+                    evalLispString("(progn " + config.startupLisp + ")");
+                }
+            }).Start();
         }
 
         /// <summary>
@@ -553,7 +554,7 @@ namespace cogbot
                     }
                 }
 
-            BotClient client = new BotClient(this,new GridClient());
+            BotClient client = new BotClient(this, new GridClient());
 
             // Optimize the throttle
             client.Throttle.Wind = 0;

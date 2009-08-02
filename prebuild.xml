@@ -140,6 +140,7 @@
         <ReferencePath>../../bin/</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Core"/>
+        <Reference name="System.Xml"/>
         <Reference name="OpenMetaverse.StructuredData" localCopy="false"/>
        <Reference name="OpenMetaverseTypes" localCopy="false"/>
         <Files>
@@ -377,7 +378,7 @@
   </Project>
 
     <!--
-    <Project name="Simian" path="Simian" type="Exe" frameworkVersion="v3_5">
+    <Project name="Simian" path="Simian" type="exe" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../bin/</OutputPath>
@@ -411,9 +412,50 @@
       </Files>
     </Project>
   -->
+    <Project name="Radegast" path="lib/Radegast" type="exe">
+       <Configuration name="Debug">
+         <Options>
+           <OutputPath>../../bin/</OutputPath>
+         </Options>
+       </Configuration>
+       <Configuration name="Release">
+         <Options>
+           <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
+           <OutputPath>../../bin/</OutputPath>
+           <PlatformTarget>x86</PlatformTarget>
+         </Options>
+       </Configuration>
+
+       <ReferencePath>../../bin/</ReferencePath>
+       <Reference name="PathSystem3D" localCopy="false"/>
+       <Reference name="System.Drawing" localCopy="false"/>
+       <Reference name="System.Windows.Forms" localCopy="false"/>
+       <Reference name="OpenMetaverse" localCopy="false"/>
+       <Reference name="OpenMetaverseTypes" localCopy="false"/>
+       <Reference name="OpenMetaverseCore" localCopy="false"/>
+       <Reference name="OpenMetaverse.StructuredData"/>
+       <Reference name="System.Data" localCopy="false"/>
+       <Reference name="AIMLbot" localCopy="false" />
+       <Reference name="log4net" localCopy="false" />
+       <Reference name="Nini" localCopy="false"/>
+       <Reference name="System" localCopy="false" />
+       <Reference name="System.Web" localCopy="false" />
+       <Reference name="System.Windows.Forms" localCopy="false" />
+       <Reference name="System.Xml" localCopy="false" />
+       <Reference name="Tao.OpenGl" localCopy="false"/>
+       <Reference name="Tao.Platform.Windows" localCopy="false" />
+       <Reference name="Tools" localCopy="false" />
+       <Files>
+           <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+           <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="AssemblyInfo.cs"/></Match>
+           <Match path="Properties" pattern="*.cs"  recurse="true"  subType="Form"/>
+       </Files>
+  </Project>
 
 
- <Project name="Cogbot" path="Cogbot" type="Exe">
+
+
+ <Project name="Cogbot" path="Cogbot" type="exe">
        <Configuration name="Debug">
          <Options>
            <OutputPath>../bin/</OutputPath>
@@ -449,7 +491,7 @@
        <Reference name="ABCL.Net.dll" localCopy="false"/>
        <Reference name="IKVM.Runtime.dll" localCopy="false"/>
        <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
-       <Reference name="Radegast" localCopy="false"/>
+       <Reference name="Radegast.exe" localCopy="false"/>
          <!--   
        <Reference name=" Khendys.Controls.ExRichTextBox.dll" localCopy="false"/>
        <Reference name=" Interop.IWshRuntimeLibrary.dll" localCopy="false"/>
@@ -475,36 +517,36 @@
  </Project>
 
 
-  <Project name="AIMLBotModule" path="contrib/AIMLBotModule" type="Library">
-       <Configuration name="Debug">
-         <Options>
-             <OutputPath>../../bin/</OutputPath>
-         </Options>
-       </Configuration>
-       <Configuration name="Release">
-         <Options>
-             <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
-             <OutputPath>../../bin/</OutputPath>
-         </Options>
-       </Configuration>
+ <Project name="AIMLBotModule" path="contrib/AIMLBotModule" type="Library">
+      <Configuration name="Debug">
+        <Options>
+            <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+            <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
+            <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
 
-       <ReferencePath>../../bin/</ReferencePath>
-       <Reference name="Cogbot" localCopy="false"/>
-       <Reference name="PathSystem3D" localCopy="false"/>
-       <Reference name="OpenMetaverse" localCopy="false"/>
-       <Reference name="OpenMetaverseTypes" localCopy="false"/>
-       <Reference name="OpenMetaverseCore" localCopy="false"/>
-       <Reference name="System" localCopy="false"/>
-       <Reference name="DotLisp" localCopy="false"/>
-       <Reference name="RTParser" localCopy="false"/>
-       <Reference name="OpenCyc.dll" localCopy="false"/>
-        <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-       <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
-       <Files>
-           <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
-           <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
-       </Files>
- </Project>
+      <ReferencePath>../../bin/</ReferencePath>
+      <Reference name="Cogbot.exe" localCopy="false"/>
+      <Reference name="PathSystem3D" localCopy="false"/>
+      <Reference name="OpenMetaverse" localCopy="false"/>
+      <Reference name="OpenMetaverseTypes" localCopy="false"/>
+      <Reference name="OpenMetaverseCore" localCopy="false"/>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="DotLisp" localCopy="false"/>
+      <Reference name="RTParser" localCopy="false"/>
+      <Reference name="OpenCyc.dll" localCopy="false"/>
+       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+      <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+      <Files>
+          <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
+          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+      </Files>
+</Project>
 
 
   <Project name="TheSimiansModule" path="contrib/TheSimiansModule" type="Library">
@@ -521,7 +563,7 @@
      </Configuration>
 
      <ReferencePath>../../bin/</ReferencePath>
-     <Reference name="Cogbot" localCopy="false"/>
+     <Reference name="Cogbot.exe" localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
      <Reference name="System.Windows.Forms" localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
@@ -554,7 +596,7 @@
      </Configuration>
 
      <ReferencePath>../../bin/</ReferencePath>
-     <Reference name="Cogbot" localCopy="false"/>
+     <Reference name="Cogbot.exe" localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
      <Reference name="System.Windows.Forms" localCopy="false"/>
@@ -588,7 +630,7 @@
      </Configuration>
 
      <ReferencePath>../../bin/</ReferencePath>
-     <Reference name="Cogbot" localCopy="false"/>
+     <Reference name="Cogbot.exe" localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
      <Reference name="System.Windows.Forms" localCopy="false"/>
@@ -606,47 +648,6 @@
          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
      </Files>
 </Project>
-
-  <Project name="Radegast" path="lib/Radegast" type="Exe">
-     <Configuration name="Debug">
-       <Options>
-         <OutputPath>../../bin/</OutputPath>
-       </Options>
-     </Configuration>
-     <Configuration name="Release">
-       <Options>
-         <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
-         <OutputPath>../../bin/</OutputPath>
-         <PlatformTarget>x86</PlatformTarget>
-       </Options>
-     </Configuration>
-
-     <ReferencePath>../../bin/</ReferencePath>
-     <Reference name="PathSystem3D" localCopy="false"/>
-     <Reference name="System.Drawing" localCopy="false"/>
-     <Reference name="System.Windows.Forms" localCopy="false"/>
-     <Reference name="OpenMetaverse" localCopy="false"/>
-     <Reference name="OpenMetaverseTypes" localCopy="false"/>
-     <Reference name="OpenMetaverseCore" localCopy="false"/>
-     <Reference name="OpenMetaverse.StructuredData"/>
-     <Reference name="System.Data" localCopy="false"/>
-     <Reference name="AIMLbot" localCopy="false" />
-     <Reference name="log4net" localCopy="false" />
-     <Reference name="Nini" localCopy="false"/>
-     <Reference name="System" localCopy="false" />
-     <Reference name="System.Web" localCopy="false" />
-     <Reference name="System.Windows.Forms" localCopy="false" />
-     <Reference name="System.Xml" localCopy="false" />
-     <Reference name="Tao.OpenGl" localCopy="false"/>
-     <Reference name="Tao.Platform.Windows" localCopy="false" />
-     <Reference name="Tools" localCopy="false" />
-     <Files>
-         <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
-         <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="AssemblyInfo.cs"/></Match>
-         <Match path="Properties" pattern="*.cs"  recurse="true"  subType="Form"/>
-     </Files>
-</Project>
-
 
   <Project name="CogbotRadegastPluginModule" path="contrib/CogbotRadegastPluginModule" type="Library">
      <Configuration name="Debug">
@@ -663,7 +664,7 @@
      </Configuration>
 
      <ReferencePath>../../bin/</ReferencePath>
-     <Reference name="Cogbot" localCopy="false"/>
+     <Reference name="Cogbot.exe" localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
      <Reference name="System.Windows.Forms" localCopy="false"/>
@@ -671,7 +672,7 @@
      <Reference name="OpenMetaverse" localCopy="false"/>
      <Reference name="OpenMetaverseTypes" localCopy="false"/>
      <Reference name="OpenMetaverseCore" localCopy="false"/>
-     <Reference name="Radegast" localCopy="false"/>
+     <Reference name="Radegast.exe" localCopy="false"/>
      <Reference name="System" localCopy="false"/>
      <Reference name="DotLisp" localCopy="false"/>
      <Reference name="OpenCyc.dll" localCopy="false"/>
@@ -685,5 +686,7 @@
 
 
   </Solution>
+
 </Prebuild>
+
 
