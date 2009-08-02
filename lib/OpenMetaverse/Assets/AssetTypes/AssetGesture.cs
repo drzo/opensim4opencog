@@ -359,7 +359,7 @@ namespace OpenMetaverse.Assets
         /// <summary>
         /// Decodes gesture assset into play sequence
         /// </summary>
-        /// <returns></returns>
+        /// <returns>true if the asset data was decoded successfully</returns>
         public override bool Decode()
         {
             try
@@ -422,7 +422,8 @@ namespace OpenMetaverse.Assets
                                 GestureStepSound step = new GestureStepSound();
                                 step.Name = lines[i++].Replace("\r", "");
                                 step.ID = new UUID(lines[i++]);
-                                int flags = int.Parse(lines[i++]);
+                                // warning CS0219: The variable `flags' is assigned but its value is never used
+                                //int flags = int.Parse(lines[i++]);
 
                                 Sequence.Add(step);
                                 break;
@@ -432,7 +433,8 @@ namespace OpenMetaverse.Assets
                             {
                                 GestureStepChat step = new GestureStepChat();
                                 step.Text = lines[i++];
-                                int flags = int.Parse(lines[i++]);
+                                // warning CS0219: The variable `flags' is assigned but its value is never used
+                                //int flags = int.Parse(lines[i++]);
 
                                 Sequence.Add(step);
                                 break;
@@ -458,7 +460,7 @@ namespace OpenMetaverse.Assets
             }
             catch (Exception ex)
             {
-                Logger.Log("Decoding gestrue asset failed:" + ex.Message, Helpers.LogLevel.Error);
+                Logger.Log("Decoding gesture asset failed:" + ex.Message, Helpers.LogLevel.Error);
                 return false;
             }
         }

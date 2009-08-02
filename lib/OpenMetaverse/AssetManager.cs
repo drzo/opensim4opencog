@@ -31,6 +31,9 @@ using System.IO;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Assets;
+using OpenMetaverse.Http;
+using OpenMetaverse.StructuredData;
+using OpenMetaverse.Messages.Linden;
 
 namespace OpenMetaverse
 {
@@ -288,6 +291,9 @@ namespace OpenMetaverse
     /// </summary>
     public class AssetManager
     {
+        /// <summary>Number of milliseconds to wait for a transfer header packet if out of order data was received</summary>
+        const int TRANSFER_HEADER_TIMEOUT = 1000 * 15;
+
         #region Delegates
 
         /// <summary>
@@ -306,6 +312,11 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="upload"></param>
         public delegate void AssetUploadedCallback(AssetUpload upload);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="newAssetID"></param>
+        public delegate void BakedTextureUploadedCallback(UUID newAssetID);
         /// <summary>
         /// 
         /// </summary>
@@ -381,16 +392,17 @@ namespace OpenMetaverse
             Client.Network.RegisterCallback(PacketType.InitiateDownload, new NetworkManager.PacketCallback(InitiateDownloadPacketHandler));
 
         }
-
+        
         /// <summary>
         /// Request an asset download
         /// </summary>
         /// <param name="assetID">Asset UUID</param>
         /// <param name="type">Asset type, must be correct for the transfer to succeed</param>
         /// <param name="priority">Whether to give this transfer an elevated priority</param>
+        /// <param name="callback">The callback to fire when the simulator responds with the asset data</param>
         public void RequestAsset(UUID assetID, AssetType type, bool priority, AssetReceivedCallback callback)
         {
-            RequestAsset(assetID, type, priority, SourceType.Asset, callback);
+            RequestAsset(assetID, type, priority, SourceType.Asset, UUID.Random(), callback);
         }
 
         /// <summary>
@@ -400,10 +412,24 @@ namespace OpenMetaverse
         /// <param name="type">Asset type, must be correct for the transfer to succeed</param>
         /// <param name="priority">Whether to give this transfer an elevated priority</param>
         /// <param name="sourceType">Source location of the requested asset</param>
+        /// <param name="callback">The callback to fire when the simulator responds with the asset data</param>
         public void RequestAsset(UUID assetID, AssetType type, bool priority, SourceType sourceType, AssetReceivedCallback callback)
         {
+            RequestAsset(assetID, type, priority, sourceType, UUID.Random(), callback);
+        }
+
+        /// <summary>
+        /// Request an asset download
+        /// </summary>
+        /// <param name="assetID">Asset UUID</param>
+        /// <param name="type">Asset type, must be correct for the transfer to succeed</param>
+        /// <param name="priority">Whether to give this transfer an elevated priority</param>
+        /// <param name="sourceType">Source location of the requested asset</param>
+        /// <param name="callback">The callback to fire when the simulator responds with the asset data</param>
+        public void RequestAsset(UUID assetID, AssetType type, bool priority, SourceType sourceType, UUID transactionID, AssetReceivedCallback callback)
+        {
             AssetDownload transfer = new AssetDownload();
-            transfer.ID = UUID.Random();
+            transfer.ID = transactionID;
             transfer.AssetID = assetID;
             //transfer.AssetType = type; // Set in TransferInfoHandler.
             transfer.Priority = 100.0f + (priority ? 1.0f : 0.0f);
@@ -503,6 +529,7 @@ namespace OpenMetaverse
         /// <param name="ownerID">The owner of this asset</param>
         /// <param name="type">Asset type</param>
         /// <param name="priority">Whether to prioritize this asset download or not</param>
+        /// <param name="callback"></param>
         public void RequestInventoryAsset(UUID assetID, UUID itemID, UUID taskID, UUID ownerID, AssetType type, bool priority, AssetReceivedCallback callback)
         {
             AssetDownload transfer = new AssetDownload();
@@ -700,6 +727,99 @@ namespace OpenMetaverse
                 {
                     throw new Exception("Timeout waiting for previous asset upload to begin");
                 }
+            }
+        }
+
+        public void RequestUploadBakedTexture(byte[] textureData, BakedTextureUploadedCallback callback)
+        {
+            Uri url = null;
+
+            Caps caps = Client.Network.CurrentSim.Caps;
+            if (caps != null)
+                url = caps.CapabilityURI("UploadBakedTexture");
+
+            if (url != null)
+            {
+                // Fetch the uploader capability
+                CapsClient request = new CapsClient(url);
+                request.OnComplete +=
+                    delegate(CapsClient client, OSD result, Exception error)
+                    {
+                        if (error == null && result is OSDMap)
+                        {
+                            UploadBakedTextureMessage message = new UploadBakedTextureMessage();
+                            message.Deserialize((OSDMap)result);
+
+                            if (message.Request.State == "upload")
+                            {
+                                Uri uploadUrl = ((UploaderRequestUpload)message.Request).Url;
+
+                                if (uploadUrl != null)
+                                {
+                                    // POST the asset data
+                                    CapsClient upload = new CapsClient(uploadUrl);
+                                    upload.OnComplete +=
+                                        delegate(CapsClient client2, OSD result2, Exception error2)
+                                        {
+                                            if (error2 == null && result2 is OSDMap)
+                                            {
+                                                UploadBakedTextureMessage message2 = new UploadBakedTextureMessage();
+                                                message2.Deserialize((OSDMap)result2);
+
+                                                if (message2.Request.State == "complete")
+                                                {
+                                                    callback(((UploaderRequestComplete)message2.Request).AssetID);
+                                                    return;
+                                                }
+                                            }
+
+                                            Logger.Log("Bake upload failed during asset upload", Helpers.LogLevel.Warning, Client);
+                                            callback(UUID.Zero);
+                                        };
+                                    upload.BeginGetResponse(textureData, "application/octet-stream", Client.Settings.CAPS_TIMEOUT);
+                                    return;
+                                }
+                            }
+                        }
+
+                        Logger.Log("Bake upload failed during uploader retrieval", Helpers.LogLevel.Warning, Client);
+                        callback(UUID.Zero);
+                    };
+                request.BeginGetResponse(new OSDMap(), OSDFormat.Xml, Client.Settings.CAPS_TIMEOUT);
+            }
+            else
+            {
+                Logger.Log("UploadBakedTexture not available, falling back to UDP method", Helpers.LogLevel.Info, Client);
+
+                ThreadPool.QueueUserWorkItem(
+                    delegate(object o)
+                    {
+                        UUID transactionID = UUID.Random();
+                        BakedTextureUploadedCallback uploadCallback = (BakedTextureUploadedCallback)o;
+                        AutoResetEvent uploadEvent = new AutoResetEvent(false);
+                        AssetUploadedCallback udpCallback =
+                            delegate(AssetUpload upload)
+                            {
+                                if (upload.ID == transactionID)
+                                {
+                                    uploadEvent.Set();
+                                    uploadCallback(upload.Success ? upload.AssetID : UUID.Zero);
+                                }
+                            };
+
+                        OnAssetUploaded += udpCallback;
+
+                        UUID assetID;
+                        RequestUpload(out assetID, AssetType.Texture, textureData, true, transactionID);
+
+                        bool success = uploadEvent.WaitOne(Settings.TRANSFER_TIMEOUT, false);
+
+                        OnAssetUploaded -= udpCallback;
+
+                        if (!success)
+                            uploadCallback(UUID.Zero);
+                    }, callback
+                );
             }
         }
 
@@ -1052,7 +1172,7 @@ namespace OpenMetaverse
                     Logger.DebugLog("TransferPacket received ahead of the transfer header, blocking...", Client);
 
                     // We haven't received the header yet, block until it's received or times out
-                    download.HeaderReceivedEvent.WaitOne(1000 * 5, false);
+                    download.HeaderReceivedEvent.WaitOne(TRANSFER_HEADER_TIMEOUT, false);
 
                     if (download.Size == 0)
                     {
