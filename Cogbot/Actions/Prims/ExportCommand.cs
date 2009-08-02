@@ -110,7 +110,7 @@ namespace cogbot.Actions
                         Logger.Log(uuid.ToString(), Helpers.LogLevel.Warning, Client);
                 }
 
-                string output = OSDParser.SerializeLLSDXmlString(Helpers.PrimListToOSD(prims));
+                string output = OSDParser.SerializeLLSDXmlString(ClientHelpers.PrimListToOSD(prims));
                 try { File.WriteAllText(file, output); }
                 catch (Exception e) { return e.Message; }
 
