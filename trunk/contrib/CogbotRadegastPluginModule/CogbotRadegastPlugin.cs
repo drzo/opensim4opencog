@@ -22,7 +22,7 @@ namespace CogbotRagegastPluginModule
 
         public void StartPlugin(RadegastInstance inst)
         {
-
+            ClientManager.UseRadgast = true;
             RadegastInstance = inst;
             clientManager = new ClientManager();
             chatConsole = new CogbotTabWindow(inst, clientManager)
@@ -32,7 +32,7 @@ namespace CogbotRagegastPluginModule
                               };
             tab = inst.TabConsole.AddTab("Cogbot", "Cogbot", chatConsole);
             tab.AllowClose = false;
-            tab.AllowDetach = true;
+            tab.AllowDetach = true;        
 
             clientManager.outputDelegate = WriteLine;
             inst.Client.Network.OnSimConnecting += Network_OnSimConnecting;
