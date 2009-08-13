@@ -21,7 +21,7 @@ distclean:
 clean:
 	# @export PATH=/usr/local/bin:$(PATH)
 	#${NANT} clean
-	rm -vf bin/cogbot*.exe bin/OpenM*.*
+	rm -vf bin/Cogbot*.exe bin/OpenM*.*
 
 test: prebuild
 	${NANT} test

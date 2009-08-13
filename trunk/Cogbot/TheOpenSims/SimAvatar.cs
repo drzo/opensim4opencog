@@ -245,7 +245,7 @@ namespace cogbot.TheOpenSims
                                                               }
                                                               catch (Exception e)
                                                               {
-                                                                  Debug("InvokeReal: " + e);
+                                                                 // Debug("InvokeReal: " + e);
                                                                   //  throw e;
                                                               }
                                                               finally

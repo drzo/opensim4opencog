@@ -649,6 +649,32 @@
      </Files>
 </Project>
 
+    <Project name="IrcRegionModule" path="contrib/IrcRegionModule" type="Library">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../bin/</ReferencePath>
+      <Reference name="Cogbot.exe" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="OpenMetaverse" localCopy="false"/>
+      <Reference name="OpenMetaverseTypes" localCopy="false"/>
+      <Reference name="log4net" localCopy="false"/>
+      <Reference name="Meebey.SmartIrc4net" localCopy="false"/>
+      <Files>
+        <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
+        <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+      </Files>
+    </Project>
+
   <Project name="CogbotRadegastPluginModule" path="contrib/CogbotRadegastPluginModule" type="Library">
      <Configuration name="Debug">
        <Options>
