@@ -429,7 +429,7 @@ namespace cogbot
             AgentDataUpdatePacket p = (AgentDataUpdatePacket)packet;
             if (p.AgentData.AgentID == sim.Client.Self.AgentID)
             {
-                WriteLine(String.Format("Got the group ID for {0}, requesting group members...", sim.Client));
+              //TODO MAKE DEBUG MESSAGE  WriteLine(String.Format("Got the group ID for {0}, requesting group members...", sim.Client));
                 GroupID = p.AgentData.ActiveGroupID;
 
                 sim.Client.Groups.RequestGroupMembers(GroupID);
@@ -438,7 +438,7 @@ namespace cogbot
 
         private void GroupMembersHandler(UUID requestID, UUID groupID, Dictionary<UUID, GroupMember> members)
         {
-            WriteLine(String.Format("Got {0} group members.", members.Count));
+            //TODO MAKE DEBUG MESSAGE  WriteLine(String.Format("Got {0} group members.", members.Count));
             GroupMembers = members;
         }
 
