@@ -7,8 +7,9 @@ using System.Threading;
 using cogbot.ScriptEngines;
 using OpenMetaverse;
 using cogbot.Actions;
-using Action = cogbot.Actions.Action;
 using Radegast;
+using Action = cogbot.Actions.Action;
+//using Radegast;
 namespace cogbot
 {
     public delegate void DescribeDelegate(bool detailed, OutputDelegate WriteLine);
@@ -55,6 +56,7 @@ namespace cogbot
         ///public Dictionary<string, DescribeDelegate> describers;
 
         public List<Type> registrationTypes;
+        public List<Type> registeredSystemApplicationCommandTypes = new List<Type>();
         public Dictionary<string, Actions.Action> groupActions;
         public Dictionary<string, Tutorials.Tutorial> tutorials;
 
@@ -150,16 +152,7 @@ namespace cogbot
                     if (t.IsSubclassOf(typeof(Command)))
                     {
                         if (!typeof(SystemApplicationCommand).IsAssignableFrom(t)) continue;
-                        ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
-                        try
-                        {
-                            Command command = (Command)info.Invoke(new object[] { null });
-                            groupActions.Add(command.Name, command);
-                        }
-                        catch (Exception e)
-                        {
-                            WriteLine("RegisterBotSystemCommands: " + e.ToString() + "\n" + e.InnerException + "\n In " + t.Name);
-                        }
+                        RegisterSystemCommand(t);
                     }
                 }
                 catch (Exception e)
@@ -422,13 +415,14 @@ namespace cogbot
                     if (BotByName.TryGetValue(fullName, out bc))
                     {
                         output(";; Reusing " + fullName);
+                        EnsureStarting(bc);
                         return bc;
                     }
                 }
                 GridClient gridClient;
                 lock (WasFirstGridClientLock)
                 {
-                    if (_wasFirstGridClient)
+                    if (_wasFirstGridClient && UseRadgast)
                     {
                         _wasFirstGridClient = false;
                         gridClient = RadegastInstance.GlobalInstance.Client;
@@ -461,24 +455,30 @@ namespace cogbot
                     location = "last";
                 }
                 bc.BotLoginParams.Start = location;
-                if (bc.Self.AgentID != UUID.Zero)
-                {
-                    Clients[bc.Self.AgentID] = bc;
-                }
-                else
-                    bc.Network.OnLogin += new NetworkManager.LoginCallback(delegate(LoginStatus login, string message)
-                    {
-                        if (login == LoginStatus.Success)
-                        {
-                            lock (Clients)
-                                Clients[bc.Self.AgentID] = bc;
-                        }
-                    });
                 //LoginParams loginParams = bc.Network.DefaultLoginParams(account.FirstName, account.LastName, account.Password, "BotClient", version);            
-                AddTypesToBotClient(bc);
-                // bc.StartupClientLisp();
+                EnsureStarting(bc);
                 return bc;
             }
+        }
+
+        private void EnsureStarting(BotClient client)
+        {
+            if (client.Self.AgentID != UUID.Zero)
+            {
+                Clients[client.Self.AgentID] = client;
+            }
+            else
+                client.Network.OnLogin += new NetworkManager.LoginCallback(delegate(LoginStatus login, string message)
+                                                                               {
+                                                                                   if (login == LoginStatus.Success)
+                                                                                   {
+                                                                                       lock (Clients)
+                                                                                           Clients[client.Self.AgentID]
+                                                                                               = client;
+                                                                                   }
+                                                                               });
+            AddTypesToBotClient(client);
+            client.StartupClientLisp();
         }
 
         private void AddTypesToBotClient(BotClient bc)
@@ -511,6 +511,8 @@ namespace cogbot
         public bool GetTextures = true; //needed for iniminfo
 
         string version = "1.0.0";
+        public static bool UseRadgast = false;
+
         /// <summary>
         /// 
         /// </summary>
@@ -799,6 +801,23 @@ namespace cogbot
         public void AddTool(string cycworldmodule, string s, EventHandler form)
         {
             TextForm.SingleInstance.AddTool(cycworldmodule, s, form);
+        }
+
+        public void RegisterSystemCommand(Type t)
+        {
+            if (!typeof(SystemApplicationCommand).IsAssignableFrom(t)) return;
+            if (registeredSystemApplicationCommandTypes.Contains(t)) return;
+            registeredSystemApplicationCommandTypes.Add(t);
+            ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
+            try
+            {
+                Command command = (Command)info.Invoke(new object[] { null });
+                groupActions.Add(command.Name, command);
+            }
+            catch (Exception e)
+            {
+                WriteLine("RegisterBotSystemCommands: " + e.ToString() + "\n" + e.InnerException + "\n In " + t.Name);
+            }
         }
     }
 

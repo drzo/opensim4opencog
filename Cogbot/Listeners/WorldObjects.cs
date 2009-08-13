@@ -20,12 +20,12 @@ namespace cogbot.Listeners
         public static bool CanPhantomize = false;
         public static bool CanUseSit = true;
         public static bool DoSimulatorsCatchUp = false;
-        public static bool MaintainAnims = true;
+        public static bool MaintainAnims = false;
         public static bool MaintainAnimsInFolders = true;
         public static bool MaintainAttachments = true;
         public static bool MaintainCollisions = true;
-        public static bool MaintainEffects = true;
-        public static bool MaintainActions = true;
+        public static bool MaintainEffects = false;
+        public static bool MaintainActions = false;
         public static bool MaintainPropertiesFromQueue = true;
         public static bool MaintainObjectUpdates = false;
         public static bool MaintainSounds = false;

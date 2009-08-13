@@ -13,6 +13,7 @@ using System.IO;
 using cogbot.Listeners;
 using Action=cogbot.Actions.Action;
 using cogbot.TheOpenSims;
+using System.Drawing;
 
 // older LibOMV
 //using TeleportFlags = OpenMetaverse.AgentManager.TeleportFlags;
@@ -120,6 +121,12 @@ namespace cogbot
                 return MasterKey != UUID.Zero;
             }
         }
+
+        public bool IsRegionMaster
+        {
+            get { return WorldSystem.IsRegionMaster; }
+        }
+
         public VoiceManager VoiceManager;
         // Shell-like inventory commands need to be aware of the 'current' inventory folder.
         public InventoryFolder CurrentDirectory = null;
@@ -390,8 +397,7 @@ namespace cogbot
             BotLoginParams.Password = configuration.password;
             BotLoginParams.URI = configuration.simURL;
         }
-
-
+   
         //breaks up large responses to deal with the max IM size
         private void SendResponseIM(GridClient client, UUID fromAgentID, OutputDelegate WriteLine, string data)
         {
@@ -1175,7 +1181,11 @@ namespace cogbot
                 {
                     if (t.IsSubclassOf(typeof(Command)))
                     {
-                        if (typeof(SystemApplicationCommand).IsAssignableFrom(t)) continue;
+                        if (typeof(SystemApplicationCommand).IsAssignableFrom(t))
+                        {
+                            ClientManager.RegisterSystemCommand(t);
+                            continue;
+                        }
                         ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
                         try
                         {
@@ -1347,7 +1357,7 @@ namespace cogbot
                     }
                     if (act is RegionMasterCommand)
                     {
-                        if (!WorldSystem.IsRegionMaster)
+                        if (!IsRegionMaster)
                         {
                             return String.Empty;
                         }
@@ -1427,7 +1437,12 @@ namespace cogbot
             {
                 if (t.IsSubclassOf(typeof(Command)))
                 {
-                    if (typeof(SystemApplicationCommand).IsAssignableFrom(t)) return;
+                    if (typeof(SystemApplicationCommand).IsAssignableFrom(t))
+                    {
+                        ClientManager.RegisterSystemCommand(t);
+                        return;
+                    }
+
                     ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
                     try
                     {
@@ -1472,6 +1487,49 @@ namespace cogbot
             return this;
         }
 
+        public void FakeEvent(Object target, String infoName, params object[] parameters)
+        {
+
+            Type type = target.GetType();
+            EventInfo eventInfo = type.GetEvent(infoName);
+            MethodInfo m = eventInfo.GetRaiseMethod();
+
+            Exception lastException = null;
+            if (m != null)
+            {
+                try
+                {
+
+
+                    m.Invoke(target, parameters);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    lastException = e;
+                }
+            }
+            else
+            {
+                {
+                    FieldInfo fieldInfo = type.GetField(eventInfo.Name,
+                                                        BindingFlags.Instance | BindingFlags.NonPublic |
+                                                        BindingFlags.Public);
+                    if (fieldInfo != null)
+                    {
+                        Delegate del = fieldInfo.GetValue(target) as Delegate;
+
+                        if (del != null)
+                        {
+                            del.DynamicInvoke(parameters);
+                            return;
+                        }
+                    }
+                }
+            }
+            if (lastException != null) throw lastException;
+            throw new NotSupportedException();
+        }
     }
 
 }

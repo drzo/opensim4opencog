@@ -38,10 +38,17 @@ namespace cogbot.Actions
         }
 
         public Command()
-            : base(null)
+            : this(null)
         {
             
         } // constructor
+
+        public Command(BotClient bc)
+            : base(bc)
+        {
+
+        } // constructor
+
 
 
         /// <summary>
