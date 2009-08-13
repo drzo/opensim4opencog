@@ -25,6 +25,7 @@
  */
 
 using System;
+using System.Drawing;
 using System.Text;
 using System.Collections.Generic;
 using System.Threading;
@@ -129,6 +130,41 @@ namespace OpenMetaverse
             {
                 return String.Format("ItemID: {0}, AssetID: {1}, WearableType: {2}, AssetType: {3}, Asset: {4}",
                     ItemID, AssetID, WearableType, AssetType, Asset != null ? Asset.Name : "(null)");
+            }
+        }
+
+        /// <summary>
+        /// Data collected from visual params for each wearable
+        /// needed for the calculation of the color
+        /// </summary>
+        private struct ColorParamInfo
+        {
+            public VisualParam VisualParam;
+            public VisualColorParam VisualColorParam;
+            public float Value;
+            public WearableType WearableType;
+        }
+
+        /// <summary>
+        /// Holds a texture assetID and the data needed to bake this layer into
+        /// an outfit texture. Used to keep track of currently worn textures
+        /// and baking data
+        /// </summary>
+        public struct TextureData
+        {
+            /// <summary>A texture AssetID</summary>
+            public UUID TextureID;
+            /// <summary>Asset data for the texture</summary>
+            public AssetTexture Texture;
+            /// <summary>Collection of alpha masks that needs applying</summary>
+            public Dictionary<VisualAlphaParam, float> AlphaMasks;
+            /// <summary>Tint that should be applied to the texture</summary>
+            public Color Color;
+
+            public override string ToString()
+            {
+                return String.Format("TextureID: {0}, Texture: {1}",
+                    TextureID, Texture != null ? Texture.AssetData.Length + " bytes" : "(null)");
             }
         }
 
