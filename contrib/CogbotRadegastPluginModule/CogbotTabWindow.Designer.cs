@@ -30,7 +30,7 @@
 //
 using Radegast;
 
-namespace CogbotRagegastPluginModule
+namespace CogbotRadegastPluginModule
 {
     partial class CogbotTabWindow
     {

@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 using System.Threading;
+using System.Windows.Forms;
 using cogbot.TheOpenSims;
 using PathSystem3D.Navigation;
 using Exception=System.Exception;
@@ -546,12 +548,22 @@ namespace TheSimiansModule
             if (debugWindow == null || debugWindow.IsDisposed)
             {
                 debugWindow = new SimThinkerDebug(Actor.GetGridClient());
-                debugWindow.Show();
-            }   else
+                (new Thread(() =>
+                {
+                    debugWindow.Closing += new CancelEventHandler(delegate(object sender, CancelEventArgs e)
+                                                                      {
+                                                                          debugWindow = null;       
+                                                                      });
+                    Application.EnableVisualStyles();
+                    debugWindow.Show();
+                    Application.Run(debugWindow);
+                })).Start();
+            }
+            else
             {
                 debugWindow.Show();
             }
-            
+
         }
     }
 }

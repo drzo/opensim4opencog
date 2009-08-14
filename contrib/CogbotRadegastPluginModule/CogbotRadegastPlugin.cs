@@ -1,13 +1,13 @@
 using System;
-using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading;
 using System.Windows.Forms;
 using cogbot;
-using cogbot.Listeners;
+using cogbot.Actions;
 using OpenMetaverse;
 using Radegast;
 
-namespace CogbotRagegastPluginModule
+namespace CogbotRadegastPluginModule
 {
     public class CogbotRadegastPlugin : IRadegastPlugin
     {
