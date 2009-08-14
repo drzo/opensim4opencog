@@ -542,22 +542,22 @@ namespace OpenMetaverse
                 {
                     if (ib is InventoryWearable)
                     {
-                        Logger.DebugLog("Adding wearable " + ib.Name, Client);
+                        DebugLog("Adding wearable " + ib.Name, Client);
                         wearables.Add((InventoryWearable)ib);
                     }
                     else if (ib is InventoryAttachment)
                     {
-                        Logger.DebugLog("Adding attachment (attachment) " + ib.Name, Client);
+                        DebugLog("Adding attachment (attachment) " + ib.Name, Client);
                         attachments.Add(ib);
                     }
                     else if (ib is InventoryObject)
                     {
-                        Logger.DebugLog("Adding attachment (object) " + ib.Name, Client);
+                        DebugLog("Adding attachment (object) " + ib.Name, Client);
                         attachments.Add(ib);
                     }
                     else
                     {
-                        Logger.DebugLog("Ignoring inventory item " + ib.Name, Client);
+                        DebugLog("Ignoring inventory item " + ib.Name, Client);
                     }
                 }
             }
@@ -759,7 +759,7 @@ namespace OpenMetaverse
             //Assets.OnImageReceived -= imageCallback;
             Assets.OnAssetUploaded -= uploadCallback;
 
-            Logger.DebugLog("CachedResponseEvent completed", Client);
+            DebugLog("CachedResponseEvent completed", Client);
 
             #region Send Appearance
 
@@ -839,7 +839,7 @@ namespace OpenMetaverse
         /// </summary>
         public void RequestCachedBakes()
         {
-            Logger.DebugLog("RequestCachedBakes()", Client);
+            DebugLog("RequestCachedBakes()", Client);
             
             List<KeyValuePair<int, UUID>> hashes = new List<KeyValuePair<int,UUID>>();
 
@@ -889,7 +889,7 @@ namespace OpenMetaverse
                     cache.WearableData[i].TextureIndex = (byte)hashes[i].Key;
                     cache.WearableData[i].ID = hashes[i].Value;
 
-                    Logger.DebugLog("Checking cache for index " + cache.WearableData[i].TextureIndex +
+                    DebugLog("Checking cache for index " + cache.WearableData[i].TextureIndex +
                         ", ID: " + cache.WearableData[i].ID, Client);
                 }
 
@@ -984,7 +984,7 @@ namespace OpenMetaverse
 
                 if (changed)
                 {
-                    Logger.DebugLog("New wearables received in AgentWearablesUpdate");
+                    DebugLog("New wearables received in AgentWearablesUpdate", Client);
                     Wearables.Clear();
 
                     for (int i = 0; i < update.WearableData.Length; i++)
@@ -1013,7 +1013,7 @@ namespace OpenMetaverse
                 }
                 else
                 {
-                    Logger.DebugLog("Duplicate AgentWearablesUpdate received, discarding");
+                    DebugLog("Duplicate AgentWearablesUpdate received, discarding",Client);
                 }
             }
 
@@ -1028,6 +1028,11 @@ namespace OpenMetaverse
                 }
             }
             WearablesRequestEvent.Set();
+        }
+
+        static void DebugLog(string s, GridClient args)
+        {
+          Console.WriteLine(s);
         }
 
         private void SendAgentSetAppearance()
@@ -1141,7 +1146,7 @@ namespace OpenMetaverse
                             Primitive.TextureEntryFace face = te.CreateFace((uint)texture.Key);
                             face.TextureID = texture.Value;
 
-                            Logger.DebugLog("Setting agent texture " + ((AvatarTextureIndex)texture.Key).ToString() + " to " +
+                            DebugLog("Setting agent texture " + ((AvatarTextureIndex)texture.Key).ToString() + " to " +
                                 texture.Value.ToString(), Client);
                         }
                     }
@@ -1193,7 +1198,7 @@ namespace OpenMetaverse
                 set.WearableData[bakedIndex] = new AgentSetAppearancePacket.WearableDataBlock();
                 set.WearableData[bakedIndex].TextureIndex = (byte)bakedIndex;
                 set.WearableData[bakedIndex].CacheID = hash;
-                Logger.DebugLog("Setting baked agent texture hash " + ((BakeType)bakedIndex).ToString() + " to " + hash, Client);
+                DebugLog("Setting baked agent texture hash " + ((BakeType)bakedIndex).ToString() + " to " + hash, Client);
 
             }
 
@@ -1204,7 +1209,7 @@ namespace OpenMetaverse
 
         private void SendAgentIsNowWearing()
         {
-            Logger.DebugLog("SendAgentIsNowWearing()", Client);
+            DebugLog("SendAgentIsNowWearing()", Client);
 
             AgentIsNowWearingPacket wearing = new AgentIsNowWearingPacket();
             wearing.AgentData.AgentID = Client.Self.AgentID;
@@ -1254,7 +1259,7 @@ namespace OpenMetaverse
             {
                 foreach (KeyValuePair<WearableType, WearableData> kvp in Wearables)
                 {
-                    Logger.DebugLog("Requesting asset for wearable item " + kvp.Value.Item.WearableType + " (" + kvp.Value.Item.AssetUUID + ")", Client);
+                    DebugLog("Requesting asset for wearable item " + kvp.Value.Item.WearableType + " (" + kvp.Value.Item.AssetUUID + ")", Client);
                     AssetDownloads.Enqueue(new PendingAssetDownload(kvp.Value.Item.AssetUUID, kvp.Value.Item.AssetType));
                 }
             }
@@ -1307,7 +1312,7 @@ namespace OpenMetaverse
                     PendingUploads.Add(UUID.Combine(id, Client.Self.SecureSessionID), BakeTypeToAgentTextureIndex(bake.BakeType));
             }
 
-            Logger.DebugLog(String.Format("Bake {0} completed. Uploading asset {1}", bake.BakeType,
+            DebugLog(String.Format("Bake {0} completed. Uploading asset {1}", bake.BakeType,
                 bake.BakedTexture.AssetID.ToString()), Client);
 
         }
@@ -1320,7 +1325,7 @@ namespace OpenMetaverse
             {
                 if (!ImageDownloads.ContainsKey(image))
                 {
-                    Logger.DebugLog("Downloading layer " + index.ToString(), Client);
+                    DebugLog("Downloading layer " + index.ToString(), Client);
                     ImageDownloads.Add(image, index);
                 }
 
@@ -1469,7 +1474,7 @@ namespace OpenMetaverse
 
         private void AgentCachedTextureResponseHandler(Packet packet, Simulator simulator)
         {
-            Logger.DebugLog("AgentCachedTextureResponseHandler()", Client);
+            DebugLog("AgentCachedTextureResponseHandler()", Client);
             
             AgentCachedTextureResponsePacket response = (AgentCachedTextureResponsePacket)packet;
 
@@ -1483,12 +1488,12 @@ namespace OpenMetaverse
                 {
                     //UUID hash=new UUID();
                     // For each missing element we need to bake our own texture
-                    Logger.DebugLog("Cache response, index: " + block.TextureIndex + ", ID: " +
+                    DebugLog("Cache response, index: " + block.TextureIndex + ", ID: " +
                         block.TextureID.ToString(), Client);
 
                     // FIXME: Use this. Right now we treat baked images on other sims as if they were missing
                     string host = Utils.BytesToString(block.HostName);
-                    if (host.Length > 0) Logger.DebugLog("Cached bake exists on foreign host " + host, Client);
+                    if (host.Length > 0) DebugLog("Cached bake exists on foreign host " + host, Client);
 
                     BakeType bakeType = (BakeType)block.TextureIndex;
                     
@@ -1508,7 +1513,7 @@ namespace OpenMetaverse
                        
                         if (!PendingBakes.ContainsKey(bakeType))
                         {
-                            Logger.DebugLog("Initializing " + bakeType.ToString() + " bake with " + imageCount + " textures", Client);
+                            DebugLog("Initializing " + bakeType.ToString() + " bake with " + imageCount + " textures", Client);
     
                             Dictionary<int, float> paramValues=MakeParamValues();
                             // Build a dictionary of appearance parameter indices and values from the wearables
@@ -1569,7 +1574,7 @@ namespace OpenMetaverse
                         {
                             kvp.Value.Asset = (AssetWearable)asset;
 
-                            Logger.DebugLog("Downloaded wearable asset " + kvp.Value.Asset.Name, Client);
+                            DebugLog("Downloaded wearable asset " + kvp.Value.Asset.Name, Client);
 
                             if (!kvp.Value.Asset.Decode())
                             {
@@ -1583,7 +1588,7 @@ namespace OpenMetaverse
                                 {
                                     if (texture.Value != DEFAULT_AVATAR_TEXTURE) // this texture is not meant to be displayed
                                     {
-                                        Logger.DebugLog("Setting " + texture.Key + " to " + texture.Value, Client);
+                                        DebugLog("Setting " + texture.Key + " to " + texture.Value, Client);
                                         AgentTextures[(int)texture.Key] = texture.Value;
                                     }
                                 }
@@ -1646,7 +1651,7 @@ namespace OpenMetaverse
                             {
                                 if (state == TextureRequestState.Finished)
                                 {
-                                    Logger.DebugLog("Finished downloading texture for " + index.ToString(), Client);
+                                    DebugLog("Finished downloading texture for " + index.ToString(), Client);
                                     OpenJPEG.DecodeToImage(assetTexture.AssetData, out assetTexture.Image);
                                     baked = PendingBakes[type].AddTexture(index, assetTexture, false);
                                 }
@@ -1668,12 +1673,12 @@ namespace OpenMetaverse
                             {
                                 // This is a failsafe catch, as the upload completed callback should normally 
                                 // be triggering the event
-                                Logger.DebugLog("No pending downloads or uploads detected in OnImageReceived", Client);
+                                DebugLog("No pending downloads or uploads detected in OnImageReceived", Client);
                                 CachedResponseEvent.Set();
                             }
                             else
                             {
-                                Logger.DebugLog("Pending uploads: " + PendingUploads.Count + ", pending downloads: " +
+                                DebugLog("Pending uploads: " + PendingUploads.Count + ", pending downloads: " +
                                     ImageDownloads.Count, Client);
                             }
 
@@ -1701,14 +1706,14 @@ namespace OpenMetaverse
                         int u = (int) index;
                         if (u < 0)
                         {
-                            Logger.DebugLog("Invalid Index, AgentTextures " + index.ToString() + " set to " +
+                            DebugLog("Invalid Index, AgentTextures " + index.ToString() + " set to " +
                                 upload.AssetID.ToString(), Client);
                         }
                         else
                         {
                             AgentTextures[u] = upload.AssetID;
                         }
-                        Logger.DebugLog("Upload complete, AgentTextures " + index.ToString() + " set to " + 
+                        DebugLog("Upload complete, AgentTextures " + index.ToString() + " set to " + 
                             upload.AssetID.ToString(), Client);
                     }
                     else
@@ -1719,12 +1724,12 @@ namespace OpenMetaverse
 
                     PendingUploads.Remove(upload.AssetID);
 
-                    Logger.DebugLog("Pending uploads: " + PendingUploads.Count + ", pending downloads: " +
+                    DebugLog("Pending uploads: " + PendingUploads.Count + ", pending downloads: " +
                         ImageDownloads.Count, Client);
 
                     if (PendingUploads.Count == 0 && ImageDownloads.Count == 0)
                     {
-                        Logger.DebugLog("All pending image downloads and uploads complete", Client);
+                        DebugLog("All pending image downloads and uploads complete", Client);
 
                         CachedResponseEvent.Set();
                     }
@@ -1732,7 +1737,7 @@ namespace OpenMetaverse
                 else
                 {
                     // TEMP
-                    Logger.DebugLog("Upload " + upload.AssetID.ToString() + " was not found in PendingUploads", Client);
+                    DebugLog("Upload " + upload.AssetID.ToString() + " was not found in PendingUploads", Client);
                 }
             }
         }
