@@ -117,7 +117,7 @@ namespace cogbot.Listeners
 
         public void Network_OnSimConnectedHook(Simulator simulator)
         {
-            base.Network_OnSimConnected(simulator);
+            ///base.Network_OnSimConnected(simulator);
             lock (WorldObjectsMasterLock)
             {
                 EnsureSimulator(simulator);
@@ -164,6 +164,13 @@ namespace cogbot.Listeners
                 Network_OnSimConnectedHook(simulator);
             }
         }
+
+
+        public override bool Network_OnSimConnecting(Simulator simulator)
+        {
+            //LeaveSimulator(simulator);
+            return true;// base.Network_OnSimConnecting(simulator);
+        }
                                           
         public override void Network_OnEventQueueRunning(Simulator simulator)
         {
@@ -172,11 +179,12 @@ namespace cogbot.Listeners
             {
            //    simulator.Client.Grid.RequestMapItems(simulator.Handle,GridItemType.AgentLocations,GridLayerType.Terrain); 
             }
-            base.Network_OnEventQueueRunning(simulator);
+           // base.Network_OnEventQueueRunning(simulator);
             if (simulator == client.Network.CurrentSim)
             {
                 new Thread(() => client.Appearance.SetPreviousAppearance(true)).Start();
             }
+            EnsureSimulator(simulator);
         }
 
         public override void Network_OnCurrentSimChanged(Simulator PreviousSimulator)
@@ -411,6 +419,11 @@ namespace cogbot.Listeners
                     RegisterThinClient();
                 }
             }
+        }
+
+        public override void Network_OnSimConnected(Simulator simulator)
+        {
+            EnsureSimulator(simulator);
         }
 
         private void RegisterThinClient()

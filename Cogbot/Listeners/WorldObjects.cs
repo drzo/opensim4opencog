@@ -470,8 +470,8 @@ namespace cogbot.Listeners
                                         //    SendNewEvent("on-prim-killed", p);
                                         //    return;
                                         //}
-                                        if (Settings.LOG_LEVEL != Helpers.LogLevel.Info)
-                                            Debug("Killing object: " + O);
+                                        //if (Settings.LOG_LEVEL != Helpers.LogLevel.Info)
+                                            //Debug("Killing object: " + O);
                                         {
                                             {
                                                 if (O.KilledPrim(p, simulator))

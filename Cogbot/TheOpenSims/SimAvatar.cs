@@ -72,7 +72,7 @@ namespace cogbot.TheOpenSims
 
         public SimHeading GetHeading()
         {
-            if (!IsRegionAttached() && _Prim0!=null)
+            if (!IsRegionAttached() && !ReferenceEquals(_Prim0,null))
             {
                 WorldSystem.ReSelectObject(_Prim0);
                 Simulator sim = WorldSystem.GetSimulator(RegionHandle);
@@ -762,11 +762,13 @@ namespace cogbot.TheOpenSims
         public override string GetName()
         {
             if (!string.IsNullOrEmpty(AspectName)) return AspectName;
-            if (_Prim0 == null)
+            if (Object.ReferenceEquals(_Prim0,null))
             {
                 return null;
             }
-            return AspectName = theAvatar.Name;
+            if (!string.IsNullOrEmpty(theAvatar.Name))
+                return AspectName = theAvatar.Name;
+            return _Prim0.ToString();
         }
 
         public override string ToString()
@@ -806,6 +808,8 @@ namespace cogbot.TheOpenSims
 
         public override bool Matches(string name)
         {
+            String n = GetName();
+            if (string.IsNullOrEmpty(n)) return false;
             return SimTypeSystem.MatchString(base.ToString(), name)
                    || SimTypeSystem.MatchString(ToString(), name);
         }
@@ -1041,7 +1045,7 @@ namespace cogbot.TheOpenSims
                     IsBlocked = false;
                     if (lastDistance <= curDist)
                     {
-                        if (_Prim0!=null && Prim.Velocity == Vector3.Zero)
+                        if (!ReferenceEquals(_Prim0,null) && Prim.Velocity == Vector3.Zero)
                             IsBlocked = true;
                         if (ApproachPosition!=null)
                         {
