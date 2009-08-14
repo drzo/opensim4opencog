@@ -23,11 +23,14 @@ namespace cogbot.Actions
             {
                 for (int i = 0; i < Client.Network.Simulators.Count; i++)
                 {
+                    if (Client.Network.Simulators[i].ObjectsAvatars.Count==0) continue;
+                    result.AppendLine();
+                    result.Append("Region: " + Client.Network.Simulators[i]);
                     Client.Network.Simulators[i].ObjectsAvatars.ForEach(
                         delegate(Avatar av)
                         {
                             result.AppendLine();
-                            result.AppendFormat("{0} (Group: {1}, Location: {2}, UUID: {3})",
+                            result.AppendFormat(" {0} (Group: {1}, Location: {2}, UUID: {3})",
                                 av.Name, av.GroupName, av.Position, av.ID.ToString());
                         }
                     );

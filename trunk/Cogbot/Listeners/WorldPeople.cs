@@ -130,6 +130,11 @@ namespace cogbot.Listeners
             EventQueue.Enqueue(() => SendNewRegionEvent(SimEventType.SCRIPT, "On-Alert-Message", client.gridClient, msg));
         }
 
+        public override void Self_OnAgentDataUpdated(string firstName, string lastName, UUID activeGroupID, string groupTitle, GroupPowers groupPowers, string groupName)
+        {
+            //OnEvent("On-Agent-Data-Updated", firstName, lastName, activeGroupID, groupTitle, groupPowers, groupName);
+        }
+
 
         public static Dictionary<string, UUID> Name2Key = new Dictionary<string, UUID>();
         public static Dictionary<UUID, UUID> AvatarRegion = new Dictionary<UUID, UUID>();
@@ -143,7 +148,7 @@ namespace cogbot.Listeners
                 AddName2Key(g.Name, key);
                 RegisterUUID(key, g);
             }
-            base.Groups_OnCurrentGroups(groups);
+            //base.Groups_OnCurrentGroups(groups);
             //OnEvent("On-Current-Groups", paramNamesOnCurrentGroups, paramTypesOnCurrentGroups, groups);
         }
 
@@ -415,6 +420,8 @@ namespace cogbot.Listeners
                     }
                 }
             {
+                client.Directory.StartPeopleSearch(DirectoryManager.DirFindFlags.People, ToAvatarName, 0, UUID.Random());
+
                 ManualResetEvent NameSearchEvent = new ManualResetEvent(false);
                 AvatarManager.AvatarNameSearchCallback callback =
                     new AvatarManager.AvatarNameSearchCallback((queryid, avatars) =>

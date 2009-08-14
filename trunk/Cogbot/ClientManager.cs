@@ -602,7 +602,7 @@ namespace cogbot
             {
                 lock (Clients) Clients[client.Self.AgentID] = client;
 
-                if (client.MasterKey == UUID.Zero)
+                if (client.MasterKey == UUID.Zero && !string.IsNullOrEmpty(client.MasterName))
                 {
                     UUID query = UUID.Random();
                     DirectoryManager.DirPeopleReplyCallback peopleDirCallback =

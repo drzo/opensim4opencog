@@ -732,7 +732,7 @@ namespace cogbot.TheOpenSims
         public virtual string DebugInfo()
         {
             string str = ToString();
-            if (_Prim0 == null) return str;
+            if (Object.ReferenceEquals(_Prim0,null)) return str;
             if (Prim.ParentID != 0)
                 return Prim.ParentID + " " + str;
             return str;
@@ -939,7 +939,7 @@ namespace cogbot.TheOpenSims
         {
             if (_TOSRTING == null)
             {
-                if (_Prim0 == null) return "UNATTACHED_PRIM "+ID.ToString();
+                if (Object.ReferenceEquals(_Prim0,null)) return "UNATTACHED_PRIM "+ID.ToString();
                 Primitive Prim = this.Prim;
                 _TOSRTING = "";
                 ID = Prim.ID;
@@ -989,7 +989,7 @@ namespace cogbot.TheOpenSims
                     Primitive pp = null;
                     if (_Parent != null)
                     {
-                        //if (_Parent._Prim0!=null)
+                        //if (_Parent.!ReferenceEquals(_Prim0,null))
                         pp = _Parent.Prim;
                     }
                     else
@@ -1064,7 +1064,7 @@ namespace cogbot.TheOpenSims
         public bool IsRegionAttached()
         {
             if (WasKilled) return false;
-            if (_Prim0 == null) return false;
+            if (ReferenceEquals(_Prim0,null)) return false;
             if (_Prim0.RegionHandle == 0)
             {
                 return false;
@@ -1144,7 +1144,7 @@ namespace cogbot.TheOpenSims
         protected Vector3 LastKnownPos;
         public virtual Vector3 GetSimPosition()
         {
-            if (_Prim0 == null) return LastKnownPos;
+            if (Object.ReferenceEquals(_Prim0,null)) return LastKnownPos;
             Primitive thisPrim = Prim;
             Vector3 thisPos = thisPrim.Position;
             //if (!IsRegionAttached()) return Prim.Position; 
@@ -1431,7 +1431,7 @@ namespace cogbot.TheOpenSims
 
         public virtual string GetName()
         {
-            if (_Prim0 == null) return ToString() + " " + RegionHandle;
+            if (Object.ReferenceEquals(_Prim0,null)) return ToString() + " " + RegionHandle;
             Primitive Prim = this.Prim;
             if (Properties != null)
             {
@@ -1486,7 +1486,7 @@ namespace cogbot.TheOpenSims
                 }
 
             }
-            if (_Prim0 == null) return 1;
+            if (Object.ReferenceEquals(_Prim0,null)) return 1;
             return Prim.Scale.X * Prim.Scale.Y;
         }
 
