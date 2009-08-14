@@ -5,7 +5,7 @@ using cogbot.TheOpenSims;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
-namespace CogbotRagegastPluginModule
+namespace CogbotRadegastPluginModule
 {
     internal class SimObjectListViewItem : ListViewItem
     {

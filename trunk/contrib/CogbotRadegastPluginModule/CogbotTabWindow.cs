@@ -43,7 +43,7 @@ using Radegast;
 using Radegast.Netcom;
 using OpenMetaverse;
 
-namespace CogbotRagegastPluginModule
+namespace CogbotRadegastPluginModule
 {
     public partial class CogbotTabWindow : UserControl
     {

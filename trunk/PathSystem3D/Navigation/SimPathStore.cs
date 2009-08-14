@@ -11,8 +11,10 @@
 //-----------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Threading;
+using System.Windows.Forms;
 using PathSystem3D.Mesher;
 using PathSystem3D.Navigation.Debug;
 using OpenMetaverse;
@@ -2317,9 +2319,23 @@ namespace PathSystem3D.Navigation
             if (PanelGUI == null)
             {
                 PanelGUI = new PathFinderDemo(this);
+                (new Thread(() =>
+                {
+                    PanelGUI.CollisionPlaneListUpdate();
+                    PanelGUI.Closing += new CancelEventHandler(delegate(object sender, CancelEventArgs e)
+                    {
+                        PanelGUI = null;
+                    });
+                    Application.EnableVisualStyles();
+                    PanelGUI.Show();
+                    Application.Run(PanelGUI);
+                })).Start();
+            } else
+            {
+                PanelGUI.CollisionPlaneListUpdate();
+                PanelGUI.Show();
             }
-            PanelGUI.CollisionPlaneListUpdate();
-            PanelGUI.Show();
+
         }
 
 
