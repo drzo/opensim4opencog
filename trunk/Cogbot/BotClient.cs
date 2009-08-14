@@ -217,7 +217,7 @@ namespace cogbot
             //          RegisterAllCommands(Assembly.GetExecutingAssembly());
 
             Settings.USE_INTERPOLATION_TIMER = false;
-            Settings.LOG_LEVEL = Helpers.LogLevel.Info;
+            Settings.LOG_LEVEL = Helpers.LogLevel.None;
 
             //   Settings.LOG_RESENDS = false;
             //   Settings.ALWAYS_DECODE_OBJECTS = true;
@@ -644,22 +644,9 @@ namespace cogbot
 
         void client_OnLogMessage(object message, Helpers.LogLevel level)
         {
-            if (!WorldSystem.IsGridMaster) return;
-            string msg = "" + level + " " + message;
+           // if (!WorldSystem.IsGridMaster) return;
 
-            if (msg.Contains("esend")) return;
-            if (msg.Contains("resent packet")) return;
-            if (msg.Contains("Rate limit")) return;
-            if (msg.Contains("ecoded image with unhandled number of compo")) return;
-            if (debugLevel < 3 && msg.Contains("Array index is out of range")) return;
-            if (debugLevel < 3 && (msg.Contains("nloadi") || msg.Contains("ransfer"))) return;
-            if (level == Helpers.LogLevel.Warning || level == Helpers.LogLevel.Debug)
-            {
-                if (Settings.LOG_LEVEL == Helpers.LogLevel.Info)
-                    Console.WriteLine(msg);
-                return;
-            }
-            SendNetworkEvent("On-Log-Message", message, level);
+            if (WorldSystem.IsGridMaster) SendNetworkEvent("On-Log-Message", message, level);
         }
 
         void Network_OnEventQueueRunning(Simulator simulator)
@@ -795,18 +782,17 @@ namespace cogbot
         }
 
         public void WriteLine(string str)
-        {
-            Console.WriteLine(str);
+        {          
             try
             {
                 if (str == null) return;
                 if (str == "") return;
                 if (str.StartsWith("$bot")) str = str.Substring(4);
-                str = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
+                str = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n").Trim();
                 string SelfName = String.Format("{0}", GetName());
                 str = str.Replace("$bot", SelfName);
-                if (str.StartsWith(SelfName)) str = str.Substring(SelfName.Length + 1);
-                ClientManager.WriteLine(SelfName + ": " + str);
+                if (str.StartsWith(SelfName)) str = str.Substring(SelfName.Length).Trim();
+                ClientManager.WriteLine(str);
             }
             catch (Exception)
             {
@@ -819,14 +805,7 @@ namespace cogbot
             {
                 if (str == null) return;
                 if (args != null && args.Length > 0) str = String.Format(str, args);
-                str = str.Trim();
-                if (str == "") return;
-                if (str.StartsWith("$bot")) str = str.Substring(4);
-                str = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
-                string SelfName = String.Format("{0}", GetName());
-                str = str.Replace("$bot", SelfName);
-                if (str.StartsWith(SelfName)) str = str.Substring(SelfName.Length + 1);
-                ClientManager.WriteLine(SelfName + ": " + str);
+                WriteLine(str);
             }
             catch (Exception)
             {

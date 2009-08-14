@@ -46,7 +46,7 @@ namespace cogbot
 
 
 
-        public LoginForm(BotClient _client, TextForm _parent)
+        public LoginForm(BotClient _client, ClientManager _parent)
         {
             client = _client.gridClient;
             parent = ClientManager.SingleInstance;

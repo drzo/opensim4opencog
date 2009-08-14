@@ -167,7 +167,7 @@ namespace cogbot.TheOpenSims
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("" + e);
+                        WriteLine("" + e);
                         //                        _TypeData = null;
                     }
                 }
@@ -216,7 +216,7 @@ namespace cogbot.TheOpenSims
                     if (!animation.HasData()) continue;
                     if (SameAsset(animation))
                     {
-                        Console.WriteLine("Found dup " + animation);
+                        WriteLine("Found dup " + animation);
                         foreach (string name in animation._Name)
                         {
                             AddName(name + "_" + AssetID);
@@ -358,7 +358,7 @@ namespace cogbot.TheOpenSims
             byte[] bs = AssetData;
             if (bs != null && bs.Length > 0)
             {
-                Console.WriteLine("saving anim file " + tmpname);
+                WriteLine("saving anim file " + tmpname);
                 File.WriteAllBytes(tmpname + ".anim", AssetData);
             }
             //WorldObjects.Master.GetModuleName()
@@ -398,7 +398,7 @@ namespace cogbot.TheOpenSims
                 }
                 catch (System.Exception ex)
                 {
-                    Console.WriteLine("" + ex);
+                    WriteLine("" + ex);
                     //_TypeData = null;
                 }
             }

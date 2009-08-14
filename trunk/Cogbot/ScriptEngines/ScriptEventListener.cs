@@ -132,7 +132,10 @@ namespace cogbot.ScriptEngines
             }
             if (arg is Simulator)
             {
-                return "'(simulator " + argString(((Simulator)arg).Name) + ")";
+                Simulator sim = (Simulator) arg;
+                uint globalX, globalY;
+                Utils.LongToUInts(sim.Handle, out globalX, out globalY);
+                return "'(simulator " + argString(sim.Name) + " " + globalX / 256 + " " + globalY / 256 + " " + argString(sim.IPEndPoint.ToString()) + ")";
             }
             if (arg is Avatar)
             {

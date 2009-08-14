@@ -27,13 +27,13 @@ namespace cogbot.Listeners
             String eventName = evt.GetVerb();
             object[] args = evt.GetArgs();
 
-            String msg = From.Self.Name + ": [" + eventName.ToLower();
+            String msg = "["+ From.GetName() + ": " + eventName.ToLower()+"]";
             int start = 0;
             if (args.Length > 1)
             {
                 if (args[0] is Simulator)
                 {
-                    start = 1;
+                   // start = 1;
                 }
             }
             for (int i = start; i < args.Length; i++)
@@ -42,14 +42,14 @@ namespace cogbot.Listeners
                 msg += From.argString(args[i]);
             }
 
-            msg += "]";
-
+            msg += "";
+            
             textForm(msg);
         }
 
         void SimEventSubscriber.ShuttingDown()
         {
-            textForm("SimEventTextSubscriber shuttdown for " + From);
+            textForm("SimEventTextSubscriber shutdown for " + From);
         }
 
         #endregion

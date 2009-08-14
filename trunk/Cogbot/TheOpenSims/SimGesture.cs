@@ -18,7 +18,7 @@ namespace cogbot.TheOpenSims
 
         protected override void SaveFile(string tmpname)
         {
-            Console.WriteLine("Not implemented save gesture file " + tmpname);
+            WriteLine("Not implemented save gesture file " + tmpname);
         }
 
         public AssetGesture GetGesture()
