@@ -27,11 +27,32 @@ namespace cogbot.Actions
 			for (int ct = 0; ct < args.Length;ct++)
 				masterName = masterName + args[ct] + " ";
             masterName = masterName.TrimEnd();
-
             if (masterName.Length == 0)
-                return "Usage: setmaster [name]";
-
+                return "Usage: setmaster [name or uuid]";
+            UUID masterUUID;
+            if (UUID.TryParse(masterName, out masterUUID))
+            {
+                Client.MasterKey = masterUUID;
+                if (String.IsNullOrEmpty(Client.MasterName))
+                {
+                    Client.MasterName = WorldSystem.GetUserName(masterUUID);
+                }
+                Client.Self.InstantMessage(
+                    Client.MasterKey, "You are now my master.  IM me with \"help\" for a command list.");
+                return "Set master UUID with name = " + Client.MasterName;
+            }
+            masterUUID = WorldSystem.GetUserID(masterName);
             if (String.IsNullOrEmpty(Client.MasterName)) Client.MasterName = masterName;
+            if (masterUUID!=UUID.Zero)
+            {
+                Client.MasterName = masterName;
+                Client.MasterKey = masterUUID;
+                Client.Self.InstantMessage(
+                    Client.MasterKey, "You are now my master.  IM me with \"help\" for a command list.");
+
+                return "Set master UUID with name = " + Client.MasterName;
+            }
+
             DirectoryManager.DirPeopleReplyCallback callback = new DirectoryManager.DirPeopleReplyCallback(KeyResolvHandler);
             Client.Directory.OnDirPeopleReply += callback;
 
