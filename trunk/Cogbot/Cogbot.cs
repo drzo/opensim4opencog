@@ -28,7 +28,7 @@ namespace cogbot
                     "cogbot.exe --first firstname --last lastname --pass password [--loginuri=\"uri\"] [--startpos \"sim/x/y/z\"] [--master \"master name\"] [--masterkey \"master uuid\"] [--gettextures] [--scriptfile \"filename\"]");
         }
 
-        [STAThread]
+        [MTAThread]
         static void Main(string[] args)
         {
           //  NativeMethods.AllocConsole();
@@ -193,7 +193,7 @@ namespace cogbot
             int index = str.IndexOf("]");
             if (index > 0 && str.StartsWith("["))
             {
-                string sender = str.Substring(0, index-1).Trim();
+                string sender = str.Substring(0, index).Trim();
                 if (sender.StartsWith("[")) sender = sender.Substring(1);
                 str = str.Substring(index + 1).Trim();
                 consoleBase.Notice(sender, str, args);
