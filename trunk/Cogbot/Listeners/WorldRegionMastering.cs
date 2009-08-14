@@ -182,7 +182,7 @@ namespace cogbot.Listeners
            // base.Network_OnEventQueueRunning(simulator);
             if (simulator == client.Network.CurrentSim)
             {
-                new Thread(() => client.Appearance.SetPreviousAppearance(true)).Start();
+              // new Thread(() => client.Appearance.SetPreviousAppearance(true)).Start();
             }
             EnsureSimulator(simulator);
         }
@@ -198,7 +198,7 @@ namespace cogbot.Listeners
             if (PreviousSimulator != null)
             {
                 LeaveSimulator(PreviousSimulator);
-                new Thread(() => client.Appearance.SetPreviousAppearance(false)).Start();
+              //  new Thread(() => client.Appearance.SetPreviousAppearance(false)).Start();
             }
             else
             {
