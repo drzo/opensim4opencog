@@ -14,9 +14,27 @@ namespace cogbot
 {
     public delegate void DescribeDelegate(bool detailed, OutputDelegate WriteLine);
     enum Modes { normal, tutorial };
+    public delegate void OutputDelegate(string str, params object[] args);
 
     public class ClientManager
     {
+
+        public void AddTool(string name, string text, EventHandler threadStart)
+        {
+            //      base.Invoke(new AddToolDelegate(AddTool0), new object[] {name, text, threadStart});
+        }
+
+        public delegate void AddToolDelegate(string name, string text, EventHandler threadStart);
+        public void AddTool0(string name, string text, EventHandler threadStart)
+        {
+            // SuspendLayout();
+            ToolStripMenuItem stripMenuItem =
+                new ToolStripMenuItem { Name = name, Size = new System.Drawing.Size(168, 22), Text = text };
+            stripMenuItem.Click += threadStart;
+            //this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {stripMenuItem});
+            //ResumeLayout();
+        }
+
         private ICollection<BotClient> BotClients
         {
             get
@@ -302,7 +320,10 @@ namespace cogbot
 
         public void WriteLine(string str, params object[] args)
         {
-            if (outputDelegate == null) Console.WriteLine(str, args);
+            if (outputDelegate == null || outputDelegate == WriteLine)
+            {
+                Console.WriteLine(str, args);
+            }
             else outputDelegate(str, args);
         }
 
@@ -642,7 +663,7 @@ namespace cogbot
                     account.URI = args[4];
 
             if (string.IsNullOrEmpty(account.URI))
-                account.URI = cogbot.OtherMainProgram.LoginURI;
+                account.URI = cogbot.Program.LoginURI;
             Logger.Log("Using login URI " + account.URI, Helpers.LogLevel.Info);
 
             return Login(account);
@@ -653,13 +674,14 @@ namespace cogbot
         /// </summary>
         public void Run()
         {
-            WriteLine("Type quit to exit.  Type help for a command list.");
+         //   WriteLine("Type quit to exit.  Type help for a command list.");
 
             while (Running)
             {
-                PrintPrompt();
-                string input = Console.ReadLine();
-                DoCommandAll(input, UUID.Zero, outputDelegate);
+                ;
+                string input = Program.consoleBase.CmdPrompt(GetPrompt());
+                if (string.IsNullOrEmpty(input)) continue;
+                outputDelegate(ExecuteCommand(input, outputDelegate));
             }
 
             lock (Clients) foreach (BotClient client in Clients.Values)
@@ -669,16 +691,18 @@ namespace cogbot
                 }
         }
 
-        private void PrintPrompt()
+        private string GetPrompt()
         {
             int online = 0;
-
+            int offline = 0;
             lock (Clients) foreach (BotClient client in Clients.Values)
                 {
                     if (client.Network.Connected) online++;
+                    else offline++;
                 }
-
-            Console.Write(online + " avatars online> ");
+            string result = (online + " avatars online");
+            if (offline > 0) result += " " + offline + " avatars offline";
+            return result;
         }
 
         /// <summary>
@@ -798,10 +822,6 @@ namespace cogbot
             }
         }
 
-        public void AddTool(string cycworldmodule, string s, EventHandler form)
-        {
-            TextForm.SingleInstance.AddTool(cycworldmodule, s, form);
-        }
 
         public void RegisterSystemCommand(Type t)
         {

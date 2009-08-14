@@ -29,7 +29,7 @@ namespace cogbot.TheOpenSims
 
         protected override void SaveFile(string tmpname)
         {
-            Console.WriteLine("Not implemented save texture file " + tmpname);
+            WriteLine("Not implemented save texture file " + tmpname);
         }
         private byte[] _TypeData;
         public override byte[] AssetData

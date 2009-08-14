@@ -543,7 +543,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                if (_Prim0 == null)
+                if (Object.ReferenceEquals(_Prim0,null))
                 {
                     return null;
                 }
@@ -1715,10 +1715,6 @@ namespace cogbot.TheOpenSims
                     sn = Properties.SitName;
                 if (!String.IsNullOrEmpty(sn)) return sn;
                 sn = ObjectType.GetSitName();
-                if (sn!=null && sn.ToLower()=="pc")
-                {
-                   Console.WriteLine("SITNAME = PC");
-                }
                 if (!String.IsNullOrEmpty(sn)) return sn;
                 return "SitOnObject";
             }
@@ -1733,10 +1729,6 @@ namespace cogbot.TheOpenSims
                     sn = Properties.TouchName;
                 if (!String.IsNullOrEmpty(sn)) return sn;
                 sn = ObjectType.GetTouchName();
-                if (sn != null && sn.ToLower() == "pc")
-                {
-                    Console.WriteLine("SITNAME = PC");
-                }
                 if (!String.IsNullOrEmpty(sn)) return sn;
                 return "TouchTheObject";
             }

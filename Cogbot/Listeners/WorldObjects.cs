@@ -23,7 +23,7 @@ namespace cogbot.Listeners
         public static bool MaintainAnims = false;
         public static bool MaintainAnimsInFolders = true;
         public static bool MaintainAttachments = true;
-        public static bool MaintainCollisions = true;
+        public static bool MaintainCollisions = false;
         public static bool MaintainEffects = false;
         public static bool MaintainActions = false;
         public static bool MaintainPropertiesFromQueue = true;
@@ -88,11 +88,13 @@ namespace cogbot.Listeners
 
             if (eventName.EndsWith("On-Image-Receive-Progress")) return true;
             if (eventName.EndsWith("Look-At")) return true;
-            Console.WriteLine("\n" + eventName);
+            var parms = new NamedParam[paramNames.Length];
             for (int i = 0; i < paramNames.Length; i++)
             {
-                Console.WriteLine(" " + paramNames[i] + ": " + client.argString(parameters[i]));
+                parms[i] = new NamedParam(paramNames[i], paramTypes[i],parameters[i]);
             }
+            SimObjectEvent evt =new SimObjectEvent(SimEventStatus.Once, eventName, SimEventType.UNKNOWN, parms);
+            client.SendPipelineEvent(evt);
             return true;
         }
 

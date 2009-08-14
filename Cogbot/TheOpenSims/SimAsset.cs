@@ -216,11 +216,11 @@ namespace cogbot.TheOpenSims
                                                             delegate(bool success, string status, UUID itemID,
                                                                      UUID assetID)
                                                             {
-                                                                Console.WriteLine(
+                                                                WriteLine(
                                                                     String.Format(
                                                                         "RequestCreateItemFromAsset() returned: Success={0}, Status={1}, ItemID={2}, AssetID={3}",
                                                                         success, status, itemID, assetID));
-                                                                Console.WriteLine(String.Format("Upload took {0}",
+                                                                WriteLine(String.Format("Upload took {0}",
                                                                                                 DateTime.Now.
                                                                                                     Subtract(start)));
                                                                 UploadCompleteEvent.Set();
@@ -271,7 +271,7 @@ namespace cogbot.TheOpenSims
                 }
                 else
                 {
-                    Console.WriteLine("Sound w/o BVH " + fName + " " + uid);
+                    WriteLine("Sound w/o BVH " + fName + " " + uid);
                 }
             }
             InternAsset(sound);
@@ -858,7 +858,7 @@ namespace cogbot.TheOpenSims
                         byte[] bs = File.ReadAllBytes(files);
                         string name = Path.GetFileNameWithoutExtension(Path.GetFileName(files)).ToLower();
                         if (nameAsset.ContainsKey(name)) continue;
-                        Console.WriteLine("Sound w/o UUID " + name);
+                        WriteLine("Sound w/o UUID " + name);
                         SimSound sound = new SimSound(UUID.Zero, name, AssetType.Sound);
                         nameAsset[name] = sound;
                     }
@@ -1083,7 +1083,7 @@ namespace cogbot.TheOpenSims
                         byte[] bs = File.ReadAllBytes(files);
                         string name = Path.GetFileNameWithoutExtension(Path.GetFileName(files)).ToLower();
                         if (nameAsset.ContainsKey(name)) continue;
-                        Console.WriteLine("Anim w/o UUID " + name);
+                        WriteLine("Anim w/o UUID " + name);
                         SimAsset anim = new SimAnimation(UUID.Zero, name);
                         nameAsset[name] = anim;
                     }
@@ -1093,9 +1093,14 @@ namespace cogbot.TheOpenSims
 
                 lock (SimAssets) foreach (SimAsset A in SimAssets)
                     {
-                        if (A.IsIncomplete()) Console.WriteLine("Asset: " + A.ToString());
+                        if (A.IsIncomplete()) WriteLine("Incomplete Asset: " + A.ToString());
                     }
             }
+        }
+
+        public static void WriteLine(string s, params object[] args)
+        {
+          // Program.WriteLine("[ASSETS] "+s, args);
         }
 
 
@@ -1138,7 +1143,7 @@ namespace cogbot.TheOpenSims
                 }
                 else
                 {
-                    Console.WriteLine("Texture w/o BVH " + fName + " " + uid);
+                    WriteLine("Texture w/o BVH " + fName + " " + uid);
                 }
             }
             InternAsset(texture);
@@ -1176,7 +1181,7 @@ namespace cogbot.TheOpenSims
                 }
                 else
                 {
-                   // Console.WriteLine("Anim w/o BVH " + fName + " " + uid);
+                   // WriteLine("Anim w/o BVH " + fName + " " + uid);
                 }
             }
             InternAsset(anim);
@@ -1435,6 +1440,11 @@ namespace cogbot.TheOpenSims
 
     abstract public class SimAsset : BotMentalAspect
     {
+
+        static public void WriteLine(string s, params object[] args)
+        {
+            SimAssetStore.WriteLine(s,args);
+        }
      //   public abstract bool NeedsRequest{ get; set;}
    //     public abstract bool SameAsset(SimAsset animation);
     //    public abstract bool HasData();
@@ -1642,7 +1652,7 @@ namespace cogbot.TheOpenSims
         protected virtual void SaveFile(string tmpname)
         {
           //  if (!HasData()) return;
-            Console.WriteLine("Not implemented save {0} file {1}", this, tmpname);
+            WriteLine("Not implemented save {0} file {1}", this, tmpname);
         }
 
         private byte[] _TypeData;
