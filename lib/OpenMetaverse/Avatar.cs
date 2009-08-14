@@ -298,7 +298,6 @@ namespace OpenMetaverse
                 }
                 else
                 {
-                    lock (NameValues)
                     {
                         if (NameValues == null || NameValues.Length == 0)
                         {
@@ -306,6 +305,7 @@ namespace OpenMetaverse
                         }
                         else
                         {
+                            lock (NameValues)
                             for (int i = 0; i < NameValues.Length; i++)
                             {
                                 if (NameValues[i].Name == "Title" && NameValues[i].Type == NameValue.ValueType.String)
