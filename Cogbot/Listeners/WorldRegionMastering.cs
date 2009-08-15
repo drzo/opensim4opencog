@@ -460,7 +460,7 @@ namespace cogbot.Listeners
             client.Self.OnChatSessionMemberAdded += Self_OnChatSessionMemberAdded;
             client.Self.OnChatSessionMemberLeft += Self_OnChatSessionMemberLeft;
             client.Appearance.OnAgentWearables += Appearance_OnAgentWearables;
-            client.Appearance.OnAppearanceUpdated += Appearance_OnAppearanceUpdated;
+            //client.Appearance.OnAppearanceUpdated += Appearance_OnAppearanceUpdated;
             client.Friends.OnFriendNamesReceived += Friends_OnFriendNamesReceived;
             client.Friends.OnFriendOnline += Friends_OnFriendOnline;
             client.Friends.OnFriendOffline += Friends_OnFriendOffline;

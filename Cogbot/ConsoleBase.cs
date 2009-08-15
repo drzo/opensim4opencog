@@ -445,6 +445,7 @@ namespace OpenSim.Framework.Console
 
         private void AddToHistory(string text)
         {
+            if (text.Trim().Length==0) return;
             while (history.Count >= 100)
                 history.RemoveAt(0);
 
