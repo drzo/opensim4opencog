@@ -725,6 +725,7 @@ namespace OpenMetaverse
                 }
                 else
                 {
+                    return upload.ID;
                     throw new Exception("Timeout waiting for previous asset upload to begin");
                 }
             }
