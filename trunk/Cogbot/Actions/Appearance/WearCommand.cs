@@ -35,7 +35,7 @@ namespace cogbot.Actions
             {
                 Client.Appearance.WearOutfit(target.Split('/'), bake);
             }
-            catch (InvalidOutfitException ex)
+            catch (Exception ex)
             {
                 return "Invalid outfit (" + ex.Message + ")";
             }
