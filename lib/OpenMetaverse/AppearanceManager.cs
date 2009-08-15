@@ -107,6 +107,23 @@ namespace OpenMetaverse
         public const int WEARABLES_PER_LAYER = 7;
         /// <summary>Total number of textures on an avatar, baked or not</summary>
         public const int AVATAR_TEXTURE_COUNT = 21;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        //public delegate void AgentWearablesCallback();
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="te"></param>
+     //   public delegate void AppearanceUpdatedCallback(Primitive.TextureEntry te);
+
+        /// <summary></summary>
+        //public event AgentWearablesCallback OnAgentWearables;
+        /// <summary></summary>
+     //   public event AppearanceUpdatedCallback OnAppearanceUpdated;
+
+
         /// <summary>Map of what wearables are included in each bake</summary>
         public static readonly WearableType[][] WEARABLE_BAKE_MAP = new WearableType[][]
         {
@@ -141,6 +158,19 @@ namespace OpenMetaverse
         /// </summary>
         public class WearableData
         {
+            private InventoryWearable _item;
+            public InventoryWearable Item
+            {
+                set
+                {
+                    _item = value;
+                    WearableType = _item.WearableType;
+                    AssetID = _item.AssetUUID;
+                    AssetType = _item.AssetType;
+                    ItemID = _item.UUID;
+                }
+            }
+
             /// <summary>Inventory ItemID of the wearable</summary>
             public UUID ItemID;
             /// <summary>AssetID of the wearable asset</summary>
@@ -279,10 +309,11 @@ namespace OpenMetaverse
             RequestSetAppearance(false);
         }
 
+        private Thread appearanceThread;
         /// <summary>
         /// Starts the appearance setting thread
         /// </summary>
-        /// <param name="forceRebake">True to force rebaking, otherwise false</param>
+        /// <param name="forceRebake">True to force rebaking, otherwise false</param>        
         public void RequestSetAppearance(bool forceRebake)
         {
             if (Interlocked.CompareExchange(ref AppearanceThreadRunning, 1, 0) != 0)
@@ -292,7 +323,7 @@ namespace OpenMetaverse
             }
 
             // This is the first time setting appearance, run through the entire sequence
-            Thread appearanceThread = new Thread(
+            appearanceThread = new Thread(
                 delegate()
                 {
                     try
@@ -344,8 +375,13 @@ namespace OpenMetaverse
                         // Send the appearance packet
                         SendAgentSetAppearance();
                     }
+                    catch(ThreadAbortException)
+                    {
+                        Logger.Log("ABORTED appearance", Helpers.LogLevel.Warning, Client);
+                    }
                     finally
                     {
+                        Logger.Log("SUCCESS appearance", Helpers.LogLevel.Warning, Client);
                         AppearanceThreadRunning = 0;
                     }
                 }
@@ -443,20 +479,448 @@ namespace OpenMetaverse
                 return UUID.Zero;
         }
 
+        ///// <summary>
+        ///// Replace the current outfit with a list of wearables and set appearance
+        ///// </summary>
+        ///// <param name="wearableItems">List of wearable inventory items that
+        ///// define a new outfit</param>
+        //public void WearOutfit(List<InventoryItem> wearableItems)
+        //{
+        //    List<InventoryWearable> wearables = new List<InventoryWearable>();
+        //    List<InventoryItem> attachments = new List<InventoryItem>();
+
+        //    for (int i = 0; i < wearableItems.Count; i++)
+        //    {
+        //    }
+        //}
+
+
+        private class WearParams
+        {
+            public object Param;
+            public bool Bake;
+            public bool RemoveExistingAttachments;
+
+            public WearParams(object param, bool bake, bool removeExistingAttachments)
+            {
+                Param = param;
+                Bake = bake;
+                RemoveExistingAttachments = removeExistingAttachments;
+            }
+        }
+
         /// <summary>
         /// Replace the current outfit with a list of wearables and set appearance
         /// </summary>
-        /// <param name="wearableItems">List of wearable inventory items that
-        /// define a new outfit</param>
-        public void WearOutfit(List<InventoryItem> wearableItems)
+        /// <param name="ibs">List of wearables that define the new outfit</param>
+        public void WearOutfit(List<InventoryBase> ibs)
         {
-            List<InventoryWearable> wearables = new List<InventoryWearable>();
-            List<InventoryItem> attachments = new List<InventoryItem>();
+            WearOutfit(ibs, true);
+        }
 
-            for (int i = 0; i < wearableItems.Count; i++)
+        /// <summary>
+        /// Replace the current outfit with a list of wearables and set appearance
+        /// </summary>
+        /// <param name="ibs">List of wearables that define the new outfit</param>
+        /// <param name="bake">Whether to bake textures for the avatar or not</param>
+        public void WearOutfit(List<InventoryBase> ibs, bool bake)
+        {
+            WearParams wearParams = new WearParams(ibs, bake, true);
+            Thread appearanceThread = new Thread(new ParameterizedThreadStart(StartWearOutfitFolder));
+            appearanceThread.Start(wearParams);
+        }
+
+
+        /// <summary>
+        /// Add to the current outfit with the list supplied
+        /// </summary>
+        /// <param name="ibs_new">List of wearables that will be added to the outfit</param>
+        /// <param name="bake">Whether to bake textures for the avatar or not</param>
+        public void AddToOutfit(List<InventoryBase> ibs_new, bool bake)
+        {
+            List<WearableData> ibs_total = new List<WearableData>();
+
+            // Get what we are currently wearing
+            //TestLock(Wearables); 
+            lock (Wearables)
             {
+                foreach (KeyValuePair<WearableType, OpenMetaverse.AppearanceManager.WearableData> kvp in Wearables)
+                    ibs_total.Add(kvp.Value);
+
+            }
+            // Add the new items at the end, ReplaceOutfitWearables() will do the right thing as it places each warable into a slot in order
+            // so the end of the list will overwrite earlier parts if they use the same slot.
+            foreach (InventoryBase item in ibs_new)
+            {
+                if (item is InventoryWearable)
+                    ibs_total.Add(WearableToData((InventoryWearable)item));
+            }
+
+            WearParams wearParams = new WearParams(ibs_total, bake, false);
+            Thread appearanceThread = new Thread(new ParameterizedThreadStart(StartWearOutfitFolder));
+            appearanceThread.Start(wearParams);
+        }
+
+        //private void StartWearOutfit(object thread_params)
+        //{
+        //    WearParams wearParams = (WearParams)thread_params;
+
+        //    List<InventoryBase> ibs = (List<InventoryBase>)wearParams.Param;
+        //    List<WearableData> wearables = new List<WearableData>();
+        //    List<InventoryBase> attachments = new List<InventoryBase>();
+
+        //    foreach (InventoryBase ib in ibs)
+        //    {
+        //        if (ib is InventoryWearable)
+        //            wearables.Add(WearableToData( (InventoryWearable)ib));
+        //        else if (ib is InventoryAttachment || ib is InventoryObject)
+        //            attachments.Add(ib);
+        //    }
+
+
+        //    // Fetch a list of the current agent wearables
+        //    if (SetAppearanceSerialNum == 0 && !GetAgentWearables())
+        //    {
+        //        Logger.Log("Failed to retrieve a list of current agent wearables, appearance cannot be set",
+        //            Helpers.LogLevel.Error, Client);
+        //       // return;
+        //    }
+        //    // Download and parse all of the agent wearables
+        //    if (SetAppearanceSerialNum == 0 && !DownloadWearables())
+        //    {
+        //        Logger.Log("One or more agent wearables failed to download, appearance will be incomplete",
+        //            Helpers.LogLevel.Warning, Client);
+        //    }
+        //    // If this is the first time setting appearance and we're not forcing rebakes, check the server
+        //    // for cached bakes
+        //    if (SetAppearanceSerialNum == 0 && !wearParams.Bake)
+        //    {
+        //        // Compute hashes for each bake layer and compare against what the simulator currently has
+        //        if (!GetCachedBakes())
+        //        {
+        //            Logger.Log("Failed to get a list of cached bakes from the simulator, appearance will be rebaked",
+        //                Helpers.LogLevel.Warning, Client);
+        //        }
+        //    }
+        //    Textures = new TextureData[AVATAR_TEXTURE_COUNT];
+        //    ReplaceOutfitWearables(wearables);
+        //    AddAttachments(attachments, wearParams.RemoveExistingAttachments);
+        //    RequestSetAppearance(wearParams.Bake);
+        //}
+
+        static WearableData WearableToData(InventoryWearable inventoryWearable)
+        {
+            WearableData wd = new WearableData();
+            wd.Item = inventoryWearable;
+            return wd;
+        }
+
+        /// <summary>
+        /// Replace the current outfit with a folder and set appearance
+        /// </summary>
+        /// <param name="folder">UUID of the inventory folder to wear</param>
+        public void WearOutfit(UUID folder)
+        {
+            WearOutfit(folder, true);
+        }
+
+        /// <summary>
+        /// Replace the current outfit with a folder and set appearance
+        /// </summary>
+        /// <param name="path">Inventory path of the folder to wear</param>
+        public void WearOutfit(string[] path)
+        {
+            WearOutfit(path, true);
+        }
+
+        /// <summary>
+        /// Replace the current outfit with a folder and set appearance
+        /// </summary>
+        /// <param name="folder">Folder containing the new outfit</param>
+        /// <param name="bake">Whether to bake the avatar textures or not</param>
+        public void WearOutfit(UUID folder, bool bake)
+        {
+            WearParams wearOutfitParams = new WearParams(folder, bake, true);
+            Thread appearanceThread = new Thread(new ParameterizedThreadStart(StartWearOutfitFolder));
+            appearanceThread.Start(wearOutfitParams);
+        }
+
+        /// <summary>
+        /// Replace the current outfit with a folder and set appearance
+        /// </summary>
+        /// <param name="path">Path of folder containing the new outfit</param>
+        /// <param name="bake">Whether to bake the avatar textures or not</param>
+        public void WearOutfit(string[] path, bool bake)
+        {
+            WearParams wearOutfitParams = new WearParams(path, bake, true);
+            Thread appearanceThread = new Thread(new ParameterizedThreadStart(StartWearOutfitFolder));
+            appearanceThread.Start(wearOutfitParams);
+        }
+
+        public void WearOutfit(InventoryFolder folder, bool bake)
+        {
+            WearParams wearOutfitParams = new WearParams(folder, bake, true);
+            Thread appearanceThread = new Thread(new ParameterizedThreadStart(StartWearOutfitFolder));
+            appearanceThread.Start(wearOutfitParams);
+        }
+
+
+        private void StartWearOutfitFolder(object thread_params)
+        {
+            if (AppearanceThreadRunning != 0)
+            {
+                Logger.Log("Appearance thread is already running ", Helpers.LogLevel.Warning);
+                if (appearanceThread != null && appearanceThread!=Thread.CurrentThread)
+                {
+                    appearanceThread.Abort();
+                }
+              //  return;
+            }
+            appearanceThread = Thread.CurrentThread;
+            try
+            {
+                WearParams wearOutfitParams = (WearParams) thread_params;
+
+                if (SetAppearanceSerialNum == 0 && !GetAgentWearables())
+                {
+                    Logger.Log("Failed to retrieve a list of current agent wearables, appearance cannot be set",
+                               Helpers.LogLevel.Error, Client);
+                    // return;
+                }
+                // Download and parse all of the agent wearables
+                if (SetAppearanceSerialNum == 0 && !DownloadWearables())
+                {
+                    Logger.Log("One or more agent wearables failed to download, appearance will be incomplete",
+                               Helpers.LogLevel.Warning, Client);
+                }
+
+                List<WearableData> wearables;
+                List<InventoryBase> attachments;
+
+                if (!GetFolderWearables(wearOutfitParams.Param, out wearables, out attachments))
+                    // get wearables in outfit folder
+                    // TODO: this error condition should be passed back to the client somehow}
+                {
+                    Logger.Log(
+                        "GetFolderWearables did not find wearables " +
+                        wearOutfitParams.Param + " " + wearables + " " +
+                        attachments, Helpers.LogLevel.Error, Client);
+                    return;
+                }
+
+                // If this is the first time setting appearance and we're not forcing rebakes, check the server
+                // for cached bakes
+                if (SetAppearanceSerialNum == 0)
+                {
+                    // Compute hashes for each bake layer and compare against what the simulator currently has
+                    if (!GetCachedBakes())
+                    {
+                        Logger.Log("Failed to get a list of cached bakes from the simulator, appearance will be rebaked",
+                            Helpers.LogLevel.Warning, Client);
+                    }
+                } 
+                
+                ReplaceOutfitWearables(wearables); // replace current wearables with outfit folder
+                AddAttachments(attachments, wearOutfitParams.RemoveExistingAttachments);
+                SendAgentIsNowWearing(Wearables);
+                Textures = new TextureData[AVATAR_TEXTURE_COUNT];
+                // Download textures, compute bakes, and upload for any cache misses
+                if (!CreateBakes())
+                {
+                    Logger.Log("Failed to create or upload one or more bakes, appearance will be incomplete",
+                               Helpers.LogLevel.Warning, Client);
+                }
+
+                // Send the appearance packet
+                SendAgentSetAppearance();
+            } catch (ThreadAbortException )
+            {
+                
             }
         }
+
+  
+
+        private bool GetFolderWearables(object _folder, out List<WearableData> wearables, out List<InventoryBase> attachments)
+        {
+            UUID folder;
+            wearables = null;
+            attachments = null;
+
+            if (_folder.GetType() == typeof(string[]))
+            {
+                string[] path = (string[])_folder;
+
+                folder = Client.Inventory.FindObjectByPath(
+                    Client.Inventory.Store.RootFolder.UUID, Client.Self.AgentID, String.Join("/", path), 1000 * 200);
+
+                if (folder == UUID.Zero)
+                {
+                    Logger.Log("Outfit path " + path + " not found", Helpers.LogLevel.Error, Client);
+                    return false;
+                }
+            }
+            else
+                folder = (UUID)_folder;
+
+            wearables = new List<WearableData>();
+            attachments = new List<InventoryBase>();
+            List<InventoryBase> objects = Client.Inventory.FolderContents(folder, Client.Self.AgentID,
+                false, true, InventorySortOrder.ByName, 1000 * 20);
+
+            if (objects != null)
+            {
+                foreach (InventoryBase ib in objects)
+                {
+                    if (ib is InventoryWearable)
+                    {
+                        DebugLog("Adding wearable " + ib.Name, Client);
+                        wearables.Add(WearableToData( (InventoryWearable)ib));
+                    }
+                    else if (ib is InventoryAttachment)
+                    {
+                        DebugLog("Adding attachment (attachment) " + ib.Name, Client);
+                        attachments.Add(ib);
+                    }
+                    else if (ib is InventoryObject)
+                    {
+                        DebugLog("Adding attachment (object) " + ib.Name, Client);
+                        attachments.Add(ib);
+                    }
+                    else
+                    {
+                        DebugLog("Ignoring inventory item " + ib.Name, Client);
+                    }
+                }
+            }
+            else
+            {
+                Logger.Log("Failed to download folder contents of + " + folder.ToString(),
+                    Helpers.LogLevel.Error, Client);
+                return false;
+            }
+
+            return true;
+        }
+
+
+        private void SendAgentIsNowWearing(Dictionary<WearableType, WearableData> Wearables)
+        {
+            DebugLog("SendAgentIsNowWearing()", Client);
+
+            AgentIsNowWearingPacket wearing = new AgentIsNowWearingPacket();
+            wearing.AgentData.AgentID = Client.Self.AgentID;
+            wearing.AgentData.SessionID = Client.Self.SessionID;
+            wearing.WearableData = new AgentIsNowWearingPacket.WearableDataBlock[WEARABLE_COUNT];
+
+            for (int i = 0; i < WEARABLE_COUNT; i++)
+            {
+                WearableType type = (WearableType)i;
+                wearing.WearableData[i] = new AgentIsNowWearingPacket.WearableDataBlock();
+                wearing.WearableData[i].WearableType = (byte)i;
+
+               lock (Wearables)
+                    if (Wearables.ContainsKey(type))
+                        wearing.WearableData[i].ItemID = Wearables[type].ItemID;
+                    else
+                        wearing.WearableData[i].ItemID = UUID.Zero;
+            }
+
+            Client.Network.SendPacket(wearing);
+        }
+
+
+        static void DebugLog(string s, GridClient args)
+        {
+            Console.WriteLine(s);
+        }
+
+        // this method will download the assets for all inventory items in iws
+        private void ReplaceOutfitWearables(List<WearableData> iws)
+        {
+            //TestLock(Wearables); 
+            lock (Wearables)
+            {
+                Dictionary<WearableType, WearableData> preserve = new Dictionary<WearableType, WearableData>();
+
+                foreach (KeyValuePair<WearableType, WearableData> kvp in Wearables)
+                {
+                    if (kvp.Value.AssetType == AssetType.Bodypart)
+                        preserve.Add(kvp.Key, kvp.Value);
+                }
+
+                Wearables = preserve;
+
+                foreach (WearableData iw in iws)
+                {
+                    //WearableData wd = new WearableData();
+                    //wd.Item = iw;
+                    Wearables[iw.WearableType] = iw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds a list of attachments to avatar
+        /// </summary>
+        /// <param name="attachments">A List containing the attachments to add</param>
+        /// <param name="removeExistingFirst">If true, tells simulator to remove existing attachment
+        /// first</param>
+        public void AddAttachments(List<InventoryBase> attachments, bool removeExistingFirst)
+        {
+            // FIXME: Obey this
+            //const int OBJECTS_PER_PACKET = 4;
+
+            // Use RezMultipleAttachmentsFromInv  to clear out current attachments, and attach new ones
+            RezMultipleAttachmentsFromInvPacket attachmentsPacket = new RezMultipleAttachmentsFromInvPacket();
+            attachmentsPacket.AgentData.AgentID = Client.Self.AgentID;
+            attachmentsPacket.AgentData.SessionID = Client.Self.SessionID;
+
+            attachmentsPacket.HeaderData.CompoundMsgID = UUID.Random();
+            attachmentsPacket.HeaderData.FirstDetachAll = removeExistingFirst;
+            attachmentsPacket.HeaderData.TotalObjects = (byte)attachments.Count;
+
+            attachmentsPacket.ObjectData = new RezMultipleAttachmentsFromInvPacket.ObjectDataBlock[attachments.Count];
+            for (int i = 0; i < attachments.Count; i++)
+            {
+                if (attachments[i] is InventoryAttachment)
+                {
+                    InventoryAttachment attachment = (InventoryAttachment)attachments[i];
+                    attachmentsPacket.ObjectData[i] = new RezMultipleAttachmentsFromInvPacket.ObjectDataBlock();
+                    attachmentsPacket.ObjectData[i].AttachmentPt = (byte)attachment.AttachmentPoint;
+                    attachmentsPacket.ObjectData[i].EveryoneMask = (uint)attachment.Permissions.EveryoneMask;
+                    attachmentsPacket.ObjectData[i].GroupMask = (uint)attachment.Permissions.GroupMask;
+                    attachmentsPacket.ObjectData[i].ItemFlags = (uint)attachment.Flags;
+                    attachmentsPacket.ObjectData[i].ItemID = attachment.UUID;
+                    attachmentsPacket.ObjectData[i].Name = Utils.StringToBytes(attachment.Name);
+                    attachmentsPacket.ObjectData[i].Description = Utils.StringToBytes(attachment.Description);
+                    attachmentsPacket.ObjectData[i].NextOwnerMask = (uint)attachment.Permissions.NextOwnerMask;
+                    attachmentsPacket.ObjectData[i].OwnerID = attachment.OwnerID;
+                }
+                else if (attachments[i] is InventoryObject)
+                {
+                    InventoryObject attachment = (InventoryObject)attachments[i];
+                    attachmentsPacket.ObjectData[i] = new RezMultipleAttachmentsFromInvPacket.ObjectDataBlock();
+                    attachmentsPacket.ObjectData[i].AttachmentPt = 0;
+                    attachmentsPacket.ObjectData[i].EveryoneMask = (uint)attachment.Permissions.EveryoneMask;
+                    attachmentsPacket.ObjectData[i].GroupMask = (uint)attachment.Permissions.GroupMask;
+                    attachmentsPacket.ObjectData[i].ItemFlags = (uint)attachment.Flags;
+                    attachmentsPacket.ObjectData[i].ItemID = attachment.UUID;
+                    attachmentsPacket.ObjectData[i].Name = Utils.StringToBytes(attachment.Name);
+                    attachmentsPacket.ObjectData[i].Description = Utils.StringToBytes(attachment.Description);
+                    attachmentsPacket.ObjectData[i].NextOwnerMask = (uint)attachment.Permissions.NextOwnerMask;
+                    attachmentsPacket.ObjectData[i].OwnerID = attachment.OwnerID;
+                }
+                else
+                {
+                    Logger.Log("Cannot attach inventory item of type " + attachments[i].GetType().ToString(),
+                        Helpers.LogLevel.Warning, Client);
+                }
+            }
+
+            Client.Network.SendPacket(attachmentsPacket);
+        }
+
 
         /// <summary>
         /// Checks if an inventory item is currently being worn
@@ -1361,7 +1825,7 @@ namespace OpenMetaverse
 
         #region Inventory Helpers
 
-        private bool GetFolderWearables(string[] folderPath, out List<InventoryWearable> wearables, out List<InventoryItem> attachments)
+        private bool GetFolderWearables(string[] folderPath, out List<WearableData> wearables, out List<InventoryItem> attachments)
         {
             UUID folder = Client.Inventory.FindObjectByPath(
                 Client.Inventory.Store.RootFolder.UUID, Client.Self.AgentID, String.Join("/", folderPath), INVENTORY_TIMEOUT);
@@ -1379,9 +1843,9 @@ namespace OpenMetaverse
             }
         }
 
-        private bool GetFolderWearables(UUID folder, out List<InventoryWearable> wearables, out List<InventoryItem> attachments)
+        private bool GetFolderWearables(UUID folder, out List<WearableData> wearables, out List<InventoryItem> attachments)
         {
-            wearables = new List<InventoryWearable>();
+            wearables = new List<WearableData>();
             attachments = new List<InventoryItem>();
             List<InventoryBase> objects = Client.Inventory.FolderContents(folder, Client.Self.AgentID, false, true,
                 InventorySortOrder.ByName, INVENTORY_TIMEOUT);
@@ -1393,7 +1857,7 @@ namespace OpenMetaverse
                     if (ib is InventoryWearable)
                     {
                         Logger.DebugLog("Adding wearable " + ib.Name, Client);
-                        wearables.Add((InventoryWearable)ib);
+                        wearables.Add(WearableToData((InventoryWearable)ib));
                     }
                     else if (ib is InventoryAttachment)
                     {
