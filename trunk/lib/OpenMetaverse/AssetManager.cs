@@ -706,7 +706,7 @@ namespace OpenMetaverse
             // Wait for the previous upload to receive a RequestXferPacket
             lock (PendingUploadLock)
             {
-                const int UPLOAD_CONFIRM_TIMEOUT = 10000;
+                const int UPLOAD_CONFIRM_TIMEOUT = 20 * 1000;
                 const int SLEEP_INTERVAL = 50;
                 int t = 0;
                 while (WaitingForUploadConfirm && t < UPLOAD_CONFIRM_TIMEOUT)
@@ -812,7 +812,7 @@ namespace OpenMetaverse
                         UUID assetID;
                         RequestUpload(out assetID, AssetType.Texture, textureData, true, transactionID);
 
-                        bool success = uploadEvent.WaitOne(Settings.TRANSFER_TIMEOUT, false);
+                        bool success = uploadEvent.WaitOne(Client.Settings.TRANSFER_TIMEOUT, false);
 
                         OnAssetUploaded -= udpCallback;
 
