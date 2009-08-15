@@ -694,7 +694,7 @@ namespace cogbot.Listeners
             client.Assets.OnAssetUploaded += Assets_OnAssetUploaded;
             client.Assets.OnUploadProgress += Assets_OnUploadProgress;
             client.Appearance.OnAgentWearables += Appearance_OnAgentWearables;
-            client.Appearance.OnAppearanceUpdated += Appearance_OnAppearanceUpdated;
+            //client.Appearance.OnAppearanceUpdated += Appearance_OnAppearanceUpdated;
             client.Inventory.OnItemReceived += Inventory_OnItemReceived;
             client.Inventory.OnFolderUpdated += Inventory_OnFolderUpdated;
             client.Inventory.OnObjectOffered += Inventory_OnObjectOffered;
@@ -810,7 +810,7 @@ namespace cogbot.Listeners
             client.Assets.OnAssetUploaded -= Assets_OnAssetUploaded;
             client.Assets.OnUploadProgress -= Assets_OnUploadProgress;
             client.Appearance.OnAgentWearables -= Appearance_OnAgentWearables;
-            client.Appearance.OnAppearanceUpdated -= Appearance_OnAppearanceUpdated;
+            //client.Appearance.OnAppearanceUpdated -= Appearance_OnAppearanceUpdated;
             client.Inventory.OnItemReceived -= Inventory_OnItemReceived;
             client.Inventory.OnFolderUpdated -= Inventory_OnFolderUpdated;
             client.Inventory.OnObjectOffered -= Inventory_OnObjectOffered;

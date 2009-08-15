@@ -17,38 +17,38 @@ namespace cogbot.Actions
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
-            AutoResetEvent are = new AutoResetEvent(false);
-            AppearanceManager.AppearanceUpdatedCallback callback = (Primitive.TextureEntry te) => are.Set();
+            //AutoResetEvent are = new AutoResetEvent(false);
+           // AppearanceManager.AppearanceUpdatedCallback callback = (Primitive.TextureEntry te) => are.Set();
             try
             {
-                Client.Appearance.OnAppearanceUpdated += callback;
+                //Client.Appearance.OnAppearanceUpdated += callback;
                 // base.acceptInput(verb, args);
                 string target = String.Empty;
                 if (args.Length == 0) return usageString;
-                bool bake = false;
+                bool bake = true;
                 string wear = args.str.Trim();
-                if (args[0] == "bake")
+                if (args[0] == "nobake")
                 {
-                    bake = true;
-                    wear = wear.Substring(4).Trim();
+                    bake = false;
+                    wear = wear.Substring(6).Trim();
                 }
                 if (args[0] == "test")
                 {
                     bake = true;
                     wear = wear.Substring(4).Trim();
                     TheBotClient.wearFolder(wear);
-                    if (!are.WaitOne(WEARABLE_TIMEOUT * 2))
-                        return "Timeout wearing " + wear + " " + (bake ? " (baked)" : " (not baked)");
-                    else
+                   // if (!are.WaitOne(WEARABLE_TIMEOUT * 2))
+                     //   return "Timeout wearing " + wear + " " + (bake ? " (baked)" : " (not baked)");
+                   // else
                         return ("wearing folder: " + wear + " " + (bake ? " (baked)" : " (not baked)"));
                 }
                 try
                 {
                     WriteLine("wearing folder: " + wear + " " + (bake ? " (baked)" : " (not baked)"));
                     Client.Appearance.WearOutfit(wear.Split('/'));
-                    if (!are.WaitOne(WEARABLE_TIMEOUT * 2))
-                        return "Timeout wearing " + wear + " " + (bake ? " (baked)" : " (not baked)");
-                    else
+                  //  if (!are.WaitOne(WEARABLE_TIMEOUT * 2))
+                   //     return "Timeout wearing " + wear + " " + (bake ? " (baked)" : " (not baked)");
+                   // else
                         return wear;
                 }
                 catch (Exception ex)
@@ -58,7 +58,7 @@ namespace cogbot.Actions
             }
             finally
             {
-                Client.Appearance.OnAppearanceUpdated -= callback;
+               // Client.Appearance.OnAppearanceUpdated -= callback;
             }
         }
 

@@ -661,7 +661,7 @@ namespace OpenMetaverse
                     if (task.Transfer.Size == 0)
                     {
                         // We haven't received the header yet, block until it's received or times out
-                        task.Transfer.HeaderReceivedEvent.WaitOne(1000 * 5, false);
+                        task.Transfer.HeaderReceivedEvent.WaitOne(1000 * 8, false);
 
                         if (task.Transfer.Size == 0)
                         {
