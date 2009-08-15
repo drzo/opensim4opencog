@@ -91,13 +91,13 @@ namespace OpenMetaverse
         /// <summary>Maximum number of concurrent uploads for baked textures</summary>
         const int MAX_CONCURRENT_UPLOADS = 3;
         /// <summary>Timeout for fetching inventory listings</summary>
-        const int INVENTORY_TIMEOUT = 1000 * 20;
+        const int INVENTORY_TIMEOUT = 1000 * 30;
         /// <summary>Timeout for fetching a single wearable, or receiving a single packet response</summary>
-        const int WEARABLE_TIMEOUT = 1000 * 10;
+        const int WEARABLE_TIMEOUT = 1000 * 30;
         /// <summary>Timeout for fetching a single texture</summary>
-        const int TEXTURE_TIMEOUT = 1000 * 30;
+        const int TEXTURE_TIMEOUT = 1000 * 120;
         /// <summary>Timeout for uploading a single baked texture</summary>
-        const int UPLOAD_TIMEOUT = 1000 * 30;
+        const int UPLOAD_TIMEOUT = 1000 * 180;
 
         /// <summary>Total number of wearables for each avatar</summary>
         public const int WEARABLE_COUNT = 13;
@@ -576,8 +576,19 @@ namespace OpenMetaverse
             }
 
 
-            SendAgentWearablesRequest();
-            DownloadWearables();
+            // Fetch a list of the current agent wearables
+            if (!GetAgentWearables())
+            {
+                Logger.Log("Failed to retrieve a list of current agent wearables, appearance cannot be set",
+                    Helpers.LogLevel.Error, Client);
+                return;
+            }
+            // Download and parse all of the agent wearables
+            if (!DownloadWearables())
+            {
+                Logger.Log("One or more agent wearables failed to download, appearance will be incomplete",
+                    Helpers.LogLevel.Warning, Client);
+            }
             ReplaceOutfitWearables(wearables);
             RequestSetAppearance(wearParams.Bake);
             AddAttachments(attachments, wearParams.RemoveExistingAttachments);
@@ -633,19 +644,6 @@ namespace OpenMetaverse
         }
 
 
-        /// <summary>
-        /// Ask the server what textures our avatar is currently wearing
-        /// </summary>
-        public void SendAgentWearablesRequest()
-        {
-            AgentWearablesRequestPacket request = new AgentWearablesRequestPacket();
-            request.AgentData.AgentID = Client.Self.AgentID;
-            request.AgentData.SessionID = Client.Self.SessionID;
-
-            Client.Network.SendPacket(request);
-        }
-
-
         private void StartWearOutfitFolder(object thread_params)
         {
             WearParams wearOutfitParams = (WearParams)thread_params;
@@ -664,8 +662,9 @@ namespace OpenMetaverse
                 return;
             }
             ReplaceOutfitWearables(wearables); // replace current wearables with outfit folder
+            SendAgentIsNowWearing(Wearables);
             AddAttachments(attachments, wearOutfitParams.RemoveExistingAttachments);
-            RequestSetAppearance(wearOutfitParams.Bake);
+            RequestSetAppearance(true);//wearOutfitParams.Bake);
         }
 
   
@@ -731,6 +730,33 @@ namespace OpenMetaverse
 
             return true;
         }
+
+
+        private void SendAgentIsNowWearing(Dictionary<WearableType, WearableData> Wearables)
+        {
+            DebugLog("SendAgentIsNowWearing()", Client);
+
+            AgentIsNowWearingPacket wearing = new AgentIsNowWearingPacket();
+            wearing.AgentData.AgentID = Client.Self.AgentID;
+            wearing.AgentData.SessionID = Client.Self.SessionID;
+            wearing.WearableData = new AgentIsNowWearingPacket.WearableDataBlock[WEARABLE_COUNT];
+
+            for (int i = 0; i < WEARABLE_COUNT; i++)
+            {
+                WearableType type = (WearableType)i;
+                wearing.WearableData[i] = new AgentIsNowWearingPacket.WearableDataBlock();
+                wearing.WearableData[i].WearableType = (byte)i;
+
+               lock (Wearables)
+                    if (Wearables.ContainsKey(type))
+                        wearing.WearableData[i].ItemID = Wearables[type].Item.UUID;
+                    else
+                        wearing.WearableData[i].ItemID = UUID.Zero;
+            }
+
+            Client.Network.SendPacket(wearing);
+        }
+
 
         static void DebugLog(string s, GridClient args)
         {
@@ -1441,7 +1467,7 @@ namespace OpenMetaverse
             {
                 DownloadTextures(pendingBakes);
 
-                Parallel.ForEach<BakeType>(pendingBakes,
+                Parallel.ForEach<BakeType>(Math.Min(MAX_CONCURRENT_UPLOADS, pendingBakes.Count), pendingBakes,
                     delegate(BakeType bakeType)
                     {
                         if (!CreateBake(bakeType))
@@ -1468,24 +1494,32 @@ namespace OpenMetaverse
             // (it does not bake hair either) it will remain to work
             if (bakeType == BakeType.Hair) return false;
 
-            List<AvatarTextureIndex> textureIndices = BakeTypeToTextures(bakeType);
-            Baker oven = new Baker(bakeType);
-
-            for (int i = 0; i < textureIndices.Count; i++)
+            try
             {
-                AvatarTextureIndex textureIndex = textureIndices[i];
-                TextureData texture = Textures[(int)textureIndex];
+                List<AvatarTextureIndex> textureIndices = BakeTypeToTextures(bakeType);
+                Baker oven = new Baker(bakeType);
 
-                oven.AddTexture(texture);
+                for (int i = 0; i < textureIndices.Count; i++)
+                {
+                    AvatarTextureIndex textureIndex = textureIndices[i];
+                    TextureData texture = Textures[(int)textureIndex];
+
+                    oven.AddTexture(texture);
+                }
+
+                int start = Environment.TickCount;
+                oven.Bake();
+                Logger.DebugLog("Baking " + bakeType + " took " + (Environment.TickCount - start) + "ms");
+
+                UUID newAssetID = UploadBake(oven.BakedTexture.AssetData);
+                Textures[(int)BakeTypeToAgentTextureIndex(bakeType)].TextureID = newAssetID;
+                return newAssetID != UUID.Zero;
             }
-
-            int start = Environment.TickCount;
-            oven.Bake();
-            Logger.DebugLog("Baking " + bakeType + " took " + (Environment.TickCount - start) + "ms");
-
-            UUID newAssetID = UploadBake(oven.BakedTexture.AssetData);
-            Textures[(int)BakeTypeToAgentTextureIndex(bakeType)].TextureID = newAssetID;
-            return newAssetID != UUID.Zero;
+            catch (Exception ex)
+            {
+                Logger.Log("Failed creating bake " + bakeType, Helpers.LogLevel.Warning, ex);
+                return false;
+            }
         }
 
         /// <summary>
