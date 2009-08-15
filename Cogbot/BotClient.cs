@@ -242,6 +242,7 @@ namespace cogbot
             Settings.LOGOUT_TIMEOUT = 16 * 1000;
             Settings.SIMULATOR_TIMEOUT = int.MaxValue;
             Settings.SEND_PINGS = false;
+            Settings.SEND_AGENT_APPEARANCE = true;
             //Settings.USE_LLSD_LOGIN = true;
             ////Settings.MULTIPLE_SIMS = false;
 

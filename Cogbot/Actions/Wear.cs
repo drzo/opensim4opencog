@@ -37,7 +37,7 @@ namespace cogbot.Actions
                     bake = true;
                     wear = wear.Substring(4).Trim();
                     TheBotClient.wearFolder(wear);
-                    if (!are.WaitOne(AppearanceManager.WEARABLE_TIMEOUT * 2))
+                    if (!are.WaitOne(WEARABLE_TIMEOUT * 2))
                         return "Timeout wearing " + wear + " " + (bake ? " (baked)" : " (not baked)");
                     else
                         return ("wearing folder: " + wear + " " + (bake ? " (baked)" : " (not baked)"));
@@ -45,13 +45,13 @@ namespace cogbot.Actions
                 try
                 {
                     WriteLine("wearing folder: " + wear + " " + (bake ? " (baked)" : " (not baked)"));
-                    Client.Appearance.WearOutfit(wear.Split('/'), bake);
-                    if (!are.WaitOne(AppearanceManager.WEARABLE_TIMEOUT * 2))
+                    Client.Appearance.WearOutfit(wear.Split('/'));
+                    if (!are.WaitOne(WEARABLE_TIMEOUT * 2))
                         return "Timeout wearing " + wear + " " + (bake ? " (baked)" : " (not baked)");
                     else
                         return wear;
                 }
-                catch (InvalidOutfitException ex)
+                catch (Exception ex)
                 {
                     return "(Invalid outfit (" + ex.Message + ")" + args.str + ".";
                 }
@@ -60,6 +60,11 @@ namespace cogbot.Actions
             {
                 Client.Appearance.OnAppearanceUpdated -= callback;
             }
+        }
+
+        protected int WEARABLE_TIMEOUT
+        {
+            get { return 20000; }
         }
     }
 }
