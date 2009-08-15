@@ -75,7 +75,7 @@ namespace OpenMetaverse
 
         /// <summary>Number of milliseconds before an asset transfer will time
         /// out</summary>
-        public int TRANSFER_TIMEOUT = 90 * 1000;
+        public static int TRANSFER_TIMEOUT = 90 * 1000;
 
         /// <summary>Number of milliseconds before a teleport attempt will time
         /// out</summary>
