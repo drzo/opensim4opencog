@@ -276,10 +276,10 @@ namespace cogbot.TheOpenSims
         public virtual bool KilledPrim(Primitive primitive, Simulator simulator)
         {
 
-            lock (primRefs)
+            lock (_primRefs)
             {
-                primRefs.Remove(primitive);
-                IsKilled = primRefs.Count == 0;
+                _primRefs.Remove(primitive);
+                IsKilled = _primRefs.Count == 0;
                 if (ReferenceEquals(_Prim0, primitive))
                 {
                     _Prim0 = null;
@@ -290,20 +290,21 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        readonly List<NamedParam> infoMap = new List<NamedParam>();
+        readonly List<NamedParam> _infoMap = new List<NamedParam>();
         public List<NamedParam> GetInfoMap()
         {
-            return infoMap;
+            return _infoMap;
         }
 
         public void SetInfoMap(string key, Type type, object value)
         {
+            if (!WorldObjects.MaintainSimObjectInfoMap) return;
             if (value == null) value = new NullType(type);
-            lock (infoMap)
-                infoMap.Add(new NamedParam(key, type, value));
+            lock (_infoMap)
+                _infoMap.Add(new NamedParam(key, type, value));
         }
 
-        readonly private List<Primitive> primRefs = new List<Primitive>();
+        readonly private List<Primitive> _primRefs = new List<Primitive>();
         public virtual void ResetPrim(Primitive prim, BotClient bc, Simulator sim)
         {
             if (_Prim0==null)
@@ -314,10 +315,10 @@ namespace cogbot.TheOpenSims
             if (prim.Properties != null) Properties = prim.Properties;
             if (prim.RegionHandle != _Prim0.RegionHandle || !Object.ReferenceEquals(prim, _Prim0))
             {
-                lock (primRefs)
+                lock (_primRefs)
                 {
                     bool found = false;
-                    foreach (Primitive av in primRefs)
+                    foreach (Primitive av in _primRefs)
                     {
                         if (Object.ReferenceEquals(av, prim))
                         {
@@ -330,7 +331,7 @@ namespace cogbot.TheOpenSims
                         {
                             Console.WriteLine("\n Different UUID! {0}", prim);                            
                         }
-                        primRefs.Add(prim);
+                        _primRefs.Add(prim);
                         //Console.WriteLine("\n Different prims {0}", prim);
                     }
                 }
@@ -349,9 +350,9 @@ namespace cogbot.TheOpenSims
             RegionHandle = regionHandle;
             if (ReferenceEquals(_Prim0,null) || _Prim0.RegionHandle != regionHandle)
             {
-                lock (primRefs)
+                lock (_primRefs)
                 {
-                    foreach (Primitive av in primRefs)
+                    foreach (Primitive av in _primRefs)
                     {
                         if (av.RegionHandle == regionHandle) _Prim0 = av;
                     }
@@ -643,11 +644,11 @@ namespace cogbot.TheOpenSims
                 {
                     RegionHandle = prim.RegionHandle;
                 }
-                lock (primRefs)
+                lock (_primRefs)
                 {
-                   if (!primRefs.Contains(prim))
+                   if (!_primRefs.Contains(prim))
                    {
-                       primRefs.Add(prim);
+                       _primRefs.Add(prim);
                    }
                 }
 

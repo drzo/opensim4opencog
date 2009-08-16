@@ -82,12 +82,12 @@ namespace cogbot.Listeners
                         }
                     }
                     occUpdate++;
-                    if (RealMeshes > MaxMeshes) break;
                     if (occUpdate % 100 == 0)
                     {
-                        Console.Write("." + occUpdate);                             
+                        Console.Write("." + occUpdate);
                         Console.Out.Flush();
                     }
+                    if (RealMeshes >= MaxMeshes || !WorldObjects.MaintainCollisions) break;
                 }
 
                 Debug("\nTrackPaths Completed: " + thisCount + " realUpdates=" + realUpdates);
