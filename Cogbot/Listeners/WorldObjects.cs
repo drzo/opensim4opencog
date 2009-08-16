@@ -31,6 +31,7 @@ namespace cogbot.Listeners
         public static bool MaintainSounds = false;
         static public bool MaintainAvatarMetaData = true;
         static public bool MaintainGroupMetaData = true;
+        public static bool MaintainSimObjectInfoMap = false;
         public static bool UseNewEventSystem = true;
         public static bool SimplifyBoxes = true; // true takes longer startup but speeds up runtime path finding
         public static bool SendAllEvents = MaintainObjectUpdates;
@@ -1240,6 +1241,7 @@ namespace cogbot.Listeners
         //    return prim;
         //}
         readonly static Dictionary<ulong, List<uint>> RequestedObjects = new Dictionary<ulong, List<uint>>();
+
         internal static void RequestObject(Simulator simulator, uint id)
         {
             //if (IsOpenSim) return;

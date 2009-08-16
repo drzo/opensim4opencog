@@ -78,7 +78,7 @@
       </Project>
       -->
 
-      <Project name="OpenMetaverseTypes" path="lib/OpenMetaverseTypes" type="Library" rootNamespace="OpenMetaverse">
+      <Project name="OpenMetaverseTypes" path="lib/OpenMetaverseTypes" type="Library" rootNamespace="OpenMetaverse" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
             <OutputPath>../../bin/</OutputPath>
@@ -101,7 +101,7 @@
         </Files>
       </Project>
 
-      <Project name="OpenMetaverse.StructuredData" path="lib/OpenMetaverse.StructuredData" type="Library" rootNamespace="OpenMetaverse.StructuredData">
+      <Project name="OpenMetaverse.StructuredData" path="lib/OpenMetaverse.StructuredData" type="Library" rootNamespace="OpenMetaverse.StructuredData" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
             <OutputPath>../../bin/</OutputPath>
@@ -123,7 +123,7 @@
         </Files>
       </Project>
 
-      <Project name="OpenMetaverseCore" path="lib/OpenMetaverseCore" type="Library" rootNamespace="OpenMetaverseCore">
+      <Project name="OpenMetaverseCore" path="lib/OpenMetaverseCore" type="Library" rootNamespace="OpenMetaverseCore" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
             <OutputPath>../../bin/</OutputPath>
@@ -148,7 +148,7 @@
         </Files>
       </Project>
 
-      <Project name="OpenMetaverse.Http" path="lib/OpenMetaverse.Http" type="Library" rootNamespace="OpenMetaverse.Http">
+      <Project name="OpenMetaverse.Http" path="lib/OpenMetaverse.Http" type="Library" rootNamespace="OpenMetaverse.Http" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
             <OutputPath>../../bin/</OutputPath>
@@ -174,7 +174,7 @@
         </Files>
       </Project>
 
-      <Project name="OpenMetaverse" path="lib/OpenMetaverse" type="Library" rootNamespace="OpenMetaverse">
+      <Project name="OpenMetaverse" path="lib/OpenMetaverse" type="Library" rootNamespace="OpenMetaverse" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
             <OutputPath>../../bin/</OutputPath>
@@ -204,7 +204,7 @@
         </Files>
       </Project>
 
-      <Project name="OpenMetaverse.Utilities" path="lib/OpenMetaverse.Utilities" type="Library">
+      <Project name="OpenMetaverse.Utilities" path="lib/OpenMetaverse.Utilities" type="Library" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
             <OutputPath>../bin/</OutputPath>
@@ -231,7 +231,7 @@
         </Files>
       </Project>
 
-      <Project name="OpenMetaverse.Rendering.Meshmerizer" path="lib/OpenMetaverse.Rendering.Meshmerizer" type="Library">
+      <Project name="OpenMetaverse.Rendering.Meshmerizer" path="lib/OpenMetaverse.Rendering.Meshmerizer" type="Library" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
             <OutputPath>../../bin/</OutputPath>
@@ -299,7 +299,7 @@
       </Project>
       -->
 
-    <Project name="DotLisp" path="dotlisp" type="Library">
+    <Project name="DotLisp" path="dotlisp" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../bin/</OutputPath>
@@ -320,7 +320,7 @@
       </Files>
     </Project>
 
-    <Project name="RTParser" path="RTParser" type="Library">
+    <Project name="RTParser" path="RTParser" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../bin/</OutputPath>
@@ -346,7 +346,7 @@
       </Files>
   </Project>
 
-    <Project name="PathSystem3D" path="PathSystem3D" type="Library">
+    <Project name="PathSystem3D" path="PathSystem3D" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../bin/</OutputPath>
@@ -412,7 +412,7 @@
       </Files>
     </Project>
   -->
-    <Project name="Radegast" path="lib/Radegast" type="exe">
+    <Project name="Radegast" path="lib/Radegast" type="exe" frameworkVersion="v3_5">
        <Configuration name="Debug">
          <Options>
            <OutputPath>../../bin/</OutputPath>
@@ -455,7 +455,7 @@
 
 
 
- <Project name="Cogbot" path="Cogbot" type="exe">
+ <Project name="Cogbot" path="Cogbot" type="exe" frameworkVersion="v3_5">
        <Configuration name="Debug">
          <Options>
            <OutputPath>../bin/</OutputPath>
@@ -517,7 +517,7 @@
  </Project>
 
 
- <Project name="AIMLBotModule" path="contrib/AIMLBotModule" type="Library">
+ <Project name="AIMLBotModule" path="contrib/AIMLBotModule" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
             <OutputPath>../../bin/</OutputPath>
@@ -549,7 +549,7 @@
 </Project>
 
 
-  <Project name="TheSimiansModule" path="contrib/TheSimiansModule" type="Library">
+  <Project name="TheSimiansModule" path="contrib/TheSimiansModule" type="Library" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
            <OutputPath>../../bin/</OutputPath>
@@ -582,41 +582,7 @@
 </Project>
 
 
-  <Project name="CycWorldModule" path="contrib/CycWorldModule" type="Library">
-     <Configuration name="Debug">
-       <Options>
-           <OutputPath>../../bin/</OutputPath>
-       </Options>
-     </Configuration>
-     <Configuration name="Release">
-       <Options>
-           <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
-           <OutputPath>../../bin/</OutputPath>
-       </Options>
-     </Configuration>
-
-     <ReferencePath>../../bin/</ReferencePath>
-     <Reference name="Cogbot.exe" localCopy="false"/>
-     <Reference name="PathSystem3D" localCopy="false"/>
-     <Reference name="System.Drawing" localCopy="false"/>
-     <Reference name="System.Windows.Forms" localCopy="false"/>
-     <Reference name="System.Data" localCopy="false"/>
-     <Reference name="OpenMetaverse" localCopy="false"/>
-     <Reference name="OpenMetaverseTypes" localCopy="false"/>
-     <Reference name="OpenMetaverseCore" localCopy="false"/>
-     <Reference name="System" localCopy="false"/>
-     <Reference name="DotLisp" localCopy="false"/>
-     <Reference name="OpenCyc.dll" localCopy="false"/>
-      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-     <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
-     <Files>
-         <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
-         <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
-     </Files>
-</Project>
-
-
-  <Project name="FashionBotModule" path="contrib/FashionBotModule" type="Library">
+  <Project name="CycWorldModule" path="contrib/CycWorldModule" type="Library" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
            <OutputPath>../../bin/</OutputPath>
@@ -649,7 +615,41 @@
      </Files>
 </Project>
 
-    <Project name="IrcRegionModule" path="contrib/IrcRegionModule" type="Library">
+
+  <Project name="FashionBotModule" path="contrib/FashionBotModule" type="Library" frameworkVersion="v3_5">
+     <Configuration name="Debug">
+       <Options>
+           <OutputPath>../../bin/</OutputPath>
+       </Options>
+     </Configuration>
+     <Configuration name="Release">
+       <Options>
+           <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
+           <OutputPath>../../bin/</OutputPath>
+       </Options>
+     </Configuration>
+
+     <ReferencePath>../../bin/</ReferencePath>
+     <Reference name="Cogbot.exe" localCopy="false"/>
+     <Reference name="PathSystem3D" localCopy="false"/>
+     <Reference name="System.Drawing" localCopy="false"/>
+     <Reference name="System.Windows.Forms" localCopy="false"/>
+     <Reference name="System.Data" localCopy="false"/>
+     <Reference name="OpenMetaverse" localCopy="false"/>
+     <Reference name="OpenMetaverseTypes" localCopy="false"/>
+     <Reference name="OpenMetaverseCore" localCopy="false"/>
+     <Reference name="System" localCopy="false"/>
+     <Reference name="DotLisp" localCopy="false"/>
+     <Reference name="OpenCyc.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+     <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+     <Files>
+         <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
+         <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+     </Files>
+</Project>
+
+    <Project name="IrcRegionModule" path="contrib/IrcRegionModule" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../bin/</OutputPath>
@@ -675,7 +675,7 @@
       </Files>
     </Project>
 
-  <Project name="CogbotRadegastPluginModule" path="contrib/CogbotRadegastPluginModule" type="Library">
+  <Project name="CogbotRadegastPluginModule" path="contrib/CogbotRadegastPluginModule" type="Library" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
          <OutputPath>../../bin/</OutputPath>

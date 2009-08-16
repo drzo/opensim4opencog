@@ -221,7 +221,7 @@ namespace PathSystem3D.Mesher
 
         public string ToString(Vector3 offset)
         {
-            string s = "(" + (Vector3)(MinEdge + offset) + " - " + (Vector3)(MaxEdge + offset) + " mass= " + Mass() + ")";
+            string s = "(" + (Vector3)(MinEdge + offset) + " - " + (Vector3)(MaxEdge + offset) + " mass= " + Mass + ")";
             return s;
         }
 
@@ -418,8 +418,8 @@ namespace PathSystem3D.Mesher
 
         static int Bigger1(Box3Fill b1, Box3Fill b2)
         {
-            float f1 = b1.Mass();
-            float f2 = b2.Mass();
+            float f1 = b1.Mass;
+            float f2 = b2.Mass;
             if (f1 == f2)
                 return 0;
             return f1 < f2 ? -1 : 1;
@@ -484,8 +484,8 @@ namespace PathSystem3D.Mesher
             {
                 return -1;
             }
-            float f1 = b1.Mass();
-            float f2 = b2.Mass();
+            float f1 = b1.Mass;
+            float f2 = b2.Mass;
             if (f1 == f2)
                 return 1;
             return f1 < f2 ? -1 : 1;
