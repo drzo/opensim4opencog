@@ -17,8 +17,10 @@ namespace cogbot.Listeners
         static Thread TrackPathsThread;
 
 
-        static public int MaxMeshes = 18000;
+        public static int MaxMeshes = 18000;
         static public int RealMeshes = 0;
+        public static float MinEdgeSizeOfSimplify = 0.5f;
+        public static float MinMassOfSimplify = 0.5f;
 
         public WorldPathSystem(GridClient gc)
         {

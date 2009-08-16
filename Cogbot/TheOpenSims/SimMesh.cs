@@ -173,14 +173,23 @@ namespace cogbot.TheOpenSims
             InnerBoxes.Clear();
             OuterBox.Reset();
             CalcBoxesFromMeshes(mesh, InnerBoxes);
-            if (WorldObjects.SimplifyBoxes)
+            bool verySmall = OuterBox.EdgeSize < WorldPathSystem.MinEdgeSizeOfSimplify;
+            if (verySmall)
             {
-                //int b = InnerBoxes.Count;
-                InnerBoxes = Box3Fill.Simplify((List<Box3Fill>) InnerBoxes);
-               // Console.Write("Simplfy mesh {0} -> {1} ", b, InnerBoxes.Count);
+                InnerBoxes.Clear();
+                AddPos(Position);
+                InnerBoxes.Add(OuterBox);
             }
-
-            AddPos(Position);
+            else
+            {
+                if (WorldObjects.SimplifyBoxes)
+                {
+                    //int b = InnerBoxes.Count;
+                    InnerBoxes = Box3Fill.Simplify((List<Box3Fill>)InnerBoxes);
+                    // Console.Write("Simplfy mesh {0} -> {1} ", b, InnerBoxes.Count);
+                }
+                AddPos(Position);
+            }
 #if COLLIDER_TRIANGLE
             triangles = mesh.triangles;
 #endif
