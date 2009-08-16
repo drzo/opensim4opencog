@@ -97,7 +97,9 @@ namespace OpenMetaverse
         /// <summary>Timeout for fetching a single texture</summary>
         const int TEXTURE_TIMEOUT = 1000 * 120;
         /// <summary>Timeout for uploading a single baked texture</summary>
-        const int UPLOAD_TIMEOUT = 1000 * 180;
+        const int UPLOAD_TIMEOUT = 1000 * 90;
+        /// <summary>Number of times to retry bake upload</summary>
+        const int UPLOAD_RETRIES = 2;
 
         /// <summary>Total number of wearables for each avatar</summary>
         public const int WEARABLE_COUNT = 13;
@@ -313,7 +315,7 @@ namespace OpenMetaverse
         /// <summary>
         /// Starts the appearance setting thread
         /// </summary>
-        /// <param name="forceRebake">True to force rebaking, otherwise false</param>        
+        /// <param name="forceRebake">True to force rebaking, otherwise false</param>
         public void RequestSetAppearance(bool forceRebake)
         {
             if (Interlocked.CompareExchange(ref AppearanceThreadRunning, 1, 0) != 0)
@@ -326,6 +328,7 @@ namespace OpenMetaverse
             appearanceThread = new Thread(
                 delegate()
                 {
+                    int startTime = Environment.TickCount;
                     try
                     {
                         if (forceRebake)
@@ -337,6 +340,7 @@ namespace OpenMetaverse
 
                         if (SetAppearanceSerialNum == 0)
                         {
+                            startTime = Environment.TickCount;
                             // Fetch a list of the current agent wearables
                             if (!GetAgentWearables())
                             {
@@ -344,36 +348,46 @@ namespace OpenMetaverse
                                     Helpers.LogLevel.Error, Client);
                                 return;
                             }
+                            LoggerLog("GetAgentWearables took "+(Environment.TickCount-startTime)+"ms",Helpers.LogLevel.Debug, Client);
                         }
 
+                        startTime = Environment.TickCount;
                         // Download and parse all of the agent wearables
                         if (!DownloadWearables())
                         {
                             Logger.Log("One or more agent wearables failed to download, appearance will be incomplete",
                                 Helpers.LogLevel.Warning, Client);
                         }
+                        LoggerLog("DownloadWearables took " + (Environment.TickCount - startTime) + "ms", Helpers.LogLevel.Debug, Client);
 
                         // If this is the first time setting appearance and we're not forcing rebakes, check the server
                         // for cached bakes
                         if (SetAppearanceSerialNum == 0 && !forceRebake)
                         {
+                            startTime = Environment.TickCount;
                             // Compute hashes for each bake layer and compare against what the simulator currently has
                             if (!GetCachedBakes())
                             {
                                 Logger.Log("Failed to get a list of cached bakes from the simulator, appearance will be rebaked",
                                     Helpers.LogLevel.Warning, Client);
                             }
+                            LoggerLog("GetCachedBakes took " + (Environment.TickCount - startTime) + "ms", Helpers.LogLevel.Debug, Client);
+
                         }
 
+                        startTime = Environment.TickCount;
                         // Download textures, compute bakes, and upload for any cache misses
                         if (!CreateBakes())
                         {
                             Logger.Log("Failed to create or upload one or more bakes, appearance will be incomplete",
                                 Helpers.LogLevel.Warning, Client);
                         }
+                        LoggerLog("CreateBakes took " + (Environment.TickCount - startTime) + "ms", Helpers.LogLevel.Debug, Client);
 
+                        startTime = Environment.TickCount;
                         // Send the appearance packet
                         SendAgentSetAppearance();
+                        LoggerLog("SendAgentSetAppearance took " + (Environment.TickCount - startTime) + "ms", Helpers.LogLevel.Debug, Client);
                     }
                     catch(ThreadAbortException)
                     {
@@ -389,6 +403,11 @@ namespace OpenMetaverse
             appearanceThread.Name = "Appearance";
             appearanceThread.IsBackground = true;
             appearanceThread.Start();
+        }
+
+        private void LoggerLog(string s, Helpers.LogLevel level, GridClient client)
+        {
+           Logger.Log(s,level,client);
         }
 
         /// <summary>
@@ -683,15 +702,9 @@ namespace OpenMetaverse
 
                 if (SetAppearanceSerialNum == 0 && !GetAgentWearables())
                 {
-                    Logger.Log("Failed to retrieve a list of current agent wearables, appearance cannot be set",
+                    Logger.Log("WearOutfit - Failed to retrieve a list of current agent wearables, appearance cannot be set",
                                Helpers.LogLevel.Error, Client);
                     // return;
-                }
-                // Download and parse all of the agent wearables
-                if (SetAppearanceSerialNum == 0 && !DownloadWearables())
-                {
-                    Logger.Log("One or more agent wearables failed to download, appearance will be incomplete",
-                               Helpers.LogLevel.Warning, Client);
                 }
 
                 List<WearableData> wearables;
@@ -702,7 +715,7 @@ namespace OpenMetaverse
                     // TODO: this error condition should be passed back to the client somehow}
                 {
                     Logger.Log(
-                        "GetFolderWearables did not find wearables " +
+                        "WearOutfit - GetFolderWearables did not find wearables " +
                         wearOutfitParams.Param + " " + wearables + " " +
                         attachments, Helpers.LogLevel.Error, Client);
                     return;
@@ -715,22 +728,38 @@ namespace OpenMetaverse
                     // Compute hashes for each bake layer and compare against what the simulator currently has
                     if (!GetCachedBakes())
                     {
-                        Logger.Log("Failed to get a list of cached bakes from the simulator, appearance will be rebaked",
+                        Logger.Log("WearOutfit - Failed to get a list of cached bakes from the simulator, appearance will be rebaked",
                             Helpers.LogLevel.Warning, Client);
                     }
-                } 
+                }
+
+                // Clear bake layer in the Textures array for missing bakes
+                for (int bakedIndex = 0; bakedIndex < BAKED_TEXTURE_COUNT; bakedIndex++)
+                {
+                    AvatarTextureIndex textureIndex = BakeTypeToAgentTextureIndex((BakeType)bakedIndex);
+                    Textures[(int) textureIndex].TextureID = UUID.Zero;
+                }
                 
                 ReplaceOutfitWearables(wearables); // replace current wearables with outfit folder
                 AddAttachments(attachments, wearOutfitParams.RemoveExistingAttachments);
-                SendAgentIsNowWearing(Wearables);
-                Textures = new TextureData[AVATAR_TEXTURE_COUNT];
+                //SendAgentIsNowWearing(Wearables);
+                // Download and parse all of the agent wearables
+                if (!DownloadWearables())
+                {
+                    Logger.Log("One or more agent wearables failed to download, appearance will be incomplete",
+                               Helpers.LogLevel.Warning, Client);
+                    return;
+                }
                 // Download textures, compute bakes, and upload for any cache misses
                 if (!CreateBakes())
                 {
                     Logger.Log("Failed to create or upload one or more bakes, appearance will be incomplete",
                                Helpers.LogLevel.Warning, Client);
+                    return;
                 }
-
+                
+                SendAgentIsNowWearing(Wearables);
+                AddAttachments(attachments, wearOutfitParams.RemoveExistingAttachments);
                 // Send the appearance packet
                 SendAgentSetAppearance();
             } catch (ThreadAbortException )
@@ -1328,7 +1357,7 @@ namespace OpenMetaverse
 
                                             // TODO pull bump data too to implement things like
                                             // clothes "bagginess"
-                                            
+
                                             // Add alpha mask
                                             if (p.AlphaParams.HasValue && p.AlphaParams.Value.TGAFile != string.Empty && !p.IsBumpAttribute)
                                             {
@@ -1564,41 +1593,41 @@ namespace OpenMetaverse
             // bump layer, viewer still displays the avatar even if its missing 
             // hair bake, and as long as viewer 1.22 is officially supported
             // (it does not bake hair either) it will remain to work
-            if (bakeType == BakeType.Hair) return false;
+            //if (bakeType == BakeType.Hair) return false;
 
-            try
+            List<AvatarTextureIndex> textureIndices = BakeTypeToTextures(bakeType);
+            Baker oven = new Baker(bakeType);
+
+            for (int i = 0; i < textureIndices.Count; i++)
             {
-                List<AvatarTextureIndex> textureIndices = BakeTypeToTextures(bakeType);
-                Baker oven = new Baker(bakeType);
+                AvatarTextureIndex textureIndex = textureIndices[i];
+                TextureData texture = Textures[(int)textureIndex];
 
-                for (int i = 0; i < textureIndices.Count; i++)
-                {
-                    AvatarTextureIndex textureIndex = textureIndices[i];
-                    TextureData texture = Textures[(int)textureIndex];
-
-                    oven.AddTexture(texture);
-                }
-
-                int start = Environment.TickCount;
-                oven.Bake();
-                Logger.DebugLog("Baking " + bakeType + " took " + (Environment.TickCount - start) + "ms");
-
-                UUID newAssetID = UploadBake(oven.BakedTexture.AssetData);
-                Textures[(int)BakeTypeToAgentTextureIndex(bakeType)].TextureID = newAssetID;
-
-                if (newAssetID == UUID.Zero)
-                {
-                    Logger.Log("Failed uploading bake " + bakeType, Helpers.LogLevel.Warning);
-                    return false;
-                }
-
-                return true;
+                oven.AddTexture(texture);
             }
-            catch (Exception ex)
+
+            int start = Environment.TickCount;
+            oven.Bake();
+            Logger.DebugLog("Baking " + bakeType + " took " + (Environment.TickCount - start) + "ms");
+
+            UUID newAssetID = UUID.Zero;
+            int retries = UPLOAD_RETRIES;
+            
+            while (newAssetID == UUID.Zero && retries > 0)
             {
-                Logger.Log("Failed creating bake " + bakeType, Helpers.LogLevel.Warning, ex);
+                newAssetID = UploadBake(oven.BakedTexture.AssetData);
+                --retries;
+            }
+
+            Textures[(int)BakeTypeToAgentTextureIndex(bakeType)].TextureID = newAssetID;
+
+            if (newAssetID == UUID.Zero)
+            {
+                Logger.Log("Failed uploading bake " + bakeType, Helpers.LogLevel.Warning);
                 return false;
             }
+
+            return true;
         }
 
         /// <summary>
