@@ -321,9 +321,32 @@ namespace PathSystem3D.Mesher
             return true;
         }
 
-        public float Mass()
+        public float Mass
         {
-            return (MaxX - MinX) * (MaxY - MinY) * (MaxZ - MinZ);
+            get { return Math.Abs(MaxX - MinX) * Math.Abs(MaxY - MinY) * Math.Abs(MaxZ - MinZ); }
+        }
+
+        public float EdgeSize
+        {
+            get
+            {
+                return Math.Abs(MaxX - MinX) + Math.Abs(MaxY - MinY) + Math.Abs(MaxZ - MinZ);
+            }
+        }
+        public float MaxEdgeSize                
+        {
+            get
+            {
+                return Math.Max(Math.Max(Math.Abs(MaxX - MinX) , Math.Abs(MaxY - MinY)),Math.Abs(MaxZ - MinZ));
+            }
+        }
+
+        public float MinEdgeSize
+        {
+            get
+            {
+                return Math.Min(Math.Min(Math.Abs(MaxX - MinX), Math.Abs(MaxY - MinY)), Math.Abs(MaxZ - MinZ));
+            }
         }
 
         public bool IsCompletelyInside(Box3Fill inner)

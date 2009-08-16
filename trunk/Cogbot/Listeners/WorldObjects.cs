@@ -32,7 +32,7 @@ namespace cogbot.Listeners
         static public bool MaintainAvatarMetaData = true;
         static public bool MaintainGroupMetaData = true;
         public static bool UseNewEventSystem = true;
-        public static bool SimplifyBoxes = false; // true takes longer startup but speeds up runtime path finding
+        public static bool SimplifyBoxes = true; // true takes longer startup but speeds up runtime path finding
         public static bool SendAllEvents = MaintainObjectUpdates;
 
 
@@ -589,6 +589,7 @@ namespace cogbot.Listeners
         {
             SimObject O = GetSimObject(prim, simulator);
             O.ResetPrim(prim, client, simulator);
+            DeclareRequested(simulator, prim.LocalID);
             if (MaintainObjectUpdates)
                 LastObjectUpdate[O] = updatFromPrim0(prim);
         }
@@ -1241,6 +1242,13 @@ namespace cogbot.Listeners
         readonly static Dictionary<ulong, List<uint>> RequestedObjects = new Dictionary<ulong, List<uint>>();
         internal static void RequestObject(Simulator simulator, uint id)
         {
+            //if (IsOpenSim) return;
+            if (DeclareRequested(simulator, id))
+                simulator.Client.Objects.RequestObject(simulator, id);
+        }
+
+        private static bool DeclareRequested(Simulator simulator, uint id)
+        {
             List<uint> uints;
             lock (RequestedObjects)
             {
@@ -1251,10 +1259,10 @@ namespace cogbot.Listeners
             }
             lock (uints)
             {
-                if (uints.Contains(id)) return;
+                if (uints.Contains(id)) return false;
                 uints.Add(id);
+                return true;
             }
-            simulator.Client.Objects.RequestObject(simulator, id);
         }
 
         public static void EnsureSelected(uint LocalID, Simulator simulator)

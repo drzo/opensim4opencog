@@ -347,7 +347,7 @@ namespace cogbot.TheOpenSims
         public virtual void ResetRegion(ulong regionHandle)
         {
             RegionHandle = regionHandle;
-            if (_Prim0.RegionHandle != regionHandle)
+            if (ReferenceEquals(_Prim0,null) || _Prim0.RegionHandle != regionHandle)
             {
                 lock (primRefs)
                 {
@@ -937,6 +937,7 @@ namespace cogbot.TheOpenSims
 
         public override string ToString()
         {
+            String _TOSRTING = null;
             if (_TOSRTING == null)
             {
                 if (Object.ReferenceEquals(_Prim0,null)) return "UNATTACHED_PRIM "+ID.ToString();
