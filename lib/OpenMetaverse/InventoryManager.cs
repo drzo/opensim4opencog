@@ -3436,7 +3436,7 @@ namespace OpenMetaverse
 
             if (reply.AgentData.Version < parentFolder.Version)
             {
-                Logger.Log("Got an outdated InventoryDescendents packet for folder " + parentFolder.Name +
+               if(false) Logger.Log("Got an outdated InventoryDescendents packet for folder " + parentFolder.Name +
                     ", this version = " + reply.AgentData.Version + ", latest version = " + parentFolder.Version,
                     Helpers.LogLevel.Warning, _Client);
                 return;
