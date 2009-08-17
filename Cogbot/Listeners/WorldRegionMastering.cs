@@ -85,7 +85,9 @@ namespace cogbot.Listeners
             base.Network_OnConnected(sender);
             if (sender != client.gridClient)
             {
-                throw new ArgumentException("wrong client " + sender);
+                Logger.DebugLog("wrong client " + sender);
+               // client =(BotClient)(GridClient)sender;
+              // throw new ArgumentException("wrong client " + sender);
             }
             //            RequestGridInfos();
         }
@@ -286,7 +288,7 @@ namespace cogbot.Listeners
                 PropertyQueue.AddFirst(() =>
                                            {
                                                Debug("CLOSE for region " + simulator);
-                                               client.Login();
+                                               //client.Login();
                                            }
                     );
         }

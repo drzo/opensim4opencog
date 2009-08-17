@@ -289,6 +289,7 @@ namespace OpenMetaverse
 
         /// <summary>All of the simulators we are currently connected to</summary>
         public List<Simulator> Simulators = new List<Simulator>();
+        public List<Simulator> SimulatorsAttepting = new List<Simulator>();
 
         /// <summary>Handlers for incoming capability events</summary>
         internal CapsEventDictionary CapsEvents;
@@ -448,6 +449,11 @@ namespace OpenMetaverse
                 lock (Simulators) Simulators.Add(simulator);
             }
 
+            lock (SimulatorsAttepting) if (!SimulatorsAttepting.Contains(simulator))
+            {
+               SimulatorsAttepting.Add(simulator);   
+            }
+
             if (!simulator.Connected)
             {
                 if (!connected)
@@ -560,7 +566,7 @@ namespace OpenMetaverse
             // will be fired in the callback. Otherwise we fire it manually with
             // a NetworkTimeout type
             if (!logoutEvent.WaitOne(Client.Settings.LOGOUT_TIMEOUT, false))
-                Shutdown(DisconnectType.NetworkTimeout);
+                Shutdown(DisconnectType.ClientInitiated);
 
             OnLogoutReply -= callback;
         }
@@ -631,7 +637,7 @@ namespace OpenMetaverse
         /// </summary>
         public void Shutdown(DisconnectType type)
         {
-            Logger.Log("NetworkManager shutdown initiated", Helpers.LogLevel.Info, Client);
+            Logger.Log("NetworkManager shutdown initiated: " + type, Helpers.LogLevel.Info, Client);
 
             // Send a CloseCircuit packet to simulators if we are initiating the disconnect
             bool sendCloseCircuit = (type == DisconnectType.ClientInitiated || type == DisconnectType.NetworkTimeout);

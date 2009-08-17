@@ -586,7 +586,7 @@ namespace OpenMetaverse
                     return false;
                 }
 
-                return true;
+                return connected;
             }
             catch (Exception e)
             {
@@ -629,7 +629,10 @@ namespace OpenMetaverse
         {
             //lets wait until the server makes a desision
             if (disconnectType == NetworkManager.DisconnectType.TeleportInitiated
-                || disconnectType == NetworkManager.DisconnectType.NetworkTimeout) return;
+                //|| disconnectType == NetworkManager.DisconnectType.NetworkTimeout
+                ) return;
+
+
             if (connected)
             {
                 connected = false;
@@ -653,7 +656,7 @@ namespace OpenMetaverse
                     Caps = null;
                 }
                 }
-
+                if (connected)
                 if (sendCloseCircuit)
                 {
                     // Try to send the CloseCircuit notice
@@ -669,6 +672,7 @@ namespace OpenMetaverse
                 // Shut the socket communication down
                 Stop();
             }
+            ConnectedEvent.Set();
         }
 
         /// <summary>

@@ -67,7 +67,7 @@ namespace cogbot
         /// for specific data stream types</summary>
         public AgentThrottle Throttle { get { return gridClient.Throttle; } }
 
-        readonly public GridClient gridClient;
+        public GridClient gridClient;
         // TODO's
         // Play Animations
         // private static UUID type_anim_uuid = new UUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
@@ -83,6 +83,7 @@ namespace cogbot
         // Reflect events into lisp
         //        
         int LoginRetries = 2; // for the times we are "already logged in"
+        public bool ExpectConnected;
         public void Login()
         {
             //if (ClientManager.simulator.periscopeClient == null)
@@ -100,6 +101,7 @@ namespace cogbot
             {
 
             }
+
         }
 
         readonly int thisTcpPort;
@@ -239,7 +241,7 @@ namespace cogbot
             Settings.RESEND_TIMEOUT = 40 * 1000;
             Settings.MAX_RESEND_COUNT = 10;
             Settings.LOGIN_TIMEOUT = 120 * 1000;
-            Settings.LOGOUT_TIMEOUT = 16 * 1000;
+            //Settings.LOGOUT_TIMEOUT = 120 * 1000;
             Settings.SIMULATOR_TIMEOUT = int.MaxValue;
             Settings.SEND_PINGS = false;
             Settings.SEND_AGENT_APPEARANCE = true;
@@ -618,6 +620,23 @@ namespace cogbot
             catch (Exception e)
             {
             }
+            //Network.CurrentSim = null;
+            if (ExpectConnected && reason != NetworkManager.DisconnectType.ClientInitiated)
+            {
+                ExpectConnected = false;
+                foreach (var s in Network.Simulators)
+                {
+                    s.Disconnect(true);
+                }
+                //gridClient = new GridClient();
+                Settings.USE_LLSD_LOGIN = true;
+                new Thread(()=>
+                               {
+                                   Thread.Sleep(10000);
+                                   Login();
+                               }).Start();
+            }
+
         }
 
         void Network_OnConnected(object sender)
@@ -630,7 +649,7 @@ namespace cogbot
                 //  describeAll();
                 //  describeSituation();
                 SendNetworkEvent("On-Network-Connected");
-
+                ExpectConnected = true;
             }
             catch (Exception e)
             {
@@ -657,6 +676,7 @@ namespace cogbot
 
         void Network_OnSimConnected(Simulator simulator)
         {
+            ExpectConnected = true;
             SendNetworkEvent("On-Simulator-Connected", simulator);
             //            SendNewEvent("on-simulator-connected",simulator);
         }
@@ -778,6 +798,7 @@ namespace cogbot
 
         public void logout()
         {
+            ExpectConnected = false;
             if (Network.Connected)
                 Network.Logout();
         }
@@ -1128,7 +1149,13 @@ namespace cogbot
             if (login == LoginStatus.Success)
             {
                 // Start in the inventory root folder.
-                CurrentDirectory = Inventory.Store.RootFolder;//.RootFolder;
+                if (Inventory.Store != null)
+                    CurrentDirectory = Inventory.Store.RootFolder;//.RootFolder;
+                else
+                {
+                    Logger.Log("Cannot get Inventory.Store.RootFolder", OpenMetaverse.Helpers.LogLevel.Error);
+                    CurrentDirectory = null;
+                }
             }
             //            WriteLine("ClientManager Network_OnLogin : [" + login.ToString() + "] " + message);
             //SendNewEvent("On-Login", login, message);
@@ -1142,6 +1169,7 @@ namespace cogbot
             }
             else if (login == LoginStatus.Success)
             {
+                LoginRetries = 0;
                 WriteLine("Logged in successfully");
                 SendNetworkEvent("On-Login-Success", login, message);
                 //                SendNewEvent("on-login-success",login,message);
