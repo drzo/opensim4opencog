@@ -2321,14 +2321,23 @@ namespace PathSystem3D.Navigation
                 PanelGUI = new PathFinderDemo(this);
                 (new Thread(() =>
                 {
-                    PanelGUI.CollisionPlaneListUpdate();
-                    PanelGUI.Closing += new CancelEventHandler(delegate(object sender, CancelEventArgs e)
+                    try
                     {
+                        PanelGUI.CollisionPlaneListUpdate();
+                        PanelGUI.Closing += new CancelEventHandler(delegate(object sender, CancelEventArgs e)
+                                                                       {
+                                                                           PanelGUI = null;
+                                                                       });
+                        Application.EnableVisualStyles();
+                        PanelGUI.Show();
+                        Application.Run(PanelGUI);
+                    } 
+                    catch (Exception e)
+                    {
+                        Debug("" + e);                       
                         PanelGUI = null;
-                    });
-                    Application.EnableVisualStyles();
-                    PanelGUI.Show();
-                    Application.Run(PanelGUI);
+                    }
+                   
                 })).Start();
             } else
             {

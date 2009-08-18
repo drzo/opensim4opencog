@@ -938,7 +938,7 @@ namespace cogbot.TheOpenSims
 
         public override string ToString()
         {
-            String _TOSRTING = null;
+           // String _TOSRTING = null;
             if (_TOSRTING == null)
             {
                 if (Object.ReferenceEquals(_Prim0,null)) return "UNATTACHED_PRIM "+ID.ToString();
@@ -1496,10 +1496,8 @@ namespace cogbot.TheOpenSims
 
         public virtual SimRegion GetSimRegion()
         {
-            int tries = 0;
-            while (RegionHandle == 0 && tries < 2)
+            while (RegionHandle == 0 && !ReferenceEquals(Prim,null))
             {
-                tries++;
                 RegionHandle = Prim.RegionHandle;
             }
             return WorldSystem.GetRegion(RegionHandle);

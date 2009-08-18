@@ -35,14 +35,12 @@ namespace cogbot
             //ResumeLayout();
         }
 
-        private ICollection<BotClient> BotClients
+        public ICollection<BotClient> BotClients
         {
             get
             {
                 // Make an immutable copy of the Clients list to safely iterate over
-                List<BotClient> clientsCopy = new List<BotClient>();
-                lock (BotByName) clientsCopy.AddRange(BotByName.Values);
-                return clientsCopy;
+                lock (BotByName) return new List<BotClient>(BotByName.Values);
             }
         }
 
@@ -294,7 +292,7 @@ namespace cogbot
         public void ShutDown()
         {
             logout();
-            foreach (BotClient CurrentClient in BotByName.Values)
+            foreach (BotClient CurrentClient in BotClients)
             {
                 CurrentClient.ShutDown();
             }
@@ -306,7 +304,7 @@ namespace cogbot
 
         public void logout()
         {
-            foreach (BotClient CurrentClient in Clients.Values)
+            foreach (BotClient CurrentClient in BotClients)
                 if (CurrentClient.Network.Connected)
                     CurrentClient.Network.Logout();
             config.saveConfig();
@@ -335,21 +333,21 @@ namespace cogbot
 
 
 
-        ScriptEventListener scriptEventListener = null;
-        ScriptInterpreter lispTaskInterperter;
+        ScriptEventListener _scriptEventListener = null;
+        ScriptInterpreter _lispTaskInterperter;
 
-        public void initTaskInterperter()
+        public ScriptInterpreter initTaskInterperter()
         {
             try
             {
                 WriteLine("Start Loading TaskInterperter ... '" + taskInterperterType + "' \n");
-                lispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
-                lispTaskInterperter.LoadFile("boot.lisp");
-                lispTaskInterperter.LoadFile("extra.lisp");
-                lispTaskInterperter.LoadFile("cogbot.lisp");
-                lispTaskInterperter.Intern("clientManager", this);
-                scriptEventListener = new ScriptEventListener(lispTaskInterperter, null);
-                lispTaskInterperter.Intern("thisClient", this);
+                _lispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
+                _lispTaskInterperter.LoadFile("boot.lisp");
+                _lispTaskInterperter.LoadFile("extra.lisp");
+                _lispTaskInterperter.LoadFile("cogbot.lisp");
+                _lispTaskInterperter.Intern("clientManager", this);
+                _scriptEventListener = new ScriptEventListener(_lispTaskInterperter, null);
+                _lispTaskInterperter.Intern("thisClient", this);
                 WriteLine("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
                 // load the initialization string
             }
@@ -359,37 +357,39 @@ namespace cogbot
                 WriteLine("error occured: " + e.Message);
                 WriteLine("        Stack: " + e.StackTrace.ToString());
             }
-
+            return _lispTaskInterperter;
         }
 
         public void enqueueLispTask(object p)
         {
-            scriptEventListener.enqueueLispTask(p);
+            _scriptEventListener.enqueueLispTask(p);
         }
 
         public string evalLispString(string lispCode)
         {
             try
             {
-                if (lispCode == null || lispCode.Length == 0) return null;
-                if (lispTaskInterperter == null)
+                if (string.IsNullOrEmpty(lispCode)) return null;
+                if (_lispTaskInterperter == null)
                 {
-                    initTaskInterperter();
+                    _lispTaskInterperter = initTaskInterperter();
                 }
                 //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
-                WriteLine("Eval> " + lispCode);
+                WriteLine("Eval> {0}", lispCode);
                 Object r = null;
-                StringReader stringCodeReader = new StringReader(lispCode);
-                r = lispTaskInterperter.Read("evalLispString", stringCodeReader);
-                if (lispTaskInterperter.Eof(r))
-                    return r.ToString();
-                return lispTaskInterperter.Str(lispTaskInterperter.Eval(r));
+                using (var stringCodeReader = new StringReader(lispCode))
+                {
+                    r = _lispTaskInterperter.Read("evalLispString", stringCodeReader);
+                    return _lispTaskInterperter.Eof(r)
+                               ? r.ToString()
+                               : _lispTaskInterperter.Str(_lispTaskInterperter.Eval(r));
+                }
             }
             catch (Exception e)
             {
-                WriteLine("!Exception: " + e.GetBaseException().Message);
-                WriteLine("error occured: " + e.Message);
-                WriteLine("        Stack: " + e.StackTrace.ToString());
+                WriteLine("!Exception: {0}", e.GetBaseException().Message);
+                WriteLine("error occured: {0}", e.Message);
+                WriteLine("        Stack: {0}", e.StackTrace.ToString());
                 throw e;
             }
         }
@@ -424,24 +424,24 @@ namespace cogbot
         public BotClient LastBotClient = null;
         readonly static object OneAtATime = new object();
         private bool _wasFirstGridClient = true;
-        private readonly object WasFirstGridClientLock = new object();
+        private readonly object _wasFirstGridClientLock = new object();
         public BotClient CreateBotClient(string first, string last, string passwd, string simurl, string location)
         {
             lock (OneAtATime)
             {
-                string fullName = first + " " + last;
+                string fullName = string.Format("{0} {1}", first, last);
                 BotClient bc;
                 lock (BotByName)
                 {
                     if (BotByName.TryGetValue(fullName, out bc))
                     {
-                        output(";; Reusing " + fullName);
+                        WriteLine(";; Reusing {0}", fullName);
                         EnsureStarting(bc);
                         return bc;
                     }
                 }
                 GridClient gridClient;
-                lock (WasFirstGridClientLock)
+                lock (_wasFirstGridClientLock)
                 {
                     if (_wasFirstGridClient && UseRadgast)
                     {
@@ -504,7 +504,7 @@ namespace cogbot
 
         private void AddTypesToBotClient(BotClient bc)
         {
-            BotByName["" + bc.BotLoginParams.FirstName + " " + bc.BotLoginParams.LastName] = bc;
+            BotByName[string.Format("{0} {1}", bc.BotLoginParams.FirstName, bc.BotLoginParams.LastName)] = bc;
             lock (registrationTypes) foreach (Type t in registrationTypes)
                 {
                     bc.RegisterType(t);
@@ -515,7 +515,7 @@ namespace cogbot
         {
 
             BotClient cl = LastBotClient;
-            lock (Clients) foreach (BotClient bc in Clients.Values)
+            foreach (BotClient bc in BotClients)
                 {
                     if (bc.GetName().Equals(botname))
                     {
@@ -538,7 +538,7 @@ namespace cogbot
         /// 
         /// </summary>
         /// <param name="accounts"></param>
-        public ClientManager(List<LoginDetails> accounts, bool getTextures)
+        public ClientManager(IEnumerable<LoginDetails> accounts, bool getTextures)
             : this()
         {
 
@@ -568,7 +568,7 @@ namespace cogbot
         public BotClient Login(LoginDetails account)
         {
             // Check if this CurrentClient is already logged in
-            lock (Clients) foreach (BotClient c in Clients.Values)
+            foreach (BotClient c in BotClients)
                 {
                     if (c.Self.FirstName == account.FirstName && c.Self.LastName == account.LastName)
                     {
@@ -578,6 +578,7 @@ namespace cogbot
                 }
 
             BotClient client = new BotClient(this, new GridClient());
+            BotByName[string.Format("{0} {1}", account.FirstName, account.LastName)] = client;
 
             // Optimize the throttle
             client.Throttle.Wind = 0;
@@ -606,21 +607,22 @@ namespace cogbot
                 {
                     UUID query = UUID.Random();
                     DirectoryManager.DirPeopleReplyCallback peopleDirCallback =
-                        delegate(UUID queryID, List<DirectoryManager.AgentSearchData> matchedPeople)
-                        {
-                            if (queryID == query)
+                        (queryID, matchedPeople) =>
                             {
-                                if (matchedPeople.Count != 1)
+                                if (queryID == query)
                                 {
-                                    Logger.Log("Unable to resolve master key from " + client.MasterName, Helpers.LogLevel.Warning);
+                                    if (matchedPeople.Count != 1)
+                                    {
+                                        Logger.Log("Unable to resolve master key from " + client.MasterName,
+                                                   Helpers.LogLevel.Warning);
+                                    }
+                                    else
+                                    {
+                                        client.MasterKey = matchedPeople[0].AgentID;
+                                        Logger.Log("Master key resolved to " + client.MasterKey, Helpers.LogLevel.Info);
+                                    }
                                 }
-                                else
-                                {
-                                    client.MasterKey = matchedPeople[0].AgentID;
-                                    Logger.Log("Master key resolved to " + client.MasterKey, Helpers.LogLevel.Info);
-                                }
-                            }
-                        };
+                            };
 
                     client.Directory.OnDirPeopleReply += peopleDirCallback;
                     client.Directory.StartPeopleSearch(DirectoryManager.DirFindFlags.People, client.MasterName, 0, query);
@@ -684,7 +686,7 @@ namespace cogbot
                 outputDelegate(ExecuteCommand(input, outputDelegate));
             }
 
-            lock (Clients) foreach (BotClient client in Clients.Values)
+            foreach (BotClient client in BotClients)
                 {
                     if (client.Network.Connected)
                         client.Network.Logout();
@@ -695,7 +697,7 @@ namespace cogbot
         {
             int online = 0;
             int offline = 0;
-            lock (Clients) foreach (BotClient client in Clients.Values)
+            foreach (BotClient client in BotClients)
                 {
                     if (client.Network.Connected) online++;
                     else offline++;
@@ -738,7 +740,7 @@ namespace cogbot
             {
                 if (Clients.Count > 0)
                 {
-                    lock (Clients) foreach (BotClient client in Clients.Values)
+                    foreach (BotClient client in BotClients)
                         {
                             WriteLine(client.Commands["help"].Execute(args, UUID.Zero, WriteLine));
                             break;
