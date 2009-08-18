@@ -1060,9 +1060,6 @@ namespace OpenMetaverse
                             Helpers.LogLevel.Warning, Client);
                         return relativePosition;
                     }
-                    Logger.Log("Currently sitting on object " + sittingOn + " which is not tracked, SimPosition will be inaccurate",
-                        Helpers.LogLevel.Warning, Client);
-                    return relativePosition;
                 }
                 else
                 {
@@ -1080,15 +1077,16 @@ namespace OpenMetaverse
                 if (sittingOn != 0)
                 {
                     Primitive parent;
-                    if (Client.Network.CurrentSim != null)
+                    if (Client.Network.CurrentSim != null && Client.Network.CurrentSim.ObjectsPrimitives.TryGetValue(sittingOn, out parent))
                     {
-                        lock (Client.Network.CurrentSim.ObjectsPrimitives.Dictionary)
-                            if (Client.Network.CurrentSim.ObjectsPrimitives.TryGetValue(sittingOn, out parent))
-                                return relativeRotation*parent.Rotation;
+                        return relativeRotation * parent.Rotation;
                     }
-                    Logger.Log("Currently sitting on object " + sittingOn + " which is not tracked, SimRotation will be inaccurate",
-                        Helpers.LogLevel.Warning, Client);
-                    return relativeRotation;
+                    else
+                    {
+                        Logger.Log("Currently sitting on object " + sittingOn + " which is not tracked, SimRotation will be inaccurate",
+                            Helpers.LogLevel.Warning, Client);
+                        return relativeRotation;
+                    }
                 }
                 else
                 {

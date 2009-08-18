@@ -1593,7 +1593,7 @@ namespace OpenMetaverse
             // bump layer, viewer still displays the avatar even if its missing 
             // hair bake, and as long as viewer 1.22 is officially supported
             // (it does not bake hair either) it will remain to work
-            //if (bakeType == BakeType.Hair) return false;
+            if (bakeType == BakeType.Hair) return false;
 
             List<AvatarTextureIndex> textureIndices = BakeTypeToTextures(bakeType);
             Baker oven = new Baker(bakeType);
@@ -2103,6 +2103,37 @@ namespace OpenMetaverse
                     return AvatarTextureIndex.HairBaked;
                 default:
                     return AvatarTextureIndex.Unknown;
+            }
+        }
+
+        /// <summary>
+        /// Gives the layer number that is used for morph mask
+        /// </summary>
+        /// <param name="bakeType">>A BakeType</param>
+        /// <returns>Which layer number as defined in BakeTypeToTextures is used for morph mask</returns>
+        public static int MorphLayerForBakeType(BakeType bakeType)
+        {
+            // Indexes return here correspond to those returned
+            // in BakeTypeToTextures(), those two need to be in sync.
+            // Which wearable layer is used for morph is defined in avatar_lad.xml
+            // by looking for <layer> that has <morph_mask> defined in it, and
+            // looking up which wearable is defined in that layer. Morph mask
+            // is never combined, it's always a straight copy of one single clothing
+            // item's alpha channel per bake.
+            switch (bakeType)
+            {
+                case BakeType.Head:
+                    return 1; // hair
+                case BakeType.UpperBody:
+                    return 3; // shirt
+                case BakeType.LowerBody:
+                    return 4; // lower pants
+                case BakeType.Skirt:
+                    return 0; // skirt
+                case BakeType.Hair:
+                    return 0; // hair
+                default:
+                    return -1;
             }
         }
 
