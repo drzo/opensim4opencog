@@ -620,7 +620,11 @@ namespace cogbot
             catch (Exception e)
             {
             }
-            //Network.CurrentSim = null;
+            EnsureConnectedCheck(reason);
+        }
+
+        private void EnsureConnectedCheck(NetworkManager.DisconnectType reason)
+        {
             if (ExpectConnected && reason != NetworkManager.DisconnectType.ClientInitiated)
             {
                 ExpectConnected = false;
@@ -630,13 +634,12 @@ namespace cogbot
                 }
                 //gridClient = new GridClient();
                 Settings.USE_LLSD_LOGIN = true;
-                new Thread(()=>
-                               {
-                                   Thread.Sleep(10000);
-                                   Login();
-                               }).Start();
+                new Thread(() =>
+                {
+                    Thread.Sleep(10000);
+                    Login();
+                }).Start();
             }
-
         }
 
         void Network_OnConnected(object sender)
@@ -660,6 +663,10 @@ namespace cogbot
         void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
         {
             SendNetworkEvent("On-Sim-Disconnected", this, simulator, reason);
+            if (simulator == Network.CurrentSim)
+            {
+                EnsureConnectedCheck(reason);
+            }
         }
 
         void client_OnLogMessage(object message, Helpers.LogLevel level)
