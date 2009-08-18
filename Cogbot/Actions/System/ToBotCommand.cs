@@ -15,9 +15,10 @@ namespace cogbot.Actions
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 2) return Description;
-            BotClient OBotClient = cogbot.ClientManager.GetBotByName(args[0]);
+            BotClient oBotClient = ClientManager.GetBotByName(args[0]);
+            if (oBotClient == null) return "not for me";
             string botcmd = String.Join(" ", args, 1, args.Length - 1).Trim();
-            return "tobot " + OBotClient + " " + OBotClient.ExecuteCommand(botcmd, WriteLine);
+            return "tobot " + oBotClient + " " + oBotClient.ExecuteCommand(botcmd, WriteLine);
         }
     }
 }
