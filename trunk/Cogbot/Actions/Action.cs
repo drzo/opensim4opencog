@@ -67,8 +67,11 @@ namespace cogbot.Actions
             if (p.Contains("-") && UUID.TryParse(p.Split(new char[] { ' ' })[0], out target)) return true;
             Primitive prim;
             if (WorldSystem.tryGetPrim(p,out prim)) {
-                target = prim.ID;
-                if (target != UUID.Zero) return true;
+                if (prim != null)
+                {
+                    target = prim.ID;
+                    if (target != UUID.Zero) return true;
+                }
             }
             target = WorldSystem.GetAssetUUID(p, AssetType.Unknown);
             if (target != UUID.Zero) return true;
@@ -76,7 +79,7 @@ namespace cogbot.Actions
         }
 
 
-        public BotClient m_Client = null;
+        private BotClient _mClient = null;
 
         public BotClient Client
         {
@@ -95,12 +98,12 @@ namespace cogbot.Actions
         {
             get
             {
-                if (m_Client != null) return m_Client;
+                if (_mClient != null) return _mClient;
                 return cogbot.Listeners.WorldObjects.GridMaster.client;
             }
             set
             {
-                m_Client = value;
+                _mClient = value;
             }
         }
 
@@ -116,8 +119,8 @@ namespace cogbot.Actions
         {
             get
             {
-                if (m_Client == null) return cogbot.Listeners.WorldObjects.GridMaster;
-                return m_Client.WorldSystem;
+                if (_mClient == null) return cogbot.Listeners.WorldObjects.GridMaster;
+                return _mClient.WorldSystem;
             }
         }
 
@@ -139,7 +142,7 @@ namespace cogbot.Actions
             usageString = "No usage instruction for this action.";
 
            // Client = _parent;
-            m_Client = _parent;//.CurrentClient;
+            _mClient = _parent;//.CurrentClient;
         }
       
         /// <summary>

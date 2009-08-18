@@ -193,7 +193,7 @@ namespace cogbot
             manager.LastBotClient = this;
             try
             {
-                //WriteLine("Start Loading TaskInterperter ... '" + taskInterperterType + "' \n");
+                //WriteLine("Start Loading TaskInterperter ... '" + TaskInterperterType + "' \n");
                 LispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
                 LispTaskInterperter.LoadFile("boot.lisp");
                 LispTaskInterperter.LoadFile("extra.lisp");
@@ -202,7 +202,7 @@ namespace cogbot
                 scriptEventListener = new ScriptEventListener(LispTaskInterperter, this);
                 botPipeline.AddSubscriber(scriptEventListener);
 
-              //  WriteLine("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
+              //  WriteLine("Completed Loading TaskInterperter '" + TaskInterperterType + "'\n");
                 // load the initialization string
             }
             catch (Exception e)

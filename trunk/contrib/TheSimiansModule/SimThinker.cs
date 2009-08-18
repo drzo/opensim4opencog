@@ -76,7 +76,8 @@ namespace TheSimiansModule
 
         private List<SimObject> InterestingObjects = new List<SimObject>();
 
-        public SimThinker(SimActor a) : base(String.Format("AvatarThinkerThread for {0}", a))
+        public SimThinker(SimActor a)
+            : base(String.Format("AvatarThinkerThread for {0}", a))
         {
             Actor = a;
             Actor["CurrentNeeds"] = new BotNeeds(90.0f);
@@ -119,7 +120,7 @@ namespace TheSimiansModule
 
         private void Debug(string p)
         {
-            if (debugWindow != null && !debugWindow.IsDisposed) debugWindow.WriteLine(p);
+            if (_debugWindow != null && !_debugWindow.IsDisposed) _debugWindow.WriteLine(p);
             Actor.Debug(p);
         }
 
@@ -144,7 +145,7 @@ namespace TheSimiansModule
         }
         public void PauseThinking()
         {
-           Abort(); 
+            Abort();
         }
 
         public override void Abort()
@@ -169,9 +170,11 @@ namespace TheSimiansModule
 
         protected bool IsControlling
         {
-            get {
+            get
+            {
                 return Actor.CurrentAction == CurrentAction || Actor.CurrentAction == this ||
-                       Actor.CurrentAction is AbortableAction; }
+                       Actor.CurrentAction is AbortableAction;
+            }
         }
 
         public SimObject GetNextInterestingObject()
@@ -336,7 +339,7 @@ namespace TheSimiansModule
             // Initially randomize
             foreach (FieldInfo c in CurrentNeeds.GetType().GetFields())
             {
-                if (c.FieldType == typeof (float))
+                if (c.FieldType == typeof(float))
                 {
                     CurrentNeeds.SetValue(c, CurrentNeeds, MyRandom.Next(100));
                 }
@@ -393,7 +396,7 @@ namespace TheSimiansModule
             {
                 if (someAspect is BotAction)
                 {
-                    BotAction act = (BotAction) someAspect;
+                    BotAction act = (BotAction)someAspect;
                     act.InvokeReal();
                     return;
                 }
@@ -405,10 +408,11 @@ namespace TheSimiansModule
 
                 if (someAspect is SimObject)
                 {
-                    SimObject someObject = (SimObject) someAspect;
+                    SimObject someObject = (SimObject)someAspect;
                     DoBestUse(someObject);
                 }
-            } finally
+            }
+            finally
             {
                 //if (IsThinking)
                 //    CurrentAction = this;
@@ -440,16 +444,16 @@ namespace TheSimiansModule
                 foreach (SimTypeUsage use in KnownTypeUsages)
                 {
                     lock (useObjects) foreach (SimObject obj in useObjects)
-                    {
-                         if (CurrentAction!=null)
-                         {
-                             if (obj==CurrentAction.Target) continue;
-                         }
-                        if (obj.GetTypeUsages().Contains(use))
                         {
-                            KnownBotAcions.Add(new BotObjectAction(Actor, new SimObjectUsage(use, obj)));
+                            if (CurrentAction != null)
+                            {
+                                if (obj == CurrentAction.Target) continue;
+                            }
+                            if (obj.GetTypeUsages().Contains(use))
+                            {
+                                KnownBotAcions.Add(new BotObjectAction(Actor, new SimObjectUsage(use, obj)));
+                            }
                         }
-                    }
                 }
             return KnownBotAcions;
         }
@@ -469,8 +473,10 @@ namespace TheSimiansModule
                 }
                 if (act == null)
                 {
+                    SimRegion R = Actor.GetSimRegion();
+                    if (R==null) return new CommandAction(Actor,"anim shrug");
                     Vector3d v3d =
-                        Actor.GetSimRegion().LocalToGlobal(new Vector3(MyRandom.Next(250) + 5, MyRandom.Next(250) + 5,
+                       R.LocalToGlobal(new Vector3(MyRandom.Next(250) + 5, MyRandom.Next(250) + 5,
                                                                        Actor.GetSimPosition().Z));
                     Actor.Debug("MoveToLocation: " + Actor.DistanceVectorString(v3d));
                     SimPosition WP = SimWaypointImpl.CreateGlobal(v3d);
@@ -542,28 +548,35 @@ namespace TheSimiansModule
             }
         }
 
-        private SimThinkerDebug debugWindow;
+        private readonly object _debugWindowLock = new object();
+        private SimThinkerDebug _debugWindow;
         internal void ShowDebug()
         {
-            if (debugWindow == null || debugWindow.IsDisposed)
-            {
-                debugWindow = new SimThinkerDebug(Actor.GetGridClient());
-                (new Thread(() =>
+            lock (_debugWindowLock)
+                if (_debugWindow == null || _debugWindow.IsDisposed)
                 {
-                    debugWindow.Closing += new CancelEventHandler(delegate(object sender, CancelEventArgs e)
-                                                                      {
-                                                                          debugWindow = null;       
-                                                                      });
-                    Application.EnableVisualStyles();
-                    debugWindow.Show();
-                    Application.Run(debugWindow);
-                })).Start();
-            }
-            else
-            {
-                debugWindow.Show();
-            }
-
+                    (new Thread(() =>
+                    {
+                        try
+                        {
+                            _debugWindow = new SimThinkerDebug(Actor.GetGridClient());
+                            _debugWindow.Closing += new CancelEventHandler(delegate(object sender, CancelEventArgs e)
+                            {
+                                lock (_debugWindowLock)
+                                    _debugWindow = null;
+                            });
+                            Application.EnableVisualStyles();
+                            Application.Run(_debugWindow);
+                        } catch(Exception e)
+                        {
+                            Console.WriteLine(""+e);
+                        }
+                    })).Start();
+                }
+                else
+                {
+                    _debugWindow.Show();
+                }
         }
     }
 }

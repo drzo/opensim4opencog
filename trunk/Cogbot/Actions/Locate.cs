@@ -16,8 +16,8 @@ namespace cogbot.Actions
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
            // base.acceptInput(verb, args);
-
-            return ("$bot is in " + Client.Network.CurrentSim.Name + "/" + (int)GetSimPosition().X + "/" + (int)GetSimPosition().Y + "/" + (int)GetSimPosition().Z);
+            if (Client.Network.CurrentSim == null) return "$bot is nowhere.";
+            return (string.Format("$bot is in {0}/{1}/{2}/{3}", Client.Network.CurrentSim.Name, (int)GetSimPosition().X, (int)GetSimPosition().Y, (int)GetSimPosition().Z));
         }
     }
 }

@@ -63,6 +63,7 @@ namespace TheSimiansModule
             this.Size = new Size(this.Size.Width + 300, this.Size.Height);
             this.Text = string.Format("SimThinker Debug {0}", client.WorldSystem.TheSimAvatar.ToString());
             this.ResizeEnd += TextForm_ResizeEnd;
+            Visible = true;
             Show();
             consoleInputText.Enabled = true;
             consoleInputText.Focus();
