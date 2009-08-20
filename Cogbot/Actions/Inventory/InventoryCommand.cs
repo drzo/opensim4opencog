@@ -38,7 +38,7 @@ namespace cogbot.Actions
         void PrintFolder(InventoryFolder f, StringBuilder result, int indent)
         {
             List<InventoryBase> contents = Manager.FolderContents(f.UUID, Client.Self.AgentID,
-                true, true, InventorySortOrder.ByName, 3000);
+                true, true, InventorySortOrder.ByName, 10000);
 
             if (contents != null)
             {

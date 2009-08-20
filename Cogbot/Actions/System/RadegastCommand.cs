@@ -9,11 +9,11 @@ using Radegast;
 
 namespace cogbot.Actions
 {
-    public class ShowRadCommand : Command, SystemApplicationCommand
+    public class ShowRadCommand : Command, BotSystemCommand
     {
         public ShowRadCommand(BotClient testClient)
         {
-            Name = "showrad";
+            Name = "showgui";
             Description = "Shows the Radegast UI";
             Category = CommandCategory.TestClient;
         }
@@ -23,7 +23,7 @@ namespace cogbot.Actions
         {
             if (PanelGUI == null)
             {
-                PanelGUI = RadegastInstance.GlobalInstance.MainForm;
+                PanelGUI = Client.TheRadegastInstance.MainForm;
                 (new Thread(() =>
                 {
                     PanelGUI.Closing += new CancelEventHandler(delegate(object sender, CancelEventArgs e)

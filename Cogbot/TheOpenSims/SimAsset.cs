@@ -128,6 +128,7 @@ namespace cogbot.TheOpenSims
 
         private void LoadFolderId(UUID folderid)
         {
+            if (!GleanFolder) return;
             if (folderid == UUID.Zero) return;
             lock (BusyUpdating) if (BusyUpdating.Contains(folderid)) return;
             taskQueue.Enqueue(() =>
@@ -1425,6 +1426,7 @@ namespace cogbot.TheOpenSims
         internal readonly static List<SimAsset> SimAssets = new List<SimAsset>();
         internal readonly static Dictionary<string, string> nameNameMap = new Dictionary<string, string>();
         static private bool FilledInAssets;
+        static private bool GleanFolder = false;
 
         public static ICollection<SimAsset> GetAssets(AssetType assetType)
         {

@@ -1109,6 +1109,7 @@ namespace RTParser
         /// <param name="pathToDLL">the path to the dll containing the custom tag handling code</param>
         public void loadCustomTagHandlers(string pathToDLL)
         {
+            return;
             Assembly tagDLL = Assembly.LoadFrom(pathToDLL);
             Type[] tagDLLTypes = tagDLL.GetTypes();
             for (int i = 0; i < tagDLLTypes.Length; i++)

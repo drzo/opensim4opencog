@@ -67,7 +67,7 @@ namespace cogbot
         /// for specific data stream types</summary>
         public AgentThrottle Throttle { get { return gridClient.Throttle; } }
 
-        public GridClient gridClient;
+        readonly public GridClient gridClient;
         // TODO's
         // Play Animations
         // private static UUID type_anim_uuid = new UUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
@@ -129,6 +129,12 @@ namespace cogbot
             get { return WorldSystem.IsRegionMaster; }
         }
 
+        public Radegast.RadegastInstance TheRadegastInstance
+        {
+            get;
+            set;
+        }
+
         public VoiceManager VoiceManager;
         // Shell-like inventory commands need to be aware of the 'current' inventory folder.
         public InventoryFolder CurrentDirectory = null;
@@ -156,7 +162,7 @@ namespace cogbot
         readonly public Dictionary<string, Listeners.Listener> listeners;
         public SortedDictionary<string, Actions.Action> Commands;
         public Dictionary<string, Tutorials.Tutorial> tutorials;
-        //public Utilities.TcpServer UtilitiesTcpServer;
+        //public Utilities.BotTcpServer UtilitiesTcpServer;
 
         public bool describeNext;
         private int describePos;
@@ -243,7 +249,7 @@ namespace cogbot
             Settings.LOGIN_TIMEOUT = 120 * 1000;
             //Settings.LOGOUT_TIMEOUT = 120 * 1000;
             Settings.SIMULATOR_TIMEOUT = int.MaxValue;
-            Settings.SEND_PINGS = false;
+            Settings.SEND_PINGS = true;
             Settings.SEND_AGENT_APPEARANCE = true;
             //Settings.USE_LLSD_LOGIN = true;
             ////Settings.MULTIPLE_SIMS = false;
@@ -342,7 +348,7 @@ namespace cogbot
             {
                 thisTcpPort = ClientManager.nextTcpPort;
                 ClientManager.nextTcpPort += ClientManager.config.tcpPortOffset;
-                Utilities.TcpServer UtilitiesTcpServer = new Utilities.TcpServer(thisTcpPort, this);
+                Utilities.BotTcpServer UtilitiesTcpServer = new Utilities.BotTcpServer(thisTcpPort, this);
                 UtilitiesTcpServer.startSocketListener();
             }
 
@@ -684,6 +690,13 @@ namespace cogbot
         void Network_OnSimConnected(Simulator simulator)
         {
             ExpectConnected = true;
+            if (!Settings.SEND_AGENT_APPEARANCE)
+            {
+                if (simulator==Network.CurrentSim)
+                {
+                    Appearance.RequestAgentWearables();
+                }
+            }
             SendNetworkEvent("On-Simulator-Connected", simulator);
             //            SendNewEvent("on-simulator-connected",simulator);
         }
@@ -757,7 +770,7 @@ namespace cogbot
                 Self.Chat("Wearing folder \"" + folderName + "\"", 0, ChatType.Normal);
                 WriteLine("Wearing folder \"" + folderName + "\"");
 
-                Appearance.WearOutfit(folderID, false);
+                Appearance.AddToOutfit(GetFolderItems(folderName), true);
                 /*
                 List<InventoryBase> folderContents=  Client.Inventory.FolderContents(folderID, Client.Self.AgentID,
                                                                 false, true,
@@ -1545,6 +1558,35 @@ namespace cogbot
             if (lastException != null) throw lastException;
             throw new NotSupportedException();
         }
+
+        public List<InventoryItem> GetFolderItems(string target)
+        {
+            if (Inventory.Store==null)
+            {
+                return null;
+            }
+            if (Inventory.Store.RootNode == null)
+            {
+                return null;
+            }
+            if (Inventory.Store.RootFolder == null)
+            {
+                return null;
+            }
+            UUID folderID = Inventory.FindObjectByPath(Inventory.Store.RootFolder.UUID, Self.AgentID, target, 10000);
+            return GetFolderItems(folderID);
+        }
+
+        public List<InventoryItem> GetFolderItems(UUID folderID)
+        {
+            List<InventoryItem> items = new List<InventoryItem>();
+            var list = Inventory.FolderContents(folderID, Self.AgentID, false, true, InventorySortOrder.ByDate, 10000);
+            foreach (var i in list)
+            {
+                if (i is InventoryItem) items.Add((InventoryItem)i);
+            }
+            return items;
+        }   
     }
 
 }

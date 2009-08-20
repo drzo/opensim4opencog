@@ -9,6 +9,8 @@ using OpenMetaverse;
 using cogbot.Actions;
 using Radegast;
 using Action = cogbot.Actions.Action;
+using NotImplementedException=sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 //using Radegast;
 namespace cogbot
 {
@@ -89,7 +91,7 @@ namespace cogbot
         //public Inventory Inventory;
         //public InventoryManager Manager;
         public Configuration config;
-        //Utilities.TcpServer UtilitiesTcpServer;
+        //Utilities.BotTcpServer UtilitiesTcpServer;
         public String taskInterperterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
         static List<LoginDetails> accounts = new List<LoginDetails>();
         ///public static ClientManager this = new ClientManager(accounts, false);
@@ -144,7 +146,7 @@ namespace cogbot
 
             //   RegisterAllCommands(Assembly.GetExecutingAssembly());
 
-            //   UtilitiesTcpServer = new cogbot.Utilities.TcpServer(this);
+            //   UtilitiesTcpServer = new cogbot.Utilities.BotTcpServer(this);
             // Start the server
             ///UtilitiesTcpServer.startSocketListener();
 
@@ -241,6 +243,9 @@ namespace cogbot
         private string ExecuteBotsCommand(string text, OutputDelegate WriteLine)
         {
             string res = String.Empty;
+            if (string.IsNullOrEmpty(text)) return res;
+            text = text.Trim();
+            if (string.IsNullOrEmpty(text)) return res;
             if (BotByName.Count == 0 && LastBotClient != null) return LastBotClient.ExecuteBotCommand(text, WriteLine);
             if (OnlyOneCurrentBotClient != null)
             {
@@ -248,11 +253,11 @@ namespace cogbot
 
             }
 
-            foreach (BotClient CurrentClient in BotClients)
-                if (CurrentClient != null)
+            foreach (BotClient currentClient in BotClients)
+                if (currentClient != null)
                 {
 
-                    res += CurrentClient.ExecuteBotCommand(text, WriteLine).Trim();
+                    res += currentClient.ExecuteBotCommand(text, WriteLine).Trim();
                     if (!String.IsNullOrEmpty(res))
                     {
                         res += "\n";
@@ -267,6 +272,10 @@ namespace cogbot
             try
             {
                 {
+                    if (string.IsNullOrEmpty(text)) return res;
+                    text = text.Trim();
+                    if (string.IsNullOrEmpty(text)) return res;
+                   
                     string verb = text.Split(null)[0];
                     if (groupActions.ContainsKey(verb))
                     {
@@ -276,8 +285,7 @@ namespace cogbot
                             res += groupActions[verb].acceptInputWrapper(verb, "", WriteLine);
                         return res;
                     }
-                    WriteLine("I don't understand the verb " + verb + ".");
-                    WriteLine("Type \"help\" for help.");
+                    WriteLine("I don't understand the ExecuteSystemCommand " + verb + ".");
                 }
                 return res;
             }
@@ -440,21 +448,31 @@ namespace cogbot
                         return bc;
                     }
                 }
-                GridClient gridClient;
                 lock (_wasFirstGridClientLock)
                 {
-                    if (_wasFirstGridClient && UseRadgast)
+                    GridClient gridClient;
+                    if (_wasFirstGridClient)
                     {
                         _wasFirstGridClient = false;
-                        gridClient = RadegastInstance.GlobalInstance.Client;
+                        RadegastInstance inst = RadegastInstance.GlobalInstance;
+                        gridClient = inst.Client;
+                        bc = new BotClient(this, gridClient);
+                        bc.TheRadegastInstance = inst;
                     }
                     else
                     {
-                        gridClient = new GridClient();
+                        if (UsingCogbotFromRadgast)
+                        {
+                            return null;
+                            throw new InvalidProgramException("UsingCogbotFromRadgast for more than one client");
+                        }
+                        RadegastInstance inst = new RadegastInstance();
+                        gridClient = inst.Client;
+                        bc = new BotClient(this, gridClient);
+                        bc.TheRadegastInstance = inst;
                     }
 
                 }
-                bc = new BotClient(this, gridClient);
                 if (!String.IsNullOrEmpty(first))
                 {
                     bc.BotLoginParams.FirstName = first;
@@ -484,20 +502,6 @@ namespace cogbot
 
         private void EnsureStarting(BotClient client)
         {
-            if (client.Self.AgentID != UUID.Zero)
-            {
-                Clients[client.Self.AgentID] = client;
-            }
-            else
-                client.Network.OnLogin += new NetworkManager.LoginCallback(delegate(LoginStatus login, string message)
-                                                                               {
-                                                                                   if (login == LoginStatus.Success)
-                                                                                   {
-                                                                                       lock (Clients)
-                                                                                           Clients[client.Self.AgentID]
-                                                                                               = client;
-                                                                                   }
-                                                                               });
             AddTypesToBotClient(client);
             client.StartupClientLisp();
         }
@@ -511,7 +515,7 @@ namespace cogbot
                 }
         }
 
-        public Utilities.TcpServer CreateHttpServer(int port, string botname)
+        public Utilities.BotTcpServer CreateHttpServer(int port, string botname)
         {
 
             BotClient cl = LastBotClient;
@@ -522,17 +526,18 @@ namespace cogbot
                         cl = bc;
                     }
                 }
-            return new Utilities.TcpServer(port, cl);
+            return new Utilities.BotTcpServer(port, cl);
         }
 
-        public Dictionary<UUID, BotClient> Clients = new Dictionary<UUID, BotClient>();
+    //    public Dictionary<UUID, BotClient> Clients = new Dictionary<UUID, BotClient>();
         //public Dictionary<Simulator, Dictionary<uint, Primitive>> SimPrims = new Dictionary<Simulator, Dictionary<uint, Primitive>>();
 
         public bool Running = true;
         public bool GetTextures = true; //needed for iniminfo
 
         string version = "1.0.0";
-        public static bool UseRadgast = false;
+        public static bool UsingCogbotFromRadgast = false;
+        public static bool UsingRadgastFromCogbot = false;
 
         /// <summary>
         /// 
@@ -601,8 +606,6 @@ namespace cogbot
 
             if (client.Network.Login(loginParams))
             {
-                lock (Clients) Clients[client.Self.AgentID] = client;
-
                 if (client.MasterKey == UUID.Zero && !string.IsNullOrEmpty(client.MasterName))
                 {
                     UUID query = UUID.Random();
@@ -738,7 +741,7 @@ namespace cogbot
             }
             else if (firstToken == "help")
             {
-                if (Clients.Count > 0)
+                if (BotClients.Count > 0)
                 {
                     foreach (BotClient client in BotClients)
                         {
@@ -790,7 +793,6 @@ namespace cogbot
         /// <param name="CurrentClient"></param>
         public void Logout(BotClient client)
         {
-            lock (Clients) Clients.Remove(client.Self.AgentID);
             client.Network.Logout();
         }
 

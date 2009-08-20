@@ -45,7 +45,8 @@ namespace cogbot.Actions
                 try
                 {
                     WriteLine("wearing folder: " + wear + " " + (bake ? " (baked)" : " (not baked)"));
-                    Client.Appearance.WearOutfit(wear.Split('/'));
+                    List<InventoryItem> outfit = Client.GetFolderItems(wear);
+                    Client.Appearance.ReplaceOutfit(outfit);
                   //  if (!are.WaitOne(WEARABLE_TIMEOUT * 2))
                    //     return "Timeout wearing " + wear + " " + (bake ? " (baked)" : " (not baked)");
                    // else

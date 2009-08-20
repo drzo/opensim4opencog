@@ -58,6 +58,11 @@ namespace cogbot.TheOpenSims
 
         public override void OpenNearbyClosedPassages()
         {
+            foreach (var s in GetNearByObjects(20, false))
+            {
+                s.UpdateOccupied();
+            } 
+
             WithAnim(Animations.AFRAID, base.OpenNearbyClosedPassages).Invoke();
         }
 
@@ -345,6 +350,7 @@ namespace cogbot.TheOpenSims
             {
                 if (Client == null) return false;
                 AgentManager ClientSelf = Client.Self;
+                if (ReferenceEquals(null, _Prim0)) return false;
                 return ClientSelf.AgentID == theAvatar.ID; //|| ClientSelf.LocalID == theAvatar.LocalID;
             }
         }
@@ -966,9 +972,9 @@ namespace cogbot.TheOpenSims
         {
             Random MyRandom = new Random(DateTime.Now.Millisecond);
             Boolean stopNext = false;
-            Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = false;
-            Client.Self.Movement.AutoResetControls = true;
-            Client.Self.Movement.UpdateInterval = 10;
+            //Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = false;
+            //Client.Self.Movement.AutoResetControls = true;
+            //Client.Self.Movement.UpdateInterval = 10;
 
             while (true)
             {
@@ -997,7 +1003,7 @@ namespace cogbot.TheOpenSims
                 {
                     AgentManager ClientSelf = Client.Self;
                     AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
-                    ClientMovement.AutoResetControls = false;
+                    //ClientMovement.AutoResetControls = false;
                     //ClientMovement.UpdateInterval = 0; /// 100
                     SimRegion R = GetSimRegion();
                     float WaterHeight = R.WaterHeight();
@@ -1212,6 +1218,7 @@ namespace cogbot.TheOpenSims
         /// <returns></returns>
         public override bool MoveTo(Vector3d finalTarget, double maxDistance, float maxSeconds)
         {
+            TurnToward(finalTarget);
             int blockCount = 0;
             IsBlocked = false;
             double currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
@@ -1406,9 +1413,9 @@ namespace cogbot.TheOpenSims
 
         public bool SitOnGround()
         {
-            Client.Self.Movement.AutoResetControls = false;
-            Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
-            Client.Self.Movement.UpdateInterval = 0;
+            //Client.Self.Movement.AutoResetControls = false;
+            //Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
+            //Client.Self.Movement.UpdateInterval = 0;
 
             AgentManager ClientSelf = Client.Self;
             AutoResetEvent are = new AutoResetEvent(false);
@@ -1475,8 +1482,9 @@ namespace cogbot.TheOpenSims
             }
             try
             {
-                Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
-               // Client.Self.Movement.UpdateInterval = 0;
+                Client.Settings.SEND_AGENT_UPDATES = true;
+                Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = false;
+                Client.Self.Movement.UpdateInterval = 0;
                 Client.Self.Movement.AutoResetControls = false;
                 InTurn++;
                 return TurnToward0(target);
@@ -1502,6 +1510,25 @@ namespace cogbot.TheOpenSims
 
             bool changed = false;
             AgentManager.AgentMovement ClientMovement = Client.Self.Movement;
+
+            if (true)
+            {
+                bool prev = Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK;
+                try
+                {
+                    Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
+                    ClientMovement.AutoResetControls = false;
+                    ClientMovement.TurnToward(target);
+                    ClientMovement.SendUpdate(true,Client.Network.CurrentSim);
+                    //ClientMovement.SendUpdate(true);
+                }
+                finally
+                {
+                    Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = prev;
+                }
+                return true;
+            }
+
             Quaternion parentRot = Quaternion.Identity;
 
             Avatar Prim = theAvatar;
@@ -1622,7 +1649,8 @@ namespace cogbot.TheOpenSims
                 try
                 {
                     Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
-                    ClientMovement.SendUpdate(true);
+                    ClientMovement.TurnToward(target);
+                    //ClientMovement.SendUpdate(true);
                 }
                 finally
                 {
@@ -2107,7 +2135,6 @@ namespace cogbot.TheOpenSims
         bool SitOn(SimObject o);
 
         BotMentalAspect GetObject(string name);
-
     }
 
 

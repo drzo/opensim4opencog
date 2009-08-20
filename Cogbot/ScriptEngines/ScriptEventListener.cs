@@ -369,9 +369,9 @@ namespace cogbot.ScriptEngines
                 //{
                 //    foreach (BotMessageSubscriber ms in lBotMsgSubscribers)
                 //    {
-                //        if (ms is Utilities.TcpServer)
+                //        if (ms is Utilities.BotTcpServer)
                 //        {
-                //            //((Utilities.TcpServer)ms).taskTick(thisTask.results);
+                //            //((Utilities.BotTcpServer)ms).taskTick(thisTask.results);
                 //        }
                 //    }
                 //}

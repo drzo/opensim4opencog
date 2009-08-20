@@ -114,7 +114,7 @@ namespace cogbot.TheOpenSims
 
         public override sealed bool Update(SimPosition simObject)
         {
-            if (!WorldObjects.MaintainCollisions) return false;
+            //if (!WorldObjects.MaintainCollisions) return false;
             if (!simObject.IsRegionAttached()) return false;
             if (MeshOnlySolids && !((MeshableObject) simObject).IsSolid) return false;
             Quaternion Rotation = simObject.GetSimRotation();

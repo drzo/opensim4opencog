@@ -28,6 +28,12 @@ namespace cogbot.Actions
 
             // Start the appearance setting process (with baking enabled or disabled)
             bool bake = !(args.Length > 0 && args[0].Equals("nobake"));
+            bool send = (args.Length > 0 && args[0].Equals("send"));
+            if (send)
+            {
+                Client.Appearance.SendAgentSetAppearance();
+                return "Sent Appearance";
+            }
             Client.Appearance.RequestSetAppearance(bake);
             return "Requested SetAppearance bake = " + bake;
             //// Wait for the process to complete or time out

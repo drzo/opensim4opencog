@@ -146,9 +146,9 @@ namespace cogbot.Listeners
 
                 client.Settings.SEND_PINGS = false;
 
-                client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
-                client.Self.Movement.AutoResetControls = false;
-                client.Self.Movement.UpdateInterval = 0;
+                //client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
+                //client.Self.Movement.AutoResetControls = false;
+                //client.Self.Movement.UpdateInterval = 0;
 
                 client.Network.OnSimConnected += Network_OnSimConnectedHook;
                 client.Inventory.OnScriptRunning += Inventory_OnScriptRunning;
@@ -232,11 +232,12 @@ namespace cogbot.Listeners
 
         internal static BotClient BotClientFor(GridClient client)
         {
-            lock (ClientManager.SingleInstance.Clients)
-                foreach (BotClient bc in ClientManager.SingleInstance.Clients.Values)
-                {
-                    if (bc.gridClient == client) return bc;
-                }
+
+            foreach (BotClient bc in ClientManager.SingleInstance.BotClients)            
+            {
+            
+                if (bc.gridClient == client) return bc;                
+            }
             return null;
         }
 
