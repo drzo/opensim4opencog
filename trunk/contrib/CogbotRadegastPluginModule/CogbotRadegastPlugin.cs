@@ -22,8 +22,14 @@ namespace CogbotRadegastPluginModule
 
         public void StartPlugin(RadegastInstance inst)
         {
-            ClientManager.UseRadgast = true;
             RadegastInstance = inst;
+            if (ClientManager.UsingRadgastFromCogbot)
+            {
+                // just unregister events for now
+                inst.Netcom.Dispose();
+                return;
+            }
+            ClientManager.UsingCogbotFromRadgast = true;
             clientManager = new ClientManager();
             chatConsole = new CogbotTabWindow(inst, clientManager)
                               {

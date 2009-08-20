@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using OpenMetaverse;
 
 namespace cogbot.Actions
@@ -33,7 +34,8 @@ namespace cogbot.Actions
 
             try
             {
-                Client.Appearance.WearOutfit(target.Split('/'), bake);
+                List<InventoryItem> outfit = Client.GetFolderItems(target);
+                Client.Appearance.ReplaceOutfit(outfit);
             }
             catch (Exception ex)
             {

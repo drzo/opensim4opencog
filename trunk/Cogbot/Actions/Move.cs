@@ -162,8 +162,8 @@ namespace cogbot.Actions
                 try
                 {
 
-                    Client.Self.Movement.UpdateInterval = 100;
-                    Client.Self.Movement.AutoResetControls = true;
+                    //Client.Self.Movement.UpdateInterval = 100;
+                    //Client.Self.Movement.AutoResetControls = true;
 
                     Client.Self.Movement.SendUpdate(true);
                     Client.Self.Movement.TurnToward(Position);

@@ -627,11 +627,11 @@ namespace OpenMetaverse
         }
         public void Disconnect(bool sendCloseCircuit, NetworkManager.DisconnectType disconnectType)
         {
+            Debug("Disconnect sendCloseCircuit=" + sendCloseCircuit + " disconnectType=" + disconnectType);
             //lets wait until the server makes a desision
             if (disconnectType == NetworkManager.DisconnectType.TeleportInitiated
                 //|| disconnectType == NetworkManager.DisconnectType.NetworkTimeout
                 ) return;
-
 
             if (connected)
             {
@@ -680,6 +680,7 @@ namespace OpenMetaverse
         /// </summary>
         public void Pause()
         {
+            Debug("pauseing");
             AgentPausePacket pause = new AgentPausePacket();
             pause.AgentData.AgentID = Client.Self.AgentID;
             pause.AgentData.SessionID = Client.Self.SessionID;
@@ -688,11 +689,20 @@ namespace OpenMetaverse
             Client.Network.SendPacket(pause, this);
         }
 
+        private void Debug(string s)
+        {
+            s = "" + s + " " + this;
+            Logger.Log(s,OpenMetaverse.Helpers.LogLevel.Info,Client);
+            Console.WriteLine("!!!!" + s);
+
+        }
+
         /// <summary>
         /// Instructs the simulator to resume sending update packets (unpause)
         /// </summary>
         public void Resume()
         {
+            Debug("resumeing");
             AgentResumePacket resume = new AgentResumePacket();
             resume.AgentData.AgentID = Client.Self.AgentID;
             resume.AgentData.SessionID = Client.Self.SessionID;
@@ -842,7 +852,8 @@ namespace OpenMetaverse
         /// 
         /// </summary>
         public void SendPing()
-        {
+        {                        
+            //Debug("SendPing");
             uint oldestUnacked = 0;
 
             // Get the oldest NeedAck value, the first entry in the sorted dictionary
@@ -1140,7 +1151,7 @@ namespace OpenMetaverse
             ResendUnacked();
 
             // Start the ACK handling functions again after NETWORK_TICK_INTERVAL milliseconds
-            try { AckTimer.Change(Settings.NETWORK_TICK_INTERVAL, Timeout.Infinite); }
+            if (AckTimer!=null) try { AckTimer.Change(Settings.NETWORK_TICK_INTERVAL, Timeout.Infinite); }
             catch (Exception) { }
         }
 

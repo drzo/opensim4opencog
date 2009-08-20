@@ -16,6 +16,7 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            if (Client.Network.CurrentSim == null) return "not yet connected";
             List<Primitive> attachments = Client.Network.CurrentSim.ObjectsPrimitives.FindAll(
                 delegate(Primitive prim) { return prim.ParentID == Client.Self.LocalID; }
             );

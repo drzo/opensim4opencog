@@ -11,8 +11,7 @@ namespace FashionBotModule
     public class FashionBotModuleMain : WorldObjectsModule
     {
         private bool EnumeratingClothing;
-        private List<InventoryBase> ClothingFolderItems;
-        private List<InventoryBase> ClothingFolderFolders;
+        private List<UUID> ClothingFolderFolders;
         int current_subfolder =-1;
         private UUID ClothingFolder;
         private UUID Owner;
@@ -63,7 +62,7 @@ namespace FashionBotModule
         {
             if (Received.Contains(item.AssetUUID))
             {
-                List<InventoryBase> newList = new List<InventoryBase> {item};
+                List<InventoryItem> newList = new List<InventoryItem> { item };
                 client.Appearance.AddToOutfit(newList, true);
             }
             EnumerateClothing();
@@ -72,18 +71,9 @@ namespace FashionBotModule
         private void FashionBotModuleMain_OnSimConnected(Simulator simulator)
         {
             EnumerateClothing();
-            WearDefaults();
             if (ClothingFolderFolders.Count>0)
             {
                 StartRotatingClothing();
-            }
-        }
-
-        private void WearDefaults()
-        {
-            if (current_subfolder == -1)
-            {
-                client.Appearance.WearOutfit(ClothingFolder, true);
             }
         }
 
@@ -104,17 +94,10 @@ namespace FashionBotModule
         private void WearOutfitTimmed()
         {
             // replace with our default first
-            client.Appearance.WearOutfit(ClothingFolder, true);
             if (ClothingFolderFolders.Count <= current_subfolder) return;
             // Add new stuff
-            AddToOutfit(ClothingFolderFolders[current_subfolder]);
+            client.Appearance.ReplaceOutfit(client.GetFolderItems(ClothingFolderFolders[current_subfolder]));
             Thread.Sleep(60000);
-        }
-
-        private void AddToOutfit(InventoryBase folder)
-        {
-            List<InventoryBase> items = client.Inventory.FolderContents(folder.UUID, Owner, false, true, InventorySortOrder.ByDate, 10000);
-            client.Appearance.AddToOutfit(items, true);
         }
 
         private void EnumerateClothing()
@@ -123,8 +106,15 @@ namespace FashionBotModule
             if (EnumeratingClothing) return;
             EnumeratingClothing = true;
             ClothingFolder = client.Inventory.FindFolderForType(AssetType.Clothing);
-            ClothingFolderFolders = client.Inventory.FolderContents(ClothingFolder, Owner, true, false, InventorySortOrder.ByName, 10000);
-            ClothingFolderItems = client.Inventory.FolderContents(ClothingFolder, Owner, false, true, InventorySortOrder.ByName, 10000);
+            ClothingFolderFolders = new List<UUID>();
+            List <InventoryBase> ib = client.Inventory.FolderContents(ClothingFolder, Owner, true, false, InventorySortOrder.ByName, 10000);
+            foreach (var list in ib)
+            {
+              if (list is InventoryFolder)
+              {
+                  ClothingFolderFolders.Add(list.UUID);
+              }   
+            }
             EnumeratingClothing = false;
         }
 

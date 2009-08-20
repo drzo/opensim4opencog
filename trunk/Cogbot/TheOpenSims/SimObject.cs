@@ -221,19 +221,16 @@ namespace cogbot.TheOpenSims
         #region SimMover Members
 
         public void TurnToward(Vector3d targetPosition)
-        {
+        {            
             Vector3d Current = GetWorldPosition();
             Vector3d diff = targetPosition - Current;
-            while (diff.Length() > 1)
+            while (diff.Length() > 20)
             {
                 diff.X *= 0.75f;
                 diff.Y *= 0.75f;
                 diff.Z *= 0.75f;
             }
-            Vector3 LocalPos = new Vector3(GetSimPosition());
-            LocalPos.X += (float) diff.X;
-            LocalPos.Y += (float) diff.Y;
-            TurnToward(LocalPos);
+            TurnToward(GetSimPosition() + new Vector3((float)diff.X, (float)diff.Y, 0));
         }
 
         #endregion
@@ -594,6 +591,7 @@ namespace cogbot.TheOpenSims
 
         public void RemoveCollisions()
         {
+            IsMeshed = false;
             if (_Mesh != null)
             {
                 _Mesh.RemoveCollisions();
@@ -866,6 +864,8 @@ namespace cogbot.TheOpenSims
                     return false;
                 }
             }
+            if (IsMeshed) return false;
+            IsMeshed = true;
             return GetSimRegion().AddCollisions(Mesh);
             //throw new NotImplementedException();
         }
@@ -1838,6 +1838,8 @@ namespace cogbot.TheOpenSims
         #region SimObject Members
 
         readonly Dictionary<string,object> dict = new Dictionary<string, object>();
+        private bool IsMeshed;
+
         public object this[string s]
         {
             get

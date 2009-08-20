@@ -72,7 +72,7 @@ namespace cogbot
                         if (ii.Name == current_itemName)
                         {
                             // we found a matcher so lets do our ops
-                            if (current_operation == "wear") botclient.Appearance.WearOutfit(ii.UUID, false);
+                            if (current_operation == "wear") botclient.Appearance.AddToOutfit(new List<InventoryItem> { ii }, true);
                             if (current_operation == "animationStart") botclient.Self.AnimationStart(ii.UUID, false);
                             if (current_operation == "animationStop") botclient.Self.AnimationStop(ii.UUID, false);
                             if (current_operation == "attach") botclient.Appearance.Attach(ii, AttachmentPoint.Default);
@@ -153,7 +153,7 @@ namespace cogbot
                             if (String.Compare(ii.Name, itemName, true) == 0)
                             {
                                 // we found a matcher so lets do our ops
-                                if (operation == "wear") botclient.Appearance.WearOutfit(ii.UUID, false);
+                                if (operation == "wear") botclient.Appearance.AddToOutfit(new List<InventoryItem>{ii},true);
                                 if (operation == "animationStart") botclient.Self.AnimationStart(ii.UUID, false);
                                 if (operation == "animationStop") botclient.Self.AnimationStop(ii.UUID, false);
                                 if (operation == "attach") botclient.Appearance.Attach(ii, AttachmentPoint.Default);
@@ -172,12 +172,12 @@ namespace cogbot
                             InventoryFolder fld = (InventoryFolder)ib;
                             //appendFolderHook(fld);
                             //fld.RequestContents();
-                            if ((operation == "wear") && (ib.Name == itemName))
-                            {
-                                botclient.Appearance.WearOutfit(ib.UUID, false);
-                                WriteLine(" [WEAR] Name: " + ib.Name + " <==> " + ib.UUID.ToString());
-                                return;
-                            }
+                            //if ((operation == "wear") && (ib.Name == itemName))
+                            //{
+                            //    botclient.Appearance.AddToOutfit(botclient.Inventory.(), false);
+                            //    WriteLine(" [WEAR] Name: " + ib.Name + " <==> " + ib.UUID.ToString());
+                            //    return;
+                            //}
                             evalOnFolders(ib as InventoryFolder, operation, itemName);
                         }
                     }

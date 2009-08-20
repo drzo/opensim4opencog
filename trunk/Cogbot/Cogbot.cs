@@ -33,10 +33,10 @@ namespace cogbot
         {
           //  NativeMethods.AllocConsole();
            // Application.EnableVisualStyles();
-            //Application.SetCompatibleTextRenderingDefault(false);
+            Application.SetCompatibleTextRenderingDefault(false);
 
-            //RadegastInstance instance = RadegastInstance.GlobalInstance;
-            //ClientManager.UseRadgast = true;
+            ClientManager.UsingCogbotFromRadgast = false;
+            ClientManager.UsingRadgastFromCogbot = true;
             Arguments arguments = new Arguments(args);           
 
             List<LoginDetails> accounts = new List<LoginDetails>();

@@ -7,13 +7,29 @@ using System.IO;
 using System.Net.Sockets;
 using System.Net;
 using System.Xml;
+using cogbot.Actions;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 using cogbot.Listeners;
 
 namespace cogbot.Utilities
 {
-    public class TcpServer : SimEventSubscriber
+
+    public class TcpServerCommand : Command,BotSystemCommand
+    {
+        public TcpServerCommand(BotClient bc):base(bc)
+        {
+            Name = "tcpserver";
+            Description = "";
+        }
+        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        {
+           // BotTcpServer btp = TheBotClient.TheTcpServer;
+            throw new NotImplementedException();
+        }
+    }
+
+    public class BotTcpServer : SimEventSubscriber
     {
         public bool DisableEventStore = true;// TODO this needs to be falso but running out of memory
         public Thread thrSvr;
@@ -21,7 +37,7 @@ namespace cogbot.Utilities
         GridClient client;
         Queue<String> whileClientIsAway = new Queue<string>();
 
-        public TcpServer(int port, BotClient botclient)
+        public BotTcpServer(int port, BotClient botclient)
         {
             parent = botclient;
             client = botclient.gridClient;
@@ -63,7 +79,9 @@ namespace cogbot.Utilities
                 byte[] data = new byte[1024];
 
                 int PortNumber = serverPort; // 5555;
+// ReSharper disable AssignNullToNotNullAttribute
                 tcp_socket = new TcpListener(IPAddress.Parse("0.0.0.0"), PortNumber);
+// ReSharper restore AssignNullToNotNullAttribute
                 parent.WriteLine("About to initialize port.");
                 tcp_socket.Start();
                 parent.WriteLine("Listening for a connection... port=" + PortNumber);
@@ -123,12 +141,12 @@ namespace cogbot.Utilities
             tcpStreamWriter.WriteLine("<comment>Welcome to Cogbot</comment>");
             tcpStreamWriter.Flush();
             // Start loop and handle commands:
-            bool _quitRequested = false;
-            while (!_quitRequested)
+            bool quitRequested = false;
+            while (!quitRequested)
             {
 
                 clientMessage = tcpStreamReader.ReadLine().Trim();
-                parent.WriteLine("SockClient:" + clientMessage);
+                parent.WriteLine("SockClient: {0}", clientMessage);
                 tcpStreamWriter.WriteLine();
                 String lowerCmd = clientMessage.ToLower();
 
@@ -136,13 +154,13 @@ namespace cogbot.Utilities
                 {
                     if (lowerCmd == "bye")
                     {
-                        _quitRequested = true;
+                        quitRequested = true;
                     }
                     else ProcessHttpCommand(tcpStreamWriter, clientMessage);
                 }
                 catch (Exception e)
                 {
-                    tcpStreamWriter.WriteLine("500 " + parent.argString(e.ToString()));
+                    tcpStreamWriter.WriteLine("500 {0}", parent.argString(e.ToString()));
                 }
                 tcpStreamWriter.Flush();
             }
@@ -442,9 +460,11 @@ namespace cogbot.Utilities
         }
         public string EvaluateCommand(string cmd)
         {
-            StringWriter wl = new StringWriter();
-            string s = parent.ExecuteCommand(cmd,wl.WriteLine);
-            return wl.ToString() + s;
+            using (StringWriter wl = new StringWriter())
+            {
+                string s = parent.ExecuteCommand(cmd, wl.WriteLine);
+                return wl.ToString() + s;
+            }
         }
 
         /// <summary>
@@ -502,7 +522,7 @@ namespace cogbot.Utilities
 
         //void BotClient.BotMessageSubscriber.ShuttingDown()
         //{
-        //    ((TcpServer)this).closeTcpListener();
+        //    ((BotTcpServer)this).closeTcpListener();
         //}
 
        // #endregion
@@ -532,7 +552,7 @@ namespace cogbot.Utilities
 
         void SimEventSubscriber.ShuttingDown()
         {
-            ((TcpServer)this).closeTcpListener();
+            ((BotTcpServer)this).closeTcpListener();
         }
 
         #endregion
