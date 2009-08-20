@@ -463,13 +463,13 @@ namespace cogbot
                     {
                         if (UsingCogbotFromRadgast)
                         {
-                            return null;
+                            //return null;
                             throw new InvalidProgramException("UsingCogbotFromRadgast for more than one client");
                         }
-                        RadegastInstance inst = new RadegastInstance();
-                        gridClient = inst.Client;
-                        bc = new BotClient(this, gridClient);
-                        bc.TheRadegastInstance = inst;
+                        //RadegastInstance inst = new RadegastInstance();
+                        //gridClient = inst.Client;
+                        //bc = new BotClient(this, gridClient);
+                        //bc.TheRadegastInstance = inst;
                     }
 
                 }
