@@ -529,7 +529,7 @@ namespace cogbot.TheOpenSims
 
         public double Distance(SimPosition prim)
         {
-            if (!prim.IsRegionAttached()) return 1300;
+            if (prim ==null || !prim.IsRegionAttached()) return 1300;
             if (!IsRegionAttached()) return 1300;
             return Vector3d.Distance(GetWorldPosition(), prim.GetWorldPosition());
         }
