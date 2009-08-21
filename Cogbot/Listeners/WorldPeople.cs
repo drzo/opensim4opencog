@@ -45,7 +45,7 @@ namespace cogbot.Listeners
 
             }
             if (string.IsNullOrEmpty(message))
-            // if (type == ChatType.StartTyping || type == ChatType.StopTyping)
+            if (type == ChatType.StartTyping || type == ChatType.StopTyping)
             {
 
                 EventQueue.Enqueue(

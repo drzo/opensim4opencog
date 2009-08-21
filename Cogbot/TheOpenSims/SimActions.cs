@@ -212,7 +212,7 @@ namespace cogbot.TheOpenSims
         readonly private float maxDistance;
         readonly private Thread FollowThread;
         private bool KeepFollowing = true;
-        public static bool UsePathfinder = false;
+        public static bool UsePathfinder = true;
 
         public FollowerAction(SimAvatar impl, SimPosition position)
             : base("" + impl.GetName() + ": Follow " + position + " -> " + impl.DistanceVectorString(position))
@@ -259,7 +259,7 @@ namespace cogbot.TheOpenSims
                         Thread.Sleep(2000);
                         TheBot.StopMoving();
                     }
-                    if (UsePathfinder && TheBot.Distance(Target) > maxDistance + 2)
+                    if (UsePathfinder && Target.IsRegionAttached() && TheBot.Distance(Target) > maxDistance + 2)
                         TheBot.GotoTarget(Target);
                 }   
                 else

@@ -94,7 +94,7 @@ namespace cogbot.Listeners
             {
                 parms[i] = new NamedParam(paramNames[i], paramTypes[i],parameters[i]);
             }
-            SimObjectEvent evt =new SimObjectEvent(SimEventStatus.Once, eventName, SimEventType.UNKNOWN, parms);
+            SimObjectEvent evt = new SimObjectEvent(SimEventStatus.Once, eventName, SimEventType.UNKNOWN, SimEventClass.REGIONAL, parms);
             client.SendPipelineEvent(evt);
             return true;
         }
@@ -922,7 +922,7 @@ namespace cogbot.Listeners
 
         public void SendNewRegionEvent(SimEventType type, string eventName, params object[] args)
         {
-            client.SendPipelineEvent(new SimObjectEvent(type, eventName, args));
+            client.SendPipelineEvent(new SimObjectEvent(type, SimEventClass.REGIONAL, eventName, args));
         }
 
         public void CalcStats(SimObject prim)

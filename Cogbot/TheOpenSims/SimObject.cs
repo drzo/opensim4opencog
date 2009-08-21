@@ -365,7 +365,7 @@ namespace cogbot.TheOpenSims
             get
             {
                 Primitive Prim = this.Prim;
-                if ((Prim.Flags & PrimFlags.Touch) != 0) return true;
+                if (Prim!=null && (Prim.Flags & PrimFlags.Touch) != 0) return true;
                 if (Properties != null)
                     return !String.IsNullOrEmpty(Properties.TouchName);
                 return false;
@@ -1776,7 +1776,7 @@ namespace cogbot.TheOpenSims
 
         public virtual bool OnEffect(string effectType, object t, object p, float duration, UUID id)
         {
-            SimObjectEvent newSimObjectEvent = new SimObjectEvent(SimEventStatus.Once, effectType, SimEventType.EFFECT,
+            SimObjectEvent newSimObjectEvent = new SimObjectEvent(SimEventStatus.Once, effectType, SimEventType.EFFECT, SimEventClass.REGIONAL,
                                                                     WorldObjects.ToParameter("doneBy", this),
                                                                     WorldObjects.ToParameter("objectActedOn", t),
                                                                     WorldObjects.ToParameter("eventPartiallyOccursAt", p),
