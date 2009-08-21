@@ -8,6 +8,12 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.TheOpenSims
 {
+    public enum SimEventClass
+    {
+        PERSONAL,
+        REGIONAL
+    }
+
     public enum SimEventType
     {
         UNKNOWN,
@@ -162,30 +168,34 @@ namespace cogbot.TheOpenSims
         public List<NamedParam> Parameters;
         public SimEventType EventType;
         public SimEventStatus EventStatus;
+        public readonly SimEventClass EventClass;
 
-        public SimObjectEvent(SimEventStatus status, string eventName, SimEventType type, IEnumerable<NamedParam> args)
+        public SimObjectEvent(SimEventStatus status, string eventName, SimEventType type, SimEventClass clazz, IEnumerable<NamedParam> args)
         {
             Verb = eventName;
             Parameters = new List<NamedParam>(args);
             EventType = type;
             EventStatus = status;
+            EventClass = clazz;
             ParameterNames();
         }
 
-        public SimObjectEvent(SimEventStatus status, string eventName, SimEventType type, params NamedParam[] args)
+        public SimObjectEvent(SimEventStatus status, string eventName, SimEventType type, SimEventClass clazz, params NamedParam[] args)
         {
             Verb = eventName;
             Parameters = new List<NamedParam>(args);
             EventType = type;
             EventStatus = status;
+            EventClass = clazz;
             ParameterNames();
         }
 
-        public SimObjectEvent(SimEventType type, string name, IEnumerable paramz)
+        public SimObjectEvent(SimEventType type, SimEventClass clazz, string name, IEnumerable paramz)
         {
             EventType = type;
             EventStatus = SimEventStatus.Once;
             Verb = name;
+            EventClass = clazz;
             Parameters = NamedParam.ObjectsToParams(paramz);
             ParameterNames();
         }

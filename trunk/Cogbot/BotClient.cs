@@ -1317,7 +1317,7 @@ namespace cogbot
                     args[0] = ((BotClient)args[0]).GetAvatar();
                 }
             }
-            SimObjectEvent evt = botPipeline.CreateEvent(type, eventName, args);
+            SimObjectEvent evt = botPipeline.CreateEvent(type, SimEventClass.PERSONAL, eventName, args);
             evt.AddParam("recipientOfInfo", GetAvatar());
             SendPipelineEvent(evt);
         }

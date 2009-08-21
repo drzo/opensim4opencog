@@ -128,13 +128,13 @@ namespace cogbot.Listeners
                         if (oldSit != null)
                             oldSit.AddCanBeTargetOf(1, SendPipelineEvent(
                                                            new SimObjectEvent(SimEventStatus.Stop, newSitName,
-                                                                              SimEventType.SIT,
+                                                                              SimEventType.SIT, SimEventClass.REGIONAL,
                                                                               ToParameter("doneBy", avatar),
                                                                               ToParameter("objectActedOn", oldSit))));
                         if (newSit != null)
                             newSit.AddCanBeTargetOf(1, SendPipelineEvent(
                                                            new SimObjectEvent(SimEventStatus.Start, newSitName,
-                                                                              SimEventType.SIT,
+                                                                              SimEventType.SIT, SimEventClass.REGIONAL,
                                                                               ToParameter("doneBy", avatar),
                                                                               ToParameter("objectActedOn", newSit))));
                     }
@@ -145,7 +145,7 @@ namespace cogbot.Listeners
         {
             if (!MaintainActions) return;
             //Console.WriteLine(user + " " + p + " " + ScriptEngines.ScriptEventListener.argsListString(args));
-            user.LogEvent(SendPipelineEvent(new SimObjectEvent(updown, p, SimEventType.SIT, args)));
+            user.LogEvent(SendPipelineEvent(new SimObjectEvent(updown, p, SimEventType.SIT, SimEventClass.REGIONAL, args)));
         }
 
 
@@ -254,7 +254,7 @@ namespace cogbot.Listeners
                         // else if (perpAv.Name == client.Self.Name)
                         //   WriteLine("$bot bumped into " + victimAv.Name + " like " + type);   
                         SimObjectEvent newSimObjectEvent = new SimObjectEvent(SimEventStatus.Once,
-                                                    "MeanCollisionType-" + type, SimEventType.SOCIAL,
+                                                    "MeanCollisionType-" + type, SimEventType.SOCIAL, SimEventClass.REGIONAL,
                                                     ToParameter("primaryObjectMoving", perpAv),
                                                     ToParameter("objectActedOn", victimAv),
                                                     ToParameter("initialSpeedOfPrimaryObjectMoving", "MetersPerSecond", magnitude));
@@ -438,7 +438,7 @@ namespace cogbot.Listeners
                                             else
                                             {
                                                 SimObjectEvent evt = new SimObjectEvent(SimEventStatus.Once, effectType,
-                                                                                        SimEventType.EFFECT,
+                                                                                        SimEventType.EFFECT, SimEventClass.REGIONAL,
                                                                                         ToParameter("doneBy", s),
                                                                                         ToParameter("objectActedOn", t),
                                                                                         ToParameter(

@@ -64,7 +64,7 @@ namespace cogbot.Listeners
     public interface SimEventPublisher
     {
         // this publisher will SendEvent to some SimEventPipeline after the Event params have been casted to the correct types
-        SimObjectEvent CreateEvent(SimEventType type, string eventName, params object[] args);
+        SimObjectEvent CreateEvent(SimEventType type,SimEventClass clazz, string eventName, params object[] args);
         // this object will propogate the event AS-IS 
         void SendEvent(SimObjectEvent evt);
         void AddSubscriber(SimEventSubscriber sub);
@@ -104,9 +104,9 @@ namespace cogbot.Listeners
 
         #region SimEventPublisher Members
 
-        public SimObjectEvent CreateEvent(SimEventType type, string eventName, params object[] args)
+        public SimObjectEvent CreateEvent(SimEventType type, SimEventClass clazz, string eventName, params object[] args)
         {
-            return new SimObjectEvent(type, eventName, args);
+            return new SimObjectEvent(type,clazz, eventName, args);
         }
 
         static private bool UseQueue = false;
