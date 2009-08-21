@@ -310,6 +310,13 @@ namespace cogbot.Listeners
                 {
                     obj0.ResetPrim(prim, client, simulator);
                 }
+                else // Ensure at least one prim
+                {
+                    if (obj0.Prim == null)
+                    {
+                        obj0.ResetPrim(prim, client, simulator);
+                    }
+                }
                 return obj0;
             }
 
