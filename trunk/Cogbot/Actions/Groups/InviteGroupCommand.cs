@@ -26,9 +26,9 @@ namespace cogbot.Actions
             UUID role = UUID.Zero;
             List<UUID> roles = new List<UUID>();
 
-            if (!UUID.TryParse(args[0], out avatar))
+            if (!UUIDTryParse(args[0], out avatar))
                     return "parse error avatar UUID";
-            if (!UUID.TryParse(args[1], out group))
+            if (!UUIDTryParse(args[1], out group))
                     return "parse error group UUID";
             for (int i = 2; i < args.Length; i++)
                 if (UUID.TryParse(args[i], out role))

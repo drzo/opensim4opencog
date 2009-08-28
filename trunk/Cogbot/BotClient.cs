@@ -373,6 +373,9 @@ namespace cogbot
             //Self.OnScriptQuestion += new AgentManager.ScriptQuestionCallback(Self_OnScriptQuestion);
             Self.OnTeleport += new AgentManager.TeleportCallback(Self_OnTeleport);
             Self.OnChat += new AgentManager.ChatCallback(Self_OnChat);
+            GroupManager.CurrentGroupsCallback callback =
+                    new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
+            Groups.OnCurrentGroups += callback;
 
             updateTimer.Start();
             searcher = new BotInventoryEval(this);
@@ -546,6 +549,9 @@ namespace cogbot
                     string groupName = im.Message;
                     int found = groupName.IndexOf("Group:");
                     if (found > 0) groupName = groupName.Substring(found + 6);
+                    Self.InstantMessage(Self.Name, im.FromAgentID, string.Empty, im.IMSessionID,
+                            InstantMessageDialog.GroupInvitationAccept, InstantMessageOnline.Offline, Self.SimPosition,
+                            UUID.Zero, new byte[0]);
                     found = groupName.IndexOf(":");
                     if (found > 0)
                     {
@@ -1581,12 +1587,12 @@ namespace cogbot
         {
             List<InventoryItem> items = new List<InventoryItem>();
             var list = Inventory.FolderContents(folderID, Self.AgentID, false, true, InventorySortOrder.ByDate, 10000);
-            foreach (var i in list)
-            {
-                if (i is InventoryItem) items.Add((InventoryItem)i);
-            }
+            if (list != null) foreach (var i in list)
+                {
+                    if (i is InventoryItem) items.Add((InventoryItem)i);
+                }
             return items;
-        }   
+        }
     }
 
 }

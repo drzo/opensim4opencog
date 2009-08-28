@@ -883,6 +883,8 @@ namespace cogbot.TheOpenSims
         public virtual bool RestoreEnterable(SimMover actor)
         {
             bool changed = false;
+            Primitive Prim = this.Prim;
+            if (Prim == null) return false;
             PrimFlags tempFlags = Prim.Flags;
             if (MadePhantom)
             {

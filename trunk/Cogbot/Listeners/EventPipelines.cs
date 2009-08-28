@@ -24,6 +24,12 @@ namespace cogbot.Listeners
         void SimEventSubscriber.OnEvent(SimObjectEvent evt)
         {
             if (evt.EventType == SimEventType.DATA_UPDATE) return;
+
+            if (evt.EventType == SimEventType.EFFECT)
+            {
+                if (evt.Verb == "LookAtType-Idle") return;
+                if (evt.Verb == "LookAtType-FreeLook") return;
+            }
             String eventName = evt.GetVerb();
             object[] args = evt.GetArgs();
 

@@ -12,7 +12,7 @@ namespace cogbot.Listeners
 {
     partial class WorldObjects
     {
-
+               
         public override void Self_OnChat(string message, ChatAudibleLevel audible, ChatType type,
                                          ChatSourceType sourceType, string fromName, UUID id, UUID ownerid,
                                          Vector3 position)
@@ -44,8 +44,22 @@ namespace cogbot.Listeners
                                    message, audible, type, sourceType, fromName, id, ownerid, location);
 
             }
+
+            if (type == ChatType.Normal || type == ChatType.Shout || type == ChatType.Whisper)
+            {
+                EventQueue.Enqueue(() =>
+                                   SendNewRegionEvent(SimEventType.SOCIAL, "ChatType-" + type.ToString(),
+                                                      ToParameter("senderOfInfo", s1),
+                                                      ToParameter("infoTransferred-NLString", message),
+                                                      audible,
+                                                      type,
+                                                      sourceType,
+                                                      ToParameter("eventPrimarilyOccursAt", location)));
+                return;
+
+            }
+
             if (string.IsNullOrEmpty(message))
-            if (type == ChatType.StartTyping || type == ChatType.StopTyping)
             {
 
                 EventQueue.Enqueue(
@@ -57,16 +71,16 @@ namespace cogbot.Listeners
                                        ToParameter("senderOfInfo", s1),
                                        ToParameter("eventPrimarilyOccursAt", location)));
                 return;
-
             }
             EventQueue.Enqueue(() =>
-                                SendNewRegionEvent(SimEventType.SOCIAL, "ChatType-" + type.ToString(),
-                                                   ToParameter("senderOfInfo", s1),
-                                                   ToParameter("infoTransferred-NLString", message),
-                                                   audible,
-                                                   type,
-                                                   sourceType,
-                                                   ToParameter("eventPrimarilyOccursAt", location)));
+                               SendNewRegionEvent(SimEventType.SOCIAL, "ChatType-" + type.ToString(),
+                                                  ToParameter("senderOfInfo", s1),
+                                                  ToParameter("infoTransferred-NLString", message),
+                                                  audible,
+                                                  type,
+                                                  sourceType,
+                                                  ToParameter("eventPrimarilyOccursAt", location)));
+
         }
 
         public override void Self_OnInstantMessage(InstantMessage im, Simulator simulator)
@@ -145,7 +159,7 @@ namespace cogbot.Listeners
             foreach (UUID key in groups.Keys)
             {
                 Group g = groups[key];
-                AddName2Key(g.Name, key);
+                AddGroup2Key(g.Name, key);
                 RegisterUUID(key, g);
             }
             //base.Groups_OnCurrentGroups(groups);
@@ -235,11 +249,13 @@ namespace cogbot.Listeners
 
         public override void Avatars_OnAvatarGroups(UUID avatarID, List<AvatarGroup> avatarGroups)
         {
-            foreach (var grp in avatarGroups)
+            foreach (AvatarGroup grp in avatarGroups)
             {
+                AddGroup2Key(grp.GroupName,grp.GroupID);
                 //TODO SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID, null), grp);                
             }
         }
+
         public override void Groups_OnGroupMembers(UUID requestID, UUID groupID, Dictionary<UUID, GroupMember> members)
         {
             // base.Groups_OnGroupMembers(requestID, totalCount, members);
@@ -249,7 +265,7 @@ namespace cogbot.Listeners
         {
             foreach (KeyValuePair<UUID, string> kvp in groupNames)
             {
-                AddName2Key(kvp.Value, kvp.Key);
+                AddGroup2Key(kvp.Value, kvp.Key);
             }
             ///base.Groups_OnGroupNames(groupNames);
         }
@@ -269,6 +285,24 @@ namespace cogbot.Listeners
             foreach (KeyValuePair<UUID, string> kvp in names)
             {
                 AddName2Key(kvp.Value, kvp.Key);
+            }
+        }
+
+
+        private void AddGroup2Key(string name, UUID uuid)
+        {
+            lock (Name2Key)
+            {
+                Name2Key[name] = uuid;
+            }
+        }
+
+        // like avatar picks or role names
+        private void AddOther2Key(string name, UUID uuid)
+        {
+            lock (Name2Key)
+            {
+                Name2Key[name] = uuid;
             }
         }
 
@@ -305,6 +339,8 @@ namespace cogbot.Listeners
                 Debug("AddName2Key: " + value + " " + id);
                 return;
             }
+            SimAvatarImpl A = CreateSimAvatar(id, this, null);
+            A.AspectName = value;
             lock (Name2Key)
             {
                 Name2Key[value] = id;
@@ -315,7 +351,7 @@ namespace cogbot.Listeners
         {
             foreach (KeyValuePair<UUID, string> kvp in picks)
             {
-                AddName2Key(kvp.Value, kvp.Key);
+                AddOther2Key(kvp.Value, kvp.Key);
             }
         }
 
@@ -394,7 +430,7 @@ namespace cogbot.Listeners
         {
             matchedGroups.ForEach(data =>
             {
-                AddName2Key(data.GroupName, data.GroupID);
+                AddGroup2Key(data.GroupName, data.GroupID);
             });
         }
 

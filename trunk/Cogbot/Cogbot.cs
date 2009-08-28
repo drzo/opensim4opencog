@@ -175,6 +175,16 @@ namespace cogbot
             manager.Run();
         }
 
+
+        public void WriteLine(ConsoleColor color, string format, params object[] args)
+        {
+            throw new NotImplementedException();
+        }
+        public string CmdPrompt(string p)
+        {
+            throw new NotImplementedException();
+        }
+
         public static void WriteLine(string str, object[] args)
         {
             if (consoleBase==null)

@@ -579,8 +579,8 @@ namespace cogbot.Listeners
         public override void Parcels_OnParcelInfo(ParcelInfo parcel)
         {
             SimRegion r = SimRegion.GetRegion(parcel.SimName);
-            r.Parcels_OnParcelInfo(parcel);
-           // base.Parcels_OnParcelInfo(parcel);
+            if (r!=null) r.Parcels_OnParcelInfo(parcel);
+            else base.Parcels_OnParcelInfo(parcel);
         }
 
         public override void Parcels_OnAccessListReply(Simulator simulator, int sequenceID, int localID, uint flags, List<ParcelManager.ParcelAccessEntry> accessEntries)

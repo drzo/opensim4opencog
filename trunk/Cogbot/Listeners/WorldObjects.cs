@@ -1457,10 +1457,10 @@ namespace cogbot.Listeners
                             SimObject obj0 = GetSimObjectFromUUID(uuid);
                             if (obj0 == null) obj0 = new SimAvatarImpl(uuid, objects, simulator);
                             SimAvatars.Add((SimAvatar)obj0);
-                            client.Avatars.RequestAvatarProperties(uuid);
                             //client.Avatars.RequestAvatarPicks(uuid);
                             SimObjects.AddTo(obj0);
                             RegisterUUID(uuid, obj0);
+                            client.Avatars.RequestAvatarProperties(uuid);
                             return (SimAvatarImpl)obj0;
                         }
         }
