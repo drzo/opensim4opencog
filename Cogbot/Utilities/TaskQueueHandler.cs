@@ -21,6 +21,7 @@ namespace cogbot.Utilities
         public TaskQueueHandler(string str, int msWaitBetween)
         {
             Name = str;
+            if (msWaitBetween < 1) msWaitBetween = 1;
             WAIT_AFTER = msWaitBetween;
             EventQueueHandler = new Thread(EventQueue_Handler) {Name = str + " worker"};
             EventQueueHandler.Start();
@@ -99,7 +100,7 @@ namespace cogbot.Utilities
             WaitingOn.Set();
         }
 
-        public static bool DebugQueue = false;
+        public static bool DebugQueue = true;
 
         void EventQueue_Ping()
         {

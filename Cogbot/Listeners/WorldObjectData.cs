@@ -60,6 +60,7 @@ namespace cogbot.Listeners
                 }
                 updateMe.UpdateProperties(props);
                 //Debug("UpdateProperties: {0}", updateMe.DebugInfo());
+                SendNewRegionEvent(SimEventType.DATA_UPDATE,"on-properties-updated",prim);
             }
             describePrimToAI(prim, simulator);
         }
@@ -119,6 +120,7 @@ namespace cogbot.Listeners
                         }
 
                     }
+                    SendNewRegionEvent(SimEventType.DATA_UPDATE, "on-data-updated", prim);
                     //Objects_OnPrimitiveUpdate(simulator, prim, objectupdate0, simulator.Handle, 0);
                 }
                 else

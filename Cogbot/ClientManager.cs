@@ -9,14 +9,13 @@ using OpenMetaverse;
 using cogbot.Actions;
 using Radegast;
 using Action = cogbot.Actions.Action;
-using NotImplementedException=sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 //using Radegast;
 namespace cogbot
 {
     public delegate void DescribeDelegate(bool detailed, OutputDelegate WriteLine);
     enum Modes { normal, tutorial };
-    public delegate void OutputDelegate(string str, params object[] args);
+    public delegate void OutputDelegate(string str, params object[] args);  
 
     public class ClientManager
     {
@@ -872,5 +871,12 @@ namespace cogbot
             this.y = 0;
             this.z = 0;
         }
+    }
+
+    public interface IConsoleBase
+    {
+        void WriteLine(ConsoleColor color, string format, params object[] args);
+        void WriteLine(string format, params object[] args);
+        string CmdPrompt(string p);
     }
 }

@@ -248,15 +248,34 @@ namespace cogbot.TheOpenSims
             while (KeepFollowing)
             {
                 Thread.Sleep(2000);
-                if (TheBot.Distance(Target) > maxDistance)
+                if (!Target.IsRegionAttached())
                 {
-                    for (int i = 0; i < 3; i++)
+                    Console.WriteLine("" + this + " Not regions attached " + Target);
+                    Thread.Sleep(2000);
+                    continue;
+                }
+                double dist = TheBot.Distance(Target);
+                if (dist > maxDistance)
+                {
+                    int useSimpleFollow = 2;
+                    while (useSimpleFollow-- > 0)
                     {
-                        if (Target.IsRegionAttached())
+                        if (!Target.IsRegionAttached())
+                        {
+                            Console.WriteLine(""+this+" Not regions attached " + Target);                            
+                            Thread.Sleep(2000);
+                            continue;
+                        }
                        // TheBot.TurnToward(Target);
+                        dist = TheBot.Distance(Target);
                         TheBot.SetMoveTarget(Target, maxDistance);
-                        else Console.WriteLine(""+this+" Not regions attached " + Target);
-                        Thread.Sleep(2000);
+                        Thread.Sleep(3000);
+                        if (dist > (TheBot.Distance(Target)+1))
+                        {
+                            // Simple Follow might have worked. try again
+                            useSimpleFollow = 2;
+                            continue;                            
+                        }
                         TheBot.StopMoving();
                     }
                     if (UsePathfinder && Target.IsRegionAttached() && TheBot.Distance(Target) > maxDistance + 2)
