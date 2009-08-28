@@ -69,6 +69,7 @@ namespace CycWorldModule.DotCYC
         public void OnEvent(SimObjectEvent evt)
         {
             if (evt.EventType == SimEventType.NETWORK) return;
+            if (evt.EventClass == SimEventClass.PERSONAL) return;
             //if (SkipVerbs.Contains(evt.Verb.ToLower())) return;
             if (!UseQueue)
             {
@@ -497,6 +498,7 @@ namespace CycWorldModule.DotCYC
         readonly static public Dictionary<Object, int> hashChanges = new Dictionary<Object, int>();
 
 
+        List<UUID> SimObjectsAdded = new List<UUID>();
 
         public CycFort FindOrCreateCycFort(SimObject obj)
         {
@@ -665,7 +667,7 @@ namespace CycWorldModule.DotCYC
             {
                 if (evt.EventType == SimEventType.DATA_UPDATE)
                 {
-                    return null;
+                   return null;
                 }
                 CycFort constant;
                 if (cycTerms.TryGetValue(evt, out constant)) return constant;
