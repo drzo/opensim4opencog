@@ -439,6 +439,7 @@
        <Reference name="log4net" localCopy="false" />
        <Reference name="Nini" localCopy="false"/>
        <Reference name="System" localCopy="false" />
+       <Reference name="System.Core" localCopy="false" />
        <Reference name="System.Web" localCopy="false" />
        <Reference name="System.Windows.Forms" localCopy="false" />
        <Reference name="System.Xml" localCopy="false" />
@@ -710,7 +711,7 @@
      </Files>
 </Project>
 
-
+  
   </Solution>
 
 </Prebuild>
