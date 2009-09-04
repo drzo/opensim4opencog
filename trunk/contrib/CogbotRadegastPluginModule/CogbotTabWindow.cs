@@ -90,7 +90,7 @@ namespace CogbotRadegastPluginModule
             //netcom.ClientLoggedOut += new EventHandler(netcom_ClientLoggedOut);
             //  netcom.ChatReceived += new EventHandler<ChatEventArgs>(netcom_ChatReceived);
             //netcom.InstantMessageReceived += new EventHandler<InstantMessageEventArgs>(netcom_InstantMessageReceived);
-            this.instance.Config.ConfigApplied += new EventHandler<ConfigAppliedEventArgs>(Config_ConfigApplied);
+            //this.instance.Config.ConfigApplied += new EventHandler<ConfigAppliedEventArgs>(Config_ConfigApplied);
             // client.Grid.OnCoarseLocationUpdate += new GridManager.CoarseLocationUpdateCallback(Grid_OnCoarseLocationUpdate);
             //client.Avatars.OnAvatarProperties += new AvatarManager.AvatarPropertiesCallback(Avatars_OnAvatarProperties);
 
@@ -117,7 +117,7 @@ namespace CogbotRadegastPluginModule
             //    System.Console.WriteLine("Failed loading ALICE: " + ex.Message);
             //}
 
-            ApplyConfig(this.instance.Config.CurrentConfig);
+           // ApplyConfig(this.instance.Config.CurrentConfig);
             //ClientManager.SingleInstance.Clients[]
             //BotClien.OnlyOneCurrentBotClient
         }
@@ -128,7 +128,7 @@ namespace CogbotRadegastPluginModule
             netcom.ClientLoggedOut -= new EventHandler(netcom_ClientLoggedOut);
             //   netcom.ChatReceived -= new EventHandler<ChatEventArgs>(netcom_ChatReceived);
             netcom.InstantMessageReceived -= new EventHandler<InstantMessageEventArgs>(netcom_InstantMessageReceived);
-            this.instance.Config.ConfigApplied -= new EventHandler<ConfigAppliedEventArgs>(Config_ConfigApplied);
+          //  this.instance.Config.ConfigApplied -= new EventHandler<ConfigAppliedEventArgs>(Config_ConfigApplied);
             client.Grid.OnCoarseLocationUpdate -= new GridManager.CoarseLocationUpdateCallback(Grid_OnCoarseLocationUpdate);
             client.Avatars.OnAvatarProperties -= new AvatarManager.AvatarPropertiesCallback(Avatars_OnAvatarProperties);
         }
@@ -229,18 +229,18 @@ namespace CogbotRadegastPluginModule
             tabConsole = instance.TabConsole;
         }
 
-        private void Config_ConfigApplied(object sender, ConfigAppliedEventArgs e)
-        {
-            ApplyConfig(e.AppliedConfig);
-        }
+        //private void Config_ConfigApplied(object sender, ConfigAppliedEventArgs e)
+        //{
+        //    ApplyConfig(e.AppliedConfig);
+        //}
 
-        private void ApplyConfig(Config config)
-        {
-            if (config.InterfaceStyle == 0) //System
-                toolStrip1.RenderMode = ToolStripRenderMode.System;
-            else if (config.InterfaceStyle == 1) //Office 2003
-                toolStrip1.RenderMode = ToolStripRenderMode.ManagerRenderMode;
-        }
+        //private void ApplyConfig(Config config)
+        //{
+        //    if (config.InterfaceStyle == 0) //System
+        //        toolStrip1.RenderMode = ToolStripRenderMode.System;
+        //    else if (config.InterfaceStyle == 1) //Office 2003
+        //        toolStrip1.RenderMode = ToolStripRenderMode.ManagerRenderMode;
+        //}
 
         void netcom_InstantMessageReceived(object sender, InstantMessageEventArgs e)
         {

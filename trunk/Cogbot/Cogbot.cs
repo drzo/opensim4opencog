@@ -7,6 +7,7 @@ using OpenMetaverse;
 using System.IO;
 using OpenSim.Framework.Console;
 using Radegast;
+using Settings=OpenMetaverse.Settings;
 
 
 namespace cogbot
