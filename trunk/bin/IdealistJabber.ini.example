@@ -1,0 +1,114 @@
+; Configure the XMPP Communications functions of the
+; Idealist Viewer.
+
+;[XMPP]
+; Basic connection section.
+;username = "John.Smith"
+;server = "jabber.org"
+;password = "smithPassword"
+;host = if different from 'server'
+;resource = "Idealist"
+
+; Any number of joined groups may follow.  The section
+; tag must begin with "XMPPGroup-".
+
+;[XMPPGroup-1]
+;JID = "awg@conference.jabber.org"
+;name = "AWGroupies"
+;nick = "John"
+
+; Configure the XMPP Communications functions of the
+; Idealist Viewer.
+
+;[XMPP]
+; Basic connection section.
+;username = "John.Smith"
+;server = "jabber.org"
+;password = "smithPassword"
+;host = if different from 'server'
+;resource = "Idealist"
+
+; Any number of joined groups may follow.  The section
+; tag must begin with "XMPPGroup-".
+
+;[XMPPGroup-1]
+;JID = "awg@conference.jabber.org"
+;name = "AWGroupies"
+;nick = "John"
+
+; Configure the XMPP Communications functions of the
+; Idealist Viewer.
+
+;[XMPP]
+; Basic connection section.
+;username = "John.Smith"
+;server = "jabber.org"
+;password = "smithPassword"
+;host = if different from 'server'
+;resource = "Idealist"
+
+; Any number of joined groups may follow.  The section
+; tag must begin with "XMPPGroup-".
+
+;[XMPPGroup-1]
+;JID = "awg@conference.jabber.org"
+;name = "AWGroupies"
+;nick = "John"
+
+; Configure the XMPP Communications functions of the
+; Idealist Viewer.
+
+;[XMPP]
+; Basic connection section.
+;username = "John.Smith"
+;server = "jabber.org"
+;password = "smithPassword"
+;host = if different from 'server'
+;resource = "Idealist"
+
+; Any number of joined groups may follow.  The section
+; tag must begin with "XMPPGroup-".
+
+;[XMPPGroup-1]
+;JID = "awg@conference.jabber.org"
+;name = "AWGroupies"
+;nick = "John"
+
+; Configure the XMPP Communications functions of the
+; Idealist Viewer.
+
+;[XMPP]
+; Basic connection section.
+;username = "John.Smith"
+;server = "jabber.org"
+;password = "smithPassword"
+;host = if different from 'server'
+;resource = "Idealist"
+
+; Any number of joined groups may follow.  The section
+; tag must begin with "XMPPGroup-".
+
+;[XMPPGroup-1]
+;JID = "awg@conference.jabber.org"
+;name = "AWGroupies"
+;nick = "John"
+
+; Configure the XMPP Communications functions of the
+; Idealist Viewer.
+
+;[XMPP]
+; Basic connection section.
+;username = "John.Smith"
+;server = "jabber.org"
+;password = "smithPassword"
+;host = if different from 'server'
+;resource = "Idealist"
+
+; Any number of joined groups may follow.  The section
+; tag must begin with "XMPPGroup-".
+
+;[XMPPGroup-1]
+;JID = "awg@conference.jabber.org"
+;name = "AWGroupies"
+;nick = "John"
+

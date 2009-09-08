@@ -72,7 +72,7 @@ namespace cogbot
                         if (ii.Name == current_itemName)
                         {
                             // we found a matcher so lets do our ops
-                            if (current_operation == "wear") botclient.Appearance.AddToOutfit(new List<InventoryItem> { ii }, true);
+                            if (current_operation == "wear") botclient.Appearance.AddToOutfit(new List<InventoryItem> { ii });
                             if (current_operation == "animationStart") botclient.Self.AnimationStart(ii.UUID, false);
                             if (current_operation == "animationStop") botclient.Self.AnimationStop(ii.UUID, false);
                             if (current_operation == "attach") botclient.Appearance.Attach(ii, AttachmentPoint.Default);
@@ -153,7 +153,7 @@ namespace cogbot
                             if (String.Compare(ii.Name, itemName, true) == 0)
                             {
                                 // we found a matcher so lets do our ops
-                                if (operation == "wear") botclient.Appearance.AddToOutfit(new List<InventoryItem>{ii},true);
+                                if (operation == "wear") botclient.Appearance.AddToOutfit(new List<InventoryItem>{ii});
                                 if (operation == "animationStart") botclient.Self.AnimationStart(ii.UUID, false);
                                 if (operation == "animationStop") botclient.Self.AnimationStop(ii.UUID, false);
                                 if (operation == "attach") botclient.Appearance.Attach(ii, AttachmentPoint.Default);

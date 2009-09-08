@@ -24,21 +24,29 @@ namespace cogbot.Actions
             if (PanelGUI == null)
             {
                 PanelGUI = Client.TheRadegastInstance.MainForm;
-                (new Thread(() =>
+               // (new Thread(() =>
                 {
                     PanelGUI.Closing += new CancelEventHandler(delegate(object sender, CancelEventArgs e)
                     {
                         PanelGUI = null;
                     });
-                    Application.EnableVisualStyles();
-                    PanelGUI.Show();
-                    Application.Run(PanelGUI);
-                })).Start();
-                return "radegast UI started";
+                    //Application.EnableVisualStyles();
+                    ////PanelGUI.Invoke(new MethodInvoker(PanelGUI.Show));
+                    //PanelGUI.BeginInvoke(new MethodInvoker(() =>
+                    //                                           {
+                    //                                               (new Thread(() => {
+                    //                                               Application.Run(PanelGUI);
+                    //                                               })).Start();
+                    //                                           }));
+                    //Application.Run(PanelGUI);
+                }
+               // )).Start();
             }
-            else
             {
-                PanelGUI.Show();
+                //(new Thread(() => {
+                PanelGUI.Invoke(new MethodInvoker(PanelGUI.Show));
+                //PanelGUI.Show();
+                //})).Start();
                 return "radegast shown";
             }
         }

@@ -29,7 +29,7 @@ namespace cogbot
                     "cogbot.exe --first firstname --last lastname --pass password [--loginuri=\"uri\"] [--startpos \"sim/x/y/z\"] [--master \"master name\"] [--masterkey \"master uuid\"] [--gettextures] [--scriptfile \"filename\"]");
         }
 
-        [MTAThread]
+        [STAThread]
         static void Main(string[] args)
         {
           //  NativeMethods.AllocConsole();
@@ -168,7 +168,13 @@ namespace cogbot
             consoleBase = new ConsoleBase("textform");
             ClientManager manager = new ClientManager(accounts, getTextures);
             manager.outputDelegate = new OutputDelegate(WriteLine);
-            manager.StartUpLisp();
+            var ti= manager.initTaskInterperter();
+            //manager.StartUpLisp();
+            var config = manager.config;
+            if (config.startupLisp.Length > 1)
+            {
+                manager.evalLispString("(progn " + config.startupLisp + ")");
+            }
 
             if (!String.IsNullOrEmpty(scriptFile))
                 manager.DoCommandAll(String.Format("script {0}", scriptFile), UUID.Zero, Console.WriteLine);

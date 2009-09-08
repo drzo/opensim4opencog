@@ -15,10 +15,12 @@ namespace CogbotRadegastPluginModule
         {
         }
 
-        public static RadegastInstance RadegastInstance;
+        public RadegastInstance RadegastInstance;
         private CogbotTabWindow chatConsole;
         private SleekTab tab;
         private ClientManager clientManager;
+        private CogbotRadegastInterpreter cogbotRadegastInterpreter;
+
 
         public void StartPlugin(RadegastInstance inst)
         {
@@ -31,6 +33,8 @@ namespace CogbotRadegastPluginModule
             }
             ClientManager.UsingCogbotFromRadgast = true;
             clientManager = new ClientManager();
+            cogbotRadegastInterpreter = new CogbotRadegastInterpreter(clientManager);
+            RadegastInstance.CommandsManager.LoadInterpreter(cogbotRadegastInterpreter);
             chatConsole = new CogbotTabWindow(inst, clientManager)
                               {
                                   Dock = DockStyle.Fill,

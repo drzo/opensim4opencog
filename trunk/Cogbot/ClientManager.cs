@@ -397,6 +397,7 @@ namespace cogbot
                 WriteLine("!Exception: {0}", e.GetBaseException().Message);
                 WriteLine("error occured: {0}", e.Message);
                 WriteLine("        Stack: {0}", e.StackTrace.ToString());
+                WriteLine("        Lisp: {0}", lispCode);
                 throw e;
             }
         }
@@ -432,70 +433,84 @@ namespace cogbot
         readonly static object OneAtATime = new object();
         private bool _wasFirstGridClient = true;
         private readonly object _wasFirstGridClientLock = new object();
-        public BotClient CreateBotClient(string first, string last, string passwd, string simurl, string location)
+        public void CreateBotClient(string first, string last, string passwd, string simurl, string location)
         {
             lock (OneAtATime)
             {
-                string fullName = string.Format("{0} {1}", first, last);
                 BotClient bc;
+                string fullName = string.Format("{0} {1}", first, last);
                 lock (BotByName)
                 {
                     if (BotByName.TryGetValue(fullName, out bc))
                     {
                         WriteLine(";; Reusing {0}", fullName);
                         EnsureStarting(bc);
-                        return bc;
+                        return;// bc;
                     }
                 }
-                lock (_wasFirstGridClientLock)
-                {
-                    GridClient gridClient;
-                    if (_wasFirstGridClient)
-                    {
-                        _wasFirstGridClient = false;
-                        RadegastInstance inst = RadegastInstance.GlobalInstance;
-                        gridClient = inst.Client;
-                        bc = new BotClient(this, gridClient);
-                        bc.TheRadegastInstance = inst;
-                    }
-                    else
-                    {
-                        if (UsingCogbotFromRadgast)
-                        {
-                            //return null;
-                            throw new InvalidProgramException("UsingCogbotFromRadgast for more than one client");
-                        }
-                        //RadegastInstance inst = new RadegastInstance();
-                        //gridClient = inst.Client;
-                        //bc = new BotClient(this, gridClient);
-                        //bc.TheRadegastInstance = inst;
-                    }
+                Thread t= new Thread(new ThreadStart(() =>
+                                               {
+                                                   Thread.CurrentThread.SetApartmentState(ApartmentState.STA);
+                                                   try
+                                                   {
+                                                       lock (_wasFirstGridClientLock)
+                                                       {
+                                                           GridClient gridClient;
+                                                           RadegastInstance inst;
+                                                           if (_wasFirstGridClient)
+                                                           {
+                                                               _wasFirstGridClient = false;
+                                                               inst = RadegastInstance.GlobalInstance;
+                                                               gridClient = inst.Client;
+                                                           }
+                                                           else
+                                                           {
+                                                               gridClient = new GridClient();
+                                                               inst = new RadegastInstance(gridClient);
+                                                           }
+                                                           bc = new BotClient(this, gridClient);
+                                                           bc.TheRadegastInstance = inst;
+                                                       }
 
-                }
-                if (!String.IsNullOrEmpty(first))
-                {
-                    bc.BotLoginParams.FirstName = first;
-                }
-                if (!String.IsNullOrEmpty(last))
-                {
-                    bc.BotLoginParams.LastName = last;
-                }
-                if (!String.IsNullOrEmpty(passwd))
-                {
-                    bc.BotLoginParams.Password = passwd;
-                }
-                if (!String.IsNullOrEmpty(simurl))
-                {
-                    bc.BotLoginParams.URI = simurl;
-                }
-                if (String.IsNullOrEmpty(location))
-                {
-                    location = "last";
-                }
-                bc.BotLoginParams.Start = location;
-                //LoginParams loginParams = bc.Network.DefaultLoginParams(account.FirstName, account.LastName, account.Password, "BotClient", version);            
-                EnsureStarting(bc);
-                return bc;
+                                                       if (!String.IsNullOrEmpty(first))
+                                                       {
+                                                           bc.BotLoginParams.FirstName = first;
+                                                       }
+                                                       if (!String.IsNullOrEmpty(last))
+                                                       {
+                                                           bc.BotLoginParams.LastName = last;
+                                                       }
+                                                       if (!String.IsNullOrEmpty(passwd))
+                                                       {
+                                                           bc.BotLoginParams.Password = passwd;
+                                                       }
+                                                       if (!String.IsNullOrEmpty(simurl))
+                                                       {
+                                                           bc.BotLoginParams.URI = simurl;
+                                                       }
+                                                       if (String.IsNullOrEmpty(location))
+                                                       {
+                                                           location = "last";
+                                                       }
+                                                       bc.BotLoginParams.Start = location;
+                                                       //LoginParams loginParams = bc.Network.DefaultLoginParams(account.FirstName, account.LastName, account.Password, "BotClient", version);            
+                                                       EnsureStarting(bc);
+                                                       if (bc.TheRadegastInstance.MainForm.InvokeRequired)
+                                                       {
+                                                           //bc.TheRadegastInstance.MainForm.Visible = false;
+                                                       } else
+                                                       {
+                                                           Application.Run(bc.TheRadegastInstance.MainForm);
+                                                       }
+                                                   } catch(Exception e)
+                                                   {
+                                                       Console.WriteLine(fullName+" "+e);
+                                                   }
+                                               }));
+                t.Name = "MainThread " + fullName;
+                t.SetApartmentState(ApartmentState.STA);
+                t.Start();
+               // return bc;
             }
         }
 

@@ -776,7 +776,7 @@ namespace cogbot
                 Self.Chat("Wearing folder \"" + folderName + "\"", 0, ChatType.Normal);
                 WriteLine("Wearing folder \"" + folderName + "\"");
 
-                Appearance.AddToOutfit(GetFolderItems(folderName), true);
+                Appearance.AddToOutfit(GetFolderItems(folderName));
                 /*
                 List<InventoryBase> folderContents=  Client.Inventory.FolderContents(folderID, Client.Self.AgentID,
                                                                 false, true,
