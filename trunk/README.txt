@@ -16,16 +16,34 @@ This allows operations to be persistent.
 |   COMPILING 4 WINDOWS   |
 +-------------------------+
 
-Cogbot was developed using Windows XP and Visual Studio 2008. 
+Cogbot was developed using Windows XP and Visual Studio 2008.
+Some plugins have dependancies of:
+
+Managed DirectX components
+ URL: http://www.microsoft.com/downloads/details.aspx?displaylang=en&FamilyID=2da43d38-db71-4c1b-bc6a-9b6652cd92a3
+
+Microsoft Speech SDK 5.1
+ URL: http://www.microsoft.com/downloads/details.aspx?FamilyID=5e86ec97-40a7-453f-b0ee-6583171b4530&displaylang=en
+   msttss22L.exe
+   SpeechSDK51.exe 
 
 You can use Visual Studio C# Express which is free from Microsoft.
-http://microsoft.com/express
+ URL: http://microsoft.com/express
 
-To compile, Open Visual Studio and open the cogbot.sln file 
+To compile, 
+  Open Command Prompt (cmd.exe)
+
+Go into your source path
+  cd C:\development\opensim4opencog\
+
+Run the Project creation (This will Generate the "Cogbot.sln")
+  runprebuild2008.bat
+
+Open Visual Studio and open the cogbot.sln file 
 located in the project's root directory. 
 This should open Cogbot in the IDE and show the several sub projects. 
 
-In the Solution Explorer, make sure that the "cogbot" project
+In the Solution Explorer, make sure that the "Radegast" project
 is bold (the startup project)  and if it is not make it so by right 
 click the project and select "Set as Startup Project"
 
