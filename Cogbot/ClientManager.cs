@@ -233,7 +233,13 @@ namespace cogbot
 
         public string ExecuteCommand(string text, OutputDelegate WriteLine)
         {
-            WriteLine("textform> " + text);
+            if (String.IsNullOrEmpty(text)) return text;
+            while (text.StartsWith("/"))
+            {
+                text = text.Substring(1);
+            }
+            if (String.IsNullOrEmpty(text)) return text;
+            WriteLine("textform> {0}", text);
             String res = ExecuteBotsCommand(text, WriteLine);
             if (!String.IsNullOrEmpty(res)) return res;
             return ExecuteSystemCommand(text, WriteLine);
@@ -244,6 +250,11 @@ namespace cogbot
             string res = String.Empty;
             if (string.IsNullOrEmpty(text)) return res;
             text = text.Trim();
+            while (text.StartsWith("/"))
+            {
+                text = text.Substring(1);
+                text = text.Trim();
+            }
             if (string.IsNullOrEmpty(text)) return res;
             if (BotByName.Count == 0 && LastBotClient != null) return LastBotClient.ExecuteBotCommand(text, WriteLine);
             if (OnlyOneCurrentBotClient != null)
@@ -273,6 +284,11 @@ namespace cogbot
                 {
                     if (string.IsNullOrEmpty(text)) return res;
                     text = text.Trim();
+                    while (text.StartsWith("/"))
+                    {
+                        text = text.Substring(1);
+                        text = text.Trim();
+                    }
                     if (string.IsNullOrEmpty(text)) return res;
                    
                     string verb = text.Split(null)[0];
