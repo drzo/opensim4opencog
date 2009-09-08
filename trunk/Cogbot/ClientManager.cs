@@ -509,6 +509,7 @@ namespace cogbot
                                                            location = "last";
                                                        }
                                                        bc.BotLoginParams.Start = location;
+                                                       bc.SetRadegastLoginOptions();
                                                        //LoginParams loginParams = bc.Network.DefaultLoginParams(account.FirstName, account.LastName, account.Password, "BotClient", version);            
                                                        EnsureStarting(bc);
                                                        if (bc.TheRadegastInstance.MainForm.InvokeRequired)

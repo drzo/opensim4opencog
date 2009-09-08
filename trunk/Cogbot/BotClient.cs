@@ -11,9 +11,11 @@ using System.Collections;
 using cogbot.ScriptEngines;
 using System.IO;
 using cogbot.Listeners;
+using Radegast;
 using Action=cogbot.Actions.Action;
 using cogbot.TheOpenSims;
 using System.Drawing;
+using Settings=OpenMetaverse.Settings;
 
 // older LibOMV
 //using TeleportFlags = OpenMetaverse.AgentManager.TeleportFlags;
@@ -1601,6 +1603,13 @@ namespace cogbot
                     if (i is InventoryItem) items.Add((InventoryItem)i);
                 }
             return items;
+        }
+
+        public void SetRadegastLoginOptions()
+        {
+            TheRadegastInstance.Netcom.LoginOptions.FirstName = BotLoginParams.FirstName;
+            TheRadegastInstance.Netcom.LoginOptions.LastName = BotLoginParams.LastName;
+            TheRadegastInstance.Netcom.LoginOptions.GridCustomLoginUri = BotLoginParams.URI;
         }
     }
 
