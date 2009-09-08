@@ -774,6 +774,7 @@
    <Reference name="OpenMetaverseCore" localCopy="false"/>
    <Reference name="Radegast" />
    <Reference name="Nini" />
+   <Reference name="fmodex-dotnet.dll" />
    <Reference name="System" />
    <Reference name="System.Core"/>
    <Reference name="System.Drawing" />
