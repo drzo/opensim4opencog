@@ -811,7 +811,7 @@
     <Reference name="Mono.Addins.dll" />
     <Reference name="XMLRPC.dll"/>
     <Reference name="Nini.dll" />
-    <Reference name="fmodex-dotnet.sll" />
+    <Reference name="fmodex-dotnet.dll" />
     <Reference name="log4net.dll" />
     <Reference name="Irrlicht.NET.dll" />
     <Reference name="Irrlicht.Extensions.dll" />
