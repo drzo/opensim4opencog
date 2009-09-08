@@ -639,10 +639,19 @@ namespace cogbot
         {
             if (ExpectConnected && reason != NetworkManager.DisconnectType.ClientInitiated)
             {
-                ExpectConnected = false;
-                foreach (var s in Network.Simulators)
+                List<Simulator> sims = new List<Simulator>();
+                lock (Network.Simulators)
                 {
-                    s.Disconnect(true);
+                    sims.AddRange(Network.Simulators);
+                }
+                ExpectConnected = false;
+                foreach (var s in sims)
+                {
+                    //lock (s)
+                    {
+                        if (s.Connected) s.Disconnect(true);
+                    }
+
                 }
                 //gridClient = new GridClient();
                 Settings.USE_LLSD_LOGIN = true;
