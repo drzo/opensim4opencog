@@ -85,7 +85,7 @@ namespace cogbot.Actions
             return list.ToArray();
         }
 
-        internal static string[] SplitOff(string[] args, int p)
+        public static string[] SplitOff(string[] args, int p)
         {
             string[] newstring = new string[args.Length - p];
             int ci = 0;

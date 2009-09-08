@@ -65,7 +65,7 @@ namespace cogbot.ScriptEngines
             }
             catch(Exception e)
             {
-                Console.WriteLine(""+e);
+                Console.WriteLine(lispCode + " -> "+e);
                 return null;
             }
             return codeTree;

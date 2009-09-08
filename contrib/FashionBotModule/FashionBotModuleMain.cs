@@ -63,7 +63,7 @@ namespace FashionBotModule
             if (Received.Contains(item.AssetUUID))
             {
                 List<InventoryItem> newList = new List<InventoryItem> { item };
-                client.Appearance.AddToOutfit(newList, true);
+                client.Appearance.AddToOutfit(newList);
             }
             EnumerateClothing();
         }
