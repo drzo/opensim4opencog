@@ -18,19 +18,27 @@ namespace cogbot.Utilities
         readonly int WAIT_AFTER;
         AutoResetEvent WaitingOn = new AutoResetEvent(false);
         readonly LinkedList<ThreadStart> EventQueue = new LinkedList<ThreadStart>();
+        public static bool DebugQueue = true;
         public TaskQueueHandler(string str, int msWaitBetween)
         {
             Name = str;
             if (msWaitBetween < 1) msWaitBetween = 1;
             WAIT_AFTER = msWaitBetween;
             EventQueueHandler = new Thread(EventQueue_Handler) {Name = str + " worker"};
+            EventQueueHandler.Priority = ThreadPriority.BelowNormal;
             EventQueueHandler.Start();
-            EventQueuePing = new Thread(EventQueue_Ping) {Name = str + " timer"};
-            EventQueuePing.Start();
+            if (DebugQueue)
+            {
+                EventQueuePing = new Thread(EventQueue_Ping) {Name = str + " debug"};
+                EventQueueHandler.Priority = ThreadPriority.Lowest;
+                EventQueuePing.Start();
+            }
         }
 
         readonly ThreadStart NOTHING = default(ThreadStart);
         private DateTime BusyStart;
+        public bool NoQueue = false;
+
 
         void EventQueue_Handler()
         {
@@ -73,13 +81,14 @@ namespace cogbot.Utilities
                 else
                 {
                     lock (EventQueue)
-                    {
                         if (EventQueue.Count > 0)
                         {
                             continue;
                         }
-                        Reset();
-                    }
+                    //lock (EventQueue)
+                    //{
+                    // Reset();
+                    //}
                     WaitOne();
                 }
                 Busy = false;
@@ -88,19 +97,20 @@ namespace cogbot.Utilities
 
         private void WaitOne()
         {
+            //lock (WaitingOn)
             WaitingOn.WaitOne();// Thread.Sleep(100);
         }
 
         private void Reset()
         {
+            //lock (WaitingOn)
             WaitingOn.Reset();
         }
         private void Set()
         {
+            //lock (WaitingOn)
             WaitingOn.Set();
         }
-
-        public static bool DebugQueue = true;
 
         void EventQueue_Ping()
         {
@@ -144,6 +154,12 @@ namespace cogbot.Utilities
 
         public void Enqueue(ThreadStart evt)
         {
+            if (NoQueue)
+            {
+               // evt();
+                return;
+
+            }
             lock (EventQueue)
             {
                 EventQueue.AddLast(evt);
@@ -153,6 +169,12 @@ namespace cogbot.Utilities
 
         public void AddFirst(ThreadStart evt)
         {
+            if (NoQueue)
+            {
+               // evt();
+                return;
+
+            }
             lock (EventQueue)
             {
                 EventQueue.AddFirst(evt);

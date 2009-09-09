@@ -39,7 +39,7 @@ namespace cogbot.Listeners
 
         private static readonly Dictionary<ulong, object> GetSimObjectLock = new Dictionary<ulong, object>();
 
-        private static readonly Dictionary<ulong, List<uint>> primsSelected = new Dictionary<ulong, List<uint>>();
+        private static readonly Dictionary<ulong, HashSet<uint>> primsSelected = new Dictionary<ulong, HashSet<uint>>();
         private static readonly Dictionary<ulong, List<uint>> primsSelectedOutbox = new Dictionary<ulong, List<uint>>();
 
         private static readonly TaskQueueHandler PropertyQueue = new TaskQueueHandler("NewObjectQueue", 0);
@@ -687,8 +687,8 @@ namespace cogbot.Listeners
             }
             if (p == null)
             {
-                RequestObject(simulator, sittingOn);
-                client.Objects.SelectObject(simulator, sittingOn);
+                client.Objects.RequestObject(simulator, sittingOn);
+                //client.Objects.SelectObject(simulator, sittingOn);
                 p = GetPrimitive(sittingOn, simulator);
                 if (p != null) return GetSimObject(p, simulator);
                 Debug("WARN: cant get prim " + sittingOn + " sim " + simulator);
@@ -1248,10 +1248,11 @@ namespace cogbot.Listeners
         //    Primitive prim = GetPrimitive(localID, simulator);
         //    return prim;
         //}
-        readonly static Dictionary<ulong, List<uint>> RequestedObjects = new Dictionary<ulong, List<uint>>();
+        readonly static Dictionary<ulong, HashSet<uint>> RequestedObjects = new Dictionary<ulong, HashSet<uint>>();
 
         internal static void RequestObject(Simulator simulator, uint id)
         {
+            if (id==0) return;
             //if (IsOpenSim) return;
             if (DeclareRequested(simulator, id))
                 simulator.Client.Objects.RequestObject(simulator, id);
@@ -1259,16 +1260,18 @@ namespace cogbot.Listeners
 
         private static bool DeclareRequested(Simulator simulator, uint id)
         {
-            List<uint> uints;
+            if (id == 0) return false;
+            HashSet<uint> uints;
             lock (RequestedObjects)
             {
                 if (!RequestedObjects.TryGetValue(simulator.Handle, out uints))
                 {
-                    RequestedObjects[simulator.Handle] = uints = new List<uint>();
+                    RequestedObjects[simulator.Handle] = uints = new HashSet<uint>();
                 }
             }
             lock (uints)
             {
+                //if (true) return false;
                 if (uints.Contains(id)) return false;
                 uints.Add(id);
                 return true;
@@ -1277,6 +1280,7 @@ namespace cogbot.Listeners
 
         public static void EnsureSelected(uint LocalID, Simulator simulator)
         {
+            if (LocalID == 0) return;
             if (NeverSelect(LocalID, simulator))
                 ReallyEnsureSelected(simulator, LocalID);
         }
@@ -1289,7 +1293,7 @@ namespace cogbot.Listeners
                 {
                     if (!primsSelected.ContainsKey(Handle))
                     {
-                        primsSelected[Handle] = new List<uint>();
+                        primsSelected[Handle] = new HashSet<uint>();
                     }
                     lock (primsSelected[Handle])
                     {
@@ -1305,6 +1309,7 @@ namespace cogbot.Listeners
 
         private static void ReallyEnsureSelected(Simulator simulator, uint LocalID)
         {
+            if (LocalID == 0) return;
             ulong Handle = simulator.Handle;
             lock (primsSelectedOutbox)
             {
@@ -1423,7 +1428,7 @@ namespace cogbot.Listeners
         internal static void ResetSelectedObjects()
         {
             lock (primsSelected)
-                foreach (List<uint> UInts in primsSelected.Values)
+                foreach (HashSet<uint> UInts in primsSelected.Values)
                 {
                     lock (UInts) UInts.Clear();
                 }

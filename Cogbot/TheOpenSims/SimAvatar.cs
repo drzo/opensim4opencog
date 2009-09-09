@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using cogbot.Listeners;
+using cogbot.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 using Random=System.Random;
@@ -23,7 +24,7 @@ namespace cogbot.TheOpenSims
             {
                 if (!WasKilled) /// already
                 {
-                    List<SimObject> AttachedChildren0 = GetChildren();
+                    IEnumerable<SimObject> AttachedChildren0 = GetChildren();
                     lock (AttachedChildren0)
                         foreach (SimObject C in AttachedChildren0)
                         {
@@ -117,7 +118,7 @@ namespace cogbot.TheOpenSims
             {
                 object o = args1_N[i];
                 if (o == this) continue; //skip self
-                if (o is SimObject) KnownSimObjects.AddFirst((SimObject)o);
+                if (o is SimObject) KnownSimObjects.Add((SimObject)o);
             }
             _knownTypeUsages.AddTo(SimTypeSystem.CreateTypeUsage(typeUse));
             bool noteable = base.LogEvent(SE);

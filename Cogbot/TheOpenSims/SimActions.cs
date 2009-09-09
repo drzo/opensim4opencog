@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using cogbot.Listeners;
+using cogbot.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
@@ -477,7 +479,7 @@ namespace cogbot.TheOpenSims
         // what most users think will happen by default
         public BotNeeds ChangePromise = new BotNeeds(0.0F);
 
-        public ListAsSet<string> SpecifiedProperties = new ListAsSet<string>();
+        public HashSet<string> SpecifiedProperties = new HashSet<string>();
         // if true the avatar will attempt to sit on the object for the duration
         public bool UseSit = false;
         // if true the client will attempt to invoke the "touch/grab" in SL for the duration
@@ -508,7 +510,7 @@ namespace cogbot.TheOpenSims
             SimTypeUsage newUse = this;
             foreach (string prop in use.SpecifiedProperties)
             {
-                newUse.SpecifiedProperties.AddTo(prop);
+                newUse.SpecifiedProperties.Add(prop);
                 System.Reflection.FieldInfo fi = newUse.GetType().GetField(prop);
                 if (fi.FieldType==typeof(BotNeeds)) continue;
                 SimTypeSystem.SetValue(fi, newUse, fi.GetValue(use));

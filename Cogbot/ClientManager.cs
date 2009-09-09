@@ -466,9 +466,33 @@ namespace cogbot
                 }
                 Thread t= new Thread(new ThreadStart(() =>
                                                {
-                                                   Thread.CurrentThread.SetApartmentState(ApartmentState.STA);
+                                                  // Thread.CurrentThread.SetApartmentState(ApartmentState.STA);
                                                    try
                                                    {
+                                                       LoginParams BotLoginParams = DefaultLoginParams();
+
+                                                       if (!String.IsNullOrEmpty(first))
+                                                       {
+                                                           BotLoginParams.FirstName = first;
+                                                       }
+                                                       if (!String.IsNullOrEmpty(last))
+                                                       {
+                                                           BotLoginParams.LastName = last;
+                                                       }
+                                                       if (!String.IsNullOrEmpty(passwd))
+                                                       {
+                                                           BotLoginParams.Password = passwd;
+                                                       }
+                                                       if (!String.IsNullOrEmpty(simurl))
+                                                       {
+                                                           BotLoginParams.URI = simurl;
+                                                       }
+                                                       if (String.IsNullOrEmpty(location))
+                                                       {
+                                                           location = "last";
+                                                       }
+                                                       BotLoginParams.Start = location;
+                                                 
                                                        lock (_wasFirstGridClientLock)
                                                        {
                                                            GridClient gridClient;
@@ -484,33 +508,10 @@ namespace cogbot
                                                                gridClient = new GridClient();
                                                                inst = new RadegastInstance(gridClient);
                                                            }
-                                                           bc = new BotClient(this, gridClient);
+                                                           bc = new BotClient(this, gridClient,BotLoginParams);
                                                            bc.TheRadegastInstance = inst;
                                                        }
-
-                                                       if (!String.IsNullOrEmpty(first))
-                                                       {
-                                                           bc.BotLoginParams.FirstName = first;
-                                                       }
-                                                       if (!String.IsNullOrEmpty(last))
-                                                       {
-                                                           bc.BotLoginParams.LastName = last;
-                                                       }
-                                                       if (!String.IsNullOrEmpty(passwd))
-                                                       {
-                                                           bc.BotLoginParams.Password = passwd;
-                                                       }
-                                                       if (!String.IsNullOrEmpty(simurl))
-                                                       {
-                                                           bc.BotLoginParams.URI = simurl;
-                                                       }
-                                                       if (String.IsNullOrEmpty(location))
-                                                       {
-                                                           location = "last";
-                                                       }
-                                                       bc.BotLoginParams.Start = location;
                                                        bc.SetRadegastLoginOptions();
-                                                       //LoginParams loginParams = bc.Network.DefaultLoginParams(account.FirstName, account.LastName, account.Password, "BotClient", version);            
                                                        EnsureStarting(bc);
                                                        if (bc.TheRadegastInstance.MainForm.InvokeRequired)
                                                        {
@@ -525,11 +526,29 @@ namespace cogbot
                                                    }
                                                }));
                 t.Name = "MainThread " + fullName;
-                t.SetApartmentState(ApartmentState.STA);
+                try
+                {
+                    t.SetApartmentState(ApartmentState.STA);
+                } catch(Exception)
+                {
+                }
                 t.Start();
                // return bc;
             }
         }
+
+        private LoginParams DefaultLoginParams()
+        {
+            LoginParams BotLoginParams = new LoginParams
+                                             {
+                                                 FirstName = config.firstName,
+                                                 LastName = config.lastName,
+                                                 Password = config.password,
+                                                 URI = config.simURL
+                                             };
+            return BotLoginParams;
+        }
+       
 
         private void EnsureStarting(BotClient client)
         {
@@ -613,27 +632,28 @@ namespace cogbot
                     }
                 }
 
-            BotClient client = new BotClient(this, new GridClient());
-            BotByName[string.Format("{0} {1}", account.FirstName, account.LastName)] = client;
+            GridClient gc =  new GridClient();
 
             // Optimize the throttle
-            client.Throttle.Wind = 0;
-            client.Throttle.Cloud = 0;
-            client.Throttle.Land = 1000000;
-            client.Throttle.Task = 1000000;
-
-            client.GroupCommands = account.GroupCommands;
-            client.MasterName = account.MasterName;
-            client.MasterKey = account.MasterKey;
-            //client.AllowObjectMaster = client.MasterKey != UUID.Zero; // Require UUID for object master.
-
-            LoginParams loginParams = client.Network.DefaultLoginParams(account.FirstName, account.LastName, account.Password, "BotClient", version);
+            gc.Throttle.Wind = 0;
+            gc.Throttle.Cloud = 0;
+            gc.Throttle.Land = 1000000;
+            gc.Throttle.Task = 1000000;
+            
+            LoginParams loginParams = gc.Network.DefaultLoginParams(account.FirstName, account.LastName, account.Password, "BotClient", version);
 
             if (!String.IsNullOrEmpty(account.StartLocation))
                 loginParams.Start = account.StartLocation;
 
             if (!String.IsNullOrEmpty(account.URI))
                 loginParams.URI = account.URI;
+
+            BotClient client = new BotClient(this, gc, loginParams);
+            BotByName[string.Format("{0} {1}", account.FirstName, account.LastName)] = client;
+            client.GroupCommands = account.GroupCommands;
+            client.MasterName = account.MasterName;
+            client.MasterKey = account.MasterKey;
+            //client.AllowObjectMaster = client.MasterKey != UUID.Zero; // Require UUID for object master.
 
             if (client.Network.Login(loginParams))
             {
