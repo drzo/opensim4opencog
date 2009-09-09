@@ -8,6 +8,7 @@ using System.Text;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Reflection;
 using System.Net.Mail;
+using AIMLbot;
 using RTParser.Normalize;
 using RTParser.Utils;
 using org.opencyc.api;
@@ -681,10 +682,10 @@ namespace RTParser
             {
                 if (BotUsers.ContainsKey(fromname)) return BotUsers[fromname];
                 newlyCreated = true;
-                User myUser = new User(fromname, this);
+                AIMLbot.User myUser = new AIMLbot.User(fromname, this);
                 BotUsers[fromname] = myUser;
-                Request r = new Request("My name is " + fromname, myUser, this);
-                Result res = Chat(r);
+                AIMLbot.Request r = new AIMLbot.Request("My name is " + fromname, myUser, this);
+                AIMLbot.Result res = Chat(r);
                 myUser.Predicates.addSetting("name", fromname);
                 return myUser;
             }
@@ -700,7 +701,7 @@ namespace RTParser
         /// <returns>the result to be output to the user</returns>        
         public string ChatString(string rawInput, string username)
         {
-            return Chat(new Request(rawInput, FindOrCreateUser(username), this)).Output;
+            return Chat(new AIMLbot.Request(rawInput, FindOrCreateUser(username), this)).Output;
         }
 
 
@@ -712,7 +713,7 @@ namespace RTParser
         /// <returns>the result to be output to the user</returns>
         public Result Chat(Unifiable rawInput, Unifiable UserGUID)
         {
-            Request request = new Request(rawInput, new User(UserGUID, this), this);
+            AIMLbot.Request request = new AIMLbot.Request(rawInput, new User(UserGUID, this), this);
             return this.Chat(request);
         }
 
@@ -721,9 +722,9 @@ namespace RTParser
         /// </summary>
         /// <param name="request">the request from the user</param>
         /// <returns>the result to be output to the user</returns>
-        public Result Chat(Request request)
+        public AIMLbot.Result Chat(Request request)
         {
-            Result result = new Result(request.user, this, request);
+            AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
 
             if (this.isAcceptingUserInput)
             {
