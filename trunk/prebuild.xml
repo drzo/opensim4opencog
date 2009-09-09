@@ -756,10 +756,48 @@
    </Files>
 </Project>
 
-  <Project name="RadegastSpeech" path="lib/RadegastSpeech" type="Library" frameworkVersion="v3_5">
+  <Project name="RadegastSpeech" path="lib/radegastspeech-svn/RadegastSpeech" type="Library" frameworkVersion="v3_5">
    <Configuration name="Debug">
      <Options>
-       <OutputPath>../../bin/</OutputPath>
+       <OutputPath>../../../bin/</OutputPath>
+     </Options>
+   </Configuration>
+   <Configuration name="Release">
+     <Options>
+       <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
+       <OutputPath>../../../bin/</OutputPath>
+       <PlatformTarget>x86</PlatformTarget>
+     </Options>
+   </Configuration>
+
+   <ReferencePath>../../../bin/</ReferencePath>
+   <Reference name="OpenMetaverse" localCopy="false"/>
+   <Reference name="OpenMetaverseTypes" localCopy="false"/>
+   <Reference name="OpenMetaverseCore" localCopy="false"/>
+   <Reference name="Radegast" />
+   <Reference name="Nini" />
+   <Reference name="fmodex-dotnet.dll" />
+   <Reference name="System" />
+   <Reference name="System.Core"/>
+   <Reference name="System.Drawing" />
+   <Reference name="System.Windows.Forms" />
+   <Reference name="System.Xml.Linq"/>
+   <Reference name="System.Data.DataSetExtensions"/>
+   <Reference name="System.Data" />
+   <Reference name="System.Speech" />
+   <Reference name="Microsoft.DirectX" />
+   <Reference name="Microsoft.DirectX.DirectSound" />   
+   <Reference name="System.Xml" />
+   <Files>
+       <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
+       <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+   </Files>
+</Project>
+
+  <Project name="RadSpeechWin" path="lib/radegastspeech-svn/RadSpeechWin" type="Library" frameworkVersion="v3_5">
+   <Configuration name="Debug">
+     <Options>
+       <OutputPath>../../../bin/</OutputPath>
      </Options>
    </Configuration>
    <Configuration name="Release">
@@ -770,11 +808,12 @@
      </Options>
    </Configuration>
 
-   <ReferencePath>../../bin/</ReferencePath>
+   <ReferencePath>../../../bin/</ReferencePath>
    <Reference name="OpenMetaverse" localCopy="false"/>
    <Reference name="OpenMetaverseTypes" localCopy="false"/>
    <Reference name="OpenMetaverseCore" localCopy="false"/>
    <Reference name="Radegast" />
+   <Reference name="RadegastSpeech" />
    <Reference name="Nini" />
    <Reference name="fmodex-dotnet.dll" />
    <Reference name="System" />
