@@ -811,21 +811,22 @@ namespace cogbot.TheOpenSims
                         //  Parent;
                         if (Properties != null)
                         {
-                            SimTypeSystem.GuessSimObjectTypes(objectProperties, this);
+                            GuessSimObjectTypes(objectProperties);
                         }
                         else
                         {
-                            SimTypeSystem.GuessSimObjectTypes(objectProperties, this);
+                            GuessSimObjectTypes(objectProperties);
                         }
                     }
                     else
                     {
                         if (Properties != null)
                         {
-                            SimTypeSystem.GuessSimObjectTypes(objectProperties, this);                        
-                        } else
+                            GuessSimObjectTypes(objectProperties);
+                        }
+                        else
                         {
-                            SimTypeSystem.GuessSimObjectTypes(objectProperties, this);                        
+                            GuessSimObjectTypes(objectProperties);
                         }
                     }
                     Properties = objectProperties;
@@ -835,6 +836,11 @@ namespace cogbot.TheOpenSims
             {
                 Debug("" + e);
             }
+        }
+
+        private void GuessSimObjectTypes(Primitive.ObjectProperties properties)
+        {
+           // SimTypeSystem.GuessSimObjectTypes(properties, this);  
         }
 
         public virtual bool IsFloating
@@ -1224,7 +1230,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        private static readonly TaskQueueHandler ParentGrabber = new TaskQueueHandler("ParentGrabber", 0);
+        private static readonly TaskQueueHandler ParentGrabber = new TaskQueueHandler("ParentGrabber", 10000);
 
         private void TaskGetParent(uint theLPrimParentID, Simulator simu)
         {
@@ -1237,6 +1243,7 @@ namespace cogbot.TheOpenSims
             }
             else
             {
+                if (ParentGrabber.NoQueue) return;
                 ParentGrabber.Enqueue(() => TaskGetParent(theLPrimParentID, simu));
             }
         }

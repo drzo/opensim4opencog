@@ -320,7 +320,7 @@
       </Files>
     </Project>
 
-    <Project name="RTParser" path="RTParser" type="Library" frameworkVersion="v3_5">
+    <Project name="AIMLbot" path="RTParser" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../bin/</OutputPath>
@@ -489,6 +489,7 @@
        <Reference name="System.Data" localCopy="false"/>
        <Reference name="System.Xml" localCopy="false"/>
        <Reference name="System.Web" localCopy="false"/>
+       <Reference name="System.Core" localCopy="false" />
        <Reference name="OpenCyc.dll" localCopy="false"/>
        <Reference name="ABCL.Net.dll" localCopy="false"/>
        <Reference name="IKVM.Runtime.dll" localCopy="false"/>
@@ -540,7 +541,8 @@
       <Reference name="OpenMetaverseCore" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
       <Reference name="DotLisp" localCopy="false"/>
-      <Reference name="RTParser" localCopy="false"/>
+      <Reference name="AIMLbot" localCopy="false"/>
+      <Reference name="System.Core" localCopy="false"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
        <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>

@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using cogbot.ScriptEngines;
+using cogbot.Utilities;
 using DotLisp;
 using OpenMetaverse;
 
@@ -143,16 +144,16 @@ namespace cogbot.TheOpenSims
         {
             lock (UsageAffect)
             {
-                ListAsSet<string> verbs = new ListAsSet<string>();
+                HashSet<string> verbs = new HashSet<string>();
                 foreach (string key in UsageAffect.Keys)
                 {
-                    verbs.AddTo(key);
+                    verbs.Add(key);
                 }
                 foreach (SimObjectType st in SuperType)
                 {
                     foreach (SimTypeUsage v in st.GetTypeUsages())
                     {
-                        verbs.AddTo(v.UsageName);
+                        verbs.Add(v.UsageName);
                     }
                 }
                 List<SimTypeUsage> usages = new List<SimTypeUsage>();
@@ -277,7 +278,7 @@ namespace cogbot.TheOpenSims
                 fi = usage.GetType().GetField(s);
                 if (fi != null)
                 {
-                    usage.SpecifiedProperties.AddTo(fi.Name);
+                    usage.SpecifiedProperties.Add(fi.Name);
                     SimTypeSystem.SetValue(fi, usage, parseStr[i++]);
                     continue;
                 }
@@ -285,7 +286,7 @@ namespace cogbot.TheOpenSims
                 fi = usage.GetType().GetField(s + "s");
                 if (fi != null)
                 {
-                    usage.SpecifiedProperties.AddTo(fi.Name);
+                    usage.SpecifiedProperties.Add(fi.Name);
                     SimTypeSystem.SetValue(fi, usage, parseStr[i++]);
                     continue;
                 }

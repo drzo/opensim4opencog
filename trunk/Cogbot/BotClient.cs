@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Xml;
+using cogbot.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Utilities;
@@ -12,6 +13,7 @@ using cogbot.ScriptEngines;
 using System.IO;
 using cogbot.Listeners;
 using Radegast;
+using Radegast.Netcom;
 using Action=cogbot.Actions.Action;
 using cogbot.TheOpenSims;
 using System.Drawing;
@@ -193,32 +195,12 @@ namespace cogbot
         /// <summary>
         /// 
         /// </summary>
-        public BotClient(ClientManager manager, GridClient g)
+        public BotClient(ClientManager manager, GridClient g, LoginParams lp )
         {
             ClientManager = manager;
             gridClient = g;
-            SetDefaultLoginDetails(ClientManager.config);
+            BotLoginParams = lp;
             manager.LastBotClient = this;
-            try
-            {
-                //WriteLine("Start Loading TaskInterperter ... '" + TaskInterperterType + "' \n");
-                LispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
-                LispTaskInterperter.LoadFile("boot.lisp");
-                LispTaskInterperter.LoadFile("extra.lisp");
-                LispTaskInterperter.LoadFile("cogbot.lisp");
-                LispTaskInterperter.Intern("clientManager", ClientManager);
-                scriptEventListener = new ScriptEventListener(LispTaskInterperter, this);
-                botPipeline.AddSubscriber(scriptEventListener);
-
-              //  WriteLine("Completed Loading TaskInterperter '" + TaskInterperterType + "'\n");
-                // load the initialization string
-            }
-            catch (Exception e)
-            {
-                WriteLine("!Exception: " + e.GetBaseException().Message);
-                WriteLine("error occured: " + e.Message);
-                WriteLine("        Stack: " + e.StackTrace.ToString());
-            }
 
             updateTimer = new System.Timers.Timer(500);
             updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(updateTimer_Elapsed);
@@ -344,6 +326,7 @@ namespace cogbot
 
             describeNext = true;
 
+            LoadTaskInterpreter();
 
             // Start the server
             lock (ClientManager.config)
@@ -386,6 +369,30 @@ namespace cogbot
 
         }
 
+        private void LoadTaskInterpreter()
+        {
+            try
+            {
+                //WriteLine("Start Loading TaskInterperter ... '" + TaskInterperterType + "' \n");
+                LispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
+                LispTaskInterperter.LoadFile("boot.lisp");
+                LispTaskInterperter.LoadFile("extra.lisp");
+                LispTaskInterperter.LoadFile("cogbot.lisp");
+                LispTaskInterperter.Intern("clientManager", ClientManager);
+                scriptEventListener = new ScriptEventListener(LispTaskInterperter, this);
+                botPipeline.AddSubscriber(scriptEventListener);
+
+                //  WriteLine("Completed Loading TaskInterperter '" + TaskInterperterType + "'\n");
+                // load the initialization string
+            }
+            catch (Exception e)
+            {
+                WriteLine("!Exception: " + e.GetBaseException().Message);
+                WriteLine("error occured: " + e.Message);
+                WriteLine("        Stack: " + e.StackTrace.ToString());
+            }
+        }
+
         private LispEventProducer lispEventProducer;
 
         public void StartupClientLisp()
@@ -401,15 +408,6 @@ namespace cogbot
                     Console.WriteLine("" + e);
                 }
             }
-        }
-
-        private void SetDefaultLoginDetails(Configuration configuration)
-        {
-
-            BotLoginParams.FirstName = configuration.firstName;
-            BotLoginParams.LastName = configuration.lastName;
-            BotLoginParams.Password = configuration.password;
-            BotLoginParams.URI = configuration.simURL;
         }
    
         //breaks up large responses to deal with the max IM size
@@ -1117,7 +1115,7 @@ namespace cogbot
         }
 
 
-        public readonly ScriptInterpreter LispTaskInterperter;
+        public ScriptInterpreter LispTaskInterperter;
         readonly private List<Type> registeredTypes = new List<Type>();
 
         public void enqueueLispTask(object p)
@@ -1433,8 +1431,12 @@ namespace cogbot
         public string GetName()
         {
             string n = Self.Name;
-            if (!String.IsNullOrEmpty(n)) return n;
-            return BotLoginParams.FirstName + " " + BotLoginParams.LastName;
+            if (n!=null && !String.IsNullOrEmpty(n.Trim())) return n;
+            if (String.IsNullOrEmpty(BotLoginParams.FirstName))
+            {
+                throw new NullReferenceException("GEtName");
+            }
+            return string.Format("{0} {1}", BotLoginParams.FirstName, BotLoginParams.LastName);
         }
 
 
@@ -1609,7 +1611,13 @@ namespace cogbot
         {
             TheRadegastInstance.Netcom.LoginOptions.FirstName = BotLoginParams.FirstName;
             TheRadegastInstance.Netcom.LoginOptions.LastName = BotLoginParams.LastName;
+            TheRadegastInstance.Netcom.LoginOptions.Password = BotLoginParams.Password;
+            TheRadegastInstance.Netcom.LoginOptions.Grid = LoginGrid.Custom;
             TheRadegastInstance.Netcom.LoginOptions.GridCustomLoginUri = BotLoginParams.URI;
+            TheRadegastInstance.Netcom.LoginOptions.StartLocation = StartLocationType.Custom;
+            TheRadegastInstance.Netcom.LoginOptions.StartLocationCustom = BotLoginParams.Start;
+            TheRadegastInstance.Netcom.LoginOptions.Author = BotLoginParams.Author;
+            TheRadegastInstance.Netcom.LoginOptions.UserAgent = BotLoginParams.UserAgent;
         }
     }
 
