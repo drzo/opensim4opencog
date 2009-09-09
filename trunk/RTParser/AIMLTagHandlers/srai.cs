@@ -40,9 +40,9 @@ namespace RTParser.AIMLTagHandlers
             {
                 if (!templateNodeInnerText.IsEmpty)
                 {
-                    Request subRequest = new Request(templateNodeInnerText, this.user, this.Proc);
+                    AIMLbot.Request subRequest = new AIMLbot.Request(templateNodeInnerText, this.user, this.Proc);
                     subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
-                    Result subQuery = this.Proc.Chat(subRequest);
+                    AIMLbot.Result subQuery = this.Proc.Chat(subRequest);
                     this.request.hasTimedOut = subRequest.hasTimedOut;
                     return subQuery.Output;
                 }
