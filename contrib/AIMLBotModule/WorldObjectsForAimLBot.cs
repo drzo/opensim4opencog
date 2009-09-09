@@ -270,9 +270,9 @@ namespace AIMLBotModule
 
             bool UseThrottle = im.GroupIM;
             string groupName = null;
-            if (im.Dialog == InstantMessageDialog.StartTyping || im.Dialog == InstantMessageDialog.StopTyping)
+            if (im.Dialog != InstantMessageDialog.MessageFromObject && im.Dialog != InstantMessageDialog.MessageFromAgent && im.Dialog != InstantMessageDialog.MessageBox && im.Dialog != InstantMessageDialog.GroupNotice )
             {
-                return;
+                im.Message = String.Format("{0} {1}", im.Dialog, im.Message);
             }
             UUID groupID = UUID.Zero;
             if (im.GroupIM)
