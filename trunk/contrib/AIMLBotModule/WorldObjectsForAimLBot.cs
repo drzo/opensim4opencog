@@ -12,6 +12,19 @@ namespace AIMLBotModule
 {
     public class WorldObjectsForAimLBot : WorldObjectsModule
     {
+        private static int _DefaultMaxRespondToChatPerMinute = 10;
+        public static int DefaultMaxRespondToChatPerMinute
+        {
+            get
+            {
+                return _DefaultMaxRespondToChatPerMinute;
+            }
+            set
+            {
+                _DefaultMaxRespondToChatPerMinute = value;
+               
+            }
+        } 
         /// <summary>
         ///  false = wont respond to user until they say something like "turn chat on" 
         ///  See next function to change the keywords
@@ -251,7 +264,11 @@ namespace AIMLBotModule
         {
             bool newlyCreated;
             User user = MyBot.FindOrCreateUser(fromname, out newlyCreated);
-            if (newlyCreated) user.RespondToChat = RespondToChatByDefaultAllUsers;
+            if (newlyCreated)
+            {
+                user.RespondToChat = RespondToChatByDefaultAllUsers;
+            }
+            user.MaxRespondToChatPerMinute = DefaultMaxRespondToChatPerMinute;
             return user;
         }
 
