@@ -1460,7 +1460,8 @@ namespace cogbot.Listeners
                       //  lock (SimAvatars)
                         {
                             SimObject obj0 = GetSimObjectFromUUID(uuid);
-                            if (obj0 == null) obj0 = new SimAvatarImpl(uuid, objects, simulator);
+                            if (obj0 != null) return (SimAvatarImpl)obj0;
+                            obj0 = new SimAvatarImpl(uuid, objects, simulator);
                             SimAvatars.Add((SimAvatar)obj0);
                             //client.Avatars.RequestAvatarPicks(uuid);
                             SimObjects.AddTo(obj0);
@@ -1479,7 +1480,8 @@ namespace cogbot.Listeners
                      //   lock (SimAvatars)
                         {
                             SimObject obj0 = GetSimObjectFromUUID(uuid);
-                            if (obj0 == null) obj0 = new SimObjectImpl(uuid, WO, simulator);
+                            if (obj0 != null) return obj0;
+                            obj0 = new SimObjectImpl(uuid, WO, simulator);
                             SimObjects.AddTo(obj0);
                             RegisterUUID(uuid, obj0);
                             return obj0;
