@@ -212,6 +212,8 @@ namespace cogbot.Listeners
         public override void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)
         {
             SimAvatar A = CreateSimAvatar(avatarID, this, null);
+            if (!MaintainAvatarMetaData) return;
+            A.ProfileProperties = properties;
             List<NamedParam> from = GetMemberValues(properties);
             foreach (var o in from)
             {
@@ -239,6 +241,8 @@ namespace cogbot.Listeners
         public override void Avatars_OnAvatarInterests(UUID avatarID, Avatar.Interests properties)
         {
             SimAvatar A = CreateSimAvatar(avatarID, this, null);
+            if (!MaintainAvatarMetaData) return;
+            A.AvatarInterests = properties;
             List<NamedParam> from = GetMemberValues(properties);
             foreach (var o in from)
             {
@@ -249,6 +253,7 @@ namespace cogbot.Listeners
 
         public override void Avatars_OnAvatarGroups(UUID avatarID, List<AvatarGroup> avatarGroups)
         {
+            SimAvatar A = CreateSimAvatar(avatarID, this, null);
             foreach (AvatarGroup grp in avatarGroups)
             {
                 AddGroup2Key(grp.GroupName,grp.GroupID);
@@ -258,6 +263,13 @@ namespace cogbot.Listeners
 
         public override void Groups_OnGroupMembers(UUID requestID, UUID groupID, Dictionary<UUID, GroupMember> members)
         {
+            if (MaintainGroupMetaData)
+            foreach (var member in members)
+            {
+                var v = member.Value;
+                SimAvatar A = CreateSimAvatar(member.Key, this, null);
+               
+            }
             // base.Groups_OnGroupMembers(requestID, totalCount, members);
         }
 
