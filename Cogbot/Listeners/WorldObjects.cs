@@ -669,6 +669,17 @@ namespace cogbot.Listeners
                 WriteLine(String.Format("err :{0}", e.StackTrace));
             }
         }
+        public SimObject GetSimObject(string[] args, out int argsUsed)
+        {
+            Primitive prim = GetPrimitive(args, out argsUsed);
+            if (prim != null) return GetSimObject(prim);
+            foreach (SimAvatar avatar in SimAvatars)
+            {
+                if (avatar.DebugInfo().Contains(args[0]))
+                    return avatar;
+            }
+            return null;
+        }
 
 
         public SimObject GetSimObject(uint sittingOn, Simulator simulator)
@@ -1466,7 +1477,7 @@ namespace cogbot.Listeners
                             //client.Avatars.RequestAvatarPicks(uuid);
                             SimObjects.AddTo(obj0);
                             RegisterUUID(uuid, obj0);
-                            client.Avatars.RequestAvatarProperties(uuid);
+                            if (MaintainAvatarMetaData) client.Avatars.RequestAvatarProperties(uuid);
                             return (SimAvatarImpl)obj0;
                         }
         }

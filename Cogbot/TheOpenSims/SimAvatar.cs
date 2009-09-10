@@ -17,6 +17,84 @@ namespace cogbot.TheOpenSims
 {
     public partial class SimAvatarImpl : SimObjectImpl, SimMover, SimAvatar, SimActor
     {
+        private Avatar.AvatarProperties _profileProperties;
+        public Avatar.AvatarProperties ProfileProperties
+        {
+            get
+            {
+                if (_Prim0 != null)
+                {
+                    if (!string.IsNullOrEmpty(((Avatar)_Prim0).ProfileProperties.BornOn))
+                    {
+                        _profileProperties = ((Avatar)_Prim0).ProfileProperties;
+                    }
+                }
+                return _profileProperties;
+            }
+            set
+            {
+                if (_Prim0 != null)
+                {
+                    if (string.IsNullOrEmpty(((Avatar)_Prim0).ProfileProperties.BornOn))
+                    {
+                        ((Avatar)_Prim0).ProfileProperties = value;
+                    }
+                }
+                _profileProperties = value;
+            }
+        }
+        private Avatar.Interests _AvatarInterests;
+        public Avatar.Interests AvatarInterests
+        {
+            get
+            {
+                if (_Prim0 != null)
+                {
+                    if (!string.IsNullOrEmpty(((Avatar)_Prim0).ProfileInterests.LanguagesText))
+                    {
+                        _AvatarInterests = ((Avatar)_Prim0).ProfileInterests;
+                    }
+                }
+                return _AvatarInterests;
+            }
+            set
+            {
+                if (_Prim0 != null)
+                {
+                    if (string.IsNullOrEmpty(((Avatar)_Prim0).ProfileInterests.LanguagesText))
+                    {
+                        ((Avatar)_Prim0).ProfileInterests = value;
+                    }
+                }
+                _AvatarInterests = value;
+            }
+        }
+        private List<UUID> _AvatarGroups;
+        public List<UUID> AvatarGroups
+        {
+            get
+            {
+                if (_Prim0 != null)
+                {
+                    if (((Avatar)_Prim0).Groups!=null)
+                    {
+                        _AvatarGroups = ((Avatar)_Prim0).Groups;
+                    }
+                }
+                return _AvatarGroups;
+            }
+            set
+            {
+                if (_Prim0 != null)
+                {
+                    if (((Avatar)_Prim0).Groups == null)
+                    {
+                        ((Avatar)_Prim0).Groups = value;
+                    }
+                }
+                _AvatarGroups = value;
+            }
+        }
         public override bool IsKilled
         {
             ///  get { return WasKilled; }
@@ -191,7 +269,7 @@ namespace cogbot.TheOpenSims
         private Thread actionThread = null;
         private readonly object actionLock = new object();
         public BotAction LastAction { get; set; }
-        
+
         /// <summary>
         ///  Current action 
         /// </summary>       
@@ -2157,6 +2235,8 @@ namespace cogbot.TheOpenSims
         float ZHeading { get; }
         IEnumerable<SimTypeUsage> KnownTypeUsages { get; }
         BotAction LastAction { get; }
+        Avatar.AvatarProperties ProfileProperties { get; set; }
+        Avatar.Interests AvatarInterests { get; set; }
         void OnAvatarAnimations(InternalDictionary<UUID, int> anims);
 
         ICollection<UUID> GetCurrentAnims();
