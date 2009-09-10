@@ -43,5 +43,6 @@
     (thisClient.ExecuteCommand "thread setmaster Douglas Miles") ;; change this to your name
    ;; (thisClient.ExecuteCommand "thread irc #logicmoo cogbotIRCModule irc.freenode.net")  ;; to connect to IRC
     (thisClient.ExecuteCommand "aiml off") ;; turns on/off aiml for all users
+    (setj AIMLBotModule:DefaultMaxRespondToChatPerMinute 20) ;; once every three seconds
   </startupClientLisp>
 </Configuration>
