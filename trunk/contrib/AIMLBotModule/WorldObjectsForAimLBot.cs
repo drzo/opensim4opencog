@@ -77,7 +77,7 @@ namespace AIMLBotModule
             try
             {
                 MyUser = user;
-                using (StringWriter sw = new StringWriter())
+                StringWriter sw = new StringWriter();
                 {
                     string s = client.ExecuteCommand(cmd, sw.WriteLine);
                     return String.Format("{0}{1}", sw, s);
