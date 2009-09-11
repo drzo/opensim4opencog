@@ -485,7 +485,7 @@ namespace AIMLBotModule
             if (respLen > 800)
             {
                 var slits = new List<String>();
-                int easySpace = slits.IndexOf(" ", 700);
+                int easySpace = resp.IndexOf(" ", 700);
                 // find a space between 700-1000
                 if (easySpace > 0 && easySpace < 1000)
                 {
