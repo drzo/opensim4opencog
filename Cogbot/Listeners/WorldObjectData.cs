@@ -58,7 +58,11 @@ namespace cogbot.Listeners
                 {
                     updateMe.ResetPrim(prim, client, simulator);
                 }
-                updateMe.UpdateProperties(props);
+                if (MaintainObjectProperties)
+                {
+                    updateMe.Properties = null;
+                    updateMe.UpdateProperties(props);
+                }
                 //Debug("UpdateProperties: {0}", updateMe.DebugInfo());
                 SendNewRegionEvent(SimEventType.DATA_UPDATE,"on-properties-updated",prim);
             }

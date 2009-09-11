@@ -12,7 +12,7 @@ namespace AIMLBotModule
 {
     public class WorldObjectsForAimLBot : WorldObjectsModule
     {
-        private static int _DefaultMaxRespondToChatPerMinute = 10;
+        private static int _DefaultMaxRespondToChatPerMinute = 20;
         public static int DefaultMaxRespondToChatPerMinute
         {
             get
@@ -566,40 +566,50 @@ namespace AIMLBotModule
             bool typing = true;
 
             // Start typing
-            client.Self.Chat(String.Empty, 0, ChatType.StartTyping);
-            client.Self.AnimationStart(Animations.TYPE, false);
-
-            while (characters < message.Length)
+            try
             {
-                if (!typing)
+                client.Self.Chat(String.Empty, 0, ChatType.StartTyping);
+                client.Self.AnimationStart(Animations.TYPE, false);
+
+                int messageLength = message.Length;
+                if (messageLength > 60)
                 {
-                    // Start typing again
-                    client.Self.Chat(String.Empty, 0, ChatType.StartTyping);
-                    client.Self.AnimationStart(Animations.TYPE, false);
-                    typing = true;
+                    messageLength = 60;
                 }
-                else
+                while (characters < messageLength)
                 {
-                    // Randomly pause typing
-                    if (rand.Next(10) >= 9)
+                    if (!typing)
                     {
-                        client.Self.Chat(String.Empty, 0, ChatType.StopTyping);
-                        client.Self.AnimationStop(Animations.TYPE, false);
-                        typing = false;
+                        // Start typing again
+                        client.Self.Chat(String.Empty, 0, ChatType.StartTyping);
+                        client.Self.AnimationStart(Animations.TYPE, false);
+                        typing = true;
                     }
+                    else
+                    {
+                        // Randomly pause typing
+                        if (rand.Next(10) >= 9)
+                        {
+                            client.Self.Chat(String.Empty, 0, ChatType.StopTyping);
+                            client.Self.AnimationStop(Animations.TYPE, false);
+                            typing = false;
+                        }
+                    }
+
+                    // Sleep for a second and increase the amount of characters we've typed
+                    System.Threading.Thread.Sleep(1000);
+                    characters += cps;
                 }
 
-                // Sleep for a second and increase the amount of characters we've typed
-                System.Threading.Thread.Sleep(1000);
-                characters += cps;
+                // Send the message
+                client.Self.Chat(message, 0, type);
             }
-
-            // Send the message
-            client.Self.Chat(message, 0, type);
-
-            // Stop typing
-            client.Self.Chat(String.Empty, 0, ChatType.StopTyping);
-            client.Self.AnimationStop(Animations.TYPE, false);
+            finally
+            {
+                // Stop typing
+                client.Self.Chat(String.Empty, 0, ChatType.StopTyping);
+                client.Self.AnimationStop(Animations.TYPE, false);
+            }
         }
 
         public Unifiable AIMLInterp(string input)

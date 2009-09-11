@@ -81,6 +81,7 @@ namespace cogbot.Listeners
             foreach (SimObject obj in GetAllSimObjects())
             {
                 //obj._Parent = obj.Parent;
+                obj.Properties = null;
                 obj.UpdateProperties(obj.Properties);
             }
             if (count != SimObjects.Count)

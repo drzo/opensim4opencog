@@ -1227,13 +1227,13 @@ namespace cogbot.TheOpenSims
             nameNameMap[name.ToLower()] = file.ToLower();
         }
 
-        public ICollection<string> GetAssetNames()
+        public ICollection<string> GetAssetNames(AssetType types)
         {
             FillAssetNames();
             List<String> names = new List<String>();
             lock (SimAssets) foreach (var list in SimAssets)
                 {
-                    names.Add(list.Name);
+                    if (list.AssetType==types) names.Add(list.Name);
                 }
             return names;
         }

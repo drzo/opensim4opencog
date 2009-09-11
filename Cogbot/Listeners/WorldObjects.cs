@@ -28,6 +28,7 @@ namespace cogbot.Listeners
         public static bool MaintainActions = false;
         public static bool MaintainPropertiesFromQueue = true;
         public static bool MaintainObjectUpdates = false;
+        public static bool MaintainObjectProperties = false;
         public static bool MaintainSounds = false;
         static public bool MaintainAvatarMetaData = true;
         static public bool MaintainGroupMetaData = true;

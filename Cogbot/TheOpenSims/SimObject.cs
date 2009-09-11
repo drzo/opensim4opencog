@@ -796,40 +796,19 @@ namespace cogbot.TheOpenSims
         {
             try
             {
-                Primitive Prim = this.Prim;
-                _TOSRTING = null;
                 if (objectProperties != null)
                 {
-                    Properties = objectProperties;
-                    if (Prim.Properties == null) Prim.Properties = objectProperties;
-
-                    ObjectType.SitName = objectProperties.SitName;
-                    ObjectType.TouchName = objectProperties.TouchName;
-                    if (needUpdate)
+                    if (objectProperties == Properties) return;
+                    Primitive Prim = this.Prim;
+                    if (Prim != null && Prim.Properties == null) Prim.Properties = objectProperties;
+                    // here we might do a real compare
+                    if (true)
                     {
-                        needUpdate = false;
-                        //  Parent;
-                        if (Properties != null)
-                        {
-                            GuessSimObjectTypes(objectProperties);
-                        }
-                        else
-                        {
-                            GuessSimObjectTypes(objectProperties);
-                        }
+                        Properties = objectProperties;
+                        _TOSRTING = null;
+                        ToString();
+                        AddSimObjectTypes(objectProperties);
                     }
-                    else
-                    {
-                        if (Properties != null)
-                        {
-                            GuessSimObjectTypes(objectProperties);
-                        }
-                        else
-                        {
-                            GuessSimObjectTypes(objectProperties);
-                        }
-                    }
-                    Properties = objectProperties;
                 }
             }
             catch (Exception e)
@@ -838,9 +817,11 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        private void GuessSimObjectTypes(Primitive.ObjectProperties properties)
+        private void AddSimObjectTypes(Primitive.ObjectProperties properties)
         {
-           // SimTypeSystem.GuessSimObjectTypes(properties, this);  
+            ObjectType.SitName = properties.SitName;
+            ObjectType.TouchName = properties.TouchName;
+            SimTypeSystem.GuessSimObjectTypes(properties, this);  
         }
 
         public virtual bool IsFloating

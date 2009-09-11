@@ -20,7 +20,7 @@ namespace cogbot.Actions
         {
             if (args.Length < 1)
             {
-                ICollection<string> list = WorldSystem.SimAssetSystem.GetAssetNames();
+                ICollection<string> list = WorldSystem.SimAssetSystem.GetAssetNames(AssetType.Gesture);
                 WriteLine(TheBotClient.argsListString(list));
                 IDictionary<UUID, int> gestures = WorldSystem.TheSimAvatar.GetCurrentAnimDict();
                 string alist = String.Empty;
