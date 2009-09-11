@@ -280,6 +280,10 @@ namespace AIMLBotModule
 
         public void AIML_OnInstantMessage(InstantMessage im, Simulator simulator)
         {
+            if (im.Dialog == InstantMessageDialog.StartTyping || im.Dialog == InstantMessageDialog.StopTyping)
+            {
+                return;
+            }
             if (im.FromAgentName == GetName()) return;
             if (im.FromAgentName == "System" || im.FromAgentName == "Second Life") return;
             User myUser = GetMyUser(im.FromAgentName);
