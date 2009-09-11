@@ -457,7 +457,7 @@ namespace AIMLBotModule
                             })).Start();
         }
 
-        private bool MessageTurnsOffChat(string message)
+        static bool MessageTurnsOffChat(string message)
         {
             message = message.ToLower();
             if (message.Contains("chat off")) return true;
@@ -482,13 +482,21 @@ namespace AIMLBotModule
             }
         }
 
-        private string[] SplitChatSmart(string resp)
+        static string[] SplitChatSmart(string resp)
         {
-            resp = resp.Trim();
+            resp = resp.Replace("\r", "\n").Replace("\n\n", "\n").TrimEnd();
             int respLen = resp.Length;
             if (respLen > 800)
             {
                 var slits = new List<String>();
+                if (resp.Contains("\n"))
+                {
+                    foreach (string s in resp.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        slits.AddRange(SplitChatSmart(s));
+                    }
+                    return slits.ToArray();
+                }
                 int easySpace = resp.IndexOf(" ", 700);
                 // find a space between 700-1000
                 if (easySpace > 0 && easySpace < 1000)
@@ -577,7 +585,7 @@ namespace AIMLBotModule
 
         public void WriteLine(string s, params object[] args)
         {
-            Console.WriteLine("AIML BOT: " + s, args);
+            Console.WriteLine(string.Format("AIML BOT {0}: {1}", GetName(), s), args);
         }
 
         /// <summary>
