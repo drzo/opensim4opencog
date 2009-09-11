@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -331,7 +332,7 @@ namespace AIMLBotModule
                                     }
                                 }
                                 UseRealism = true;
-                                foreach (string ting in resp.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries))
+                                foreach (string ting in SplitChatSmart(resp))
                                 {
                                     string tsing = ting.Trim();
                                     if (tsing.Length > 1000)
@@ -467,7 +468,7 @@ namespace AIMLBotModule
         }
         private void StringChat(string resp, ChatType type)
         {
-            foreach (string ting in resp.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (string ting in SplitChatSmart(resp))
             {
                 string sting = ting.Trim();
                 if (UseRealism)
@@ -475,6 +476,31 @@ namespace AIMLBotModule
                 else client.Self.Chat(sting, 0, type);
                 UseRealism = false;
             }
+        }
+
+        private string[] SplitChatSmart(string resp)
+        {
+            resp = resp.Trim();
+            int respLen = resp.Length;
+            if (respLen > 800)
+            {
+                var slits = new List<String>();
+                int easySpace = slits.IndexOf(" ", 700);
+                // find a space between 700-1000
+                if (easySpace > 0 && easySpace < 1000)
+                {
+                    slits.AddRange(SplitChatSmart(resp.Substring(0, easySpace)));
+                    slits.AddRange(SplitChatSmart(resp.Substring(easySpace)));
+                }
+                else
+                {
+                    slits.AddRange(SplitChatSmart(resp.Substring(0, 800)));
+                    slits.AddRange(SplitChatSmart(resp.Substring(800)));                   
+                }
+                return slits.ToArray();
+            }
+            // split newlines
+            return resp.Split(new char[] {'\n'}, StringSplitOptions.RemoveEmptyEntries);
         }
 
         private bool MessageTurnsOnChat(string message)
