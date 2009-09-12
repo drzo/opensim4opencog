@@ -466,6 +466,21 @@ namespace OpenMetaverse
         }
 
 
+        public string _seed;
+ 
+        public void ConnectCaps()
+        {
+            if (Caps != null)
+            {
+                Caps.Disconnect(true);
+                Caps = null;
+            }
+            if (!String.IsNullOrEmpty(_seed))
+            {
+                Caps = new Caps(this, _seed);
+            }
+        }
+
         readonly static Dictionary<GridClient, Dictionary<ulong, Simulator>> savedSims = new Dictionary<GridClient, Dictionary<ulong, Simulator>>();
         readonly static Dictionary<ulong, Simulator> firstSim = new Dictionary<ulong, Simulator>();
         public static Simulator Create(GridClient client, IPEndPoint point, ulong handle)
@@ -598,6 +613,8 @@ namespace OpenMetaverse
 
         public void SetSeedCaps(string seedcaps)
         {
+            _seed = seedcaps;
+
             if (Caps != null)
             {
                 if (Caps._SeedCapsURI == seedcaps) return;
