@@ -1,15 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Reflection;
 using System.Threading;
-using System.Windows.Forms;
 using cogbot.TheOpenSims;
 using PathSystem3D.Navigation;
 using Exception=System.Exception;
 using String=System.String;
 using OpenMetaverse;
+using cogbot;
 
 namespace TheSimiansModule
 {
@@ -87,6 +86,7 @@ namespace TheSimiansModule
                                             Priority = ThreadPriority.Lowest
                                         };
             avatarHeartbeatThread.Start();
+            ShowDebug();
         }
 
 
@@ -555,28 +555,34 @@ namespace TheSimiansModule
             lock (_debugWindowLock)
                 if (_debugWindow == null || _debugWindow.IsDisposed)
                 {
-                    (new Thread(() =>
-                    {
-                        try
-                        {
-                            _debugWindow = new SimThinkerDebug(Actor.GetGridClient());
-                            _debugWindow.Closing += new CancelEventHandler(delegate(object sender, CancelEventArgs e)
-                            {
-                                lock (_debugWindowLock)
-                                    _debugWindow = null;
-                            });
-                            Application.EnableVisualStyles();
-                            Application.Run(_debugWindow);
-                        } catch(Exception e)
-                        {
-                            Console.WriteLine(""+e);
-                        }
-                    })).Start();
+                    BotClient gc = Actor.GetGridClient();
+                    gc.Invoke((() =>
+                                                    {
+                                                        try
+                                                        {
+                                                            string name = "ST: " + gc.GetName();
+                                                            _debugWindow = new SimThinkerDebug(name,gc);
+                                                            gc.AddTab(name, name, _debugWindow, CloseDebug);
+                                                        }
+                                                        catch (Exception e)
+                                                        {
+                                                            Console.WriteLine("" + e);
+                                                        }
+                                                    }
+                                         ));
                 }
                 else
                 {
                     _debugWindow.Show();
                 }
+        }
+
+        private void CloseDebug(object sender, EventArgs e)
+        {
+            lock (_debugWindowLock)
+            {
+                _debugWindow = null;
+            }
         }
     }
 }

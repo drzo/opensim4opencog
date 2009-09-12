@@ -11,9 +11,19 @@ using String=System.String;
 
 namespace TheSimiansModule
 {
-    public partial class SimThinkerDebug : Form
+    public sealed partial class SimThinkerDebug : UserControl
     {
         private delegate void ShowDelegate();
+        
+        public event FormClosedEventHandler Closing;
+        private MenuStrip _MainMenuStrip;
+
+        public MenuStrip MainMenuStrip
+        {
+            get { return _MainMenuStrip; }
+            set { _MainMenuStrip = value; }
+        }
+
         public void Show()
         {
             if (this.InvokeRequired)
@@ -32,14 +42,21 @@ namespace TheSimiansModule
                 baseShow();
 
                 //if (this.WindowState == FormWindowState.Minimized)              
-                base.WindowState = FormWindowState.Normal;
+              //  base.WindowState = FormWindowState.Normal;
                 if (!base.Visible) base.Visible = true;
-                base.Activate();
+                //base.Activate();
+                client.ShowTab(GetTabName());
+                
             }
             catch (Exception e)
             {
                 Console.WriteLine("" + e);
             }
+        }
+
+        public string GetTabName()
+        {
+            return _tabname;
         }
 
         private void baseShow()
@@ -56,15 +73,19 @@ namespace TheSimiansModule
 
 
         private readonly BotClient client;
-        public SimThinkerDebug(BotClient bc)
+        private readonly string _tabname;
+        public SimThinkerDebug(string name,BotClient bc)
         {
             client = bc;
+            _tabname = name;
+            this.Name = name;
             InitializeComponent();
             this.Size = new Size(this.Size.Width + 300, this.Size.Height);
-            this.Text = string.Format("SimThinker Debug {0}", client.WorldSystem.TheSimAvatar.ToString());
-            this.ResizeEnd += TextForm_ResizeEnd;
+            this.Text = string.Format("SimThinker Debug {0}", name);
+            this.SizeChanged += TextForm_ResizeEnd;
+            this.Resize += TextForm_ResizeEnd;
+            this.Dock = DockStyle.Fill;
             Visible = true;
-            Show();
             consoleInputText.Enabled = true;
             consoleInputText.Focus();
         }
@@ -121,7 +142,7 @@ namespace TheSimiansModule
             {
                 if (str == null) return;
                 if (args != null && args.Length > 0) str = String.Format(str, args);
-                str = str.Trim();
+                str = str.TrimEnd();
                 if (str == "") return;
 
                 str = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
@@ -150,14 +171,14 @@ namespace TheSimiansModule
         {
             if (str == null) return;
             if (args.Length > 0) str = String.Format(str, args);
-            str = str.Trim();
+            str = str.TrimEnd();
             if (str == "") return;
             try
             {
                 // lock (consoleText)
                 {
                     if (consoleText.IsDisposed) return; // for (un)clean exits
-                    consoleText.AppendText(str + "\r\n");
+                    consoleText.AppendText(String.Format("{0}\r\n", str));
                 }
             }
             catch (Exception e)
@@ -194,6 +215,11 @@ namespace TheSimiansModule
         }
 
         private void clientToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void consoleText_TextChanged(object sender, EventArgs e)
         {
 
         }

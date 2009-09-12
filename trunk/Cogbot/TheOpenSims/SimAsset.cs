@@ -10,85 +10,6 @@ using OpenMetaverse.Assets;
 
 namespace cogbot.TheOpenSims
 {
-    public class AssetThread
-    {
-        private readonly SimAsset asset;
-        private readonly AgentManager ClientSelf;
-        private Thread assetLoop;
-        private bool repeat = true;
-
-        public AssetThread(AgentManager c, SimAsset amin0)
-        {
-            ClientSelf = c; //.Self;
-            repeat = !amin0.IsLoop;
-            asset = amin0;
-        }
-
-        public override string ToString()
-        {
-            return String.Format("AssetLoop {0} of {1}", asset, ClientSelf);
-        }
-
-        public void Start()
-        {
-            assetLoop = new Thread(LoopAnim) { Name = string.Format("Thread for {0}", ToString()) };
-            assetLoop.Start();
-        }
-
-        private void LoopAnim()
-        {
-            try
-            {
-                ClientSelf.AnimationStart(AssetID, true);
-                while (NeedsLooping)
-                {
-                    // some anims will only last a short time so we have to 
-                    // remind the server we still want to be using it 
-                    // like Laugh .. lasts for about .9 seconds
-                    //12000 is a estimate average
-                    Thread.Sleep((int)(asset.Length * 1000));
-                    ClientSelf.AnimationStop(AssetID, true);
-                    ClientSelf.AnimationStart(AssetID, true);
-                }
-            }
-            catch (Exception)
-            {
-            } // for the Abort 
-        }
-
-        protected bool NeedsLooping
-        {
-            get
-            {
-                if (repeat) return true;
-                if (!asset.IsLoop) return true;
-                return false;
-            }
-        }
-
-        protected UUID AssetID
-        {
-            get { return asset.AssetID; }
-        }
-
-        public void Stop()
-        {
-            repeat = false;
-            if (assetLoop != null)
-            {
-                try
-                {
-                    if (assetLoop.IsAlive) assetLoop.Abort();
-                }
-                catch (Exception)
-                {
-                }
-                assetLoop = null;
-            }
-            ClientSelf.AnimationStop(AssetID, true);
-        }
-    }
-
     public class SimAssetStore
     {
 
@@ -98,17 +19,36 @@ namespace cogbot.TheOpenSims
         internal readonly BotClient Client;
 
         TaskQueueHandler taskQueue = new TaskQueueHandler("SimAssetStore",1);
-       
+        private InventoryManager Manager;
+        private OpenMetaverse.Inventory Inventory;
 
-        List<UUID> BusyUpdating = new List<UUID>();
+        HashSet<UUID> BusyUpdating = new HashSet<UUID>();
         public SimAssetStore(BotClient GC)
         {
             Client = GC;
-            FillAssetNames();
+            Manager = Client.Inventory;
+            Manager.OnItemReceived += Inventory_OnItemReceived;
+            Manager.OnTaskItemReceived += Inventory_OnTaskItemReceived;
+            Manager.OnFolderUpdated += Inventory_OnFolderUpdated;
+            Inventory = Manager.Store;
             Client.Network.OnSimConnected += Ensure_Downloaded;
-            Client.Inventory.OnItemReceived += Inventory_OnItemReceived;
-            Client.Inventory.OnTaskItemReceived += Inventory_OnTaskItemReceived;
-            Client.Inventory.OnFolderUpdated += Inventory_OnFolderUpdated;
+            FillAssetNames();
+        }
+
+
+        private void Store_OnInventoryObjectRemoved(InventoryBase obj)
+        {
+           // throw new NotImplementedException();
+        }
+
+        private void Store_OnInventoryObjectUpdated(InventoryBase oldobject, InventoryBase newobject)
+        {
+            taskQueue.Enqueue(() =>LoadItemOrFolder(newobject));
+        }
+
+        private void Store_OnInventoryObjectAdded(InventoryBase obj)
+        {
+            taskQueue.Enqueue(() =>LoadItemOrFolder(obj));
         }
 
         private void Inventory_OnFolderUpdated(UUID folderid)
@@ -128,20 +68,18 @@ namespace cogbot.TheOpenSims
 
         private void LoadFolderId(UUID folderid)
         {
-            if (!GleanFolder) return;
+            if (!WorldObjects.GleanAssetsFromFolders) return;
             if (folderid == UUID.Zero) return;
             lock (BusyUpdating) if (BusyUpdating.Contains(folderid)) return;
+            lock (BusyUpdating) BusyUpdating.Add(folderid);
             taskQueue.Enqueue(() =>
                                   {
-
-                                      lock (BusyUpdating) BusyUpdating.Add(folderid);
-
                                       List<InventoryBase> contents = Client.Inventory.FolderContents(folderid,
                                                                                                      Client.Self.AgentID,
                                                                                                      true, true,
                                                                                                      InventorySortOrder.
                                                                                                          ByName, 10000);
-                                      if (contents != null) contents.ForEach(LoadFolder);
+                                      if (contents != null) contents.ForEach(LoadItemOrFolder);
                                   //    lock (BusyUpdating) BusyUpdating.Remove(folderid);
                                   });
 
@@ -149,15 +87,21 @@ namespace cogbot.TheOpenSims
 
         private void Inventory_OnItemReceived(InventoryItem item)
         {
-            taskQueue.Enqueue(() => LoadFolder(item));
+            taskQueue.Enqueue(() => LoadItemOrFolder(item));
         }
 
         private bool downloadedAssetFolders = false;
+        static bool downloadedAssetFoldersComplete = false;
         private void Ensure_Downloaded(Simulator simulator)
         {
             if (downloadedAssetFolders) return;
             downloadedAssetFolders = true;
+            Inventory = Manager.Store;
+            Inventory.OnInventoryObjectAdded += new Inventory.InventoryObjectAdded(Store_OnInventoryObjectAdded);
+            Inventory.OnInventoryObjectUpdated += new Inventory.InventoryObjectUpdated(Store_OnInventoryObjectUpdated);
+            Inventory.OnInventoryObjectRemoved += new Inventory.InventoryObjectRemoved(Store_OnInventoryObjectRemoved);
             taskQueue.Enqueue((DownloadAssetFolders));
+
         }
 
          void DownloadAssetFolders()
@@ -165,9 +109,10 @@ namespace cogbot.TheOpenSims
             Client.AnimationFolder = Client.Inventory.FindFolderForType(AssetType.Animation);
             LoadFolderId(Client.Inventory.Store.LibraryFolder.UUID);
             LoadFolderId(Client.Inventory.Store.RootFolder.UUID);
+            downloadedAssetFoldersComplete = true;
         }
 
-        private void LoadFolder(InventoryBase IB)
+        private void LoadItemOrFolder(InventoryBase IB)
         {
             if (IB is InventoryItem)
             {
@@ -184,7 +129,7 @@ namespace cogbot.TheOpenSims
             //    true, true, InventorySortOrder.ByName, 30000);
             //if (contents != null) foreach (InventoryBase IBO in contents)
             //{
-            //    LoadFolder(IBO);
+            //    LoadItemOrFolder(IBO);
             //}
             //lock (BusyUpdating) BusyUpdating.Remove(IB.UUID);
         }
@@ -1101,7 +1046,7 @@ namespace cogbot.TheOpenSims
 
         public static void WriteLine(string s, params object[] args)
         {
-          // Program.WriteLine("[ASSETS] "+s, args);
+            Program.WriteLine("[ASSETS] "+s, args);
         }
 
 
@@ -1282,6 +1227,10 @@ namespace cogbot.TheOpenSims
             FillAssetNames();
             SimAsset anim = FindOrCreateAsset(uUID, type);
             anim.Name = s;
+            if (downloadedAssetFoldersComplete)
+            {
+                WriteLine("SetAssetName: {0} {1}", type, s);
+            }
             InternAsset(anim);
             return anim;
         }
@@ -1426,7 +1375,6 @@ namespace cogbot.TheOpenSims
         internal readonly static List<SimAsset> SimAssets = new List<SimAsset>();
         internal readonly static Dictionary<string, string> nameNameMap = new Dictionary<string, string>();
         static private bool FilledInAssets;
-        static private bool GleanFolder = false;
 
         public static ICollection<SimAsset> GetAssets(AssetType assetType)
         {

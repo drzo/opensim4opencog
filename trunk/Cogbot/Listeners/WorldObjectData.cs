@@ -60,7 +60,7 @@ namespace cogbot.Listeners
                 }
                 if (MaintainObjectProperties)
                 {
-                    updateMe.Properties = null;
+                    //updateMe.Properties = null;
                     updateMe.UpdateProperties(props);
                 }
                 //Debug("UpdateProperties: {0}", updateMe.DebugInfo());

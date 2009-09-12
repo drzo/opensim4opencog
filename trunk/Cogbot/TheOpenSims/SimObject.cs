@@ -796,26 +796,48 @@ namespace cogbot.TheOpenSims
         {
             try
             {
+                Primitive Prim = this.Prim;
+                _TOSRTING = null;
                 if (objectProperties != null)
                 {
-                    if (objectProperties == Properties) return;
-                    Primitive Prim = this.Prim;
-                    if (Prim != null && Prim.Properties == null) Prim.Properties = objectProperties;
-                    // here we might do a real compare
-                    if (true)
+                    Properties = objectProperties;
+                    if (Prim!=null && Prim.Properties == null) Prim.Properties = objectProperties;
+
+                    ObjectType.SitName = objectProperties.SitName;
+                    ObjectType.TouchName = objectProperties.TouchName;
+                    if (needUpdate)
                     {
-                        Properties = objectProperties;
-                        _TOSRTING = null;
-                        ToString();
-                        AddSimObjectTypes(objectProperties);
+                        needUpdate = false;
+                        //  Parent; 
+                        if (Properties != null)
+                        {
+                            SimTypeSystem.GuessSimObjectTypes(objectProperties, this);
+                        }
+                        else
+                        {
+                            SimTypeSystem.GuessSimObjectTypes(objectProperties, this);
+                        }
                     }
+                    else
+                    {
+                        if (Properties != null)
+                        {
+                            SimTypeSystem.GuessSimObjectTypes(objectProperties, this);
+                        }
+                        else
+                        {
+                            SimTypeSystem.GuessSimObjectTypes(objectProperties, this);
+                        }
+                    }
+                    Properties = objectProperties;
                 }
             }
             catch (Exception e)
             {
                 Debug("" + e);
             }
-        }
+        } 
+ 
 
         private void AddSimObjectTypes(Primitive.ObjectProperties properties)
         {
