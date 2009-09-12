@@ -391,7 +391,7 @@ namespace cogbot.TheOpenSims
                 TheBot.TurnToward(Target);
                 if (howClose - 1 > TypeUsage.maximumDistance + 0.5f)
                 {
-                    TheBot.Debug("Too far away " + howClose + " from " + this);
+                    Debug(TheBot, "Too far away " + howClose + " from " + this);
                     return;
                 }
                 Target.MakeEnterable(TheBot);
@@ -409,7 +409,7 @@ namespace cogbot.TheOpenSims
 
         public virtual void InvokeBotSideEffect(SimAvatar TheBot)
         {
-            TheBot.Debug(ToString());
+            Debug(TheBot, ToString());
             //User.ApplyUpdate(use, simObject);
             BotNeeds CurrentNeeds = (BotNeeds)TheBot["CurrentNeeds"];
             BotNeeds needsBefore = CurrentNeeds.Copy();
@@ -418,12 +418,23 @@ namespace cogbot.TheOpenSims
             CurrentNeeds.AddFrom(update);
             CurrentNeeds.SetRange(0.0F, 100.0F);
             BotNeeds difNeeds = CurrentNeeds.Minus(needsBefore);
-            TheBot.Debug(TheBot + " " + ToString() + "\n\t " +
+            Debug(TheBot,TheBot + " " + ToString() + "\n\t " +
                 TheBot.DistanceVectorString(Target)
                 + "=> " + difNeeds.ShowNonZeroNeeds());
             if (TheBot is SimActor) ((SimActor)TheBot).ExecuteLisp(this, TypeUsage);
             Thread.Sleep(TypeUsage.totalTimeMS);
         }
+
+        private void Debug(SimAvatar TheBot,string theBotDebug)
+        {
+            TheBot.Debug(theBotDebug);
+            //Radegast.RadegastInstance C = TheBot.GetGridClient().TheRadegastInstance;
+            //if (C != null)
+            //{
+            //    C.TabConsole.DisplayNotificationInChat(theBotDebug);
+            //}
+        }
+
 
 
         public BotNeeds GetProposedChange()

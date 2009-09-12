@@ -83,24 +83,39 @@ namespace cogbot.Actions
                 }
                 amins.Add(new KeyValuePair<UUID,int>(anim,time));
             }
-            foreach(KeyValuePair<UUID,int> anim in amins) {
-                int val = anim.Value;
-                switch (val)
+            foreach (KeyValuePair<UUID, int> anim in amins)
+            {
+                try
                 {
-                    case -1:
-                        WriteLine("Stop anim " + WorldSystem.GetAnimationName(anim.Key));
-                        Client.Self.AnimationStop(anim.Key, true);
-                        continue;
-                    case 0:
-                        WriteLine("Start anim " + WorldSystem.GetAnimationName(anim.Key));
-                        Client.Self.AnimationStart(anim.Key, true);
-                        continue;
-                    default:
-                        Client.Self.AnimationStart(anim.Key, true);
-                        WriteLine("Run anim " + WorldSystem.GetAnimationName(anim.Key) + " for " + val / 1000 + " seconds.");
-                        Thread.Sleep(val);
-                        Client.Self.AnimationStop(anim.Key, true);
-                        continue;
+                    int val = anim.Value;
+                    switch (val)
+                    {
+                        case -1:
+                            Client.Self.AnimationStop(anim.Key, true);
+                            WriteLine("Stop anim " + WorldSystem.GetAnimationName(anim.Key));
+                            continue;
+                        case 0:
+                            Client.Self.AnimationStart(anim.Key, true);
+                            WriteLine("Start anim " + WorldSystem.GetAnimationName(anim.Key));
+                            continue;
+                        default:
+                            try
+                            {
+                                Client.Self.AnimationStart(anim.Key, true);
+                                WriteLine("Ran anim " + WorldSystem.GetAnimationName(anim.Key) + " for " + val/1000 +
+                                          " seconds.");
+                                Thread.Sleep(val);
+                            }
+                            finally
+                            {
+                                Client.Self.AnimationStop(anim.Key, true);
+                            }
+                            continue;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("" + e);
                 }
             }
             return "Ran "+amins.Count+" amins";

@@ -22,13 +22,14 @@ namespace cogbot.Listeners
         public static bool DoSimulatorsCatchUp = false;
         public static bool MaintainAnims = false;
         public static bool MaintainAnimsInFolders = true;
+        public static bool GleanAssetsFromFolders = true;
         public static bool MaintainAttachments = true;
         public static bool MaintainCollisions = false;
         public static bool MaintainEffects = false;
         public static bool MaintainActions = false;
         public static bool MaintainPropertiesFromQueue = true;
         public static bool MaintainObjectUpdates = false;
-        public static bool MaintainObjectProperties = false;
+        public static bool MaintainObjectProperties = true;
         public static bool MaintainSounds = false;
         static public bool MaintainAvatarMetaData = true;
         static public bool MaintainGroupMetaData = true;

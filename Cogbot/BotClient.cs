@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
+using System.Windows.Forms;
 using System.Xml;
 using cogbot.Utilities;
 using OpenMetaverse;
@@ -1618,6 +1620,34 @@ namespace cogbot
             TheRadegastInstance.Netcom.LoginOptions.StartLocationCustom = BotLoginParams.Start;
             TheRadegastInstance.Netcom.LoginOptions.Author = BotLoginParams.Author;
             TheRadegastInstance.Netcom.LoginOptions.UserAgent = BotLoginParams.UserAgent;
+        }
+
+        public void ShowTab(string name)
+        {
+            TheRadegastInstance.TabConsole.GetTab(name).Select();
+        }
+
+        public void AddTab(string name, string label, UserControl _debugWindow, EventHandler CloseDebug)
+        {
+            SleekTab tab = TheRadegastInstance.TabConsole.AddTab(name, label, _debugWindow);
+            tab.AllowDetach = true;
+            tab.AllowMerge = true;
+            //tab.TabClosed += ((sender, args) => _debugWindow.Dispose());
+            if (CloseDebug != null)
+            {
+                tab.AllowClose = true;
+                tab.TabClosed += CloseDebug;
+            } else
+            {
+                tab.AllowClose = false;
+            }
+            //Application.EnableVisualStyles();
+            //Application.Run(new Form(_debugWindow));
+        }
+
+        public void Invoke(ThreadStart o)
+        {
+            o();
         }
     }
 

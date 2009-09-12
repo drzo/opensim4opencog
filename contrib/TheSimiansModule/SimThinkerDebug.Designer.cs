@@ -31,25 +31,22 @@ namespace TheSimiansModule
         private void InitializeComponent()
         {
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clientToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loginToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.logoutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.simbotStopToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.simbotThinkToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.simbotOffToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.submitButton = new System.Windows.Forms.Button();
             this.consoleInputText = new System.Windows.Forms.TextBox();
             this.consoleText = new System.Windows.Forms.TextBox();
-            this.simbotStopToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.simbotThinkToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.simbotOffToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem,
             this.clientToolStripMenuItem,
             this.toolsToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
@@ -57,21 +54,6 @@ namespace TheSimiansModule
             this.menuStrip1.Size = new System.Drawing.Size(596, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
-            // 
-            // fileToolStripMenuItem
-            // 
-            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.exitToolStripMenuItem});
-            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(35, 20);
-            this.fileToolStripMenuItem.Text = "File";
-            // 
-            // exitToolStripMenuItem
-            // 
-            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.exitToolStripMenuItem.Text = "Exit";
-            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
             // clientToolStripMenuItem
             // 
@@ -99,6 +81,24 @@ namespace TheSimiansModule
             this.logoutToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.logoutToolStripMenuItem.Text = "simbot start";
             this.logoutToolStripMenuItem.Click += new System.EventHandler(this.NamedItemClick);
+            // 
+            // simbotStopToolStripMenuItem
+            // 
+            this.simbotStopToolStripMenuItem.Name = "simbotStopToolStripMenuItem";
+            this.simbotStopToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.simbotStopToolStripMenuItem.Text = "simbot stop";
+            // 
+            // simbotThinkToolStripMenuItem
+            // 
+            this.simbotThinkToolStripMenuItem.Name = "simbotThinkToolStripMenuItem";
+            this.simbotThinkToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.simbotThinkToolStripMenuItem.Text = "simbot think";
+            // 
+            // simbotOffToolStripMenuItem
+            // 
+            this.simbotOffToolStripMenuItem.Name = "simbotOffToolStripMenuItem";
+            this.simbotOffToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.simbotOffToolStripMenuItem.Text = "simbot off";
             // 
             // toolsToolStripMenuItem
             // 
@@ -138,39 +138,19 @@ namespace TheSimiansModule
             this.consoleText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.consoleText.Size = new System.Drawing.Size(572, 321);
             this.consoleText.TabIndex = 11;
-            // 
-            // simbotStopToolStripMenuItem
-            // 
-            this.simbotStopToolStripMenuItem.Name = "simbotStopToolStripMenuItem";
-            this.simbotStopToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.simbotStopToolStripMenuItem.Text = "simbot stop";
-            // 
-            // simbotThinkToolStripMenuItem
-            // 
-            this.simbotThinkToolStripMenuItem.Name = "simbotThinkToolStripMenuItem";
-            this.simbotThinkToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.simbotThinkToolStripMenuItem.Text = "simbot think";
-            // 
-            // simbotOffToolStripMenuItem
-            // 
-            this.simbotOffToolStripMenuItem.Name = "simbotOffToolStripMenuItem";
-            this.simbotOffToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.simbotOffToolStripMenuItem.Text = "simbot off";
+            this.consoleText.TextChanged += new System.EventHandler(this.consoleText_TextChanged);
             // 
             // SimThinkerDebug
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(596, 386);
             this.Controls.Add(this.submitButton);
             this.Controls.Add(this.consoleInputText);
             this.Controls.Add(this.consoleText);
             this.Controls.Add(this.menuStrip1);
-            this.MainMenuStrip = this.menuStrip1;
             this.Name = "SimThinkerDebug";
-            this.Text = "CogBot";
+            this.Size = new System.Drawing.Size(596, 386);
             this.Load += new System.EventHandler(this.TextForm_Load);
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.TextForm_FormClosed);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
@@ -181,8 +161,6 @@ namespace TheSimiansModule
         #endregion
 
         private System.Windows.Forms.MenuStrip menuStrip1;
-        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem clientToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loginToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem logoutToolStripMenuItem;

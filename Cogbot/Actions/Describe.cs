@@ -99,7 +99,17 @@ namespace cogbot.Actions
                         else
                         {
 
-                            WriteLine("I don't know about " + subject + ".");
+                            int found = 0;
+                            foreach (var o in WorldSystem.GetAllSimObjects(args.str))
+                            {
+                                found++;
+                                if (o is SimAvatar)
+                                    WriteLine(WorldSystem.describeAvatar((Avatar)o.Prim));
+                                else
+                                    WriteLine(WorldSystem.describePrim(o.Prim, false));
+                                if (found > 30) break;
+                            }
+                            if (found == 0) WriteLine("I don't know about " + subject + ".");
                         }
                     }
                 }

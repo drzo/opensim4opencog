@@ -8,6 +8,7 @@ using OpenMetaverse;
 using PathSystem3D.Navigation;
 using Random=System.Random;
 using UUID=OpenMetaverse.UUID;
+using System.Drawing;
 
 /// Complex outcomes may be a result of simple causes, or they may just be complex by nature. 
 /// Those complexities that turn out to have simple causes can be simulated and studied, 
@@ -678,7 +679,12 @@ namespace cogbot.TheOpenSims
         {
             if (Client != null)
             {
-                Client.WorldSystem.WriteLine(String.Format(p, args));
+                string str = String.Format(p, args);
+                Client.WorldSystem.WriteLine(str);
+                if (Client.TheRadegastInstance!=null)
+                {
+                    Client.TheRadegastInstance.TabConsole.DisplayNotificationInChat(str);
+                }
             }
             else
             {
