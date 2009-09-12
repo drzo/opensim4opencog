@@ -714,48 +714,6 @@
      </Files>
 </Project>
 
-  <Project name="IdealistRadegastPlugin" path="lib/IdealistRadegastPlugin" type="Library" frameworkVersion="v3_5">
-   <Configuration name="Debug">
-     <Options>
-       <OutputPath>../../bin/</OutputPath>
-     </Options>
-   </Configuration>
-   <Configuration name="Release">
-     <Options>
-       <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
-       <OutputPath>../../bin/</OutputPath>
-       <PlatformTarget>x86</PlatformTarget>
-     </Options>
-   </Configuration>
-
-   <ReferencePath>../../bin/</ReferencePath>
-   <Reference name="OpenMetaverse" localCopy="false"/>
-   <Reference name="OpenMetaverseTypes" localCopy="false"/>
-   <Reference name="OpenMetaverseCore" localCopy="false"/>
-   <Reference name="IdealistViewer" localCopy="false"/>
-   <Reference name="HttpServer"/>
-   <Reference name="Irrlicht.Extensions" />
-   <Reference name="Irrlicht.NET" />
-   <Reference name="log4net" />
-   <Reference name="Radegast" />
-   <Reference name="MXP" />
-   <Reference name="Nini" />
-   <Reference name="PrimMesher" />
-   <Reference name="protobuf-net" />
-   <Reference name="System" />
-   <Reference name="System.Core"/>
-   <Reference name="System.Drawing" />
-   <Reference name="System.Windows.Forms" />
-   <Reference name="System.Xml.Linq"/>
-   <Reference name="System.Data.DataSetExtensions"/>
-   <Reference name="System.Data" />
-   <Reference name="System.Xml" />
-   <Files>
-       <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
-       <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
-   </Files>
-</Project>
-
   <Project name="RadegastSpeech" path="lib/radegastspeech-svn/RadegastSpeech" type="Library" frameworkVersion="v3_5">
    <Configuration name="Debug">
      <Options>
@@ -774,7 +732,7 @@
    <Reference name="OpenMetaverse" localCopy="false"/>
    <Reference name="OpenMetaverseTypes" localCopy="false"/>
    <Reference name="OpenMetaverseCore" localCopy="false"/>
-   <Reference name="Radegast" />
+   <Reference name="Radegast.exe" />
    <Reference name="Nini" />
    <Reference name="fmodex-dotnet.dll" />
    <Reference name="System" />
@@ -792,7 +750,44 @@
    </Files>
 </Project>
 
-  <Project name="RadSpeechWin" path="lib/radegastspeech-svn/RadSpeechWin" type="Library" frameworkVersion="v3_5">
+  <Project name="RadSpeechLin" path="lib/radegastspeech-svn/RadSpeechLin" type="Library" frameworkVersion="v3_5">
+   <Configuration name="Debug">
+     <Options>
+       <OutputPath>../../../bin/</OutputPath>
+     </Options>
+   </Configuration>
+   <Configuration name="Release">
+     <Options>
+       <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
+       <OutputPath>../../bin/</OutputPath>
+       <PlatformTarget>x86</PlatformTarget>
+     </Options>
+   </Configuration>
+
+   <ReferencePath>../../../bin/</ReferencePath>
+   <Reference name="OpenMetaverse" localCopy="false"/>
+   <Reference name="OpenMetaverseTypes" localCopy="false"/>
+   <Reference name="OpenMetaverseCore" localCopy="false"/>
+   <Reference name="Radegast" />
+   <Reference name="RadegastSpeech" />
+   <Reference name="Nini" />
+   <Reference name="fmodex-dotnet.dll" />
+   <Reference name="System" />
+   <Reference name="System.Core"/>
+   <Reference name="System.Drawing" />
+   <Reference name="System.Windows.Forms" />
+   <Reference name="System.Xml.Linq"/>
+   <Reference name="System.Data.DataSetExtensions"/>
+   <Reference name="System.Data" />
+   <Reference name="System.Speech" />
+   <Reference name="System.Xml" />
+   <Files>
+       <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
+       <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+   </Files>
+</Project>
+
+  <Project name="RadSpeechWin" path="lib/radegastspeech-svn/RadSpeechLin" type="Library" frameworkVersion="v3_5">
    <Configuration name="Debug">
      <Options>
        <OutputPath>../../../bin/</OutputPath>
@@ -869,7 +864,112 @@
       co  <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
     </Files>
   </Project>
-  
+
+
+  <Project name="IdealistRadegastPlugin" path="lib/IdealistRadegastPlugin" type="Library" frameworkVersion="v3_5">
+   <Configuration name="Debug">
+     <Options>
+       <OutputPath>../../bin/</OutputPath>
+     </Options>
+   </Configuration>
+   <Configuration name="Release">
+     <Options>
+       <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
+       <OutputPath>../../bin/</OutputPath>
+       <PlatformTarget>x86</PlatformTarget>
+     </Options>
+   </Configuration>
+
+   <ReferencePath>../../bin/</ReferencePath>
+   <Reference name="OpenMetaverse" localCopy="false"/>
+   <Reference name="OpenMetaverseTypes" localCopy="false"/>
+   <Reference name="OpenMetaverseCore" localCopy="false"/>
+   <Reference name="IdealistViewer.exe" localCopy="false"/>
+   <Reference name="HttpServer"/>
+   <Reference name="Irrlicht.Extensions" />
+   <Reference name="Irrlicht.NET" />
+   <Reference name="log4net" />
+   <Reference name="Radegast.exe" />
+   <Reference name="MXP" />
+   <Reference name="Nini" />
+   <Reference name="PrimMesher" />
+   <Reference name="protobuf-net" />
+   <Reference name="System" />
+   <Reference name="System.Core"/>
+   <Reference name="System.Drawing" />
+   <Reference name="System.Windows.Forms" />
+   <Reference name="System.Xml.Linq"/>
+   <Reference name="System.Data.DataSetExtensions"/>
+   <Reference name="System.Data" />
+   <Reference name="System.Xml" />
+   <Files>
+       <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
+       <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+   </Files>
+</Project>
+
+  <!-- DebugApp app -->
+<Project name="ABuildStartup" path="contrib/DebugStartup" type="Exe" frameworkVersion="v3_5">
+<Configuration name="Debug">
+  <Options>
+    <OutputPath>../../bin/</OutputPath>
+  </Options>
+</Configuration>
+<Configuration name="Release">
+  <Options>
+    <OutputPath>../../bin/</OutputPath>
+  </Options>
+</Configuration>
+    <Reference name="HttpServer" />
+    <Reference name="OpenMetaverseTypes" />
+    <Reference name="OpenMetaverse.StructuredData" />
+    <Reference name="OpenMetaverse.Http" />
+    <Reference name="OpenMetaverse" />
+    <Reference name="OpenMetaverse.Utilities" />
+    <Reference name="OpenMetaverse.Rendering.Meshmerizer" />
+    <Reference name="DotLisp" />
+    <Reference name="AIMLbot" />
+    <Reference name="PathSystem3D" />
+    <Reference name="Radegast.exe" />
+    <Reference name="Cogbot" />
+    <Reference name="AIMLBotModule" />
+    <Reference name="TheSimiansModule" />
+    <Reference name="CycWorldModule" />
+    <Reference name="FashionBotModule" />
+    <Reference name="IrcRegionModule" />
+    <Reference name="CogbotRadegastPluginModule" />
+    <Reference name="IdealistRadegastPlugin" />
+    <Reference name="RadegastSpeech" />
+    <Reference name="RadSpeechLin" />
+    <Reference name="RadSpeechWin" />
+    <Reference name="IdealistViewer" />
+    <Reference name="System" localCopy="false"/>
+    <Reference name="System.Drawing" localCopy="false"/>
+    <Reference name="System.Xml"/>
+    <!--<Reference name="Mono.Addins.dll" />-->
+    <Reference name="XMLRPC.dll"/>
+    <Reference name="Nini.dll" />
+    <Reference name="fmodex-dotnet.dll" />
+    <Reference name="log4net.dll" />
+    <Reference name="Irrlicht.NET.dll" />
+    <Reference name="Irrlicht.Extensions.dll" />
+    <Reference name="jabber-net.dll" />
+    <Reference name="muzzle.dll" />
+    <Reference name="OpenMetaverse" />
+    <Reference name="OpenMetaverseTypes" />
+    <Reference name="OpenMetaverseCore" />
+    <Reference name="PrimMesher.dll" />
+    <Reference name="MXP.dll" />
+    <Reference name="protobuf-net.dll" />
+    <Reference name="System.Windows.Forms" />
+    <Reference name="System.Data" />
+<Files>
+  <Match pattern="*.cs" recurse="true"/>
+  <!--<Match pattern="frm*.cs" subType="Form"/>-->
+  co  <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
+</Files>
+</Project>
+
   </Solution>
 
 </Prebuild>
