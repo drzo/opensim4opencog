@@ -83,6 +83,7 @@ namespace cogbot.TheOpenSims
             if (uuid == UUID.Zero) return null;
             foreach (var v in CurrentRegions)
             {
+                if (v.Client == null) v.Client = client;
                 if (uuid == v.RegionID) return v;
             }
             SimRegion r = null;

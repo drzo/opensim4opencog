@@ -4,6 +4,7 @@ using System.Threading;
 using System.Windows.Forms;
 using cogbot;
 using cogbot.Actions;
+using cogbot.GUI;
 using OpenMetaverse;
 using Radegast;
 
@@ -40,13 +41,21 @@ namespace CogbotRadegastPluginModule
                                   Dock = DockStyle.Fill,
                                   Visible = false
                               };
-            tab = inst.TabConsole.AddTab("Cogbot", "Cogbot", chatConsole);
+            tab = inst.TabConsole.AddTab("cogbot", "Cogbot", chatConsole);
             tab.AllowClose = false;
-            tab.AllowDetach = true;        
+            tab.AllowDetach = true;
+
+            RadegastInstance.Client.Network.OnConnected += Plugin_OnConnected;
 
             clientManager.outputDelegate = WriteLine;
             inst.Client.Network.OnSimConnecting += Network_OnSimConnecting;
             clientManager.StartUpLisp();
+        }
+
+        private void Plugin_OnConnected(object sender)
+        {
+            clientManager.LastBotClient.Invoke(() => clientManager.LastBotClient.AddTab("aspects", "Aspects",new SimAspectConsole(RadegastInstance),null));
+           
         }
 
         private void WriteLine(string str, object[] args)
