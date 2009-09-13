@@ -1624,30 +1624,37 @@ namespace cogbot
 
         public void ShowTab(string name)
         {
-            TheRadegastInstance.TabConsole.GetTab(name).Select();
+            Invoke(() => TheRadegastInstance.TabConsole.GetTab(name.ToLower()).Select());
         }
 
         public void AddTab(string name, string label, UserControl _debugWindow, EventHandler CloseDebug)
         {
-            SleekTab tab = TheRadegastInstance.TabConsole.AddTab(name, label, _debugWindow);
-            tab.AllowDetach = true;
-            tab.AllowMerge = true;
-            //tab.TabClosed += ((sender, args) => _debugWindow.Dispose());
-            if (CloseDebug != null)
-            {
-                tab.AllowClose = true;
-                tab.TabClosed += CloseDebug;
-            } else
-            {
-                tab.AllowClose = false;
-            }
-            //Application.EnableVisualStyles();
-            //Application.Run(new Form(_debugWindow));
+            Invoke(() =>
+                       {
+                           SleekTab tab = TheRadegastInstance.TabConsole.AddTab(name.ToLower(), label, _debugWindow);
+                           tab.AllowDetach = true;
+                           tab.AllowMerge = true;
+                           //tab.TabClosed += ((sender, args) => _debugWindow.Dispose());
+                           if (CloseDebug != null)
+                           {
+                               tab.AllowClose = true;
+                               tab.TabClosed += CloseDebug;
+                           }
+                           else
+                           {
+                               tab.AllowClose = false;
+                           }
+                           //Application.EnableVisualStyles();
+                           //Application.Run(new Form(_debugWindow));
+                       });
         }
 
         public void Invoke(ThreadStart o)
         {
-            o();
+            if (TheRadegastInstance.MainForm.InvokeRequired)
+            {
+                TheRadegastInstance.MainForm.Invoke(o); 
+            } else o();
         }
     }
 

@@ -514,6 +514,7 @@
            <Match path="Properties" pattern="*.cs" recurse="true"/>
            <Match path="Tutorials" pattern="*.cs" recurse="true"/>
            <Match path="Utilities" pattern="*.cs" recurse="true"/>
+           <Match path="GUI" pattern="*.cs" recurse="true"/>
            <Match path="ScriptEngines" pattern="*.cs" recurse="true"/>
            <Match path="TheOpenSims" pattern="*.cs" recurse="true"/>
        </Files>
@@ -858,6 +859,7 @@
     <Reference name="protobuf-net.dll" />
     <Reference name="System.Windows.Forms" />
     <Reference name="System.Data" />
+    <Reference name="RadegastSpeech" localCopy="false"/>
     <Files>
       <Match pattern="*.cs" recurse="true"/>
       <!--<Match pattern="frm*.cs" subType="Form"/>-->
