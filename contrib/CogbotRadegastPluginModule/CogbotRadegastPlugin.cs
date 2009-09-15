@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel;
 using System.Threading;
 using System.Windows.Forms;
@@ -44,34 +43,34 @@ namespace CogbotRadegastPluginModule
             tab = inst.TabConsole.AddTab("cogbot", "Cogbot", chatConsole);
             tab.AllowClose = false;
             tab.AllowDetach = true;
+            SleekTab tab1 = RadegastInstance.TabConsole.GetTab("chat");
+            tab1.AllowDetach = true;
+            SleekTab tab2 = RadegastInstance.TabConsole.GetTab("login");
+            tab2.AllowDetach = true;
 
-            RadegastInstance.Client.Network.OnConnected += Plugin_OnConnected;
+            //RadegastInstance.Client.Network.OnConnected += Plugin_OnConnected;
 
             clientManager.outputDelegate = WriteLine;
             inst.Client.Network.OnSimConnecting += Network_OnSimConnecting;
+            tab.Select();
             clientManager.StartUpLisp();
         }
 
         private void Plugin_OnConnected(object sender)
         {
-            clientManager.LastBotClient.Invoke(() => clientManager.LastBotClient.AddTab("aspects", "Aspects",new SimAspectConsole(RadegastInstance),null));
-           
+            //clientManager.LastBotClient.Invoke(() => clientManager.LastBotClient.AddTab("aspects", "Aspects", new SimAspectConsole(RadegastInstance), null));
+            //clientManager.LastBotClient.Invoke(() => RadegastInstance.TabConsole.AddContextMenu(new AspectContextAction(RadegastInstance)
+            //{
+            //}));
+
+  
         }
 
         private void WriteLine(string str, object[] args)
         {
-            MergeSplitWorkArround();
             chatConsole.WriteLine(str, args);
         }
 
-        private bool _mergeSplitWorkArrounded = false;
-        private void MergeSplitWorkArround()
-        {
-            if (_mergeSplitWorkArrounded) return;
-            _mergeSplitWorkArrounded = false;
-            //RadegastInstance.TabConsole.tabs["chat"].MergeWith(tab);
-            //RadegastInstance.TabConsole.SplitTab(tab);
-        }
         private bool Network_OnSimConnecting(Simulator simulator)
         {
             return true;

@@ -14,6 +14,7 @@ namespace cogbot.Actions
             Name = "animinfo";
             Description = "Show debug info about anims.  Usage:  animinfo [match]";
             Category = CommandCategory.Appearance;
+            Parameters = new[] { typeof(SimAnimation), typeof(UUID) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

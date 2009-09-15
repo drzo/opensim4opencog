@@ -17,6 +17,7 @@ namespace cogbot.Actions
         public Move(BotClient Client)
             : base(Client)
         {
+            Name = "n/s/e/w";
             helpString = "Move to a person or object, or in a direction: west, east, north or south."; //Client.RM.GetString("smove");
             usageString = "Type \"west/east/north/south\" to move 5 meters in a direction. Or Type \"west distance/east distance/north distance/south distance\" to move a specific distance in that direction.";// Client.RM.GetString("umove");
         }

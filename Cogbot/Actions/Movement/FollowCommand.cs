@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using PathSystem3D.Navigation;
 
 namespace cogbot.Actions
 {
@@ -14,9 +15,10 @@ namespace cogbot.Actions
 
 		public FollowCommand(BotClient testClient)
 		{
-			Name = "follow";
+			Name = "Follow";
 			Description = "Follow another avatar. Usage: follow [FirstName LastName]/off.";
-            Category = CommandCategory.Movement;            
+            Category = CommandCategory.Movement;
+            Parameters = new[] { typeof(SimPosition), typeof(string) };      
 		}
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -50,24 +52,12 @@ namespace cogbot.Actions
 
         bool Follow(string name)
         {
-            lock (Client.Network.Simulators)
+            Primitive target = WorldSystem.GetPrimitive(name);
+            if (target != null)
             {
-                for (int i = 0; i < Client.Network.Simulators.Count; i++)
-                {
-                    Avatar target = Client.Network.Simulators[i].ObjectsAvatars.Find(
-                        delegate(Avatar avatar)
-                        {
-                            return avatar.Name == name;
-                        }
-                    );
-
-                    if (target != null)
-                    {
-                        targetLocalID = target.LocalID;
-                        Active = true;
-                        return true;
-                    }
-                }
+                targetLocalID = target.LocalID;
+                Active = true;
+                return true;
             }
 
             if (Active)

@@ -16,9 +16,9 @@ using System.IO;
 using cogbot.Listeners;
 using Radegast;
 using Radegast.Netcom;
-using Action=cogbot.Actions.Action;
 using cogbot.TheOpenSims;
 using System.Drawing;
+using Action=cogbot.Actions.Action;
 using Settings=OpenMetaverse.Settings;
 
 // older LibOMV
@@ -433,7 +433,7 @@ namespace cogbot
 
         private void updateTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            foreach (Action c in Commands.Values)
+            foreach (var c in Commands.Values)
                 if (c.Active)
                     c.Think();
         }
@@ -1256,19 +1256,20 @@ namespace cogbot
         /// </summary>
         /// <param name="login">The status of the login</param>
         /// <param name="message">Error message on failure, MOTD on success.</param>
-        private void RegisterCommand(string name, cogbot.Actions.Action command)
+        private void RegisterCommand(string name, cogbot.Actions.Command command)
         {
-            name = name.ToLower();
+            string orginalName = name;
+            name = name.Replace(" ", "").ToLower();
 
             if (!Commands.ContainsKey(name))
             {
                 Commands.Add(name, command);
-                command.Name = name;
+                command.Name = orginalName;
                 command.TheBotClient = this;
             }
             else
             {
-                RegisterCommand("!" + name, command);
+                RegisterCommand("!" + orginalName, command);
             }
         }
 
@@ -1389,7 +1390,7 @@ namespace cogbot
                 }
                 //            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
                 //text = text.Replace("\"", "");
-                string verb = text.Split(null)[0];
+                string verb = cogbot.Actions.Parser.ParseArgs(text)[0];
                 if (Commands != null && Commands.ContainsKey(verb))
                 {
                     Action act = Commands[verb];
@@ -1420,6 +1421,10 @@ namespace cogbot
                 }
                 else
                 {
+                    UUID assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Gesture);
+                    if (assetID != UUID.Zero) return ExecuteCommand("gesture " + assetID);
+                    assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Animation);
+                    if (assetID != UUID.Zero) return ExecuteCommand("anim " + assetID);
                     return String.Empty;
                 }
             }

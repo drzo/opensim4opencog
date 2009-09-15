@@ -353,7 +353,7 @@ namespace cogbot.TheOpenSims
         {
             if (Item==null)
             {
-                Item = SimGesture.SaveAnimation(this);
+                Item = SimGesture.SaveGesture(this);
             }
             byte[] bs = AssetData;
             if (bs != null && bs.Length > 0)

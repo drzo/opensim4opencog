@@ -44,6 +44,12 @@ namespace cogbot.Actions
         /// </summary>
         public bool Active;
 
+
+        /// <summary>
+        /// When set to true, think will be called.
+        /// </summary>
+        public Type[] Parameters;
+
         /// <summary>
         /// Called twice per second, when Command.Active is set to true.
         /// </summary>
@@ -138,6 +144,7 @@ namespace cogbot.Actions
 
         public Action(BotClient _parent)
         {
+            Name = GetType().Name.Replace("Command", "");
             helpString = "No help information for this action.";
             usageString = "No usage instruction for this action.";
 

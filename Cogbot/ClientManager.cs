@@ -8,7 +8,6 @@ using cogbot.ScriptEngines;
 using OpenMetaverse;
 using cogbot.Actions;
 using Radegast;
-using Action = cogbot.Actions.Action;
 
 //using Radegast;
 namespace cogbot
@@ -74,7 +73,7 @@ namespace cogbot
 
         public List<Type> registrationTypes;
         public List<Type> registeredSystemApplicationCommandTypes = new List<Type>();
-        public Dictionary<string, Actions.Action> groupActions;
+        public Dictionary<string, Actions.Command> groupActions;
         public Dictionary<string, Tutorials.Tutorial> tutorials;
 
         public bool describeNext;
@@ -114,7 +113,7 @@ namespace cogbot
 
             //Manager = CurrentClient.Inventory;
             //Inventory = Manager.Store;
-            groupActions = new Dictionary<string, cogbot.Actions.Action>();
+            groupActions = new Dictionary<string, cogbot.Actions.Command>();
             //groupActions["login"] = new Login(null);
 
 
@@ -611,6 +610,13 @@ namespace cogbot
                 if (config.startupLisp.Length > 1)
                 {
                     evalLispString("(progn " + config.startupLisp + ")");
+                    if (LastBotClient == null)
+                    {
+                        LastBotClient = new BotClient(this, RadegastInstance.GlobalInstance.Client, DefaultLoginParams());
+                        LastBotClient.TheRadegastInstance = RadegastInstance.GlobalInstance;
+                       // LastBotClient.SetRadegastLoginOptions();
+                        EnsureStarting(LastBotClient);
+                    }
                 }
             }).Start();
         }
@@ -887,11 +893,27 @@ namespace cogbot
             try
             {
                 Command command = (Command)info.Invoke(new object[] { null });
-                groupActions.Add(command.Name, command);
+                RegisterSystemCommand(command.Name, command);
             }
             catch (Exception e)
             {
                 WriteLine("RegisterBotSystemCommands: " + e.ToString() + "\n" + e.InnerException + "\n In " + t.Name);
+            }
+        }
+
+        public void RegisterSystemCommand(string name, cogbot.Actions.Command command)
+        {
+            string orginalName = name;
+            name = name.Replace(" ", "").ToLower();
+
+            if (!groupActions.ContainsKey(name))
+            {
+                groupActions.Add(name, command);
+                command.Name = orginalName;
+            }
+            else
+            {
+                RegisterSystemCommand("!" + orginalName, command);
             }
         }
     }

@@ -17,7 +17,7 @@ namespace cogbot.Actions
             Name = "dumpoutfit";
             Description = "Dumps all of the textures from an avatars outfit to the hard drive. Usage: dumpoutfit [avatar-uuid]";
             Category = CommandCategory.Inventory;
-
+            Parameters = new[] { typeof(Primitive), typeof(UUID) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -25,21 +25,17 @@ namespace cogbot.Actions
             if (args.Length < 1)
                 return "Usage: dumpoutfit [avatar-uuid]";
 
-            UUID target;
+            //UUID target;
 
-            if (!UUIDTryParse(args, 0 , out target))
-                return "Usage: dumpoutfit [avatar-uuid]";
+            //if (!UUIDTryParse(args, 0 , out target))
+            //    return "Usage: dumpoutfit [avatar-uuid]";
 
-            lock (Client.Network.Simulators)
+            //lock (Client.Network.Simulators)
             {
-                for (int i = 0; i < Client.Network.Simulators.Count; i++)
+                //for (int i = 0; i < Client.Network.Simulators.Count; i++)
                 {
-                    Avatar targetAv = Client.Network.Simulators[i].ObjectsAvatars.Find(
-                        delegate(Avatar avatar)
-                        {
-                            return avatar.ID == target;
-                        }
-                    );
+                    int i;
+                    Primitive targetAv = WorldSystem.GetPrimitive(args, out i);
 
                     if (targetAv != null)
                     {
@@ -78,7 +74,7 @@ namespace cogbot.Actions
                 }
             }
 
-            return "Couldn't find avatar " + target.ToString();
+            return "Couldn't find avatar " + String.Join(" ", args);
         }
 
         private void Assets_OnImageReceived(TextureRequestState state, AssetTexture assetTexture)

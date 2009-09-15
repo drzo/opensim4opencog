@@ -12,6 +12,7 @@ namespace cogbot.Actions
             Name = "attachments";
             Description = "Prints a list of the currently known agent attachments";
             Category = CommandCategory.Appearance;
+            Parameters = new Type[] { typeof(GridClient), null };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

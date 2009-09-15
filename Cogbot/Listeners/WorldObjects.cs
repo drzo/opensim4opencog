@@ -19,7 +19,7 @@ namespace cogbot.Listeners
 
         public static bool CanPhantomize = false;
         public static bool CanUseSit = true;
-        public static bool DoSimulatorsCatchUp = false;
+        public static bool DoSimulatorsCatchUp = true;
         public static bool MaintainAnims = false;
         public static bool MaintainAnimsInFolders = true;
         public static bool GleanAssetsFromFolders = true;
@@ -212,7 +212,8 @@ namespace cogbot.Listeners
                     m_TheSimAvatar = (SimActor)GetSimObjectFromUUID(id);
                     if (m_TheSimAvatar == null)
                     {
-                        m_TheSimAvatar = (SimActor)GetSimObject(GetAvatar(id, client.Network.CurrentSim));
+                        Avatar av = GetAvatar(id, client.Network.CurrentSim);
+                        if (av != null) m_TheSimAvatar = (SimActor) GetSimObject(av, client.Network.CurrentSim);
                         if (m_TheSimAvatar == null)
                         {
                             SimAvatarImpl impl;
@@ -299,7 +300,10 @@ namespace cogbot.Listeners
 
         public SimObject GetSimObject(Primitive prim, Simulator simulator)
         {
-            if (prim == null) return null;
+            if (prim == null)
+            {
+                return null;
+            }
             //if (prim.ID == null) return null;
             SimObject obj0 = GetSimObjectFromUUID(prim.ID);
             if (obj0 != null)
@@ -308,16 +312,15 @@ namespace cogbot.Listeners
                 {
                     EnsureSelected(prim.LocalID, simulator);
                 }
+                // Ensure at least one prim
+                if (obj0.Prim == null)
+                {
+                    obj0.SetFirstPrim(prim);
+                    return obj0;
+                } 
                 if (!obj0.IsRegionAttached())
                 {
                     obj0.ResetPrim(prim, client, simulator);
-                }
-                else // Ensure at least one prim
-                {
-                    if (obj0.Prim == null)
-                    {
-                        obj0.ResetPrim(prim, client, simulator);
-                    }
                 }
                 return obj0;
             }
@@ -792,14 +795,16 @@ namespace cogbot.Listeners
 
         public Primitive GetPrimitive(UUID id, Simulator simulator)
         {
-            //lock (uuidTypeObject)
+            //lock (uuidTypeObject)                        
+            Primitive found = null;
             {
                 object simobject;
                 if (uuidTypeObject.TryGetValue(id, out simobject))
                 {
                     //object simobject = uuidTypeObject[id];
                     if (simobject != null && simobject is SimObject)
-                        return ((SimObject)simobject).Prim;
+                        found = ((SimObject)simobject).Prim;
+                    if (found != null) return found;
                 }
             }
             if (simulator == null)
@@ -820,7 +825,6 @@ namespace cogbot.Listeners
                 }
             }
 
-            Primitive found = null;
 
             // lock (simulator.ObjectsPrimitives.Dictionary)
             {
@@ -961,6 +965,19 @@ namespace cogbot.Listeners
         }
         public bool tryGetPrim(string name, out Primitive prim)
         {
+            if (tryGetPrim0(name, out prim))
+            {
+                if (prim == null)
+                {
+                    return false;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        public bool tryGetPrim0(string name, out Primitive prim)
+        {
             name = name.Trim().Replace("  ", " ");
             prim = null;
             uint pickNum = 0;
@@ -969,6 +986,7 @@ namespace cogbot.Listeners
             {
                 prim = GetPrimitive(uuid, null);
                 if (prim != null) return true;
+                prim = GetPrimitive(uuid, null);
             }
             if (name.ToLower().StartsWith("primid"))
             {
@@ -1391,23 +1409,29 @@ namespace cogbot.Listeners
         public Primitive GetPrimitive(string[] args, out int argsUsed)
         {
             argsUsed = 0;
-            if (args.Length == 0) return TheSimAvatar.theAvatar;
             int consume = args.Length;
+            if (consume == 0) return TheSimAvatar.theAvatar;
             while (consume > 0)
             {
                 string s = String.Join(" ", args, 0, consume);
                 Primitive prim;
 
-
                 if (tryGetPrim(s, out prim))
                 {
-                    SimObject simObject = GetSimObject(prim);
+                    if (prim != null)
+                    {
+                        argsUsed = consume; 
+                        return prim;
+                    }
+                    List<SimObject> simObject = GetAllSimObjects(s);
                     //         if (simObject.IsRegionAttached())
+                    if (simObject != null && simObject.Count>0)
                     {
                         argsUsed = consume;
-                        return simObject.Prim;
+                        return simObject[0].Prim;
                     }
                 }
+
                 consume--;
             }
             return null;

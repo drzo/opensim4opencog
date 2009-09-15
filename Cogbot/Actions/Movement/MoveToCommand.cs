@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
+using PathSystem3D.Navigation;
 
 namespace cogbot.Actions.Movement
 {
@@ -12,6 +13,8 @@ namespace cogbot.Actions.Movement
             Name = "moveto";
             Description = "Moves the avatar to the specified global position using simulator autopilot. Usage: moveto x y z";
             Category = CommandCategory.Movement;
+            Parameters = new[] { typeof(SimPosition), typeof(string) };
+
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

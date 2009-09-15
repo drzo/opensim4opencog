@@ -199,6 +199,7 @@ namespace cogbot.Actions.Movement
             Name = GetType().Name;
             Description = "Reads the sim prims for improving routes";
             Category = cogbot.Actions.CommandCategory.Movement;
+            Parameters = new[] { typeof(Primitive), typeof(UUID) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -224,6 +225,7 @@ namespace cogbot.Actions.Movement
             Name = GetType().Name;
             Description = "Calculates the Z level of walking at point. Usage: simzinfo 120 123";
             Category = cogbot.Actions.CommandCategory.Movement;
+            Parameters = new[] { typeof(SimPosition), typeof(Vector2) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -246,6 +248,7 @@ namespace cogbot.Actions.Movement
             Name = GetType().Name;
             Description = "Calculates the Height (Z) level of walking at point. Usage: simzinfo 120 123 30";
             Category = cogbot.Actions.CommandCategory.Movement;
+            Parameters = new[] { typeof(SimPosition), typeof(Vector2) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -302,6 +305,7 @@ namespace cogbot.Actions.Movement
             Name = GetType().Name;
             Description = "Reads the sim prims for improving routes then bakes the region";
             Category = cogbot.Actions.CommandCategory.Movement;
+            Parameters = new[] { typeof(Primitive), typeof(UUID) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -358,6 +362,7 @@ namespace cogbot.Actions.Movement
             Name = GetType().Name;
             Description = "Move to a the specified point using MoveTo";
             Category = cogbot.Actions.CommandCategory.Movement;
+            Parameters = new[] { typeof(SimPosition), typeof(SimPosition) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -395,6 +400,8 @@ namespace cogbot.Actions.Movement
             Name = GetType().Name;
             Description = "Use A* Pathfinding to get to object";
             Category = cogbot.Actions.CommandCategory.Movement;
+            Parameters = new[] { typeof(SimPosition), typeof(Vector3d) };
+
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -432,6 +439,7 @@ namespace cogbot.Actions.Movement
             Name = GetType().Name;
             Description = "Puts one minute temp blocks toward objects";
             Category = cogbot.Actions.CommandCategory.Movement;
+            Parameters = new[] { typeof(SimPosition), typeof(SimPosition) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -458,6 +466,7 @@ namespace cogbot.Actions.Movement
             Name = "gto";
             Description = "Go to the avatar toward the specified position for a maximum of seconds. gto [prim | [x y]] [dist]";
             Category = cogbot.Actions.CommandCategory.Movement;
+            Parameters = new[] { typeof(SimPosition), typeof(SimPosition) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -558,6 +567,7 @@ namespace cogbot.Actions.Movement
             Name = "turnto";
             Description = "turn the avatar toward the specified position for a maximum of seconds. turnto [prim | [x y [z]]";
             Category = cogbot.Actions.CommandCategory.Movement;
+            Parameters = new[] { typeof(SimPosition), typeof(SimPosition) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -617,6 +627,7 @@ namespace cogbot.Actions.Movement
             Name = "selectobject";
             Description = "Re select object [prim]";
             Category = cogbot.Actions.CommandCategory.Movement;
+            Parameters = new[] { typeof(Primitive), typeof(UUID) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

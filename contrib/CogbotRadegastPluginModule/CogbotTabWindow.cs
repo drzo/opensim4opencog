@@ -64,6 +64,9 @@ namespace CogbotRadegastPluginModule
         private SimObjectSorterClass simObjectSorterClass;
         private WorldObjects GridMaster;
 
+
+        public System.Windows.Forms.ContextMenuStrip PluginExtraContextMenu { get { return ExtraContextMenu; } }
+
         public CogbotTabWindow(RadegastInstance instance, ClientManager man)
         {
             InitializeComponent();
@@ -278,6 +281,7 @@ namespace CogbotRadegastPluginModule
             cbxInput.Enabled = true;
             btnSay.Enabled = true;
             btnShout.Enabled = true;
+            return;
             GridMaster = WorldObjects.GridMaster;
             GridMaster.OnAddSimObject += WorldSystem_OnAddSimObject;
           //  simObjectSorterClass.Origin = GridMaster.TheSimAvatar;
@@ -728,6 +732,37 @@ namespace CogbotRadegastPluginModule
                 // probably dead anyway ...
             }
             return;
+        }
+
+        private void setCameraToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void ctxPoint_Click555(object sender, EventArgs e)
+        {
+            sender = FindContextArg(sender,typeof(Primitive));
+            Primitive currentPrim = sender as Primitive;
+            if (currentPrim!=null) instance.State.SetPointing(currentPrim, 3);
+        }
+
+        private object FindContextArg(object sender, Type type)
+        {
+            if (type.IsInstanceOfType(sender)) return sender;
+            if (sender is ToolStripItem)
+            {
+                object o = ((ToolStripItem)sender).Tag;
+                if (o is AspectContextAction)
+                {
+                    return ((AspectContextAction) o).GetValue(type);
+                }
+            }
+            return null;
+        }
+
+        private void ctxAnim_Click(object sender, EventArgs e)
+        {
+
         }
 
     }

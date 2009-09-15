@@ -18,7 +18,7 @@ namespace cogbot.TheOpenSims
 
         protected override void SaveFile(string tmpname)
         {
-            WriteLine("Not implemented save gesture file " + tmpname);
+            //WriteLine("Not implemented save gesture file " + tmpname);
         }
 
         public AssetGesture GetGesture()
@@ -247,7 +247,7 @@ namespace cogbot.TheOpenSims
             get { return false; }
         }
 
-        public static InventoryItem SaveAnimation(SimAnimation animation)
+        public static InventoryItem SaveGesture(SimAnimation animation)
         {
             return null;
          //   throw new NotImplementedException();

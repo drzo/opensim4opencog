@@ -12,6 +12,7 @@ namespace cogbot.Actions
         {
             helpString = "Finds out in which direction an object or a building or a person is.";
             usageString = "To find out wher an object, building or a person is, type \"where is <object/person name>\"";
+            Parameters = new Type[] { typeof(Primitive), typeof(UUID) };
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)

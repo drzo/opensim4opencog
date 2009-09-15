@@ -15,6 +15,7 @@ namespace cogbot.Actions
             Name = "clone";
             Description = "Clone the appearance of a nearby avatar. Usage: clone [name]";
             Category = CommandCategory.Appearance;
+            Parameters = new[] { typeof(Avatar), typeof(UUID) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

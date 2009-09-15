@@ -11,6 +11,8 @@ namespace cogbot.Actions
         public Describe(BotClient Client)
             : base(Client)
         {
+            Name = "Describe";
+            Parameters = new Type[]{typeof(Primitive),typeof(UUID)};
         }
 
         public override string makeHelpString()

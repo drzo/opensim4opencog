@@ -14,6 +14,7 @@ namespace cogbot.Actions
             Name = "fly";
             helpString = "To start flying type: \"fly\"";
             usageString = "fly [up|down] 'no_argument= start flying";
+            Parameters = new Type[] { typeof(GridClient), null };
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)

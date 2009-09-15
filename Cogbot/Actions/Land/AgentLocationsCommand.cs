@@ -15,6 +15,8 @@ namespace cogbot.Actions
             Name = "agentlocations";
             Description = "Downloads all of the agent locations in a specified region. Usage: agentlocations [regionhandle]";
             Category = CommandCategory.Simulator;
+            Parameters = new Type[] { typeof(Simulator), typeof(ulong) };
+
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
