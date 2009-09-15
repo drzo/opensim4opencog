@@ -19,16 +19,16 @@ namespace cogbot.Listeners
 
         public static bool CanPhantomize = false;
         public static bool CanUseSit = true;
-        public static bool DoSimulatorsCatchUp = true;
+        public static bool DoSimulatorsCatchUp = false; //GridMaster will turn this on/off only if it needed
         public static bool MaintainAnims = false;
         public static bool MaintainAnimsInFolders = true;
         public static bool GleanAssetsFromFolders = true;
         public static bool MaintainAttachments = true;
-        public static bool MaintainCollisions = false;
-        public static bool MaintainEffects = false;
-        public static bool MaintainActions = false;
+        public static bool MaintainCollisions = false; // keep false so the bot only meshes what it needs
+        public static bool MaintainEffects = true;
+        public static bool MaintainActions = true;
         public static bool MaintainPropertiesFromQueue = true;
-        public static bool MaintainObjectUpdates = false;
+        public static bool MaintainObjectUpdates = true;
         public static bool MaintainObjectProperties = true;
         public static bool MaintainSounds = false;
         static public bool MaintainAvatarMetaData = true;
@@ -116,6 +116,7 @@ namespace cogbot.Listeners
                 if (GridMaster == null)
                 {
                     GridMaster = this;
+                    if (client.Network.CurrentSim != null) DoSimulatorsCatchUp = true;
                     if (DoSimulatorsCatchUp)
                     {
                         CatchUpQueue.AddFirst(DoCatchup);
@@ -126,7 +127,7 @@ namespace cogbot.Listeners
                     //only one rpc at a time
                     client.Settings.USE_LLSD_LOGIN = true;
                 }
-
+                DoSimulatorsCatchUp = false;
                 //new DebugAllEvents(client);
 
                 primGroups = new Dictionary<UUID, List<Primitive>>();
@@ -195,7 +196,12 @@ namespace cogbot.Listeners
             {
                 GridMaster.CatchUp(S);
             }
-            CatchUpQueue.Enqueue(DoCatchup);
+            if (DoSimulatorsCatchUp)
+            {
+                DoSimulatorsCatchUp = false;
+                CatchUpQueue.Enqueue(DoCatchup);
+            }
+            
         }
 
         public SimActor TheSimAvatar

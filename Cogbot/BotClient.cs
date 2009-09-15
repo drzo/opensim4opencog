@@ -92,6 +92,7 @@ namespace cogbot
         public bool ExpectConnected;
         public void Login()
         {
+            if (ExpectConnected) return;
             //if (ClientManager.simulator.periscopeClient == null)
             //{
             //    ClientManager.simulator.periscopeClient = this;
