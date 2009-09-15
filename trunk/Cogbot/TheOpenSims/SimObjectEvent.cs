@@ -349,7 +349,7 @@ namespace cogbot.TheOpenSims
                 var o = Parameters[i];
                 if (o.Value is Vector3)
                 {
-                    Console.WriteLine("Got v3 in {0}", this);
+                    //Console.WriteLine("Got v3 in {0}", this);
                 }
                 object key = o;
 

@@ -698,6 +698,7 @@
      <Reference name="Cogbot.exe" localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
+     <Reference name="System.Core" localCopy="false"/>
      <Reference name="System.Windows.Forms" localCopy="false"/>
      <Reference name="System.Data" localCopy="false"/>
      <Reference name="OpenMetaverse" localCopy="false"/>

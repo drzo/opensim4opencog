@@ -450,6 +450,7 @@ namespace cogbot
         private readonly object _wasFirstGridClientLock = new object();
         public void CreateBotClient(string first, string last, string passwd, string simurl, string location)
         {
+            StarupLispCreatedBotClients = true;
             lock (OneAtATime)
             {
                 BotClient bc;
@@ -587,6 +588,7 @@ namespace cogbot
         string version = "1.0.0";
         public static bool UsingCogbotFromRadgast = false;
         public static bool UsingRadgastFromCogbot = false;
+        public bool StarupLispCreatedBotClients;
 
         /// <summary>
         /// 
@@ -610,7 +612,7 @@ namespace cogbot
                 if (config.startupLisp.Length > 1)
                 {
                     evalLispString("(progn " + config.startupLisp + ")");
-                    if (LastBotClient == null)
+                    if (!StarupLispCreatedBotClients)
                     {
                         LastBotClient = new BotClient(this, RadegastInstance.GlobalInstance.Client, DefaultLoginParams());
                         LastBotClient.TheRadegastInstance = RadegastInstance.GlobalInstance;
