@@ -93,6 +93,10 @@ namespace cogbot
         public void Login()
         {
             if (ExpectConnected) return;
+            if (Network.CurrentSim!=null)
+            {
+                if (Network.CurrentSim.Connected) return;
+            }
             //if (ClientManager.simulator.periscopeClient == null)
             //{
             //    ClientManager.simulator.periscopeClient = this;
