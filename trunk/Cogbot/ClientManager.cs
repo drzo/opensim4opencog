@@ -617,7 +617,14 @@ namespace cogbot
                         LastBotClient = new BotClient(this, RadegastInstance.GlobalInstance.Client, DefaultLoginParams());
                         LastBotClient.TheRadegastInstance = RadegastInstance.GlobalInstance;
                        // LastBotClient.SetRadegastLoginOptions();
-                        EnsureStarting(LastBotClient);
+                        AddTypesToBotClient(LastBotClient);
+                        LastBotClient.Network.OnLogin += (delegate(LoginStatus login, string message)
+                                                              {
+                                                                  if (login==LoginStatus.Success)
+                                                                  {
+                                                                      LastBotClient.StartupClientLisp();                
+                                                                  }
+                                                              });
                     }
                 }
             }).Start();
