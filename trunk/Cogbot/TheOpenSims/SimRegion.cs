@@ -484,6 +484,30 @@ namespace cogbot.TheOpenSims
         {
             foreach (SimRegion R in CurrentRegions)
                 if (R.RegionName.Contains(simname)) return R;
+            ulong handle;
+            if (ulong.TryParse(simname, out handle))
+            {
+                return GetRegion(handle);
+            }
+            UUID rid;
+            if (UUID.TryParse(simname, out rid))
+            {
+                return GetRegion(rid);
+            }
+            GridRegion gl;
+            if (ClientManager.SingleInstance.LastBotClient.Grid.GetGridRegion(simname,GridLayerType.Terrain,out gl))
+            {
+                return GetRegion(gl.RegionHandle);
+            }
+            return null;
+        }
+
+        public static SimRegion GetRegion(UUID rid)
+        {
+            foreach (SimRegion R in CurrentRegions)
+                if (R.RegionID == rid) return R;
+            ClientManager.SingleInstance.LastBotClient.Grid.RequestRegionHandle(rid);
+
             return null;
         }
 

@@ -32,6 +32,7 @@ namespace cogbot.Actions
             Name = "downloadterrain";
             Description = "Download the RAW terrain file for this estate. Usage: downloadterrain [timeout]";
             Category = CommandCategory.Simulator;
+            Parameters = new Type[] { typeof(GridClient), null };
         }
 
         /// <summary>

@@ -9,6 +9,7 @@ namespace cogbot.Actions
         public Logout(BotClient Client)
             : base(Client)
         {
+            Name = "Logout";
             helpString = "Logout from Secondlife";
             usageString = "To Logout from Second Life, type \"logout\"";
         }

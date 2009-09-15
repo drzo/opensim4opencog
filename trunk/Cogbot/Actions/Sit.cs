@@ -18,6 +18,7 @@ namespace cogbot.Actions
             helpString = "Sit on the ground or on an object.";
             usageString = "To sit on ground, type \"sit\" \r\n" +
                           "To sit on an object, type \"sit on <object name>\"";
+            Parameters = new Type[] { typeof(GridClient), null };
         }
 
         void Objects_OnAvatarSitChanged(Simulator simulator, Avatar avatar, uint sittingOn, uint oldSeat)

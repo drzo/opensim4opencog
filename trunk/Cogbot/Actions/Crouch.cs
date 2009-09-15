@@ -14,6 +14,8 @@ namespace cogbot.Actions
         {
             helpString = "crouch [on|off] 'no argumennt=for 500ms' ";
             usageString = "crouch [on|off]";
+            Name = "Crouch";
+            Parameters = new Type[] { typeof(GridClient), null };
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)

@@ -10,6 +10,7 @@ namespace cogbot.Actions
         public Say(BotClient Client) 
             : base(Client) 
         {
+            Name = GetType().Name.ToLower().Replace("command", "");
             helpString = "Say a message for everyone to hear.";
             usageString = "To communicate to everyone, type \"say <message>\"";
         }

@@ -10,7 +10,7 @@ namespace cogbot.Actions
         public Login(BotClient Client)
             : base(Client)
         {
-            Client.ToString();
+            Name = "Login";
             helpString = "Login to World Server";
             usageString = "login <first name> <last name> <password> [<simurl>] [<location>]";
         }

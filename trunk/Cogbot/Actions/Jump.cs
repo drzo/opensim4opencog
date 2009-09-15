@@ -10,7 +10,8 @@ namespace cogbot.Actions
             : base(Client)
         {
             helpString = "Jump for 500ms.";
-            usageString = "to Jump type \"jump\""; ;
+            usageString = "to Jump type \"jump\"";
+            Name = "Jump";
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)

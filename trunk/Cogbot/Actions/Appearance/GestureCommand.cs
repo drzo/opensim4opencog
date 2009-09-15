@@ -52,7 +52,8 @@ namespace cogbot.Actions
                 return "unknown gesture " + a;
             }
             Client.Self.PlayGesture(gesture);
-            return "Started gesture: " + gesture;
+            return "Started gesture: " + WorldSystem.SimAssetSystem.GetAssetName(gesture);
+;
         }
     }
 }

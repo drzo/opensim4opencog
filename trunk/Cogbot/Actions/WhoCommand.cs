@@ -13,6 +13,7 @@ namespace cogbot.Actions
 			Name = "who";
 			Description = "Lists seen avatars.";
             Category = CommandCategory.Other;
+            Parameters = new Type[] { typeof(GridClient), null };
 		}
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

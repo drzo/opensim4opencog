@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using OpenMetaverse;
 using cogbot.TheOpenSims; //using libsecondlife;
 
@@ -8,12 +6,15 @@ namespace cogbot.Actions
 {
     class Use : Action
     {
-       public Use(BotClient Client)
+        public Use(BotClient Client)
             : base(Client)
         {
             helpString = "Use an item from inventory or world.";
+            Parameters = new Type[] {typeof (Primitive), typeof (UUID)};
+            Name = "Use..";
         }
-       public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+
+        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
        {
         //   base.acceptInput(verb, args);
            string to_op = "";

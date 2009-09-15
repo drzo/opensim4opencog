@@ -16,6 +16,7 @@ namespace cogbot.Actions
             Name = "mapfriend";
             Description = "Show a friends location. Usage: mapfriend UUID";
             Category = CommandCategory.Friends;
+            Parameters = new[] { typeof(Avatar), typeof(UUID) };
         }
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {

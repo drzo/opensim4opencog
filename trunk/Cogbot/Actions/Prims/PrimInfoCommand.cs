@@ -11,6 +11,7 @@ namespace cogbot.Actions
             Name = "priminfo";
             Description = "Dumps information about a specified prim. " + "Usage: priminfo [prim-uuid]";
             Category = CommandCategory.Objects;
+            Parameters = new[] { typeof(Primitive), typeof(UUID) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

@@ -103,6 +103,7 @@ namespace cogbot.Listeners
 
         internal SimRegion GetRegion(ulong RegionHandle)
         {
+            if (RegionHandle == 0) return null;
             return SimRegion.GetRegion(RegionHandle,client);
         }
 
@@ -241,11 +242,61 @@ namespace cogbot.Listeners
                     return SimWaypointImpl.CreateLocal(target, TheSimAvatar.GetPathStore());
                 }
             }
-
-            int consume = args.Length;
+            SimObject O = null;
+            UUID uuid;
+            if (UUID.TryParse(args[0],out uuid))
+            {
+                O = GetSimObjectFromUUID(uuid);
+                if (O != null)
+                    return O;
+            }
             Primitive prim = GetPrimitive(args, out argsUsed);
             if (prim != null) return GetSimObject(prim);
-            return null;
+
+
+            argsUsed = 0;
+            string destination = String.Empty;
+
+            // Handle multi-word sim names by combining the arguments
+            foreach (string arg in args)
+            {
+                destination += arg + " ";
+            }
+            int consume = args.Length;
+            destination = destination.Trim();
+
+            string[] tokens = destination.Split(new char[] { '/' });
+            float x, y = 128;
+            if (!float.TryParse(tokens[0], out x))
+            {
+                x = 128;
+            } else
+            {
+                argsUsed++;
+            }
+            string sim = tokens[argsUsed];
+            SimRegion region = SimRegion.GetRegion(sim);
+            if (region==null) return null;
+            argsUsed += 1;
+            float z = region.AverageHieght;
+            if (tokens.Length > argsUsed+1)
+            {
+                if (!float.TryParse(tokens[argsUsed], out x) ||
+                    !float.TryParse(tokens[argsUsed+1], out y))
+                {
+                    return null;
+                }
+                argsUsed += 2;
+                if (tokens.Length > argsUsed)
+                {
+                    if (float.TryParse(tokens[argsUsed], out z))
+                    {
+                        argsUsed += 1;
+                    }
+                }
+            }
+            Vector3 v3 = new Vector3(x, y, z);
+            return SimWaypointImpl.CreateLocal(v3, region.GetPathStore(v3));
         }
 
         public List<SimObject> GetNearByObjects(Vector3d here, object except, float maxDistance, bool rootOnly)

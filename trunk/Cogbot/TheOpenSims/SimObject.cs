@@ -637,7 +637,6 @@ namespace cogbot.TheOpenSims
             {
                 if (ID == UUID.Zero) ID = prim.ID;
                 _Prim0 = prim;
-                if (prim.Properties != null) Properties = prim.Properties;
                 if (prim.RegionHandle != 0)
                 {
                     RegionHandle = prim.RegionHandle;
@@ -649,8 +648,11 @@ namespace cogbot.TheOpenSims
                        _primRefs.Add(prim);
                    }
                 }
-
-                UpdateProperties(prim.Properties);
+                if (prim.Properties != null)
+                {
+                   // Properties = prim.Properties;
+                    UpdateProperties(prim.Properties);
+                }
 
                 if (WorldObjects.MaintainSimCollisions(prim.RegionHandle) && prim.Sculpt != null)
                 {
@@ -1508,10 +1510,12 @@ namespace cogbot.TheOpenSims
 
         public virtual SimRegion GetSimRegion()
         {
+            Primitive Prim = this.Prim;
             while (RegionHandle == 0 && !ReferenceEquals(Prim,null))
             {
                 RegionHandle = Prim.RegionHandle;
             }
+            if (RegionHandle == 0) return null;
             return WorldSystem.GetRegion(RegionHandle);
         }
 

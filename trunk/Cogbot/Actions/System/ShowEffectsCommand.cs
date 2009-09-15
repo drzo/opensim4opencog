@@ -13,6 +13,7 @@ namespace cogbot.Actions
             Name = "showeffects";
             Description = "Prints out information for every viewer effect that is received. Usage: showeffects [on/off]";
             Category = CommandCategory.Other;
+            Parameters = new Type[] { typeof(GridClient), null };
         }
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {

@@ -580,29 +580,24 @@ namespace cogbot.GUI
             if (!has_items || start.NeedsUpdate)
             {
                 InventoryFolder f = (InventoryFolder)start.Data;
-                AutoResetEvent gotFolderEvent = new AutoResetEvent(false);
-                bool success = false;
-
-                InventoryManager.FolderUpdatedCallback callback = delegate(UUID folderID)
+                using (AutoResetEvent gotFolderEvent = new AutoResetEvent(false))
                 {
-                    if (f.UUID == folderID)
+                    bool success = false;
+                    InventoryManager.FolderUpdatedCallback callback = delegate(UUID folderID)
                     {
-                        if (((InventoryFolder)Inventory.Items[folderID].Data).DescendentCount <= Inventory.Items[folderID].Nodes.Count)
-                        {
-                            success = true;
-                            gotFolderEvent.Set();
-                        }
-                    }
-                };
-
-                client.Inventory.OnFolderUpdated += callback;
-                fetchFolder(f.UUID, f.OwnerID, true);
-                gotFolderEvent.WaitOne(30 * 1000, false);
-                client.Inventory.OnFolderUpdated -= callback;
-
-                if (!success)
-                {
-                    Logger.Log(string.Format("Failed fetching folder {0}, got {1} items out of {2}", f.Name, Inventory.Items[f.UUID].Nodes.Count, ((InventoryFolder)Inventory.Items[f.UUID].Data).DescendentCount), Helpers.LogLevel.Error, client);
+                        if (f.UUID == folderID)
+                            if (((InventoryFolder)Inventory.Items[folderID].Data).DescendentCount <= Inventory.Items[folderID].Nodes.Count)
+                            {
+                                success = true;
+                                gotFolderEvent.Set();
+                            }
+                    };
+                    client.Inventory.OnFolderUpdated += callback;
+                    fetchFolder(f.UUID, f.OwnerID, true);
+                    gotFolderEvent.WaitOne(30 * 1000, false);
+                    client.Inventory.OnFolderUpdated -= callback;
+                    if (!success)
+                        Logger.Log(string.Format("Failed fetching folder {0}, got {1} items out of {2}", f.Name, Inventory.Items[f.UUID].Nodes.Count, ((InventoryFolder)Inventory.Items[f.UUID].Data).DescendentCount), Helpers.LogLevel.Error, client);
                 }
             }
 
@@ -1573,6 +1568,11 @@ namespace cogbot.GUI
         }
 
         private void simTypeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void rezToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
         }

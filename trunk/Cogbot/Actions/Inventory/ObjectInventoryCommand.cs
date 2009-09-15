@@ -11,6 +11,7 @@ namespace cogbot.Actions
             Name = "objectinventory";
             Description = "Retrieves a listing of items inside an object (task inventory). Usage: objectinventory [objectID]";
             Category = CommandCategory.Inventory;
+            Parameters = new[] { typeof(Primitive), typeof(UUID) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -18,16 +19,12 @@ namespace cogbot.Actions
             if (args.Length < 1)
                 return "Usage: objectinventory [objectID]";
 
-            uint objectLocalID;
-            UUID objectID;
-            if (!UUIDTryParse(args,0,out objectID))
-                return "Usage: objectinventory [objectID]";
+            int argsUsed;
+            Primitive found = WorldSystem.GetPrimitive(args, out argsUsed);
+            if (found == null) return "Couldn't find object " + String.Join(" ", args);
 
-            Primitive found = Client.Network.CurrentSim.ObjectsPrimitives.Find(delegate(Primitive prim) { return prim.ID == objectID; });
-            if (found != null)
-                objectLocalID = found.LocalID;
-            else
-                return "Couldn't find prim " + objectID.ToString();
+            uint objectLocalID = found.LocalID;
+            UUID objectID = found.ID;
 
             List<InventoryBase> items = Client.Inventory.GetTaskInventory(objectID, objectLocalID, 1000 * 30);
 

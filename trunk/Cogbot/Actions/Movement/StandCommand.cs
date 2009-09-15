@@ -10,7 +10,7 @@ namespace cogbot.Actions
     {
         public StandCommand(BotClient testClient)
 	{
-		Name = "stand";
+		Name = "Stand";
 		Description = "Stand";
         Category = CommandCategory.Movement;
 	}

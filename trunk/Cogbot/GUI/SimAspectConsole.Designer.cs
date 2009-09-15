@@ -99,6 +99,7 @@
             this.notecardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.textureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.gestureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.simTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.objectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.rezToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lSLTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -111,7 +112,6 @@
             this.pnlDetail = new System.Windows.Forms.Panel();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnProfile = new System.Windows.Forms.Button();
-            this.txtCreator = new Radegast.AgentNameTextBox();
             this.txtCreated = new System.Windows.Forms.TextBox();
             this.txtAssetID = new System.Windows.Forms.TextBox();
             this.lblCreated = new System.Windows.Forms.Label();
@@ -120,7 +120,7 @@
             this.lblCreator = new System.Windows.Forms.Label();
             this.lblItemName = new System.Windows.Forms.Label();
             this.ctxInv = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.simTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.txtCreator = new Radegast.AgentNameTextBox();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -296,7 +296,7 @@
             this.folderToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.ContextToolStripMenuItem});
             this.folderToolStripMenuItem.Name = "folderToolStripMenuItem";
-            this.folderToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.folderToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
             this.folderToolStripMenuItem.Text = "Folder";
             this.folderToolStripMenuItem.Click += new System.EventHandler(this.folderToolStripMenuItem_Click);
             // 
@@ -309,39 +309,46 @@
             this.gestureToolStripMenuItem,
             this.simTypeToolStripMenuItem});
             this.ContextToolStripMenuItem.Name = "ContextToolStripMenuItem";
-            this.ContextToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.ContextToolStripMenuItem.Size = new System.Drawing.Size(118, 22);
             this.ContextToolStripMenuItem.Text = "New...";
             // 
             // scriptToolStripMenuItem
             // 
             this.scriptToolStripMenuItem.Name = "scriptToolStripMenuItem";
-            this.scriptToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.scriptToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
             this.scriptToolStripMenuItem.Text = "LSLText";
             // 
             // notecardToolStripMenuItem
             // 
             this.notecardToolStripMenuItem.Name = "notecardToolStripMenuItem";
-            this.notecardToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.notecardToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
             this.notecardToolStripMenuItem.Text = "Notecard";
             // 
             // textureToolStripMenuItem
             // 
             this.textureToolStripMenuItem.Name = "textureToolStripMenuItem";
-            this.textureToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.textureToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
             this.textureToolStripMenuItem.Text = "Texture";
             // 
             // gestureToolStripMenuItem
             // 
             this.gestureToolStripMenuItem.Name = "gestureToolStripMenuItem";
-            this.gestureToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.gestureToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
             this.gestureToolStripMenuItem.Text = "Gesture";
+            // 
+            // simTypeToolStripMenuItem
+            // 
+            this.simTypeToolStripMenuItem.Name = "simTypeToolStripMenuItem";
+            this.simTypeToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
+            this.simTypeToolStripMenuItem.Text = "SimType";
+            this.simTypeToolStripMenuItem.Click += new System.EventHandler(this.simTypeToolStripMenuItem_Click);
             // 
             // objectToolStripMenuItem
             // 
             this.objectToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.rezToolStripMenuItem});
             this.objectToolStripMenuItem.Name = "objectToolStripMenuItem";
-            this.objectToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.objectToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
             this.objectToolStripMenuItem.Text = "Object";
             // 
             // rezToolStripMenuItem
@@ -349,47 +356,48 @@
             this.rezToolStripMenuItem.Name = "rezToolStripMenuItem";
             this.rezToolStripMenuItem.Size = new System.Drawing.Size(111, 22);
             this.rezToolStripMenuItem.Text = "Rez..";
+            this.rezToolStripMenuItem.Click += new System.EventHandler(this.rezToolStripMenuItem_Click);
             // 
             // lSLTextToolStripMenuItem
             // 
             this.lSLTextToolStripMenuItem.Name = "lSLTextToolStripMenuItem";
-            this.lSLTextToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.lSLTextToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
             this.lSLTextToolStripMenuItem.Text = "LSLText";
             // 
             // gestureToolStripMenuItem1
             // 
             this.gestureToolStripMenuItem1.Name = "gestureToolStripMenuItem1";
-            this.gestureToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+            this.gestureToolStripMenuItem1.Size = new System.Drawing.Size(139, 22);
             this.gestureToolStripMenuItem1.Text = "Gesture";
             // 
             // notecardToolStripMenuItem1
             // 
             this.notecardToolStripMenuItem1.Name = "notecardToolStripMenuItem1";
-            this.notecardToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+            this.notecardToolStripMenuItem1.Size = new System.Drawing.Size(139, 22);
             this.notecardToolStripMenuItem1.Text = "Notecard";
             // 
             // textureToolStripMenuItem1
             // 
             this.textureToolStripMenuItem1.Name = "textureToolStripMenuItem1";
-            this.textureToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+            this.textureToolStripMenuItem1.Size = new System.Drawing.Size(139, 22);
             this.textureToolStripMenuItem1.Text = "Texture";
             // 
             // callingCardToolStripMenuItem
             // 
             this.callingCardToolStripMenuItem.Name = "callingCardToolStripMenuItem";
-            this.callingCardToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.callingCardToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
             this.callingCardToolStripMenuItem.Text = "CallingCard";
             // 
             // soundToolStripMenuItem
             // 
             this.soundToolStripMenuItem.Name = "soundToolStripMenuItem";
-            this.soundToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.soundToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
             this.soundToolStripMenuItem.Text = "Sound";
             // 
             // animationToolStripMenuItem
             // 
             this.animationToolStripMenuItem.Name = "animationToolStripMenuItem";
-            this.animationToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.animationToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
             this.animationToolStripMenuItem.Text = "Animation";
             // 
             // pnlDetail
@@ -428,16 +436,6 @@
             this.btnProfile.TabIndex = 2;
             this.btnProfile.UseVisualStyleBackColor = true;
             this.btnProfile.Click += new System.EventHandler(this.btnProfile_Click);
-            // 
-            // txtCreator
-            // 
-            this.txtCreator.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtCreator.AgentID")));
-            this.txtCreator.BackColor = System.Drawing.SystemColors.Window;
-            this.txtCreator.Location = new System.Drawing.Point(80, 36);
-            this.txtCreator.Name = "txtCreator";
-            this.txtCreator.ReadOnly = true;
-            this.txtCreator.Size = new System.Drawing.Size(338, 20);
-            this.txtCreator.TabIndex = 1;
             // 
             // txtCreated
             // 
@@ -505,12 +503,15 @@
             this.ctxInv.Size = new System.Drawing.Size(36, 4);
             this.ctxInv.Text = "Inventory Folder";
             // 
-            // simTypeToolStripMenuItem
+            // txtCreator
             // 
-            this.simTypeToolStripMenuItem.Name = "simTypeToolStripMenuItem";
-            this.simTypeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.simTypeToolStripMenuItem.Text = "SimType";
-            this.simTypeToolStripMenuItem.Click += new System.EventHandler(this.simTypeToolStripMenuItem_Click);
+            this.txtCreator.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtCreator.AgentID")));
+            this.txtCreator.BackColor = System.Drawing.SystemColors.Window;
+            this.txtCreator.Location = new System.Drawing.Point(80, 36);
+            this.txtCreator.Name = "txtCreator";
+            this.txtCreator.ReadOnly = true;
+            this.txtCreator.Size = new System.Drawing.Size(338, 20);
+            this.txtCreator.TabIndex = 1;
             // 
             // SimAspectConsole
             // 
@@ -559,7 +560,7 @@
         private System.Windows.Forms.ToolStripMenuItem reloadInventoryToolStripMenuItem;
         public System.Windows.Forms.TreeView invTree;
         private System.Windows.Forms.ToolStripMenuItem aspectsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripDropDownButton ExtraContextMenu;
+        public System.Windows.Forms.ToolStripDropDownButton ExtraContextMenu;
         private System.Windows.Forms.ToolStripMenuItem folderToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ContextToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem scriptToolStripMenuItem;

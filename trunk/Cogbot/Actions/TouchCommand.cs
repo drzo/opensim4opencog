@@ -1,3 +1,4 @@
+using System;
 using OpenMetaverse;
 
 namespace cogbot.Actions
@@ -9,6 +10,7 @@ namespace cogbot.Actions
 			Name = "touch";
 			Description = "Attempt to touch a prim with specified UUID";
             Category = CommandCategory.Objects;
+            Parameters = new Type[] { typeof(Primitive), typeof(UUID) };
 		}
 		
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using OpenMetaverse;
 
 namespace cogbot.Actions
 {
@@ -11,6 +12,7 @@ namespace cogbot.Actions
         {
             helpString = "You stop flying.";
             usageString = "To stop flying type: \"stop-flying\"";
+            Parameters = new Type[] { typeof(GridClient), null };
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)

@@ -1,5 +1,6 @@
 ﻿using System;
 using OpenMetaverse;
+using PathSystem3D.Navigation;
 
 namespace cogbot.Actions.Movement
 {
@@ -19,10 +20,10 @@ namespace cogbot.Actions.Movement
         {
             TheBotClient = testClient;
 
-            Name = "FlyTo";
+            Name = "Fly To";
             Description = "Fly the avatar toward the specified position for a maximum of seconds. Usage: FlyTo x y z [seconds]";
             Category = CommandCategory.Movement;
-
+            Parameters = new[] { typeof(SimPosition), typeof(string) };
             callback = new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
         }
 

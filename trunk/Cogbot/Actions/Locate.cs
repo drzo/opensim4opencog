@@ -11,6 +11,7 @@ namespace cogbot.Actions
         {
             helpString = "Gives the coordinates of where $bot is.";
             usageString = "To locate the coordinates of yourself, type in \"locate\"";
+            Name = "Locate";
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)

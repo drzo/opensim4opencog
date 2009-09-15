@@ -10,9 +10,10 @@ namespace cogbot.Actions
     {
         public SitOnCommand(BotClient testClient)
         {
-            Name = "siton";
+            Name = "Sit On";
             Description = "Attempt to sit on a particular prim, with specified UUID";
             Category = CommandCategory.Movement;
+            Parameters = new[] { typeof(Primitive), typeof(UUID) };  
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

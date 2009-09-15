@@ -329,6 +329,7 @@ namespace cogbot.Listeners
 
         public override void Grid_OnRegionHandleReply(UUID regionID, ulong regionHandle)
         {
+            if (regionHandle==0) return;
             RegisterUUID(regionID, GetRegion(regionHandle));
             base.Grid_OnRegionHandleReply(regionID, regionHandle);
         }

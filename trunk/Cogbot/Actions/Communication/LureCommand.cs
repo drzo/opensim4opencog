@@ -12,6 +12,7 @@ namespace cogbot.Actions.Communication
             Name = "lure";
             Description = "Send a lure to a user. Usage: lure FirstName LastName";
             Category = CommandCategory.Communication;
+            Parameters = new[] { typeof(Avatar), typeof(UUID) };
         }
 
 

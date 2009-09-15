@@ -20,6 +20,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Other;
 
             TheBotClient = testClient;
+            Parameters = new Type[] { typeof(GridClient), null };
         }
 
         private bool registered = false;

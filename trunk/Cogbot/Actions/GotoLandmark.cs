@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using PathSystem3D.Navigation;
 
 namespace cogbot.Actions
 {
@@ -13,6 +14,7 @@ namespace cogbot.Actions
             Name = "goto_landmark";
             Description = "Teleports to a Landmark. Usage: goto_landmark [UUID]";
             Category = CommandCategory.Movement;
+            Parameters = new[] { typeof(InventoryLandmark), typeof(UUID) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

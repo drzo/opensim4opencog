@@ -467,6 +467,7 @@ namespace cogbot.Listeners
 
                     }
                 }
+            if (UUID.TryParse(ToAvatarName, out found)) return found;
             {
                 client.Directory.StartPeopleSearch(DirectoryManager.DirFindFlags.People, ToAvatarName, 0, UUID.Random());
 
