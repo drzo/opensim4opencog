@@ -641,6 +641,10 @@ namespace cogbot.Listeners
         public override void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle,
                                                  ushort timeDilation)
         {
+            if (regionHandle==0)
+            {
+                return;
+            }
             SimObject AV = GetSimObject(avatar, simulator);
             if (avatar.ID == client.Self.AgentID)
             {
@@ -1348,6 +1352,10 @@ namespace cogbot.Listeners
         {
             if (LocalID == 0) return;
             ulong Handle = simulator.Handle;
+            if (Handle == 0)
+            {
+                throw new AbandonedMutexException();
+            }
             lock (primsSelectedOutbox)
             {
                 if (!primsSelectedOutbox.ContainsKey(Handle))

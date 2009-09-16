@@ -571,7 +571,7 @@ namespace cogbot
 
             bool groupIM = im.GroupIM && GroupMembers != null && GroupMembers.ContainsKey(im.FromAgentID) ? true : false;
 
-            //if (im.FromAgentID == MasterKey || (GroupCommands && groupIM) || im.FromAgentName == MasterName)
+            if (im.FromAgentID == MasterKey || (GroupCommands && groupIM) || im.FromAgentName == MasterName)
             {
                 // Received an IM from someone that is authenticated
                 WriteLine(String.Format("<{0} ({1})> {2}: {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM", im.Dialog,
