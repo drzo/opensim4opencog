@@ -64,7 +64,7 @@ namespace CogbotRadegastPluginModule
 
             clientManager.outputDelegate = WriteLine;
             inst.Client.Network.OnSimConnecting += Network_OnSimConnecting;
-            tab.Select();
+          //  tab.Select();
             clientManager.StartUpLisp();
         }
 
