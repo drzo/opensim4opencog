@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Threading;
 using System.Windows.Forms;
@@ -21,8 +22,19 @@ namespace CogbotRadegastPluginModule
         private ClientManager clientManager;
         private CogbotRadegastInterpreter cogbotRadegastInterpreter;
 
-
         public void StartPlugin(RadegastInstance inst)
+        {
+            try
+            {
+                StartPlugin0(inst);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(""+ex);
+            }
+        }
+
+        public void StartPlugin0(RadegastInstance inst)
         {
             RadegastInstance = inst;
             if (ClientManager.UsingRadgastFromCogbot)
