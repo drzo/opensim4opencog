@@ -100,7 +100,9 @@ namespace cogbot.TheOpenSims
 
         public SimPathStore GetPathStore()
         {
-            return GetSimRegion().GetPathStore(GetSimPosition());
+            SimRegion R = GetSimRegion();//
+            if (R == null) return null;
+            return R.GetPathStore(GetSimPosition());
         }
 
         public virtual void TurnToward(SimPosition targetPosition)
