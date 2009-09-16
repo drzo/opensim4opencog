@@ -2077,6 +2077,18 @@ namespace cogbot.TheOpenSims
         private string PostureType;
         private SimObjectEvent LastPostureEvent;
         readonly private object postureLock  = new object();
+        public Vector3 SimPosition
+        {
+            set
+            {
+                LastKnownSimPos = value;   
+            }          
+            get
+            {
+                return GetSimPosition();
+            }
+        }
+
         private void SetPosture(SimObjectEvent evt)
         {
             lock (postureLock)

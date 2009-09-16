@@ -580,7 +580,7 @@ namespace cogbot.Listeners
 
         public override void Parcels_OnParcelInfo(ParcelInfo parcel)
         {
-            SimRegion r = SimRegion.GetRegion(parcel.SimName);
+            SimRegion r = SimRegion.GetRegion(parcel.SimName, client);
             if (r!=null) r.Parcels_OnParcelInfo(parcel);
             else base.Parcels_OnParcelInfo(parcel);
         }

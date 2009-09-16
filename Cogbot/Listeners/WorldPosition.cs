@@ -275,7 +275,7 @@ namespace cogbot.Listeners
                 argsUsed++;
             }
             string sim = tokens[argsUsed];
-            SimRegion region = SimRegion.GetRegion(sim);
+            SimRegion region = SimRegion.GetRegion(sim,client);
             if (region==null) return null;
             argsUsed += 1;
             float z = region.AverageHieght;

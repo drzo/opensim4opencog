@@ -42,7 +42,8 @@ namespace cogbot.Actions
                 return "Set master UUID with name = " + Client.MasterName;
             }
             masterUUID = WorldSystem.GetUserID(masterName);
-            if (String.IsNullOrEmpty(Client.MasterName)) Client.MasterName = masterName;
+            //if (String.IsNullOrEmpty(Client.MasterName))                 
+            Client.MasterName = masterName;
             if (masterUUID!=UUID.Zero)
             {
                 Client.MasterName = masterName;

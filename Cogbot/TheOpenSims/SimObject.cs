@@ -188,7 +188,7 @@ namespace cogbot.TheOpenSims
             {
                 throw Error("GotoTarget !Client.Self.AgentID == Prim.ID");
             }
-            TeleportTo(SimRegion.GetRegion(local.GetPathStore().RegionName), local.GetSimPosition());
+            TeleportTo(SimRegion.GetRegion(SimRegion.GetRegionHandle(local.GetPathStore())), local.GetSimPosition());
         }
 
         public virtual void TeleportTo(SimRegion R, Vector3 local)
@@ -1158,24 +1158,24 @@ namespace cogbot.TheOpenSims
             return transValue;
         }
 
-        protected Vector3 LastKnownPos;
+        protected Vector3 LastKnownSimPos;
         public virtual Vector3 GetSimPosition()
         {
-            if (Object.ReferenceEquals(_Prim0,null)) return LastKnownPos;
+            if (Object.ReferenceEquals(_Prim0,null)) return LastKnownSimPos;
             Primitive thisPrim = Prim;
             Vector3 thisPos = thisPrim.Position;
             //if (!IsRegionAttached()) return Prim.Position; 
             //throw Error("GetWorldPosition !IsRegionAttached: " + this);
             if (thisPrim.ParentID == 0)
             {
-                return LastKnownPos = thisPos;
+                return LastKnownSimPos = thisPos;
             }
             {
                 Primitive outerPrim = GetParentPrim(thisPrim);
 
                 if (outerPrim == null)
                 {
-                    if (LastKnownPos!=default(Vector3))return LastKnownPos;
+                    if (LastKnownSimPos!=default(Vector3))return LastKnownSimPos;
                     Debug("Unknown parent");
                     throw Error("GetSimRotation !IsRegionAttached: " + this);
                     return thisPrim.Position;
@@ -1190,7 +1190,7 @@ namespace cogbot.TheOpenSims
                 Debug("-------------------------" + this + " shouldnt be at " + thisPos);
                 //   WorldSystem.DeletePrim(thePrim);
             }
-            return LastKnownPos = thisPos;
+            return LastKnownSimPos = thisPos;
         }
 
         protected Primitive GetParentPrim(Primitive thisPrim)
