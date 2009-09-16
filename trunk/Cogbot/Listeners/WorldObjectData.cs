@@ -69,28 +69,6 @@ namespace cogbot.Listeners
             describePrimToAI(prim, simulator);
         }
 
-        public override void Grid_OnCoarseLocationUpdate(Simulator sim, List<UUID> newEntries, List<UUID> removedEntries)
-        {
-            if (!MaintainObjectUpdates) return;
-            //for (int i = 0; i < coarse.Location.Length; i++)
-            //{
-            //    if (i == coarse.Index.$bot)
-            //    {
-            //        simulator.positionIndexYou = i;
-            //    }
-            //    else if (i == coarse.Index.Prey)
-            //    {
-            //        simulator.positionIndexPrey = i;
-            //    }
-            //    simulator.avatarPositions.Add(new Vector3(coarse.Location[i].X, coarse.Location[i].Y,
-            //        coarse.Location[i].Z * 4));
-            //}
-
-            if (newEntries.Count== 0 && removedEntries.Count==0) return;
-
-            //OnEvent("On-Coarse-Location-Update", paramNamesOnCoarseLocationUpdate, paramTypesOnCoarseLocationUpdate, sim, newEntries , removedEntries);
-        }
-
         #region Nested type: DoWhat
 
         private delegate object DoWhat(SimObject objectUpdated, string p, Object before, Object after, Object diff);
@@ -451,6 +429,7 @@ namespace cogbot.Listeners
 
         private void SendNewUpdateEvent(string eventName, SimObject obj, object value)
         {
+            return;
             //if (primitive is Avatar)                 
             //client.
             //	Debug(eventName + " " + client.argsListString(args));

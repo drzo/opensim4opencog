@@ -237,6 +237,37 @@ namespace cogbot.Listeners
             //TODO SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID, null), properties);
         }
 
+        public override void Grid_OnCoarseLocationUpdate(Simulator sim, List<UUID> newEntries, List<UUID> removedEntries)
+        {
+            if (!MaintainAvatarMetaData) return;
+
+            foreach (UUID uuid in newEntries)
+            {
+                SimAvatarImpl A = CreateSimAvatar(uuid,this,sim);
+                A.RegionHandle = sim.Handle;
+                A.SimPosition = sim.AvatarPositions[uuid];
+
+            }
+            //for (int i = 0; i < coarse.Location.Length; i++)
+            //{
+            //    if (i == coarse.Index.$bot)
+            //    {
+            //        simulator.positionIndexYou = i;
+            //    }
+            //    else if (i == coarse.Index.Prey)
+            //    {
+            //        simulator.positionIndexPrey = i;
+            //    }
+            //    simulator.avatarPositions.Add(new Vector3(coarse.Location[i].X, coarse.Location[i].Y,
+            //        coarse.Location[i].Z * 4));
+            //}
+
+            if (newEntries.Count == 0 && removedEntries.Count == 0) return;
+
+
+            //OnEvent("On-Coarse-Location-Update", paramNamesOnCoarseLocationUpdate, paramTypesOnCoarseLocationUpdate, sim, newEntries , removedEntries);
+        }
+
 
         public override void Avatars_OnAvatarInterests(UUID avatarID, Avatar.Interests properties)
         {
