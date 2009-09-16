@@ -50,7 +50,7 @@ namespace AIMLBotModule
         /// <summary>
         /// Move towards interesting objects
         /// </summary>
-        public static bool UseAttention = false;
+        public static bool UseAttention = true;
         /// <summary>
         /// Max Distance for attention objects
         /// </summary>
