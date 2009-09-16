@@ -484,15 +484,18 @@ namespace cogbot.Listeners
         public static ObjectUpdate updatFromSimObject(SimObject from)
         {
             ObjectUpdate update = new ObjectUpdate();
-            update.Acceleration = from.Prim.Acceleration;
-            update.AngularVelocity = from.Prim.AngularVelocity;
-            update.CollisionPlane = from.Prim.CollisionPlane;
-            update.Position = from.GetSimPosition();            
-            update.Rotation = from.GetSimRotation();
-            update.State = from.Prim.PrimData.State;
-            update.Textures = from.Prim.Textures;
-            update.Velocity = from.Prim.Velocity;
-            update.LocalID = from.Prim.LocalID;
+            if (from.Prim != null)
+            {
+                update.Acceleration = from.Prim.Acceleration;
+                update.AngularVelocity = from.Prim.AngularVelocity;
+                update.CollisionPlane = from.Prim.CollisionPlane;
+                update.Position = from.GetSimPosition();
+                update.Rotation = from.GetSimRotation();
+                update.State = from.Prim.PrimData.State;
+                update.Textures = from.Prim.Textures;
+                update.Velocity = from.Prim.Velocity;
+                update.LocalID = from.Prim.LocalID;
+            }
             update.Avatar = (from is SimAvatar);
             return update;
         }

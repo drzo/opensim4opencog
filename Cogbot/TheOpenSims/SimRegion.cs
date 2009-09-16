@@ -1477,5 +1477,19 @@ namespace cogbot.TheOpenSims
             return new Vector3d(regionX + objectLoc.X, regionY + objectLoc.Y, objectLoc.Z);
         }
 
+        public static ulong GetRegionHandle(SimPathStore store)
+        {
+            foreach (var of in CurrentRegions)
+            {
+                if (of.PathStore == store)
+                    return of.RegionHandle;
+            }
+           
+            Vector2 loc = store.RegionLocation;
+            uint regionX = (uint) loc.X*256;
+            uint regionY = (uint)loc.Y * 256;
+            return Utils.UIntsToLong(regionX, regionY);
+            //_GridLoc = new Vector2((float)(regionX / 256), (float)(regionY / 256));           
+        }
     }
 }
