@@ -28,7 +28,9 @@
 //
 // $Id: SimAspectConsole.Designer.cs 181 2009-09-03 01:32:49Z latifer@gmail.com $
 //
-﻿namespace cogbot.GUI
+using Radegast;
+
+namespace cogbot.GUI
 {
     partial class SimAspectConsole
     {
@@ -119,7 +121,7 @@
             this.lblAsset = new System.Windows.Forms.Label();
             this.lblCreator = new System.Windows.Forms.Label();
             this.lblItemName = new System.Windows.Forms.Label();
-            this.ctxInv = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.ctxInv = new RadegastContextMenuStrip(this.components);
             this.txtCreator = new Radegast.AgentNameTextBox();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();

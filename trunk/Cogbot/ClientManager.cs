@@ -914,6 +914,7 @@ namespace cogbot
         {
             string orginalName = name;
             name = name.Replace(" ", "").ToLower();
+            while (name.EndsWith(".")) name = name.Substring(0, name.Length - 1);
 
             if (!groupActions.ContainsKey(name))
             {

@@ -116,7 +116,9 @@ namespace CogbotRadegastPluginModule
 
         public string ActName
         {
-            get { return act.Name.Replace(" ", "").ToLower(); }
+            get { string name= act.Name.Replace(" ", "").ToLower();
+            while (name.EndsWith(".")) name = name.Substring(0, name.Length - 1);
+                return name;}
         }
 
         public override bool Contributes(object o, Type type)
