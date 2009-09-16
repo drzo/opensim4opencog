@@ -48,9 +48,13 @@ namespace AIMLBotModule
         /// </summary>
         public static bool UseRealism = false;
         /// <summary>
+        /// Turn towards interesting objects
+        /// </summary>
+        public static bool UseLookAttention = true;
+        /// <summary>
         /// Move towards interesting objects
         /// </summary>
-        public static bool UseAttention = true;
+        public static bool UseMoveAttention = false;
         /// <summary>
         /// Max Distance for attention objects
         /// </summary>
@@ -533,7 +537,7 @@ namespace AIMLBotModule
 
         private void AttendTo(string fromname, UUID fromID, PCode isAvatar)
         {
-            if (!UseAttention) return;
+            if (!UseLookAttention && !UseMoveAttention) return;
             TimeSpan ts = new TimeSpan(DateTime.Now.Ticks - lastFollow.Ticks);
             SimObject talker = WorldSystem.AsObject(fromname, fromID, isAvatar);
             if (ts.TotalSeconds < 30)
@@ -569,17 +573,30 @@ namespace AIMLBotModule
                 WriteLine("X,Y " + dist + " Too far to " + talker);
                 return;
             }
-            else if (dist > MaxDistance)
+            if (UseLookAttention)
+            {
+                a.TurnToward(talker);
+            }
+            if (dist > MaxDistance)
             {
                 WriteLine("X,Y " + dist + " Too far to " + talker);
                 return;
             }
             if (a.CurrentAction == null || a.CurrentAction is FollowerAction)
             {
-                FollowerAction fa = new FollowerAction(a, talker);
-                client.output("" + fa);
-                a.CurrentAction = fa;
-                lastFollow = DateTime.Now;
+                if (UseMoveAttention)
+                {
+                    FollowerAction fa = new FollowerAction(a, talker);
+                    client.output("" + fa);
+                    a.CurrentAction = fa;
+                    lastFollow = DateTime.Now;
+                } else
+                {
+                    if (UseLookAttention)
+                    {
+                        a.TurnToward(talker);
+                    }
+                }
             }
         }
 
