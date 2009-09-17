@@ -468,8 +468,8 @@ namespace cogbot.Listeners
                 update.Acceleration = from.Prim.Acceleration;
                 update.AngularVelocity = from.Prim.AngularVelocity;
                 update.CollisionPlane = from.Prim.CollisionPlane;
-                update.Position = from.GetSimPosition();
-                update.Rotation = from.GetSimRotation();
+                update.Position = from.Prim.Position;
+                update.Rotation = from.Prim.Rotation;
                 update.State = from.Prim.PrimData.State;
                 update.Textures = from.Prim.Textures;
                 update.Velocity = from.Prim.Velocity;

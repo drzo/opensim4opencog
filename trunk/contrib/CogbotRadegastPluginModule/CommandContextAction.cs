@@ -5,6 +5,7 @@ using System.Threading;
 using System.Windows.Forms;
 using cogbot;
 using cogbot.Actions;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 using Radegast;
 using PathSystem3D.Navigation;
@@ -177,8 +178,9 @@ namespace CogbotRadegastPluginModule
         {
             if (type == null) return lastObject;
             if (type.IsInstanceOfType(lastObject)) return lastObject;
-            if (type.IsAssignableFrom(typeof(Vector2))) return ToUUID(lastObject).ToString();                        
+            if (type.IsAssignableFrom(typeof(Vector2))) return ToUUID(lastObject).ToString();
             if (type.IsAssignableFrom(typeof(SimPosition))) return ToUUID(lastObject).ToString();
+            if (type.IsAssignableFrom(typeof(SimObject))) return ToUUID(lastObject).ToString();
             if (type.IsAssignableFrom(typeof(string))) return ToUUID(lastObject).ToString();
             if (type.IsAssignableFrom(typeof(Primitive))) return ToPrimitive(lastObject);
             if (type.IsAssignableFrom(typeof(Avatar))) return ToAvatar(lastObject);
