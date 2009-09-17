@@ -17,6 +17,7 @@ namespace CogbotRadegastPluginModule
         }
 
         public RadegastInstance RadegastInstance;
+        public CogbotContextMenuListener CogbotContextMenuListener;
         private CogbotTabWindow chatConsole;
         private SleekTab tab;
         private ClientManager clientManager;
@@ -37,6 +38,7 @@ namespace CogbotRadegastPluginModule
         public void StartPlugin0(RadegastInstance inst)
         {
             RadegastInstance = inst;
+            CogbotContextMenuListener = new CogbotContextMenuListener();
             if (ClientManager.UsingRadgastFromCogbot)
             {
                 // just unregister events for now
@@ -70,7 +72,7 @@ namespace CogbotRadegastPluginModule
 
         private void Plugin_OnConnected(object sender)
         {
-            //clientManager.LastBotClient.Invoke(() => clientManager.LastBotClient.AddTab("aspects", "Aspects", new SimAspectConsole(RadegastInstance), null));
+            //clientManager.LastBotClient.Invoke(() => clientManager.Lai didnt get it stBotClient.AddTab("aspects", "Aspects", new SimAspectConsole(RadegastInstance), null));
             //clientManager.LastBotClient.Invoke(() => RadegastInstance.TabConsole.AddContextMenu(new AspectContextAction(RadegastInstance)
             //{
             //}));
@@ -91,5 +93,6 @@ namespace CogbotRadegastPluginModule
         public void StopPlugin(RadegastInstance inst)
         {
         }
+
     }
 }

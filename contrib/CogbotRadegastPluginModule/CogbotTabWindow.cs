@@ -65,7 +65,7 @@ namespace CogbotRadegastPluginModule
         private WorldObjects GridMaster;
 
 
-        public System.Windows.Forms.ContextMenuStrip PluginExtraContextMenu { get { return ExtraContextMenu; } }
+        public RadegastContextMenuStrip PluginExtraContextMenu { get { return ExtraContextMenu; } }
 
         public CogbotTabWindow(RadegastInstance instance, ClientManager man)
         {

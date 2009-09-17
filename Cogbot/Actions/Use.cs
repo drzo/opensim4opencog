@@ -31,6 +31,10 @@ namespace cogbot.Actions
                if (WorldSystem.tryGetPrim(objname, out prim))
                {
                    SimObject objToUse = WorldSystem.GetSimObject(prim);
+                   if ((BotNeeds)WorldSystem.TheSimAvatar["CurrentNeeds"]==null)
+                   {
+                       WorldSystem.TheSimAvatar["CurrentNeeds"] = new BotNeeds(90.0f);
+                   }
                    SimTypeUsage usage = objToUse.GetBestUse((BotNeeds)WorldSystem.TheSimAvatar["CurrentNeeds"]);
                    WorldSystem.TheSimAvatar.Do(usage,objToUse);
                    return "used " + objToUse;

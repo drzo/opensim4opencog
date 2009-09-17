@@ -68,7 +68,7 @@ namespace CogbotRadegastPluginModule
             this.btnShout = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.lvwObjects = new System.Windows.Forms.ListView();
-            this.ExtraContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.ExtraContextMenu = new RadegastContextMenuStrip(this.components);
             this.avatarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ctxAnim = new System.Windows.Forms.ToolStripMenuItem();
             this.ctxProfile = new System.Windows.Forms.ToolStripMenuItem();
@@ -1061,7 +1061,7 @@ namespace CogbotRadegastPluginModule
         private System.Windows.Forms.Button btnMoveBack;
         private System.Windows.Forms.ToolStripButton tbtnAnim;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
-        private System.Windows.Forms.ContextMenuStrip ExtraContextMenu;
+        private RadegastContextMenuStrip ExtraContextMenu;
         private System.Windows.Forms.ToolStripMenuItem folderToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ContextToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem scriptToolStripMenuItem;

@@ -14,7 +14,7 @@ namespace CogbotRadegastPluginModule
         {
             get { return (CogbotTabWindow)instance.TabConsole.GetTab("cogbot").Control; }
         }
-        private ContextMenuStrip ExtraContextMenu
+        private RadegastContextMenuStrip ExtraContextMenu
         {
             get { return console.PluginExtraContextMenu; }
         }

@@ -345,7 +345,7 @@ namespace cogbot.TheOpenSims
                                                                       }
                                                               }
                                                           });
-                            actionThread.Name = _currentAction.ToString();
+                            actionThread.Name = value.ToString();
                             actionThread.Start();
                         }
                     }
