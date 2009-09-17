@@ -362,7 +362,7 @@ namespace cogbot.Actions.Movement
             Name = GetType().Name;
             Description = "Move to a the specified point using MoveTo";
             Category = cogbot.Actions.CommandCategory.Movement;
-            Parameters = new[] {  new NamedParam(typeof(SimPosition), null) };
+            Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -439,7 +439,7 @@ namespace cogbot.Actions.Movement
             Name = GetType().Name;
             Description = "Puts one minute temp blocks toward objects";
             Category = cogbot.Actions.CommandCategory.Movement;
-            Parameters = new[] {  new NamedParam(typeof(SimPosition), null) };
+            Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -466,7 +466,7 @@ namespace cogbot.Actions.Movement
             Name = "gto";
             Description = "Go to the avatar toward the specified position for a maximum of seconds. gto [prim | [x y]] [dist]";
             Category = cogbot.Actions.CommandCategory.Movement;
-            Parameters = new[] {  new NamedParam(typeof(SimPosition), null) };
+            Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -567,7 +567,7 @@ namespace cogbot.Actions.Movement
             Name = "turnto";
             Description = "turn the avatar toward the specified position for a maximum of seconds. turnto [prim | [x y [z]]";
             Category = cogbot.Actions.CommandCategory.Movement;
-            Parameters = new[] {  new NamedParam(typeof(SimPosition), null) };
+            Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

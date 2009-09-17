@@ -15,7 +15,7 @@ namespace cogbot.Actions
 			Name = "goto";
 			Description = "Teleport to a location (e.g. \"goto Hooper/100/100/30\")";
             Category = CommandCategory.Movement;
-            Parameters = new[] {  new NamedParam(typeof(SimPosition), null) };
+            Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
 		}
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
