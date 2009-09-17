@@ -15,7 +15,7 @@ namespace cogbot.Actions
             Name = "searchevents";
             Description = "Searches Events list. Usage: searchevents [search text]";
             Category = CommandCategory.Other;
-            Parameters = new Type[] { typeof(GridClient), null };
+            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace cogbot.Actions
 {
-    class Locate : Action
+    class Locate : Command
     {
         public Locate(BotClient Client)
             : base(Client)

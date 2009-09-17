@@ -23,7 +23,7 @@ namespace cogbot.Actions.Movement
             Name = "Fly To";
             Description = "Fly the avatar toward the specified position for a maximum of seconds. Usage: FlyTo x y z [seconds]";
             Category = CommandCategory.Movement;
-            Parameters = new[] { typeof(SimPosition), typeof(string) };
+            Parameters = new[] {  new NamedParam(typeof(SimPosition), null) };
             callback = new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
         }
 

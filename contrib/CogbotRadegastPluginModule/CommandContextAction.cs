@@ -15,7 +15,7 @@ namespace CogbotRadegastPluginModule
     public class CommandContextAction : ContextAction
     {
         public Object lastObject;
-        public cogbot.Actions.Action act;
+        public Command act;
         public Type useType;
         CogbotTabWindow console
         {
@@ -53,30 +53,41 @@ namespace CogbotRadegastPluginModule
             }
         }
 
-        private void AddCommand(cogbot.Actions.Action c)
+        private void AddCommand(Command c)
         {
-            if (string.IsNullOrEmpty(c.Name))
+            if (c == null)
             {
-                throw new AbandonedMutexException();
+                DebugLog("WARNING: Cannot use NULL command");
+                return;
             }
-            if (c.Name.StartsWith("!")) return;
-            if (c.Parameters!=null)
+            string cName = c.Name;
+            if (string.IsNullOrEmpty(cName))
             {
-                int i = 0;
-                while (i<c.Parameters.Length)
-                {
-                    Type from = c.Parameters[i];
-                    i++;
-                    Type use = c.Parameters[i];
-                    AddCommand(c,from,use);
-
-                    i++;
-                }
+                DebugLog("WARNING: Cannot use no-name command " + c.GetType());
+                return;
+            }
+            if (cName.StartsWith("!"))
+            {
+                //DebugLog("WARNING: Skipping command " + cName);
+                return;
+            }
+            if (c.Parameters == null)
+            {
+               // DebugLog("WARNING: Skipping non-paramerized command " + cName);
+                return;
+            }
+            int i = 0;
+            while (i < c.Parameters.Length)
+            {
+                Type from =(Type) c.Parameters[i].Key;
+                Type use = (Type) c.Parameters[i].Value;
+                AddCommand(c, from, use);
+                i++;
             }
         }
 
-        static public readonly HashSet<cogbot.Actions.Action> Actions = new HashSet<cogbot.Actions.Action>();
-        private void AddCommand(cogbot.Actions.Action renCmd, Type type, Type use)
+        static public readonly HashSet<Command> Actions = new HashSet<Command>();
+        private void AddCommand(Command renCmd, Type type, Type use)
         {
             lock (Actions) if (!Actions.Add(renCmd)) return;
             CommandContextAction cca = new CommandContextAction(instance)

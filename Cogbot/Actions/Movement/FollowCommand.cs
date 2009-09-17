@@ -18,7 +18,7 @@ namespace cogbot.Actions
 			Name = "Follow";
 			Description = "Follow another avatar. Usage: follow [FirstName LastName]/off.";
             Category = CommandCategory.Movement;
-            Parameters = new[] { typeof(SimPosition), typeof(string) };      
+            Parameters = new[] {  new NamedParam(typeof(SimPosition), null) };      
 		}
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

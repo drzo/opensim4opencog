@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace cogbot.Actions
 {
-    class Stop : Action
+    class Stop : Command
     {
         public Stop(BotClient Client)
             : base(Client)

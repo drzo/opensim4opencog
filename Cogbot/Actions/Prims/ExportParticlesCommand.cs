@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 
 namespace cogbot.Actions
@@ -13,7 +14,7 @@ namespace cogbot.Actions
             Name = "exportparticles";
             Description = "Reverse engineers a prim with a particle system to an LSL script. Usage: exportscript [prim-uuid]";
             Category = CommandCategory.Objects;
-            Parameters = new[] { typeof(Primitive), typeof(UUID) };
+            Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

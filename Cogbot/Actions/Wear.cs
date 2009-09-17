@@ -6,7 +6,7 @@ using OpenMetaverse; //using libsecondlife;
 
 namespace cogbot.Actions
 {
-    class Wear : Action
+    class Wear : Command
     {
         public Wear(BotClient Client)
             : base(Client)

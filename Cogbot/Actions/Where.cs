@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using cogbot.TheOpenSims;
 using OpenMetaverse; //using libsecondlife;
 
 namespace cogbot.Actions
 {
-    class Where : Action
+    class Where : Command
     {
         public Where(BotClient Client)
             : base(Client)
         {
             helpString = "Finds out in which direction an object or a building or a person is.";
             usageString = "To find out wher an object, building or a person is, type \"where is <object/person name>\"";
-            Parameters = new Type[] { typeof(Primitive), typeof(UUID) };
+            Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)

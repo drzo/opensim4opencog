@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.IO;
 using System.Collections.Generic;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.Imaging;
@@ -17,7 +18,7 @@ namespace cogbot.Actions
             Name = "dumpoutfit";
             Description = "Dumps all of the textures from an avatars outfit to the hard drive. Usage: dumpoutfit [avatar-uuid]";
             Category = CommandCategory.Inventory;
-            Parameters = new[] { typeof(Primitive), typeof(UUID) };
+            Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

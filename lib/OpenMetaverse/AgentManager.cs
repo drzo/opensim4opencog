@@ -2540,6 +2540,7 @@ namespace OpenMetaverse
         /// <param name="lookAt"><seealso cref="Vector3"/> direction in destination sim agent will look at</param>
         public void RequestTeleport(ulong regionHandle, Vector3 position, Vector3 lookAt)
         {
+           
             if (Client.Network.CurrentSim != null &&
                 Client.Network.CurrentSim.Caps != null &&
                 Client.Network.CurrentSim.Caps.IsEventQueueRunning)

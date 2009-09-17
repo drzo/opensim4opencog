@@ -6,13 +6,13 @@ using cogbot.TheOpenSims; //using libsecondlife;
 
 namespace cogbot.Actions
 {
-    class Describe : Action
+    class Describe : Command
     {
         public Describe(BotClient Client)
             : base(Client)
         {
             Name = "Describe";
-            Parameters = new Type[]{typeof(Primitive),typeof(UUID)};
+            Parameters = new []{ new NamedParam(typeof(SimObject), typeof(UUID))};
         }
 
         public override string makeHelpString()

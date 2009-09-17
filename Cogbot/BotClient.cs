@@ -18,7 +18,6 @@ using Radegast;
 using Radegast.Netcom;
 using cogbot.TheOpenSims;
 using System.Drawing;
-using Action=cogbot.Actions.Action;
 using Settings=OpenMetaverse.Settings;
 
 // older LibOMV
@@ -171,7 +170,7 @@ namespace cogbot
         public Dictionary<string, DescribeDelegate> describers;
 
         readonly public Dictionary<string, Listeners.Listener> listeners;
-        public SortedDictionary<string, Actions.Action> Commands;
+        public SortedDictionary<string, Command> Commands;
         public Dictionary<string, Tutorials.Tutorial> tutorials;
         //public Utilities.BotTcpServer UtilitiesTcpServer;
 
@@ -297,12 +296,12 @@ namespace cogbot
             //registrationTypes["sound"] = new Listeners.Sound(this);
             //registrationTypes["sound"] = new Listeners.Objects(this);
 
-            Commands = new SortedDictionary<string, cogbot.Actions.Action>();
+            Commands = new SortedDictionary<string, Command>();
             Commands["login"] = new Actions.Login(this);
             Commands["logout"] = new Actions.Logout(this);
             Commands["stop"] = new Actions.Stop(this);
             Commands["teleport"] = new Actions.Teleport(this);
-            Action desc = new Actions.Describe(this);
+            Command desc = new Actions.Describe(this);
             Commands["describe"] = desc;
             Commands["look"] = desc;
             Commands["say"] = new Actions.Say(this);
@@ -1415,7 +1414,7 @@ namespace cogbot
                 string verb = cogbot.Actions.Parser.ParseArgs(text)[0];
                 if (Commands != null && Commands.ContainsKey(verb))
                 {
-                    Action act = Commands[verb];
+                    Command act = Commands[verb];
                     if (act is GridMasterCommand)
                     {
                         if (!WorldSystem.IsGridMaster)

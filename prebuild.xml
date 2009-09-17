@@ -789,7 +789,7 @@
    </Files>
 </Project>
 
-  <Project name="RadSpeechWin" path="lib/radegastspeech-svn/RadSpeechLin" type="Library" frameworkVersion="v3_5">
+  <Project name="RadSpeechWin" path="lib/radegastspeech-svn/RadSpeechWin" type="Library" frameworkVersion="v3_5">
    <Configuration name="Debug">
      <Options>
        <OutputPath>../../../bin/</OutputPath>

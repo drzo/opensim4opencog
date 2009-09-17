@@ -9,7 +9,7 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.Actions
 {
-    class Follow : Action
+    class Follow : Command
     {
 
 
@@ -19,7 +19,7 @@ namespace cogbot.Actions
             helpString = "Start or stop following a user.";
             usageString = "To start following an avatar, type \"follow <avatar name>\" \r\n" +
                           "To stop following an avatar, type \"stop-following <avatar name>\"";
-            Parameters = new Type[] { typeof(Primitive), typeof(UUID) };
+            Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
             Name = "Follower";
         }
 

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace cogbot.Actions
 {
-    class Eval : Action
+    class Eval : Command
     {
        public Eval(BotClient Client)
             : base(Client)
