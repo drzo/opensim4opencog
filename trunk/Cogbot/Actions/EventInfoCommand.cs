@@ -13,7 +13,7 @@ namespace cogbot.Actions
             Name = "evinfo";
             helpString = "Shows the events that have been associated with an object.";
             usageString = "evinfo [primid]";
-            Parameters = new Type[] { typeof(Primitive), typeof(UUID) };
+            Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

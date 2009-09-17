@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 
 namespace cogbot.Actions
@@ -15,7 +16,7 @@ namespace cogbot.Actions
             Name = "agentlocations";
             Description = "Downloads all of the agent locations in a specified region. Usage: agentlocations [regionhandle]";
             Category = CommandCategory.Simulator;
-            Parameters = new Type[] { typeof(Simulator), typeof(ulong) };
+            Parameters = new [] { new NamedParam(typeof(SimRegion), typeof(ulong)) };
 
         }
 

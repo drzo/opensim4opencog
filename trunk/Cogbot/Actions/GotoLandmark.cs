@@ -14,7 +14,7 @@ namespace cogbot.Actions
             Name = "goto_landmark";
             Description = "Teleports to a Landmark. Usage: goto_landmark [UUID]";
             Category = CommandCategory.Movement;
-            Parameters = new[] { typeof(InventoryLandmark), typeof(UUID) };
+            Parameters = new[] { new NamedParam(typeof(InventoryLandmark), typeof(UUID)) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

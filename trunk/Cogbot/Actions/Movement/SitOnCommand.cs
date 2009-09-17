@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
@@ -13,7 +14,7 @@ namespace cogbot.Actions
             Name = "Sit On";
             Description = "Attempt to sit on a particular prim, with specified UUID";
             Category = CommandCategory.Movement;
-            Parameters = new[] { typeof(Primitive), typeof(UUID) };  
+            Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };  
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

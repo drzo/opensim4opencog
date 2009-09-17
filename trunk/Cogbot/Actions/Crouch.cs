@@ -5,7 +5,7 @@ using OpenMetaverse; //using libsecondlife;
 
 namespace cogbot.Actions
 {
-    class Crouch : Action
+    class Crouch : Command
     {
        // bool isCrouching = false;
 
@@ -15,7 +15,7 @@ namespace cogbot.Actions
             helpString = "crouch [on|off] 'no argumennt=for 500ms' ";
             usageString = "crouch [on|off]";
             Name = "Crouch";
-            Parameters = new Type[] { typeof(GridClient), null };
+            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
@@ -16,7 +17,7 @@ namespace cogbot.Actions
             Name = "mapfriend";
             Description = "Show a friends location. Usage: mapfriend UUID";
             Category = CommandCategory.Friends;
-            Parameters = new[] { typeof(Avatar), typeof(UUID) };
+            Parameters = new[] {  new NamedParam(typeof(SimAvatar), typeof(UUID)) };
         }
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {

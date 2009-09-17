@@ -14,7 +14,7 @@ namespace cogbot.Actions
             Name = "anim";
             Description = "Do a animation or gesture.  Usage:  anim [seconds] HOVER [seconds] 23423423423-4234234234-234234234-23423423  +CLAP -JUMP STAND";
             Category = CommandCategory.Appearance;
-            Parameters = new[] { typeof(SimAnimation),typeof(UUID) };
+            Parameters = new[] { new NamedParam(typeof(SimAnimation), typeof(UUID)) };
         }
        
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

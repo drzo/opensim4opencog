@@ -10,7 +10,7 @@ namespace cogbot.Actions
             Name = "wind";
             Description = "Displays current wind data";
             Category = CommandCategory.Simulator;
-            Parameters = new Type[] { typeof(GridClient), null };
+            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

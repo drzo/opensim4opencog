@@ -13,7 +13,7 @@ namespace cogbot.Actions.Movement
             Name = "moveto";
             Description = "Moves the avatar to the specified global position using simulator autopilot. Usage: moveto x y z";
             Category = CommandCategory.Movement;
-            Parameters = new[] { typeof(SimPosition), typeof(string) };
+            Parameters = new[] {  new NamedParam(typeof(SimPosition), null) };
 
         }
 

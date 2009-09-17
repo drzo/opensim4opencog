@@ -1,4 +1,5 @@
 using System;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 
 namespace cogbot.Actions
@@ -10,7 +11,7 @@ namespace cogbot.Actions
 			Name = "touch";
 			Description = "Attempt to touch a prim with specified UUID";
             Category = CommandCategory.Objects;
-            Parameters = new Type[] { typeof(Primitive), typeof(UUID) };
+            Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
 		}
 		
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

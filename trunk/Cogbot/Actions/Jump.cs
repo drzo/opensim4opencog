@@ -4,7 +4,7 @@ using System.Text;
 
 namespace cogbot.Actions
 {
-    class Jump : Action
+    class Jump : Command
     {
         public Jump(BotClient Client)
             : base(Client)

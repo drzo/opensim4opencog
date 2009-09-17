@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using cogbot;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using cogbot.Utilities;

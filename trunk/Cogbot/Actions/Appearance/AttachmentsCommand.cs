@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class AttachmentsCommand : Command
+    public class AttachmentsCommand : Command, RegionMasterCommand
     {
         public AttachmentsCommand(BotClient testClient)
         {
@@ -12,7 +13,7 @@ namespace cogbot.Actions
             Name = "attachments";
             Description = "Prints a list of the currently known agent attachments";
             Category = CommandCategory.Appearance;
-            Parameters = new Type[] { typeof(GridClient), null };
+            Parameters = new [] { new NamedParam(typeof(SimObject), typeof(Primitive)) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

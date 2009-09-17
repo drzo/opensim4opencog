@@ -236,7 +236,18 @@ namespace OpenMetaverse
         /// <summary>A Unique Cache identifier for this simulator</summary>
         public UUID ID = UUID.Zero;
         /// <summary>The capabilities for this simulator</summary>
-        public Caps Caps = null;
+        private Caps _Caps = null;
+        public Caps Caps
+        {
+            get
+            {
+                if (_Caps == null || !_Caps.IsEventQueueRunning)
+                {
+                    ConnectCaps();
+                }
+                return _Caps;
+            }
+        }
         /// <summary></summary>
         public ulong Handle;
         /// <summary>The current version of software this simulator is running</summary>
@@ -458,7 +469,8 @@ namespace OpenMetaverse
         }
 
         private void ReInit()
-        {            
+        {
+            useReconnect = true;
             Network = Client.Network;
             PacketArchive = new IncomingPacketIDCollection(Settings.PACKET_ARCHIVE_SIZE);
             InBytes = new Queue<long>(Client.Settings.STATS_QUEUE_SIZE);
@@ -467,17 +479,25 @@ namespace OpenMetaverse
 
 
         public string _seed;
- 
+
+        private bool useReconnect = true;
         public void ConnectCaps()
         {
-            if (Caps != null)
+            if (!useReconnect) return;
+            useReconnect = false;
+            if (_Caps != null)
             {
-                Caps.Disconnect(true);
-                Caps = null;
+                if (_Caps.IsEventQueueRunning) return;
+                _Caps.Disconnect(true);
+                _Caps = null;
             }
             if (!String.IsNullOrEmpty(_seed))
             {
-                Caps = new Caps(this, _seed);
+                _Caps = new Caps(this, _seed);
+                Thread.Sleep(30000);
+                if (!_Caps.IsEventQueueRunning)
+                {
+                }
             }
         }
 
@@ -531,9 +551,9 @@ namespace OpenMetaverse
         public void Dispose()
         {
             // Force all the CAPS connections closed for this simulator
-            if (Caps != null)
+            if (_Caps != null)
             {
-                Caps.Disconnect(true);
+                _Caps.Disconnect(true);
             }
         }
 
@@ -615,20 +635,20 @@ namespace OpenMetaverse
         {
             _seed = seedcaps;
 
-            if (Caps != null)
+            if (_Caps != null)
             {
-                if (Caps._SeedCapsURI == seedcaps) return;
+                if (_Caps._SeedCapsURI == seedcaps) return;
 
                 Logger.Log("Unexpected change of seed capability", Helpers.LogLevel.Warning, Client);
-                Caps.Disconnect(true);
-                Caps = null;
+                _Caps.Disconnect(true);
+                _Caps = null;
             }
 
             if (Client.Settings.ENABLE_CAPS)
             {
                 // Connect to the new CAPS system
                 if (!String.IsNullOrEmpty(seedcaps))
-                    Caps = new Caps(this, seedcaps);
+                    _Caps = new Caps(this, seedcaps);
                 else
                     Logger.Log("Setting up a sim without a valid capabilities server!", Helpers.LogLevel.Error, Client);
             }
@@ -667,10 +687,10 @@ namespace OpenMetaverse
                 PingTimer = null;
 
                 // Kill the current CAPS system
-                if (Caps != null)
+                if (_Caps != null)
                 {
-                    Caps.Disconnect(true);
-                    Caps = null;
+                    _Caps.Disconnect(true);
+                    _Caps = null;
                 }
                 }
                 if (connected)

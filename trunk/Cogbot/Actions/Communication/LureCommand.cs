@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 
 namespace cogbot.Actions.Communication
@@ -12,7 +13,7 @@ namespace cogbot.Actions.Communication
             Name = "lure";
             Description = "Send a lure to a user. Usage: lure FirstName LastName";
             Category = CommandCategory.Communication;
-            Parameters = new[] { typeof(Avatar), typeof(UUID) };
+            Parameters = new[] {  new NamedParam(typeof(SimAvatar), typeof(UUID)) };
         }
 
 

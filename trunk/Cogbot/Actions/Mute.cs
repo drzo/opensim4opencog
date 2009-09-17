@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-
+using cogbot.TheOpenSims;
 using OpenMetaverse; //using libsecondlife;
 
 namespace cogbot.Actions
 {
-    class Mute : Action
+    class Mute : Command
     {
         public Mute(BotClient Client)
             : base(Client)
@@ -14,7 +14,7 @@ namespace cogbot.Actions
             helpString = "Toggle Mute or unmute a user";
             usageString = "To Mute an avatar, type \"Mute <avatar name>\"; to Mute all, type \"mute all\" \r\n" +
                           "To Unmute an avatar, type \"Mute <avatar name>\" again; to Unmute all, type \"mute all\" again";
-            Parameters = new Type[] { typeof(Primitive), typeof(UUID) };
+            Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)

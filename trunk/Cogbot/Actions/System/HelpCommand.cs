@@ -13,7 +13,7 @@ namespace cogbot.Actions
 			Name = "help";
 			Description = "Lists available commands. usage: help [command] to display information on commands";
             Category = CommandCategory.TestClient;
-            Parameters = new Type[] { typeof(GridClient), null };
+            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
 		}
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

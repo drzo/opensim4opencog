@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 
 namespace cogbot.Actions
@@ -11,7 +12,7 @@ namespace cogbot.Actions
             Name = "objectinventory";
             Description = "Retrieves a listing of items inside an object (task inventory). Usage: objectinventory [objectID]";
             Category = CommandCategory.Inventory;
-            Parameters = new[] { typeof(Primitive), typeof(UUID) };
+            Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

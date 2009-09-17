@@ -18,6 +18,7 @@ namespace CogbotRadegastPluginModule
     
         private void Test_OnContentMenuItemClicked(object sender, RadegastContextMenuStrip.ContextMenuEventArgs e)
         {
+            if (e.MenuItem==null) return;
             Console.WriteLine("I hope you meant to " + e.MenuItem.Text + "  " + e.Selection + "!");
             if (!e.MenuItem.Enabled)
             {

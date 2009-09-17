@@ -10,7 +10,7 @@ namespace cogbot.Actions
             Name = "crouch";
             Description = "Starts or stops crouching. Usage: crouch [start/stop]";
             Category = CommandCategory.Movement;
-            Parameters = new Type[] { typeof(GridClient), null };
+            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

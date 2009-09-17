@@ -6,7 +6,7 @@ using System.Threading; //using libsecondlife;
 
 namespace cogbot.Actions
 {
-    class Fly : Action
+    class Fly : Command
     {
         public Fly(BotClient Client)
             : base(Client)
@@ -14,7 +14,7 @@ namespace cogbot.Actions
             Name = "fly";
             helpString = "To start flying type: \"fly\"";
             usageString = "fly [up|down] 'no_argument= start flying";
-            Parameters = new Type[] { typeof(GridClient), null };
+            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)

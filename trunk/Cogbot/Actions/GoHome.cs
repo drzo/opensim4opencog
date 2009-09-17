@@ -10,7 +10,7 @@ namespace cogbot.Actions
             Name = "gohome";
             Description = "Teleports home";
             Category = CommandCategory.Movement;
-            Parameters = new Type[] { typeof(GridClient), null };
+            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

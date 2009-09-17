@@ -20,13 +20,12 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using PathSystem3D.Navigation;
 
-
 namespace PathSystem3D.Navigation.Debug
 {
     /// <summary>
     /// Summary description for Form1.
     /// </summary>
-    public partial class GraphFormer : System.Windows.Forms.Form
+    public partial class GraphFormer : Form
     {
         volatile public static GraphFormer DEBUGGER = null;
         #region Construction / Destruction

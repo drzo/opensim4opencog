@@ -14,7 +14,7 @@ namespace cogbot.Actions.Appearance
             Name = "avatarinfo";
             Description = "Print out information on a nearby avatar. Usage: avatarinfo [firstname] [lastname]";
             Category = CommandCategory.Appearance;
-            Parameters = new Type[] { typeof(Avatar), typeof(UUID) };
+            Parameters = new [] {  new NamedParam(typeof(SimAvatar), typeof(UUID)) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

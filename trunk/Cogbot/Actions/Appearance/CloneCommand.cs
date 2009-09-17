@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
@@ -15,7 +16,7 @@ namespace cogbot.Actions
             Name = "clone";
             Description = "Clone the appearance of a nearby avatar. Usage: clone [name]";
             Category = CommandCategory.Appearance;
-            Parameters = new[] { typeof(Avatar), typeof(UUID) };
+            Parameters = new[] {  new NamedParam(typeof(SimAvatar), typeof(UUID)) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

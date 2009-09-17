@@ -4,13 +4,13 @@ using cogbot.TheOpenSims; //using libsecondlife;
 
 namespace cogbot.Actions
 {
-    class Use : Action
+    class Use : Command
     {
         public Use(BotClient Client)
             : base(Client)
         {
             helpString = "Use an item from inventory or world.";
-            Parameters = new Type[] {typeof (Primitive), typeof (UUID)};
+            Parameters = new [] { new NamedParam(typeof(SimObject), typeof(UUID))};
             Name = "Use..";
         }
 

@@ -8,7 +8,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    class Move : Action
+    class Move : Command
     {
         Vector3 PrevPosition;
         float moveDist = 0;

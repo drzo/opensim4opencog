@@ -10,7 +10,7 @@ using System.Threading; //using libsecondlife;
 namespace cogbot.Actions
 {
 #pragma warning disable 0168
-    class Teleport : Action
+    class Teleport : Command
     {
         ManualResetEvent TeleportFinished = new ManualResetEvent(false);
 

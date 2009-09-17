@@ -5,7 +5,7 @@ using OpenMetaverse; //using libsecondlife;
 
 namespace cogbot.Actions
 {
-    class Whisper : Action
+    class Whisper : Command
     {
         public UUID currentAvatar;
         public UUID currentSession;

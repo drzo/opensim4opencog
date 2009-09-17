@@ -5,14 +5,14 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    class StopFlying : Action
+    class StopFlying : Command
     {
         public StopFlying(BotClient Client)
             : base(Client)
         {
             helpString = "You stop flying.";
             usageString = "To stop flying type: \"stop-flying\"";
-            Parameters = new Type[] { typeof(GridClient), null };
+            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)

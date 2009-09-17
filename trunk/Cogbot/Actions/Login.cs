@@ -4,7 +4,7 @@ using System.Text;
 
 namespace cogbot.Actions
 {
-    class Login : Action, BotSystemCommand
+    class Login : Command, BotSystemCommand
     {
 
         public Login(BotClient Client)

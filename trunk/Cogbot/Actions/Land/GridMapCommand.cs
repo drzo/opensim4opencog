@@ -13,7 +13,7 @@ namespace cogbot.Actions
             Name = "gridmap";
             Description = "Downloads all visible information about the grid map";
             Category = CommandCategory.Simulator;
-            Parameters = new Type[] { typeof(GridClient), null };
+            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

@@ -13,7 +13,7 @@ namespace cogbot.Actions
             Name = "stats";
             Description = "Provide connection figures and statistics";
             Category = CommandCategory.Simulator;
-            Parameters = new Type[] { typeof(GridClient), null };
+            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

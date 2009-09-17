@@ -5,14 +5,14 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    class Help : Action
+    class Help : Command
     {
         public Help(BotClient Client)
             : base(Client)
         {
             helpString = "Print this help message.";
             usageString = helpString;
-            Parameters = new Type[] { typeof(GridClient), null};
+            Parameters = new [] {  new NamedParam(typeof(GridClient), null)};
             Name = "help";
         }
 

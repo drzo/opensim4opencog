@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
@@ -25,7 +26,7 @@ namespace cogbot.Actions
             Description = "Clones another avatars profile as closely as possible. WARNING: This command will " +
                 "destroy your existing profile! Usage: cloneprofile [targetuuid]";
             Category = CommandCategory.Other;
-            Parameters = new Type[] { typeof(Primitive), typeof(UUID) };
+            Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
