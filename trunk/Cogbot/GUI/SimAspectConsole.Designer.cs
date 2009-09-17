@@ -537,7 +537,7 @@ namespace cogbot.GUI
         #endregion
 
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.ContextMenuStrip ctxInv;
+        private RadegastContextMenuStrip ctxInv;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.TextBox txtItemName;
         private System.Windows.Forms.Label lblCreator;
