@@ -811,8 +811,10 @@
    <Reference name="RadegastSpeech" />
    <Reference name="Nini" />
    <Reference name="fmodex-dotnet.dll" />
+   <Reference name="Radegast.exe" />
    <Reference name="System" />
    <Reference name="System.Core"/>
+   <Reference name="System.Speech"/>
    <Reference name="System.Drawing" />
    <Reference name="System.Windows.Forms" />
    <Reference name="System.Xml.Linq"/>
