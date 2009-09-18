@@ -1,6 +1,9 @@
 ﻿using System;
 using OpenMetaverse;
-using cogbot.TheOpenSims; //using libsecondlife;
+using cogbot.TheOpenSims;
+using PathSystem3D.Navigation;
+
+//using libsecondlife;
 
 namespace cogbot.Actions
 {
@@ -10,7 +13,7 @@ namespace cogbot.Actions
             : base(Client)
         {
             helpString = "Use an item from inventory or world.";
-            Parameters = new [] { new NamedParam(typeof(SimObject), typeof(UUID))};
+            Parameters = new [] { new NamedParam(typeof(SimPosition), typeof(UUID))};
             Name = "Use..";
         }
 

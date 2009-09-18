@@ -1320,6 +1320,11 @@ namespace cogbot.TheOpenSims
             while (Environment.TickCount < endTick)
             {
                 currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
+                if (Prim==null)
+                {
+                    Debug("Where is my body? ");
+                    return false;
+                }
                 if (!IsKnownMoving)
                 {
                     if (Prim.Velocity != Vector3.Zero) IsKnownMoving = true;
