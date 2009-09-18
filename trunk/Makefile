@@ -11,10 +11,11 @@ release: prebuild
 
 prebuild:
 	./runprebuild.sh
+	cp NullBuild.txt lib/radegastspeech-svn/RadSpeechWin/RadSpeechWin.dll.build
 
 distclean:
-        # @export PATH=/usr/local/bin:$(PATH)
-      #  ${NANT} clean
+	# @export PATH=/usr/local/bin:$(PATH)
+	#  ${NANT} clean
 	find . -iname "*.build" -exec rm -v  {} \;
 	find . -iname "*.csproj" -exec rm -v  {} \; 
         
