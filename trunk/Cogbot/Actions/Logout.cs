@@ -10,8 +10,8 @@ namespace cogbot.Actions
             : base(Client)
         {
             Name = "Logout";
-            helpString = "Logout from Secondlife";
-            usageString = "To Logout from Second Life, type \"logout\"";
+            Description = "Logout from Secondlife";
+            Usage = "To Logout from Second Life, type \"logout\"";
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)

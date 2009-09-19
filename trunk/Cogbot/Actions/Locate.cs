@@ -9,8 +9,8 @@ namespace cogbot.Actions
         public Locate(BotClient Client)
             : base(Client)
         {
-            helpString = "Gives the coordinates of where $bot is.";
-            usageString = "To locate the coordinates of yourself, type in \"locate\"";
+            Description = "Gives the coordinates of where $bot is.";
+            Usage = "To locate the coordinates of yourself, type in \"locate\"";
             Name = "Locate";
         }
 

@@ -11,8 +11,8 @@ namespace cogbot.Actions
         public Where(BotClient Client)
             : base(Client)
         {
-            helpString = "Finds out in which direction an object or a building or a person is.";
-            usageString = "To find out wher an object, building or a person is, type \"where is <object/person name>\"";
+            Description = "Finds out in which direction an object or a building or a person is.";
+            Usage = "To find out wher an object, building or a person is, type \"where is <object/person name>\"";
             Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 

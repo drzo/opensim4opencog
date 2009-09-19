@@ -10,8 +10,8 @@ namespace cogbot.Actions
         public StopFlying(BotClient Client)
             : base(Client)
         {
-            helpString = "You stop flying.";
-            usageString = "To stop flying type: \"stop-flying\"";
+            Description = "You stop flying.";
+            Usage = "To stop flying type: \"stop-flying\"";
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 

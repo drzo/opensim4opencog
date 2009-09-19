@@ -4,6 +4,7 @@ using System.Text;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using Radegast;
 
 namespace cogbot.Actions
 {
@@ -85,13 +86,46 @@ namespace cogbot.Actions
         } // method: acceptInput
 
 
-		public string Description;
+        public string Description
+        {
+            get
+            {
+                return GetDescription();
+            }
+            set
+            {
+                if (String.IsNullOrEmpty(value)) return;
+                int half = value.ToLower().IndexOf("usage");
+                if (half == -1)
+                {
+                    half = value.ToLower().IndexOf("use");
+                }
+                if (half==-1)
+                {
+                    helpString = value;
+                    return;
+                }
+                Description = value.Substring(0, half).TrimEnd();
+                Usage = value.Substring(half);
+
+            }
+        }
+
+        public string Usage
+        {
+            get { return makeUsageString(); }
+            set
+            {
+                usageString = value.Trim().Replace("Usage:", " ").Replace("usage:", " ").Replace("Use:", " ").Trim();
+            }
+        }
+
         public CommandCategory Category;
         /// <summary>
         /// When set to true, think will be called.
         /// </summary>
         public bool Active;
-        public string Name;
+        public string Name { get; set; }
         protected string helpString;
         protected string usageString;
         /// <summary>
@@ -184,21 +218,21 @@ namespace cogbot.Actions
         }
         public virtual string GetDescription()
         {
-            if (!string.IsNullOrEmpty(Description)) return Description;
-            return helpString + "  Usage: " + usageString;
+            if (!string.IsNullOrEmpty(helpString)) return helpString;
+            return helpString + "  Usage: " + Usage;
         }
 
 
         public virtual string makeHelpString()
         {
-            if (!string.IsNullOrEmpty(usageString)) return usageString;
-            return Description;
+            if (!string.IsNullOrEmpty(helpString)) return helpString;
+            return helpString;
         }
 
         public virtual string makeUsageString()
         {
             if (!String.IsNullOrEmpty(usageString)) return usageString;
-            return Description;
+            return helpString;
         }
                 
         // Helpers

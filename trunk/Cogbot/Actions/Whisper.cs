@@ -13,8 +13,8 @@ namespace cogbot.Actions
         public Whisper(BotClient Client)
             : base(Client)
         {
-            helpString = "Whisper a message to a user.";
-            usageString = "To whisper a message to an avatar, type \"whisper to <avatar name>\"";
+            Description = "Whisper a message to a user.";
+            Usage = "To whisper a message to an avatar, type \"whisper to <avatar name>\"";
 
             currentAvatar = UUID.Zero;
             currentSession = UUID.Zero;

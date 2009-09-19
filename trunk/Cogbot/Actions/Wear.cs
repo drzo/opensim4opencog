@@ -11,8 +11,8 @@ namespace cogbot.Actions
         public Wear(BotClient Client)
             : base(Client)
         {
-            helpString = "Usage: wear [outfit name] ";
-            usageString = helpString + "\r\n you can type  'wear [bake] /My Outfit/Dance Party";
+            Description = "Usage: wear [outfit name] ";
+            Usage = Description + "\r\n you can type  'wear [bake] /My Outfit/Dance Party";
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
@@ -24,7 +24,7 @@ namespace cogbot.Actions
                 //Client.Appearance.OnAppearanceUpdated += callback;
                 // base.acceptInput(verb, args);
                 string target = String.Empty;
-                if (args.Length == 0) return usageString;
+                if (args.Length == 0) return Usage;
                 bool bake = true;
                 string wear = args.str.Trim();
                 if (args[0] == "nobake")

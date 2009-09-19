@@ -11,8 +11,8 @@ namespace cogbot.Actions
         public EventInfoCommand(BotClient Client)
         {
             Name = "evinfo";
-            helpString = "Shows the events that have been associated with an object.";
-            usageString = "evinfo [primid]";
+            Description = "Shows the events that have been associated with an object.";
+            Usage = "evinfo [primid]";
             Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 

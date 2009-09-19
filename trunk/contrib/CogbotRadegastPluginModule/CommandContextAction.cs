@@ -135,10 +135,13 @@ namespace CogbotRadegastPluginModule
 
         public override bool Contributes(object o, Type type)
         {
-            //if (type == useType) return true;           
-            if (base.ContextType == typeof(SimPosition))
+            if (type == useType) return true;           
+            if (base.ContextType == typeof(SimPosition) || base.ContextType == typeof(SimObject))
             {
-                if (type == typeof(UUID)) return false;
+                if (type == typeof(UUID))
+                {
+                    return false;
+                }
                 return !typeof(InventoryBase).IsInstanceOfType(o);
             }
             return base.Contributes(o, type);

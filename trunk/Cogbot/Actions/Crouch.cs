@@ -12,10 +12,10 @@ namespace cogbot.Actions
         public Crouch(BotClient Client)
             : base(Client)
         {
-            helpString = "crouch [on|off] 'no argumennt=for 500ms' ";
-            usageString = "crouch [on|off]";
+            Description = "crouch [on|off] 'no argumennt=for 500ms' ";
+            Usage = "crouch [on|off]";
             Name = "Crouch";
-            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
+            Parameters = new[] {new NamedParam(typeof (GridClient),typeof(string), null, "on", "off", typeof (int))};
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)

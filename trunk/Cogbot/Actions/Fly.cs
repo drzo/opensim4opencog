@@ -12,8 +12,8 @@ namespace cogbot.Actions
             : base(Client)
         {
             Name = "fly";
-            helpString = "To start flying type: \"fly\"";
-            usageString = "fly [up|down] 'no_argument= start flying";
+            Description = "To start flying type: \"fly\"";
+            Usage = "fly [up|down] 'no_argument= start flying";
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 

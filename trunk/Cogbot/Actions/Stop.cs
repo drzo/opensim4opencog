@@ -10,8 +10,8 @@ namespace cogbot.Actions
         public Stop(BotClient Client)
             : base(Client)
         {
-            helpString = "Cancels a particular action";
-			usageString = "To cancel a particular action, type \"stop <action>\"";
+            Description = "Cancels a particular action";
+			Usage = "To cancel a particular action, type \"stop <action>\"";
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
