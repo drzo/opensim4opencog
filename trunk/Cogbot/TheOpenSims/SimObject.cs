@@ -178,7 +178,19 @@ namespace cogbot.TheOpenSims
                 throw Error("FollowPathTo !IsControllable");
             }
             SimAbstractMover move = SimAbstractMover.CreateSimPathMover(this, globalEnd, distance);
-            return move.Goto() == SimMoverState.COMPLETE;
+            try
+            {
+                move.OnMoverStateChange += OnMoverStateChange;
+                return move.Goto() == SimMoverState.COMPLETE;
+            }
+            finally
+            {
+                move.OnMoverStateChange -= OnMoverStateChange;
+            }
+        }
+
+        protected virtual void OnMoverStateChange(SimMoverState obj)
+        {
         }
 
 
@@ -866,9 +878,13 @@ namespace cogbot.TheOpenSims
             _TOSRTING = null;
         }
 
+        private bool IsMeshing;
         public virtual bool UpdateOccupied()
         {
-            if (!IsRegionAttached()) return false;
+            if (!IsRegionAttached())
+            {
+                return false;
+            }
             if (!IsRoot)
             {
                 // dont mesh armor
@@ -877,10 +893,28 @@ namespace cogbot.TheOpenSims
                     return false;
                 }
             }
-            if (IsMeshed) return false;
+            if (IsMeshing) return false;
+            IsMeshing = true;
+            bool updated = GetSimRegion().AddCollisions(Mesh);
+            // update parent + siblings
+            if (!IsRoot)
+            {
+                if (_Parent!=null)
+                {
+                    if (_Parent.UpdateOccupied()) updated = true;
+                }
+            }
+            // update children
+            foreach (SimObject o in AttachedChildren)
+            {
+               if (o.UpdateOccupied())
+               {
+                   updated = true;
+               }
+            }
+            IsMeshing = false;
             IsMeshed = true;
-            return GetSimRegion().AddCollisions(Mesh);
-            //throw new NotImplementedException();
+            return updated;
         }
 
         public void AddSuperTypes(IList<SimObjectType> listAsSet)
@@ -1081,7 +1115,7 @@ namespace cogbot.TheOpenSims
         public bool IsRegionAttached()
         {
             if (WasKilled) return false;
-            if (ReferenceEquals(_Prim0,null)) return false;
+            if (ReferenceEquals(_Prim0, null)) return false;
             if (_Prim0.RegionHandle == 0)
             {
                 return false;
@@ -1089,7 +1123,7 @@ namespace cogbot.TheOpenSims
             if (IsRoot) return true;
             if (_Parent == null)
             {
-                if (Prim.ParentID==0)
+                if (Prim.ParentID == 0)
                 {
                     _Parent = this;
                     return true;
@@ -1097,23 +1131,25 @@ namespace cogbot.TheOpenSims
                 Simulator simu = GetSimulator();
                 if (simu == null) return false;
                 EnsureParentRequested(simu);
-                return false;
                 Primitive pUse = WorldSystem.GetPrimitive(Prim.ParentID, simu);
                 if (pUse == null)
                 {
                     return false;
                 }
-                if(_Parent==null)
+                if (_Parent == null)
                 {
                     if (pUse.ID != UUID.Zero)
                         _Parent = WorldSystem.GetSimObject(pUse);
                 }
+
             }
             if (_Parent == this)
             {
                 return true;
             }
-            return _Parent != null && _Parent.IsRegionAttached();
+            bool at = _Parent != null && _Parent.IsRegionAttached();
+            if (at) return true;
+            return false;
         }
 
         public virtual Simulator GetSimulator()
@@ -1427,7 +1463,7 @@ namespace cogbot.TheOpenSims
                 loc = obj.GetSimPosition();
                 SimPathStore R = obj.GetPathStore();
                 return String.Format("unknown relative {0}/{1:0.00}/{2:0.00}/{3:0.00}",
-                                     R.RegionName, loc.X, loc.Y, loc.Z);
+                                     R != null ? R.RegionName : "NULL", loc.X, loc.Y, loc.Z);
             }
             return DistanceVectorString(obj.GetWorldPosition());
         }
@@ -1517,7 +1553,10 @@ namespace cogbot.TheOpenSims
             {
                 RegionHandle = Prim.RegionHandle;
             }
-            if (RegionHandle == 0) return null;
+            if (RegionHandle == 0)
+            {
+                return null;
+            }
             return WorldSystem.GetRegion(RegionHandle);
         }
 
@@ -1551,15 +1590,16 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public virtual void OpenNearbyClosedPassages()
+        public virtual bool OpenNearbyClosedPassages()
         {
+            bool changed = false;
             SimObjectType DOOR = SimTypeSystem.DOOR;
             // look for closed doors
 
             List<SimObject> UnEnterables = new List<SimObject>();
             foreach (SimObject O in GetNearByObjects(3, false))
             {
-                O.UpdateOccupied();
+                if (O.UpdateOccupied()) changed = true;
                 if (!O.IsPhantom)
                 {
                     if (O.IsTypeOf(DOOR) != null)
@@ -1578,6 +1618,7 @@ namespace cogbot.TheOpenSims
             }
             if (UnEnterables.Count > 0)
             {
+                changed = true;
                 new Thread(delegate()
                                {
                                    Thread.Sleep(90000); // 90 seconds
@@ -1587,6 +1628,7 @@ namespace cogbot.TheOpenSims
                                    }
                                }).Start();
             }
+            return changed;
         }
 
 

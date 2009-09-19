@@ -734,7 +734,7 @@ namespace PathSystem3D.Navigation
         /// However! if the point is of questionable quality it will permanently block it
         /// </summary>
         /// <param name="vector3"></param>
-        internal void BlockPointTemp(Vector3 vector3, List<ThreadStart> undo)
+        public void BlockPointTemp(Vector3 vector3, List<ThreadStart> undo)
         {
             CollisionPlane CP = FindCollisionPlane(vector3.Z);
             if (CP != null)

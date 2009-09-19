@@ -14,8 +14,8 @@ namespace TheSimiansModule
         public SimBot(BotClient Client)
         {
             Name = "simbot";
-            helpString = "Start theOpenSims type AI.";
-            usageString = "simbot [on|start|stop|off|think|needs|info|load]";
+            Description = "Start theOpenSims type AI.";
+            Usage = "simbot [on|start|stop|off|think|needs|info|load]";
         }
 
         public SimThinker Thinker
@@ -107,7 +107,7 @@ namespace TheSimiansModule
                     return "(Re)Loaded " + args[1];
                 }
             }
-            return usageString;
+            return Usage;
         }
 
         private SimThinker GetSimAvatar()

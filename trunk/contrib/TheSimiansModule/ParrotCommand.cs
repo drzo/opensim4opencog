@@ -20,8 +20,8 @@ namespace TheSimiansModule
         public ParrotCommand(BotClient Client)
         {
             Name = "parrot";
-            helpString = "Make a bot parrot all actions by another avatar.";
-            usageString = "parrot [touch/sit/uses/effects/move/anims/all [off]] Avatar Name";
+            Description = "Make a bot parrot all actions by another avatar.";
+            Usage = "parrot [touch/sit/uses/effects/move/anims/all [off]] Avatar Name";
         }
 
         public SimParrotActor Thinker
@@ -126,7 +126,7 @@ namespace TheSimiansModule
                     return "(Re)Loaded " + args[1];
                 }
             }
-            return usageString;
+            return Usage;
         }
 
         private SimParrotActor GetSimAvatar()
