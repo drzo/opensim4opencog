@@ -48,10 +48,19 @@ namespace CogbotRadegastPluginModule
     public partial class CogbotTabWindow : UserControl
     {
         private RadegastInstance instance;
-        private RadegastNetcom netcom;
-        private GridClient client;
+        private RadegastNetcom netcom
+        {
+            get { return instance.Netcom; }
+        }
+        private GridClient client
+        {
+            get { return instance.Client; }
+        }
         private ClientManager chatManager;
-        private TabsConsole tabConsole;
+        private TabsConsole tabConsole
+        {
+            get { return instance.TabConsole; }
+        }
         private Avatar currentAvatar;
         private SleekMovement movement;
         //    private AIMLbot.Bot Alice;
@@ -62,7 +71,10 @@ namespace CogbotRadegastPluginModule
         private Dictionary<uint, bool> bots = new Dictionary<uint, bool>();
         private RichTextBoxPrinter printer;
         private SimObjectSorterClass simObjectSorterClass;
-        private WorldObjects GridMaster;
+        private WorldObjects GridMaster
+        {
+            get { return WorldObjects.GridMaster; }
+        }
 
 
         public RadegastContextMenuStrip PluginExtraContextMenu { get { return ExtraContextMenu; } }
@@ -70,6 +82,7 @@ namespace CogbotRadegastPluginModule
         public CogbotTabWindow(RadegastInstance instance, ClientManager man)
         {
             InitializeComponent();
+            this.instance = instance;
             Disposed += new EventHandler(ChatConsole_Disposed);
 
             if (!instance.advancedDebugging)
@@ -84,9 +97,7 @@ namespace CogbotRadegastPluginModule
             ctxAnim.Visible = true;
             ctxTextures.Visible = true;
 
-            this.instance = instance;
-            netcom = this.instance.Netcom;
-            client = this.instance.Client;
+
 
             // Callbacks
             netcom.ClientLoginStatus += new EventHandler<ClientLoginEventArgs>(netcom_ClientLoginStatus);
@@ -229,7 +240,7 @@ namespace CogbotRadegastPluginModule
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            tabConsole = instance.TabConsole;
+            //tabConsole = instance.TabConsole;
         }
 
         //private void Config_ConfigApplied(object sender, ConfigAppliedEventArgs e)
@@ -282,7 +293,6 @@ namespace CogbotRadegastPluginModule
             btnSay.Enabled = true;
             btnShout.Enabled = true;
             return;
-            GridMaster = WorldObjects.GridMaster;
             GridMaster.OnAddSimObject += WorldSystem_OnAddSimObject;
           //  simObjectSorterClass.Origin = GridMaster.TheSimAvatar;
             //  Alice.GlobalSettings.updateSetting("name", firstName(client.Self.Name));

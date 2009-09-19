@@ -10,8 +10,8 @@ namespace cogbot.Actions
         public Help(BotClient Client)
             : base(Client)
         {
-            helpString = "Print this help message.";
-            usageString = helpString;
+            Description = "Print this help message.";
+            Usage = Description;
             Parameters = new [] {  new NamedParam(typeof(GridClient), null)};
             Name = "help";
         }
@@ -26,7 +26,7 @@ namespace cogbot.Actions
             {
                 foreach (string action in TheBotClient.Commands.Keys)
                 {
-                    WriteLine(action + ": " + TheBotClient.Commands[action].makeHelpString());
+                    WriteLine(action + ": " + TheBotClient.Commands[action].Description);
                 }
                 foreach (string tutorial in TheBotClient.tutorials.Keys)
                 {

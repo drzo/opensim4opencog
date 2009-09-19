@@ -19,8 +19,8 @@ namespace cogbot.Actions
         {
             TheBotClient = testClient;
 
-            helpString = "Teleport to a location.";
-            usageString = "To teleport to a location, type \"teleport to <location name>\"";
+            Description = "Teleport to a location.";
+            Usage = "To teleport to a location, type \"teleport to <location name>\"";
         }
 
                                     //string message, TeleportStatus status, TeleportFlags flags

@@ -12,7 +12,7 @@ namespace cogbot.Actions
         public Use(BotClient Client)
             : base(Client)
         {
-            helpString = "Use an item from inventory or world.";
+            Description = "Use an item from inventory or world.";
             Parameters = new [] { new NamedParam(typeof(SimPosition), typeof(UUID))};
             Name = "Use..";
         }

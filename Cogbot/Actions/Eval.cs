@@ -11,7 +11,7 @@ namespace cogbot.Actions
             : base(Client)
         {
             Name = "eval";
-            helpString = " eval: Enqueue a lisp task. Eval <lisp expression>";
+            Description = " eval: Enqueue a lisp task. Eval <lisp expression>";
         }
        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
        {

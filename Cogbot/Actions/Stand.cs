@@ -11,8 +11,8 @@ namespace cogbot.Actions
         public Stand(BotClient Client)
             : base(Client)
         {
-            helpString = "Stand up.";
-            usageString = "To Stand up, type \"stand\"";
+            Description = "Stand up.";
+            Usage = "To Stand up, type \"stand\"";
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)

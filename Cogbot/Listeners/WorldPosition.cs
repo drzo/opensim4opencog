@@ -294,6 +294,11 @@ namespace cogbot.Listeners
                         argsUsed += 1;
                     }
                 }
+                // test for global
+                if (x>512 && y<512)
+                {
+                    return SimWaypointImpl.CreateGlobal(x, y, z); 
+                }
             }
             Vector3 v3 = new Vector3(x, y, z);
             return SimWaypointImpl.CreateLocal(v3, region.GetPathStore(v3));

@@ -23,7 +23,7 @@ namespace cogbot.Actions
             Name = "deed";
             Description = "Recursively changes all of the permissions for child and task inventory objects. Usage prim-uuid [copy] [mod] [xfer]";
             Category = CommandCategory.Objects;
-            usageString = "Usage: deed group-spec prim-uuid [copy] [mod] [xfer] [deed]";
+            Usage = "Usage: deed group-spec prim-uuid [copy] [mod] [xfer] [deed]";
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -48,10 +48,10 @@ namespace cogbot.Actions
                 bool doIncr = false;
 
                 if (args.Length < 3)
-                    return usageString;
+                    return Usage;
 
                 if (!UUIDTryParse(args, 0, out groupID))
-                    return usageString;
+                    return Usage;
 
 
                 bool deed = false;
@@ -84,7 +84,7 @@ namespace cogbot.Actions
                             doIncr = true;
                             break;
                         default:
-                            return usageString;
+                            return Usage;
                     }
                 }
 

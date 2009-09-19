@@ -16,11 +16,11 @@ namespace cogbot.Actions
         public Follow(BotClient Client)
             : base(Client)
         {
-            helpString = "Start or stop following a user.";
-            usageString = "To start following an avatar, type \"follow <avatar name>\" \r\n" +
+            Description = "Start or stop following a user.";
+            Usage = "To start following an avatar, type \"follow <avatar name>\" \r\n" +
                           "To stop following an avatar, type \"stop-following <avatar name>\"";
             Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
-            Name = "Follower";
+            Name = "Follow*";
         }
 
 
@@ -30,29 +30,7 @@ namespace cogbot.Actions
             // base.acceptInput(verb, args);
             string[] args = pargs.tokens;
             UUID primID;
-            if (verb == "follow" && args.Length > 0)
-            {
-
-                string name = pargs.objectPhrase;
-                if (String.IsNullOrEmpty(name.Trim())) name = "avatar";
-                Primitive avatar;
-                if (WorldSystem.tryGetPrim(name, out avatar))
-                {
-                    SimObject followAvatar = WorldSystem.GetSimObject(avatar);
-                    String str = "" + Client + " start to follow " + followAvatar + ".";
-                    WriteLine(str);
-                    SimActor me = WorldSystem.TheSimAvatar;
-
-                    // The thread that accepts the Client and awaits messages
-                    me.CurrentAction = new FollowerAction(me, followAvatar);
-                    return "$bot started following " + followAvatar;
-                }
-                else
-                {
-                    return ("$bot don't know who " + name + " is.");
-                }
-            }
-            else if (verb == "stop-following")
+            if (verb == "stop-following")
             {
 
                 SimPosition ap = WorldSystem.TheSimAvatar.ApproachPosition;
@@ -62,9 +40,30 @@ namespace cogbot.Actions
                 }
                 WorldSystem.TheSimAvatar.SetMoveTarget(null, 10);
                 WorldSystem.TheSimAvatar.StopMoving();
-                return ("$bot stops following " + ap + ".");
             }
-            else
+            else if (args.Length > 0)
+            {
+
+                string name = pargs.objectPhrase;
+                if (String.IsNullOrEmpty(name.Trim())) name = "avatar 1";
+                int argsUsed;
+                SimPosition position = WorldSystem.GetVector(pargs.tokens, out argsUsed);
+
+                Primitive avatar;
+                if (position != null)
+                {
+                    String str = "" + Client + " start to follow " + position + ".";
+                    WriteLine(str);
+                    SimActor me = WorldSystem.TheSimAvatar;
+                    // The thread that accepts the Client and awaits messages
+                    me.CurrentAction = new FollowerAction(me, position);
+                    return "$bot started following " + position;
+                }
+                else
+                {
+                    return ("$bot don't know who " + name + " is.");
+                }
+            }
             {
                 return "$bot ApproachPosition: " + WorldSystem.TheSimAvatar.ApproachPosition;
             }

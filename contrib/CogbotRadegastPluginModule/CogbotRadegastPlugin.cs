@@ -46,6 +46,7 @@ namespace CogbotRadegastPluginModule
                 return;
             }
             ClientManager.UsingCogbotFromRadgast = true;
+            inst.Client.Settings.MULTIPLE_SIMS = true;
             clientManager = new ClientManager();
             cogbotRadegastInterpreter = new CogbotRadegastInterpreter(clientManager);
             RadegastInstance.CommandsManager.LoadInterpreter(cogbotRadegastInterpreter);

@@ -14,12 +14,12 @@ namespace cogbot.Actions
         public DoCommand(BotClient Client)
         {
             Name = GetType().Name.ToLower().Replace("command", "");
-            helpString = "Tell a bot to do an action on an object";
-            usageString = "Usage: " + Name + " [UseTypeName] [object]";
+            Description = "Tell a bot to do an action on an object";
+            Usage = "Usage: " + Name + " [UseTypeName] [object]";
         }
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length < 2) return usageString;
+            if (args.Length < 2) return Usage;
             SimTypeUsage use = SimTypeSystem.FindObjectUse(args[0]);
             if (use == null) return "Unknown use: " + args[0];
             args = Parsing.SplitOff(args,1);
@@ -41,8 +41,8 @@ namespace cogbot.Actions
         public SimTypeCommand(BotClient Client)
         {
             Name = GetType().Name.ToLower().Replace("command","");
-            helpString = "Manipulates the SimType typesystem";
-            usageString = "Usage: " + Name + " [ini|list|objects|uses|instances|load]";
+            Description = "Manipulates the SimType typesystem";
+            Usage = "Usage: " + Name + " [ini|list|objects|uses|instances|load]";
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -81,7 +81,7 @@ namespace cogbot.Actions
                     return SimTypeSystem.ListTypes(true, false, false, true);
                 }
             }
-            return usageString;
+            return Usage;
         }
     }
 }

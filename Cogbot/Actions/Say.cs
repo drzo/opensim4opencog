@@ -11,8 +11,8 @@ namespace cogbot.Actions
             : base(Client) 
         {
             Name = GetType().Name.ToLower().Replace("command", "");
-            helpString = "Say a message for everyone to hear.";
-            usageString = "To communicate to everyone, type \"say <message>\"";
+            Description = "Say a message for everyone to hear.";
+            Usage = "To communicate to everyone, type \"say <message>\"";
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)

@@ -12,15 +12,26 @@ namespace cogbot
             Key = k;
             Value = v;
             _Type = null;
+            Choices = null;
         }
         public NamedParam(object k, Type type, object v)
         {
             Key = k;
             Value = v;
             _Type = type;
+            Choices = null;
         }
+        public NamedParam(object k, Type type, object v, params object[] choices)
+        {
+            Key = k;
+            Value = v;
+            _Type = type;
+            Choices = choices;
+        }
+
         readonly public object Key;
         readonly public object Value;
+        readonly public object[] Choices;
         public Type _Type;
 
         public Type Type

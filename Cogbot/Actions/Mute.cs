@@ -11,8 +11,8 @@ namespace cogbot.Actions
         public Mute(BotClient Client)
             : base(Client)
         {
-            helpString = "Toggle Mute or unmute a user";
-            usageString = "To Mute an avatar, type \"Mute <avatar name>\"; to Mute all, type \"mute all\" \r\n" +
+            Description = "Toggle Mute or unmute a user";
+            Usage = "To Mute an avatar, type \"Mute <avatar name>\"; to Mute all, type \"mute all\" \r\n" +
                           "To Unmute an avatar, type \"Mute <avatar name>\" again; to Unmute all, type \"mute all\" again";
             Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }

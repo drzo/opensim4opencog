@@ -11,8 +11,8 @@ namespace cogbot.Actions
             : base(Client)
         {
             Name = "Login";
-            helpString = "Login to World Server";
-            usageString = "login <first name> <last name> <password> [<simurl>] [<location>]";
+            Description = "Login to World Server";
+            Usage = "login <first name> <last name> <password> [<simurl>] [<location>]";
         }
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)

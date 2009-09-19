@@ -9,8 +9,8 @@ namespace cogbot.Actions
         public Jump(BotClient Client)
             : base(Client)
         {
-            helpString = "Jump for 500ms.";
-            usageString = "to Jump type \"jump\"";
+            Description = "Jump for 500ms.";
+            Usage = "to Jump type \"jump\"";
             Name = "Jump";
         }
 

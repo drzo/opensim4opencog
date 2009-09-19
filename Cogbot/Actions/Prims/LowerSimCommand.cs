@@ -37,7 +37,7 @@ namespace cogbot.Actions
                     Client.Objects.RequestObject(sim,u);
                     Client.Objects.SelectObject(sim,u);
                 }
-                return usageString;
+                return Usage;
 
             }
             if (len>1)
