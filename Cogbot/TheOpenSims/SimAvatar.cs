@@ -136,14 +136,52 @@ namespace cogbot.TheOpenSims
             return WithAnim(SimAssetStore.FindOrCreateAsset(uUID, AssetType.Animation), threadStart);
         }
 
-        public override void OpenNearbyClosedPassages()
+        public override bool OpenNearbyClosedPassages()
         {
+            bool changed = false;
             foreach (var s in GetNearByObjects(20, false))
             {
-                s.UpdateOccupied();
-            } 
+                if (s.UpdateOccupied()) changed = true;
+            }
+            if (!changed)
+                foreach (var s in GetNearByObjects(40, false))
+                {
+                    if (s.UpdateOccupied()) changed = true;
+                }
+            //WithAnim(Animations.AFRAID,()=> base.OpenNearbyClosedPassages()).Invoke();
+            return  base.OpenNearbyClosedPassages() || changed;
+        }
 
-            WithAnim(Animations.AFRAID, base.OpenNearbyClosedPassages).Invoke();
+        private SimMoverState old;
+        protected override void OnMoverStateChange(SimMoverState obj)
+        {
+            UUID THINK_AMIN = Animations.EXPRESS_TOOTHSMILE;
+            
+            if (old==SimMoverState.THINKING)
+            {
+                Client.Self.AnimationStop(THINK_AMIN, true);
+            }
+            //Client.Self.AnimationStop(Animations.SHRUG, true);
+            //Client.Self.AnimationStop(Animations.SURPRISE, true);
+            switch (obj)
+            {
+                case SimMoverState.PAUSED:
+                    break;
+                case SimMoverState.MOVING:
+                    break;
+                case SimMoverState.BLOCKED:
+                    break;
+                case SimMoverState.COMPLETE:
+                    break;
+                case SimMoverState.TRYAGAIN:
+                    break;
+                case SimMoverState.THINKING:
+                    Client.Self.AnimationStart(THINK_AMIN, true);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("obj");
+            }
+            old = obj;
         }
 
         public float ZHeading

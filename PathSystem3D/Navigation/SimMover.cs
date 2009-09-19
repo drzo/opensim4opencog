@@ -26,7 +26,7 @@ namespace PathSystem3D.Navigation
                     SimPathStore GetPathStore();
          
          */
-        void OpenNearbyClosedPassages();
+        bool OpenNearbyClosedPassages();
         void ThreadJump();
     }
 
@@ -36,7 +36,8 @@ namespace PathSystem3D.Navigation
         MOVING = 1,
         BLOCKED = 2,
         COMPLETE = 3,
-        TRYAGAIN = 4
+        TRYAGAIN = 4,
+        THINKING = 5
     }
 
 
@@ -69,10 +70,19 @@ namespace PathSystem3D.Navigation
             FinalPosition = finalGoal;
         }
 
+        public event Action<SimMoverState> OnMoverStateChange;
         public SimMoverState STATE
         {
             get { return _STATE; }
-            set { _STATE = value; }
+            set
+            {
+                if (value != _STATE)
+                {
+                    if (OnMoverStateChange != null)
+                        OnMoverStateChange(_STATE);
+                    _STATE = value;
+                }
+            }
         }
 
         public SimPathStore PathStore
@@ -94,7 +104,7 @@ namespace PathSystem3D.Navigation
         public SimMoverState FollowPathTo(IList<Vector3d> v3s, Vector3d finalTarget, double finalDistance)
         {
             completedAt = 0;
-            _STATE = SimMoverState.MOVING;
+            STATE = SimMoverState.MOVING;
             Vector3d vstart = v3s[0];
             // Vector3 vv3 = SimPathStore.GlobalToLocal(vstart);
 
@@ -184,8 +194,11 @@ namespace PathSystem3D.Navigation
                 at = best + 1;
 
             }
-            Debug("Complete: {0} -> {1}", DistanceVectorString(GetWorldPosition()), DistanceVectorString(finalTarget));
-            return SimMoverState.COMPLETE;
+                        
+            double fd = Vector3d.Distance(GetWorldPosition(), finalTarget);
+            STATE = fd <= finalDistance ? SimMoverState.COMPLETE : SimMoverState.BLOCKED;
+            Debug("{0}: {1:0.00}m", STATE, fd);
+            return STATE;
         }
 
         public virtual IList<Vector3d> GetSimplifedRoute(Vector3d vstart, IList<Vector3d> v3s)
@@ -251,7 +264,7 @@ namespace PathSystem3D.Navigation
         readonly static List<MoveToPassable> PathBreakAways = new List<MoveToPassable>();
         public Vector3 MoveToPassableArround(Vector3 start)
         {
-            Mover.OpenNearbyClosedPassages();
+            OpenNearbyClosedPassages();
             if (!UseTurnAvoid)
             {
                 UseTurnAvoid = !UseTurnAvoid;
@@ -370,9 +383,9 @@ namespace PathSystem3D.Navigation
             PathStore.SetBlockedTemp(GetSimPosition(), l3, 45);
         }
 
-        public virtual void OpenNearbyClosedPassages()
+        public virtual bool OpenNearbyClosedPassages()
         {
-            Mover.OpenNearbyClosedPassages();
+            return Mover.OpenNearbyClosedPassages();
         }
 
         public static Vector3 ZAngleVector(double ZAngle)
@@ -408,14 +421,20 @@ namespace PathSystem3D.Navigation
             return MoverPlane.GetHeight(local);
         }
 
-        public override void OpenNearbyClosedPassages()
+        public override bool OpenNearbyClosedPassages()
         {
             Vector3 v3 = GetSimPosition();
             byte b = PathStore.GetNodeQuality(v3, MoverPlane);
             if (b < 200) b += 100;
             if (b > 254) b = 254;
             PathStore.SetNodeQuality(v3, b, MoverPlane);
-            base.OpenNearbyClosedPassages();
+            bool changed = base.OpenNearbyClosedPassages();
+            if (changed)
+            {
+                MoverPlane.HeightMapNeedsUpdate = true;
+                MoverPlane.MatrixNeedsUpdate = true;
+            }
+            return changed;
         }
 
         public SimCollisionPlaneMover(SimMover mover, SimPosition finalGoal, double finalDistance) :
@@ -495,19 +514,21 @@ namespace PathSystem3D.Navigation
         {
             bool OnlyStart = true;
             bool MadeIt = true;
-            bool KeepTrying = true;
 
             int maxTryAgains = 0;
+            IList<Vector3d> route = null;
             while (OnlyStart && MadeIt)
             {
                 Vector3d v3d = GetWorldPosition();
                 if (Vector3d.Distance(v3d, globalEnd) < distance) return true;
                 float G = MoverPlane.GlobalBumpConstraint;
                 if (G < 1f) Orig = G;
-                IList<Vector3d> route = SimPathStore.GetPath(MoverPlane, v3d, globalEnd, distance, out OnlyStart);
+                SimMoverState prev = STATE;
+                STATE = SimMoverState.THINKING;
+                route = SimPathStore.GetPath(MoverPlane, v3d, globalEnd, distance, out OnlyStart);
                 // todo need to look at OnlyStart?
-                PreXp = route.Count == 1 && G < 11f;
-                while (route.Count == 1 && G < 11f)
+                PreXp = route.Count < 3 && G < 11f;
+                while (route.Count < 3 && G < 11f)
                 {
                     if (G < 0.5) G += 0.1f;
                     else
@@ -536,6 +557,7 @@ namespace PathSystem3D.Navigation
                         MoverPlane.GlobalBumpConstraint = Orig;
                     }
                 }
+                STATE = prev;
                 STATE = FollowPathTo(route, globalEnd, distance);
                 Vector3 newPos = GetSimPosition();
                            switch (STATE)
@@ -563,6 +585,7 @@ namespace PathSystem3D.Navigation
                         }
                     case SimMoverState.PAUSED:
                     case SimMoverState.MOVING:
+                    case SimMoverState.THINKING:
                     default:
                         {
                             //MadeIt = true;
@@ -573,7 +596,57 @@ namespace PathSystem3D.Navigation
 
             
             }
+            if (!MadeIt && route!=null)
+            {
+                SimMoverState prev = STATE;
+                STATE = SimMoverState.THINKING;
+                CollisionPlane CP = this.MoverPlane;
+                if (!CP.MatrixNeedsUpdate || !CP.HeightMapNeedsUpdate)
+                {
+                    CP.MatrixNeedsUpdate = true;
+                    CP.HeightMapNeedsUpdate = true;
+                    Debug("Faking matrix needs update?");
+                }
+                else
+                {
+                    Debug("Matrix really needed update");
+                }
+
+                CP.EnsureUpdated();
+                DepricateRoute(route);
+                STATE = prev;
+            }
             return MadeIt;
+        }
+
+        /// <summary>
+        /// Make sure this the non-simplfied route
+        /// </summary>
+        /// <param name="route"></param>
+        private void DepricateRoute(IEnumerable<Vector3d> route)
+        {
+            List<ThreadStart> listUndo = new List<ThreadStart>();
+            const int time = 120;
+            foreach (Vector3d list in route)
+            {
+                PathStore.BlockPointTemp(SimPathStore.GlobalToLocal(list), listUndo);
+            }
+            if (listUndo.Count == 0) return;
+            string tmp = string.Format("Blocking {0} points for {1} seconds", listUndo.Count, time);
+            Thread thr = new Thread(() =>
+                                        {
+                                            Debug(tmp);
+                                            Thread.Sleep(time*1000);
+                                            Debug("Un-{0}", tmp);
+                                            foreach (ThreadStart undo in listUndo)
+                                            {
+                                                undo();
+                                            }
+                                        })
+                             {
+                                 Name = tmp
+                             };
+            thr.Start();
         }
 
 
@@ -745,7 +818,7 @@ namespace PathSystem3D.Navigation
 
         public override SimMoverState Goto()
         {
-            _STATE = SimMoverState.MOVING;
+            STATE = SimMoverState.MOVING;
             int CanSkip = 0;
             int Skipped = 0;
             int tried = 0;
