@@ -403,7 +403,7 @@ namespace cogbot.TheOpenSims
 
         public bool IsSculpted
         {
-            get { return Prim.Sculpt != null; }
+            get { return Prim!=null && Prim.Sculpt != null; }
         }
 
         private bool _Passable;
@@ -683,6 +683,7 @@ namespace cogbot.TheOpenSims
             {
                 if (_Parent == null)
                 {
+                    if (Prim == null) return _Parent;
                     uint parent = Prim.ParentID;
                     if (parent == 0)
                     {

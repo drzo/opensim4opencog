@@ -6,4 +6,8 @@ copy lib\Radegast\*.pdb bin\
 copy lib\Radegast\*.config bin\
 copy lib\Radegast\*.so bin\
 copy lib\Radegast\*.dylib bin\
+del lib\LookingGlass-svn\bin\Prebuild.exe
+del lib\LookingGlass-svn\bin\HttpServer.dll
+del lib\LookingGlass-svn\bin\PrimMesher.dll
+copy lib\LookingGlass-svn\bin\*.* bin\
 pause
