@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 using cogbot.TheOpenSims;
@@ -8,10 +7,6 @@ using System.Windows.Forms;
 using PathSystem3D.Navigation.Debug;
 using System.Drawing;
 using System.Net;
-using cogbot.Listeners;
-using System.Threading;
-using PathSystem3D;
-//using METAbolt;
 
 namespace cogbot.Actions.Movement
 {
@@ -66,36 +61,6 @@ namespace cogbot.Actions.Movement
     //        return "ran " + Name;
     //    }
     //}
-
-    class connections : cogbot.Actions.Command, SystemApplicationCommand
-    {
-        public connections(BotClient client)
-        {
-            Name = GetType().Name;
-            Description = "Starts the waypoint debuger";
-            Category = cogbot.Actions.CommandCategory.Movement;
-        }
-
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
-        {
-            if (args.Length == 0)
-            {
-                foreach (SimRegion R in SimRegion.CurrentRegions)
-                {
-                    WriteLine(R.NetworkInfo());
-                }
-            }
-            else
-            {
-                foreach (SimRegion R in SimRegion.CurrentRegions)
-                {
-                    if (R.RegionName.Contains(String.Join(" ", args)))
-                        WriteLine(R.NetworkInfo());
-                }
-            }
-            return "ran " + Name;
-        }
-    }
 
     class srdebug : cogbot.Actions.Command, SystemApplicationCommand
     {
@@ -560,174 +525,6 @@ namespace cogbot.Actions.Movement
         }
     }
 
-    class turnto : cogbot.Actions.Command
-    {
-        public turnto(BotClient client)
-        {
-            Name = "turnto";
-            Description = "turn the avatar toward the specified position for a maximum of seconds. turnto [prim | [x y [z]]";
-            Category = cogbot.Actions.CommandCategory.Movement;
-            Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
-        }
-
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
-        {
-            SimPosition simObject;
-
-            if (args.Length > 3 || args.Length == 0)
-                return "Usage: turnto [prim | [x y [z]]";
-
-            Vector3 local = new Vector3();
-            if (float.TryParse(args[0], out local.X) &&
-                float.TryParse(args[1], out local.Y))
-            {
-
-                if (args.Length == 3)
-                {
-                    Single.TryParse(args[2], out local.Z);
-                }
-                else
-                {
-                    local.Z = GetSimPosition().Z;
-                }
-                Vector3d target = WorldSystem.TheSimAvatar.GetPathStore().LocalToGlobal(local);
-                simObject = SimWaypointImpl.CreateGlobal(target);
-            }
-            else
-            {
-                string s = String.Join(" ", args);
-                Primitive prim;
-
-
-                if (WorldSystem.tryGetPrim(s, out prim))
-                {
-
-                    simObject = WorldSystem.GetSimObject(prim);
-                    if (!simObject.IsRegionAttached())
-                    {
-                        return "Cannot get Sim Position of " + simObject;
-                    }
-                }
-                else
-                {
-                    return "Cannot select " + s;
-                }
-            }
-
-            WriteLine("ternto {0}", simObject);
-            WorldSystem.TheSimAvatar.TurnToward(simObject);
-            return WorldSystem.TheSimAvatar.DistanceVectorString(simObject);
-        }
-    }
-
-    class selectobject : cogbot.Actions.Command
-    {
-        public selectobject(BotClient client)
-        {
-            Name = "selectobject";
-            Description = "Re select object [prim]";
-            Category = cogbot.Actions.CommandCategory.Movement;
-            Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
-        }
-
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
-        {
-            if (args.Length==0) {
-                WorldObjects.ResetSelectedObjects();
-                return "ResetSelectedObjects";
-            }
-            int used;
-            Primitive P = WorldSystem.GetPrimitive(args, out used);
-            WorldSystem.ReSelectObject(P);
-            return "object selected " + P;
-        }
-    }
-
-    class moveprim : cogbot.Actions.Command
-    {
-        public moveprim(BotClient client)
-        {
-            Name = "moveprim";
-            Description = "move prim to the relative specified position. Usage: moveprim prim [x y [z]]";
-            Category = cogbot.Actions.CommandCategory.Movement;
-        }
-
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
-        {
-
-            if (args.Length < 3)
-                return "Usage: moveprim prim [x y [z]]";
-
-            int used;
-            Primitive P = WorldSystem.GetPrimitive(args, out used);
-            SimObject O = WorldSystem.GetSimObject(P);
-
-            used = 1;
-            Vector3d prev = O.GetWorldPosition();
-            Vector3d local = Vector3d.Zero;
-            if (double.TryParse(args[used++], out local.X) &&
-                double.TryParse(args[used++], out local.Y))
-            {
-
-                if (args.Length > used)
-                {
-                    double.TryParse(args[used++], out local.Z);
-                }
-                else
-                {
-                    local.Z = 0f;// O.GetSimPosition().Z;
-                }
-            }
-            local += prev;
-            O.MoveTo(local,1f,10);
-            return WorldSystem.TheSimAvatar.DistanceVectorString(O);
-        }
-    }
-
-
-    class mvprim : cogbot.Actions.Command
-    {
-        public mvprim(BotClient client)
-        {
-            Name = "mvprim";
-            Description = "mv prim to the relative specified position. Usage: mvprim [rel] prim [[+/-]x y [z]]";
-            Category = cogbot.Actions.CommandCategory.Movement;
-        }
-
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
-        {
-
-            if (args.Length < 3)
-                return "Usage: mvprim [rel] prim [[+/-]x y [z]]";
-
-            if (args[0] == "rel")
-            {
-            }
-            int used;
-            Primitive P = WorldSystem.GetPrimitive(args, out used);
-            SimObject O = WorldSystem.GetSimObject(P);
-
-            used = 1;
-            Vector3 prev = O.GetSimPosition();
-            Vector3 local = Vector3.Zero;
-            if (float.TryParse(args[used++], out local.X) &&
-                float.TryParse(args[used++], out local.Y))
-            {
-
-                if (args.Length > used)
-                {
-                    Single.TryParse(args[used++], out local.Z);
-                }
-                else
-                {
-                    local.Z = 0f;// O.GetSimPosition().Z;
-                }
-            }
-            local += prev;
-            O.SetObjectPosition(local);
-            return WorldSystem.TheSimAvatar.DistanceVectorString(O);
-        }
-    }
 
 
 }

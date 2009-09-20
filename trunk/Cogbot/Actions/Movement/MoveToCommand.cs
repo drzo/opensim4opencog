@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
@@ -13,7 +11,7 @@ namespace cogbot.Actions.Movement
             Name = "moveto";
             Description = "Moves the avatar to the specified global position using simulator autopilot. Usage: moveto x y z";
             Category = CommandCategory.Movement;
-            Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
+            Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
 
         }
 
