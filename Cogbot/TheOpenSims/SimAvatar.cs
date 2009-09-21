@@ -42,8 +42,10 @@ namespace cogbot.TheOpenSims
                     }
                 }
                 _profileProperties = value;
+                AddInfoMap(value, "ProfileProperties");
             }
         }
+
         private Avatar.Interests _AvatarInterests;
         public Avatar.Interests AvatarInterests
         {
@@ -68,6 +70,7 @@ namespace cogbot.TheOpenSims
                     }
                 }
                 _AvatarInterests = value;
+                AddInfoMap(value, "AvatarInterests");
             }
         }
         private List<UUID> _AvatarGroups;

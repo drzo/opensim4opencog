@@ -214,11 +214,6 @@ namespace cogbot.Listeners
             SimAvatar A = CreateSimAvatar(avatarID, this, null);
             if (!MaintainAvatarMetaData) return;
             A.ProfileProperties = properties;
-            List<NamedParam> from = GetMemberValues(properties);
-            foreach (var o in from)
-            {
-                A.SetInfoMap(o.Key.ToString(), o.Type, o.Value);
-            }
             UUID propertiesPartner = properties.Partner;
             if (propertiesPartner != UUID.Zero)
             {
@@ -233,7 +228,6 @@ namespace cogbot.Listeners
             {
                // RequestAsset(properties.ProfileImage, AssetType.Texture, true);
             }
-            SendNewRegionEvent(SimEventType.DATA_UPDATE, "OnAvatarDataUpdate", A);
             //TODO SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID, null), properties);
         }
 
@@ -274,12 +268,6 @@ namespace cogbot.Listeners
             SimAvatar A = CreateSimAvatar(avatarID, this, null);
             if (!MaintainAvatarMetaData) return;
             A.AvatarInterests = properties;
-            List<NamedParam> from = GetMemberValues(properties);
-            foreach (var o in from)
-            {
-                A.SetInfoMap(o.Key.ToString(), o.Type, o.Value);
-            }
-            SendNewRegionEvent(SimEventType.DATA_UPDATE, "OnAvatarDataUpdate", A);
         }
 
         public override void Avatars_OnAvatarGroups(UUID avatarID, List<AvatarGroup> avatarGroups)

@@ -665,7 +665,7 @@ namespace cogbot.Listeners
             client.Objects.OnNewPrim += Objects_OnNewPrim;
             client.Objects.OnNewAttachment += Objects_OnNewAttachment;
             client.Objects.OnNewAvatar += Objects_OnNewAvatar;
-            client.Objects.OnObjectUpdated += Objects_OnObjectUpdated;
+            //note we dont use client.Objects.OnObjectUpdated += Objects_OnObjectUpdated;
             client.Objects.OnAvatarSitChanged += Objects_OnAvatarSitChanged;
             client.Objects.OnObjectKilled += Objects_OnObjectKilled;
            // client.Objects.OnObjectProperties += Objects_OnObjectProperties;

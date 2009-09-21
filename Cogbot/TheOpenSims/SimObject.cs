@@ -15,8 +15,17 @@ namespace cogbot.TheOpenSims
     public class SimObjectImpl : SimPosition, BotMentalAspect, SimMover, SimObject, MeshableObject
     {
 
-        
-        public Primitive.ObjectProperties Properties { get; set; }
+        public void AddInfoMap(object properties, string name)
+        {
+            List<NamedParam> from = WorldObjects.GetMemberValues("", properties);
+            foreach (var o in from)
+            {
+                AddInfoMap(o);
+            }
+            WorldSystem.SendNewRegionEvent(SimEventType.DATA_UPDATE, "On" + name + "Update", this);
+        }
+
+        protected Primitive.ObjectProperties _propertiesCache { get; set; }
         
         public BotMentalAspect GetObject(string name)
         {
@@ -25,6 +34,16 @@ namespace cogbot.TheOpenSims
 
         public ulong RegionHandle { get; set; }
         public UUID ID { get; set;}
+
+        public Primitive.ObjectProperties Properties
+        {
+            get { return _propertiesCache; }
+            set
+            {
+                UpdateProperties(value);
+                AddInfoMap(value, "ObjectProperties");
+            }
+        }
 
         public float GetCubicMeters()
         {
@@ -295,7 +314,7 @@ namespace cogbot.TheOpenSims
                 {
                     _Prim0 = null;
                     RequestedParent = false;
-                    _Parent = null;
+                    Parent = null;
                 }
                 return WasKilled;
             }
@@ -311,9 +330,15 @@ namespace cogbot.TheOpenSims
         {
             if (!WorldObjects.MaintainSimObjectInfoMap) return;
             if (value == null) value = new NullType(type);
-            lock (_infoMap)
-                _infoMap.Add(new NamedParam(key, type, value));
+            AddInfoMap(new NamedParam(key, type, value));
         }
+
+        public void AddInfoMap(NamedParam ad)
+        {
+            lock (_infoMap)
+                _infoMap.Add(ad);            
+        }
+
 
         readonly private List<Primitive> _primRefs = new List<Primitive>();
         public virtual void ResetPrim(Primitive prim, BotClient bc, Simulator sim)
@@ -323,7 +348,7 @@ namespace cogbot.TheOpenSims
                 SetFirstPrim(prim);
                 return;
             }
-            if (prim.Properties != null) Properties = prim.Properties;
+            if (prim.Properties != null) _propertiesCache = prim.Properties;
             if (prim.RegionHandle != _Prim0.RegionHandle || !Object.ReferenceEquals(prim, _Prim0))
             {
                 lock (_primRefs)
@@ -380,8 +405,8 @@ namespace cogbot.TheOpenSims
             {
                 Primitive Prim = this.Prim;
                 if (Prim!=null && (Prim.Flags & PrimFlags.Touch) != 0) return true;
-                if (Properties != null)
-                    return !String.IsNullOrEmpty(Properties.TouchName);
+                if (_propertiesCache != null)
+                    return !String.IsNullOrEmpty(_propertiesCache.TouchName);
                 return false;
             }
         }
@@ -395,8 +420,8 @@ namespace cogbot.TheOpenSims
             {
                 Primitive Prim = this.Prim;
                 if (Prim.ClickAction == ClickAction.Sit) return true;
-                if (Properties != null)
-                    return !String.IsNullOrEmpty(Properties.SitName);
+                if (_propertiesCache != null)
+                    return !String.IsNullOrEmpty(_propertiesCache.SitName);
                 return false;
             }
         }
@@ -660,12 +685,13 @@ namespace cogbot.TheOpenSims
                    if (!_primRefs.Contains(prim))
                    {
                        _primRefs.Add(prim);
+                       AddInfoMap(prim, "Primitive");
                    }
                 }
                 if (prim.Properties != null)
                 {
                    // Properties = prim.Properties;
-                    UpdateProperties(prim.Properties);
+                    Properties = prim.Properties;
                 }
 
                 if (WorldObjects.MaintainSimCollisions(prim.RegionHandle) && prim.Sculpt != null)
@@ -687,7 +713,7 @@ namespace cogbot.TheOpenSims
                     uint parent = Prim.ParentID;
                     if (parent == 0)
                     {
-                        _Parent = this;
+                        Parent = this;
                     }
                     else
                     {
@@ -699,11 +725,17 @@ namespace cogbot.TheOpenSims
                             EnsureParentRequested(simu);
                             return _Parent;
                         }
-                        _Parent = WorldSystem.GetSimObject(prim, simu);
+                        Parent = WorldSystem.GetSimObject(prim, simu);
                         _Parent.AddChild(this);
                     }
                 }
                 return _Parent;
+            }
+            set
+            {
+                //if (value==null) return;
+                _Parent = value;
+                SetInfoMap("Parent",GetType(),value);
             }
         }
 
@@ -711,7 +743,7 @@ namespace cogbot.TheOpenSims
         {
             SimObjectImpl simObject = (SimObjectImpl) simO;
             needUpdate = true;
-            simObject._Parent = this;
+            simObject.Parent = this;
             simObject.needUpdate = true;
             bool b = AttachedChildren.AddTo(simObject);
             if (b)
@@ -769,7 +801,7 @@ namespace cogbot.TheOpenSims
             List<SimObjectUsage> uses = new List<SimObjectUsage>();
             if (needUpdate)
             {
-                UpdateProperties(Properties);
+                UpdateProperties(_propertiesCache);
             }
             foreach (SimTypeUsage typeUse in ObjectType.GetTypeUsages())
             {
@@ -783,18 +815,18 @@ namespace cogbot.TheOpenSims
             //props.Permissions = new Permissions(objectData.BaseMask, objectData.EveryoneMask, objectData.GroupMask,
             //  objectData.NextOwnerMask, objectData.OwnerMask);
             List<string> list = new List<string>();
-            if (Properties != null)
+            if (_propertiesCache != null)
             {
                 //  if (theProperties.TextName != "")
                 list.Add("grab");
                 //   if (theProperties.SitName != "")
                 list.Add("sit");
-                PermissionMask mask = Properties.Permissions.EveryoneMask;
+                PermissionMask mask = _propertiesCache.Permissions.EveryoneMask;
                 if (Prim.OwnerID == avatar.theAvatar.ID)
                 {
-                    mask = Properties.Permissions.OwnerMask;
+                    mask = _propertiesCache.Permissions.OwnerMask;
                 }
-                PermissionMask result = mask | Properties.Permissions.BaseMask;
+                PermissionMask result = mask | _propertiesCache.Permissions.BaseMask;
                 if ((result & PermissionMask.Copy) != 0)
                     list.Add("copy");
                 if ((result & PermissionMask.Modify) != 0)
@@ -809,7 +841,7 @@ namespace cogbot.TheOpenSims
             return list;
         }
 
-        public void UpdateProperties(Primitive.ObjectProperties objectProperties)
+        private void UpdateProperties(Primitive.ObjectProperties objectProperties)
         {
             try
             {
@@ -817,7 +849,7 @@ namespace cogbot.TheOpenSims
                 _TOSRTING = null;
                 if (objectProperties != null)
                 {
-                    Properties = objectProperties;
+                    _propertiesCache = objectProperties;
                     if (Prim!=null && Prim.Properties == null) Prim.Properties = objectProperties;
 
                     ObjectType.SitName = objectProperties.SitName;
@@ -826,7 +858,7 @@ namespace cogbot.TheOpenSims
                     {
                         needUpdate = false;
                         //  Parent; 
-                        if (Properties != null)
+                        if (_propertiesCache != null)
                         {
                             SimTypeSystem.GuessSimObjectTypes(objectProperties, this);
                         }
@@ -837,7 +869,7 @@ namespace cogbot.TheOpenSims
                     }
                     else
                     {
-                        if (Properties != null)
+                        if (_propertiesCache != null)
                         {
                             SimTypeSystem.GuessSimObjectTypes(objectProperties, this);
                         }
@@ -846,7 +878,7 @@ namespace cogbot.TheOpenSims
                             SimTypeSystem.GuessSimObjectTypes(objectProperties, this);
                         }
                     }
-                    Properties = objectProperties;
+                    _propertiesCache = objectProperties;
                 }
             }
             catch (Exception e)
@@ -873,7 +905,7 @@ namespace cogbot.TheOpenSims
         {
             if (needUpdate)
             {
-                UpdateProperties(Properties);
+                UpdateProperties(_propertiesCache);
             }
             UpdateOccupied();
             _TOSRTING = null;
@@ -1019,17 +1051,17 @@ namespace cogbot.TheOpenSims
                     }
                 }
                 _TOSRTING += String.Format(" {0} ", ID);
-                if (Properties != null)
+                if (_propertiesCache != null)
                 {
-                    if (!String.IsNullOrEmpty(Properties.Name))
-                        _TOSRTING += String.Format("{0} ", Properties.Name);
-                    if (!String.IsNullOrEmpty(Properties.Description))
-                        _TOSRTING += String.Format(" | {0} ", Properties.Description);
+                    if (!String.IsNullOrEmpty(_propertiesCache.Name))
+                        _TOSRTING += String.Format("{0} ", _propertiesCache.Name);
+                    if (!String.IsNullOrEmpty(_propertiesCache.Description))
+                        _TOSRTING += String.Format(" | {0} ", _propertiesCache.Description);
                 } else
                 {
                     needUpdate = true;
-                    Console.WriteLine("Reselecting prim " + Prim);
-                    WorldSystem.ReSelectObject(Prim);
+                   // Console.WriteLine("Reselecting prim " + Prim);
+                    WorldObjects.EnsureSelected(Prim.LocalID,GetSimulator());
                 }
                 if (!String.IsNullOrEmpty(Prim.Text))
                     _TOSRTING += String.Format(" | {0} ", Prim.Text);
@@ -1126,7 +1158,7 @@ namespace cogbot.TheOpenSims
             {
                 if (Prim.ParentID == 0)
                 {
-                    _Parent = this;
+                    Parent = this;
                     return true;
                 }
                 Simulator simu = GetSimulator();
@@ -1140,7 +1172,7 @@ namespace cogbot.TheOpenSims
                 if (_Parent == null)
                 {
                     if (pUse.ID != UUID.Zero)
-                        _Parent = WorldSystem.GetSimObject(pUse);
+                        Parent = WorldSystem.GetSimObject(pUse);
                 }
 
             }
@@ -1283,7 +1315,7 @@ namespace cogbot.TheOpenSims
             Primitive outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
             if (outerPrim != null)
             {
-                _Parent = WorldObjects.GetSimObjectFromUUID(outerPrim.ID);
+                Parent = WorldObjects.GetSimObjectFromUUID(outerPrim.ID);
             }
             else
             {
@@ -1308,7 +1340,7 @@ namespace cogbot.TheOpenSims
         {
             if (needUpdate)
             {
-                UpdateProperties(Properties);
+                UpdateProperties(_propertiesCache);
             }
             return ObjectType.GetUsageActual(pUse).Magnify(scaleOnNeeds);
         }
@@ -1318,7 +1350,7 @@ namespace cogbot.TheOpenSims
         {
             if (needUpdate)
             {
-                UpdateProperties(Properties);
+                UpdateProperties(_propertiesCache);
             }
 
             IList<SimTypeUsage> all = ObjectType.GetTypeUsages();
@@ -1488,11 +1520,11 @@ namespace cogbot.TheOpenSims
         {
             if (Object.ReferenceEquals(_Prim0,null)) return ToString() + " " + RegionHandle;
             Primitive Prim = this.Prim;
-            if (Properties != null)
+            if (_propertiesCache != null)
             {
-                String s = Properties.Name;
+                String s = _propertiesCache.Name;
                 if (s.Length > 8) return s;
-                s += " | " + Properties.Description;
+                s += " | " + _propertiesCache.Description;
                 if (s.Length > 12) return s;
             }
             return ToString();
@@ -1751,7 +1783,7 @@ namespace cogbot.TheOpenSims
         {
             Primitive Prim = this.Prim;
             string sn;
-            OpenMetaverse.Primitive.ObjectProperties PrimProperties = Properties;
+            OpenMetaverse.Primitive.ObjectProperties PrimProperties = _propertiesCache;
             if (PrimProperties != null)
             {
                 sn = PrimProperties.TouchName;
@@ -1772,8 +1804,8 @@ namespace cogbot.TheOpenSims
             get
             {
                 string sn = null;
-                if (Properties != null)
-                    sn = Properties.SitName;
+                if (_propertiesCache != null)
+                    sn = _propertiesCache.SitName;
                 if (!String.IsNullOrEmpty(sn)) return sn;
                 sn = ObjectType.GetSitName();
                 if (!String.IsNullOrEmpty(sn)) return sn;
@@ -1786,8 +1818,8 @@ namespace cogbot.TheOpenSims
             get
             {
                 string sn = null;
-                if (Properties != null)
-                    sn = Properties.TouchName;
+                if (_propertiesCache != null)
+                    sn = _propertiesCache.TouchName;
                 if (!String.IsNullOrEmpty(sn)) return sn;
                 sn = ObjectType.GetTouchName();
                 if (!String.IsNullOrEmpty(sn)) return sn;
@@ -1989,7 +2021,7 @@ namespace cogbot.TheOpenSims
         bool TurnToward(Vector3 target);
         void UpdateObject(ObjectUpdate objectUpdate, ObjectUpdate objectUpdateDiff);
 
-        void UpdateProperties(Primitive.ObjectProperties props);
+        //void UpdateProperties(Primitive.ObjectProperties props);
 
         bool UpdateOccupied();
 
@@ -2019,6 +2051,6 @@ namespace cogbot.TheOpenSims
         bool KilledPrim(Primitive primitive, Simulator simulator);
 
         List<NamedParam> GetInfoMap();
-        void SetInfoMap(string key,Type type, Object value);
+        //void SetInfoMap(string key,Type type, Object value);
     }
 }
