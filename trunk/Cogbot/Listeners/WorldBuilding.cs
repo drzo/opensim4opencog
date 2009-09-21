@@ -15,7 +15,7 @@ namespace cogbot.Listeners
     public partial class WorldObjects
     {
 
-        public static List<NamedParam> GetMemberValues(Object properties)
+        public static List<NamedParam> GetMemberValues(string prefix, Object properties)
         {
             List<NamedParam> dict = new List<NamedParam>();
             if (properties == null)
@@ -23,34 +23,39 @@ namespace cogbot.Listeners
                 return dict;
             }
             Type t = properties.GetType();
+            HashSet<string> lowerProps = new HashSet<string>();
+            foreach (PropertyInfo o in t.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
+            {
+                if (o.CanRead)
+                {
+                    try
+                    {
+                        if (o.DeclaringType == typeof(Object)) continue;
+                        if (!lowerProps.Add(o.Name.ToLower())) continue;
+                        var v = o.GetValue(properties, null);
+                        if (v == null) v = new NullType(o.PropertyType);
+                        dict.Add(new NamedParam(o, prefix + o.Name, o.PropertyType, v));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("" + e);
+                    }
+                }
+            }
             foreach (FieldInfo o in t.GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
             {
                 try
                 {
+                    if (o.DeclaringType == typeof(Object)) continue;
+                    if (!lowerProps.Add(o.Name.ToLower())) continue;
                     var v = o.GetValue(properties);
                     if (v == null) v = new NullType(o.FieldType);
-                    dict.Add(new NamedParam(o.Name, o.FieldType, v));
+                    dict.Add(new NamedParam(o,prefix + o.Name, o.FieldType, v));
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("" + e);
                 }
-            }
-            foreach (PropertyInfo o in t.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
-            {
-              if (o.CanRead)
-              {
-                  try
-                  {
-                      var v = o.GetValue(properties, null);
-                      if (v == null) v = new NullType(o.PropertyType);
-                      dict.Add(new NamedParam(o.Name, o.PropertyType, v));
-                  }
-                  catch (Exception e)
-                  {
-                      Console.WriteLine("" + e);
-                  }
-              }
             }
             return dict;
         }
@@ -82,7 +87,7 @@ namespace cogbot.Listeners
             {
                 //obj._Parent = obj.Parent;
                 //obj.Properties = null;
-                obj.UpdateProperties(obj.Properties);
+                obj.Properties = obj.Properties;
             }
             if (count != SimObjects.Count)
             {

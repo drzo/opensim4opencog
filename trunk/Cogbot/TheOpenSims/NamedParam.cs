@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using cogbot.TheOpenSims;
 
 namespace cogbot
@@ -13,6 +14,8 @@ namespace cogbot
             Value = v;
             _Type = null;
             Choices = null;
+            info = null;
+            checkKey(k);
         }
         public NamedParam(object k, Type type, object v)
         {
@@ -20,6 +23,26 @@ namespace cogbot
             Value = v;
             _Type = type;
             Choices = null;
+            info = null;
+            checkKey(k);
+        }
+
+        private void checkKey(object o)
+        {
+            if (o!=null) if (o.ToString().Contains("offsetU"))
+            {
+                
+            }
+        }
+
+        public NamedParam(MemberInfo inf, object k, Type type, object v)
+        {
+            info = inf;
+            Key = k;
+            Value = v;
+            _Type = type;
+            Choices = null;
+            checkKey(k);
         }
         public NamedParam(object k, Type type, object v, params object[] choices)
         {
@@ -27,11 +50,14 @@ namespace cogbot
             Value = v;
             _Type = type;
             Choices = choices;
+            info = null;
+            checkKey(k);
         }
 
         readonly public object Key;
         readonly public object Value;
         readonly public object[] Choices;
+        public MemberInfo info;
         public Type _Type;
 
         public Type Type
