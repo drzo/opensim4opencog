@@ -10,5 +10,6 @@ del lib\LookingGlass-svn\bin\Prebuild.exe
 del lib\LookingGlass-svn\bin\HttpServer.dll
 del lib\LookingGlass-svn\bin\PrimMesher.dll
 del lib\LookingGlass-svn\bin\Radegast.exe
+del lib\LookingGlass-svn\bin\OpenMetav*.*
 copy lib\LookingGlass-svn\bin\*.* bin\
 pause

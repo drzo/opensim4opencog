@@ -11,7 +11,6 @@ release: prebuild
 
 prebuild:
 	./runprebuild.sh
-	cp NullBuild.txt lib/radegastspeech-svn/RadSpeechWin/RadSpeechWin.dll.build
 
 distclean:
 	# @export PATH=/usr/local/bin:$(PATH)
