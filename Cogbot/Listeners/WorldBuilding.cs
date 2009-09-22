@@ -57,7 +57,81 @@ namespace cogbot.Listeners
                     Console.WriteLine("" + e);
                 }
             }
+            foreach (NamedParam list in dict)
+            {
+                if (list.Value is UUID)
+                {
+                    UUID id = (UUID) list.Value;
+                    if (id != UUID.Zero)
+                    {
+                        GetUUIDType(list.info.Name, id);
+                    }
+                }
+            }
             return dict;
+        }
+
+        private static Dictionary<string, Action<UUID>> UUID2Type = new Dictionary<string, Action<UUID>>();
+        static void GetUUIDType(string p, UUID id)
+        {
+//            if (UUID2Type.Count==0)
+            {
+                Action<UUID> texture = ((UUID obj) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Texture); });
+                Action<UUID> avatar = ((UUID obj) => { GridMaster.CreateSimAvatar(obj, GridMaster, null); });
+                Action<UUID> nothing = ((UUID obj) => { });
+                UUID2Type[""] = UUID2Type["ID"] = nothing;
+                UUID2Type["Sound"] = ((UUID obj) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Sound); });
+                UUID2Type["Image"] = UUID2Type["SculptTexture"] = UUID2Type["Photo"] = UUID2Type["Picture"] = UUID2Type["Texture"] = UUID2Type["Sculpt"] = UUID2Type["ProfileImage"] = texture;
+                UUID2Type["Partner"] = UUID2Type["Owner"] = UUID2Type["Creator"] = avatar;
+                UUID2Type["Group"] = ((UUID obj) => { GridMaster.DeclareGroup(obj); });
+                UUID2Type["Object"] = ((UUID obj) => { GridMaster.CreateSimObject(obj, GridMaster, null); });
+                // todo inventory item 
+                UUID2Type["ItemID"] = nothing;
+            }
+            Action<UUID> o;
+            if (!UUID2Type.TryGetValue(p, out o))
+            {
+  
+                if (p.EndsWith("ID"))
+                {
+                    GetUUIDType(p.Substring(0, p.Length - 2), id);
+                    return;
+                }
+                if (p.StartsWith("Next"))
+                {
+                    GetUUIDType(p.Substring(4), id);
+                    return;
+                }
+                if (p.StartsWith("Last"))
+                {
+                    GetUUIDType(p.Substring(4), id);
+                    return;
+                }
+                if (p.StartsWith("Life"))
+                {
+                    GetUUIDType(p.Substring(4), id);
+                    return;
+                }
+                if (p.StartsWith("First"))
+                {
+                    GetUUIDType(p.Substring(5), id);
+                    return;
+                }
+                if (p.StartsWith("Second"))
+                {
+                    GetUUIDType(p.Substring(6), id);
+                    return;
+                }
+                Debug("Dont know what UUID means in " + p);
+            }
+            else
+            {
+                o(id);
+            }
+        }
+
+        private static void SkipUUID(UUID obj)
+        {           
         }
 
         static public NamedParam ToParameter(string p, object s)

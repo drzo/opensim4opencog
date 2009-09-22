@@ -289,6 +289,7 @@ namespace cogbot.Listeners
                 SimAvatar A = CreateSimAvatar(member.Key, this, null);
                
             }
+            DeclareGroup(groupID);
             // base.Groups_OnGroupMembers(requestID, totalCount, members);
         }
 
@@ -322,9 +323,25 @@ namespace cogbot.Listeners
 
         private void AddGroup2Key(string name, UUID uuid)
         {
+            DeclareGroup(uuid);
             lock (Name2Key)
             {
                 Name2Key[name] = uuid;
+            }
+        }
+
+        private void DeclareGroup(UUID uuid)
+        {
+            lock (uuidTypeObject)
+            {
+                object g;
+                if (uuidTypeObject.TryGetValue(uuid, out g))
+                {
+                  if (g is Group)
+                  {
+                      SimGroup sg = new SimGroup(uuid) {Group = (Group) g};
+                  }   
+                }
             }
         }
 

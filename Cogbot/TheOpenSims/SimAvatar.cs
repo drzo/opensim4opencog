@@ -490,7 +490,37 @@ namespace cogbot.TheOpenSims
             //    if (Client.Settings.OBJECT_TRACKING)
             //        return GetSimPosition();
             //}
-            return base.GetSimPosition();
+            Primitive thisPrim = this.Prim;
+            if (Object.ReferenceEquals(_Prim0, null) || thisPrim == null)
+            {
+                return LastKnownSimPos;
+            }
+            Vector3 thisPos = thisPrim.Position;
+            while (thisPrim.ParentID != 0)
+            {
+                Primitive outerPrim = GetParentPrim(thisPrim);
+
+                if (outerPrim == null)
+                {
+                    if (LastKnownSimPos != default(Vector3)) return LastKnownSimPos;
+                    Debug("Unknown parent");
+                    throw Error("GetSimRotation !IsRegionAttached: " + this);
+                    return thisPrim.Position;
+                }
+                if (outerPrim == thisPrim || outerPrim == this.Prim)
+                {
+                    throw Error("GetSimPosition Loop: " + this);
+                }
+                thisPos = outerPrim.Position +
+                          Vector3.Transform(thisPos, Matrix4.CreateFromQuaternion(outerPrim.Rotation));
+                thisPrim = outerPrim;
+            }
+            if (BadLocation(thisPos))
+            {
+                Debug("-------------------------" + this + " shouldnt be at " + thisPos);
+                //   WorldSystem.DeletePrim(thePrim);
+            }
+            return LastKnownSimPos = thisPos;
         }
 
         public override Vector3d GetWorldPosition()

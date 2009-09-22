@@ -133,7 +133,7 @@ namespace cogbot.Listeners
                 prim.NameValues = nameValues;
                 prim.LocalID = block.ID;
                 prim.ID = block.FullID;
-                prim.ParentID = block.ParentID;
+               //NOTE this broke onSitChanged! prim.ParentID = block.ParentID;
                 prim.RegionHandle = simulator.Handle;
                 prim.Scale = block.Scale;
                 prim.ClickAction = (ClickAction)block.ClickAction;
@@ -222,7 +222,15 @@ namespace cogbot.Listeners
                 {
                     AV.ResetPrim(av, client, simulator);
                 }
-
+                Primitive prev = AV.Prim;
+                if (prev!=null)
+                {
+                    // parent changed?
+                    if (prev.ParentID != av.ParentID)
+                    {
+                        AV.Parent = null;
+                    }
+                }
                 if (av.ParentID == 0 && !SimRegion.OutOfRegion(update.Position))
                 {
                     if (update.Avatar)

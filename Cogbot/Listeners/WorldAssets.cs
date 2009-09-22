@@ -49,6 +49,7 @@ namespace cogbot.Listeners
 
         public byte[] TextureBytesFormUUID(UUID uUID)
         {
+            SimAssetStore.FindOrCreateAsset(uUID, AssetType.Texture);
             ImageDownload ID = null;
             //lock (uuidTypeObject)
             {
@@ -182,6 +183,7 @@ namespace cogbot.Listeners
 
         public ImageDownload StartTextureDownload(UUID id)
         {
+            SimAssetStore.FindOrCreateAsset(id, AssetType.Texture);
             if (RegionMasterTexturePipeline.Cache.HasAsset(id))
             {
                 return RegionMasterTexturePipeline.Cache.GetCachedImage(id);

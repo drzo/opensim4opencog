@@ -87,7 +87,10 @@ namespace cogbot.Listeners
              */
         public override void Objects_OnAvatarSitChanged(Simulator simulator, Avatar avatar, uint sittingOn, uint oldSeat)
         {
-            if (!IsMaster(simulator)) return;
+            if (!IsMaster(simulator))
+            {
+                return;
+            }
             if (!MaintainActions) return;
                 EventQueue.Enqueue(() =>
                 {
@@ -144,8 +147,12 @@ namespace cogbot.Listeners
         private void LogSitEvent(SimObject user, SimEventStatus updown, string p, params NamedParam[] args)
         {
             if (!MaintainActions) return;
+            if (user !=null)
+            {
+                user.Parent = null;
+                user.LogEvent(SendPipelineEvent(new SimObjectEvent(updown, p, SimEventType.SIT, SimEventClass.REGIONAL, args)));
+            }
             //Console.WriteLine(user + " " + p + " " + ScriptEngines.ScriptEventListener.argsListString(args));
-            user.LogEvent(SendPipelineEvent(new SimObjectEvent(updown, p, SimEventType.SIT, SimEventClass.REGIONAL, args)));
         }
 
 
