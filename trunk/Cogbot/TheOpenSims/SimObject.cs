@@ -772,6 +772,7 @@ namespace cogbot.TheOpenSims
             {
                 if (WasKilled) return false;
                 if (Prim==null || Prim.ParentID == 0) return true;
+                EnsureParentAccruate(Prim);
                 // _Parent = Parent;
                 return false;
             }
@@ -846,12 +847,12 @@ namespace cogbot.TheOpenSims
             try
             {
                 Primitive Prim = this.Prim;
+                EnsureParentAccruate(Prim);
                 _TOSRTING = null;
                 if (objectProperties != null)
                 {
                     _propertiesCache = objectProperties;
                     if (Prim!=null && Prim.Properties == null) Prim.Properties = objectProperties;
-
                     ObjectType.SitName = objectProperties.SitName;
                     ObjectType.TouchName = objectProperties.TouchName;
                     if (needUpdate)
@@ -885,8 +886,26 @@ namespace cogbot.TheOpenSims
             {
                 Debug("" + e);
             }
-        } 
- 
+        }
+
+        protected void EnsureParentAccruate(Primitive primitive)
+        {
+            return;
+            if (primitive==null) return;
+            if (primitive.ParentID==0)
+            {
+                _Parent = this;
+                return;
+            }
+            if (_Parent!=null)
+            {
+                if (_Parent.Prim==null || _Parent.Prim.LocalID==primitive.ParentID) return;
+                _Parent = null;
+                Debug("Nulling parent");
+            }
+            //throw new NotImplementedException();
+        }
+
 
         private void AddSimObjectTypes(Primitive.ObjectProperties properties)
         {
@@ -1227,29 +1246,28 @@ namespace cogbot.TheOpenSims
             return transValue;
         }
 
-        protected Vector3 LastKnownSimPos;
+        public Vector3 LastKnownSimPos;
         public virtual Vector3 GetSimPosition()
         {
-            if (Object.ReferenceEquals(_Prim0,null)) return LastKnownSimPos;
-            Primitive thisPrim = Prim;
+            Primitive thisPrim = this.Prim;
+            if (Object.ReferenceEquals(_Prim0, null) || thisPrim == null) return LastKnownSimPos;
+            if (thisPrim.ParentID == 0) return thisPrim.Position;
             Vector3 thisPos = thisPrim.Position;
-            //if (!IsRegionAttached()) return Prim.Position; 
-            //throw Error("GetWorldPosition !IsRegionAttached: " + this);
-            if (thisPrim.ParentID == 0)
-            {
-                return LastKnownSimPos = thisPos;
-            }
+            while (thisPrim.ParentID != 0)
             {
                 Primitive outerPrim = GetParentPrim(thisPrim);
 
                 if (outerPrim == null)
                 {
-                    if (LastKnownSimPos!=default(Vector3))return LastKnownSimPos;
+                    if (LastKnownSimPos != default(Vector3)) return LastKnownSimPos;
                     Debug("Unknown parent");
                     throw Error("GetSimRotation !IsRegionAttached: " + this);
                     return thisPrim.Position;
                 }
-
+                if (outerPrim == thisPrim || outerPrim == this.Prim)
+                {
+                    throw Error("GetSimPosition Loop: " + this);
+                }
                 thisPos = outerPrim.Position +
                           Vector3.Transform(thisPos, Matrix4.CreateFromQuaternion(outerPrim.Rotation));
                 thisPrim = outerPrim;
@@ -1265,10 +1283,17 @@ namespace cogbot.TheOpenSims
         protected Primitive GetParentPrim(Primitive thisPrim)
         {
             Primitive outerPrim = null;
+            if (thisPrim.ParentID == 0)
+            {
+                return null;
+            }
             int requests = 10;
             while (outerPrim == null && requests-->0)
             {
-                if (thisPrim == Prim && _Parent != null) return _Parent.Prim;
+                if (thisPrim == Prim && _Parent != null)
+                {
+                    return _Parent.Prim;
+                }
                 uint theLPrimParentID = thisPrim.ParentID;
                 if (theLPrimParentID == 0 || requests-- <1)
                 {
@@ -2000,7 +2025,7 @@ namespace cogbot.TheOpenSims
         bool MakeEnterable(SimMover actor);
         bool Matches(string name);
         SimMesh Mesh { get; }
-        SimObject Parent { get; }
+        SimObject Parent { get; set; }
         double RateIt(BotNeeds needs);
         void ResetPrim(Primitive prim, BotClient bc, Simulator sim);
         void ResetRegion(ulong regionHandle);
