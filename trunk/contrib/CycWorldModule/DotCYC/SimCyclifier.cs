@@ -9,7 +9,6 @@ using cogbot;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using cogbot.Utilities;
-using java.util;
 using OpenMetaverse;
 using org.opencyc.api;
 using org.opencyc.cycobject;
