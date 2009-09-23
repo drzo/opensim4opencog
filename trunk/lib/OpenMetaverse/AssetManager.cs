@@ -292,7 +292,7 @@ namespace OpenMetaverse
     public class AssetManager
     {
         /// <summary>Number of milliseconds to wait for a transfer header packet if out of order data was received</summary>
-        const int TRANSFER_HEADER_TIMEOUT = 1000 * 15;
+        const int TRANSFER_HEADER_TIMEOUT = 1000 * 35;
 
         #region Delegates
 
@@ -1216,6 +1216,7 @@ namespace OpenMetaverse
                 // hopefully that is a safe assumption to make
                 try
                 {
+                    int len = asset.TransferData.Length;
                     Buffer.BlockCopy(asset.TransferData.Data, 0, download.AssetData, 1000 * asset.TransferData.Packet,
                         asset.TransferData.Data.Length);
                     download.Transferred += asset.TransferData.Data.Length;
@@ -1248,6 +1249,9 @@ namespace OpenMetaverse
                         catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
                     }
                 }
+            } else
+            {
+                //Logger.Log("Unknown Transfer for asset " + asset.TransferData.TransferID + " len=" + asset.TransferData.Data.Length, Helpers.LogLevel.Info, Client);
             }
         }
 
