@@ -563,28 +563,28 @@
 <category>
 	<pattern>WHAT IS *</pattern>
 	<template>
-		<srai>XDEF <star/></srai>
+		<srai>XFIND <star/></srai>
 	</template>
 </category>
 
 <category>
 	<pattern>WHAT ARE *</pattern>
 	<template>
-		<srai>XDEF <star/></srai>
+		<srai>XFIND <star/></srai>
 	</template>
 </category>
 
 <category>
 	<pattern>WHAT IS A *</pattern>
 	<template>
-		<srai>XDEF <star/></srai>
+		<srai>XFIND <star/></srai>
 	</template>
 </category>
 
 <category>
 	<pattern>WHAT IS AN *</pattern>
 	<template>
-		<srai>XDEF <star/></srai>
+		<srai>XFIND <star/></srai>
 	</template>
 </category>
 
@@ -592,42 +592,42 @@
 <category>
 	<pattern>WHAT IS THE DEFINITION OF *</pattern>
 	<template>
-		<srai>XDEF <star/></srai>
+		<srai>XFIND <star/></srai>
 	</template>
 </category>
 
 <category>
 	<pattern>DEFINE *</pattern>
 	<template>
-		<srai>XDEF <star/></srai>
+		<srai>XFIND <star/></srai>
 	</template>
 </category>
 
 <category>
 	<pattern>TELL ME WHAT * MEANS</pattern>
 	<template>
-		<srai>XDEF <star/></srai>
+		<srai>XFIND <star/></srai>
 	</template>
 </category>
 
 <category>
 	<pattern>WHAT DOES * MEAN</pattern>
 	<template>
-		<srai>XDEF <star/></srai>
+		<srai>XFIND <star/></srai>
 	</template>
 </category>
 
 <category>
 	<pattern>WHAT IS THE MEANING OF *</pattern>
 	<template>
-		<srai>XDEF <star/></srai>
+		<srai>XFIND <star/></srai>
 	</template>
 </category>
 
 <category>
 	<pattern>WHO IS *</pattern>
 	<template>
-		<srai>XDEF <star/></srai>
+		<srai>XFIND <star/></srai>
 	</template>
 </category>
 
@@ -670,7 +670,7 @@
 
 
 <category>
-	<pattern>XDEF *</pattern>
+	<pattern>XFIND *</pattern>
 	<template>
 		I'm sorry, but Cyc has no comment on that topic.
 	</template>
@@ -679,7 +679,7 @@
 
 
 <category>
-	<pattern>XDEF *</pattern>
+	<pattern>XFIND *</pattern>
 	<guard>(#$or (#$isa  <cycterm><star index="1"/></cycterm> ?REPLY)(#$genls <cycterm><star index="1"/></cycterm> ?REPLY))</guard>
 	<template>
 		I believe one thing <star index="1"/>is  <cycrandom>(cyc-query '(#$or (#$isa  <cycterm><star index="1"/></cycterm> ?REPLY)(#$genls <cycterm><star index="1"/></cycterm> ?REPLY)) #$EverythingPSC)</cycrandom>.
@@ -687,7 +687,7 @@
 </category>
 
 <category>
-	<pattern>XDEF *</pattern>
+	<pattern>XFIND *</pattern>
 	<guard>(#$comment <cycterm><star index="1"/></cycterm> ?REPLY)</guard>
 	<template>
 		<cycrandom>(cyc-query '(#$comment <cycterm><star index="1"/></cycterm> ?REPLY) #$EverythingPSC)</cycrandom>
