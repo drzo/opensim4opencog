@@ -2347,7 +2347,25 @@ namespace PathSystem3D.Navigation
 
         }
 
-
+        public Vector3 FirstOcclusion(Vector3 start, Vector3 end)
+        {
+            Vector3 oclusion = start;
+            Vector3 direction = end - start;
+            float dist = direction.Length();
+            while (direction.Length()>0.2)
+            {
+                direction *= 0.9f;               
+            }
+            float mag = direction.Length();
+            float traveled = 0f;
+            while (traveled<dist)
+            {
+                traveled += mag;
+                oclusion += direction;
+                if (!IsPassable(oclusion)) return oclusion;
+            }
+            return end;
+        }
         public Vector3 LocalOuterEdge(Vector3 startLocal, Vector3d globalEnd, out SimPathStore nextRegion)
         {
             SimPathStore rother = GetPathStore(globalEnd);
