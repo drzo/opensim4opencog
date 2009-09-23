@@ -13,19 +13,28 @@ namespace cogbot.TheOpenSims
     public class SimAssetStore
     {
 
-        internal static readonly Dictionary<UUID, SimAsset> uuidAsset = new Dictionary<UUID, SimAsset>();
+        //internal static readonly Dictionary<UUID, object> uuidAsset = new Dictionary<UUID, object>();
+
+        static internal Dictionary<UUID, object> uuidAsset
+        {
+            get { return WorldObjects.uuidTypeObject; }
+        }
+
+        public static SimAssetStore TheStore;
+
         internal static readonly Dictionary<string, SimAsset> nameAsset = new Dictionary<string, SimAsset>();
 
         internal readonly BotClient Client;
 
-        TaskQueueHandler taskQueue = new TaskQueueHandler("SimAssetStore",1);
+        readonly internal TaskQueueHandler taskQueue = new TaskQueueHandler("SimAssetStore",1);
         private InventoryManager Manager;
         private OpenMetaverse.Inventory Inventory;
 
         HashSet<UUID> BusyUpdating = new HashSet<UUID>();
         public SimAssetStore(BotClient GC)
         {
-            Client = GC;
+            TheStore = this;
+            Client = GC;           
             Manager = Client.Inventory;
             Manager.OnItemReceived += Inventory_OnItemReceived;
             Manager.OnTaskItemReceived += Inventory_OnTaskItemReceived;
@@ -1187,10 +1196,13 @@ namespace cogbot.TheOpenSims
         {
             FillAssetNames();
             String name;
-            SimAsset anim;
+            object anim;
             if (uuidAsset.TryGetValue(uuid, out anim))
             {
-                return anim.Name;
+                if (anim is SimAsset)
+                {
+                    return ((SimAsset)anim).Name;                    
+                }
             }
             return null;
         }
@@ -1240,7 +1252,7 @@ namespace cogbot.TheOpenSims
             lock (uuidAsset)
             {
                 FillAssetNames();
-                SimAsset anim;
+                object anim;
                 if (!uuidAsset.TryGetValue(uUID, out anim))
                 {
                     lock (SimAssets)
@@ -1248,11 +1260,16 @@ namespace cogbot.TheOpenSims
                         {
                             if (A.AssetIDs.Contains(uUID))
                             {
-                                return anim;
+                                return A;
                             }
                         }
+                    return null;
                 }
-                return anim;
+                if (!(anim is SimAsset))
+                {
+                    return null;
+                }
+                return (SimAsset)anim;
             }
         }
 
@@ -1363,8 +1380,11 @@ namespace cogbot.TheOpenSims
                             throw new NotImplementedException("FindOrCreateAsset " + type);
                             break;
                     }
-                    // WorldObjects.RequestAsset(uUID, AssetType.Animation, true);
-                    if (anim != null) uuidAsset[uUID] = anim;
+                    if (anim != null)
+                    {
+                        uuidAsset[uUID] = anim;
+                    }
+                    WorldObjects.EnqueueRequestAsset(uUID, type, true);
                 }
                 if (anim != null) anim.AssetType = type;
                 InternAsset(anim);
