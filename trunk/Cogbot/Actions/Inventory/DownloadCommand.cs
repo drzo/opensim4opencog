@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Threading;
+using cogbot.Listeners;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
@@ -8,10 +11,6 @@ namespace cogbot.Actions
 {
     public class DownloadCommand : Command
     {
-        UUID AssetID;
-        AssetType assetType;
-        AutoResetEvent DownloadHandle = new AutoResetEvent(false);
-        bool Success;
 
         public DownloadCommand(BotClient testClient)
         {
@@ -22,68 +21,58 @@ namespace cogbot.Actions
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length != 2)
-                return "Usage: download [uuid] [assetType]";
+            if (args.Length < 2) return Usage;
+            AssetType assetType;
 
-            Success = false;
-            AssetID = UUID.Zero;
-            assetType = AssetType.Unknown;
-            DownloadHandle.Reset();
-
-            if (UUID.TryParse(args[0], out AssetID))
+            FieldInfo fi = typeof(AssetType).GetField(args[1]);
+            if (fi == null)
             {
                 int typeInt;
-                if (Int32.TryParse(args[1], out typeInt) && typeInt >= 0 && typeInt <= 22)
+                if (int.TryParse(args[1], out typeInt))
                 {
                     assetType = (AssetType)typeInt;
-
-                    // Start the asset download
-                    Client.Assets.RequestAsset(AssetID, assetType, true, Assets_OnAssetReceived);
-
-                    if (DownloadHandle.WaitOne(120 * 1000, false))
-                    {
-                        if (Success)
-                            return String.Format("Saved {0}.{1}", AssetID, assetType.ToString().ToLower());
-                        else
-                            return String.Format("Failed to download asset {0}, perhaps {1} is the incorrect asset type?",
-                                AssetID, assetType);
-                    }
-                    else
-                    {
-                        return "Timed out waiting for texture download";
-                    }
                 }
                 else
                 {
-                    return "Usage: download [uuid] [assetType]";
+                    WriteLine(typeof(AssetType).GetFields().ToString());
+                    return "unknown asset type";
                 }
             }
             else
             {
-                return "Usage: download [uuid] [assetType]";
+                assetType = (AssetType)fi.GetValue(null);
             }
-        }
-
-        private void Assets_OnAssetReceived(AssetDownload transfer, Asset asset)
-        {
-            if (transfer.AssetID == AssetID)
+            //var v = WorldObjects.uuidTypeObject;
+            UUID AssetID;
+            string botcmd = String.Join(" ", args, 0, args.Length - 1).Trim();
+            UUIDTryParse(botcmd, out AssetID);
+            AutoResetEvent DownloadHandle = new AutoResetEvent(false);
+            Client.Assets.RequestAsset(AssetID, assetType, true, delegate(AssetDownload transfer, Asset asset)
             {
-                if (transfer.Success)
-                {
-                    try
+                WriteLine("Status: " + transfer.Status + "  Asset: " + asset);
+
+                if (transfer.Success) try
                     {
                         File.WriteAllBytes(String.Format("{0}.{1}", AssetID,
                             assetType.ToString().ToLower()), asset.AssetData);
-                        Success = true;
+                        try
+                        {
+                            asset.Decode();
+                            WriteLine("Asset decoded as " + asset.AssetType);
+                        }
+                        catch (Exception ex)
+                        {
+                            WriteLine("Asset not decoded: " + ex);
+                        }
                     }
                     catch (Exception ex)
                     {
                         Logger.Log(ex.Message, Helpers.LogLevel.Error, ex);
                     }
-                }
-
                 DownloadHandle.Set();
-            }
+            });
+            DownloadHandle.WaitOne(30000);
+            return "Done RequestAsset " + AssetID;
         }
     }
 }
