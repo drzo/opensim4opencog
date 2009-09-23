@@ -14,6 +14,16 @@ namespace cogbot.TheOpenSims
     //TheSims-like object
     public class SimObjectImpl : SimPosition, BotMentalAspect, SimMover, SimObject, MeshableObject
     {
+        public bool CanShoot(SimPosition position)
+        {
+            if (!IsRegionAttached() || !position.IsRegionAttached()) return false;
+            SimPathStore PS1 = GetPathStore();
+            SimPathStore PS2 = position.GetPathStore();
+            if (PS1 != PS2) return false;
+            Vector3 end = position.GetSimPosition();
+            Vector3 first = PS1.FirstOcclusion(GetSimPosition(), end);
+            return (first == end);
+        }
 
         public void AddInfoMap(object properties, string name)
         {
@@ -157,7 +167,7 @@ namespace cogbot.TheOpenSims
         }
 
         /// <summary>
-        /// 
+        /// Used to be 9 now its 4 times
         /// </summary>
         /// <param name="pos"></param>
         /// <returns></returns>
@@ -169,7 +179,7 @@ namespace cogbot.TheOpenSims
             }
 
             float maxDist = pos.GetSizeDistance();
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 4; i++)
             {
                 bool result = FollowPathTo(pos, maxDist);
                 if (result)
@@ -178,7 +188,7 @@ namespace cogbot.TheOpenSims
                     return true;
                 }
             }
-            return FollowPathTo(pos, maxDist);
+            return false;
         }
 
         public virtual bool IsControllable
@@ -257,7 +267,7 @@ namespace cogbot.TheOpenSims
         {            
             Vector3d Current = GetWorldPosition();
             Vector3d diff = targetPosition - Current;
-            while (diff.Length() > 20)
+            while (diff.Length() > 10)
             {
                 diff.X *= 0.75f;
                 diff.Y *= 0.75f;
@@ -1084,6 +1094,7 @@ namespace cogbot.TheOpenSims
                 }
                 if (!String.IsNullOrEmpty(Prim.Text))
                     _TOSRTING += String.Format(" | {0} ", Prim.Text);
+                _TOSRTING += "(localID "+Prim.LocalID+")";
                 uint ParentId = Prim.ParentID;
                 if (ParentId != 0)
                 {
@@ -1872,6 +1883,7 @@ namespace cogbot.TheOpenSims
                 if (gain < SoundGainThreshold)
                 {
                     CurrentSounds.Clear();
+                    Debug("Clearing all sounds");
                 }
                 else
                 {
@@ -2076,6 +2088,8 @@ namespace cogbot.TheOpenSims
         bool KilledPrim(Primitive primitive, Simulator simulator);
 
         List<NamedParam> GetInfoMap();
+
+        bool CanShoot(SimPosition position);
         //void SetInfoMap(string key,Type type, Object value);
     }
 }

@@ -158,6 +158,7 @@ namespace cogbot.TheOpenSims
         private SimMoverState old;
         protected override void OnMoverStateChange(SimMoverState obj)
         {
+            return; // todo make sure it doesnt mess up turning animations while moving
             UUID THINK_AMIN = Animations.EXPRESS_TOOTHSMILE;
             
             if (old==SimMoverState.THINKING)
@@ -200,8 +201,9 @@ namespace cogbot.TheOpenSims
         {
             if (!IsRegionAttached() && !ReferenceEquals(_Prim0,null))
             {
-                WorldSystem.ReSelectObject(_Prim0);
                 Simulator sim = WorldSystem.GetSimulator(RegionHandle);
+                Debug("Requesting object for heading");
+                sim.Client.Objects.RequestObject(sim, _Prim0.LocalID);
                 EnsureParentRequested(sim);
             }
             return new SimHeading(this);
@@ -429,7 +431,7 @@ namespace cogbot.TheOpenSims
 
         public override bool IsRoot
         {
-            get { return theAvatar == null || theAvatar.ParentID == 0; }
+            get { Avatar theAvatar = this.theAvatar; return theAvatar == null || theAvatar.ParentID == 0; }
         }
 
         ///  public override ISimObject Parent {  get { return this; }   }
@@ -1644,9 +1646,10 @@ namespace cogbot.TheOpenSims
             try
             {
                 Client.Settings.SEND_AGENT_UPDATES = true;
-                Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = false;
-                Client.Self.Movement.UpdateInterval = 0;
-                Client.Self.Movement.AutoResetControls = false;
+                Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
+                Client.Self.Movement.TurnToward(target);
+                Client.Self.Movement.UpdateInterval = 10;
+                Client.Self.Movement.AutoResetControls = true;
                 InTurn++;
                 return TurnToward0(target);
             }
