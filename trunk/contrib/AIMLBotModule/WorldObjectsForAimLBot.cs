@@ -602,7 +602,7 @@ namespace AIMLBotModule
 
         public void WriteLine(string s, params object[] args)
         {
-            Console.WriteLine(string.Format("AIML BOT {0}: {1}", GetName(), s), args);
+            Console.WriteLine(string.Format("[AIMLBOT] {0} {1}", GetName(), s), args);
         }
 
         /// <summary>
@@ -674,11 +674,26 @@ namespace AIMLBotModule
 
         public Unifiable AIMLInterp(string input, User myUser)
         {
+            if (input == null) return Unifiable.Empty;
+            input = input.Trim().Replace("  "," ");
+            if (string.IsNullOrEmpty(input)) return Unifiable.Empty;
             string removeName = RemoveNameFromString(input);
+            string myName = GetName().ToLower(); 
             if (!string.IsNullOrEmpty(removeName))
             {
-                if (!GetName().ToLower().Contains(removeName.ToLower())) return Unifiable.Empty;
+                if (!myName.Contains(removeName.ToLower())) return Unifiable.Empty;
                 input = input.Substring(removeName.Length);
+            } else
+            {
+                if (input.Contains(" "))
+                {
+                    string[] split = input.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (myName.StartsWith(split[0].ToLower()))
+                    {
+                        input = string.Join(" ", split, 1, split.Length - 1);   
+                    }
+                    
+                }
             }
             input = input.Trim();
             if (input.Length == 0)
