@@ -99,6 +99,7 @@ namespace CycWorldModule.DotCYC
     }
     public class SimCyclifier : SimEventSubscriber
     {
+        private object obj = null;
         private static TaskQueueHandler taskQueueHandler = null;// new TaskQueueHandler("SimCyclifier", 0);
         static readonly List<String> SkipVerbs = new List<string>() { "on-log-message", "on-login", "on-event-queue-running", "on-sim-connecting" };
 
@@ -131,7 +132,7 @@ namespace CycWorldModule.DotCYC
                 {
                     foreach (var v in evt.GetArgs())
                     {
-                        Master.ToFort(v);
+                        Master.DataUpdate(v);
                     }
                     return;
                 }
@@ -152,6 +153,15 @@ namespace CycWorldModule.DotCYC
 
         }
 
+        private void DataUpdate(object v)
+        {
+            CycFort constant = (CycFort) ToFort(v);
+           if (obj is SimObject)
+           {
+               taskQueueHandler.Enqueue(() => SaveInfoMap(constant, obj as SimObject));               
+           }
+        }
+
         public void ShuttingDown()
         {
             throw new NotImplementedException();
@@ -162,7 +172,13 @@ namespace CycWorldModule.DotCYC
         static public CycAccess cycAccess;
         static public CycFort vocabMt;
         static public CycFort assertMt;
-        static public Dictionary<string, CycFort> simFort = new Dictionary<string, CycFort>();
+        static public Dictionary<object, CycFort> simFort
+        {
+            get
+            {
+            	return cycTerms;
+            }
+        }// new Dictionary<string, CycFort>();
         static CycConnectionForm cycConnection;
         static readonly DateTime baseTime = new DateTime(1970, 1, 1, 0, 0, 0);
 
@@ -382,12 +398,12 @@ namespace CycWorldModule.DotCYC
 
         static void Debug(string s)
         {
-            Console.WriteLine("[SimCyclifier] " + s);
+            //Console.WriteLine("[SimCyclifier] " + s);
         }
 
         static void Exception(Exception e)
         {
-            Debug("" + e);
+            //Debug("" + e);
             Trace();
         }
 
@@ -582,12 +598,12 @@ namespace CycWorldModule.DotCYC
 
         public CycFort FindOrCreateCycFort(SimObject obj)
         {
+            CycFort constant;
             lock (cycTerms)
             {
-                CycFort constant;
                 if (cycTerms.TryGetValue(obj, out constant))
                 {
-                    SaveInfoMap(constant, obj);
+                   // SaveInfoMap(constant, obj);
                     return constant;
                 }
                 string name;
@@ -618,8 +634,12 @@ namespace CycWorldModule.DotCYC
                 //System.Guid g = new System.Guid();
                 ////CUID cycid = CUID.nameUUIDFromBytes(ba);
 
-                cycTerms[obj] = constant = createIndividualFn(type, name, String.Format("{0} {1}", obj.GetName(), obj.ID), "SimVocabMt",
-                                             type);
+                cycTerms[obj] = constant =
+                                createIndividualFn(
+                                    type, name,
+                                    String.Format("{0} {1}", obj.GetName(), obj.ID), "SimVocabMt", type);
+            }
+            {
                 if (obj is SimAvatar)
                 {
                     // assertGaf(C("comment"), constant, obj.DebugInfo());
@@ -628,7 +648,6 @@ namespace CycWorldModule.DotCYC
                 {
                     assertGaf(C("comment"), constant, obj.DebugInfo());
                 }
-                SaveInfoMap(constant, obj);
                 return constant;
             }
         }
@@ -645,16 +664,17 @@ namespace CycWorldModule.DotCYC
                         return;
                     }
                 }
-                ICollection<NamedParam> infomap = im;
-                lock (infomap)
-                {
-                    infomap = new List<NamedParam>(infomap);
-                }
-                hashChanges[obj] = infomap.Count;
-                foreach (NamedParam o in infomap)
-                {
-                    assertEventData(constant, o);
-                }
+                hashChanges[obj] = im.Count;
+            }
+            ICollection<NamedParam> infomap = im;
+            lock (infomap)
+            {
+                infomap = new List<NamedParam>(infomap);
+            }
+
+            foreach (NamedParam o in infomap)
+            {
+                assertEventData(constant, o);
             }
         }
 
@@ -674,15 +694,15 @@ namespace CycWorldModule.DotCYC
 
         public CycFort FindOrCreateCycFort(SimAsset simObj)
         {
+            CycFort constant;
             lock (cycTerms)
             {
-                CycFort constant;
                 if (cycTerms.TryGetValue(simObj, out constant)) return constant;
                 constant = createIndividualColFn("Sim" + simObj.AssetType, simObj.Name, simObj.DebugInfo(), "SimVocabMt", "Sim" + simObj.AssetType);
-                assertGaf(C("comment"), constant, simObj.DebugInfo());
                 cycTerms[simObj] = constant;
-                return constant;
             }
+            assertGaf(C("comment"), constant, simObj.DebugInfo());
+            return constant;
         }
         public CycFort FindOrCreateCycFort(Asset simObj)
         {
@@ -753,20 +773,23 @@ namespace CycWorldModule.DotCYC
 
         public CycFort FindOrCreateCycFort(SimObjectEvent evt)
         {
-            lock (cycTerms)
+            if (evt.EventType == SimEventType.DATA_UPDATE)
             {
-                if (evt.EventType == SimEventType.DATA_UPDATE)
-                {
-                    return null;
-                }
+                return null;
+            }
+            else
+            {
                 CycFort constant;
-                if (cycTerms.TryGetValue(evt, out constant)) return constant;
-                //   object[] forts = ToForts(simObj.Parameters);
-                constant = createIndividualFn("SimEvent-" + evt.EventType,
-                                              evt.ToEventString(),
-                                              evt.ToString(),
-                                              "SimVocabMt",
-                                              "SimObjectEvent");
+                lock (cycTerms)
+                {
+                    if (cycTerms.TryGetValue(evt, out constant)) return constant;
+                    //   object[] forts = ToForts(simObj.Parameters);
+                    cycTerms[evt] = constant = createIndividualFn("SimEvent-" + evt.EventType,
+                                                                  evt.ToEventString(),
+                                                                  evt.ToString(),
+                                                                  "SimVocabMt",
+                                                                  "SimObjectEvent");
+                }
                 bool wasNew;
                 CycFort col = createIndividual(evt.GetVerb().Replace(" ", "-"),
                                                "Event subtype of #$SimObjectEvent", "SimVocabMt", "Collection",
@@ -1191,9 +1214,9 @@ namespace CycWorldModule.DotCYC
                     Debug("Assertion Failed: " + ast);
                 }
             }
-            catch (java.lang.RuntimeException re)
+            catch (Exception re)
             {
-                re.printStackTrace();
+                //re.printStackTrace();
                 Exception(re);
             }
         }
@@ -1270,8 +1293,8 @@ namespace CycWorldModule.DotCYC
                         if (cycTerms.TryGetValue(nv, out indv)) return indv;
                         indv = new CycNart(CycList.list(fn, name));
                         cycTerms[nv] = indv;
-                        assertGaf(C("comment"), indv, comment);
                     }
+                    assertGaf(C("comment"), indv, comment);
                 }
             return indv;
         }
@@ -1756,10 +1779,27 @@ namespace CycWorldModule.DotCYC
             //  FindOrCreateCycFort(obj);
         }
 
+        static Dictionary<Assembly, XElement> AssmblyXDoics = new Dictionary<Assembly, XElement>();
+         public static XElement GetXmlDocMembers(Assembly typeAssembly)
+         {
+             XElement ele;
+             lock (AssmblyXDoics) 
+                 if (!AssmblyXDoics.TryGetValue(typeAssembly,out ele))
+                 {
+                     AssmblyXDoics[typeAssembly] = ele = GetXmlDocMembers0(typeAssembly);
+                 }
+             return ele;
+         }
+
+        public static XElement GetXmlDocMembers0(Assembly typeAssembly)
+        {
+            var file = GetXmlDocFile(typeAssembly);
+            return XDocument.Load(file.FullName).Root.Element("members");
+        }
+
         public static XElement GetXmlDocMembers(Type type)
         {
-            var file = GetXmlDocFile(type.Assembly);
-            return XDocument.Load(file.FullName).Root.Element("members");
+            return GetXmlDocMembers(type.Assembly);
         }
 
 
