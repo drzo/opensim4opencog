@@ -23,88 +23,36 @@ using UUID=OpenMetaverse.UUID;
 
 namespace CycWorldModule.DotCYC
 {
-    public class CycTypeInfo
-    {
-        readonly public CycFort cycFort;
-        readonly Type CType;
-
-        public CycTypeInfo(CycFort fort, Type type)
-        {
-            cycFort = fort;
-            CType = type;
-            SimCyclifier.typeFort[type] = this;
-            if (type.IsEnum)
-            {
-                SetupEnum();
-            } else if (type.IsInterface)
-            {
-                SetupType("Interface");
-            }
-            else if (type.IsClass)
-            {
-                SetupType("Class");                
-            }
-        }
-
-        private void SetupEnum()
-        {
-            SimCyclifier simCyclifier = SimCyclifier.Master;
-            var docMembers = SimCyclifier.GetXmlDocMembers(CType);             
-            simCyclifier.assertIsa(cycFort, C("Collection"));
-            simCyclifier.assertIsa(cycFort, C("SimEnumCollection"));
-            String ele = SimCyclifier.GetDocString(docMembers, CType);
-            simCyclifier.assertGaf(C("comment"), cycFort, "The sim enum for " + CType);
-            if (!String.IsNullOrEmpty(ele))
-            {
-                simCyclifier.assertGaf(C("comment"), cycFort, ele);
-            }
-            if (CType.IsEnum)
-            {
-                foreach (FieldInfo fort in CType.GetFields(BindingFlags.Public | BindingFlags.Static))
-                {
-                    //if (fort.GetValue(null))        
-                    string v = string.Format("{0}-{1}", CType.Name, fort.Name);
-                    CycFort cv = C(v);
-                    simCyclifier.assertIsa(cv, C("Collection"));
-                    simCyclifier.assertGaf(C("genls"), cv, cycFort);
-                    simCyclifier.assertGaf(C("comment"), cv, "The sim enum value for: " + fort);
-                    ele = SimCyclifier.GetDocString(docMembers, fort);
-                    if (!String.IsNullOrEmpty(ele))
-                    {
-                        simCyclifier.assertGaf(C("comment"), cv, ele);
-                        continue;
-                    }
-                }
-            }
-        }
-
-        private void SetupType(String s)
-        {
-            SimCyclifier simCyclifier = SimCyclifier.Master;
-            var docMembers = SimCyclifier.GetXmlDocMembers(CType);    
-            simCyclifier.assertIsa(cycFort, C("Collection"));
-            simCyclifier.assertIsa(cycFort, C("Sim"+s+"Collection"));
-            String ele = SimCyclifier.GetDocString(docMembers, CType);
-            simCyclifier.assertGaf(C("comment"), cycFort, "The sim "+s+" for " + CType);
-            if (!String.IsNullOrEmpty(ele))
-            {
-                simCyclifier.assertGaf(C("comment"), cycFort, ele);
-            }
-        }
-
-        private CycFort C(string collection)
-        {
-            return SimCyclifier.Master.C(collection);
-        }
-    }
     public class SimCyclifier : SimEventSubscriber
     {
-        private object obj = null;
+        // ReSharper disable InconsistentNaming
+
+        public static bool UseCyc = true;
+        public static bool ClearKBBetweenSessions = false;
+        static public CycAccess cycAccess;
+        static public CycFort vocabMt;
+        static public CycFort assertMt;
+        static public Dictionary<object, CycFort> simFort
+        {
+            get
+            {
+                return cycTerms;
+            }
+        }// new Dictionary<string, CycFort>();
+        static CycConnectionForm cycConnection;
+        static readonly DateTime baseTime = new DateTime(1970, 1, 1, 0, 0, 0);
+        private static readonly TaskQueueHandler cycAccessQueueHandler = new TaskQueueHandler("CycAccess", 0);
         private static TaskQueueHandler taskQueueHandler = null;// new TaskQueueHandler("SimCyclifier", 0);
-        static readonly List<String> SkipVerbs = new List<string>() { "on-log-message", "on-login", "on-event-queue-running", "on-sim-connecting" };
 
+        readonly static public Dictionary<object, CycFort> cycTerms = new Dictionary<object, CycFort>();
+        readonly static public Dictionary<Object, int> hashChanges = new Dictionary<Object, int>();
+        List<UUID> SimObjectsAdded = new List<UUID>();
+        internal static readonly Dictionary<Type, CycTypeInfo> typeFort = new Dictionary<Type, CycTypeInfo>();
+
+        //static readonly List<String> SkipVerbs = new List<string>() { "on-log-message", "on-login", "on-event-queue-running", "on-sim-connecting" };
         public static SimCyclifier Master;
-
+        static object SimCyclifierLock = new object();
+        // ReSharper restore InconsistentNaming
         public void OnEvent(SimObjectEvent evt)
         {
             if (cycAccess == null)
@@ -153,62 +101,18 @@ namespace CycWorldModule.DotCYC
 
         }
 
-        private void DataUpdate(object v)
+        internal void DataUpdate(object v)
         {
-            CycFort constant = (CycFort) ToFort(v);
-           if (obj is SimObject)
-           {
-               taskQueueHandler.Enqueue(() => SaveInfoMap(constant, obj as SimObject));               
-           }
+            object constant = ToFort(v);
+            if (constant is CycFort && v is SimObject)
+            {
+                taskQueueHandler.Enqueue(() => SaveInfoMap(constant as CycFort, v as SimObject));
+            }
         }
 
         public void ShuttingDown()
         {
-            throw new NotImplementedException();
         }
-
-        public static bool UseCyc = true;
-        public static bool ClearKBBetweenSessions = false;
-        static public CycAccess cycAccess;
-        static public CycFort vocabMt;
-        static public CycFort assertMt;
-        static public Dictionary<object, CycFort> simFort
-        {
-            get
-            {
-            	return cycTerms;
-            }
-        }// new Dictionary<string, CycFort>();
-        static CycConnectionForm cycConnection;
-        static readonly DateTime baseTime = new DateTime(1970, 1, 1, 0, 0, 0);
-
-        public void assertGenls(CycFort a, CycFort b)
-        {
-            try
-            {
-                cycAccess.assertGenls(a, b, vocabMt);
-            }
-            catch (Exception e)
-            {
-
-                Exception(e);
-            }
-        }
-
-        public void assertIsa(CycFort a, CycFort b)
-        {
-            try
-            {
-                cycAccess.assertIsa(a, b, vocabMt);
-            }
-            catch (Exception e)
-            {
-
-                Exception(e);
-            }
-        }
-
-        static object SimCyclifierLock = new object();
 
         public SimCyclifier(CycWorldModule tf)
         {
@@ -225,13 +129,13 @@ namespace CycWorldModule.DotCYC
                     taskQueueHandler = new TaskQueueHandler("SimCyclifier", 0);
                     taskQueueHandler.AddFirst(AssertKE);
                 }
-                
+
             }
         }
 
         private void AssertKE()
         {
-
+            cycAccessQueueHandler.NoQueue = true;
             cycAccess = cycConnection.getCycAccess();
             if (cycAccess == null)
             {
@@ -256,7 +160,7 @@ namespace CycWorldModule.DotCYC
                 cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-MOVEMENTFn\"))");
             }
             simFort["SimObject"] = createCollection("SimObject", "#$SpatiallyDisjointObjectType for the simulator",
-                                                    "SimVocabMt","SpatiallyDisjointObjectType",null);
+                                                    "SimVocabMt", "SpatiallyDisjointObjectType", null);
             simFort["SimAsset"] = createCollection("SimAsset",
                                                    "A SimAsset is a #$PartiallyTangibleTypeByPhysicalFeature from the simulator such as #$BlueColor or #$BlowingAKiss animation",
                                                    "SimVocabMt", "Collection", "PartiallyTangibleTypeByPhysicalFeature");
@@ -360,6 +264,7 @@ namespace CycWorldModule.DotCYC
             cycAssert("(#$pointInSystem (#$PointInRegionFn ?STR ?X ?Y ?Z) (#$SimRegionCoordinateSystemFn (#$SimRegionFn ?STR)))");
             cycAssert("(#$pointInSystem (#$PointInRegionFn \"Daxlandia\" 128 120 27) (#$SimRegionCoordinateSystemFn (#$SimRegionFn \"Daxlandia\")))");
             ProbeNewAssets();
+            cycAccessQueueHandler.NoQueue = false;
         }
 
         static int lastAssetCount = 0;
@@ -396,49 +301,6 @@ namespace CycWorldModule.DotCYC
 
         }
 
-        static void Debug(string s)
-        {
-            //Console.WriteLine("[SimCyclifier] " + s);
-        }
-
-        static void Exception(Exception e)
-        {
-            //Debug("" + e);
-            Trace();
-        }
-
-        private static void Trace()
-        {
-       
-        }
-
-        public bool cycAssert(string s)
-        {
-            try
-            {
-                return cycAccess.converseBoolean("(fi-assert '" + s + " " + vocabMt.cyclifyWithEscapeChars() + ")");
-            }
-            catch (Exception e)
-            {
-
-                Exception(e);
-                return false;
-            }
-        }
-
-        public void ResultIsa(string fn, string col, string comment, CycFort arg1Isa)
-        {
-            simFort[fn] = createIndividual(fn, comment, "SimVocabMt", "ReifiableFunction");
-            assertGaf(C("resultIsa"), simFort[fn], C(col));
-            assertGaf(C("arg1Isa"), simFort[fn], arg1Isa);
-
-        }
-
-        public void conceptuallyRelated(CycFort a, CycFort b)
-        {
-            assertGaf(C("conceptuallyCoRelated"), a, b);
-        }
-
         public void VisitType(Type type)
         {
             if (type.IsSubclassOf(typeof(Asset)))
@@ -471,8 +333,6 @@ namespace CycWorldModule.DotCYC
             }
         }
 
-        internal static readonly Dictionary<Type, CycTypeInfo> typeFort = new Dictionary<Type, CycTypeInfo>();
-
         private CycFort VisitEnumType(Type type)
         {
             lock (typeFort)
@@ -488,6 +348,19 @@ namespace CycWorldModule.DotCYC
                 ctype = new CycTypeInfo(cn, type);
                 return cn;
             }
+        }
+
+        public void ResultIsa(string fn, string col, string comment, CycFort arg1Isa)
+        {
+            simFort[fn] = createIndividual(fn, comment, "SimVocabMt", "ReifiableFunction");
+            assertGaf(C("resultIsa"), simFort[fn], C(col));
+            assertGaf(C("arg1Isa"), simFort[fn], arg1Isa);
+
+        }
+
+        public void conceptuallyRelated(CycFort a, CycFort b)
+        {
+            assertGaf(C("conceptuallyCoRelated"), a, b);
         }
 
         public void FunctionToCollection(string fn, string col, string comment)
@@ -509,7 +382,7 @@ namespace CycWorldModule.DotCYC
             CycFort fcol = C(col);
             assertIsa(fcol, C("Collection"));
             assertIsa(fcol, C(isa));
-            if (genls!=null) assertGenls(fcol, C(genls));
+            if (genls != null) assertGenls(fcol, C(genls));
             assertGaf(C("comment"), fcol, comment);
 
             return fcol;
@@ -521,9 +394,9 @@ namespace CycWorldModule.DotCYC
             assertIsa(simFort[fn], C("IndividualDenotingFunction"));
             assertIsa(simFort[fn], C("ReifiableFunction"));
             CycFort fcol = C(col);
-            assertIsa(fcol,C("Collection"));
-            assertGaf(C("comment"),fcol,comment);
-           // simFort[col] = createIndividual(col, comment, "SimVocabMt", "Collection");
+            assertIsa(fcol, C("Collection"));
+            assertGaf(C("comment"), fcol, comment);
+            // simFort[col] = createIndividual(col, comment, "SimVocabMt", "Collection");
             assertGaf(C("resultIsa"), simFort[fn], simFort[col]);
         }
 
@@ -532,33 +405,105 @@ namespace CycWorldModule.DotCYC
             bool newlyCreated;
             return createIndividual(term, comment, mt, type, out newlyCreated);
         }
+        public void assertGenls(CycFort a, CycFort b)
+        {
+            cycAccessQueueHandler.Enqueue(() =>
+            {
+                try
+                {
+                    cycAccess.assertGenls(a, b, vocabMt);
+                }
+                catch (Exception e)
+                {
+
+                    Exception(e);
+                }
+            });
+        }
+
+        public void assertIsa(CycFort a, CycFort b)
+        {
+            cycAccessQueueHandler.Enqueue(() =>
+            {
+                try
+                {
+                    cycAccess.assertIsa(a, b, vocabMt);
+                }
+                catch (Exception e)
+                {
+
+                    Exception(e);
+                }
+            });
+        }
 
         public void assertGaf(CycFort a, CycFort b, CycFort c)
         {
-            try
+            cycAccessQueueHandler.Enqueue(() =>
             {
-                cycAccess.assertGaf(vocabMt, a, b, c);
-            }
-            catch (Exception e)
-            {
+                try
+                {
+                    cycAccess.assertGaf(vocabMt, a, b, c);
+                }
+                catch (Exception e)
+                {
 
-                Exception(e);
-            }
+                    Exception(e);
+                }
+            });
         }
 
         public void assertGaf(CycFort a, CycFort b, string c)
         {
+            cycAccessQueueHandler.Enqueue(() =>
+                              {
+                                  try
+                                  {
+                                      cycAccess.assertGaf(vocabMt, a, b, c);
+                                  }
+                                  catch (Exception e)
+                                  {
+
+                                      Exception(e);
+                                  }
+                              });
+        }
+
+
+        private void CycListAssert(CycList list)
+        {
             try
             {
-                cycAccess.assertGaf(vocabMt, a, b, c);
+                string ast = list.cyclifyWithEscapeChars();
+                cycAssert(ast);
             }
-            catch (Exception e)
+            catch (Exception re)
             {
-
-                Exception(e);
+                //re.printStackTrace();
+                Exception(re);
             }
         }
 
+        public void cycAssert(string s)
+        {
+            string asert = string.Format("(fi-assert '{0} {1})", s, vocabMt.cyclifyWithEscapeChars());
+            cycAccessQueueHandler.Enqueue(() =>
+            {
+                try
+                {
+                    if (!cycAccess.converseBoolean(asert))
+                    {
+                        Debug("Assertion failed: " + asert);
+                    }
+                }
+                catch (Exception e)
+                {
+
+                    Exception(e);
+                    return;
+                }
+            });
+        }
 
 
         public CycFort createIndividual(string term, string comment, string mt, string type, out bool created)
@@ -576,9 +521,13 @@ namespace CycWorldModule.DotCYC
                     Trace();
                 }
                 CycFort indv = simFort[term] = C(term);
+                bool NoQueue = cycAccessQueueHandler.NoQueue;
+                cycAccessQueueHandler.NoQueue = true;
                 assertIsa(indv, C("Individual"));
                 assertIsa(indv, C(type));
-                assertGaf(C("comment"),indv,comment);
+                cycAccessQueueHandler.NoQueue = false;
+                assertGaf(C("comment"), indv, comment);
+                cycAccessQueueHandler.NoQueue = NoQueue;
                 return indv;// simFort[term] = cycAccess.createIndividual(term, comment, mt, type);
             }
 
@@ -589,13 +538,6 @@ namespace CycWorldModule.DotCYC
 
         }
 
-        readonly static public Dictionary<object, CycFort> cycTerms = new Dictionary<object, CycFort>();
-
-        readonly static public Dictionary<Object, int> hashChanges = new Dictionary<Object, int>();
-
-
-        List<UUID> SimObjectsAdded = new List<UUID>();
-
         public CycFort FindOrCreateCycFort(SimObject obj)
         {
             CycFort constant;
@@ -603,7 +545,7 @@ namespace CycWorldModule.DotCYC
             {
                 if (cycTerms.TryGetValue(obj, out constant))
                 {
-                   // SaveInfoMap(constant, obj);
+                    // SaveInfoMap(constant, obj);
                     return constant;
                 }
                 string name;
@@ -845,7 +787,7 @@ namespace CycWorldModule.DotCYC
                                 o = new CycNart(C("SimAvatarFn"), o.ToString());
                             }
                         }
-                        assertEventData(constant, list.Key.ToString(), o, newHashSet(args[i].info ));
+                        assertEventData(constant, list.Key.ToString(), o, newHashSet(args[i].info));
                     }
                     else
                     {
@@ -859,7 +801,7 @@ namespace CycWorldModule.DotCYC
                         }
                         else
                         {
-                            assertEventData(constant, names[i], o, newHashSet(args[i].info ));
+                            assertEventData(constant, names[i], o, newHashSet(args[i].info));
                         }
                     }
                 }
@@ -1104,7 +1046,7 @@ namespace CycWorldModule.DotCYC
 
         private CycFort assertEventData(CycFort constant, NamedParam o)
         {
-            return assertEventData(constant, ToPropName(o.Key.ToString()), o.Value,newHashSet(o.info));
+            return assertEventData(constant, ToPropName(o.Key.ToString()), o.Value, newHashSet(o.info));
         }
 
         private CycFort assertEventData(CycFort constant, string name, object fort, HashSet<MemberInfo> info)
@@ -1203,23 +1145,6 @@ namespace CycWorldModule.DotCYC
             }
         }
 
-        private void CycListAssert(CycList list)
-        {
-            try
-            {
-                string ast = list.cyclifyWithEscapeChars();
-
-                if (!cycAssert(ast))
-                {
-                    Debug("Assertion Failed: " + ast);
-                }
-            }
-            catch (Exception re)
-            {
-                //re.printStackTrace();
-                Exception(re);
-            }
-        }
 
         private IEnumerable GetMultiValues(object fort)
         {
@@ -1638,22 +1563,25 @@ namespace CycWorldModule.DotCYC
 
         public CycFort C(string p)
         {
-
-            if (simFort.ContainsKey(p)) return simFort[p];
-            try
+            lock (simFort)
             {
-                CheckConstantName(p);
-                return simFort[p] = cycAccess.findOrCreate(p);
-            }
-            catch (Exception e)
-            {
-                Exception(e);
-                throw e;
-                //return CYC_NULL;
+                if (simFort.ContainsKey(p)) return simFort[p];
+                try
+                {
+                    p = CheckConstantName(p);
+                    CycConstant c = cycAccess.findOrCreate(p);
+                    return simFort[p] = c;
+                }
+                catch (Exception e)
+                {
+                    Exception(e);
+                    throw e;
+                    //return CYC_NULL;
+                }
             }
         }
 
-        private void CheckConstantName(string s)
+        private String CheckConstantName(string s)
         {
             if (s.EndsWith("-6") || s.EndsWith("-4") || s.Contains("offsetU"))
             {
@@ -1663,6 +1591,13 @@ namespace CycWorldModule.DotCYC
             {
                 Trace();
             }
+            CycConstant colided = cycAccess.constantNameCaseCollision(s);
+            if (colided != null)
+            {
+                Trace();
+                return CheckConstantName(s + "-Pred");
+            }
+            return s;
         }
 
         public object FindOrCreateCycFort(UUID region)
@@ -1780,16 +1715,16 @@ namespace CycWorldModule.DotCYC
         }
 
         static Dictionary<Assembly, XElement> AssmblyXDoics = new Dictionary<Assembly, XElement>();
-         public static XElement GetXmlDocMembers(Assembly typeAssembly)
-         {
-             XElement ele;
-             lock (AssmblyXDoics) 
-                 if (!AssmblyXDoics.TryGetValue(typeAssembly,out ele))
-                 {
-                     AssmblyXDoics[typeAssembly] = ele = GetXmlDocMembers0(typeAssembly);
-                 }
-             return ele;
-         }
+        public static XElement GetXmlDocMembers(Assembly typeAssembly)
+        {
+            XElement ele;
+            lock (AssmblyXDoics)
+                if (!AssmblyXDoics.TryGetValue(typeAssembly, out ele))
+                {
+                    AssmblyXDoics[typeAssembly] = ele = GetXmlDocMembers0(typeAssembly);
+                }
+            return ele;
+        }
 
         public static XElement GetXmlDocMembers0(Assembly typeAssembly)
         {
@@ -1838,9 +1773,7 @@ namespace CycWorldModule.DotCYC
 
         private string GetDocString(MemberInfo memberInfo)
         {
-            var file = GetXmlDocFile(memberInfo.DeclaringType.Assembly);
-            var docXml = XDocument.Load(file.FullName);
-            var docMembers = docXml.Root.Element("members");
+            var docMembers = GetXmlDocMembers(memberInfo.DeclaringType.Assembly);
             return GetDocString(docMembers, memberInfo);
         }
 
@@ -1869,5 +1802,23 @@ namespace CycWorldModule.DotCYC
             }
             return null;
         }
+
+
+        static void Debug(string s, params object[] args)
+        {
+            Console.WriteLine(string.Format("[SimCyclifier] {0}", s), args);
+        }
+
+        static void Exception(Exception e)
+        {
+            Debug("" + e);
+            Trace();
+        }
+
+        private static void Trace()
+        {
+
+        }
+
     }
 }

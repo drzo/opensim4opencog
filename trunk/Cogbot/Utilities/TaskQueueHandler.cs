@@ -5,7 +5,8 @@ using System.Threading;
 namespace cogbot.Utilities
 {
     public class TaskQueueHandler//<TValue>
-    {
+     {
+        static public HashSet<TaskQueueHandler> TaskQueueHandlers = new HashSet<TaskQueueHandler>();
         readonly private Thread EventQueueHandler;
         readonly private Thread EventQueuePing;
         readonly private string Name;
@@ -16,23 +17,30 @@ namespace cogbot.Utilities
         private bool Busy;
         private ulong LastBusy = 0;
         readonly int WAIT_AFTER;
+        readonly object EventQueueLock = new object();
         AutoResetEvent WaitingOn = new AutoResetEvent(false);
         readonly LinkedList<ThreadStart> EventQueue = new LinkedList<ThreadStart>();
         public static bool DebugQueue = true;
         public TaskQueueHandler(string str, int msWaitBetween)
         {
+            TaskQueueHandlers.Add(this);
             Name = str;
             if (msWaitBetween < 1) msWaitBetween = 1;
             WAIT_AFTER = msWaitBetween;
             EventQueueHandler = new Thread(EventQueue_Handler) {Name = str + " worker"};
             EventQueueHandler.Priority = ThreadPriority.BelowNormal;
             EventQueueHandler.Start();
-            if (DebugQueue)
+            //if (DebugQueue)
             {
                 EventQueuePing = new Thread(EventQueue_Ping) {Name = str + " debug"};
                 EventQueueHandler.Priority = ThreadPriority.Lowest;
                 EventQueuePing.Start();
             }
+        }
+
+        public override string ToString()
+        {
+            return String.Format("TASKQUEUE {0} Count={1} sequence={2} Busy={3} NoQueue={4} ", Name, EventQueue.Count, sequence, Busy, NoQueue);
         }
 
         readonly ThreadStart NOTHING = default(ThreadStart);
@@ -47,7 +55,7 @@ namespace cogbot.Utilities
                 Busy = false;
 
                 ThreadStart evt;
-                lock (EventQueue)
+                lock (EventQueueLock)
                 {
                     if (EventQueue.Count > 0)
                     {
@@ -80,12 +88,13 @@ namespace cogbot.Utilities
                 }
                 else
                 {
-                    lock (EventQueue)
+                    lock (EventQueueLock)
                         if (EventQueue.Count > 0)
                         {
+                            Busy = false;
                             continue;
                         }
-                    //lock (EventQueue)
+                    //lock (EventQueueLock)
                     //{
                     // Reset();
                     //}
@@ -114,10 +123,11 @@ namespace cogbot.Utilities
 
         void EventQueue_Ping()
         {
+            bool WaitingOnPing = false;
             while (true)
             {
                 Thread.Sleep(PING_TIME);
-                if (Busy)
+                if (Busy || WaitingOnPing)
                 {
                     if (LastBusy == sequence)
                     {
@@ -126,11 +136,19 @@ namespace cogbot.Utilities
                                           Name, PING_TIME.TotalSeconds, t.TotalSeconds, EventQueue.Count);
                     }
                     LastBusy = sequence;
+                    continue;
                 }
                 DateTime oldnow = DateTime.UtcNow;
                 int count = EventQueue.Count;
+                if (WaitingOnPing)
+                {
+                    continue;
+                }
+                WaitingOnPing = true;
                 Enqueue(() =>
                 {
+                    WaitingOnPing = false;
+                    sequence--;
                     DateTime now = DateTime.UtcNow;
                     TimeSpan timeSpan = now - oldnow;
                     double secs = timeSpan.TotalSeconds;
@@ -156,30 +174,30 @@ namespace cogbot.Utilities
         {
             if (NoQueue)
             {
-               // evt();
+                evt();
                 return;
 
             }
-            lock (EventQueue)
+            lock (EventQueueLock)
             {
                 EventQueue.AddLast(evt);
-                Set();
             }
+            Set();
         }
 
         public void AddFirst(ThreadStart evt)
         {
             if (NoQueue)
             {
-               // evt();
+               evt();
                 return;
 
             }
-            lock (EventQueue)
+            lock (EventQueueLock)
             {
                 EventQueue.AddFirst(evt);
-                Set();
             }
+            Set();
         }
     }
 }
