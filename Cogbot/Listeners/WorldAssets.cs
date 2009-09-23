@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using System.Collections.Generic;
 using cogbot.TheOpenSims;
@@ -103,20 +104,20 @@ namespace cogbot.Listeners
             return ID.AssetData;
         }
 
-        public void RequestAsset(UUID id, AssetType assetType, bool p)
+        public SimAsset RequestAsset(UUID id, AssetType assetType, bool p)
         {
-            if (id == UUID.Zero) return;
+            if (id == UUID.Zero) return null;
             SimAsset sa = SimAssetStore.FindOrCreateAsset(id, assetType);
-            if (!sa.NeedsRequest) return;
-            if (assetType == AssetType.Sound) return;
-            if (assetType == AssetType.SoundWAV) return;
+            if (!sa.NeedsRequest) return sa;
+            //if (assetType == AssetType.Sound) return sa;
+            if (assetType == AssetType.SoundWAV) return sa;
             sa.NeedsRequest = false;
-            lock (AssetRequestType) if (AssetRequestType.ContainsKey(id)) return;
+            lock (AssetRequestType) if (AssetRequestType.ContainsKey(id)) return sa;
             {
                 if (assetType == AssetType.Texture)
                 {
                     StartTextureDownload(id);
-                    return;
+                    return sa;
                 }
                 RegionMasterTexturePipeline.RequestAsset(id, assetType, p, Assets_OnAssetReceived);
                 lock (AssetRequestType)
@@ -124,6 +125,7 @@ namespace cogbot.Listeners
                     AssetRequestType[id] = assetType;
                 }
             }
+            return sa;
         }
 
 
@@ -366,6 +368,36 @@ namespace cogbot.Listeners
                     }
             }
             RegisterUUIDMaybe(uUID, asset);
+        }
+
+        public static void EnqueueRequestAsset(UUID id, AssetType type, bool b)
+        {
+            return;
+            if (GridMaster!=null)
+            GridMaster.
+            client.Assets.RequestAsset(id, type,true,
+                                         delegate(AssetDownload transfer, Asset asset)
+                                         {
+                                             if (transfer.Success){ try
+                                                 {
+
+                                                     try
+                                                     {
+                                                         asset.Decode();
+                                                         Debug("Asset decoded as " + asset.AssetType);
+                                                     }
+                                                     catch (Exception ex)
+                                                     {
+                                                         Debug("Asset not decoded: " + ex);
+                                                     }
+                                                 }
+                                                 catch (Exception ex)
+                                                 {
+                                                     Logger.Log(ex.Message, Helpers.LogLevel.Error, ex);
+                                                 }
+                                             }
+                                             
+                                         });
         }
     }
 }

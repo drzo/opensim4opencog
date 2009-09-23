@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using cogbot.Listeners;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
@@ -22,12 +23,42 @@ namespace cogbot.TheOpenSims
 
         public SimAssetStore Store
         {
-            get { return WorldObjects.GridMaster.SimAssetSystem; }
+            get
+            {
+                if (WorldObjects.GridMaster != null && WorldObjects.GridMaster.SimAssetSystem != null)
+                    return WorldObjects.GridMaster.SimAssetSystem;
+                return SimAssetStore.TheStore;
+            }
         }
 
+        public bool PullServerAsset = true;
         public virtual Asset ServerAsset
         {
-            get { return _ServerAsset; }
+            get
+            {
+                if (_ServerAsset == null)
+                {
+                    if (PullServerAsset)
+                    {
+                        GridClient c = Store.Client;
+                        if (c != null && c.Network.Connected)
+                        {
+                            PullServerAsset = false;
+                            c.Assets.RequestAsset(AssetID, AssetType, true, On_AssetDownloaded);
+                        }
+                        else
+                        {
+                            PullServerAsset = false;
+                            Store.taskQueue.Enqueue(() =>
+                                                        {
+                                                            Thread.Sleep(1000);
+                                                            var v = ServerAsset;
+                                                        });
+                        }
+                    }
+                }
+                return _ServerAsset;
+            }
             set
             {
                 _ServerAsset = value;
@@ -38,6 +69,15 @@ namespace cogbot.TheOpenSims
                 }
             }
         }
+
+        private void On_AssetDownloaded(AssetDownload transfer, Asset asset)
+        {
+            PullServerAsset = false;
+            //if (!transfer.Success) PullServerAsset = true;
+            _ServerAsset = asset;
+            GuessAssetName();
+        }
+
         readonly public List<string> Meanings = new List<string>();
         public string Comment;
         public InventoryItem Item;

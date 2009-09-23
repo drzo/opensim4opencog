@@ -30,7 +30,7 @@ namespace cogbot.Listeners
         public static bool MaintainPropertiesFromQueue = true;
         public static bool MaintainObjectUpdates = true;
         public static bool MaintainObjectProperties = true;
-        public static bool MaintainSounds = false;
+        public static bool MaintainSounds = true;
         static public bool MaintainAvatarMetaData = true;
         static public bool MaintainGroupMetaData = true;
         public static bool MaintainSimObjectInfoMap = true;
@@ -47,9 +47,9 @@ namespace cogbot.Listeners
         private static readonly TaskQueueHandler PropertyQueue = new TaskQueueHandler("NewObjectQueue", 0);
         private static readonly object SelectObjectsTimerLock = new object();
         private static readonly List<ThreadStart> ShutdownHooks = new List<ThreadStart>();
-        private static readonly TaskQueueHandler EventQueue = new TaskQueueHandler("EventQueue", 0);
+        private static readonly TaskQueueHandler EventQueue = new TaskQueueHandler("World EventQueue", 0);
         private static readonly TaskQueueHandler CatchUpQueue = new TaskQueueHandler("Simulator catchup", 30000);
-        private static readonly Dictionary<UUID, object> uuidTypeObject = new Dictionary<UUID, object>();
+        internal static readonly Dictionary<UUID, object> uuidTypeObject = new Dictionary<UUID, object>();
         private static readonly object WorldObjectsMasterLock = new object();
 
         private static int CountnumAvatars;

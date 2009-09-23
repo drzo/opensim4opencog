@@ -159,10 +159,19 @@ namespace cogbot.Listeners
         public void OnObjectSound(UUID objectID, UUID soundID, float gain)
         {
             if (!MaintainSounds) return;
-            RequestAsset(soundID, AssetType.Sound, true);
             SimObject o = SimObjectFn(objectID);
             if (o == null) return;
-            o.OnSound(soundID, gain);
+            if (soundID == UUID.Zero)
+            {
+                o.OnSound(UUID.Zero, gain);
+                SendNewRegionEvent(SimEventType.EFFECT, "On-Attach-Sound-Gain-Change", o, gain);
+            }
+            else
+            {
+                SimAsset sound = RequestAsset(soundID, AssetType.Sound, true);
+                o.OnSound(soundID, gain);
+                SendNewRegionEvent(SimEventType.EFFECT, "On-Single-Sound-Gain-Change", o, sound, gain);
+            }
             // RegionMasterTexturePipeline.RequestAsset(soundID, AssetType.SoundWAV, true);
         }
 
@@ -209,7 +218,6 @@ namespace cogbot.Listeners
                 EventQueue.Enqueue(() =>
                 {
                     OnObjectSound(objectID, UUID.Zero, gain);
-                    SendNewRegionEvent(SimEventType.EFFECT, "On-Attach-Sound-Gain-Change", SimObjectFn(objectID), gain);
                 });
             //base.Sound_OnAttachSoundGainChange(objectID, gain);
         }
