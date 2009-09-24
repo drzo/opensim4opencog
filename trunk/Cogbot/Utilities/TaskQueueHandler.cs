@@ -4,13 +4,13 @@ using System.Threading;
 
 namespace cogbot.Utilities
 {
-    public class TaskQueueHandler//<TValue>
-     {
+    public class TaskQueueHandler : IDisposable
+    {
         static public HashSet<TaskQueueHandler> TaskQueueHandlers = new HashSet<TaskQueueHandler>();
         readonly private Thread EventQueueHandler;
         readonly private Thread EventQueuePing;
         readonly private string Name;
-        static private readonly TimeSpan PING_TIME = new TimeSpan(0,0,0,30); //30 seconds
+        static private readonly TimeSpan PING_TIME = new TimeSpan(0, 0, 0, 30); //30 seconds
         private ulong processed = 0;
         ulong sequence = 1;
         private ulong GoodPings = 0;
@@ -23,16 +23,19 @@ namespace cogbot.Utilities
         public static bool DebugQueue = true;
         public TaskQueueHandler(string str, int msWaitBetween)
         {
-            TaskQueueHandlers.Add(this);
+            lock (TaskQueueHandlers) TaskQueueHandlers.Add(this);
             Name = str;
             if (msWaitBetween < 1) msWaitBetween = 1;
             WAIT_AFTER = msWaitBetween;
-            EventQueueHandler = new Thread(EventQueue_Handler) {Name = str + " worker"};
-            EventQueueHandler.Priority = ThreadPriority.BelowNormal;
+            EventQueueHandler = new Thread(EventQueue_Handler)
+                                    {
+                                        Name = str + " worker",
+                                        Priority = ThreadPriority.BelowNormal
+                                    };
             EventQueueHandler.Start();
             //if (DebugQueue)
             {
-                EventQueuePing = new Thread(EventQueue_Ping) {Name = str + " debug"};
+                EventQueuePing = new Thread(EventQueue_Ping) { Name = str + " debug" };
                 EventQueueHandler.Priority = ThreadPriority.Lowest;
                 EventQueuePing.Start();
             }
@@ -40,7 +43,19 @@ namespace cogbot.Utilities
 
         public override string ToString()
         {
-            return String.Format("TASKQUEUE {0} Count={1} sequence={2} Busy={3} NoQueue={4} ", Name, EventQueue.Count, sequence, Busy, NoQueue);
+            return String.Format(
+                "{0} {1} Todo={2} Complete={3} {4}",
+                Busy ? "Busy" : "Idle", Name, EventQueue.Count, sequence, NoQueue ? "NoQueue" : "");
+        }
+
+        public void Dispose()
+        {
+            lock (TaskQueueHandlers)
+                TaskQueueHandlers.Remove(this);
+            EventQueuePing.Abort();
+            EventQueueHandler.Abort();
+            WaitingOn.Set();
+            WaitingOn.Close();
         }
 
         readonly ThreadStart NOTHING = default(ThreadStart);
@@ -154,7 +169,7 @@ namespace cogbot.Utilities
                     double secs = timeSpan.TotalSeconds;
                     if (secs < 2)
                     {
-                       // Console.WriteLine("PONG: " + Name + " " + timeSpan.TotalMilliseconds + " ms");
+                        // Console.WriteLine("PONG: " + Name + " " + timeSpan.TotalMilliseconds + " ms");
                         GoodPings++;
                     }
                     else
@@ -189,7 +204,7 @@ namespace cogbot.Utilities
         {
             if (NoQueue)
             {
-               evt();
+                evt();
                 return;
 
             }
