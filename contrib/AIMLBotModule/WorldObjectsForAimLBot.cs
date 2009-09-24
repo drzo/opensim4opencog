@@ -23,9 +23,9 @@ namespace AIMLBotModule
             set
             {
                 _DefaultMaxRespondToChatPerMinute = value;
-               
+
             }
-        } 
+        }
         /// <summary>
         ///  false = wont respond to user until they say something like "turn chat on" 
         ///  See next function to change the keywords
@@ -254,7 +254,7 @@ namespace AIMLBotModule
             client.InternType(this.GetType());
             string myName = GetName().Trim();
             String[] sname = myName.Split(' ');
-            MyBot.GlobalSettings.addSetting("name", String.Format("{0}", myName ));
+            MyBot.GlobalSettings.addSetting("name", String.Format("{0}", myName));
             MyBot.GlobalSettings.addSetting("firstname", sname[0]);
             MyBot.GlobalSettings.addSetting("lastname", sname[1]);
             client.WorldSystem.TheSimAvatar["AIMLBotModule"] = this;
@@ -285,14 +285,14 @@ namespace AIMLBotModule
             file = Path.Combine("aiml", myName);
             if (Directory.Exists(file))
             {
-                WriteLine("LoadPersonalDirectories: '{0}'",file);
+                WriteLine("LoadPersonalDirectories: '{0}'", file);
                 loaded = true;
                 MyBot.isAcceptingUserInput = false;
                 MyBot.loadAIMLFromFiles(file);
                 MyBot.isAcceptingUserInput = true;
             }
 
-            file = Path.Combine(myName,"config");
+            file = Path.Combine(myName, "config");
             if (Directory.Exists(file))
             {
                 WriteLine("LoadPersonalDirectories: '{0}'", file);
@@ -300,10 +300,10 @@ namespace AIMLBotModule
                 MyBot.loadSettings(Path.Combine(file, "Settings.xml"));
             }
 
-            file = Path.Combine(myName,"aiml");
+            file = Path.Combine(myName, "aiml");
             if (Directory.Exists(file))
             {
-                WriteLine("LoadPersonalDirectories: '{0}'",file);
+                WriteLine("LoadPersonalDirectories: '{0}'", file);
                 loaded = true;
                 MyBot.isAcceptingUserInput = false;
                 MyBot.loadAIMLFromFiles(file);
@@ -364,7 +364,10 @@ namespace AIMLBotModule
 
             bool UseThrottle = im.GroupIM;
             string groupName = null;
-            if (im.Dialog != InstantMessageDialog.MessageFromObject && im.Dialog != InstantMessageDialog.MessageFromAgent && im.Dialog != InstantMessageDialog.MessageBox && im.Dialog != InstantMessageDialog.GroupNotice )
+            if (im.Dialog != InstantMessageDialog.MessageFromObject &&
+                im.Dialog != InstantMessageDialog.MessageFromAgent && 
+                im.Dialog != InstantMessageDialog.MessageBox &&
+                im.Dialog != InstantMessageDialog.GroupNotice)
             {
                 im.Message = String.Format("{0} {1}", im.Dialog, im.Message);
             }
@@ -393,68 +396,95 @@ namespace AIMLBotModule
             string message = im.Message;
             if (message == "typing") return;
             if (message == "") return;
-            (new Thread(() => // this can be long running
+            RunTask(() => // this can be long running
+                        {
+                            string resp = AIMLInterp(message, myUser);
+                            // if (im.Offline == InstantMessageOnline.Offline) return;
+                            if (String.IsNullOrEmpty(resp)) return;
+                            if (UseThrottle)
                             {
-                                string resp = AIMLInterp(message, myUser);
-                                // if (im.Offline == InstantMessageOnline.Offline) return;
-                                if (String.IsNullOrEmpty(resp)) return;
-                                if (UseThrottle)
+                                if (Environment.TickCount - myUser.LastResponseGivenTime <
+                                    (60000 / myUser.MaxRespondToChatPerMinute))
                                 {
-                                    if (Environment.TickCount - myUser.LastResponseGivenTime <
-                                        (60000 / myUser.MaxRespondToChatPerMinute))
-                                    {
-                                        WriteLine("AIML_OnChat Reply is too fast: " + resp);
-                                        return; //too early to respond.. but still listened
-                                    }
+                                    WriteLine("AIML_OnInstantMessage Reply is too fast: " + resp);
+                                    return; //too early to respond.. but still listened
                                 }
-                                UseRealism = true;
-                                foreach (string ting in SplitChatSmart(resp))
+                            }
+                            UseRealism = true;
+                            foreach (string ting in SplitChatSmart(resp))
+                            {
+                                string tsing = ting.Trim();
+                                if (tsing.Length > 1000)
                                 {
-                                    string tsing = ting.Trim();
-                                    if (tsing.Length > 1000)
-                                    {
-                                        tsing = tsing.Substring(0, 1000);
-                                    }
-                                    Thread.Sleep(100);
-                                    if (im.GroupIM)
-                                    {
-                                        if (!myUser.RespondToChat) return;
-                                        if (!RespondToGroup) return;
-
-                                        WriteLine("InstantMessageGroup {0} {1} {2}",
-                                                          im.FromAgentName + "/" + groupName, im.FromAgentID,
-                                                          ting.Trim());
-                                        client.Self.InstantMessageGroup(GetName(), im.FromAgentID, tsing);
-                                    }
-                                    else
-                                    {
-                                        // todo maybe send a typing message for the UseRealism
-                                        if (UseRealism)
-                                        {
-                                            client.Self.InstantMessage(GetName(), im.FromAgentID, "typing", im.IMSessionID,
-                                                                       InstantMessageDialog.StartTyping,
-                                                                       InstantMessageOnline.Offline,
-                                                                       client.Self.SimPosition,
-                                                                       UUID.Zero, Utils.EmptyBytes);
-                                            Thread.Sleep(1900);
-                                            client.Self.InstantMessage(GetName(), im.FromAgentID, "typing", im.IMSessionID,
-                                                                       InstantMessageDialog.StopTyping,
-                                                                       InstantMessageOnline.Online,
-                                                                       client.Self.SimPosition,
-                                                                       UUID.Zero, Utils.EmptyBytes);
-
-                                        }
-
-                                        WriteLine("InstantMessage {0} {1} {2}", im.FromAgentName,
-                                                          im.FromAgentID, ting.Trim());
-                                        client.Self.InstantMessage(im.FromAgentID, tsing, im.IMSessionID);
-                                    }
-                                    UseRealism = false;
-
+                                    tsing = tsing.Substring(0, 1000);
                                 }
-                                myUser.LastResponseGivenTime = Environment.TickCount;
-                            })).Start();
+                                Thread.Sleep(100);
+                                if (im.GroupIM)
+                                {
+                                    if (!myUser.RespondToChat) return;
+                                    if (!RespondToGroup) return;
 
+                                    WriteLine("InstantMessageGroup {0} {1} {2}",
+                                              im.FromAgentName + "/" + groupName, im.FromAgentID,
+                                              ting.Trim());
+                                    client.Self.InstantMessageGroup(GetName(), im.FromAgentID, tsing);
+                                }
+                                else
+                                {
+                                    // todo maybe send a typing message for the UseRealism
+                                    if (UseRealism)
+                                    {
+                                        client.Self.InstantMessage(GetName(), im.FromAgentID, "typing",
+                                                                   im.IMSessionID,
+                                                                   InstantMessageDialog.StartTyping,
+                                                                   InstantMessageOnline.Offline,
+                                                                   client.Self.SimPosition,
+                                                                   UUID.Zero, Utils.EmptyBytes);
+                                        Thread.Sleep(1900);
+                                        client.Self.InstantMessage(GetName(), im.FromAgentID, "typing",
+                                                                   im.IMSessionID,
+                                                                   InstantMessageDialog.StopTyping,
+                                                                   InstantMessageOnline.Online,
+                                                                   client.Self.SimPosition,
+                                                                   UUID.Zero, Utils.EmptyBytes);
+
+                                    }
+
+                                    WriteLine("InstantMessage {0} {1} {2}", im.FromAgentName,
+                                              im.FromAgentID, ting.Trim());
+                                    client.Self.InstantMessage(im.FromAgentID, tsing, im.IMSessionID);
+                                }
+                                UseRealism = false;
+
+                            }
+                            myUser.LastResponseGivenTime = Environment.TickCount;
+                        }, "AIML_OnInstantMessage: " + myUser + ": " + message);
+
+        }
+
+        List<Thread> ThreadList
+        {
+            get
+            {
+                return WorldSystem.client.botCommandThreads;
+            }
+        }
+
+        private void RunTask(ThreadStart action, string name)
+        {
+            Thread tr = new Thread(() =>
+                                       {
+                                           try
+                                           {
+                                               action();
+                                           }
+                                           finally
+                                           {
+                                               ThreadList.Remove(Thread.CurrentThread);
+                                           }
+                                       }) {Name = name};
+            ThreadList.Add(tr);
+            tr.Start();
         }
 
         public WorldObjectsForAimLBot(BotClient testClient)
@@ -509,24 +539,24 @@ namespace AIMLBotModule
 
             UseRealism = true;
 
-            (new Thread(() => // this can be long running
+            RunTask(() => // this can be long running
+                        {
+                            string resp = AIMLInterp(message, myUser);
+                            if (String.IsNullOrEmpty(resp)) return;
+                            if (Environment.TickCount - myUser.LastResponseGivenTime <
+                                (60000 / myUser.MaxRespondToChatPerMinute))
                             {
-                                string resp = AIMLInterp(message, myUser);
-                                if (String.IsNullOrEmpty(resp)) return;
-                                if (Environment.TickCount - myUser.LastResponseGivenTime <
-                                    (60000 / myUser.MaxRespondToChatPerMinute))
-                                {
-                                    WriteLine("AIML_OnChat Reply is too fast: " + resp);
-                                    return; //too early to respond.. but still listened
-                                }
-                                if (!myUser.RespondToChat)
-                                {
-                                    WriteLine("AIML_OnChat Reply is quietly: " + resp);
-                                    return;
-                                }
-                                StringChat(resp, type);
-                                myUser.LastResponseGivenTime = Environment.TickCount;
-                            })).Start();
+                                WriteLine("AIML_OnChat Reply is too fast: " + resp);
+                                return; //too early to respond.. but still listened
+                            }
+                            if (!myUser.RespondToChat)
+                            {
+                                WriteLine("AIML_OnChat Reply is quietly: " + resp);
+                                return;
+                            }
+                            StringChat(resp, type);
+                            myUser.LastResponseGivenTime = Environment.TickCount;
+                        }, "AIML_OnChat: " + myUser + ": " + message);
         }
 
         static bool MessageTurnsOffChat(string message)
@@ -579,12 +609,12 @@ namespace AIMLBotModule
                 else
                 {
                     slits.AddRange(SplitChatSmart(resp.Substring(0, 800)));
-                    slits.AddRange(SplitChatSmart(resp.Substring(800)));                   
+                    slits.AddRange(SplitChatSmart(resp.Substring(800)));
                 }
                 return slits.ToArray();
             }
             // split newlines
-            return resp.Split(new char[] {'\n'}, StringSplitOptions.RemoveEmptyEntries);
+            return resp.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
         }
 
         private bool MessageTurnsOnChat(string message)
@@ -658,7 +688,8 @@ namespace AIMLBotModule
                     client.output("" + fa);
                     a.CurrentAction = fa;
                     lastFollow = DateTime.Now;
-                } else
+                }
+                else
                 {
                     if (UseLookAttention)
                     {
@@ -743,24 +774,25 @@ namespace AIMLBotModule
         public Unifiable AIMLInterp(string input, User myUser)
         {
             if (input == null) return Unifiable.Empty;
-            input = input.Trim().Replace("  "," ");
+            input = input.Trim().Replace("  ", " ");
             if (string.IsNullOrEmpty(input)) return Unifiable.Empty;
             string removeName = RemoveNameFromString(input);
-            string myName = GetName().ToLower(); 
+            string myName = GetName().ToLower();
             if (!string.IsNullOrEmpty(removeName))
             {
                 if (!myName.Contains(removeName.ToLower())) return Unifiable.Empty;
                 input = input.Substring(removeName.Length);
-            } else
+            }
+            else
             {
                 if (input.Contains(" "))
                 {
                     string[] split = input.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (myName.StartsWith(split[0].ToLower()))
                     {
-                        input = string.Join(" ", split, 1, split.Length - 1);   
+                        input = string.Join(" ", split, 1, split.Length - 1);
                     }
-                    
+
                 }
             }
             input = input.Trim();
