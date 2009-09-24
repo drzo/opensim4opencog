@@ -51,6 +51,14 @@ namespace AIMLBotModule
                         WorldSystemModule.MyBot.ReloadAll();
                         return "WorldSystemModule.MyBot.ReloadAll();";
                     }
+                    else
+                        if (s == "load")
+                        {
+                            if (args.Length < 2) return Usage;
+                            string stringJoin = String.Join(" ", args, 1, args.Length - 1);
+                            WorldSystemModule.MyBot.loadAIMLFromFiles(stringJoin);
+                            return "aiml loaded " + stringJoin;
+                        }
             string joined = String.Join(" ", args);
             return WorldSystemModule.AIMLInterp(joined);
         }

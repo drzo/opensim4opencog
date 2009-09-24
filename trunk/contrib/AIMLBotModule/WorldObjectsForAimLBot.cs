@@ -68,6 +68,7 @@ namespace AIMLBotModule
         /// </summary>
         public static double MaxZDistance = 1;
 
+        public bool NeedPersonalConfig = true;
         /// <summary>
         /// REgister the Lisp Version of TalkToObject
         /// </summary>
@@ -160,6 +161,7 @@ namespace AIMLBotModule
                 MyBot.loadAIMLFromFiles();
                 MyBot.isAcceptingUserInput = true;
                 MyBot.outputDelegate = WriteLine;
+                LoadPersonalConfig();
                 // wont get here unless there was no problem
                 client.Self.OnChat += AIML_OnChat;
                 client.Self.OnInstantMessage += AIML_OnInstantMessage;
@@ -249,15 +251,82 @@ namespace AIMLBotModule
 
         private void ReadSimSettings()
         {
-            MyBot.GlobalSettings.addSetting("name",
-                                            String.Format("{0} {1}", client.BotLoginParams.FirstName,
-                                                          client.BotLoginParams.LastName));
-            MyBot.GlobalSettings.addSetting("firstname", client.BotLoginParams.FirstName);
-            MyBot.GlobalSettings.addSetting("lastname", client.BotLoginParams.LastName);
+            client.InternType(this.GetType());
+            string myName = GetName().Trim();
+            String[] sname = myName.Split(' ');
+            MyBot.GlobalSettings.addSetting("name", String.Format("{0}", myName ));
+            MyBot.GlobalSettings.addSetting("firstname", sname[0]);
+            MyBot.GlobalSettings.addSetting("lastname", sname[1]);
             client.WorldSystem.TheSimAvatar["AIMLBotModule"] = this;
             client.WorldSystem.TheSimAvatar["MyBot"] = MyBot;
-            client.InternType(this.GetType());
+            LoadPersonalConfig();
 
+        }
+
+        private void LoadPersonalConfig()
+        {
+            if (!NeedPersonalConfig) return;
+            string myName = GetName().ToLower().Trim().Replace(" ", "_");
+            if (string.IsNullOrEmpty(myName)) return;
+            NeedPersonalConfig = false;
+            LoadPersonalDirectories(myName);
+        }
+
+        public void LoadPersonalDirectories(string myName)
+        {
+            bool loaded = false;
+            string file = Path.Combine("config", myName);
+            if (Directory.Exists(file))
+            {
+                WriteLine("LoadPersonalDirectories: '{0}'", file);
+                loaded = true;
+                MyBot.loadSettings(file);
+            }
+            file = Path.Combine("aiml", myName);
+            if (Directory.Exists(file))
+            {
+                WriteLine("LoadPersonalDirectories: '{0}'",file);
+                loaded = true;
+                MyBot.isAcceptingUserInput = false;
+                MyBot.loadAIMLFromFiles(file);
+                MyBot.isAcceptingUserInput = true;
+            }
+
+            file = Path.Combine(myName,"config");
+            if (Directory.Exists(file))
+            {
+                WriteLine("LoadPersonalDirectories: '{0}'", file);
+                loaded = true;
+                MyBot.loadSettings(file);
+            }
+
+            file = Path.Combine(myName,"aiml");
+            if (Directory.Exists(file))
+            {
+                WriteLine("LoadPersonalDirectories: '{0}'",file);
+                loaded = true;
+                MyBot.isAcceptingUserInput = false;
+                MyBot.loadAIMLFromFiles(file);
+                MyBot.isAcceptingUserInput = true;
+            }
+
+            if (!loaded)
+            {
+                file = myName;
+                if (Directory.Exists(file))
+                {
+                    WriteLine("LoadPersonalDirectories: '{0}'", file);
+                    loaded = true;
+                    MyBot.isAcceptingUserInput = false;
+                    MyBot.loadAIMLFromFiles(file);
+                    MyBot.isAcceptingUserInput = true;
+                    MyBot.loadSettings(file);
+                }
+            }
+            if (!loaded)
+            {
+                WriteLine("Didnt find personal directories with stem: '{0}'", myName);
+            }
         }
 
         public void SetChatOnOff(string username, bool value)
