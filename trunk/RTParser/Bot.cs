@@ -351,7 +351,8 @@ namespace RTParser
             AIMLLoader loader = new AIMLLoader(this);
             loader.loadAIML(path);
             // maybe loads settings files if they are there
-            loadSettings(path);
+            string settings = Path.Combine(path, "Settings.xml");
+            if (File.Exists(settings)) loadSettings(settings);
         }
 
         /// <summary>
