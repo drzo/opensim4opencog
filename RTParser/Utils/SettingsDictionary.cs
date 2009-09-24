@@ -116,7 +116,7 @@ namespace RTParser.Utils
                     }
                     else
                     {
-                        throw new FileNotFoundException(pathToSettings);
+                        Console.WriteLine("No settings found in: " + pathToSettings);
                     }
                 }
                 else
@@ -149,18 +149,23 @@ namespace RTParser.Utils
 
                 foreach (XmlNode myNode in rootChildren)
                 {
-                    if (myNode.NodeType == XmlNodeType.Comment) continue;
-                    if ((myNode.Name == "item") & (myNode.Attributes.Count == 2))
+                    loadSettingNode(myNode);
+                }
+            }
+        }
+
+        public void loadSettingNode(XmlNode myNode)
+        {
+            if (myNode.NodeType == XmlNodeType.Comment) return;
+            if ((myNode.Name == "item") & (myNode.Attributes.Count == 2))
+            {
+                if ((myNode.Attributes[0].Name == "name") & (myNode.Attributes[1].Name == "value"))
+                {
+                    string name = myNode.Attributes["name"].Value;
+                    Unifiable value = Unifiable.Create(myNode.Attributes["value"].Value);
+                    if (name.Length > 0)
                     {
-                        if ((myNode.Attributes[0].Name == "name") & (myNode.Attributes[1].Name == "value"))
-                        {
-                            string name = myNode.Attributes["name"].Value;
-                            Unifiable value = Unifiable.Create(myNode.Attributes["value"].Value);
-                            if (name.Length > 0)
-                            {
-                                this.addSetting(name, value);
-                            }
-                        }
+                        this.addSetting(name, value);
                     }
                 }
             }

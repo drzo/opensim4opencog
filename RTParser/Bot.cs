@@ -344,6 +344,17 @@ namespace RTParser
         }
 
         /// <summary>
+        /// Loads AIML from .aiml files into the graphmaster "brain" of the Proccessor
+        /// </summary>
+        public void loadAIMLFromFiles(string path)
+        {
+            AIMLLoader loader = new AIMLLoader(this);
+            loader.loadAIML(path);
+            // maybe loads settings files if they are there
+            loadSettings(path);
+        }
+
+        /// <summary>
         /// Allows the Proccessor to load a new XML version of some AIML
         /// </summary>
         /// <param name="newAIML">The XML document containing the AIML</param>
@@ -367,7 +378,7 @@ namespace RTParser
             this.DefaultPredicates = new SettingsDictionary(this);
             this.CustomTags = new Dictionary<Unifiable, TagHandler>();
             this.Graphmaster = new RTParser.Utils.Node(null);
-            loadCustomTagHandlers("RTParser.dll");
+            loadCustomTagHandlers("AIMLbot.dll");
         }
 
         /// <summary>

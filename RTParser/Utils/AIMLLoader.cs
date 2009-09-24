@@ -125,19 +125,36 @@ namespace RTParser.Utils
             // process each of these child nodes
             foreach (XmlNode currentNode in rootChildren)
             {
-                if (currentNode.NodeType == XmlNodeType.Comment) continue;
-                if (currentNode.Name == "topic")
+                loadAIMLNode(currentNode, filename);
+            }
+        }
+
+        private void loadAIMLNode(XmlNode currentNode, string filename)
+        {
+            if (currentNode.NodeType == XmlNodeType.Comment) return;
+            if (currentNode.Name == "topic")
+            {
+                this.processTopic(currentNode, filename);
+            }
+            else if (currentNode.Name == "category")
+            {
+                this.processCategory(currentNode, filename);
+            }
+            else if (currentNode.Name == "root")
+            {
+                // process each of these child "settings"? nodes
+                foreach (XmlNode child in currentNode.ChildNodes)
                 {
-                    this.processTopic(currentNode, filename);
+                    loadAIMLNode(child, filename);
                 }
-                else if (currentNode.Name == "category")
-                {
-                    this.processCategory(currentNode, filename);
-                }
-                else
-                {
-                    this.RProcessor.writeToLog("unused node in " + doc + ": " + currentNode.OuterXml);
-                }
+            }
+            else if (currentNode.Name == "item")
+            {
+                this.RProcessor.GlobalSettings.loadSettingNode(currentNode);
+            }
+            else
+            {
+                this.RProcessor.writeToLog("unused node in " + filename + ": " + currentNode.OuterXml);
             }
         }
 
