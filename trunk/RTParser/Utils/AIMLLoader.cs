@@ -49,6 +49,7 @@ namespace RTParser.Utils
         /// <param name="path"></param>
         public void loadAIML(string path)
         {
+            RProcessor.ReloadHooks.Add(() => loadAIML(path));
             if (Directory.Exists(path))
             {
                 // process the AIML

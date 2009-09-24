@@ -25,7 +25,7 @@ namespace RTParser
     public class RTPBot
     {
         #region Attributes
-
+        public List<CrossAppDomainDelegate> ReloadHooks = new List<CrossAppDomainDelegate>();
         /// <summary>
         /// A dictionary object that looks after all the settings associated with this Proccessor
         /// </summary>
@@ -378,6 +378,7 @@ namespace RTParser
             this.Substitutions = new SettingsDictionary(this);
             this.DefaultPredicates = new SettingsDictionary(this);
             this.CustomTags = new Dictionary<Unifiable, TagHandler>();
+            this.Size = 0;
             this.Graphmaster = new RTParser.Utils.Node(null);
             loadCustomTagHandlers("AIMLbot.dll");
         }
@@ -395,11 +396,12 @@ namespace RTParser
         public void ReloadAll()
         {
             setup();
-            loadSettings();
-            //MyBot.GlobalSettings.addSetting("name", client.BotLoginParams.FirstName+ " " + client.BotLoginParams.LastName);
-            this.isAcceptingUserInput = false;
-            this.loadAIMLFromFiles();
-            this.isAcceptingUserInput = true;
+            List<CrossAppDomainDelegate> todo = new List<CrossAppDomainDelegate>(ReloadHooks);
+            ReloadHooks.Clear();
+            foreach (var list in todo)
+            {
+                list();
+            }
         }
 
         /// <summary>
@@ -409,6 +411,7 @@ namespace RTParser
         /// <param name="pathToSettings">Path to the settings xml file</param>
         public void loadSettings(string pathToSettings)
         {
+            ReloadHooks.Add(() => loadSettings(pathToSettings));
             this.GlobalSettings.loadSettings(pathToSettings);
 
             // Checks for some important default settings

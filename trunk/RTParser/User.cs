@@ -98,6 +98,11 @@ namespace RTParser
             }
 		}
 
+        public override string ToString()
+        {
+            return UserID;
+        }
+
         /// <summary>
         /// Returns the Unifiable to use for the next that part of a subsequent path
         /// </summary>
