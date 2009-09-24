@@ -3,8 +3,6 @@ using System.ComponentModel;
 using System.Threading;
 using System.Windows.Forms;
 using cogbot;
-using cogbot.Actions;
-using cogbot.GUI;
 using OpenMetaverse;
 using Radegast;
 
@@ -22,6 +20,7 @@ namespace CogbotRadegastPluginModule
         private SleekTab tab;
         private ClientManager clientManager;
         private CogbotRadegastInterpreter cogbotRadegastInterpreter;
+        private CogbotNotificationListener CogbotNoticeuListener;
 
         public void StartPlugin(RadegastInstance inst)
         {
@@ -39,6 +38,7 @@ namespace CogbotRadegastPluginModule
         {
             RadegastInstance = inst;
             CogbotContextMenuListener = new CogbotContextMenuListener();
+            CogbotNoticeuListener = new CogbotNotificationListener();
             if (ClientManager.UsingRadgastFromCogbot)
             {
                 // just unregister events for now
