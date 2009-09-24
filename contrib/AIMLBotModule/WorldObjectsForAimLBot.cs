@@ -280,7 +280,7 @@ namespace AIMLBotModule
             {
                 WriteLine("LoadPersonalDirectories: '{0}'", file);
                 loaded = true;
-                MyBot.loadSettings(file);
+                MyBot.loadSettings(Path.Combine(file, "Settings.xml"));
             }
             file = Path.Combine("aiml", myName);
             if (Directory.Exists(file))
@@ -297,7 +297,7 @@ namespace AIMLBotModule
             {
                 WriteLine("LoadPersonalDirectories: '{0}'", file);
                 loaded = true;
-                MyBot.loadSettings(file);
+                MyBot.loadSettings(Path.Combine(file, "Settings.xml"));
             }
 
             file = Path.Combine(myName,"aiml");
@@ -320,7 +320,6 @@ namespace AIMLBotModule
                     MyBot.isAcceptingUserInput = false;
                     MyBot.loadAIMLFromFiles(file);
                     MyBot.isAcceptingUserInput = true;
-                    MyBot.loadSettings(file);
                 }
             }
             if (!loaded)
