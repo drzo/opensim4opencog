@@ -755,7 +755,6 @@
    <Reference name="System.Xml.Linq"/>
    <Reference name="System.Data.DataSetExtensions"/>
    <Reference name="System.Data" />
-   <Reference name="System.Speech" />
    <Reference name="System.Xml" />
    <Files>
        <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
@@ -792,7 +791,6 @@
    <Reference name="System.Xml.Linq"/>
    <Reference name="System.Data.DataSetExtensions"/>
    <Reference name="System.Data" />
-   <Reference name="System.Speech" />
    <Reference name="System.Xml" />
    <Files>
        <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
@@ -831,7 +829,6 @@
    <Reference name="System.Xml.Linq"/>
    <Reference name="System.Data.DataSetExtensions"/>
    <Reference name="System.Data" />
-   <Reference name="System.Speech" />
    <Reference name="System.Xml" />
    <Files>
        <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
