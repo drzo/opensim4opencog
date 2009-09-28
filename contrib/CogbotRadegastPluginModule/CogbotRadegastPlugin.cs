@@ -17,7 +17,7 @@ namespace CogbotRadegastPluginModule
         public RadegastInstance RadegastInstance;
         public CogbotContextMenuListener CogbotContextMenuListener;
         private CogbotTabWindow chatConsole;
-        private SleekTab tab;
+        private RadegastTab tab;
         private ClientManager clientManager;
         private CogbotRadegastInterpreter cogbotRadegastInterpreter;
         private CogbotNotificationListener CogbotNoticeuListener;
@@ -58,9 +58,9 @@ namespace CogbotRadegastPluginModule
             tab = inst.TabConsole.AddTab("cogbot", "Cogbot", chatConsole);
             tab.AllowClose = false;
             tab.AllowDetach = true;
-            SleekTab tab1 = RadegastInstance.TabConsole.GetTab("chat");
+            RadegastTab tab1 = RadegastInstance.TabConsole.GetTab("chat");
             tab1.AllowDetach = true;
-            SleekTab tab2 = RadegastInstance.TabConsole.GetTab("login");
+            RadegastTab tab2 = RadegastInstance.TabConsole.GetTab("login");
             tab2.AllowDetach = true;
 
             //RadegastInstance.Client.Network.OnConnected += Plugin_OnConnected;

@@ -62,7 +62,7 @@ namespace CogbotRadegastPluginModule
             get { return instance.TabConsole; }
         }
         private Avatar currentAvatar;
-        private SleekMovement movement;
+        private RadegastMovement  movement;
         //    private AIMLbot.Bot Alice;
         private Hashtable AliceUsers = new Hashtable();
         private Avatar.AvatarProperties myProfile;
