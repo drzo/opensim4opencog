@@ -142,6 +142,7 @@ namespace cogbot.Utilities
             while (true)
             {
                 Thread.Sleep(PING_TIME);
+                if (NoQueue) continue;
                 if (Busy || WaitingOnPing)
                 {
                     if (LastBusy == sequence)
@@ -163,7 +164,7 @@ namespace cogbot.Utilities
                 Enqueue(() =>
                 {
                     WaitingOnPing = false;
-                    sequence--;
+                    if (sequence > 1) sequence--;
                     DateTime now = DateTime.UtcNow;
                     TimeSpan timeSpan = now - oldnow;
                     double secs = timeSpan.TotalSeconds;
@@ -189,9 +190,16 @@ namespace cogbot.Utilities
         {
             if (NoQueue)
             {
-                evt();
-                return;
-
+                try
+                {
+                    Busy = true;
+                    evt();
+                    return;
+                }
+                finally
+                {
+                    Busy = false;
+                }
             }
             lock (EventQueueLock)
             {
@@ -204,8 +212,16 @@ namespace cogbot.Utilities
         {
             if (NoQueue)
             {
-                evt();
-                return;
+                try
+                {
+                    Busy = true;
+                    evt();
+                    return;
+                }
+                finally
+                {
+                    Busy = false;
+                }
 
             }
             lock (EventQueueLock)
