@@ -239,7 +239,9 @@ namespace cogbot.Listeners
             {
                 SimAvatarImpl A = CreateSimAvatar(uuid,this,sim);
                 A.RegionHandle = sim.Handle;
-                A.SimPosition = sim.AvatarPositions[uuid];
+                Vector3 pos;
+                if (sim.AvatarPositions.TryGetValue(uuid, out pos))
+                    A.SimPosition = pos;
 
             }
             //for (int i = 0; i < coarse.Location.Length; i++)
