@@ -653,10 +653,14 @@ namespace OpenMetaverse
         {
             ImagePacketPacket image = (ImagePacketPacket)packet;
 
+            TaskInfo task;
+            bool found;
             lock (_Transfers)
             {
-                TaskInfo task;
-                if (_Transfers.TryGetValue(image.ImageID.ID, out task))
+                found = _Transfers.TryGetValue(image.ImageID.ID, out task);
+            }
+            {
+                if (found)
                 {
                     if (task.Transfer.Size == 0)
                     {
@@ -668,7 +672,7 @@ namespace OpenMetaverse
                             Logger.Log("Timed out while waiting for the image header to download for " +
                                        task.Transfer.ID, Helpers.LogLevel.Warning, _Client);
 
-                            _Transfers.Remove(task.Transfer.ID);
+                            lock (_Transfers) _Transfers.Remove(task.Transfer.ID);
                             resetEvents[task.RequestSlot].Set(); // free up request slot
 
                             foreach (TextureDownloadCallback callback in task.Callbacks)
@@ -715,7 +719,7 @@ namespace OpenMetaverse
 #endif
 
                         task.Transfer.Success = true;
-                        _Transfers.Remove(task.Transfer.ID);
+                        lock(_Transfers) _Transfers.Remove(task.Transfer.ID);
                         resetEvents[task.RequestSlot].Set(); // free up request slot
                         _Client.Assets.Cache.SaveAssetToCache(task.RequestID, task.Transfer.AssetData);
                         foreach (TextureDownloadCallback callback in task.Callbacks)
