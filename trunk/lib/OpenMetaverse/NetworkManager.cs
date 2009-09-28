@@ -1095,7 +1095,8 @@ namespace OpenMetaverse
         {
             Logger.DebugLog("Received a DisableSimulator packet from " + simulator + ", shutting it down", Client);
 
-            DisconnectSim(simulator, false, DisconnectType.ServerInitiated);
+            if (CurrentSim==simulator)
+                DisconnectSim(simulator, false, DisconnectType.ServerInitiated);
         }
 
         private void KickUserHandler(Packet packet, Simulator simulator)
