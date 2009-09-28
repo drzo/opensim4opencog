@@ -4,10 +4,6 @@ using System.Threading;
 using cogbot.Actions;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
-using OpenMetaverse.Assets;
-using OpenMetaverse.Packets;
-using OpenMetaverse.StructuredData;
-using PathSystem3D.Navigation;
 using cogbot.Utilities;
 
 namespace cogbot.Listeners
@@ -1503,14 +1499,20 @@ namespace cogbot.Listeners
 
         private SimAvatarImpl CreateSimAvatar(UUID uuid, WorldObjects objects, Simulator simulator)
         {
+            if (uuid==UUID.Zero)
+            {
+                throw new NullReferenceException("UUID.Zero!");
+            }
             // Request all of the packets that make up an avatar profile
             // lock (GetSimObjectLock)
+            SimObject obj0 = GetSimObjectFromUUID(uuid);
+            if (obj0 != null) return (SimAvatarImpl)obj0;
             lock (GetSimLock(simulator ?? client.Network.CurrentSim))
                 lock (uuidTypeObject)
                     //lock (SimObjects)
                       //  lock (SimAvatars)
                         {
-                            SimObject obj0 = GetSimObjectFromUUID(uuid);
+                            obj0 = GetSimObjectFromUUID(uuid);
                             if (obj0 != null) return (SimAvatarImpl)obj0;
                             obj0 = new SimAvatarImpl(uuid, objects, simulator);
                             SimAvatars.Add((SimAvatar)obj0);
@@ -1524,13 +1526,19 @@ namespace cogbot.Listeners
 
         private SimObject CreateSimObject(UUID uuid, WorldObjects WO, Simulator simulator)
         {
+            if (uuid == UUID.Zero)
+            {
+                throw new NullReferenceException("UUID.Zero!");
+            }
             //  lock (GetSimObjectLock)
+            SimObject obj0 = GetSimObjectFromUUID(uuid);
+            if (obj0 != null) return obj0;
             lock (GetSimLock(simulator ?? client.Network.CurrentSim))
                 lock (uuidTypeObject)
                    // lock (SimObjects)
                      //   lock (SimAvatars)
                         {
-                            SimObject obj0 = GetSimObjectFromUUID(uuid);
+                            obj0 = GetSimObjectFromUUID(uuid);
                             if (obj0 != null) return obj0;
                             obj0 = new SimObjectImpl(uuid, WO, simulator);
                             SimObjects.AddTo(obj0);
