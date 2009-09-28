@@ -1657,7 +1657,7 @@ namespace cogbot
         {
             Invoke(() =>
                        {
-                           SleekTab tab = TheRadegastInstance.TabConsole.AddTab(name.ToLower(), label, _debugWindow);
+                           RadegastTab tab = TheRadegastInstance.TabConsole.AddTab(name.ToLower(), label, _debugWindow);
                            tab.AllowDetach = true;
                            tab.AllowMerge = true;
                            //tab.TabClosed += ((sender, args) => _debugWindow.Dispose());
