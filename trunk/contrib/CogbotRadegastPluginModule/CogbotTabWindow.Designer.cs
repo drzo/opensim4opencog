@@ -61,61 +61,10 @@ namespace CogbotRadegastPluginModule
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CogbotTabWindow));
             this.rtbChat = new System.Windows.Forms.RichTextBox();
             this.cbxInput = new System.Windows.Forms.ComboBox();
             this.btnSay = new System.Windows.Forms.Button();
-            this.btnShout = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.lvwObjects = new System.Windows.Forms.ListView();
-            this.ExtraContextMenu = new RadegastContextMenuStrip(this.components);
-            this.avatarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.ctxAnim = new System.Windows.Forms.ToolStripMenuItem();
-            this.ctxProfile = new System.Windows.Forms.ToolStripMenuItem();
-            this.ctxPay = new System.Windows.Forms.ToolStripMenuItem();
-            this.ctxMaster = new System.Windows.Forms.ToolStripMenuItem();
-            this.ctxStartIM = new System.Windows.Forms.ToolStripMenuItem();
-            this.setCameraToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.avatarToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.ctxSource = new System.Windows.Forms.ToolStripMenuItem();
-            this.ctxTextures = new System.Windows.Forms.ToolStripMenuItem();
-            this.ctxFollow = new System.Windows.Forms.ToolStripMenuItem();
-            this.ctxAttach = new System.Windows.Forms.ToolStripMenuItem();
-            this.ctxPoint = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem33 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem34 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem35 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem36 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem37 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem38 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem39 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem40 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem41 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem44 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem45 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem46 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem49 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem43 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem71 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem42 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.tbtnStartIM = new System.Windows.Forms.ToolStripButton();
-            this.tbtnProfile = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.tbtnFollow = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.tbtnTextures = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.tbtnAttach = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
-            this.tbtnMaster = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
-            this.tbtnAnim = new System.Windows.Forms.ToolStripButton();
-            this.pnlMovement = new System.Windows.Forms.Panel();
-            this.btnMoveBack = new System.Windows.Forms.Button();
-            this.btnFwd = new System.Windows.Forms.Button();
-            this.btnTurnRight = new System.Windows.Forms.Button();
-            this.btnTurnLeft = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.folderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ContextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -165,13 +114,42 @@ namespace CogbotRadegastPluginModule
             this.toolStripMenuItem30 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem31 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem32 = new System.Windows.Forms.ToolStripMenuItem();
+            this.lvwObjects = new System.Windows.Forms.ListView();
+            this.ExtraContextMenu = new Radegast.RadegastContextMenuStrip(this.components);
+            this.avatarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ctxAnim = new System.Windows.Forms.ToolStripMenuItem();
+            this.ctxProfile = new System.Windows.Forms.ToolStripMenuItem();
+            this.ctxPay = new System.Windows.Forms.ToolStripMenuItem();
+            this.ctxMaster = new System.Windows.Forms.ToolStripMenuItem();
+            this.ctxStartIM = new System.Windows.Forms.ToolStripMenuItem();
+            this.setCameraToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.avatarToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.ctxSource = new System.Windows.Forms.ToolStripMenuItem();
+            this.ctxTextures = new System.Windows.Forms.ToolStripMenuItem();
+            this.ctxFollow = new System.Windows.Forms.ToolStripMenuItem();
+            this.ctxAttach = new System.Windows.Forms.ToolStripMenuItem();
+            this.ctxPoint = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem33 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem34 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem35 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem36 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem37 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem38 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem39 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem40 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem41 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem44 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem45 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem46 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem49 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem43 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem71 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem42 = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
-            this.ExtraContextMenu.SuspendLayout();
-            this.toolStrip1.SuspendLayout();
-            this.pnlMovement.SuspendLayout();
             this.panel1.SuspendLayout();
+            this.ExtraContextMenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // rtbChat
@@ -199,8 +177,9 @@ namespace CogbotRadegastPluginModule
             this.cbxInput.FormattingEnabled = true;
             this.cbxInput.Location = new System.Drawing.Point(0, 0);
             this.cbxInput.Name = "cbxInput";
-            this.cbxInput.Size = new System.Drawing.Size(352, 21);
+            this.cbxInput.Size = new System.Drawing.Size(431, 21);
             this.cbxInput.TabIndex = 3;
+            this.cbxInput.SelectedIndexChanged += new System.EventHandler(this.cbxInput_SelectedIndexChanged);
             this.cbxInput.KeyUp += new System.Windows.Forms.KeyEventHandler(this.cbxInput_KeyUp);
             this.cbxInput.KeyDown += new System.Windows.Forms.KeyEventHandler(this.cbxInput_KeyDown);
             this.cbxInput.TextChanged += new System.EventHandler(this.cbxInput_TextChanged);
@@ -209,25 +188,13 @@ namespace CogbotRadegastPluginModule
             // 
             this.btnSay.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSay.Enabled = false;
-            this.btnSay.Location = new System.Drawing.Point(358, 0);
+            this.btnSay.Location = new System.Drawing.Point(437, 0);
             this.btnSay.Name = "btnSay";
             this.btnSay.Size = new System.Drawing.Size(76, 24);
             this.btnSay.TabIndex = 5;
             this.btnSay.Text = "Execute";
             this.btnSay.UseVisualStyleBackColor = true;
             this.btnSay.Click += new System.EventHandler(this.btnSay_Click);
-            // 
-            // btnShout
-            // 
-            this.btnShout.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnShout.Enabled = false;
-            this.btnShout.Location = new System.Drawing.Point(440, 0);
-            this.btnShout.Name = "btnShout";
-            this.btnShout.Size = new System.Drawing.Size(76, 24);
-            this.btnShout.TabIndex = 4;
-            this.btnShout.Text = "Shout";
-            this.btnShout.UseVisualStyleBackColor = true;
-            this.btnShout.Click += new System.EventHandler(this.btnShout_Click);
             // 
             // splitContainer1
             // 
@@ -242,452 +209,14 @@ namespace CogbotRadegastPluginModule
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.lvwObjects);
-            this.splitContainer1.Panel2.Controls.Add(this.toolStrip1);
-            this.splitContainer1.Panel2.Controls.Add(this.pnlMovement);
             this.splitContainer1.Size = new System.Drawing.Size(516, 310);
             this.splitContainer1.SplitterDistance = 400;
             this.splitContainer1.TabIndex = 7;
-            // 
-            // lvwObjects
-            // 
-            this.lvwObjects.AllowDrop = true;
-            this.lvwObjects.ContextMenuStrip = this.ExtraContextMenu;
-            this.lvwObjects.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lvwObjects.FullRowSelect = true;
-            this.lvwObjects.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.lvwObjects.HideSelection = false;
-            this.lvwObjects.LabelWrap = false;
-            this.lvwObjects.Location = new System.Drawing.Point(0, 0);
-            this.lvwObjects.MultiSelect = false;
-            this.lvwObjects.Name = "lvwObjects";
-            this.lvwObjects.Size = new System.Drawing.Size(77, 273);
-            this.lvwObjects.TabIndex = 10;
-            this.lvwObjects.UseCompatibleStateImageBehavior = false;
-            this.lvwObjects.View = System.Windows.Forms.View.List;
-            this.lvwObjects.SelectedIndexChanged += new System.EventHandler(this.lvwObjects_SelectedIndexChanged);
-            this.lvwObjects.DragDrop += new System.Windows.Forms.DragEventHandler(this.lvwObjects_DragDrop);
-            this.lvwObjects.DragOver += new System.Windows.Forms.DragEventHandler(this.lvwObjects_DragOver);
-            // 
-            // ExtraContextMenu
-            // 
-            this.ExtraContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.avatarToolStripMenuItem,
-            this.avatarToolStripMenuItem1,
-            this.toolStripMenuItem33,
-            this.toolStripMenuItem40,
-            this.toolStripMenuItem44,
-            this.toolStripMenuItem45,
-            this.toolStripMenuItem46,
-            this.toolStripMenuItem49,
-            this.toolStripMenuItem43,
-            this.toolStripMenuItem71,
-            this.toolStripMenuItem42});
-            this.ExtraContextMenu.Name = "avatarContext";
-            this.ExtraContextMenu.Size = new System.Drawing.Size(153, 268);
-            this.ExtraContextMenu.Opening += new System.ComponentModel.CancelEventHandler(this.avatarContext_Opening);
-            // 
-            // avatarToolStripMenuItem
-            // 
-            this.avatarToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.ctxAnim,
-            this.ctxProfile,
-            this.ctxPay,
-            this.ctxMaster,
-            this.ctxStartIM,
-            this.setCameraToolStripMenuItem});
-            this.avatarToolStripMenuItem.Name = "avatarToolStripMenuItem";
-            this.avatarToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.avatarToolStripMenuItem.Text = "Avatar";
-            // 
-            // ctxAnim
-            // 
-            this.ctxAnim.Name = "ctxAnim";
-            this.ctxAnim.Size = new System.Drawing.Size(159, 22);
-            this.ctxAnim.Text = "Animations";
-            this.ctxAnim.Click += new System.EventHandler(this.ctxAnim_Click);
-            // 
-            // ctxProfile
-            // 
-            this.ctxProfile.Name = "ctxProfile";
-            this.ctxProfile.Size = new System.Drawing.Size(159, 22);
-            this.ctxProfile.Text = "Profile";
-            // 
-            // ctxPay
-            // 
-            this.ctxPay.Enabled = false;
-            this.ctxPay.Name = "ctxPay";
-            this.ctxPay.Size = new System.Drawing.Size(159, 22);
-            this.ctxPay.Text = "Pay";
-            // 
-            // ctxMaster
-            // 
-            this.ctxMaster.Name = "ctxMaster";
-            this.ctxMaster.Size = new System.Drawing.Size(159, 22);
-            this.ctxMaster.Text = "Master controls";
-            // 
-            // ctxStartIM
-            // 
-            this.ctxStartIM.Name = "ctxStartIM";
-            this.ctxStartIM.Size = new System.Drawing.Size(159, 22);
-            this.ctxStartIM.Text = "Start IM";
-            // 
-            // setCameraToolStripMenuItem
-            // 
-            this.setCameraToolStripMenuItem.Name = "setCameraToolStripMenuItem";
-            this.setCameraToolStripMenuItem.Size = new System.Drawing.Size(159, 22);
-            this.setCameraToolStripMenuItem.Text = "Set Camera";
-            this.setCameraToolStripMenuItem.Click += new System.EventHandler(this.setCameraToolStripMenuItem_Click);
-            // 
-            // avatarToolStripMenuItem1
-            // 
-            this.avatarToolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.ctxSource,
-            this.ctxTextures,
-            this.ctxFollow,
-            this.ctxAttach,
-            this.ctxPoint});
-            this.avatarToolStripMenuItem1.Name = "avatarToolStripMenuItem1";
-            this.avatarToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
-            this.avatarToolStripMenuItem1.Text = "Primitive";
-            // 
-            // ctxSource
-            // 
-            this.ctxSource.Name = "ctxSource";
-            this.ctxSource.Size = new System.Drawing.Size(150, 22);
-            this.ctxSource.Text = "Set as source";
-            // 
-            // ctxTextures
-            // 
-            this.ctxTextures.Name = "ctxTextures";
-            this.ctxTextures.Size = new System.Drawing.Size(150, 22);
-            this.ctxTextures.Text = "Textures";
-            // 
-            // ctxFollow
-            // 
-            this.ctxFollow.Name = "ctxFollow";
-            this.ctxFollow.Size = new System.Drawing.Size(150, 22);
-            this.ctxFollow.Text = "Follow";
-            // 
-            // ctxAttach
-            // 
-            this.ctxAttach.Name = "ctxAttach";
-            this.ctxAttach.Size = new System.Drawing.Size(150, 22);
-            this.ctxAttach.Text = "Attachments";
-            // 
-            // ctxPoint
-            // 
-            this.ctxPoint.Name = "ctxPoint";
-            this.ctxPoint.Size = new System.Drawing.Size(150, 22);
-            this.ctxPoint.Text = "Point at";
-            this.ctxPoint.Click += new System.EventHandler(this.ctxPoint_Click);
-            // 
-            // toolStripMenuItem33
-            // 
-            this.toolStripMenuItem33.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem34});
-            this.toolStripMenuItem33.Name = "toolStripMenuItem33";
-            this.toolStripMenuItem33.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItem33.Text = "Folder";
-            // 
-            // toolStripMenuItem34
-            // 
-            this.toolStripMenuItem34.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem35,
-            this.toolStripMenuItem36,
-            this.toolStripMenuItem37,
-            this.toolStripMenuItem38,
-            this.toolStripMenuItem39});
-            this.toolStripMenuItem34.Name = "toolStripMenuItem34";
-            this.toolStripMenuItem34.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItem34.Text = "New Item...";
-            // 
-            // toolStripMenuItem35
-            // 
-            this.toolStripMenuItem35.Name = "toolStripMenuItem35";
-            this.toolStripMenuItem35.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItem35.Text = "LSLText";
-            // 
-            // toolStripMenuItem36
-            // 
-            this.toolStripMenuItem36.Name = "toolStripMenuItem36";
-            this.toolStripMenuItem36.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItem36.Text = "Notecard";
-            // 
-            // toolStripMenuItem37
-            // 
-            this.toolStripMenuItem37.Name = "toolStripMenuItem37";
-            this.toolStripMenuItem37.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItem37.Text = "Texture";
-            // 
-            // toolStripMenuItem38
-            // 
-            this.toolStripMenuItem38.Name = "toolStripMenuItem38";
-            this.toolStripMenuItem38.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItem38.Text = "Gesture";
-            // 
-            // toolStripMenuItem39
-            // 
-            this.toolStripMenuItem39.Name = "toolStripMenuItem39";
-            this.toolStripMenuItem39.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItem39.Text = "SimType";
-            // 
-            // toolStripMenuItem40
-            // 
-            this.toolStripMenuItem40.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem41});
-            this.toolStripMenuItem40.Name = "toolStripMenuItem40";
-            this.toolStripMenuItem40.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItem40.Text = "Object";
-            // 
-            // toolStripMenuItem41
-            // 
-            this.toolStripMenuItem41.Name = "toolStripMenuItem41";
-            this.toolStripMenuItem41.Size = new System.Drawing.Size(111, 22);
-            this.toolStripMenuItem41.Text = "Rez..";
-            // 
-            // toolStripMenuItem44
-            // 
-            this.toolStripMenuItem44.Name = "toolStripMenuItem44";
-            this.toolStripMenuItem44.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItem44.Text = "Notecard";
-            // 
-            // toolStripMenuItem45
-            // 
-            this.toolStripMenuItem45.Name = "toolStripMenuItem45";
-            this.toolStripMenuItem45.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItem45.Text = "Texture";
-            // 
-            // toolStripMenuItem46
-            // 
-            this.toolStripMenuItem46.Name = "toolStripMenuItem46";
-            this.toolStripMenuItem46.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItem46.Text = "CallingCard";
-            // 
-            // toolStripMenuItem49
-            // 
-            this.toolStripMenuItem49.Name = "toolStripMenuItem49";
-            this.toolStripMenuItem49.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItem49.Text = "Sound";
-            // 
-            // toolStripMenuItem43
-            // 
-            this.toolStripMenuItem43.Name = "toolStripMenuItem43";
-            this.toolStripMenuItem43.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItem43.Text = "Animation";
-            // 
-            // toolStripMenuItem71
-            // 
-            this.toolStripMenuItem71.Name = "toolStripMenuItem71";
-            this.toolStripMenuItem71.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItem71.Text = "Gesture";
-            // 
-            // toolStripMenuItem42
-            // 
-            this.toolStripMenuItem42.Name = "toolStripMenuItem42";
-            this.toolStripMenuItem42.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItem42.Text = "LSLText";
-            // 
-            // toolStrip1
-            // 
-            this.toolStrip1.Dock = System.Windows.Forms.DockStyle.Right;
-            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.tbtnStartIM,
-            this.tbtnProfile,
-            this.toolStripSeparator1,
-            this.tbtnFollow,
-            this.toolStripSeparator2,
-            this.tbtnTextures,
-            this.toolStripSeparator3,
-            this.tbtnAttach,
-            this.toolStripSeparator4,
-            this.tbtnMaster,
-            this.toolStripSeparator5,
-            this.tbtnAnim});
-            this.toolStrip1.Location = new System.Drawing.Point(77, 0);
-            this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
-            this.toolStrip1.Size = new System.Drawing.Size(35, 273);
-            this.toolStrip1.TabIndex = 9;
-            this.toolStrip1.Text = "toolStrip1";
-            // 
-            // tbtnStartIM
-            // 
-            this.tbtnStartIM.AutoToolTip = false;
-            this.tbtnStartIM.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.tbtnStartIM.Enabled = false;
-            this.tbtnStartIM.Image = ((System.Drawing.Image)(resources.GetObject("tbtnStartIM.Image")));
-            this.tbtnStartIM.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tbtnStartIM.Name = "tbtnStartIM";
-            this.tbtnStartIM.Size = new System.Drawing.Size(32, 20);
-            this.tbtnStartIM.ToolTipText = "Start IM";
-            this.tbtnStartIM.Click += new System.EventHandler(this.tbtnStartIM_Click);
-            // 
-            // tbtnProfile
-            // 
-            this.tbtnProfile.AutoToolTip = false;
-            this.tbtnProfile.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.tbtnProfile.Enabled = false;
-            this.tbtnProfile.Image = ((System.Drawing.Image)(resources.GetObject("tbtnProfile.Image")));
-            this.tbtnProfile.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tbtnProfile.Name = "tbtnProfile";
-            this.tbtnProfile.Size = new System.Drawing.Size(32, 20);
-            this.tbtnProfile.ToolTipText = "View Profile";
-            this.tbtnProfile.Click += new System.EventHandler(this.tbtnProfile_Click);
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(32, 6);
-            // 
-            // tbtnFollow
-            // 
-            this.tbtnFollow.AutoToolTip = false;
-            this.tbtnFollow.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.tbtnFollow.Enabled = false;
-            this.tbtnFollow.Image = ((System.Drawing.Image)(resources.GetObject("tbtnFollow.Image")));
-            this.tbtnFollow.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tbtnFollow.Name = "tbtnFollow";
-            this.tbtnFollow.Size = new System.Drawing.Size(32, 20);
-            this.tbtnFollow.ToolTipText = "Follow";
-            this.tbtnFollow.Click += new System.EventHandler(this.tbtnFollow_Click);
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(32, 6);
-            // 
-            // tbtnTextures
-            // 
-            this.tbtnTextures.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.tbtnTextures.Enabled = false;
-            this.tbtnTextures.Image = ((System.Drawing.Image)(resources.GetObject("tbtnTextures.Image")));
-            this.tbtnTextures.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tbtnTextures.Name = "tbtnTextures";
-            this.tbtnTextures.Size = new System.Drawing.Size(32, 17);
-            this.tbtnTextures.Text = "Txtr";
-            this.tbtnTextures.Click += new System.EventHandler(this.dumpOufitBtn_Click);
-            // 
-            // toolStripSeparator3
-            // 
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(32, 6);
-            // 
-            // tbtnAttach
-            // 
-            this.tbtnAttach.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.tbtnAttach.Enabled = false;
-            this.tbtnAttach.Image = ((System.Drawing.Image)(resources.GetObject("tbtnAttach.Image")));
-            this.tbtnAttach.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tbtnAttach.Name = "tbtnAttach";
-            this.tbtnAttach.Size = new System.Drawing.Size(32, 17);
-            this.tbtnAttach.Text = "Attn";
-            this.tbtnAttach.ToolTipText = "List avatar attachments";
-            this.tbtnAttach.Click += new System.EventHandler(this.tbtnAttach_Click);
-            // 
-            // toolStripSeparator4
-            // 
-            this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(32, 6);
-            // 
-            // tbtnMaster
-            // 
-            this.tbtnMaster.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.tbtnMaster.Enabled = false;
-            this.tbtnMaster.Image = ((System.Drawing.Image)(resources.GetObject("tbtnMaster.Image")));
-            this.tbtnMaster.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tbtnMaster.Name = "tbtnMaster";
-            this.tbtnMaster.Size = new System.Drawing.Size(32, 17);
-            this.tbtnMaster.Text = "Mstr";
-            this.tbtnMaster.Click += new System.EventHandler(this.tbtnMaster_Click);
-            // 
-            // toolStripSeparator5
-            // 
-            this.toolStripSeparator5.Name = "toolStripSeparator5";
-            this.toolStripSeparator5.Size = new System.Drawing.Size(32, 6);
-            // 
-            // tbtnAnim
-            // 
-            this.tbtnAnim.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.tbtnAnim.Enabled = false;
-            this.tbtnAnim.Image = ((System.Drawing.Image)(resources.GetObject("tbtnAnim.Image")));
-            this.tbtnAnim.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tbtnAnim.Name = "tbtnAnim";
-            this.tbtnAnim.Size = new System.Drawing.Size(32, 17);
-            this.tbtnAnim.Text = "Anim";
-            this.tbtnAnim.ToolTipText = "List Avatar Animatoions";
-            this.tbtnAnim.Click += new System.EventHandler(this.tbtnAnim_Click);
-            // 
-            // pnlMovement
-            // 
-            this.pnlMovement.Controls.Add(this.btnMoveBack);
-            this.pnlMovement.Controls.Add(this.btnFwd);
-            this.pnlMovement.Controls.Add(this.btnTurnRight);
-            this.pnlMovement.Controls.Add(this.btnTurnLeft);
-            this.pnlMovement.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlMovement.Location = new System.Drawing.Point(0, 273);
-            this.pnlMovement.Name = "pnlMovement";
-            this.pnlMovement.Size = new System.Drawing.Size(112, 37);
-            this.pnlMovement.TabIndex = 11;
-            this.pnlMovement.Click += new System.EventHandler(this.pnlMovement_Click);
-            // 
-            // btnMoveBack
-            // 
-            this.btnMoveBack.Font = new System.Drawing.Font("Tahoma", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnMoveBack.Location = new System.Drawing.Point(36, 15);
-            this.btnMoveBack.Margin = new System.Windows.Forms.Padding(0);
-            this.btnMoveBack.Name = "btnMoveBack";
-            this.btnMoveBack.Size = new System.Drawing.Size(31, 19);
-            this.btnMoveBack.TabIndex = 0;
-            this.btnMoveBack.Text = "R";
-            this.btnMoveBack.UseVisualStyleBackColor = true;
-            this.btnMoveBack.MouseDown += new System.Windows.Forms.MouseEventHandler(this.btnMoveBack_MouseDown);
-            this.btnMoveBack.MouseUp += new System.Windows.Forms.MouseEventHandler(this.btnMoveBack_MouseUp);
-            // 
-            // btnFwd
-            // 
-            this.btnFwd.Font = new System.Drawing.Font("Tahoma", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnFwd.Location = new System.Drawing.Point(36, 0);
-            this.btnFwd.Margin = new System.Windows.Forms.Padding(0);
-            this.btnFwd.Name = "btnFwd";
-            this.btnFwd.Size = new System.Drawing.Size(31, 19);
-            this.btnFwd.TabIndex = 0;
-            this.btnFwd.Text = "^";
-            this.btnFwd.UseVisualStyleBackColor = true;
-            this.btnFwd.MouseDown += new System.Windows.Forms.MouseEventHandler(this.btnFwd_MouseDown);
-            this.btnFwd.MouseUp += new System.Windows.Forms.MouseEventHandler(this.btnFwd_MouseUp);
-            // 
-            // btnTurnRight
-            // 
-            this.btnTurnRight.Font = new System.Drawing.Font("Tahoma", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnTurnRight.Location = new System.Drawing.Point(67, 15);
-            this.btnTurnRight.Margin = new System.Windows.Forms.Padding(0);
-            this.btnTurnRight.Name = "btnTurnRight";
-            this.btnTurnRight.Size = new System.Drawing.Size(31, 19);
-            this.btnTurnRight.TabIndex = 0;
-            this.btnTurnRight.Text = ">>";
-            this.btnTurnRight.UseVisualStyleBackColor = true;
-            this.btnTurnRight.MouseDown += new System.Windows.Forms.MouseEventHandler(this.btnTurnRight_MouseDown);
-            this.btnTurnRight.MouseUp += new System.Windows.Forms.MouseEventHandler(this.btnTurnRight_MouseUp);
-            // 
-            // btnTurnLeft
-            // 
-            this.btnTurnLeft.Font = new System.Drawing.Font("Tahoma", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnTurnLeft.Location = new System.Drawing.Point(5, 15);
-            this.btnTurnLeft.Margin = new System.Windows.Forms.Padding(0);
-            this.btnTurnLeft.Name = "btnTurnLeft";
-            this.btnTurnLeft.Size = new System.Drawing.Size(31, 19);
-            this.btnTurnLeft.TabIndex = 0;
-            this.btnTurnLeft.Text = "<<";
-            this.btnTurnLeft.UseVisualStyleBackColor = true;
-            this.btnTurnLeft.MouseDown += new System.Windows.Forms.MouseEventHandler(this.btnTurnLeft_MouseDown);
-            this.btnTurnLeft.MouseUp += new System.Windows.Forms.MouseEventHandler(this.btnTurnLeft_MouseUp);
             // 
             // panel1
             // 
             this.panel1.Controls.Add(this.cbxInput);
             this.panel1.Controls.Add(this.btnSay);
-            this.panel1.Controls.Add(this.btnShout);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.panel1.Location = new System.Drawing.Point(0, 310);
             this.panel1.Name = "panel1";
@@ -1012,6 +541,245 @@ namespace CogbotRadegastPluginModule
             this.toolStripMenuItem32.Size = new System.Drawing.Size(139, 22);
             this.toolStripMenuItem32.Text = "Animation";
             // 
+            // lvwObjects
+            // 
+            this.lvwObjects.AllowDrop = true;
+            this.lvwObjects.ContextMenuStrip = this.ExtraContextMenu;
+            this.lvwObjects.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lvwObjects.FullRowSelect = true;
+            this.lvwObjects.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.lvwObjects.HideSelection = false;
+            this.lvwObjects.LabelWrap = false;
+            this.lvwObjects.Location = new System.Drawing.Point(0, 0);
+            this.lvwObjects.MultiSelect = false;
+            this.lvwObjects.Name = "lvwObjects";
+            this.lvwObjects.Size = new System.Drawing.Size(112, 310);
+            this.lvwObjects.TabIndex = 10;
+            this.lvwObjects.UseCompatibleStateImageBehavior = false;
+            this.lvwObjects.View = System.Windows.Forms.View.List;
+            this.lvwObjects.SelectedIndexChanged += new System.EventHandler(this.lvwObjects_SelectedIndexChanged);
+            this.lvwObjects.DragDrop += new System.Windows.Forms.DragEventHandler(this.lvwObjects_DragDrop);
+            this.lvwObjects.DragOver += new System.Windows.Forms.DragEventHandler(this.lvwObjects_DragOver);
+            // 
+            // ExtraContextMenu
+            // 
+            this.ExtraContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.avatarToolStripMenuItem,
+            this.avatarToolStripMenuItem1,
+            this.toolStripMenuItem33,
+            this.toolStripMenuItem40,
+            this.toolStripMenuItem44,
+            this.toolStripMenuItem45,
+            this.toolStripMenuItem46,
+            this.toolStripMenuItem49,
+            this.toolStripMenuItem43,
+            this.toolStripMenuItem71,
+            this.toolStripMenuItem42});
+            this.ExtraContextMenu.Name = "avatarContext";
+            this.ExtraContextMenu.Size = new System.Drawing.Size(140, 246);
+            this.ExtraContextMenu.Opening += new System.ComponentModel.CancelEventHandler(this.avatarContext_Opening);
+            // 
+            // avatarToolStripMenuItem
+            // 
+            this.avatarToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.ctxAnim,
+            this.ctxProfile,
+            this.ctxPay,
+            this.ctxMaster,
+            this.ctxStartIM,
+            this.setCameraToolStripMenuItem});
+            this.avatarToolStripMenuItem.Name = "avatarToolStripMenuItem";
+            this.avatarToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
+            this.avatarToolStripMenuItem.Text = "Avatar";
+            // 
+            // ctxAnim
+            // 
+            this.ctxAnim.Name = "ctxAnim";
+            this.ctxAnim.Size = new System.Drawing.Size(159, 22);
+            this.ctxAnim.Text = "Animations";
+            this.ctxAnim.Click += new System.EventHandler(this.ctxAnim_Click);
+            // 
+            // ctxProfile
+            // 
+            this.ctxProfile.Name = "ctxProfile";
+            this.ctxProfile.Size = new System.Drawing.Size(159, 22);
+            this.ctxProfile.Text = "Profile";
+            // 
+            // ctxPay
+            // 
+            this.ctxPay.Enabled = false;
+            this.ctxPay.Name = "ctxPay";
+            this.ctxPay.Size = new System.Drawing.Size(159, 22);
+            this.ctxPay.Text = "Pay";
+            // 
+            // ctxMaster
+            // 
+            this.ctxMaster.Name = "ctxMaster";
+            this.ctxMaster.Size = new System.Drawing.Size(159, 22);
+            this.ctxMaster.Text = "Master controls";
+            // 
+            // ctxStartIM
+            // 
+            this.ctxStartIM.Name = "ctxStartIM";
+            this.ctxStartIM.Size = new System.Drawing.Size(159, 22);
+            this.ctxStartIM.Text = "Start IM";
+            // 
+            // setCameraToolStripMenuItem
+            // 
+            this.setCameraToolStripMenuItem.Name = "setCameraToolStripMenuItem";
+            this.setCameraToolStripMenuItem.Size = new System.Drawing.Size(159, 22);
+            this.setCameraToolStripMenuItem.Text = "Set Camera";
+            this.setCameraToolStripMenuItem.Click += new System.EventHandler(this.setCameraToolStripMenuItem_Click);
+            // 
+            // avatarToolStripMenuItem1
+            // 
+            this.avatarToolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.ctxSource,
+            this.ctxTextures,
+            this.ctxFollow,
+            this.ctxAttach,
+            this.ctxPoint});
+            this.avatarToolStripMenuItem1.Name = "avatarToolStripMenuItem1";
+            this.avatarToolStripMenuItem1.Size = new System.Drawing.Size(139, 22);
+            this.avatarToolStripMenuItem1.Text = "Primitive";
+            // 
+            // ctxSource
+            // 
+            this.ctxSource.Name = "ctxSource";
+            this.ctxSource.Size = new System.Drawing.Size(150, 22);
+            this.ctxSource.Text = "Set as source";
+            // 
+            // ctxTextures
+            // 
+            this.ctxTextures.Name = "ctxTextures";
+            this.ctxTextures.Size = new System.Drawing.Size(150, 22);
+            this.ctxTextures.Text = "Textures";
+            // 
+            // ctxFollow
+            // 
+            this.ctxFollow.Name = "ctxFollow";
+            this.ctxFollow.Size = new System.Drawing.Size(150, 22);
+            this.ctxFollow.Text = "Follow";
+            // 
+            // ctxAttach
+            // 
+            this.ctxAttach.Name = "ctxAttach";
+            this.ctxAttach.Size = new System.Drawing.Size(150, 22);
+            this.ctxAttach.Text = "Attachments";
+            // 
+            // ctxPoint
+            // 
+            this.ctxPoint.Name = "ctxPoint";
+            this.ctxPoint.Size = new System.Drawing.Size(150, 22);
+            this.ctxPoint.Text = "Point at";
+            this.ctxPoint.Click += new System.EventHandler(this.ctxPoint_Click);
+            // 
+            // toolStripMenuItem33
+            // 
+            this.toolStripMenuItem33.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem34});
+            this.toolStripMenuItem33.Name = "toolStripMenuItem33";
+            this.toolStripMenuItem33.Size = new System.Drawing.Size(139, 22);
+            this.toolStripMenuItem33.Text = "Folder";
+            // 
+            // toolStripMenuItem34
+            // 
+            this.toolStripMenuItem34.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem35,
+            this.toolStripMenuItem36,
+            this.toolStripMenuItem37,
+            this.toolStripMenuItem38,
+            this.toolStripMenuItem39});
+            this.toolStripMenuItem34.Name = "toolStripMenuItem34";
+            this.toolStripMenuItem34.Size = new System.Drawing.Size(143, 22);
+            this.toolStripMenuItem34.Text = "New Item...";
+            // 
+            // toolStripMenuItem35
+            // 
+            this.toolStripMenuItem35.Name = "toolStripMenuItem35";
+            this.toolStripMenuItem35.Size = new System.Drawing.Size(129, 22);
+            this.toolStripMenuItem35.Text = "LSLText";
+            // 
+            // toolStripMenuItem36
+            // 
+            this.toolStripMenuItem36.Name = "toolStripMenuItem36";
+            this.toolStripMenuItem36.Size = new System.Drawing.Size(129, 22);
+            this.toolStripMenuItem36.Text = "Notecard";
+            // 
+            // toolStripMenuItem37
+            // 
+            this.toolStripMenuItem37.Name = "toolStripMenuItem37";
+            this.toolStripMenuItem37.Size = new System.Drawing.Size(129, 22);
+            this.toolStripMenuItem37.Text = "Texture";
+            // 
+            // toolStripMenuItem38
+            // 
+            this.toolStripMenuItem38.Name = "toolStripMenuItem38";
+            this.toolStripMenuItem38.Size = new System.Drawing.Size(129, 22);
+            this.toolStripMenuItem38.Text = "Gesture";
+            // 
+            // toolStripMenuItem39
+            // 
+            this.toolStripMenuItem39.Name = "toolStripMenuItem39";
+            this.toolStripMenuItem39.Size = new System.Drawing.Size(129, 22);
+            this.toolStripMenuItem39.Text = "SimType";
+            // 
+            // toolStripMenuItem40
+            // 
+            this.toolStripMenuItem40.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem41});
+            this.toolStripMenuItem40.Name = "toolStripMenuItem40";
+            this.toolStripMenuItem40.Size = new System.Drawing.Size(139, 22);
+            this.toolStripMenuItem40.Text = "Object";
+            // 
+            // toolStripMenuItem41
+            // 
+            this.toolStripMenuItem41.Name = "toolStripMenuItem41";
+            this.toolStripMenuItem41.Size = new System.Drawing.Size(111, 22);
+            this.toolStripMenuItem41.Text = "Rez..";
+            // 
+            // toolStripMenuItem44
+            // 
+            this.toolStripMenuItem44.Name = "toolStripMenuItem44";
+            this.toolStripMenuItem44.Size = new System.Drawing.Size(139, 22);
+            this.toolStripMenuItem44.Text = "Notecard";
+            // 
+            // toolStripMenuItem45
+            // 
+            this.toolStripMenuItem45.Name = "toolStripMenuItem45";
+            this.toolStripMenuItem45.Size = new System.Drawing.Size(139, 22);
+            this.toolStripMenuItem45.Text = "Texture";
+            // 
+            // toolStripMenuItem46
+            // 
+            this.toolStripMenuItem46.Name = "toolStripMenuItem46";
+            this.toolStripMenuItem46.Size = new System.Drawing.Size(139, 22);
+            this.toolStripMenuItem46.Text = "CallingCard";
+            // 
+            // toolStripMenuItem49
+            // 
+            this.toolStripMenuItem49.Name = "toolStripMenuItem49";
+            this.toolStripMenuItem49.Size = new System.Drawing.Size(139, 22);
+            this.toolStripMenuItem49.Text = "Sound";
+            // 
+            // toolStripMenuItem43
+            // 
+            this.toolStripMenuItem43.Name = "toolStripMenuItem43";
+            this.toolStripMenuItem43.Size = new System.Drawing.Size(139, 22);
+            this.toolStripMenuItem43.Text = "Animation";
+            // 
+            // toolStripMenuItem71
+            // 
+            this.toolStripMenuItem71.Name = "toolStripMenuItem71";
+            this.toolStripMenuItem71.Size = new System.Drawing.Size(139, 22);
+            this.toolStripMenuItem71.Text = "Gesture";
+            // 
+            // toolStripMenuItem42
+            // 
+            this.toolStripMenuItem42.Name = "toolStripMenuItem42";
+            this.toolStripMenuItem42.Size = new System.Drawing.Size(139, 22);
+            this.toolStripMenuItem42.Text = "LSLText";
+            // 
             // CogbotTabWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1023,13 +791,9 @@ namespace CogbotRadegastPluginModule
             this.Size = new System.Drawing.Size(516, 334);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
-            this.splitContainer1.Panel2.PerformLayout();
             this.splitContainer1.ResumeLayout(false);
-            this.ExtraContextMenu.ResumeLayout(false);
-            this.toolStrip1.ResumeLayout(false);
-            this.toolStrip1.PerformLayout();
-            this.pnlMovement.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
+            this.ExtraContextMenu.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -1039,28 +803,9 @@ namespace CogbotRadegastPluginModule
         private System.Windows.Forms.RichTextBox rtbChat;
         private System.Windows.Forms.ComboBox cbxInput;
         private System.Windows.Forms.Button btnSay;
-        private System.Windows.Forms.Button btnShout;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.ToolStripButton tbtnStartIM;
-        private System.Windows.Forms.ToolStripButton tbtnFollow;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ListView lvwObjects;
-        private System.Windows.Forms.ToolStripButton tbtnProfile;
-        private System.Windows.Forms.ToolStripButton tbtnTextures;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
-        private System.Windows.Forms.ToolStripButton tbtnMaster;
-        private System.Windows.Forms.ToolStripButton tbtnAttach;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
-        private System.Windows.Forms.Panel pnlMovement;
-        private System.Windows.Forms.Button btnTurnLeft;
-        private System.Windows.Forms.Button btnTurnRight;
-        private System.Windows.Forms.Button btnFwd;
-        private System.Windows.Forms.Button btnMoveBack;
-        private System.Windows.Forms.ToolStripButton tbtnAnim;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
         private RadegastContextMenuStrip ExtraContextMenu;
         private System.Windows.Forms.ToolStripMenuItem folderToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ContextToolStripMenuItem;
