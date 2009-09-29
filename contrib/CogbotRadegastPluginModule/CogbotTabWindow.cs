@@ -415,7 +415,20 @@ namespace CogbotRadegastPluginModule
 
         private void btnSay_Click(object sender, EventArgs e)
         {
-            WriteLine(GridMaster.client.ExecuteCommand(cbxInput.Text));
+            string s = cbxInput.Text;
+            BotClient bc = ClientManager.SingleInstance.LastBotClient;
+            if (bc != null)
+            {
+                WriteLine(ClientManager.SingleInstance.LastBotClient.ExecuteCommand(s, WriteLine));
+                return;
+            }
+            WorldObjects gm = GridMaster;
+            if (gm!=null)
+            {
+                WriteLine(gm.client.ExecuteCommand(s, WriteLine));
+                return;
+            }
+            WriteLine("Too early: Could not do " + s);
         }
 
         private void btnShout_Click(object sender, EventArgs e)
