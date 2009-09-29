@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using cogbot;
 using OpenMetaverse;
 using Radegast;
+using RadegastTab = Radegast.SleekTab;
 
 namespace CogbotRadegastPluginModule
 {
@@ -24,13 +25,21 @@ namespace CogbotRadegastPluginModule
 
         public void StartPlugin(RadegastInstance inst)
         {
+            RadegastInstance = inst;
+            inst.MainForm.Load += MainForm_Load;
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            RadegastInstance.MainForm.Load -= MainForm_Load;
             try
             {
-                StartPlugin0(inst);
+                // inst.MainForm.Invoke(new MethodInvoker(() => StartPlugin0(inst)));               
+                StartPlugin0(RadegastInstance);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(""+ex);
+                Logger.Log(" exception " + ex, Helpers.LogLevel.Error, ex);
             }
         }
 
