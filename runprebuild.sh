@@ -31,6 +31,8 @@ cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass/LookingGlass.exe.build
 cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.Renderer.Ogre/LookingGlass.Renderer.Ogr.dll.build
 cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.Renderer.Ogre/LookingGlass.Renderer.Ogre.dll.build
 
+rm -rf bin/LookingGlass*.*
+rm -rf bin/RadSpeechWin*.*
 
 echo copied assembies
 
