@@ -396,6 +396,7 @@ namespace PathSystem3D.Mesher
             {
                 Box3Fill bi = simpl[i];
                 if (bi == null) continue;
+                //bi.MakeAtLeast(0.2f);
                 bool foundInside = false;
                 for (int ii = len1; ii > i; ii--)
                 {
@@ -414,6 +415,25 @@ namespace PathSystem3D.Mesher
                 }
             }
             return retval;
+        }
+        private void MakeAtLeast(float f)
+        {
+            MakeAtLeast(f, ref MaxX, ref MinX);
+            MakeAtLeast(f, ref MaxY, ref MinY);
+            float size = MaxZ - MinZ;
+            if (size < f)
+            {
+                MinZ = MaxZ - f;
+            }
+        }
+
+        private void MakeAtLeast(float f, ref float MaxXYZ, ref float MinXYZ)
+        {
+            float size = MaxXYZ - MinXYZ;
+            if (size<f)
+            {
+                MinXYZ = MaxXYZ - f;
+            }
         }
 
         static int Bigger1(Box3Fill b1, Box3Fill b2)
