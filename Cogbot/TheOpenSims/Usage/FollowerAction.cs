@@ -70,7 +70,7 @@ namespace cogbot.TheOpenSims
                         dist = TheBot.Distance(Target);
                         TheBot.SetMoveTarget(Target, maxDistance);
                         Thread.Sleep(3000);
-                        if (dist > (TheBot.Distance(Target)+1))
+                        if (dist > (TheBot.Distance(Target)+2))
                         {
                             // Simple Follow might have worked. try again
                             useSimpleFollow = 2;
