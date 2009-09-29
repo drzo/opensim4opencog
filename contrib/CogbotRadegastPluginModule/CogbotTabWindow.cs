@@ -91,8 +91,8 @@ namespace CogbotRadegastPluginModule
 
             if (!instance.advancedDebugging)
             {
-                tbtnAnim.Visible = false;
-                tbtnTextures.Visible = false;
+//                tbtnAnim.Visible = false;
+  //              tbtnTextures.Visible = false;
 
                 ctxAnim.Visible = false;
                 ctxTextures.Visible = false;
@@ -295,7 +295,7 @@ namespace CogbotRadegastPluginModule
 
             cbxInput.Enabled = true;
             btnSay.Enabled = true;
-            btnShout.Enabled = true;
+            //btnShout.Enabled = true;
             return;
             GridMaster.OnAddSimObject += WorldSystem_OnAddSimObject;
           //  simObjectSorterClass.Origin = GridMaster.TheSimAvatar;
@@ -314,9 +314,9 @@ namespace CogbotRadegastPluginModule
 
         private void netcom_ClientLoggedOut(object sender, EventArgs e)
         {
-            cbxInput.Enabled = false;
-            btnSay.Enabled = false;
-            btnShout.Enabled = false;
+           cbxInput.Enabled = true;
+            //btnSay.Enabled = false;
+            //btnShout.Enabled = false;
 
             lvwObjects.Items.Clear();
         }
@@ -370,13 +370,7 @@ namespace CogbotRadegastPluginModule
         {
             if (e.KeyCode != Keys.Enter) return;
             e.SuppressKeyPress = true;
-
-            if (e.Shift)
-                ProcessChatInput(cbxInput.Text, ChatType.Whisper);
-            else if (e.Control)
-                ProcessChatInput(cbxInput.Text, ChatType.Shout);
-            else
-                WriteLine(GridMaster.client.ExecuteCommand(cbxInput.Text));
+            btnSay_Click(sender, e);
         }
 
         private void ProcessChatInput(string input, ChatType type)
@@ -409,6 +403,7 @@ namespace CogbotRadegastPluginModule
 
         private void ClearChatInput()
         {
+            if (string.IsNullOrEmpty(cbxInput.Text)) return;
             cbxInput.Items.Add(cbxInput.Text);
             cbxInput.Text = string.Empty;
         }
@@ -420,12 +415,14 @@ namespace CogbotRadegastPluginModule
             if (bc != null)
             {
                 WriteLine(ClientManager.SingleInstance.LastBotClient.ExecuteCommand(s, WriteLine));
+                ClearChatInput();
                 return;
             }
             WorldObjects gm = GridMaster;
             if (gm!=null)
             {
                 WriteLine(gm.client.ExecuteCommand(s, WriteLine));
+                ClearChatInput();
                 return;
             }
             WriteLine("Too early: Could not do " + s);
@@ -438,9 +435,10 @@ namespace CogbotRadegastPluginModule
 
         private void cbxInput_TextChanged(object sender, EventArgs e)
         {
+            return; //no typing animations in cogbot indow
             if (cbxInput.Text.Length > 0)
             {
-                btnSay.Enabled = btnShout.Enabled = true;
+               // btnSay.Enabled = btnShout.Enabled = true;
 
                 if (!cbxInput.Text.StartsWith("/"))
                 {
@@ -450,7 +448,7 @@ namespace CogbotRadegastPluginModule
             }
             else
             {
-                btnSay.Enabled = btnShout.Enabled = false;
+                //btnSay.Enabled = btnShout.Enabled = false;
                 instance.State.SetTyping(false);
             }
         }
@@ -509,7 +507,7 @@ namespace CogbotRadegastPluginModule
             if (lvwObjects.SelectedItems.Count == 0)
             {
                 currentAvatar = null;
-                tbtnStartIM.Enabled = tbtnFollow.Enabled = tbtnProfile.Enabled = tbtnTextures.Enabled = tbtnMaster.Enabled = tbtnAttach.Enabled = tbtnAnim.Enabled = false;
+//                tbtnStartIM.Enabled = tbtnFollow.Enabled = tbtnProfile.Enabled = tbtnTextures.Enabled = tbtnMaster.Enabled = tbtnAttach.Enabled = tbtnAnim.Enabled = false;
                 ctxPay.Enabled = ctxSource.Enabled = ctxPoint.Enabled = ctxStartIM.Enabled = ctxFollow.Enabled = ctxProfile.Enabled = ctxTextures.Enabled = ctxMaster.Enabled = ctxAttach.Enabled = ctxAnim.Enabled = false;
             }
             else
@@ -519,15 +517,15 @@ namespace CogbotRadegastPluginModule
                     return a.ID == (UUID)lvwObjects.SelectedItems[0].Tag;
                 });
 
-                tbtnStartIM.Enabled = tbtnProfile.Enabled = true;
-                tbtnFollow.Enabled = tbtnTextures.Enabled = tbtnMaster.Enabled = tbtnAttach.Enabled = tbtnAnim.Enabled = currentAvatar != null;
+            //    tbtnStartIM.Enabled = tbtnProfile.Enabled = true;
+            //    tbtnFollow.Enabled = tbtnTextures.Enabled = tbtnMaster.Enabled = tbtnAttach.Enabled = tbtnAnim.Enabled = currentAvatar != null;
 
                 ctxPay.Enabled = ctxSource.Enabled = ctxStartIM.Enabled = ctxProfile.Enabled = true;
                 ctxPoint.Enabled = ctxFollow.Enabled = ctxTextures.Enabled = ctxMaster.Enabled = ctxAttach.Enabled = ctxAnim.Enabled = currentAvatar != null;
 
                 if ((UUID)lvwObjects.SelectedItems[0].Tag == client.Self.AgentID)
                 {
-                    tbtnFollow.Enabled = tbtnStartIM.Enabled = false;
+              //      tbtnFollow.Enabled = tbtnStartIM.Enabled = false;
                     ctxPay.Enabled = ctxFollow.Enabled = ctxStartIM.Enabled = false;
                 }
             }
@@ -790,6 +788,11 @@ namespace CogbotRadegastPluginModule
         }
 
         private void ctxAnim_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void cbxInput_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }
