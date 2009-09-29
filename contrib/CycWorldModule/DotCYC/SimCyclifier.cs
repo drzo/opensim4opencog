@@ -106,7 +106,13 @@ namespace CycWorldModule.DotCYC
             object constant = ToFort(v);
             if (constant is CycFort && v is SimObject)
             {
-                taskQueueHandler.Enqueue(() => SaveInfoMap(constant as CycFort, v as SimObject));
+                SimObject o = (SimObject) v;
+                if (WorldObjects.GridMaster != null && WorldObjects.GridMaster.TheSimAvatar.Distance(o) < 30)
+                {
+                    SaveInfoMap(constant as CycFort, o);
+                }
+                else
+                    taskQueueHandler.Enqueue(() => SaveInfoMap(constant as CycFort, o));
             }
         }
 
@@ -264,7 +270,7 @@ namespace CycWorldModule.DotCYC
             cycAssert("(#$pointInSystem (#$PointInRegionFn ?STR ?X ?Y ?Z) (#$SimRegionCoordinateSystemFn (#$SimRegionFn ?STR)))");
             cycAssert("(#$pointInSystem (#$PointInRegionFn \"Daxlandia\" 128 120 27) (#$SimRegionCoordinateSystemFn (#$SimRegionFn \"Daxlandia\")))");
             ProbeNewAssets();
-            cycAccessQueueHandler.NoQueue = false;
+            cycAccessQueueHandler.NoQueue = true;
         }
 
         static int lastAssetCount = 0;
@@ -525,7 +531,7 @@ namespace CycWorldModule.DotCYC
                 cycAccessQueueHandler.NoQueue = true;
                 assertIsa(indv, C("Individual"));
                 assertIsa(indv, C(type));
-                cycAccessQueueHandler.NoQueue = false;
+                cycAccessQueueHandler.NoQueue = true;
                 assertGaf(C("comment"), indv, comment);
                 cycAccessQueueHandler.NoQueue = NoQueue;
                 return indv;// simFort[term] = cycAccess.createIndividual(term, comment, mt, type);
@@ -1043,6 +1049,16 @@ namespace CycWorldModule.DotCYC
             withValue((CycFort)ToFort(p));
         }
 
+
+        private void assertEventData(CycFort constant, IEnumerable<NamedParam> args)
+        {
+            CycFort fort = null;
+            foreach (NamedParam o in args)
+            {
+                 fort = assertEventData(constant, ToPropName(o.Key.ToString()), o.Value, newHashSet(o.info));                
+            }
+          //  return fort;
+        }
 
         private CycFort assertEventData(CycFort constant, NamedParam o)
         {
@@ -1612,7 +1628,21 @@ namespace CycWorldModule.DotCYC
         public CycObject FindOrCreateCycFort(SimRegion region)
         {
             if (region == SimRegion.UNKNOWN) return CYC_NULL;
-            return createIndividualFn("SimRegion", region.RegionName, "SimRegion " + region, vocabMt.ToString(), "GeographicalPlace-3D");
+            CycFort obj;
+            lock (simFort)
+            {
+                if (simFort.TryGetValue(region, out obj)) return obj;
+
+                    obj = createIndividualFn("SimRegion", region.RegionName, "SimRegion " + region, vocabMt.ToString(),
+                                             "GeographicalPlace-3D");
+            }
+            if (region.GridInfo.MapImageID != UUID.Zero)
+            {
+                simFort[region] =
+                    obj;
+                assertEventData(obj, WorldObjects.GetMemberValues("GridInfo-", region.GridInfo));
+            }
+            return obj;
         }
 
         public CycObject FindOrCreateCycFort(SimPathStore region)
