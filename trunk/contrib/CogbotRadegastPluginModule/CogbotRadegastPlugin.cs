@@ -26,6 +26,10 @@ namespace CogbotRadegastPluginModule
         public void StartPlugin(RadegastInstance inst)
         {
             RadegastInstance = inst;
+            if (inst.MainForm.IsHandleCreated)
+            {
+                inst.MainForm.Invoke(new MethodInvoker(() => StartPlugin0(inst)));
+            } else
             inst.MainForm.Load += MainForm_Load;
         }
 
