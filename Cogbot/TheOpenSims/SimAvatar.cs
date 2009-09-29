@@ -393,9 +393,9 @@ namespace cogbot.TheOpenSims
                         }
                     }
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    Console.WriteLine("" + e);
+                    Logger.Log(GetName() + " exception " + ex, Helpers.LogLevel.Error, ex);
                 }
             }
         }
@@ -517,7 +517,7 @@ namespace cogbot.TheOpenSims
                           Vector3.Transform(thisPos, Matrix4.CreateFromQuaternion(outerPrim.Rotation));
                 thisPrim = outerPrim;
             }
-            if (BadLocation(thisPos))
+            if (false && BadLocation(thisPos))
             {
                 Debug("-------------------------" + this + " shouldnt be at " + thisPos);
                 //   WorldSystem.DeletePrim(thePrim);
