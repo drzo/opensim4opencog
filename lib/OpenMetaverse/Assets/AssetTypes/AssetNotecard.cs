@@ -182,41 +182,41 @@ namespace OpenMetaverse.Assets
 
                 // Version
                 if (!(m = Regex.Match(lines[i++], @"Linden text version\s+(\d+)")).Success)
-                    throw new Exception("could not determine version");
+                    newException("could not determine version");
                 int notecardVersion = int.Parse(m.Groups[1].Value);
                 if (notecardVersion < 1 || notecardVersion > 2)
-                    throw new Exception("unsuported version");
+                    newException("unsuported version");
                 if (!(m = Regex.Match(lines[i++], @"\s*{$")).Success)
-                    throw new Exception("wrong format");
+                    newException("wrong format");
 
                 // Embedded items header
                 if (!(m = Regex.Match(lines[i++], @"LLEmbeddedItems version\s+(\d+)")).Success)
-                    throw new Exception("could not determine embedded items version version");
+                    newException("could not determine embedded items version version");
                 if (m.Groups[1].Value != "1")
-                    throw new Exception("unsuported embedded item version");
+                    newException("unsuported embedded item version");
                 if (!(m = Regex.Match(lines[i++], @"\s*{$")).Success)
-                    throw new Exception("wrong format");
+                    newException("wrong format");
 
                 // Item count
                 if (!(m = Regex.Match(lines[i++], @"count\s+(\d+)")).Success)
-                    throw new Exception("wrong format");
+                    newException("wrong format");
                 int count = int.Parse(m.Groups[1].Value);
 
                 // Decode individual items
                 for (int n = 0; n < count; n++)
                 {
                     if (!(m = Regex.Match(lines[i++], @"\s*{$")).Success)
-                        throw new Exception("wrong format");
+                        newException("wrong format");
 
                     // Index
                     if (!(m = Regex.Match(lines[i++], @"ext char index\s+(\d+)")).Success)
-                        throw new Exception("missing ext char index");
+                        newException("missing ext char index");
                     //warning CS0219: The variable `index' is assigned but its value is never used
                     //int index = int.Parse(m.Groups[1].Value);
 
                     // Inventory item
                     if (!(m = Regex.Match(lines[i++], @"inv_item\s+0")).Success)
-                        throw new Exception("missing inv item");
+                        newException("missing inv item");
 
                     // Item itself
                     UUID uuid = UUID.Zero;
@@ -239,7 +239,7 @@ namespace OpenMetaverse.Assets
                     while (true)
                     {
                         if (!(m = Regex.Match(lines[i++], @"([^\s]+)(\s+)?(.*)?")).Success)
-                            throw new Exception("wrong format");
+                            newException("wrong format");
                         string key = m.Groups[1].Value;
                         string val = m.Groups[3].Value;
                         if (key == "{")
@@ -257,7 +257,7 @@ namespace OpenMetaverse.Assets
                             while (true)
                             {
                                 if (!(m = Regex.Match(lines[i++], @"([^\s]+)(\s+)?([^\s]+)?")).Success)
-                                    throw new Exception("wrong format");
+                                    newException("wrong format");
                                 string pkey = m.Groups[1].Value;
                                 string pval = m.Groups[3].Value;
 
@@ -309,7 +309,7 @@ namespace OpenMetaverse.Assets
                             while (true)
                             {
                                 if (!(m = Regex.Match(lines[i++], @"([^\s]+)(\s+)?([^\s]+)?")).Success)
-                                    throw new Exception("wrong format");
+                                    newException("wrong format");
                                 string pkey = m.Groups[1].Value;
                                 string pval = m.Groups[3].Value;
 
@@ -384,15 +384,15 @@ namespace OpenMetaverse.Assets
                     EmbeddedItems.Add(finalEmbedded);
 
                     if (!(m = Regex.Match(lines[i++], @"\s*}$")).Success)
-                        throw new Exception("wrong format");
+                        newException("wrong format");
 
                 }
 
                 // Text size
                 if (!(m = Regex.Match(lines[i++], @"\s*}$")).Success)
-                    throw new Exception("wrong format");
+                    newException("wrong format");
                 if (!(m = Regex.Match(lines[i++], @"Text length\s+(\d+)")).Success)
-                    throw new Exception("could not determine text length");
+                    newException("could not determine text length");
 
                 // Read the rest of the notecard
                 while (i < lines.Length)
@@ -407,6 +407,12 @@ namespace OpenMetaverse.Assets
                 Logger.Log("Decoding notecard asset failed: " + ex.Message, Helpers.LogLevel.Error);
                 return false;
             }
+        }
+
+        private void newException(string s)
+        {
+            Console.WriteLine("Notecard Error: "+s);
+            //throw new Exception(s);
         }
     }
 }
