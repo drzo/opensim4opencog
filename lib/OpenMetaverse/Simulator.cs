@@ -494,7 +494,7 @@ namespace OpenMetaverse
             if (!String.IsNullOrEmpty(_seed))
             {
                 _Caps = new Caps(this, _seed);
-                Thread.Sleep(30000);
+                Thread.Sleep(5000);
                 if (!_Caps.IsEventQueueRunning)
                 {
                 }
