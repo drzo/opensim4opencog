@@ -184,9 +184,10 @@ namespace cogbot.TheOpenSims
             {
                 if (WorldObjects.SimplifyBoxes)
                 {
-                    //int b = InnerBoxes.Count;
+                    int b = InnerBoxes.Count;
                     InnerBoxes = Box3Fill.Simplify((List<Box3Fill>)InnerBoxes);
-                    // Console.Write("Simplfy mesh {0} -> {1} ", b, InnerBoxes.Count);
+                    if (b>3000)
+                     Console.Write("Simplfy mesh {0} -> {1} ", b, InnerBoxes.Count + " " + OuterBox.Mass + " " + this.GetObjectName());
                 }
                 AddPos(Position);
             }
@@ -434,7 +435,7 @@ namespace cogbot.TheOpenSims
                     break;
             }
             if (idata == null) return null;
-            sculptMesh = new SculptMesh((System.Drawing.Bitmap)idata, sculptType, (int)64, false, sculptDataIn.Mirror, sculptDataIn.Invert);
+            sculptMesh = new SculptMesh((System.Drawing.Bitmap)idata, sculptType, (int)32, false, sculptDataIn.Mirror, sculptDataIn.Invert);
 
             idata.Dispose();
 
