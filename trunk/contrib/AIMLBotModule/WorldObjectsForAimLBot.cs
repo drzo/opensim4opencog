@@ -8,6 +8,11 @@ using cogbot.TheOpenSims;
 using OpenMetaverse;
 using RTParser;
 using cogbot;
+using cogbot.Utilities;
+using Exception=System.Exception;
+using Math=System.Math;
+using String=System.String;
+using Thread=System.Threading.Thread;
 
 namespace AIMLBotModule
 {
@@ -118,7 +123,7 @@ namespace AIMLBotModule
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e);
+                Logger.Log("[AIMLBOT] exception " + e, Helpers.LogLevel.Error, e);
             }
         }
         private void TalkToObject0(SimActor av, SimObject obj)
@@ -699,9 +704,17 @@ namespace AIMLBotModule
             }
         }
 
+        static readonly TaskQueueHandler writeLock = new TaskQueueHandler("AIMLBot Console Writer",0);
         public void WriteLine(string s, params object[] args)
         {
-            Console.WriteLine(string.Format("[AIMLBOT] {0} {1}", GetName(), s), args);
+            if (Monitor.TryEnter(writeLock,1000))
+            {
+                writeLock.Enqueue(()=> Console.WriteLine(string.Format("[AIMLBOT] {0} {1}", GetName(), s), args));
+                Monitor.Exit(writeLock);
+            } else
+            {
+              throw new NullReferenceException("cant even get a Enqueue!");  
+            }
         }
 
         /// <summary>

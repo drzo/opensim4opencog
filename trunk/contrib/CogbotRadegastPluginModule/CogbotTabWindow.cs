@@ -42,6 +42,10 @@ using cogbot.TheOpenSims;
 using Radegast;
 using Radegast.Netcom;
 using OpenMetaverse;
+using cogbot.Utilities;
+using RadegastTab = Radegast.SleekTab;
+using RadegastMovement = Radegast.SleekMovement;
+
 
 namespace CogbotRadegastPluginModule
 {
@@ -695,6 +699,8 @@ namespace CogbotRadegastPluginModule
             (new frmPay(instance, (UUID)lvwObjects.SelectedItems[0].Tag, instance.getAvatarName((UUID)lvwObjects.SelectedItems[0].Tag), false)).ShowDialog();
         }
 
+
+        private readonly TaskQueueHandler writeLock = new TaskQueueHandler("FormWriter", 0);
         public void WriteLine(string str, params object[] args)
         {
             try
@@ -720,9 +726,9 @@ namespace CogbotRadegastPluginModule
                     doOutput(str);
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine("" + e);
+                Logger.Log("CogbotTabWindow exception " + ex, Helpers.LogLevel.Error, ex);
             }
         }
 
@@ -734,7 +740,7 @@ namespace CogbotRadegastPluginModule
             if (str == "") return;
             try
             {
-                printer.PrintTextLine(str);
+                writeLock.Enqueue(() => printer.PrintTextLine(str));
             }
             catch (Exception e)
             {
