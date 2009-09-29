@@ -260,7 +260,7 @@ namespace cogbot.TheOpenSims
         protected virtual void SaveFile(string tmpname)
         {
             //  if (!HasData()) return;
-            WriteLine("Not implemented save {0} file {1}", this, tmpname);
+            //WriteLine("Not implemented save {0} file {1}", this, tmpname);
         }
 
         private byte[] _TypeData;
