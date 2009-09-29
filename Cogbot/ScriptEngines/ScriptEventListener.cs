@@ -157,7 +157,8 @@ namespace cogbot.ScriptEngines
             if (arg is SimAsset)
             {
                 SimAsset prim = (SimAsset)arg;
-                arg = "'(SimAnimationFn "; //+ argString(prim.ID.ToString());
+                AssetType tyepe = prim.AssetType;
+                arg = "'(Sim"+tyepe+"Fn "; //+ argString(prim.ID.ToString());
                 if (prim.Name != null)
                 {
                     arg = arg + " " + argString(prim.Name);
