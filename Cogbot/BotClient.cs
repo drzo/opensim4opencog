@@ -19,6 +19,7 @@ using Radegast.Netcom;
 using cogbot.TheOpenSims;
 using System.Drawing;
 using Settings=OpenMetaverse.Settings;
+using RadegastTab = Radegast.SleekTab;
 
 // older LibOMV
 //using TeleportFlags = OpenMetaverse.AgentManager.TeleportFlags;
@@ -409,9 +410,9 @@ namespace cogbot
                 {
                     evalLispString("(progn " + ClientManager.config.startupClientLisp + ")");
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    Console.WriteLine("" + e);
+                    Logger.Log(GetName() + " exception " + ex, Helpers.LogLevel.Error, ex);
                 }
             }
         }
@@ -873,8 +874,9 @@ namespace cogbot
                 if (str.StartsWith(SelfName)) str = str.Substring(SelfName.Length).Trim();
                 ClientManager.WriteLine(str);
             }
-            catch (Exception)
+            catch (Exception ex)            
             {
+                Logger.Log(GetName() + " exeption " + ex, Helpers.LogLevel.Error, ex);
             }
 
         }
@@ -886,8 +888,9 @@ namespace cogbot
                 if (args != null && args.Length > 0) str = String.Format(str, args);
                 WriteLine(str);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Logger.Log(GetName() + " exeption " + ex, Helpers.LogLevel.Error, ex);
             }
         }
         // for lisp to call
