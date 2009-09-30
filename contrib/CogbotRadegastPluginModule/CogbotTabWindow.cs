@@ -43,8 +43,8 @@ using Radegast;
 using Radegast.Netcom;
 using OpenMetaverse;
 using cogbot.Utilities;
-using RadegastTab = Radegast.SleekTab;
-using RadegastMovement = Radegast.SleekMovement;
+//using RadegastTab = Radegast.SleekTab;
+//using RadegastMovement = Radegast.SleekMovement;
 
 
 namespace CogbotRadegastPluginModule
