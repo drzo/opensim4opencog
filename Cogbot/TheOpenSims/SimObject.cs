@@ -1272,7 +1272,7 @@ namespace cogbot.TheOpenSims
                 {
                     if (LastKnownSimPos != default(Vector3)) return LastKnownSimPos;
                     Debug("Unknown parent");
-                    throw Error("GetSimRotation !IsRegionAttached: " + this);
+                    throw Error("GetSimPosition !IsRegionAttached: " + this);
                     return thisPrim.Position;
                 }
                 if (outerPrim == thisPrim || outerPrim == this.Prim)

@@ -198,6 +198,11 @@ namespace cogbot
             {
                 try
                 {
+                    if (args == null || args.Length == 0)
+                    {
+                        args = new object[] { str };
+                        str = "{0}";
+                    } 
                     Console.WriteLine(str, args);
                 }
                 catch (FormatException)

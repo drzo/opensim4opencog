@@ -641,6 +641,11 @@ namespace OpenSim.Framework.Console
             {
                 lock (m_syncRoot)
                 {
+                    if (args == null || args.Length == 0)
+                    {
+                        args = new object[] { format };
+                        format = "{0}";
+                    }
                     try
                     {
                         if (color != ConsoleColor.White)
@@ -654,9 +659,9 @@ namespace OpenSim.Framework.Console
                         // Some older systems dont support coloured text.
                         System.Console.WriteLine(format, args);
                     }
-                    catch (FormatException)
+                    catch (FormatException e)
                     {
-                        System.Console.WriteLine("FormatException " + args);
+                        System.Console.WriteLine("FormatException " + format + " ex=" + e );
                     }
                 }
             }
