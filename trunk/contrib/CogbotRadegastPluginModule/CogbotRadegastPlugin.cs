@@ -5,7 +5,7 @@ using System.Windows.Forms;
 using cogbot;
 using OpenMetaverse;
 using Radegast;
-using RadegastTab = Radegast.SleekTab;
+//using RadegastTab = Radegast.SleekTab;
 
 namespace CogbotRadegastPluginModule
 {

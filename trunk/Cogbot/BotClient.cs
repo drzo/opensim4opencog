@@ -19,7 +19,7 @@ using Radegast.Netcom;
 using cogbot.TheOpenSims;
 using System.Drawing;
 using Settings=OpenMetaverse.Settings;
-using RadegastTab = Radegast.SleekTab;
+//using RadegastTab = Radegast.SleekTab;
 
 // older LibOMV
 //using TeleportFlags = OpenMetaverse.AgentManager.TeleportFlags;
