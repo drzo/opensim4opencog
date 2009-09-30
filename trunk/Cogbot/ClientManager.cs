@@ -344,7 +344,11 @@ namespace cogbot
             {
                 Console.WriteLine(str, args);
             }
-            else outputDelegate(str, args);
+            else
+            {
+                Console.WriteLine(str, args);
+                outputDelegate(str, args);
+            }
         }
 
         public string ExecuteCommand(string text)
