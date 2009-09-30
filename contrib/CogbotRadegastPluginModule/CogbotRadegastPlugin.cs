@@ -42,6 +42,9 @@ namespace CogbotRadegastPluginModule
             clientManager.outputDelegate = WriteLine;
             clientManager.StartUpLisp();
 
+            StartPlugin0(inst);
+            return;
+
             if (inst.MainForm.IsHandleCreated)
             {
                 inst.MainForm.Invoke(new MethodInvoker(() => StartPlugin0(inst)));
