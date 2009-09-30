@@ -1334,7 +1334,12 @@ namespace cogbot.TheOpenSims
             {
                 RequestedParent = true;
                 if (_Parent != null) return;
-                //Primitive Prim = this.Prim;
+                Primitive Prim = this.Prim;
+                if (Prim==null)
+                {
+                    RequestedParent = false;
+                    return;
+                }
                 uint theLPrimParentID = Prim.ParentID;
                 WorldObjects.RequestObject(simu, theLPrimParentID);
                 WorldObjects.EnsureSelected(theLPrimParentID, simu);
