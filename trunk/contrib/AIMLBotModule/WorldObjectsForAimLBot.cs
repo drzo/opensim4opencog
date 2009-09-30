@@ -707,6 +707,11 @@ namespace AIMLBotModule
         static readonly TaskQueueHandler writeLock = new TaskQueueHandler("AIMLBot Console Writer",0);
         public void WriteLine(string s, params object[] args)
         {
+            if (args == null || args.Length == 0)
+            {
+                args = new object[] { s };
+                s = "{0}";
+            }
             if (Monitor.TryEnter(writeLock,1000))
             {
                 writeLock.Enqueue(()=> Console.WriteLine(string.Format("[AIMLBOT] {0} {1}", GetName(), s), args));

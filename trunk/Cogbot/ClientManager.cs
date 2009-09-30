@@ -340,6 +340,11 @@ namespace cogbot
 
         public void WriteLine(string str, params object[] args)
         {
+            if (args == null || args.Length == 0)
+            {
+                args = new object[] { str };
+                str = "{0}";
+            }
             if (outputDelegate == null || outputDelegate == WriteLine)
             {
                 Console.WriteLine(str, args);

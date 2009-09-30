@@ -1836,6 +1836,11 @@ namespace CycWorldModule.DotCYC
 
         static void Debug(string s, params object[] args)
         {
+            if (args == null || args.Length == 0)
+            {
+                args = new object[] { s };
+                s = "{0}";
+            }
             Console.WriteLine(string.Format("[SimCyclifier] {0}", s), args);
         }
 

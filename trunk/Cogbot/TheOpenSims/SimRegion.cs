@@ -1163,10 +1163,15 @@ namespace cogbot.TheOpenSims
             return true;
         }
 
-        private static void Debug(string p, params object[] args)
+        private static void Debug(string str, params object[] args)
         {
+            if (args == null || args.Length == 0)
+            {
+                args = new object[] { str };
+                str = "{0}";
+            }
             if (Settings.LOG_LEVEL == Helpers.LogLevel.Debug)
-                Console.WriteLine(p, args);
+                Console.WriteLine(str, args);
         }
 
         public static bool IsMaster(Simulator simulator, GridClient client)

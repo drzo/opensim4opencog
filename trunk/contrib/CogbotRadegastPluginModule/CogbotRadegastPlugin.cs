@@ -85,7 +85,12 @@ namespace CogbotRadegastPluginModule
 
         private void WriteLine(string str, object[] args)
         {
-            if (chatConsole==null)
+            if (args == null || args.Length == 0)
+            {
+                args = new object[] { str };
+                str = "{0}";
+            }
+            if (chatConsole == null)
             {
                 Console.WriteLine(str,args);
             }
