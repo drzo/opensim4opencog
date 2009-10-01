@@ -428,7 +428,7 @@ namespace PathSystem3D.Navigation
         //{
         //    if (O is MeshableObject)
         //    {
-        //        return _GlobalPos == ((MeshableObject)O).GetWorldPosition();
+        //        return _GlobalPos == ((MeshableObject)O).GlobalPosition();
         //    }
         //    //if (O is Vector3d)
         //    //{

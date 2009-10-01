@@ -714,6 +714,12 @@ namespace CogbotRadegastPluginModule
         private readonly TaskQueueHandler writeLock = new TaskQueueHandler("FormWriter", 0);
         public void WriteLine(string str, params object[] args)
         {
+
+            if (args == null || args.Length == 0)
+            {
+                args = new object[] { str };
+                str = "{0}";
+            }
             try
             {
                 if (str == null) return;
@@ -746,6 +752,11 @@ namespace CogbotRadegastPluginModule
         private void doOutput(string str, params object[] args)
         {
             if (str == null) return;
+            if (args == null || args.Length == 0)
+            {
+                args = new object[] { str };
+                str = "{0}";
+            }
             if (args.Length > 0) str = String.Format(str, args);
             str = str.Trim();
             if (str == "") return;

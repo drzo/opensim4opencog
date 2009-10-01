@@ -152,7 +152,7 @@ namespace cogbot.TheOpenSims
 
 
             // if (PathStore.RegionName
-            //new SimPathStore("region" + Handle + ".serz", GetGridLocation(), GetWorldPosition(), new Vector3(256, 256, float.MaxValue));
+            //new SimPathStore("region" + Handle + ".serz", GetGridLocation(), GlobalPosition(), new Vector3(256, 256, float.MaxValue));
         }
 
         public static List<SimRegion> CurrentRegions
@@ -1260,7 +1260,7 @@ namespace cogbot.TheOpenSims
             }
 
             double radAngle = zAngleFromFace/RAD_TO_DEG;
-            Quaternion rot = pos.GetSimRotation();
+            Quaternion rot = pos.SimRotation;
             Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(rot));
             double rz = Math.Atan2(v3.Y, v3.X);
             double az = rz + radAngle;
@@ -1279,7 +1279,7 @@ namespace cogbot.TheOpenSims
             var ymul = (float) Math.Sin(az);
             Vector3 diff = new Vector3(xmul, ymul, 0)*(float) distance;
 
-            Vector3 result = pos.GetSimPosition() + diff;
+            Vector3 result = pos.SimPosition + diff;
 
             if (result.X > 254f)
             {
@@ -1327,7 +1327,7 @@ namespace cogbot.TheOpenSims
             }
 
             double radAngle = zAngleFromFace/RAD_TO_DEG;
-            Quaternion rot = pos.GetSimRotation();
+            Quaternion rot = pos.SimRotation;
             Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(rot));
             double rz = Math.Atan2(v3.Y, v3.X);
 
@@ -1346,7 +1346,7 @@ namespace cogbot.TheOpenSims
             var ymul = (double) Math.Sin(az);
             Vector3d diff = new Vector3d(xmul, ymul, 0)*distance;
 
-            Vector3d result = pos.GetWorldPosition() + diff;
+            Vector3d result = pos.GlobalPosition + diff;
 
             return result;
             /*

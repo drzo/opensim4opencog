@@ -23,7 +23,7 @@ namespace cogbot.Actions.Movement
             SimObject O = WorldSystem.GetSimObject(P);
 
             used = 1;
-            Vector3d prev = O.GetWorldPosition();
+            Vector3d prev = O.GlobalPosition;
             Vector3d local = Vector3d.Zero;
             if (double.TryParse(args[used++], out local.X) &&
                 double.TryParse(args[used++], out local.Y))
@@ -68,7 +68,7 @@ namespace cogbot.Actions.Movement
             SimObject O = WorldSystem.GetSimObject(P);
 
             used = 1;
-            Vector3 prev = O.GetSimPosition();
+            Vector3 prev = O.SimPosition;
             Vector3 local = Vector3.Zero;
             if (float.TryParse(args[used++], out local.X) &&
                 float.TryParse(args[used++], out local.Y))

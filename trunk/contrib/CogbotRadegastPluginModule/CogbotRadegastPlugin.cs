@@ -18,6 +18,7 @@ namespace CogbotRadegastPluginModule
         public RadegastInstance RadegastInstance;
         public CogbotContextMenuListener CogbotContextMenuListener;
         private CogbotTabWindow chatConsole;
+        private SimObjectsConsole _simObjectsConsole;
         private RadegastTab tab;
         private ClientManager clientManager;
         private CogbotRadegastInterpreter cogbotRadegastInterpreter;
@@ -26,35 +27,6 @@ namespace CogbotRadegastPluginModule
         public void StartPlugin(RadegastInstance inst)
         {
             RadegastInstance = inst;
-            CogbotContextMenuListener = new CogbotContextMenuListener();
-            CogbotNoticeuListener = new CogbotNotificationListener();
-            if (ClientManager.UsingRadgastFromCogbot)
-            {
-                // just unregister events for now
-                inst.Netcom.Dispose();
-                return;
-            }
-            ClientManager.UsingCogbotFromRadgast = true;
-            inst.Client.Settings.MULTIPLE_SIMS = true;
-            clientManager = new ClientManager();
-            cogbotRadegastInterpreter = new CogbotRadegastInterpreter(clientManager);
-            RadegastInstance.CommandsManager.LoadInterpreter(cogbotRadegastInterpreter);
-            clientManager.outputDelegate = WriteLine;
-            clientManager.StartUpLisp();
-
-            StartPlugin0(inst);
-            return;
-
-            if (inst.MainForm.IsHandleCreated)
-            {
-                inst.MainForm.Invoke(new MethodInvoker(() => StartPlugin0(inst)));
-            } else
-            inst.MainForm.Load += MainForm_Load;
-        }
-
-        private void MainForm_Load(object sender, EventArgs e)
-        {
-            RadegastInstance.MainForm.Load -= MainForm_Load;
             try
             {
                 // inst.MainForm.Invoke(new MethodInvoker(() => StartPlugin0(inst)));               
@@ -62,13 +34,33 @@ namespace CogbotRadegastPluginModule
             }
             catch (Exception ex)
             {
-                Logger.Log(" exception " + ex, Helpers.LogLevel.Error, ex);
+                Logger.Log("[COGBOT PLUGIN] exception " + ex, Helpers.LogLevel.Error, ex);
             }
         }
 
         public void StartPlugin0(RadegastInstance inst)
         {
+            RadegastInstance = inst;
+            CogbotContextMenuListener = new CogbotContextMenuListener();
+            CogbotNoticeuListener = new CogbotNotificationListener();
+            if (ClientManager.UsingRadgastFromCogbot)
+            {
+                // just unregister events for now
+                inst.Netcom.Dispose();
+                clientManager = ClientManager.SingleInstance;
+            }
+            else
+            {
+                ClientManager.UsingCogbotFromRadgast = true;
+                clientManager = new ClientManager();
+            }
+            cogbotRadegastInterpreter = new CogbotRadegastInterpreter(clientManager);
+            RadegastInstance.CommandsManager.LoadInterpreter(cogbotRadegastInterpreter);
 
+            if (ClientManager.UsingRadgastFromCogbot) return;
+            inst.Client.Settings.MULTIPLE_SIMS = true;
+            clientManager.outputDelegate = WriteLine;
+            clientManager.StartUpLisp();
             chatConsole = new CogbotTabWindow(inst, clientManager)
                               {
                                   Dock = DockStyle.Fill,
@@ -77,6 +69,16 @@ namespace CogbotRadegastPluginModule
             tab = inst.TabConsole.AddTab("cogbot", "Cogbot", chatConsole);
             tab.AllowClose = false;
             tab.AllowDetach = true;
+
+            _simObjectsConsole = new SimObjectsConsole(inst)
+            {
+                Dock = DockStyle.Fill,
+               // Visible = false
+            };
+            tab = inst.TabConsole.AddTab("simobjects", "SimObjects", _simObjectsConsole);
+            tab.AllowClose = false;
+            tab.AllowDetach = true;
+
             RadegastTab tab1 = RadegastInstance.TabConsole.GetTab("chat");
             tab1.AllowDetach = true;
             RadegastTab tab2 = RadegastInstance.TabConsole.GetTab("login");

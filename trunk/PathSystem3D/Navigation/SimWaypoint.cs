@@ -20,15 +20,15 @@ namespace PathSystem3D.Navigation
    
         public string DistanceVectorString(SimPosition pos)
         {
-            Vector3 loc = pos.GetSimPosition();
-            SimPathStore R = pos.GetPathStore();
-            return String.Format("{0:0.00}m ", Vector3d.Distance(GetWorldPosition(), pos.GetWorldPosition()))
+            Vector3 loc = pos.SimPosition;
+            SimPathStore R = pos.PathStore;
+            return String.Format("{0:0.00}m ", Vector3d.Distance(GlobalPosition, pos.GlobalPosition))
                + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
         }
 
         public double Distance(SimPosition other)
         {
-            return Vector3d.Distance(GetWorldPosition(), other.GetWorldPosition());
+            return Vector3d.Distance(GlobalPosition, other.GlobalPosition);
         }
 
         public bool IsGroundLevel()
@@ -38,7 +38,7 @@ namespace PathSystem3D.Navigation
 
         public bool IsUnderWater()
         {
-            return GetZLevel(Plane) < GetPathStore().WaterHeight;
+            return GetZLevel(Plane) < PathStore.WaterHeight;
         }
 
         private float _MinZ;
@@ -114,9 +114,9 @@ namespace PathSystem3D.Navigation
             return this;
         }
 
-        public bool IsRegionAttached()
+        public bool IsRegionAttached
         {
-            return PathStore != null;
+            get { return PathStore != null; }
         }
 
         Vector3d _GlobalPos;
@@ -359,8 +359,8 @@ namespace PathSystem3D.Navigation
         public override string ToString()
         {
             //    return "(" + _GlobalPos.ToRawString() + ")"; 
-            SimPathStore R = GetPathStore();
-            Vector3 loc = GetSimPosition();
+            SimPathStore R = PathStore;
+            Vector3 loc = SimPosition;
             return String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
         }
 
@@ -375,7 +375,7 @@ namespace PathSystem3D.Navigation
         //{
         //    if (O is MeshableObject)
         //    {
-        //        return _GlobalPos == ((MeshableObject)O).GetWorldPosition();
+        //        return _GlobalPos == ((MeshableObject)O).GlobalPosition();
         //    }
         //    //if (O is Vector3d)
         //    //{
@@ -521,7 +521,6 @@ namespace PathSystem3D.Navigation
         //    return new Vector3d(v3.X, v3.Y, v3.Z);
         //}
 
-        public SimPathStore PathStore;
         Vector3 _LocalPos;
         CollisionIndex CIndex;
         private SimWaypointImpl(Vector3 local, Vector3d global, CollisionIndex Ci, CollisionPlane Cp, SimPathStore pathStore)
@@ -581,9 +580,10 @@ namespace PathSystem3D.Navigation
             //  PathStore.EnsureKnown(wp);
             return WP;
         }
-        public Vector3 GetSimPosition()
+
+        public Vector3 SimPosition
         {
-            return _LocalPos;
+            get { return _LocalPos; }
         }
 
         #region MeshableObject Members
@@ -654,18 +654,16 @@ namespace PathSystem3D.Navigation
 
         #region MeshableObject Members
 
-
-        public Quaternion GetSimRotation()
+        public Quaternion SimRotation
         {
-            return Quaternion.Identity;
-        }
-   
-
-        public Vector3d GetWorldPosition()
-        {
-            return _GlobalPos;
+            get { return Quaternion.Identity; }
         }
 
+
+        public Vector3d GlobalPosition
+        {
+            get { return _GlobalPos; }
+        }
 
         #endregion
 
@@ -688,11 +686,7 @@ namespace PathSystem3D.Navigation
 
         #region MeshableObject Members
 
-
-        public SimPathStore GetPathStore()
-        {
-            return PathStore;
-        }
+        public SimPathStore PathStore { get; set;}
 
         #endregion
     }

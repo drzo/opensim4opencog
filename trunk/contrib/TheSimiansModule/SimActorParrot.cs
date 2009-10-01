@@ -374,13 +374,13 @@ namespace TheSimiansModule
         public List<BotAction> GetPossibleActions(double maxXYDistance, double maxZDist)
         {
             List<SimObject> KnownObjects = ObservedActor.GetKnownObjects();
-            double myZ = ObservedActor.GetWorldPosition().Z;
+            double myZ = ObservedActor.GlobalPosition.Z;
             List<SimObject> useObjects = new List<SimObject>();
             foreach (SimObject O in KnownObjects)
             {
-                if (!O.IsRegionAttached()) continue;
+                if (!O.IsRegionAttached) continue;
                 if (O.Distance(ObservedActor) > maxXYDistance) continue;
-                if (Math.Abs(O.GetWorldPosition().Z - myZ) > maxZDist) continue;
+                if (Math.Abs(O.GlobalPosition.Z - myZ) > maxZDist) continue;
                 useObjects.Add(O);
             }
             // useObjects.Sort(Actor.CompareDistance);
@@ -427,7 +427,7 @@ namespace TheSimiansModule
                 {
                     Vector3d v3d =
                         Actor.GetSimRegion().LocalToGlobal(new Vector3(MyRandom.Next(250) + 5, MyRandom.Next(250) + 5,
-                                                                       ObservedActor.GetSimPosition().Z));
+                                                                       ObservedActor.SimPosition.Z));
                     ObservedActor.Debug("MoveToLocation: " + ObservedActor.DistanceVectorString(v3d));
                     SimPosition WP = SimWaypointImpl.CreateGlobal(v3d);
                     act = new MoveToLocation(ObservedActor, WP);
@@ -476,7 +476,7 @@ namespace TheSimiansModule
         }
         public override Vector3 GetUsePostion()
         {
-            if (CurrentAction == null) return ObservedActor.GetSimPosition();
+            if (CurrentAction == null) return ObservedActor.SimPosition;
             return CurrentAction.GetUsePostion();
         }
 

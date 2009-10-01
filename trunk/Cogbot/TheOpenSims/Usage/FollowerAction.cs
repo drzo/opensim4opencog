@@ -48,7 +48,7 @@ namespace cogbot.TheOpenSims
             while (KeepFollowing)
             {
                 Thread.Sleep(2000);
-                if (!Target.IsRegionAttached())
+                if (!Target.IsRegionAttached)
                 {
                     Console.WriteLine("" + this + " Not regions attached " + Target);
                     Thread.Sleep(2000);
@@ -60,7 +60,7 @@ namespace cogbot.TheOpenSims
                     int useSimpleFollow = 2;
                     while (useSimpleFollow-- > 0)
                     {
-                        if (!Target.IsRegionAttached())
+                        if (!Target.IsRegionAttached)
                         {
                             Console.WriteLine(""+this+" Not regions attached " + Target);                            
                             Thread.Sleep(2000);
@@ -78,7 +78,7 @@ namespace cogbot.TheOpenSims
                         }
                         TheBot.StopMoving();
                     }
-                    if (UsePathfinder && Target.IsRegionAttached() && TheBot.Distance(Target) > maxDistance + 2)
+                    if (UsePathfinder && Target.IsRegionAttached && TheBot.Distance(Target) > maxDistance + 2)
                         TheBot.GotoTarget(Target);
                 }   
                 else
@@ -104,7 +104,7 @@ namespace cogbot.TheOpenSims
 
         public override Vector3 GetUsePostion()
         {
-            return Target.GetSimPosition();
+            return Target.SimPosition;
         }
 
         public override FirstOrderTerm GetTerm()

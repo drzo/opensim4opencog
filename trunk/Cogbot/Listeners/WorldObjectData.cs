@@ -570,7 +570,7 @@ namespace cogbot.Listeners
             //WriteLine(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
             //WriteLine(avatar.Name + " is " + Vector3.Distance(GetSimPosition(), avatar.Position).ToString() + " distant.");
             client.SendPersonalEvent(SimEventType.MOVEMENT, "on-avatar-dist", A, A.Distance(TheSimAvatar));
-            SendNewRegionEvent(SimEventType.MOVEMENT, "on-avatar-pos", A, A.GetWorldPosition());
+            SendNewRegionEvent(SimEventType.MOVEMENT, "on-avatar-pos", A, A.GlobalPosition);
             SendNewRegionEvent(SimEventType.EFFECT, "on-avatar-description", avatar, avatar.GroupName);
             //  botenqueueLispTask("(on-avatar-posture (@\"" + avatar.Name + "\") (@\"" + verb + "\") )");
 

@@ -654,18 +654,18 @@ namespace AIMLBotModule
                 // WriteLine("cannot follow NULL");
                 return;
             }
-            if (!talker.IsRegionAttached())
+            if (!talker.IsRegionAttached)
             {
                 WriteLine("Talker: !IsRegionAttached " + talker);
                 return;
             }
             SimActor a = WorldSystem.TheSimAvatar;
-            if (!a.IsRegionAttached())
+            if (!a.IsRegionAttached)
             {
                 WriteLine("!IsRegionAttached " + talker);
                 return;
             }
-            if (Math.Abs(a.GetSimPosition().Z - talker.GetSimPosition().Z) > MaxZDistance)
+            if (Math.Abs(a.SimPosition.Z - talker.SimPosition.Z) > MaxZDistance)
             {
                 WriteLine("Z Too far " + talker);
                 return;

@@ -74,7 +74,7 @@ namespace cogbot.Listeners
                 foreach (SimObject O in SimObjects.CopyOf())
                 {
                     if (!WorldObjects.MaintainSimCollisions(O.RegionHandle)) continue;
-                    if (O.IsRegionAttached())
+                    if (O.IsRegionAttached)
                     {
                         if (O.UpdateOccupied())
                         {

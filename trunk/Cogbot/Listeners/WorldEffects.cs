@@ -309,9 +309,9 @@ namespace cogbot.Listeners
             if (so is SimAvatar)
             {
                 SimAvatar A = (SimAvatar)so;
-                if (!A.IsRegionAttached()) return false;
+                if (!A.IsRegionAttached) return false;
                 if (A.Distance(TheSimAvatar) < 30) return true;
-                if (A.IsRegionAttached() && A.GetName().Contains("Rajesh"))
+                if (A.IsRegionAttached && A.GetName().Contains("Rajesh"))
                     return true;
             }
             //return true;
@@ -381,8 +381,8 @@ namespace cogbot.Listeners
                 {
                     if (ST != null)
                     {
-                        if (ST.IsRegionAttached())
-                            p = (ST.GetWorldPosition() + targetPos);
+                        if (ST.IsRegionAttached)
+                            p = (ST.GlobalPosition + targetPos);
                         else
                         {
                             p = AsRLocation(sim, targetPos, ST);

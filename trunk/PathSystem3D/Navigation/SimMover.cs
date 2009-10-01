@@ -22,7 +22,7 @@ namespace PathSystem3D.Navigation
                     float GetSizeDistance();
                     bool IsRegionAttached();
                     Quaternion GetSimRotation();
-                    Vector3d GetWorldPosition();
+                    Vector3d GlobalPosition();
                     SimPathStore GetPathStore();
          
          */
@@ -66,7 +66,7 @@ namespace PathSystem3D.Navigation
         {
             Mover = mover;
             FinalDistance = finalDistance;
-            FinalLocation = finalGoal.GetWorldPosition();
+            FinalLocation = finalGoal.GlobalPosition;
             FinalPosition = finalGoal;
         }
 
@@ -87,7 +87,7 @@ namespace PathSystem3D.Navigation
 
         public SimPathStore PathStore
         {
-            get { return Mover.GetPathStore(); }
+            get { return Mover.PathStore; }
         }
 
 
@@ -98,7 +98,7 @@ namespace PathSystem3D.Navigation
 
         public Vector3 GetSimPosition()
         {
-            return Mover.GetSimPosition();
+            return Mover.SimPosition;
         }
 
         public SimMoverState FollowPathTo(IList<Vector3d> v3s, Vector3d finalTarget, double finalDistance)
@@ -238,7 +238,7 @@ namespace PathSystem3D.Navigation
 
         public string DistanceVectorString(SimPosition loc3d)
         {
-            return DistanceVectorString(loc3d.GetWorldPosition());
+            return DistanceVectorString(loc3d.GlobalPosition);
         }
 
         public string DistanceVectorString(Vector3 loc)
@@ -317,7 +317,7 @@ namespace PathSystem3D.Navigation
                 {
                     Vector3d v3d = PathStore.LocalToGlobal(next);
                     Mover.ThreadJump();
-                    v3d.Z = Mover.GetSimPosition().Z;
+                    v3d.Z = Mover.SimPosition.Z;
                     if (Mover.MoveTo(v3d, 1, 1))
                     {
                         TurnAvoid += angle;  // update for next use
@@ -370,7 +370,7 @@ namespace PathSystem3D.Navigation
 
         public Vector3d GetWorldPosition()
         {
-            return Mover.GetWorldPosition();
+            return Mover.GlobalPosition;
         }
 
         /// <summary>
@@ -440,7 +440,7 @@ namespace PathSystem3D.Navigation
         public SimCollisionPlaneMover(SimMover mover, SimPosition finalGoal, double finalDistance) :
             base(mover, finalGoal, finalDistance)
         {
-            float startZ = CalcStartZ(mover.GetSimPosition().Z, finalGoal.GetSimPosition().Z);
+            float startZ = CalcStartZ(mover.SimPosition.Z, finalGoal.SimPosition.Z);
             double diff = MoverPlane.MinZ - startZ;
 
             MoverPlane.MinZ = startZ;
@@ -469,18 +469,18 @@ namespace PathSystem3D.Navigation
                 {
                     if (!MoverPlanes.ContainsKey(Mover))
                     {
-                        _MoverPlane = MoverPlanes[Mover] = PathStore.GetCollisionPlane(Mover.GetSimPosition().Z);
+                        _MoverPlane = MoverPlanes[Mover] = PathStore.GetCollisionPlane(Mover.SimPosition.Z);
                         _MoverPlane.HeightMapNeedsUpdate = true;
                         _MoverPlane.Users++;
                     }
                     _MoverPlane = MoverPlanes[Mover];
-                    if (_MoverPlane.PathStore != Mover.GetPathStore())
+                    if (_MoverPlane.PathStore != Mover.PathStore)
                     {
                         if (_MoverPlane!=null)
                         {
                             _MoverPlane.Users--;
                         }
-                        _MoverPlane = MoverPlanes[Mover] = PathStore.GetCollisionPlane(Mover.GetSimPosition().Z);
+                        _MoverPlane = MoverPlanes[Mover] = PathStore.GetCollisionPlane(Mover.SimPosition.Z);
                         _MoverPlane.HeightMapNeedsUpdate = true;
                         _MoverPlane.Users++;
                     }
@@ -747,7 +747,7 @@ namespace PathSystem3D.Navigation
                 SimWaypoint target = (SimWaypoint)pos;
                 IList<SimRoute> routes = (IList<SimRoute>)GetRouteList(target, out IsFake);
                 if (routes == null) return false;
-                SimRouteMover ApproachPlan = new SimRouteMover(Mover, routes, pos.GetWorldPosition(), pos.GetSizeDistance());
+                SimRouteMover ApproachPlan = new SimRouteMover(Mover, routes, pos.GlobalPosition, pos.GetSizeDistance());
                 state = ApproachPlan.Goto();
                 if (state == SimMoverState.COMPLETE) return true;
             }
@@ -766,13 +766,13 @@ namespace PathSystem3D.Navigation
                 if (TryGotoTarget(pos, out IsFake))
                 {
                     Mover.StopMoving();
-                    Mover.TurnToward(pos.GetWorldPosition());
+                    Mover.TurnToward(pos.GlobalPosition);
                     Debug("SUCCESS GotoTarget: " + pos);
                     return true;
                 }
 
                 //TurnToward(pos);
-                double posDist = Vector3d.Distance(GetWorldPosition(), pos.GetWorldPosition());
+                double posDist = Vector3d.Distance(GetWorldPosition(), pos.GlobalPosition);
                 if (posDist <= pos.GetSizeDistance() + 0.5)
                 {
                     Debug("OK GotoTarget: " + pos);
@@ -810,7 +810,7 @@ namespace PathSystem3D.Navigation
 
 
         public SimRouteMover(SimMover mover, IList<SimRoute> routes, Vector3d finalGoal, double finalDistance)
-            : base(mover, mover.GetPathStore().CreateClosestWaypoint(finalGoal, finalDistance), finalDistance)
+            : base(mover, mover.PathStore.CreateClosestWaypoint(finalGoal, finalDistance), finalDistance)
         {
             Routes = routes;
             OuterRoute = new SimRouteMulti(routes);
@@ -843,7 +843,7 @@ namespace PathSystem3D.Navigation
                 // TRY
                 STATE = FollowRoute(route);
 
-                double distance = Vector3d.Distance(Mover.GetWorldPosition(), FinalLocation);
+                double distance = Vector3d.Distance(Mover.GlobalPosition, FinalLocation);
                 if (STATE == SimMoverState.BLOCKED)
                 {
                     Mover.StopMoving();
@@ -908,9 +908,9 @@ namespace PathSystem3D.Navigation
 
         public void SetBlocked(SimRoute StuckAt)
         {
-            BlockTowardsVector(StuckAt._EndNode.GetSimPosition());
+            BlockTowardsVector(StuckAt._EndNode.SimPosition);
 
-            Vector3d pos = Mover.GetWorldPosition();
+            Vector3d pos = Mover.GlobalPosition;
             if (StuckAt.BlockedPoint(GetGlobal(pos)))
             {
                 StuckAt.ReWeight(1.1f);
@@ -950,8 +950,8 @@ namespace PathSystem3D.Navigation
 
         public SimMoverState FollowRoute(SimRoute route)
         {
-            Vector3d vectStart = route.StartNode.GetWorldPosition();
-            Vector3d vectMover = Mover.GetWorldPosition();
+            Vector3d vectStart = route.StartNode.GlobalPosition;
+            Vector3d vectMover = Mover.GlobalPosition;
             double currentDistFromStart = Vector3d.Distance(vectMover, vectStart);
             if (currentDistFromStart > CloseDistance)
             {
@@ -962,7 +962,7 @@ namespace PathSystem3D.Navigation
                     return SimMoverState.TRYAGAIN;
                 }
             }
-            Vector3d endVect = route.EndNode.GetWorldPosition();
+            Vector3d endVect = route.EndNode.GlobalPosition;
 
             bool MadeIt = MoveTo(endVect);
 
@@ -973,7 +973,7 @@ namespace PathSystem3D.Navigation
                 return SimMoverState.BLOCKED;
             }
 
-            Vector3d endVectMover = Mover.GetWorldPosition();
+            Vector3d endVectMover = Mover.GlobalPosition;
             double currentDistFromfinish = Vector3d.Distance(endVectMover, endVect);
             if (currentDistFromfinish > CloseDistance)
             {
@@ -1000,7 +1000,7 @@ namespace PathSystem3D.Navigation
 
     //        int OneCount = 0;
     //        Mover.TurnToward(vector3);
-    //        if (Vector3d.Distance(GetWorldPosition(), vector3) < finalDistance) return true;
+    //        if (Vector3d.Distance(GlobalPosition(), vector3) < finalDistance) return true;
     //        for (int trial = 0; trial < 25; trial++)
     //        {
     //            Mover.StopMoving();
@@ -1022,7 +1022,7 @@ namespace PathSystem3D.Navigation
     //            }
     //            else
     //            {
-    //                MoveToPassableArround(GetWorldPosition());
+    //                MoveToPassableArround(GlobalPosition());
     //                //  GetUsePosition();
     //                if (OneCount > 3) return false;
     //                OneCount++;
@@ -1030,7 +1030,7 @@ namespace PathSystem3D.Navigation
 
     //            Debug("Path {1}: {0} ", v3s.Count, trial);
     //            if (FollowPath(v3s, vector3, finalDistance)) return true;
-    //            if (Vector3d.Distance(GetWorldPosition(), vector3) < finalDistance) return true;
+    //            if (Vector3d.Distance(GlobalPosition(), vector3) < finalDistance) return true;
 
     //        }
     //        return false;
@@ -1039,23 +1039,23 @@ namespace PathSystem3D.Navigation
 
     //    public bool FollowPath(List<Vector3d> v3sIn, Vector3d finalTarget, double finalDistance)
     //    {
-    //        IList<Vector3d> v3s = PathStore.GetSimplifedRoute(GetWorldPosition(), v3sIn, 10, 8f);
+    //        IList<Vector3d> v3s = PathStore.GetSimplifedRoute(GlobalPosition(), v3sIn, 10, 8f);
     //        Debug("FollowPath: {0} -> {1}", v3sIn.Count, v3s.Count);
     //        int CanSkip = 2;
     //        int Skipped = 0;
     //        foreach (Vector3d v3 in v3s)
     //        {
     //            STATE = SimMoverState.MOVING;
-    //            //  if (Vector3d.Distance(v3, GetWorldPosition()) < dist) continue;
+    //            //  if (Vector3d.Distance(v3, GlobalPosition()) < dist) continue;
     //            if (!MoveTo(v3))
     //            {
     //                STATE = SimMoverState.TRYAGAIN;
-    //                if (Vector3d.Distance(GetWorldPosition(), finalTarget) < finalDistance) return true;
+    //                if (Vector3d.Distance(GlobalPosition(), finalTarget) < finalDistance) return true;
     //                if (!Mover.MoveTo(v3,PathStore.LargeScale,4))
     //                {
     //                    if (Skipped++ <= CanSkip)
     //                    {
-    //                        MoveToPassableArround(GetWorldPosition());
+    //                        MoveToPassableArround(GlobalPosition());
     //                        Skipped++;
     //                        continue;
     //                    }

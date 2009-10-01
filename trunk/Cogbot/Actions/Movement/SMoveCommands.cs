@@ -197,8 +197,8 @@ namespace cogbot.Actions.Movement
         {
             int argcount;
             SimPosition pos = WorldSystem.GetVector(args, out argcount);
-            SimPathStore R = pos.GetPathStore();
-            Vector3 v3 = pos.GetSimPosition();
+            SimPathStore R = pos.PathStore;
+            Vector3 v3 = pos.SimPosition;
             WriteLine("SimZInfo: " + pos + " " + R.GetGroundLevel(v3.X, v3.Y));
             SimWaypoint WP = R.GetWaypointOf(v3);
             WriteLine("WaypointInfo: {0}", WP.OccupiedString(R.GetCollisionPlane(v3.Z)));
@@ -220,8 +220,8 @@ namespace cogbot.Actions.Movement
         {
             int argcount;
             SimPosition pos = WorldSystem.GetVector(args, out argcount);
-            SimPathStore R = pos.GetPathStore();
-            Vector3 v3 = pos.GetSimPosition();
+            SimPathStore R = pos.PathStore;
+            Vector3 v3 = pos.SimPosition;
             WriteLine("SimZInfo: " + pos + " " + R.GetGroundLevel(v3.X, v3.Y));
 
 #if COLLIDER_ODE  
@@ -343,9 +343,9 @@ namespace cogbot.Actions.Movement
             if (argcount < args.Length)
             {
             }
-            string str = "MoveTo(" + pos.GetSimPosition() + ", " + maxDistance + ", " + maxSeconds + ")";
+            string str = "MoveTo(" + pos.SimPosition + ", " + maxDistance + ", " + maxSeconds + ")";
             WriteLine("Starting  " + str);
-            bool MadIt = WorldSystem.TheSimAvatar.MoveTo(pos.GetWorldPosition(), maxDistance, maxSeconds);
+            bool MadIt = WorldSystem.TheSimAvatar.MoveTo(pos.GlobalPosition, maxDistance, maxSeconds);
             if (MadIt)
             {
                 return ("SUCCESS " + str);
@@ -416,8 +416,8 @@ namespace cogbot.Actions.Movement
                 return "Cannot " + Name + " to " + String.Join(" ", args);
             }
 
-            Vector3d v3d = pos.GetWorldPosition();
-            Vector3 v3 = pos.GetSimPosition();
+            Vector3d v3d = pos.GlobalPosition;
+            Vector3 v3 = pos.SimPosition;
             SimAbstractMover sam = SimCollisionPlaneMover.CreateSimPathMover(WorldSystem.TheSimAvatar, pos, pos.GetSizeDistance());
             sam.BlockTowardsVector(v3);
             return ("SUCCESS ");
@@ -447,7 +447,7 @@ namespace cogbot.Actions.Movement
                 float.TryParse(args[1], out local.Y))
             {
                 local.Z = GetSimPosition().Z;
-                Vector3d target = WorldSystem.TheSimAvatar.GetPathStore().LocalToGlobal(local);
+                Vector3d target = WorldSystem.TheSimAvatar.PathStore.LocalToGlobal(local);
                 simObject = SimWaypointImpl.CreateGlobal(target);
                 if (args.Length == 3) Single.TryParse(args[2], out distance);
 
@@ -462,7 +462,7 @@ namespace cogbot.Actions.Movement
                 {
 
                     simObject = WorldSystem.GetSimObject(prim);
-                    if (!simObject.IsRegionAttached())
+                    if (!simObject.IsRegionAttached)
                     {
                         return "Cannot get Sim Position of " + simObject;
                     }
@@ -475,7 +475,7 @@ namespace cogbot.Actions.Movement
             }
 
             WriteLine("gto {0} {1}", simObject, distance);
-            WorldSystem.TheSimAvatar.MoveTo(simObject.GetWorldPosition(), distance, 10);
+            WorldSystem.TheSimAvatar.MoveTo(simObject.GlobalPosition, distance, 10);
             WorldSystem.TheSimAvatar.StopMoving();
             return WorldSystem.TheSimAvatar.DistanceVectorString(simObject);
         }

@@ -394,7 +394,7 @@ namespace PathSystem3D.Navigation
             lock (SimWaypoints) foreach (SimWaypoint N in SimWaypoints)
                 {
                     if (IgnorePassableProperty && N.IsPassable == false) continue;
-                    double DistanceTemp = Vector3d.Distance(N.GetWorldPosition(), P);
+                    double DistanceTemp = Vector3d.Distance(N.GlobalPosition, P);
                     if (DistanceMin == -1 || DistanceMin > DistanceTemp)
                     {
                         DistanceMin = DistanceTemp;

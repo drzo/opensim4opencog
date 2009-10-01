@@ -988,7 +988,7 @@ namespace PathSystem3D.Navigation
                 }
             }
             if (PanelGUI != null) PanelGUI.Invalidate();
-            return GetWaypointOf(v3).GetSimPosition();
+            return GetWaypointOf(v3).SimPosition;
         }
 
         public Vector3 GetUsableLocalPositionOfOLD(CollisionPlane CP, Vector3 v3, float useDist)
@@ -1022,7 +1022,7 @@ namespace PathSystem3D.Navigation
                     }
                 }
             }
-            return GetWaypointOf(v3).GetSimPosition();
+            return GetWaypointOf(v3).SimPosition;
         }
 
         /// <summary>
@@ -1045,7 +1045,7 @@ namespace PathSystem3D.Navigation
                 zAngleFromFace += 360;
             }
 
-            Vector3 result = pos.GetSimPosition() + GetXYDiffOfMovement(zAngleFromFace, pos.GetSimRotation(), distance);
+            Vector3 result = pos.SimPosition + GetXYDiffOfMovement(zAngleFromFace, pos.SimRotation, distance);
 
 
             if (result.X > 254f)
@@ -1248,7 +1248,7 @@ namespace PathSystem3D.Navigation
 
             SimPathStore PathStore = GetPathStore3D(v3);
             SimWaypoint swp = PathStore.CreateClosestRegionWaypoint(v3, 2);
-            float dist = Vector3.Distance(v3, swp.GetSimPosition());
+            float dist = Vector3.Distance(v3, swp.SimPosition);
             if (!swp.IsPassable)
             {
                 Debug("CreateClosestWaypoint: " + v3 + " <- " + dist + " -> " + swp + " " + this);

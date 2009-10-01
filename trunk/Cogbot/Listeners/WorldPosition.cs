@@ -27,9 +27,9 @@ namespace cogbot.Listeners
             if (here == Vector3d.Zero) return retObj;
             foreach (SimObject obj in GetAllSimObjects())
             {
-                if (obj.IsRegionAttached())
+                if (obj.IsRegionAttached)
                 {
-                    Vector3d at = obj.GetWorldPosition();
+                    Vector3d at = obj.GlobalPosition;
                     if (at == here)
                     {
                         dist = 0;
@@ -53,15 +53,15 @@ namespace cogbot.Listeners
             {
                 if (r == null)
                 {
-                    if (pos != null && pos.IsRegionAttached()) return new SimHeading(pos); 
+                    if (pos != null && pos.IsRegionAttached) return new SimHeading(pos); 
                     return SimHeading.UNKNOWN;
                 }
                 return r;
             }
             Quaternion rot = Quaternion.Identity;
-            if (pos!=null && pos.IsRegionAttached())
+            if (pos!=null && pos.IsRegionAttached)
             {
-                rot = pos.GetSimRotation();
+                rot = pos.SimRotation;
             }
             return new SimHeading(r.GetPathStore(position), position, rot);
         }
@@ -74,7 +74,7 @@ namespace cogbot.Listeners
             {
                 if (r == null)
                 {
-                    if (pos != null && pos.IsRegionAttached()) return new SimHeading(pos);
+                    if (pos != null && pos.IsRegionAttached) return new SimHeading(pos);
                     return SimHeading.UNKNOWN;
                 }
                 return r;
@@ -233,13 +233,13 @@ namespace cogbot.Listeners
                     float.TryParse(args[1], out target.Y))
                 {
                     argsUsed = 2;
-                    target.Z = TheSimAvatar.GetSimPosition().Z;
+                    target.Z = TheSimAvatar.SimPosition.Z;
                     if (args.Length == 3)
                     {
                         Single.TryParse(args[2], out target.Z);
                         argsUsed = 3;
                     }
-                    return SimWaypointImpl.CreateLocal(target, TheSimAvatar.GetPathStore());
+                    return SimWaypointImpl.CreateLocal(target, TheSimAvatar.PathStore);
                 }
             }
             SimObject O = null;
@@ -316,7 +316,7 @@ namespace cogbot.Listeners
                 if (obj != except)
                 {
                     if (rootOnly && !obj.IsRoot) continue;
-                    if (obj.IsRegionAttached() && Vector3d.Distance(obj.GetWorldPosition(), here) <= maxDistance)
+                    if (obj.IsRegionAttached && Vector3d.Distance(obj.GlobalPosition, here) <= maxDistance)
                         nearby.Add(obj);
                 }
             }

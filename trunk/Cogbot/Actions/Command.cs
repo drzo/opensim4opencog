@@ -239,7 +239,7 @@ namespace cogbot.Actions
 
         protected Vector3 GetSimPosition()
         {
-            return TheSimAvatar.GetSimPosition();
+            return TheSimAvatar.SimPosition;
         }
 
         public UUID UUIDParse(string p)
