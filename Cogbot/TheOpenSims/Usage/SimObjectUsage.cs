@@ -132,7 +132,7 @@ namespace cogbot.TheOpenSims
 
         public Vector3 GetUsePosition()
         {
-            return Target.GetSimPosition();
+            return Target.SimPosition;
         }
 
         public override float RateIt(BotNeeds simAvatar)

@@ -48,7 +48,7 @@ namespace CogbotRadegastPluginModule
         {
             SimObject item1 = ((SimObjectListViewItem)x).TheSimObject;
             SimObject item2 = ((SimObjectListViewItem)y).TheSimObject;
-            if (Origin==null || !Origin.IsRegionAttached())
+            if (Origin==null || !Origin.IsRegionAttached)
             {
                 return item1.ToString().CompareTo(item2.ToString());                
             }

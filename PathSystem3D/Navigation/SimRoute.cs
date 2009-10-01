@@ -241,7 +241,7 @@ namespace PathSystem3D.Navigation
         {
             get
             {
-                return StartNode.GetPathStore() != EndNode.GetPathStore();
+                return StartNode.PathStore != EndNode.PathStore;
             }
         }
 
@@ -399,7 +399,7 @@ namespace PathSystem3D.Navigation
             double len = Length;
             if (p <= 0.0f) return StartNode;
             if (p >= len) return EndNode;
-            Vector3d dir = EndNode.GetWorldPosition() - StartNode.GetWorldPosition();
+            Vector3d dir = EndNode.GlobalPosition - StartNode.GlobalPosition;
             double X = (dir.X / len) * p;
             double Y = (dir.Y / len) * p;
             double Z = (dir.Z / len) * p;
@@ -463,7 +463,7 @@ namespace PathSystem3D.Navigation
 
         public virtual string ToInfoString()
         {
-            string s = StartNode.GetWorldPosition().ToRawString() + " -> " + EndNode.GetWorldPosition().ToRawString() + " ";
+            string s = StartNode.GlobalPosition.ToRawString() + " -> " + EndNode.GlobalPosition.ToRawString() + " ";
             //if (MustAutoPilot) s += " MustAutoPilot";
             if (MustFly) s += " MustFly";
             if (MustCrouch) s += " MustCrouch";

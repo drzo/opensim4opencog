@@ -50,7 +50,7 @@ namespace cogbot.Actions.Movement
             }
             else
             {
-                Vector3 cur = WorldSystem.TheSimAvatar.GetSimPosition();
+                Vector3 cur = WorldSystem.TheSimAvatar.SimPosition;
                 // Parse the number             
                 float angle;
                 if (!float.TryParse(args[0], out angle)) // rotate help

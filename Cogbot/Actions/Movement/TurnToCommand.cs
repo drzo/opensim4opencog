@@ -34,7 +34,7 @@ namespace cogbot.Actions.Movement
                 {
                     local.Z = GetSimPosition().Z;
                 }
-                Vector3d target = WorldSystem.TheSimAvatar.GetPathStore().LocalToGlobal(local);
+                Vector3d target = WorldSystem.TheSimAvatar.PathStore.LocalToGlobal(local);
                 simObject = SimWaypointImpl.CreateGlobal(target);
             }
             else
@@ -47,7 +47,7 @@ namespace cogbot.Actions.Movement
                 {
 
                     simObject = WorldSystem.GetSimObject(prim);
-                    if (!simObject.IsRegionAttached())
+                    if (!simObject.IsRegionAttached)
                     {
                         return "Cannot get Sim Position of " + simObject;
                     }

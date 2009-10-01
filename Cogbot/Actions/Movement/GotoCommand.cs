@@ -26,9 +26,9 @@ namespace cogbot.Actions
             int argsUsed;
             SimPosition position = WorldSystem.GetVector(args, out argsUsed);
             if (position == null) return "Teleport - Cannot resolve to a location: " + string.Join(" ", args);
-            SimPathStore ps = position.GetPathStore();
+            SimPathStore ps = position.PathStore;
             ulong handle = SimRegion.GetRegionHandle(ps);
-            if (Client.Self.Teleport(handle, position.GetSimPosition()))
+            if (Client.Self.Teleport(handle, position.SimPosition))
                 return "Teleported to " + Client.Network.CurrentSim;
             else
                 return "Teleport failed: " + Client.Self.TeleportMessage;

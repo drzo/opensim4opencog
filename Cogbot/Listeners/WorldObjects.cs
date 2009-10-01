@@ -320,7 +320,7 @@ namespace cogbot.Listeners
                     obj0.SetFirstPrim(prim);
                     return obj0;
                 } 
-                if (!obj0.IsRegionAttached())
+                if (!obj0.IsRegionAttached)
                 {
                     obj0.ResetPrim(prim, client, simulator);
                 }
@@ -490,6 +490,7 @@ namespace cogbot.Listeners
                                             //Debug("Killing object: " + O);
                                         {
                                             {
+                                                SendOnRemoveSimObject(O);
                                                 if (O.KilledPrim(p, simulator))
                                                 {
                                                    // lock (SimAvatars)
@@ -1141,7 +1142,7 @@ namespace cogbot.Listeners
             //WriteLine(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
             //WriteLine(avatar.Name + " is " + Vector3.Distance(GetSimPosition(), avatar.Position).ToString() + " distant.");
             client.SendPersonalEvent(SimEventType.MOVEMENT, "on-prim-dist", A, A.Distance(TheSimAvatar));
-            SendNewRegionEvent(SimEventType.MOVEMENT, "on-prim-pos", A, A.GetWorldPosition());
+            SendNewRegionEvent(SimEventType.MOVEMENT, "on-prim-pos", A, A.GlobalPosition);
             BlockUntilProperties(prim, simulator);
             if (prim.Properties.Name != null)
             {
@@ -1463,7 +1464,12 @@ namespace cogbot.Listeners
 
         public SimObject GetSimObject(Primitive prim)
         {
-            return GetSimObject(prim, null);
+            Simulator sim = GetSimulator(prim);
+            if (sim==null)
+            {
+                
+            }
+            return GetSimObject(prim, sim);
         }
 
         private static void DoEvents()

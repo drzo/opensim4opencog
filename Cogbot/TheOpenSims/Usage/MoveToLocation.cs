@@ -27,7 +27,7 @@ namespace cogbot.TheOpenSims
 
         public override Vector3 GetUsePostion()
         {
-            return Target.GetSimPosition();
+            return Target.SimPosition;
         }
 
         public override FirstOrderTerm GetTerm()

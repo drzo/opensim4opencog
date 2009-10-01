@@ -74,12 +74,13 @@ namespace cogbot.Listeners
         private static Dictionary<string, Action<UUID>> UUID2Type = new Dictionary<string, Action<UUID>>();
         static void GetUUIDType(string p, UUID id)
         {
-//            if (UUID2Type.Count==0)
+            lock (UUID2Type) if (UUID2Type.Count == 0)
             {
                 Action<UUID> texture = ((UUID obj) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Texture); });
                 Action<UUID> avatar = ((UUID obj) => { GridMaster.CreateSimAvatar(obj, GridMaster, null); });
                 Action<UUID> nothing = ((UUID obj) => { });
-                UUID2Type[""] = UUID2Type["ID"] = nothing;
+                UUID2Type[""] = nothing;
+                UUID2Type["ID"] = nothing;
                 UUID2Type["Sound"] = ((UUID obj) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Sound); });
                 UUID2Type["Image"] = UUID2Type["SculptTexture"] = UUID2Type["Photo"] = UUID2Type["Picture"] = UUID2Type["Texture"] = UUID2Type["Sculpt"] = UUID2Type["ProfileImage"] = texture;
                 UUID2Type["Partner"] = UUID2Type["Owner"] = UUID2Type["Creator"] = avatar;

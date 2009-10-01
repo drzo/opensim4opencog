@@ -1654,11 +1654,11 @@ namespace CycWorldModule.DotCYC
         public CycObject FindOrCreateCycFort(SimHeading b)
         {
             if (SimHeading.UNKNOWN == b) return CYC_NULL;
-            if (b.IsRegionAttached())
+            if (b.IsRegionAttached)
             {
-                SimPathStore r = b.GetPathStore();
+                SimPathStore r = b.PathStore;
                 CycObject findOrCreateCycFort = FindOrCreateCycFort(r);
-                return FindOrCreateCycFort(b.GetSimPosition(), r.RegionName);
+                return FindOrCreateCycFort(b.SimPosition, r.RegionName);
             }
             else
             {

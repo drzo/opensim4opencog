@@ -75,7 +75,7 @@ namespace cogbot.TheOpenSims
 
         public override bool IsRegionAttached()
         {
-            return RootObject.IsRegionAttached();
+            return RootObject.IsRegionAttached;
         }
 
 
@@ -115,11 +115,11 @@ namespace cogbot.TheOpenSims
         public override sealed bool Update(SimPosition simObject)
         {
             //if (!WorldObjects.MaintainCollisions) return false;
-            if (!simObject.IsRegionAttached()) return false;
+            if (!simObject.IsRegionAttached) return false;
             if (MeshOnlySolids && !((MeshableObject) simObject).IsSolid) return false;
-            Quaternion Rotation = simObject.GetSimRotation();
+            Quaternion Rotation = simObject.SimRotation;
             Vector3 Scale = Prim.Scale; //.GetSimScale();
-            Vector3 Position = simObject.GetSimPosition();
+            Vector3 Position = simObject.SimPosition;
 
 #if COLLIDER_ODE  
             LastSize = new PhysicsVector(1, 1, 1); // we scaled the PrimMesh already!

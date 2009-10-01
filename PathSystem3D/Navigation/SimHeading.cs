@@ -13,7 +13,7 @@ namespace PathSystem3D.Navigation
         public SimHeading(SimPosition pos)
         {
             late = pos;
-            if (pos.IsRegionAttached())
+            if (pos.IsRegionAttached)
             {
                 InitFromPos(pos);
             }
@@ -22,7 +22,7 @@ namespace PathSystem3D.Navigation
         public override string ToString()
         {
             
-            if (reg==null && late!=null && !late.IsRegionAttached() )
+            if (reg==null && late!=null && !late.IsRegionAttached )
             {
                 return "HEADING: " + late;
             }
@@ -47,7 +47,7 @@ namespace PathSystem3D.Navigation
         {
             late = pos;
             lateV3 = vector3;
-            if (pos.IsRegionAttached())
+            if (pos.IsRegionAttached)
             {
                 InitFromPos(pos);
             }
@@ -61,45 +61,48 @@ namespace PathSystem3D.Navigation
 
         public string DistanceVectorString(SimPosition obj)
         {
-            if (!obj.IsRegionAttached())
+            if (!obj.IsRegionAttached)
             {
-                Vector3 loc = obj.GetSimPosition();
-                SimPathStore R = obj.GetPathStore();
+                Vector3 loc = obj.SimPosition;
+                SimPathStore R = obj.PathStore;
                 return String.Format("unknown relative {0}/{1:0.00}/{2:0.00}/{3:0.00}",
                                      R.RegionName, loc.X, loc.Y, loc.Z);
             }
-            return DistanceVectorString(obj.GetWorldPosition());
+            return DistanceVectorString(obj.GlobalPosition);
         }
 
         public string DistanceVectorString(Vector3d loc3d)
         {
             Vector3 loc = SimPathStore.GlobalToLocal(loc3d);
             SimPathStore R = SimPathStore.GetPathStore(loc3d);
-            return String.Format("{0:0.00}m ", Vector3d.Distance(GetWorldPosition(), loc3d))
+            return String.Format("{0:0.00}m ", Vector3d.Distance(GlobalPosition, loc3d))
                    + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
         }
 
         public string DistanceVectorString(Vector3 loc)
         {
             SimPathStore R = reg;
-            return String.Format("{0:0.00}m ", Vector3.Distance(GetSimPosition(), loc))
+            return String.Format("{0:0.00}m ", Vector3.Distance(SimPosition, loc))
                    + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
         }
 
-        public Vector3 GetSimPosition()
+        public Vector3 SimPosition
         {
-            if (reg == null && late != null)
+            get
             {
-                InitFromPos(late);
+                if (reg == null && late != null)
+                {
+                    InitFromPos(late);
+                }
+                return pos;
             }
-            return pos;
         }
 
         private void InitFromPos(SimPosition position)
         {
-            this.reg = position.GetPathStore();
-            this.pos = position.GetSimPosition() + lateV3;
-            this.rot = position.GetSimRotation();
+            this.reg = position.PathStore;
+            this.pos = position.SimPosition + lateV3;
+            this.rot = position.SimRotation;
             late = null;
             lateV3 = Vector3.Zero;
         }
@@ -109,44 +112,53 @@ namespace PathSystem3D.Navigation
             return 0.2f;
         }
 
-        public bool IsRegionAttached()
+        public bool IsRegionAttached
         {
-            if (reg == null && late != null)
+            get
             {
-                if (late.IsRegionAttached()) 
+                if (reg == null && late != null)
+                {
+                    if (late.IsRegionAttached)
+                        InitFromPos(late);
+                }
+                return reg != null;
+            }
+        }
+
+        public Quaternion SimRotation
+        {
+            get
+            {
+                if (reg == null && late != null)
+                {
                     InitFromPos(late);
+                }
+                return rot;
             }
-            return reg != null;
         }
 
-        public Quaternion GetSimRotation()
+        public Vector3d GlobalPosition
         {
-            if (reg == null && late != null)
+            get { return PathStore.LocalToGlobal(SimPosition); }
+        }
+
+        public SimPathStore PathStore
+        {
+            get
             {
-                InitFromPos(late);
+                if (reg == null && late != null)
+                {
+                    InitFromPos(late);
+                }
+                return reg;
             }
-            return rot;
-        }
-
-        public Vector3d GetWorldPosition()
-        {
-            return GetPathStore().LocalToGlobal(GetSimPosition());
-        }
-
-        public SimPathStore GetPathStore()
-        {
-            if (reg == null && late != null)
-            {
-                InitFromPos(late);
-            }
-            return reg;
         }
 
         public float ZHeading
         {
             get
             {
-                Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(GetSimRotation()));
+                Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(SimRotation));
                 return (float)(Math.Atan2(-v3.X, -v3.Y) + Math.PI); // 2Pi= N, 1/2Pi = E
             }
         }

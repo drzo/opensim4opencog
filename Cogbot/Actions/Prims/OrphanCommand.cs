@@ -31,7 +31,7 @@ namespace cogbot.Actions
                         WriteLine("Orphans: " + o);
                     }
                 }
-                if (!o.IsRegionAttached())
+                if (!o.IsRegionAttached)
                 {
                     detatched++;
                     WriteLine("Detatched " + o);

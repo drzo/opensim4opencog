@@ -192,14 +192,14 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(GetSimRotation()));
+                Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(SimRotation));
                 return (float)(Math.Atan2(-v3.X, -v3.Y) + Math.PI); // 2Pi= N, 1/2Pi = E
             }
         }
 
         public SimHeading GetHeading()
         {
-            if (!IsRegionAttached() && !ReferenceEquals(_Prim0,null))
+            if (!IsRegionAttached && HasPrim)
             {
                 Simulator sim = WorldSystem.GetSimulator(RegionHandle);
                 Debug("Requesting object for heading");
@@ -473,7 +473,7 @@ namespace cogbot.TheOpenSims
             {
                 if (Client == null) return false;
                 AgentManager ClientSelf = Client.Self;
-                if (ReferenceEquals(null, _Prim0)) return false;
+                if (!base.HasPrim) return false;
                 return ClientSelf.AgentID == theAvatar.ID; //|| ClientSelf.LocalID == theAvatar.LocalID;
             }
         }
@@ -485,56 +485,63 @@ namespace cogbot.TheOpenSims
             return GetSimRegion().TheSimulator;
         }
 
-        public override Vector3 GetSimPosition()
+        public override Vector3 SimPosition
         {
-            //if (Client!=null && Client.Self.AgentID == Prim.ID)
-            //{
-            //    if (Client.Settings.OBJECT_TRACKING)
-            //        return GetSimPosition();
-            //}
-            Primitive thisPrim = this.Prim;
-            if (Object.ReferenceEquals(_Prim0, null) || thisPrim == null)
+            get
             {
-                return LastKnownSimPos;
-            }
-            Vector3 thisPos = thisPrim.Position;
-            while (thisPrim.ParentID != 0)
-            {
-                Primitive outerPrim = GetParentPrim(thisPrim);
+                //if (Client!=null && Client.Self.AgentID == Prim.ID)
+                //{
+                //    if (Client.Settings.OBJECT_TRACKING)
+                //        return GetSimPosition();
+                //}
+                Primitive thisPrim = this.Prim;
+                if (!HasPrim || thisPrim == null)
+                {
+                    return LastKnownSimPos;
+                }
+                Vector3 thisPos = thisPrim.Position;
+                while (thisPrim.ParentID != 0)
+                {
+                    Primitive outerPrim = GetParentPrim(thisPrim);
 
-                if (outerPrim == null)
-                {
-                    if (LastKnownSimPos != default(Vector3)) return LastKnownSimPos;
-                    Debug("Unknown parent");
-                    throw Error("GetSimRotation !IsRegionAttached: " + this);
-                    return thisPrim.Position;
+                    if (outerPrim == null)
+                    {
+                        if (LastKnownSimPos != default(Vector3)) return LastKnownSimPos;
+                        Debug("Unknown parent");
+                        throw Error("GetSimRotation !IsRegionAttached: " + this);
+                        return thisPrim.Position;
+                    }
+                    if (outerPrim == thisPrim || outerPrim == this.Prim)
+                    {
+                        throw Error("GetSimPosition Loop: " + this);
+                    }
+                    thisPos = outerPrim.Position +
+                              Vector3.Transform(thisPos, Matrix4.CreateFromQuaternion(outerPrim.Rotation));
+                    thisPrim = outerPrim;
                 }
-                if (outerPrim == thisPrim || outerPrim == this.Prim)
+                if (false && BadLocation(thisPos))
                 {
-                    throw Error("GetSimPosition Loop: " + this);
+                    Debug("-------------------------" + this + " shouldnt be at " + thisPos);
+                    //   WorldSystem.DeletePrim(thePrim);
                 }
-                thisPos = outerPrim.Position +
-                          Vector3.Transform(thisPos, Matrix4.CreateFromQuaternion(outerPrim.Rotation));
-                thisPrim = outerPrim;
+                return LastKnownSimPos = thisPos;
             }
-            if (false && BadLocation(thisPos))
-            {
-                Debug("-------------------------" + this + " shouldnt be at " + thisPos);
-                //   WorldSystem.DeletePrim(thePrim);
-            }
-            return LastKnownSimPos = thisPos;
+      
         }
 
-        public override Vector3d GetWorldPosition()
+        public override Vector3d GlobalPosition
         {
-            /// if (Client.Self.AgentID == Prim.ID)
-            /// {
-            ///     if (Client.Settings.OBJECT_TRACKING)
-            ///         return Client.Self.GlobalPosition;
+            get
+            {
+                /// if (Client.Self.AgentID == Prim.ID)
+                /// {
+                ///     if (Client.Settings.OBJECT_TRACKING)
+                ///         return Client.Self.GlobalPosition;
 
-            /// }
-            return base.GetWorldPosition();
-            //return GetSimRegion().LocalToGlobal(GetSimPosition());
+                /// }
+                return base.GlobalPosition;
+                //return GetSimRegion().LocalToGlobal(GetSimPosition());
+            }
         }
 
         public override SimRegion GetSimRegion()
@@ -573,22 +580,26 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public override Quaternion GetSimRotation()
+        public override Quaternion SimRotation
         {
-            //if (IsControllable)
-            //{
-            //    if (Client.Settings.OBJECT_TRACKING)
-            //        return Client.Self.SimRotation;
-            //}
-            /// lock (Prim)
+            get
             {
-                //if (theAvatar.RegionHandle != _CurrentRegion.RegionHandle)
+                //if (IsControllable)
                 //{
-                //    Debug("out of date RegionHandle ");
+                //    if (Client.Settings.OBJECT_TRACKING)
+                //        return Client.Self.SimRotation;
                 //}
-                return base.GetSimRotation();
+                /// lock (Prim)
+                {
+                    //if (theAvatar.RegionHandle != _CurrentRegion.RegionHandle)
+                    //{
+                    //    Debug("out of date RegionHandle ");
+                    //}
+                    return base.SimRotation;
+                }
             }
         }
+
         /// public void AddGrass(Simulator simulator, Vector3 scale, Quaternion rotation, Vector3 position, Grass grassType, UUID groupOwner)
         /// {
         /// }
@@ -926,7 +937,7 @@ namespace cogbot.TheOpenSims
         public override string GetName()
         {
             if (!string.IsNullOrEmpty(AspectName)) return AspectName;
-            if (Object.ReferenceEquals(_Prim0,null))
+            if (!HasPrim)
             {
                 return null;
             }
@@ -959,12 +970,12 @@ namespace cogbot.TheOpenSims
 
         public SimObject FindSimObject(SimObjectType pUse, double maxXYDistance, double maxZDist)
         {
-            double myZ = GetWorldPosition().Z;
+            double myZ = GlobalPosition.Z;
             IList<SimObject> objects = GetKnownObjects();
             lock (objects) foreach (SimObject O in objects)
             {
                 if (O.Distance(this) > maxXYDistance) continue;
-                if (Math.Abs(O.GetWorldPosition().Z - myZ) > maxZDist) continue;
+                if (Math.Abs(O.GlobalPosition.Z - myZ) > maxZDist) continue;
                 if (O.IsTypeOf(pUse) != null) return O;
             }
             return null;
@@ -1031,10 +1042,10 @@ namespace cogbot.TheOpenSims
 
         /// public override SimWaypoint GetWaypoint()
         /// {
-        ///     Vector3 v3 = GetWorldPosition();
+        ///     Vector3 v3 = GlobalPosition();
         ///     SimRegion PathStore = GetSimRegion();
         ///     SimWaypoint swp = PathStore.CreateClosestWaypoint(v3);
-        ///     double dist = Vector3.Distance(v3, swp.GetWorldPosition());
+        ///     double dist = Vector3.Distance(v3, swp.GlobalPosition());
         ///     if (!swp.Passable)
         ///     {
         ///         WorldSystem.WriteLine("CreateClosestWaypoint: " + v3 + " <- " + dist + " -> " + swp + " " + this);
@@ -1110,7 +1121,7 @@ namespace cogbot.TheOpenSims
             string str = "Approaching " + obj + " " + DistanceVectorString(obj) + " to get " + ApproachDistance;
             Debug(str);
             obj.MakeEnterable(this);
-            ///  if (!MoveTo(obj.GetWorldPosition(), obj.GetSizeDistance() + 0.5f, 12))
+            ///  if (!MoveTo(obj.GlobalPosition(), obj.GetSizeDistance() + 0.5f, 12))
             {
                 GotoTarget(obj);
                 TurnToward(obj);
@@ -1151,11 +1162,11 @@ namespace cogbot.TheOpenSims
                     }
                     if (ApproachPosition != null)
                     {
-                        targetPosition = ApproachPosition.GetWorldPosition();
+                        targetPosition = ApproachPosition.GlobalPosition;
                     }
                 }
                 double realTargetZ = targetPosition.Z;
-                Vector3d worldPosition = GetWorldPosition();
+                Vector3d worldPosition = GlobalPosition;
                 /// ApproachDistance = ApproachPosition.GetSizeDistance();
                 try
                 {
@@ -1209,7 +1220,7 @@ namespace cogbot.TheOpenSims
                     IsBlocked = false;
                     if (lastDistance <= curDist)
                     {
-                        if (!ReferenceEquals(_Prim0,null) && Prim.Velocity == Vector3.Zero)
+                        if (HasPrim && Prim.Velocity == Vector3.Zero)
                             IsBlocked = true;
                         if (ApproachPosition!=null)
                         {
@@ -1379,7 +1390,7 @@ namespace cogbot.TheOpenSims
             TurnToward(finalTarget);
             int blockCount = 0;
             IsBlocked = false;
-            double currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
+            double currentDist = Vector3d.Distance(finalTarget, GlobalPosition);
             ///  if (currentDist < maxDistance) return true;
             lock (TrackerLoopLock)
             {
@@ -1392,7 +1403,7 @@ namespace cogbot.TheOpenSims
             long endTick = Environment.TickCount + (int) (maxSeconds*1000);
             while (Environment.TickCount < endTick)
             {
-                currentDist = Vector3d.Distance(finalTarget, GetWorldPosition());
+                currentDist = Vector3d.Distance(finalTarget, GlobalPosition);
                 if (Prim==null)
                 {
                     Debug("Where is my body? ");
@@ -1480,7 +1491,7 @@ namespace cogbot.TheOpenSims
             if (ApproachPosition != target)
             {
                 lastDistance = float.MaxValue;
-                SetMoveTarget(target.GetWorldPosition());
+                SetMoveTarget(target.GlobalPosition);
                 ApproachDistance = maxDist;
             }
         }
@@ -1624,10 +1635,10 @@ namespace cogbot.TheOpenSims
         {
             if (!IsRoot)
             {
-                Quaternion start = GetSimRotation();
+                Quaternion start = SimRotation;
                 Quaternion offset = localPos / start;
                 SimObject p = Parent;
-                return p.SetObjectRotation(p.GetSimRotation() * offset);
+                return p.SetObjectRotation(p.SimRotation * offset);
             }
             WorldSystem.SetObjectRotation(Prim, localPos);
             return true;
@@ -1720,7 +1731,7 @@ namespace cogbot.TheOpenSims
 
             {
                 int tries = 1;// int.MaxValue;
-                Vector3 lp = GetSimPosition();
+                Vector3 lp = SimPosition;
                 bool needsTurn = true;
                 while (needsTurn && tries-- > 0)
                 {
@@ -1798,7 +1809,7 @@ namespace cogbot.TheOpenSims
                 }
 
                 Quaternion between = Vector3.RotationBetween(Vector3.UnitX,
-                                             Vector3.Normalize(target - GetSimPosition()));
+                                             Vector3.Normalize(target - SimPosition));
                 Quaternion rot = between * (Quaternion.Identity / parentRot);
 
                 Quaternion br = ClientMovement.BodyRotation;
@@ -1807,7 +1818,7 @@ namespace cogbot.TheOpenSims
                 changed = true;
                 ClientMovement.BodyRotation = rot;
                 ClientMovement.HeadRotation = rot;
-                ClientMovement.Camera.LookAt(GetSimPosition(), target);
+                ClientMovement.Camera.LookAt(SimPosition, target);
 
                 bool prev = Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK;
                 try
@@ -2156,17 +2167,7 @@ namespace cogbot.TheOpenSims
         private string PostureType;
         private SimObjectEvent LastPostureEvent;
         readonly private object postureLock  = new object();
-        public Vector3 SimPosition
-        {
-            set
-            {
-                LastKnownSimPos = value;   
-            }          
-            get
-            {
-                return GetSimPosition();
-            }
-        }
+
 
         private void SetPosture(SimObjectEvent evt)
         {

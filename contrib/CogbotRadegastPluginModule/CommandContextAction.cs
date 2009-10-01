@@ -169,11 +169,31 @@ namespace CogbotRadegastPluginModule
 
         public object GetValue(Type type)
         {
+            if (type == typeof(UUID) && lastObject is SimObject) return ((SimObject)lastObject).ID;
             object o = GetValue(type, lastObject);
             if (type == null) return null;
             if (type.IsInstanceOfType(o)) return o;
             object od = DeRef(o);
             if (od != o) return GetValue(type, od);
+            return o;
+        }
+
+        public override object DeRef(object o)
+        {
+            if (o is Control)
+            {
+                Control control = (Control)o;
+                if (control.Tag != null) return control.Tag;
+                if (!string.IsNullOrEmpty(control.Name)) return control.Name;
+                if (!string.IsNullOrEmpty(control.Text)) return control.Text;
+            }
+            else if (o is ListViewItem)
+            {
+                ListViewItem control = (ListViewItem)o;
+                if (control.Tag != null) return control.Tag;
+                if (!string.IsNullOrEmpty(control.Name)) return control.Name;
+                if (!string.IsNullOrEmpty(control.Text)) return control.Text;
+            }
             return o;
         }
 

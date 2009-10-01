@@ -20,7 +20,7 @@ namespace cogbot.TheOpenSims
 
         public override Vector3 GetUsePostion()
         {
-            return Victem.GetSimPosition();
+            return Victem.SimPosition;
         }
 
         public override void Abort()

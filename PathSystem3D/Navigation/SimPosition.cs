@@ -9,11 +9,11 @@ namespace PathSystem3D.Navigation
     {
         bool IsPassable { get; set; }
         string DistanceVectorString(SimPosition RootObject);
-        Vector3 GetSimPosition();
+        Vector3 SimPosition { get; }
         float GetSizeDistance();
-        bool IsRegionAttached();
-        Quaternion GetSimRotation();
-        Vector3d GetWorldPosition();
-        SimPathStore GetPathStore();
+        bool IsRegionAttached { get; }
+        Quaternion SimRotation { get; }
+        Vector3d GlobalPosition { get; }
+        SimPathStore PathStore { get; }
     }
 }
