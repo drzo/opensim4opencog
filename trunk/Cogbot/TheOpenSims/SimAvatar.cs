@@ -106,7 +106,7 @@ namespace cogbot.TheOpenSims
             {
                 if (!WasKilled) /// already
                 {
-                    IEnumerable<SimObject> AttachedChildren0 = GetChildren();
+                    IEnumerable<SimObject> AttachedChildren0 = Children;
                     lock (AttachedChildren0)
                         foreach (SimObject C in AttachedChildren0)
                         {
@@ -889,17 +889,17 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public override bool IsFloating
+        public override bool Flying
         {
             get
             {
                 if (IsControllable)
                     return Client.Self.Movement.Fly;
-                return false;
+                return base.Flying;
             }
             set
             {
-                if (IsFloating != value)
+                if (Flying != value)
                 {
                     if (IsControllable) Client.Self.Fly(value);
                 }

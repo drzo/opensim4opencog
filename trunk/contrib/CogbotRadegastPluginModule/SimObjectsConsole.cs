@@ -42,6 +42,8 @@ using cogbot.Utilities;
 using OpenMetaverse;
 using Radegast;
 using System.Reflection;
+//MAYBE: Radegast.ToolStripCheckBox?
+using GenericSearchFilter = System.Windows.Forms.CheckBox;
 
 namespace CogbotRadegastPluginModule
 {
@@ -276,7 +278,7 @@ namespace CogbotRadegastPluginModule
             cbNextOwnCopy.Checked = (p.NextOwnerMask & PermissionMask.Copy) != 0;
             cbNextOwnTransfer.Checked = (p.NextOwnerMask & PermissionMask.Transfer) != 0;
 
-            txtPrims.Text = GetSimObject(currentPrim).GetChildren().Count.ToString();
+            txtPrims.Text = GetSimObject(currentPrim).Children.Count.ToString();
 
             if ((currentPrim.Flags & PrimFlags.Money) != 0)
             {
@@ -376,6 +378,7 @@ namespace CogbotRadegastPluginModule
 
         private void Objects_OnObjectKilled(Simulator simulator, uint objectID)
         {
+            return;
             if (InvokeRequired)
             {
                 Invoke(new MethodInvoker(delegate() { Objects_OnObjectKilled(simulator, objectID); }));
@@ -396,44 +399,37 @@ namespace CogbotRadegastPluginModule
             }
         }
 
-        private Dictionary<ToolStripCheckBox, PropertyInfo> Boxs = new Dictionary<ToolStripCheckBox, PropertyInfo>();
+        private Dictionary<GenericSearchFilter, PropertyInfo> Boxs = new Dictionary<GenericSearchFilter, PropertyInfo>();
         Dictionary<PropertyInfo, Object> uBoxs = new Dictionary<PropertyInfo, Object>();
         void AddChecks(string name)
         {
-            ToolStripCheckBox IsRoot = new Radegast.ToolStripCheckBox();
+            GenericSearchFilter IsRoot = new GenericSearchFilter();
             IsRoot.Checked = false;
             IsRoot.CheckState = System.Windows.Forms.CheckState.Indeterminate;
-            IsRoot.Name = name;
+            IsRoot.Name = "object_" + name;
             IsRoot.Size = new System.Drawing.Size(58, 22);
-            IsRoot.Text = name;
-            IsRoot.CheckBoxControl.ThreeState = true;
+            IsRoot.Text = name.StartsWith("Is") ? name.Substring(2) : name.StartsWith("Has") ? name.Substring(3) : name;
+            IsRoot.ThreeState = true;
             IsRoot.Click += new System.EventHandler(this.IsRoot_Click);
-            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { IsRoot });
-            Boxs[IsRoot] = typeof(SimObjectImpl).GetProperty(name);
+            this.searchOptions.Controls.Add(IsRoot);
+            Boxs[IsRoot] = typeof (SimObjectImpl).GetProperty(name);
         }
+
         private void AddAllObjects()
         {
             Vector3d location = client.Self.GlobalPosition;
             List<ListViewItem> items = new List<ListViewItem>();
 
-
-
-            WorldObjects.SimObjects.CopyOf().ForEach(
-                prim =>
-                    {
-                        {
-                            bool skip = IsSkipped(location,prim);
-                            if (!skip)
-                            {
-                                ListViewItem item = new ListViewItem();
-                                item.Text = GetObjectName(prim);
-                                item.Tag = prim;
-                                item.Name = prim.ID.ToString();
-                                items.Add(item);
-                            }
-                        }
-                    });
-
+            foreach (var prim in WorldObjects.SimObjects.CopyOf())
+            {
+                if (IsSkipped(location, prim)) continue;
+                items.Add(new ListViewItem
+                              {
+                                  Text = GetObjectName(prim),
+                                  Tag = prim,
+                                  Name = prim.ID.ToString()
+                              });
+            }
             lock (lstPrims.Items)
             {
                 lstPrims.Items.AddRange(items.ToArray());
@@ -701,7 +697,7 @@ namespace CogbotRadegastPluginModule
         private void IsRoot_Click(object sender, EventArgs e)
         {
             uBoxs.Clear();
-            foreach (KeyValuePair<ToolStripCheckBox, PropertyInfo> box in Boxs)
+            foreach (KeyValuePair<GenericSearchFilter, PropertyInfo> box in Boxs)
             {
                 if (box.Key.CheckState != CheckState.Indeterminate)
                 {
@@ -709,6 +705,11 @@ namespace CogbotRadegastPluginModule
                 }
             }
             btnRefresh_Click(null, null);
+        }
+
+        private void searchOptions_Paint(object sender, PaintEventArgs e)
+        {
+
         }
 
     }

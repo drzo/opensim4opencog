@@ -34,7 +34,7 @@ namespace CogbotRadegastPluginModule
 {
     partial class SimObjectsConsole
     {
-        /// <summary>
+              /// <summary>
         /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
@@ -62,15 +62,6 @@ namespace CogbotRadegastPluginModule
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SimObjectsConsole));
-            this.ctxMenuObjects = new Radegast.RadegastContextMenuStrip(this.components);
-            this.BottomToolStripPanel = new System.Windows.Forms.ToolStripPanel();
-            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
-            this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
-            this.TopToolStripPanel = new System.Windows.Forms.ToolStripPanel();
-            this.RightToolStripPanel = new System.Windows.Forms.ToolStripPanel();
-            this.LeftToolStripPanel = new System.Windows.Forms.ToolStripPanel();
-            this.ContentPanel = new System.Windows.Forms.ToolStripContentPanel();
-            this.txtSearch = new System.Windows.Forms.TextBox();
             this.gbxInworld = new System.Windows.Forms.GroupBox();
             this.btnWalkTo = new System.Windows.Forms.Button();
             this.btnTurnTo = new System.Windows.Forms.Button();
@@ -81,16 +72,17 @@ namespace CogbotRadegastPluginModule
             this.btnTouch = new System.Windows.Forms.Button();
             this.btnSitOn = new System.Windows.Forms.Button();
             this.btnPointAt = new System.Windows.Forms.Button();
+            this.txtSearch = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.lblDistance = new System.Windows.Forms.Label();
             this.btnClear = new System.Windows.Forms.Button();
             this.btnRefresh = new System.Windows.Forms.Button();
-            this.lstPrims = new Radegast.ListViewNoFlicker();
-            this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
             this.nudRadius = new System.Windows.Forms.NumericUpDown();
+            this.lblDistance = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.rbName = new System.Windows.Forms.RadioButton();
             this.rbDistance = new System.Windows.Forms.RadioButton();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.gbxObjectDetails = new System.Windows.Forms.GroupBox();
             this.cbNextOwnTransfer = new System.Windows.Forms.CheckBox();
             this.cbNextOwnCopy = new System.Windows.Forms.CheckBox();
@@ -99,8 +91,6 @@ namespace CogbotRadegastPluginModule
             this.cbOwnerCopy = new System.Windows.Forms.CheckBox();
             this.cbOwnerModify = new System.Windows.Forms.CheckBox();
             this.txtPrims = new System.Windows.Forms.TextBox();
-            this.txtCreator = new Radegast.AgentNameTextBox();
-            this.txtOwner = new Radegast.AgentNameTextBox();
             this.txtHover = new System.Windows.Forms.TextBox();
             this.txtDescription = new System.Windows.Forms.TextBox();
             this.txtObjectName = new System.Windows.Forms.TextBox();
@@ -112,84 +102,18 @@ namespace CogbotRadegastPluginModule
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.lblName = new System.Windows.Forms.Label();
-            this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
-            this.statusStrip1.SuspendLayout();
+            this.searchOptions = new System.Windows.Forms.FlowLayoutPanel();
+            this.txtCreator = new Radegast.AgentNameTextBox();
+            this.txtOwner = new Radegast.AgentNameTextBox();
+            this.lstPrims = new Radegast.ListViewNoFlicker();
+            this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
+            this.ctxMenuObjects = new Radegast.RadegastContextMenuStrip(this.components);
             this.gbxInworld.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudRadius)).BeginInit();
             this.groupBox1.SuspendLayout();
+            this.statusStrip1.SuspendLayout();
             this.gbxObjectDetails.SuspendLayout();
-            this.toolStripContainer1.BottomToolStripPanel.SuspendLayout();
-            this.toolStripContainer1.ContentPanel.SuspendLayout();
-            this.toolStripContainer1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // ctxMenuObjects
-            // 
-            this.ctxMenuObjects.Name = "ctxMenuObjects";
-            this.ctxMenuObjects.Size = new System.Drawing.Size(61, 4);
-            this.ctxMenuObjects.Opening += new System.ComponentModel.CancelEventHandler(this.ctxMenuObjects_Opening);
-            // 
-            // BottomToolStripPanel
-            // 
-            this.BottomToolStripPanel.Location = new System.Drawing.Point(0, 0);
-            this.BottomToolStripPanel.Name = "BottomToolStripPanel";
-            this.BottomToolStripPanel.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            this.BottomToolStripPanel.RowMargin = new System.Windows.Forms.Padding(3, 0, 0, 0);
-            this.BottomToolStripPanel.Size = new System.Drawing.Size(0, 0);
-            // 
-            // statusStrip1
-            // 
-            this.statusStrip1.Dock = System.Windows.Forms.DockStyle.None;
-            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.lblStatus});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 0);
-            this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(651, 22);
-            this.statusStrip1.TabIndex = 15;
-            this.statusStrip1.Text = "statusStrip1";
-            // 
-            // lblStatus
-            // 
-            this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(59, 17);
-            this.lblStatus.Text = "Tracking...";
-            // 
-            // TopToolStripPanel
-            // 
-            this.TopToolStripPanel.Location = new System.Drawing.Point(0, 0);
-            this.TopToolStripPanel.Name = "TopToolStripPanel";
-            this.TopToolStripPanel.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            this.TopToolStripPanel.RowMargin = new System.Windows.Forms.Padding(3, 0, 0, 0);
-            this.TopToolStripPanel.Size = new System.Drawing.Size(0, 0);
-            // 
-            // RightToolStripPanel
-            // 
-            this.RightToolStripPanel.Location = new System.Drawing.Point(0, 0);
-            this.RightToolStripPanel.Name = "RightToolStripPanel";
-            this.RightToolStripPanel.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            this.RightToolStripPanel.RowMargin = new System.Windows.Forms.Padding(3, 0, 0, 0);
-            this.RightToolStripPanel.Size = new System.Drawing.Size(0, 0);
-            // 
-            // LeftToolStripPanel
-            // 
-            this.LeftToolStripPanel.Location = new System.Drawing.Point(0, 0);
-            this.LeftToolStripPanel.Name = "LeftToolStripPanel";
-            this.LeftToolStripPanel.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            this.LeftToolStripPanel.RowMargin = new System.Windows.Forms.Padding(3, 0, 0, 0);
-            this.LeftToolStripPanel.Size = new System.Drawing.Size(0, 0);
-            // 
-            // ContentPanel
-            // 
-            this.ContentPanel.AutoScroll = true;
-            this.ContentPanel.Size = new System.Drawing.Size(651, 370);
-            // 
-            // txtSearch
-            // 
-            this.txtSearch.Location = new System.Drawing.Point(62, 28);
-            this.txtSearch.Name = "txtSearch";
-            this.txtSearch.Size = new System.Drawing.Size(133, 21);
-            this.txtSearch.TabIndex = 0;
-            this.txtSearch.TextChanged += new System.EventHandler(this.txtSearch_TextChanged);
             // 
             // gbxInworld
             // 
@@ -204,9 +128,9 @@ namespace CogbotRadegastPluginModule
             this.gbxInworld.Controls.Add(this.btnSitOn);
             this.gbxInworld.Controls.Add(this.btnPointAt);
             this.gbxInworld.Enabled = false;
-            this.gbxInworld.Location = new System.Drawing.Point(384, 140);
+            this.gbxInworld.Location = new System.Drawing.Point(384, 150);
             this.gbxInworld.Name = "gbxInworld";
-            this.gbxInworld.Size = new System.Drawing.Size(255, 21);
+            this.gbxInworld.Size = new System.Drawing.Size(255, 14);
             this.gbxInworld.TabIndex = 2;
             this.gbxInworld.TabStop = false;
             this.gbxInworld.Text = "In-world";
@@ -294,7 +218,7 @@ namespace CogbotRadegastPluginModule
             // 
             // btnPointAt
             // 
-            this.btnPointAt.Location = new System.Drawing.Point(90, 49);
+            this.btnPointAt.Location = new System.Drawing.Point(89, 49);
             this.btnPointAt.Name = "btnPointAt";
             this.btnPointAt.Size = new System.Drawing.Size(75, 23);
             this.btnPointAt.TabIndex = 8;
@@ -302,27 +226,26 @@ namespace CogbotRadegastPluginModule
             this.btnPointAt.UseVisualStyleBackColor = true;
             this.btnPointAt.Click += new System.EventHandler(this.btnPointAt_Click);
             // 
+            // txtSearch
+            // 
+            this.txtSearch.Location = new System.Drawing.Point(62, 12);
+            this.txtSearch.Name = "txtSearch";
+            this.txtSearch.Size = new System.Drawing.Size(133, 21);
+            this.txtSearch.TabIndex = 0;
+            this.txtSearch.TextChanged += new System.EventHandler(this.txtSearch_TextChanged);
+            // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 36);
+            this.label1.Location = new System.Drawing.Point(12, 15);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(44, 13);
             this.label1.TabIndex = 7;
             this.label1.Text = "Search:";
             // 
-            // lblDistance
-            // 
-            this.lblDistance.AutoSize = true;
-            this.lblDistance.Location = new System.Drawing.Point(318, 31);
-            this.lblDistance.Name = "lblDistance";
-            this.lblDistance.Size = new System.Drawing.Size(55, 13);
-            this.lblDistance.TabIndex = 7;
-            this.lblDistance.Text = "radius (m)";
-            // 
             // btnClear
             // 
-            this.btnClear.Location = new System.Drawing.Point(201, 26);
+            this.btnClear.Location = new System.Drawing.Point(201, 10);
             this.btnClear.Name = "btnClear";
             this.btnClear.Size = new System.Drawing.Size(54, 23);
             this.btnClear.TabIndex = 2;
@@ -341,34 +264,6 @@ namespace CogbotRadegastPluginModule
             this.btnRefresh.UseVisualStyleBackColor = true;
             this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
-            // lstPrims
-            // 
-            this.lstPrims.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.lstPrims.AutoArrange = false;
-            this.lstPrims.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader1});
-            this.lstPrims.ContextMenuStrip = this.ctxMenuObjects;
-            this.lstPrims.FullRowSelect = true;
-            this.lstPrims.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.lstPrims.HideSelection = false;
-            this.lstPrims.LabelWrap = false;
-            this.lstPrims.Location = new System.Drawing.Point(12, 57);
-            this.lstPrims.MultiSelect = false;
-            this.lstPrims.Name = "lstPrims";
-            this.lstPrims.ShowGroups = false;
-            this.lstPrims.Size = new System.Drawing.Size(365, 335);
-            this.lstPrims.TabIndex = 10;
-            this.lstPrims.UseCompatibleStateImageBehavior = false;
-            this.lstPrims.View = System.Windows.Forms.View.Details;
-            this.lstPrims.SelectedIndexChanged += new System.EventHandler(this.lstPrims_SelectedIndexChanged);
-            this.lstPrims.MouseUp += new System.Windows.Forms.MouseEventHandler(this.lstPrims_MouseUp);
-            // 
-            // columnHeader1
-            // 
-            this.columnHeader1.Width = 340;
-            // 
             // nudRadius
             // 
             this.nudRadius.Increment = new decimal(new int[] {
@@ -376,7 +271,7 @@ namespace CogbotRadegastPluginModule
             0,
             0,
             0});
-            this.nudRadius.Location = new System.Drawing.Point(261, 28);
+            this.nudRadius.Location = new System.Drawing.Point(261, 12);
             this.nudRadius.Maximum = new decimal(new int[] {
             1000,
             0,
@@ -392,6 +287,15 @@ namespace CogbotRadegastPluginModule
             0});
             this.nudRadius.KeyUp += new System.Windows.Forms.KeyEventHandler(this.nudRadius_KeyUp);
             this.nudRadius.KeyDown += new System.Windows.Forms.KeyEventHandler(this.nudRadius_KeyDown);
+            // 
+            // lblDistance
+            // 
+            this.lblDistance.AutoSize = true;
+            this.lblDistance.Location = new System.Drawing.Point(318, 15);
+            this.lblDistance.Name = "lblDistance";
+            this.lblDistance.Size = new System.Drawing.Size(55, 13);
+            this.lblDistance.TabIndex = 7;
+            this.lblDistance.Text = "radius (m)";
             // 
             // groupBox1
             // 
@@ -428,6 +332,22 @@ namespace CogbotRadegastPluginModule
             this.rbDistance.Text = "Distance";
             this.rbDistance.UseVisualStyleBackColor = true;
             this.rbDistance.CheckedChanged += new System.EventHandler(this.rbDistance_CheckedChanged);
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.lblStatus});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 395);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(651, 22);
+            this.statusStrip1.TabIndex = 15;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // lblStatus
+            // 
+            this.lblStatus.Name = "lblStatus";
+            this.lblStatus.Size = new System.Drawing.Size(59, 17);
+            this.lblStatus.Text = "Tracking...";
             // 
             // gbxObjectDetails
             // 
@@ -528,26 +448,6 @@ namespace CogbotRadegastPluginModule
             this.txtPrims.Size = new System.Drawing.Size(54, 21);
             this.txtPrims.TabIndex = 5;
             // 
-            // txtCreator
-            // 
-            this.txtCreator.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtCreator.AgentID")));
-            this.txtCreator.BackColor = System.Drawing.SystemColors.Window;
-            this.txtCreator.Location = new System.Drawing.Point(61, 116);
-            this.txtCreator.Name = "txtCreator";
-            this.txtCreator.ReadOnly = true;
-            this.txtCreator.Size = new System.Drawing.Size(130, 21);
-            this.txtCreator.TabIndex = 5;
-            // 
-            // txtOwner
-            // 
-            this.txtOwner.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtOwner.AgentID")));
-            this.txtOwner.BackColor = System.Drawing.SystemColors.Window;
-            this.txtOwner.Location = new System.Drawing.Point(61, 91);
-            this.txtOwner.Name = "txtOwner";
-            this.txtOwner.ReadOnly = true;
-            this.txtOwner.Size = new System.Drawing.Size(130, 21);
-            this.txtOwner.TabIndex = 4;
-            // 
             // txtHover
             // 
             this.txtHover.Location = new System.Drawing.Point(61, 66);
@@ -641,113 +541,153 @@ namespace CogbotRadegastPluginModule
             this.lblName.TabIndex = 0;
             this.lblName.Text = "Name";
             // 
-            // toolStripContainer1
+            // searchOptions
             // 
+            this.searchOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.searchOptions.AutoSize = true;
+            this.searchOptions.FlowDirection = System.Windows.Forms.FlowDirection.BottomUp;
+            this.searchOptions.Location = new System.Drawing.Point(390, 10);
+            this.searchOptions.Name = "searchOptions";
+            this.searchOptions.Size = new System.Drawing.Size(249, 134);
+            this.searchOptions.TabIndex = 17;
+            this.searchOptions.Paint += new System.Windows.Forms.PaintEventHandler(this.searchOptions_Paint);
             // 
-            // toolStripContainer1.BottomToolStripPanel
+            // txtCreator
             // 
-            this.toolStripContainer1.BottomToolStripPanel.Controls.Add(this.statusStrip1);
+            this.txtCreator.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtCreator.AgentID")));
+            this.txtCreator.BackColor = System.Drawing.SystemColors.Window;
+            this.txtCreator.Location = new System.Drawing.Point(61, 116);
+            this.txtCreator.Name = "txtCreator";
+            this.txtCreator.ReadOnly = true;
+            this.txtCreator.Size = new System.Drawing.Size(130, 21);
+            this.txtCreator.TabIndex = 5;
             // 
-            // toolStripContainer1.ContentPanel
+            // txtOwner
             // 
-            this.toolStripContainer1.ContentPanel.AutoScroll = true;
-            this.toolStripContainer1.ContentPanel.Controls.Add(this.gbxObjectDetails);
-            this.toolStripContainer1.ContentPanel.Controls.Add(this.groupBox1);
-            this.toolStripContainer1.ContentPanel.Controls.Add(this.nudRadius);
-            this.toolStripContainer1.ContentPanel.Controls.Add(this.lstPrims);
-            this.toolStripContainer1.ContentPanel.Controls.Add(this.btnRefresh);
-            this.toolStripContainer1.ContentPanel.Controls.Add(this.btnClear);
-            this.toolStripContainer1.ContentPanel.Controls.Add(this.lblDistance);
-            this.toolStripContainer1.ContentPanel.Controls.Add(this.label1);
-            this.toolStripContainer1.ContentPanel.Controls.Add(this.gbxInworld);
-            this.toolStripContainer1.ContentPanel.Controls.Add(this.txtSearch);
-            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(651, 395);
-            this.toolStripContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.toolStripContainer1.Location = new System.Drawing.Point(0, 0);
-            this.toolStripContainer1.Name = "toolStripContainer1";
-            this.toolStripContainer1.Size = new System.Drawing.Size(651, 417);
-            this.toolStripContainer1.TabIndex = 20;
-            this.toolStripContainer1.Text = "toolStripContainer1";
+            this.txtOwner.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtOwner.AgentID")));
+            this.txtOwner.BackColor = System.Drawing.SystemColors.Window;
+            this.txtOwner.Location = new System.Drawing.Point(61, 91);
+            this.txtOwner.Name = "txtOwner";
+            this.txtOwner.ReadOnly = true;
+            this.txtOwner.Size = new System.Drawing.Size(130, 21);
+            this.txtOwner.TabIndex = 4;
+            // 
+            // lstPrims
+            // 
+            this.lstPrims.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.lstPrims.AutoArrange = false;
+            this.lstPrims.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader1});
+            this.lstPrims.ContextMenuStrip = this.ctxMenuObjects;
+            this.lstPrims.FullRowSelect = true;
+            this.lstPrims.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.lstPrims.HideSelection = false;
+            this.lstPrims.LabelWrap = false;
+            this.lstPrims.Location = new System.Drawing.Point(12, 39);
+            this.lstPrims.MultiSelect = false;
+            this.lstPrims.Name = "lstPrims";
+            this.lstPrims.ShowGroups = false;
+            this.lstPrims.Size = new System.Drawing.Size(365, 353);
+            this.lstPrims.TabIndex = 10;
+            this.lstPrims.UseCompatibleStateImageBehavior = false;
+            this.lstPrims.View = System.Windows.Forms.View.Details;
+            this.lstPrims.SelectedIndexChanged += new System.EventHandler(this.lstPrims_SelectedIndexChanged);
+            this.lstPrims.MouseUp += new System.Windows.Forms.MouseEventHandler(this.lstPrims_MouseUp);
+            // 
+            // columnHeader1
+            // 
+            this.columnHeader1.Width = 340;
+            // 
+            // ctxMenuObjects
+            // 
+            this.ctxMenuObjects.Name = "ctxMenuObjects";
+            this.ctxMenuObjects.Size = new System.Drawing.Size(61, 4);
+            this.ctxMenuObjects.Opening += new System.ComponentModel.CancelEventHandler(this.ctxMenuObjects_Opening);
             // 
             // SimObjectsConsole
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.toolStripContainer1);
+            this.Controls.Add(this.searchOptions);
+            this.Controls.Add(this.gbxObjectDetails);
+            this.Controls.Add(this.statusStrip1);
+            this.Controls.Add(this.groupBox1);
+            this.Controls.Add(this.nudRadius);
+            this.Controls.Add(this.lstPrims);
+            this.Controls.Add(this.btnRefresh);
+            this.Controls.Add(this.btnClear);
+            this.Controls.Add(this.lblDistance);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.txtSearch);
+            this.Controls.Add(this.gbxInworld);
             this.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.MinimumSize = new System.Drawing.Size(508, 417);
             this.Name = "SimObjectsConsole";
             this.Size = new System.Drawing.Size(651, 417);
-            this.statusStrip1.ResumeLayout(false);
-            this.statusStrip1.PerformLayout();
             this.gbxInworld.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.nudRadius)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
             this.gbxObjectDetails.ResumeLayout(false);
             this.gbxObjectDetails.PerformLayout();
-            this.toolStripContainer1.BottomToolStripPanel.ResumeLayout(false);
-            this.toolStripContainer1.BottomToolStripPanel.PerformLayout();
-            this.toolStripContainer1.ContentPanel.ResumeLayout(false);
-            this.toolStripContainer1.ContentPanel.PerformLayout();
-            this.toolStripContainer1.ResumeLayout(false);
-            this.toolStripContainer1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
 
-        private RadegastContextMenuStrip ctxMenuObjects;
-        private System.Windows.Forms.ToolStripPanel BottomToolStripPanel;
-        private System.Windows.Forms.StatusStrip statusStrip1;
-        private System.Windows.Forms.ToolStripStatusLabel lblStatus;
-        private System.Windows.Forms.ToolStripPanel TopToolStripPanel;
-        private System.Windows.Forms.ToolStripPanel RightToolStripPanel;
-        private System.Windows.Forms.ToolStripPanel LeftToolStripPanel;
-        private System.Windows.Forms.ToolStripContentPanel ContentPanel;
-        private System.Windows.Forms.TextBox txtSearch;
         private System.Windows.Forms.GroupBox gbxInworld;
-        private System.Windows.Forms.Button btnWalkTo;
-        private System.Windows.Forms.Button btnTurnTo;
-        private System.Windows.Forms.Button btnBuy;
-        private System.Windows.Forms.Button btnView;
-        private System.Windows.Forms.Button btnPay;
-        private System.Windows.Forms.Button btnSource;
-        private System.Windows.Forms.Button btnTouch;
         private System.Windows.Forms.Button btnSitOn;
         private System.Windows.Forms.Button btnPointAt;
+        private System.Windows.Forms.Button btnTouch;
+        private System.Windows.Forms.TextBox txtSearch;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label lblDistance;
         private System.Windows.Forms.Button btnClear;
-        private System.Windows.Forms.Button btnRefresh;
-        private ListViewNoFlicker lstPrims;
+        private Radegast.ListViewNoFlicker lstPrims;
         private System.Windows.Forms.ColumnHeader columnHeader1;
+        private System.Windows.Forms.Button btnRefresh;
+        private System.Windows.Forms.Button btnSource;
+        private System.Windows.Forms.Button btnPay;
+        private System.Windows.Forms.Button btnView;
         private System.Windows.Forms.NumericUpDown nudRadius;
+        private System.Windows.Forms.Label lblDistance;
+        private System.Windows.Forms.Button btnBuy;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.RadioButton rbName;
         private System.Windows.Forms.RadioButton rbDistance;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel lblStatus;
+        private System.Windows.Forms.Button btnWalkTo;
+        private System.Windows.Forms.Button btnTurnTo;
         private System.Windows.Forms.GroupBox gbxObjectDetails;
-        private System.Windows.Forms.CheckBox cbNextOwnTransfer;
-        private System.Windows.Forms.CheckBox cbNextOwnCopy;
-        private System.Windows.Forms.CheckBox cbOwnerTransfer;
-        private System.Windows.Forms.CheckBox cbNextOwnModify;
-        private System.Windows.Forms.CheckBox cbOwnerCopy;
-        private System.Windows.Forms.CheckBox cbOwnerModify;
-        private System.Windows.Forms.TextBox txtPrims;
-        private AgentNameTextBox txtCreator;
-        private AgentNameTextBox txtOwner;
-        private System.Windows.Forms.TextBox txtHover;
+        private System.Windows.Forms.Label lblName;
         private System.Windows.Forms.TextBox txtDescription;
         private System.Windows.Forms.TextBox txtObjectName;
-        private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.TextBox txtHover;
+        private System.Windows.Forms.Label label2;
+        private Radegast.AgentNameTextBox txtCreator;
+        private Radegast.AgentNameTextBox txtOwner;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label lblName;
-        private System.Windows.Forms.ToolStripContainer toolStripContainer1;
+        private System.Windows.Forms.CheckBox cbOwnerTransfer;
+        private System.Windows.Forms.CheckBox cbOwnerCopy;
+        private System.Windows.Forms.CheckBox cbOwnerModify;
+        private System.Windows.Forms.CheckBox cbNextOwnTransfer;
+        private System.Windows.Forms.CheckBox cbNextOwnCopy;
+        private System.Windows.Forms.CheckBox cbNextOwnModify;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.TextBox txtPrims;
+        private RadegastContextMenuStrip ctxMenuObjects;
+        private System.Windows.Forms.FlowLayoutPanel searchOptions;
+    
     }
 }
