@@ -200,7 +200,7 @@ namespace cogbot.TheOpenSims
             get
             {
                 if (!IsRoot) return false;
-                return true; // WorldSystem.client.Network.CurrentSim == GetSimRegion().TheSimulator;
+                return HasPrim; // WorldSystem.client.Network.CurrentSim == GetSimRegion().TheSimulator;
             }
         }
 
@@ -567,11 +567,22 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public bool Flying
+        public virtual bool Flying
         {
             get
             {
                 return HasPrim && (Prim.Flags & PrimFlags.Flying) != 0;
+            }
+            set
+            {
+                if (Flying != value)
+                {
+                    if (IsControllable)
+                    {
+                        Prim.Flags = (Prim.Flags | PrimFlags.Flying);
+                        //WorldSystem.client.Objects.SetFlags();
+                    }
+                }
             }
         }
 
@@ -694,7 +705,7 @@ namespace cogbot.TheOpenSims
             {
                 if (!WasKilled) //already
                 {
-                    List<SimObject> AttachedChildren0 = GetChildren();
+                    List<SimObject> AttachedChildren0 = Children;
                     lock (AttachedChildren0)
                         foreach (SimObject C in AttachedChildren0)
                         {
@@ -725,11 +736,16 @@ namespace cogbot.TheOpenSims
             return ObjectType.IsSubType(superType);
         }
 
-        public ListAsSet<SimObject> AttachedChildren = new ListAsSet<SimObject>();
+        protected ListAsSet<SimObject> _children = new ListAsSet<SimObject>(); 
 
-        public ListAsSet<SimObject> GetChildren()
+        public ListAsSet<SimObject> Children
         {
-            return AttachedChildren;
+            get { return _children; }
+        }
+
+        public bool HasChildren
+        {
+            get { return _children.Count > 0; }
         }
 
         /// <summary>
@@ -792,15 +808,15 @@ namespace cogbot.TheOpenSims
                 if (_Parent == null)
                 {
                     if (Prim == null) return _Parent;
-                    uint parent = Prim.ParentID;
-                    if (parent == 0)
+                    uint parentID = Prim.ParentID;
+                    if (parentID == 0)
                     {
-                        Parent = this;
+                        _Parent = this;
                     }
                     else
                     {
                         Simulator simu = GetSimulator();
-                        Primitive prim = WorldSystem.GetPrimitive(parent, simu);
+                        Primitive prim = WorldSystem.GetPrimitive(parentID, simu);
                         if (prim == null)
                         {
                             // try to request for next time
@@ -808,26 +824,39 @@ namespace cogbot.TheOpenSims
                             return _Parent;
                         }
                         Parent = WorldSystem.GetSimObject(prim, simu);
-                        _Parent.AddChild(this);
                     }
                 }
                 return _Parent;
             }
             set
             {
-                //if (value==null) return;
+                if (value == _Parent) return;
+                SetInfoMap("Parent", GetType(), value);
+                if (value == null)
+                {
+                    _Parent.Children.Remove(this);
+                }
+                else if (value != this)
+                {
+                    IsAttachment = (value is SimAvatar);
+                    if (value.Children.AddTo(this))
+                    {
+                        needUpdate = true;
+                        SimObjectImpl simObject = (SimObjectImpl)value;
+                        simObject.needUpdate = true;
+                    }
+                }
                 _Parent = value;
-                SetInfoMap("Parent",GetType(),value);
             }
         }
 
         public bool AddChild(SimObject simO)
         {
-            SimObjectImpl simObject = (SimObjectImpl) simO;
+            SimObjectImpl simObject = (SimObjectImpl)simO;
             needUpdate = true;
-            simObject.Parent = this;
+            simObject._Parent = this;
             simObject.needUpdate = true;
-            bool b = AttachedChildren.AddTo(simObject);
+            bool b = Children.AddTo(simObject);
             if (b)
             {
                 if (!IsTyped)
@@ -996,11 +1025,6 @@ namespace cogbot.TheOpenSims
             SimTypeSystem.GuessSimObjectTypes(properties, this);  
         }
 
-        public virtual bool IsFloating
-        {
-            get { return !IsPhysical; }
-            set { IsPhysical = !value; }
-        }
 
         public virtual void UpdateObject(ObjectUpdate objectUpdate, ObjectUpdate objectUpdateDiff)
         {
@@ -1039,7 +1063,7 @@ namespace cogbot.TheOpenSims
                 }
             }
             // update children
-            foreach (SimObject o in AttachedChildren)
+            foreach (SimObject o in Children)
             {
                if (o.UpdateOccupied())
                {
@@ -1201,9 +1225,9 @@ namespace cogbot.TheOpenSims
                     }
                     _TOSRTING += ")";
                 }
-                if (AttachedChildren.Count > 0)
+                if (Children.Count > 0)
                 {
-                    _TOSRTING += "(childs " + AttachedChildren.Count + ")";
+                    _TOSRTING += "(childs " + Children.Count + ")";
                 }
                 else
                 {
@@ -1394,7 +1418,7 @@ namespace cogbot.TheOpenSims
             Primitive outerPrim = null;
             if (thisPrim.ParentID == 0)
             {
-                return null;
+                return WorldSystem.GetSimObject(thisPrim).Prim;
             }
             int requests = 10;
             while (outerPrim == null && requests-->0)
@@ -1533,7 +1557,7 @@ namespace cogbot.TheOpenSims
             double fy; // = thePrim.Scale.Y;
             //if (fy > size) size = fy;
 
-            foreach (SimObject obj in AttachedChildren)
+            foreach (SimObject obj in Children)
             {
                 Primitive cp = obj.Prim;
                 fx = cp.Scale.X;
@@ -1616,6 +1640,7 @@ namespace cogbot.TheOpenSims
 
         public int CompareDistance(SimObject p1, SimObject p2)
         {
+            if (p1 == p2) return 0;
             return (int) (Distance(p1) - Distance(p2));
         }
 
@@ -2118,7 +2143,7 @@ namespace cogbot.TheOpenSims
         bool FollowPathTo(SimPosition globalEnd, double distance);
         BotNeeds GetActualUpdate(string pUse);
         SimTypeUsage GetBestUse(BotNeeds needs);
-        ListAsSet<SimObject> GetChildren();
+        ListAsSet<SimObject> Children { get; }
         Vector3d GetGlobalLeftPos(int angle, double Dist);
         List<string> GetMenu(SimAvatar avatar);
         string GetName();
@@ -2128,7 +2153,7 @@ namespace cogbot.TheOpenSims
         IList<SimTypeUsage> GetTypeUsages();
         List<SimObjectUsage> GetUsages();
         bool GotoTarget(SimPosition pos);
-        bool IsFloating { get; set; }
+        bool Flying { get; set; }
         bool IsInside(Vector3 L);
         bool IsKilled { set; }
         bool IsControllable { get; }

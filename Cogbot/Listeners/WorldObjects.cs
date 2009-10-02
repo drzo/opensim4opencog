@@ -1489,12 +1489,12 @@ namespace cogbot.Listeners
 
         internal void ReSelectObject(Primitive P)
         {
-            Simulator sim = GetSimulator(P);
             if (P == null)
             {
                 Console.WriteLine("NULL RESELECTOBJECT");
                 return;
             }
+            Simulator sim = GetSimulator(P);
             if (P.ParentID != 0)
             {
                 client.Objects.SelectObjects(sim, new uint[] { P.LocalID, P.ParentID });
