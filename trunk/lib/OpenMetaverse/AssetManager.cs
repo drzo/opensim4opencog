@@ -230,6 +230,7 @@ namespace OpenMetaverse
         public ImageCodec Codec;
         public Simulator Simulator;
         public SortedList<ushort, ushort> PacketsSeen;
+        public readonly object PacketSeenLock = new object();
         public ImageType ImageType;
         public int DiscardLevel;
         public float Priority;
@@ -1216,7 +1217,6 @@ namespace OpenMetaverse
                 // hopefully that is a safe assumption to make
                 try
                 {
-                    int len = asset.TransferData.Length;
                     Buffer.BlockCopy(asset.TransferData.Data, 0, download.AssetData, 1000 * asset.TransferData.Packet,
                         asset.TransferData.Data.Length);
                     download.Transferred += asset.TransferData.Data.Length;
@@ -1249,9 +1249,6 @@ namespace OpenMetaverse
                         catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
                     }
                 }
-            } else
-            {
-                //Logger.Log("Unknown Transfer for asset " + asset.TransferData.TransferID + " len=" + asset.TransferData.Data.Length, Helpers.LogLevel.Info, Client);
             }
         }
 
