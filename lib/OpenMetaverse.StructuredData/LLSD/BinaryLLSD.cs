@@ -213,7 +213,7 @@ namespace OpenMetaverse.StructuredData
             foreach (KeyValuePair<string, OSD> kvp in osdMap)
             {
                 stream.WriteByte(keyBinaryMarker);
-                byte[] binaryKey = Encoding.UTF8.GetBytes(kvp.Key);
+                byte[] binaryKey = Utils.EncodingUTF8.GetBytes(kvp.Key);
                 byte[] binaryKeyLength = HostToNetworkIntBytes(binaryKey.Length);
                 stream.Write(binaryKeyLength, 0, int32Length);
                 stream.Write(binaryKey, 0, binaryKey.Length);
@@ -259,12 +259,12 @@ namespace OpenMetaverse.StructuredData
                     break;
                 case stringBinaryMarker:
                     int stringLength = NetworkToHostInt(ConsumeBytes(stream, int32Length));
-                    string ss = Encoding.UTF8.GetString(ConsumeBytes(stream, stringLength));
+                    string ss = Utils.EncodingUTF8.GetString(ConsumeBytes(stream, stringLength));
                     osd = OSD.FromString(ss);
                     break;
                 case uriBinaryMarker:
                     int uriLength = NetworkToHostInt(ConsumeBytes(stream, int32Length));
-                    string sUri = Encoding.UTF8.GetString(ConsumeBytes(stream, uriLength));
+                    string sUri = Utils.EncodingUTF8.GetString(ConsumeBytes(stream, uriLength));
                     Uri uri;
                     try
                     {
@@ -322,7 +322,7 @@ namespace OpenMetaverse.StructuredData
                 if (!FindByte(stream, keyBinaryMarker))
                     throw new OSDException("Binary LLSD parsing: Missing key marker in map.");
                 int keyLength = NetworkToHostInt(ConsumeBytes(stream, int32Length));
-                string key = Encoding.UTF8.GetString(ConsumeBytes(stream, keyLength));
+                string key = Utils.EncodingUTF8.GetString(ConsumeBytes(stream, keyLength));
                 osdMap[key] = ParseLLSDBinaryElement(stream);
                 crrElement++;
             }

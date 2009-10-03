@@ -99,7 +99,7 @@ namespace OpenMetaverse.StructuredData
         /// <returns></returns>
         public static byte[] SerializeLLSDXmlBytes(OSD data)
         {
-            return Encoding.UTF8.GetBytes(SerializeLLSDXmlString(data));
+            return Utils.EncodingUTF8.GetBytes(SerializeLLSDXmlString(data));
         }
 
         /// <summary>
