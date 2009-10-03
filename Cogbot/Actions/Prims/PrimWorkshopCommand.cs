@@ -25,14 +25,18 @@ namespace cogbot.Actions
             List<Primitive> prims = new List<Primitive>();
             SimObject o = WorldSystem.GetSimObject(args, out used);
             if (o == null) return string.Format("Cant find {0}", string.Join(" ", args));
+            if (!o.HasPrim) return string.Format("No prim for {0}", string.Join(" ", args));
             prims.Add(o.Prim);
             foreach (var child in o.Children)
             {
-                prims.Add(child.Prim);
+                if (child.HasPrim) prims.Add(child.Prim);
             }
-            frmPrimWorkshop pw = new frmPrimWorkshop(TheBotClient.TheRadegastInstance);
-            pw.loadPrims(prims);
-            pw.Show();
+            TheBotClient.Invoke(() =>
+                                    {
+                                        frmPrimWorkshop pw = new frmPrimWorkshop(TheBotClient.TheRadegastInstance);
+                                        pw.loadPrims(prims);
+                                        pw.Show();
+                                    });
             return Name + " on " + o;
         }
     }

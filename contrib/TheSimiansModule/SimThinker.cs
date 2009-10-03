@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using cogbot.TheOpenSims;
+using cogbot.Utilities;
 using PathSystem3D.Navigation;
 using Exception=System.Exception;
 using String=System.String;
@@ -73,7 +74,7 @@ namespace TheSimiansModule
         /// </summary>
         public double MaxSupportedZChange = 2d;
 
-        private List<SimObject> InterestingObjects = new List<SimObject>();
+        private ListAsSet<SimObject> InterestingObjects = new ListAsSet<SimObject>();
 
         public SimThinker(SimActor a)
             : base(String.Format("AvatarThinkerThread for {0}", a))
@@ -183,7 +184,7 @@ namespace TheSimiansModule
             if (InterestingObjects.Count < 2)
             {
                 InterestingObjects = Actor.GetKnownObjects();
-                InterestingObjects.Remove(Actor);
+                lock (InterestingObjects) InterestingObjects.Remove(Actor);
             }
             int count = InterestingObjects.Count - 2;
             foreach (BotMentalAspect cAspect in InterestingObjects)
@@ -203,8 +204,11 @@ namespace TheSimiansModule
                     if (count < 0) break;
                 }
             }
-            InterestingObjects.Remove(mostInteresting);
-            InterestingObjects.Add(mostInteresting);
+            lock (InterestingObjects)
+            {
+                InterestingObjects.Remove(mostInteresting);
+                InterestingObjects.Add(mostInteresting);                
+            }
             return mostInteresting;
         }
 
@@ -295,7 +299,7 @@ namespace TheSimiansModule
 
             int show = 10;
 
-            List<SimObject> KnowsAboutList = Actor.GetKnownObjects();
+            List<SimObject> KnowsAboutList = Actor.GetKnownObjects().CopyOf();
             lock (KnowsAboutList)
             {
                 KnowsAboutList.Sort(CompareObjects);

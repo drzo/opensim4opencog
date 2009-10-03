@@ -38,7 +38,7 @@ namespace cogbot.TheOpenSims
             {
                 if (_ServerAsset == null)
                 {
-                    if (PullServerAsset)
+                    if (PullServerAsset && AssetID!=UUID.Zero)
                     {
                         GridClient c = Store.Client;
                         if (c != null && c.Network.Connected)

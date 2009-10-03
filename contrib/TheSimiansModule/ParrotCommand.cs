@@ -5,6 +5,7 @@ using System.Threading;
 using cogbot;
 using cogbot.Actions;
 using cogbot.TheOpenSims;
+using cogbot.Utilities;
 using PathSystem3D.Navigation;
 using Exception=System.Exception;
 using String=System.String;
@@ -278,7 +279,7 @@ namespace TheSimiansModule
             if (InterestingObjects.Count < 2)
             {
                 InterestingObjects = Actor.GetKnownObjects();
-                InterestingObjects.Remove(Actor);
+                lock (InterestingObjects) InterestingObjects.Remove(Actor);
             }
             int count = InterestingObjects.Count - 2;
             foreach (BotMentalAspect cAspect in InterestingObjects)
@@ -298,8 +299,11 @@ namespace TheSimiansModule
                     if (count < 0) break;
                 }
             }
-            InterestingObjects.Remove(mostInteresting);
-            InterestingObjects.Add(mostInteresting);
+            lock (InterestingObjects)
+            {
+                InterestingObjects.Remove(mostInteresting);
+                InterestingObjects.Add(mostInteresting);
+            }
             return mostInteresting;
         }
 
@@ -504,10 +508,11 @@ namespace TheSimiansModule
 
         public List<BotAction> GetPossibleActions(double maxXYDistance, double maxZDist)
         {
-            List<SimObject> KnownObjects = Actor.GetKnownObjects();
+            ListAsSet<SimObject> KnownObjects = Actor.GetKnownObjects();
+            
             double myZ = Actor.GlobalPosition.Z;
             List<SimObject> useObjects = new List<SimObject>();
-            foreach (SimObject O in KnownObjects)
+            foreach (SimObject O in KnownObjects.CopyOf())
             {
                 if (!O.IsRegionAttached) continue;
                 if (O.Distance(Actor) > maxXYDistance) continue;

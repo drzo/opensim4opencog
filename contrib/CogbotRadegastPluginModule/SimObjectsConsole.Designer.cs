@@ -91,6 +91,8 @@ namespace CogbotRadegastPluginModule
             this.cbOwnerCopy = new System.Windows.Forms.CheckBox();
             this.cbOwnerModify = new System.Windows.Forms.CheckBox();
             this.txtPrims = new System.Windows.Forms.TextBox();
+            this.txtCreator = new Radegast.AgentNameTextBox();
+            this.txtOwner = new Radegast.AgentNameTextBox();
             this.txtHover = new System.Windows.Forms.TextBox();
             this.txtDescription = new System.Windows.Forms.TextBox();
             this.txtObjectName = new System.Windows.Forms.TextBox();
@@ -103,8 +105,6 @@ namespace CogbotRadegastPluginModule
             this.label2 = new System.Windows.Forms.Label();
             this.lblName = new System.Windows.Forms.Label();
             this.searchOptions = new System.Windows.Forms.FlowLayoutPanel();
-            this.txtCreator = new Radegast.AgentNameTextBox();
-            this.txtOwner = new Radegast.AgentNameTextBox();
             this.lstPrims = new Radegast.ListViewNoFlicker();
             this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
             this.ctxMenuObjects = new Radegast.RadegastContextMenuStrip(this.components);
@@ -128,9 +128,9 @@ namespace CogbotRadegastPluginModule
             this.gbxInworld.Controls.Add(this.btnSitOn);
             this.gbxInworld.Controls.Add(this.btnPointAt);
             this.gbxInworld.Enabled = false;
-            this.gbxInworld.Location = new System.Drawing.Point(384, 150);
+            this.gbxInworld.Location = new System.Drawing.Point(384, 63);
             this.gbxInworld.Name = "gbxInworld";
-            this.gbxInworld.Size = new System.Drawing.Size(255, 14);
+            this.gbxInworld.Size = new System.Drawing.Size(255, 101);
             this.gbxInworld.TabIndex = 2;
             this.gbxInworld.TabStop = false;
             this.gbxInworld.Text = "In-world";
@@ -448,6 +448,26 @@ namespace CogbotRadegastPluginModule
             this.txtPrims.Size = new System.Drawing.Size(54, 21);
             this.txtPrims.TabIndex = 5;
             // 
+            // txtCreator
+            // 
+            this.txtCreator.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtCreator.AgentID")));
+            this.txtCreator.BackColor = System.Drawing.SystemColors.Window;
+            this.txtCreator.Location = new System.Drawing.Point(61, 116);
+            this.txtCreator.Name = "txtCreator";
+            this.txtCreator.ReadOnly = true;
+            this.txtCreator.Size = new System.Drawing.Size(130, 21);
+            this.txtCreator.TabIndex = 5;
+            // 
+            // txtOwner
+            // 
+            this.txtOwner.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtOwner.AgentID")));
+            this.txtOwner.BackColor = System.Drawing.SystemColors.Window;
+            this.txtOwner.Location = new System.Drawing.Point(61, 91);
+            this.txtOwner.Name = "txtOwner";
+            this.txtOwner.ReadOnly = true;
+            this.txtOwner.Size = new System.Drawing.Size(130, 21);
+            this.txtOwner.TabIndex = 4;
+            // 
             // txtHover
             // 
             this.txtHover.Location = new System.Drawing.Point(61, 66);
@@ -547,31 +567,11 @@ namespace CogbotRadegastPluginModule
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.searchOptions.AutoSize = true;
             this.searchOptions.FlowDirection = System.Windows.Forms.FlowDirection.BottomUp;
-            this.searchOptions.Location = new System.Drawing.Point(390, 10);
+            this.searchOptions.Location = new System.Drawing.Point(615, 10);
             this.searchOptions.Name = "searchOptions";
-            this.searchOptions.Size = new System.Drawing.Size(249, 134);
+            this.searchOptions.Size = new System.Drawing.Size(24, 134);
             this.searchOptions.TabIndex = 17;
             this.searchOptions.Paint += new System.Windows.Forms.PaintEventHandler(this.searchOptions_Paint);
-            // 
-            // txtCreator
-            // 
-            this.txtCreator.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtCreator.AgentID")));
-            this.txtCreator.BackColor = System.Drawing.SystemColors.Window;
-            this.txtCreator.Location = new System.Drawing.Point(61, 116);
-            this.txtCreator.Name = "txtCreator";
-            this.txtCreator.ReadOnly = true;
-            this.txtCreator.Size = new System.Drawing.Size(130, 21);
-            this.txtCreator.TabIndex = 5;
-            // 
-            // txtOwner
-            // 
-            this.txtOwner.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtOwner.AgentID")));
-            this.txtOwner.BackColor = System.Drawing.SystemColors.Window;
-            this.txtOwner.Location = new System.Drawing.Point(61, 91);
-            this.txtOwner.Name = "txtOwner";
-            this.txtOwner.ReadOnly = true;
-            this.txtOwner.Size = new System.Drawing.Size(130, 21);
-            this.txtOwner.TabIndex = 4;
             // 
             // lstPrims
             // 

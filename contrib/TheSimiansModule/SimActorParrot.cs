@@ -170,7 +170,7 @@ namespace TheSimiansModule
             if (InterestingObjects.Count < 2)
             {
                 InterestingObjects = ObservedActor.GetKnownObjects();
-                InterestingObjects.Remove(ObservedActor);
+                lock (InterestingObjects) InterestingObjects.Remove(ObservedActor);
             }
             int count = InterestingObjects.Count - 2;
             foreach (BotMentalAspect cAspect in InterestingObjects)
@@ -190,8 +190,11 @@ namespace TheSimiansModule
                     if (count < 0) break;
                 }
             }
-            InterestingObjects.Remove(mostInteresting);
-            InterestingObjects.Add(mostInteresting);
+            lock (InterestingObjects)
+            {
+                InterestingObjects.Remove(mostInteresting);
+                InterestingObjects.Add(mostInteresting);
+            }
             return mostInteresting;
         }
 

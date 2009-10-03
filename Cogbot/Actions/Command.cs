@@ -258,7 +258,8 @@ namespace cogbot.Actions
             if (p.Contains("-") && UUID.TryParse(p, out target)) return true;
             if (p.Contains("-") && UUID.TryParse(p.Split(new char[] { ' ' })[0], out target)) return true;
             Primitive prim;
-            if (WorldSystem.tryGetPrim(p, out prim))
+            int argsUsed;
+            if (WorldSystem.tryGetPrim(Parsing.ParseArguments(p), out prim, out argsUsed))
             {
                 if (prim != null)
                 {
