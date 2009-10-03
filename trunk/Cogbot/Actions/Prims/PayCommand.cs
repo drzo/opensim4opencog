@@ -22,14 +22,13 @@ namespace cogbot.Actions
                 return Usage;
             }
             int used;
-            List<Primitive> prims = new List<Primitive>();
             SimObject o = WorldSystem.GetSimObject(args, out used);
             if (o == null) return string.Format("Cant find {0}", string.Join(" ", args));
 
             bool isObject = !(o is SimAvatar);
             UUID target = o.ID;
             GridClient client = TheBotClient;
-            if (used == args.Length) (new frmPay(TheBotClient.TheRadegastInstance, o.ID, o.Properties.Name, isObject)).ShowDialog();
+            if (used == args.Length) (new frmPay(TheBotClient.TheRadegastInstance, o.ID, o.GetName(), isObject)).ShowDialog();
             else
             {
                 int amount;

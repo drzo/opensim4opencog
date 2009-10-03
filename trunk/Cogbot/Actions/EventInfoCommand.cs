@@ -55,7 +55,7 @@ namespace cogbot.Actions
                     SimAvatar simAva = WorldSystem.TheSimAvatar;
                     if (simAva != null)
                     {
-                        List<SimObject> objs = simAva.GetKnownObjects();
+                        List<SimObject> objs = simAva.GetKnownObjects().CopyOf();
                         lock (objs) if (objs.Count > 0)
                         {
                             foreach (SimObject o in objs)

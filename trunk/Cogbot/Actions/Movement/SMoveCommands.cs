@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 using cogbot.TheOpenSims;
@@ -436,44 +437,26 @@ namespace cogbot.Actions.Movement
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            SimPosition simObject;
             float distance = 2.0f;
 
-            if (args.Length > 3 || args.Length == 0)
-                return "Usage: gto [prim | [x y]] [dist]";
+            int argsUsed;
+            SimPosition simObject = WorldSystem.GetVector(args, out argsUsed);
 
-            Vector3 local = new Vector3();
-            if (float.TryParse(args[0], out local.X) &&
-                float.TryParse(args[1], out local.Y))
+            if (simObject==null) return "Cannot find " + string.Join(" ", args); 
+            if (!simObject.IsRegionAttached)
             {
-                local.Z = GetSimPosition().Z;
-                Vector3d target = WorldSystem.TheSimAvatar.PathStore.LocalToGlobal(local);
-                simObject = SimWaypointImpl.CreateGlobal(target);
-                if (args.Length == 3) Single.TryParse(args[2], out distance);
-
-            }
-            else
-            {
-                string s = String.Join(" ", args);
-                Primitive prim;
-
-
-                if (WorldSystem.tryGetPrim(s, out prim))
-                {
-
-                    simObject = WorldSystem.GetSimObject(prim);
-                    if (!simObject.IsRegionAttached)
-                    {
-                        return "Cannot get Sim Position of " + simObject;
-                    }
-                    distance = 0.5f + simObject.GetSizeDistance();
-                }
-                else
-                {
-                    return "Cannot select " + s;
-                }
+                return "Cannot get SimPosition of " + simObject;
             }
 
+            distance = 0.5f + simObject.GetSizeDistance();
+            if (argsUsed < args.Length)
+            {
+                float d;
+                if (float.TryParse(args[argsUsed], out d))
+                {
+                    distance = d;
+                }
+            }
             WriteLine("gto {0} {1}", simObject, distance);
             WorldSystem.TheSimAvatar.MoveTo(simObject.GlobalPosition, distance, 10);
             WorldSystem.TheSimAvatar.StopMoving();

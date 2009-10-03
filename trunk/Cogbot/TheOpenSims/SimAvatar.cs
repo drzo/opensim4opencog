@@ -290,7 +290,7 @@ namespace cogbot.TheOpenSims
         /// Returns hopefully at least three objects sorted by distance
         /// </summary>
         /// <returns></returns>
-        public List<SimObject> GetKnownObjects()
+        public ListAsSet<SimObject> GetKnownObjects()
         {
             ScanNewObjects(3, SightRange, false);
             lock (KnownSimObjects) SortByDistance(KnownSimObjects);
@@ -1009,7 +1009,8 @@ namespace cogbot.TheOpenSims
                 Client.Self.Crouch(false);
                 ClientSelf.AnimationStart(Animations.STANDUP, true);
                 ClientSelf.Stand();
-                StopAllAnimations();
+                ClientSelf.AnimationStop(Animations.STANDUP, true);
+               // StopAllAnimations();
                 return UnPhantom;
             }
             finally
@@ -1120,16 +1121,21 @@ namespace cogbot.TheOpenSims
             ApproachDistance = obj.GetSizeDistance() + 0.5f;
             string str = "Approaching " + obj + " " + DistanceVectorString(obj) + " to get " + ApproachDistance;
             Debug(str);
-            obj.MakeEnterable(this);
-            ///  if (!MoveTo(obj.GlobalPosition(), obj.GetSizeDistance() + 0.5f, 12))
+            try
             {
+                Client.ExecuteCommand("pointat " + obj.ID, Debug);
+                obj.MakeEnterable(this);
+                ///  if (!MoveTo(obj.GlobalPosition(), obj.GetSizeDistance() + 0.5f, 12))
                 GotoTarget(obj);
                 TurnToward(obj);
             }
-            if (UnPhantom != null)
-                UnPhantom.RestoreEnterable(this);
-
-            return (double) Distance(obj);
+            finally
+            {
+                if (UnPhantom != null)
+                    UnPhantom.RestoreEnterable(this);
+                Client.ExecuteCommand("pointat", Debug);
+            }
+            return (double)Distance(obj);
         }
 
         private readonly object TrackerLoopLock = new object();
@@ -2323,7 +2329,7 @@ namespace cogbot.TheOpenSims
         /// Returns hopefully at least three objects sorted by distance
         /// </summary>
         /// <returns></returns>
-        List<SimObject> GetKnownObjects();
+        ListAsSet<SimObject> GetKnownObjects();
         void ScanNewObjects(int minimum, double sightRange,bool rootOnly);
         double SightRange { get; set; }
         SimPosition ApproachPosition { get; }

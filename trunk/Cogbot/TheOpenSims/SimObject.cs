@@ -48,10 +48,30 @@ namespace cogbot.TheOpenSims
 
         public Primitive.ObjectProperties Properties
         {
-            get { return _propertiesCache; }
+            get
+            {
+                if (_propertiesCache==null)
+                {
+                    if (!HasPrim) return null;
+                    Primitive Prim = this.Prim;
+                    if (Prim.Properties != null)
+                    {
+                        UpdateProperties(Prim.Properties);
+                    }
+                    else
+                    {
+                        WorldObjects.EnsureSelected(Prim.LocalID,GetSimulator());
+                    }
+                }
+                return _propertiesCache;
+            }
             set
             {
                 UpdateProperties(value);
+                if (HasPrim)
+                {
+                    Prim.Properties = value;
+                }
                 AddInfoMap(value, "ObjectProperties");
             }
         }
@@ -181,16 +201,31 @@ namespace cogbot.TheOpenSims
             {
                 throw Error("GotoTarget !IsControllable");
             }
-
+            BotClient Client = WorldSystem.client;
             float maxDist = pos.GetSizeDistance();
             for (int i = 0; i < 4; i++)
             {
                 bool result = FollowPathTo(pos, maxDist);
                 if (result)
                 {
-                    SetMoveTarget(pos,maxDist);
+                    try
+                    {
+                        SetMoveTarget(pos, maxDist);
+                    }
+                    finally
+                    {
+                        Client.ExecuteCommand("pointat", Debug);                        
+                    }
                     return true;
                 }
+            }
+            SimObject obj = pos as SimObject;
+            if (obj != null)
+            {
+                Client.ExecuteCommand("pointat " + obj.ID, Debug);
+            } else
+            {
+                Client.ExecuteCommand("pointat " + pos.GlobalPosition, Debug);
             }
             return false;
         }
@@ -2221,6 +2256,7 @@ namespace cogbot.TheOpenSims
         void SetFirstPrim(Primitive primitive);
         UUID ID { get; }
         Primitive.ObjectProperties Properties { get; set; }
+        bool HasPrim { get; }
         bool KilledPrim(Primitive primitive, Simulator simulator);
 
         List<NamedParam> GetInfoMap();

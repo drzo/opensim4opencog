@@ -62,6 +62,8 @@ namespace cogbot.TheOpenSims
         private GridClient Client;
         private int GetGroundLevelTried = 0;
         private bool GridInfoKnown = false;
+        private bool RequestMapRegionTerrainOnce = false;
+        private bool RequestMapRegionOjectsOnce = false;
         private SimPathStore PathStore
         {
             get
@@ -131,7 +133,11 @@ namespace cogbot.TheOpenSims
                     if (sim != null) _RegionID = sim.ID;
                     if (_RegionID == UUID.Zero)
                     {
-                        Client.Grid.RequestMapRegion(RegionName, GridLayerType.Terrain);
+                        if (IsLegalSimName(RegionName) && !RequestMapRegionTerrainOnce)
+                        {
+                            RequestMapRegionTerrainOnce = true;
+                            Client.Grid.RequestMapRegion(RegionName, GridLayerType.Terrain);
+                        }
                     }
                 }
                 return _RegionID;
@@ -214,10 +220,14 @@ namespace cogbot.TheOpenSims
                     {
                         Client = AnyClient;
                     }
-                    Client.Grid.OnGridRegion += callback;
-                    Client.Grid.RequestMapRegion(PathStore.RegionName, GridLayerType.Objects);
-                    regionEvent.WaitOne(Client.Settings.MAP_REQUEST_TIMEOUT, false);
-                    Client.Grid.OnGridRegion -= callback;
+                    if (IsLegalSimName(PathStore.RegionName) && !RequestMapRegionOjectsOnce)
+                    {
+                        RequestMapRegionOjectsOnce = true;
+                        Client.Grid.OnGridRegion += callback;
+                        Client.Grid.RequestMapRegion(PathStore.RegionName, GridLayerType.Objects);
+                        regionEvent.WaitOne(Client.Settings.MAP_REQUEST_TIMEOUT, false);
+                        Client.Grid.OnGridRegion -= callback;
+                    }
                 }
                 return _GridInfo;
             }
@@ -1108,7 +1118,11 @@ namespace cogbot.TheOpenSims
                     GetGroundLevelTried++;
                     if (GetGroundLevelTried == 1)
                     {
-                        Client.Grid.RequestMapRegion(RegionName, GridLayerType.Terrain);
+                        if (IsLegalSimName(RegionName) && !RequestMapRegionTerrainOnce)
+                        {
+                            RequestMapRegionTerrainOnce = true;
+                            Client.Grid.RequestMapRegion(RegionName, GridLayerType.Terrain);
+                        }
                     }
                     if (GetGroundLevelTried > 20)
                     {
@@ -1128,6 +1142,17 @@ namespace cogbot.TheOpenSims
                 //Client.Grid.RequestMapRegion(
             }
             return AverageHieght;
+        }
+
+        static bool IsLegalSimName(string name)
+        {
+            if (name == null) return false;
+            name = name.Trim();
+            if (string.IsNullOrEmpty(name) || name.Contains(",") || name.Contains("<"))
+            {
+                return false;
+            }
+            return true;
         }
 
         static bool ParcelAllowsEntry(Parcel P, UUID uUID)
