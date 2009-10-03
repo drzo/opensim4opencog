@@ -142,7 +142,7 @@ namespace cogbot.Listeners
                 lock (AssetRequestType)
                     if (AssetRequestType.ContainsKey(transfer.AssetID))
                     {
-                        Debug("Failed transfer for " + AssetRequestType[transfer.ID] +
+                        Debug("Failed transfer for " + AssetRequestType[transfer.AssetID] +
                               " " + transfer.ID + " ");
                     }
                     else
