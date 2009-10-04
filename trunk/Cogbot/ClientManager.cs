@@ -366,27 +366,38 @@ namespace cogbot
 
         ScriptEventListener _scriptEventListener = null;
         ScriptInterpreter _lispTaskInterperter;
+        public readonly object LispTaskInterperterLock = new object();
 
         public ScriptInterpreter initTaskInterperter()
         {
-            try
+            lock (LispTaskInterperterLock)
             {
-                WriteLine("Start Loading TaskInterperter ... '" + taskInterperterType + "' \n");
-                _lispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
-                _lispTaskInterperter.LoadFile("boot.lisp");
-                _lispTaskInterperter.LoadFile("extra.lisp");
-                _lispTaskInterperter.LoadFile("cogbot.lisp");
-                _lispTaskInterperter.Intern("clientManager", this);
-                _scriptEventListener = new ScriptEventListener(_lispTaskInterperter, null);
-                _lispTaskInterperter.Intern("thisClient", this);
-                WriteLine("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
-                // load the initialization string
-            }
-            catch (Exception e)
-            {
-                WriteLine("!Exception: " + e.GetBaseException().Message);
-                WriteLine("error occured: " + e.Message);
-                WriteLine("        Stack: " + e.StackTrace.ToString());
+                if (_lispTaskInterperter == null)
+                {
+                    try
+                    {
+                        WriteLine("Start Loading Main TaskInterperter ... '" + taskInterperterType + "' \n");
+                        _lispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
+                        _lispTaskInterperter.LoadFile("boot.lisp");
+                        _lispTaskInterperter.LoadFile("extra.lisp");
+                        _lispTaskInterperter.LoadFile("cogbot.lisp");
+                        _lispTaskInterperter.Intern("clientManager", this);
+                        _scriptEventListener = new ScriptEventListener(_lispTaskInterperter, null);
+                        _lispTaskInterperter.Intern("thisClient", this);
+                        WriteLine("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
+                        // load the initialization string
+                    }
+                    catch (Exception e)
+                    {
+                        WriteLine("!Exception: " + e.GetBaseException().Message);
+                        WriteLine("error occured: " + e.Message);
+                        WriteLine("        Stack: " + e.StackTrace.ToString());
+                    }
+                }
+                else
+                {
+                    return _lispTaskInterperter;
+                }
             }
             return _lispTaskInterperter;
         }
@@ -401,10 +412,7 @@ namespace cogbot
             try
             {
                 if (string.IsNullOrEmpty(lispCode)) return null;
-                if (_lispTaskInterperter == null)
-                {
-                    _lispTaskInterperter = initTaskInterperter();
-                }
+                initTaskInterperter();
                 //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
                 WriteLine("Eval> {0}", lispCode);
                 Object r = null;
