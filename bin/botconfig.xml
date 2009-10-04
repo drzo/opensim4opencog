@@ -1,4 +1,4 @@
-?xml version="2.0" encoding="utf-8"?>
+<?xml version="2.0" encoding="utf-8"?>
 <Configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Version>2</Version>
   <tcpPort>5555</tcpPort>
@@ -16,7 +16,6 @@
     (setj GridAddress "https://login.agni.lindenlab.com/cgi-bin/login.cgi")
     (setj GridAddress "http://osgrid.org:8002/")
     (setj GlobalPasswd "abc123")
-
 
     (setj StartLoc "uri:Fairyverse&amp;115&amp;125&amp;21")
     (setj StartLoc "uri:last&amp;173&amp;51&amp;38")
