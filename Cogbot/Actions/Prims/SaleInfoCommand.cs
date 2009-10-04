@@ -23,11 +23,12 @@ namespace cogbot.Actions
             int used;
             SimObject o = WorldSystem.GetSimObject(args, out used);
             if (o == null) return string.Format("Cant find {0}", string.Join(" ", args));
-            if (!o.HasPrim) return string.Format("No Prim localId for {0}", string.Join(" ", args));
+            Primitive currentPrim = o.Prim;
+            if (currentPrim == null) return string.Format("No Prim localId for {0}", string.Join(" ", args));
             Primitive.ObjectProperties props = o.Properties;
             if (used == args.Length)
             {
-                WorldObjects.EnsureSelected(o.Prim.LocalID, WorldSystem.GetSimulator(o.Prim));
+                WorldObjects.EnsureSelected(currentPrim.LocalID, WorldSystem.GetSimulator(currentPrim));
                 if (props == null) return "no props on " + o + " yet try again";
                 return string.Format("saletype {0} {1} {2}", o.ID, props.SalePrice, props.SaleType);
             }
@@ -55,7 +56,7 @@ namespace cogbot.Actions
             }
 
             WriteLine("Setting Ammount={0} SaleType={1} for {2}", saletype, amount, o);
-            TheBotClient.Objects.SetSaleInfo(o.Prim.LocalID,saletype,amount);
+            TheBotClient.Objects.SetSaleInfo(currentPrim.LocalID,saletype,amount);
 
             return Name + " on " + o;
         }
