@@ -117,6 +117,19 @@ namespace CogbotRadegastPluginModule
         private void SubHook(object sender, EventArgs e)
         {
             object obj = GetValue(useType);
+            if (obj is SimObject)
+            {
+                obj = ((SimObject)obj).ID.ToString();
+            }
+            else if (obj is Primitive)
+            {
+                obj = ((Primitive)obj).ID.ToString();
+            }
+            else if (obj is SimPosition)
+            {
+                obj = ((SimPosition)obj).GlobalPosition.ToString();
+            }
+
             DebugLog(ActName + "=" + obj);
 
             TryCatch(() =>
