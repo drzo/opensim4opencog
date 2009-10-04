@@ -133,9 +133,10 @@ namespace cogbot.TheOpenSims
                     if (sim != null) _RegionID = sim.ID;
                     if (_RegionID == UUID.Zero)
                     {
-                        if (IsLegalSimName(RegionName) && !RequestMapRegionTerrainOnce)
+                        if (!RequestMapRegionTerrainOnce && IsLegalSimName(RegionName))
                         {
                             RequestMapRegionTerrainOnce = true;
+                            Debug("Requesting Terrain " + RegionName);
                             Client.Grid.RequestMapRegion(RegionName, GridLayerType.Terrain);
                         }
                     }
@@ -207,8 +208,11 @@ namespace cogbot.TheOpenSims
             get
             {
                 if (GridInfoKnown) return _GridInfo;
-                if (!String.IsNullOrEmpty(PathStore.RegionName))
+                String RegionName = this.RegionName;
+                if (!IsLegalSimName(RegionName)) RegionName = PathStore.RegionName;
+                if (!RequestMapRegionOjectsOnce && IsLegalSimName(RegionName))
                 {
+                    RequestMapRegionOjectsOnce = true;
                     regionEvent.Reset();
                     GridManager.GridRegionCallback callback =
                         delegate(GridRegion gridRegion)
@@ -216,18 +220,16 @@ namespace cogbot.TheOpenSims
                                 if (gridRegion.RegionHandle == RegionHandle)
                                     regionEvent.Set();
                             };
-                    if (Client==null)
+                    if (Client == null)
                     {
                         Client = AnyClient;
                     }
-                    if (IsLegalSimName(PathStore.RegionName) && !RequestMapRegionOjectsOnce)
-                    {
-                        RequestMapRegionOjectsOnce = true;
-                        Client.Grid.OnGridRegion += callback;
-                        Client.Grid.RequestMapRegion(PathStore.RegionName, GridLayerType.Objects);
-                        regionEvent.WaitOne(Client.Settings.MAP_REQUEST_TIMEOUT, false);
-                        Client.Grid.OnGridRegion -= callback;
-                    }
+
+                    Client.Grid.OnGridRegion += callback;
+                    Debug("Requesting Objects " + RegionName);
+                    Client.Grid.RequestMapRegion(RegionName, GridLayerType.Objects);
+                    regionEvent.WaitOne(Client.Settings.MAP_REQUEST_TIMEOUT, false);
+                    Client.Grid.OnGridRegion -= callback;
                 }
                 return _GridInfo;
             }
@@ -1118,9 +1120,10 @@ namespace cogbot.TheOpenSims
                     GetGroundLevelTried++;
                     if (GetGroundLevelTried == 1)
                     {
-                        if (IsLegalSimName(RegionName) && !RequestMapRegionTerrainOnce)
+                        if (!RequestMapRegionTerrainOnce && IsLegalSimName(RegionName))
                         {
                             RequestMapRegionTerrainOnce = true;
+                            Debug("Requesting Terrain " + RegionName);
                             Client.Grid.RequestMapRegion(RegionName, GridLayerType.Terrain);
                         }
                     }
@@ -1148,8 +1151,9 @@ namespace cogbot.TheOpenSims
         {
             if (name == null) return false;
             name = name.Trim();
-            if (string.IsNullOrEmpty(name) || name.Contains(",") || name.Contains("<"))
+            if (string.IsNullOrEmpty(name) || name.Contains(",") || name.Contains("<") || name.StartsWith("region"))
             {
+                Debug("Not legal name " + name);
                 return false;
             }
             return true;
@@ -1195,7 +1199,7 @@ namespace cogbot.TheOpenSims
                 args = new object[] { str };
                 str = "{0}";
             }
-            if (Settings.LOG_LEVEL == Helpers.LogLevel.Debug)
+            if (Settings.LOG_LEVEL != Helpers.LogLevel.None)
                 Console.WriteLine(str, args);
         }
 
