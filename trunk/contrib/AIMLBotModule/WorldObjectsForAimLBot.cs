@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
@@ -714,11 +715,11 @@ namespace AIMLBotModule
             }
             if (Monitor.TryEnter(writeLock,1000))
             {
-                writeLock.Enqueue(()=> Console.WriteLine(string.Format("[AIMLBOT] {0} {1}", GetName(), s), args));
+                writeLock.Enqueue(()=> Logger.DebugLog(string.Format(string.Format("[AIMLBOT] {0} {1}", GetName(), s), args));
                 Monitor.Exit(writeLock);
             } else
             {
-              throw new NullReferenceException("cant even get a Enqueue!");  
+              Console.WriteLine("cant even get a Enqueue! " + MethodInfo.GetCurrentMethod());  
             }
         }
 
