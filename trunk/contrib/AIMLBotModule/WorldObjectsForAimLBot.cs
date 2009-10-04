@@ -715,7 +715,7 @@ namespace AIMLBotModule
             }
             if (Monitor.TryEnter(writeLock,1000))
             {
-                writeLock.Enqueue(()=> Logger.DebugLog(string.Format(string.Format("[AIMLBOT] {0} {1}", GetName(), s), args));
+                writeLock.Enqueue(()=> Logger.DebugLog(string.Format(string.Format("[AIMLBOT] {0} {1}", GetName(), s), args)));
                 Monitor.Exit(writeLock);
             } else
             {
