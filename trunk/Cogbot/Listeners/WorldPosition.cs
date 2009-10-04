@@ -239,6 +239,11 @@ namespace cogbot.Listeners
                         Single.TryParse(args[2], out target.Z);
                         argsUsed = 3;
                     }
+                    if (target.X > 512 || target.Y > 512)
+                    {
+                        // Globals
+                        return SimWaypointImpl.CreateGlobal(target.X, target.Y, target.Z);
+                    }
                     return SimWaypointImpl.CreateLocal(target, TheSimAvatar.PathStore);
                 }
             }
@@ -248,7 +253,10 @@ namespace cogbot.Listeners
             {
                 O = GetSimObjectFromUUID(uuid);
                 if (O != null)
+                {
+                    argsUsed = 1; 
                     return O;
+                }
             }
             Primitive prim = GetPrimitive(args, out argsUsed);
             if (prim != null) return GetSimObject(prim);
