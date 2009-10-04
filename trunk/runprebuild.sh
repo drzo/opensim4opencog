@@ -1,10 +1,12 @@
 #!/bin/sh
 
 mono ./bin/Prebuild.exe  prebuild.xml /target nant
+chnod 555 bin/*.so bin/*.config
 cp lib/Radegast/assemblies/*.dll bin/
 cp lib/Radegast/*.dll bin/
 cp lib/Radegast/*.pdb bin/
 cp lib/Radegast/*.config bin/
+rm -f lib/Radegast/libop*
 cp lib/Radegast/*.so bin/
 cp lib/Radegast/*.dylib bin/
 rm -f lib/LookingGlass-svn/bin/Prebuild.exe
@@ -12,6 +14,8 @@ rm -f lib/LookingGlass-svn/bin/OpenMeta*
 rm -f lib/LookingGlass-svn/bin/HttpServer.dll
 rm -f lib/LookingGlass-svn/bin/PrimMesher.dll
 rm -f lib/LookingGlass-svn/bin/Radegast.exe
+rm -f lib/LookingGlass-svn/bin/libo*
+
 cp lib/LookingGlass-svn/bin/*.* bin/
 
 # Stomp on BuildFiles
