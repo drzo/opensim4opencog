@@ -341,55 +341,46 @@ namespace cogbot.TheOpenSims
                             {
                                 _currentAction = null;
                                 LastAction.Abort();
-
                             }
-                            catch (Exception)
+                            catch (Exception ex)
                             {
+                                Debug("While aborting last action: " + ex);
+                                // already terminated (not abortable)
                             }
                             _currentAction = value;
                         }
                         _currentAction = value;
-                        if (actionThread != null)
-                        {
-                            try
-                            {
-                                actionThread.Abort();
-                            }
-                            catch (Exception)
-                            {
-                            }
-                            finally
-                            {
-                                actionThread = null;
-                            }
-                        }
+                        Thread lastActionthread = actionThread;
                         if (value != null)
                         {
-                            actionThread = new Thread(() =>
-                                                          {
-                                                              try
-                                                              {
-                                                                  value.InvokeReal();
-                                                              }
-                                                              catch (Exception e)
-                                                              {
-                                                                 // Debug("InvokeReal: " + e);
-                                                                  //  throw e;
-                                                              }
-                                                              finally
-                                                              {
-                                                                      //lock (actionLock)
-                                                                      {
-                                                                          if (_currentAction == value)
-                                                                          {
-                                                                              LastAction = value;
-                                                                              _currentAction = null;
-                                                                          }
-                                                                      }
-                                                              }
-                                                          });
-                            actionThread.Name = value.ToString();
-                            actionThread.Start();
+                            actionThread = makeActionThread(value);
+                        } else
+                        {
+                            actionThread = null;
+                        }
+                        try
+                        {
+
+                            if (lastActionthread != null)
+                            {
+                                try
+                                {
+                                    lastActionthread.Abort();
+                                }
+                                catch (Exception ex)
+                                {
+                                    Debug("While aborting last thread: " + ex);
+                                    // already terminated (not abortable)
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            if (actionThread != null && value != null)
+                            {
+                                actionThread.Name = value.ToString();
+                                actionThread.Start();
+                            }                            
                         }
                     }
                 }
@@ -398,6 +389,34 @@ namespace cogbot.TheOpenSims
                     Logger.Log(GetName() + " exception " + ex, Helpers.LogLevel.Error, ex);
                 }
             }
+        }
+
+        private Thread makeActionThread(BotAction value)
+        {
+            return new Thread(() =>
+                                  {
+                                      try
+                                      {
+                                          value.InvokeReal();
+                                      }
+                                      catch (Exception e)
+                                      {
+                                          Debug("InvokeReal: " + e);
+                                          throw e;
+                                      }
+                                      finally
+                                      {
+                                          //lock (actionLock)
+                                          {
+                                              if (_currentAction == value)
+                                              {
+                                                  LastAction = value;
+                                                  _currentAction = null;
+                                              }
+                                          }
+                                      }
+                                  });
+
         }
 
         public override sealed bool MakeEnterable(SimMover actor)
