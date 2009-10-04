@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using OpenMetaverse;
 using Radegast;
 using System.Windows.Forms;
 
@@ -14,10 +16,21 @@ namespace DebugStartup
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            Application.ThreadException += HandleThreadException;
+            AppDomain.CurrentDomain.UnhandledException += HandleUnhandledException;
             RadegastInstance instance = RadegastInstance.GlobalInstance;
             Application.Run(instance.MainForm);
             instance = null;
+        }
+        static void HandleThreadException(object sender, ThreadExceptionEventArgs e)
+        {
+            Console.WriteLine("" + e.Exception);
+        }
+
+        static void HandleUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            Console.WriteLine("" + e.ExceptionObject);
         }
     }
 }
