@@ -44,38 +44,49 @@ namespace CogbotRadegastPluginModule
         private void ScanCogbotMenu()
         {
             if (act!=null) return;
-            foreach (var c in ClientManager.SingleInstance.groupActions.Values)
+            int groupCommands = 0, botCommands = 0;
+
+            if (ClientManager.SingleInstance.groupActions != null)
             {
-                AddCommand(c);
+                lock (ClientManager.SingleInstance.groupActions)
+                    foreach (var c in ClientManager.SingleInstance.groupActions.Values)
+                    {
+                        if (AddCommand(c)) groupCommands++;
+                    }
             }
-            foreach (var c in ClientManager.SingleInstance.LastBotClient.Commands.Values)
+            if (ClientManager.SingleInstance.LastBotClient != null && ClientManager.SingleInstance.LastBotClient.Commands !=null)
             {
-                AddCommand(c);
+                lock (ClientManager.SingleInstance.LastBotClient.Commands)
+                    foreach (var c in ClientManager.SingleInstance.LastBotClient.Commands.Values)
+                    {
+                        if (AddCommand(c)) botCommands++;
+                    }
             }
+            DebugLog(string.Format("Loaded groupCommands={0} botCommands={1}", groupCommands, botCommands));
         }
 
-        private void AddCommand(Command c)
+        private bool AddCommand(Command c)
         {
             if (c == null)
             {
                 DebugLog("WARNING: Cannot use NULL command");
-                return;
+                return false;
             }
             string cName = c.Name;
             if (string.IsNullOrEmpty(cName))
             {
                 DebugLog("WARNING: Cannot use no-name command " + c.GetType());
-                return;
+                return false;
             }
             if (cName.StartsWith("!"))
             {
                 //DebugLog("WARNING: Skipping command " + cName);
-                return;
+                return false;
             }
             if (c.Parameters == null)
             {
                // DebugLog("WARNING: Skipping non-paramerized command " + cName);
-                return;
+                return false;
             }
             int i = 0;
             while (i < c.Parameters.Length)
@@ -85,6 +96,7 @@ namespace CogbotRadegastPluginModule
                 AddCommand(c, from, use);
                 i++;
             }
+            return true;
         }
 
         static public readonly HashSet<Command> Actions = new HashSet<Command>();
