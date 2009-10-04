@@ -378,26 +378,28 @@ namespace cogbot
 
         private void LoadTaskInterpreter()
         {
-            try
-            {
-                //WriteLine("Start Loading TaskInterperter ... '" + TaskInterperterType + "' \n");
-                LispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
-                LispTaskInterperter.LoadFile("boot.lisp");
-                LispTaskInterperter.LoadFile("extra.lisp");
-                LispTaskInterperter.LoadFile("cogbot.lisp");
-                LispTaskInterperter.Intern("clientManager", ClientManager);
-                scriptEventListener = new ScriptEventListener(LispTaskInterperter, this);
-                botPipeline.AddSubscriber(scriptEventListener);
+            lock (LispTaskInterperterLock)
+                try
+                {
+                    if (LispTaskInterperter != null) return;
+                    //WriteLine("Start Loading TaskInterperter ... '" + TaskInterperterType + "' \n");
+                    LispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
+                    LispTaskInterperter.LoadFile("boot.lisp");
+                    LispTaskInterperter.LoadFile("extra.lisp");
+                    LispTaskInterperter.LoadFile("cogbot.lisp");
+                    LispTaskInterperter.Intern("clientManager", ClientManager);
+                    scriptEventListener = new ScriptEventListener(LispTaskInterperter, this);
+                    botPipeline.AddSubscriber(scriptEventListener);
 
-                //  WriteLine("Completed Loading TaskInterperter '" + TaskInterperterType + "'\n");
-                // load the initialization string
-            }
-            catch (Exception e)
-            {
-                WriteLine("!Exception: " + e.GetBaseException().Message);
-                WriteLine("error occured: " + e.Message);
-                WriteLine("        Stack: " + e.StackTrace.ToString());
-            }
+                    //  WriteLine("Completed Loading TaskInterperter '" + TaskInterperterType + "'\n");
+                    // load the initialization string
+                }
+                catch (Exception e)
+                {
+                    WriteLine("!Exception: " + e.GetBaseException().Message);
+                    WriteLine("error occured: " + e.Message);
+                    WriteLine("        Stack: " + e.StackTrace.ToString());
+                }
         }
 
         private LispEventProducer lispEventProducer;
@@ -1141,6 +1143,7 @@ namespace cogbot
 
 
         public ScriptInterpreter LispTaskInterperter;
+        public readonly object LispTaskInterperterLock = new object();
         readonly private List<Type> registeredTypes = new List<Type>();
 
         public void enqueueLispTask(object p)
@@ -1152,6 +1155,7 @@ namespace cogbot
         {
             try
             {
+                LoadTaskInterpreter();
                 if (lispCode == null || lispCode.Length == 0) return null;
                 Object r = null;
                 //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
