@@ -23,24 +23,24 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                if (_Prim0 != null)
-                {
-                    if (!string.IsNullOrEmpty(((Avatar)_Prim0).ProfileProperties.BornOn))
+                lock (HasPrimLock) if (HasPrim)
                     {
-                        _profileProperties = ((Avatar)_Prim0).ProfileProperties;
+                        if (!string.IsNullOrEmpty(theAvatar.ProfileProperties.BornOn))
+                        {
+                            _profileProperties = theAvatar.ProfileProperties;
+                        }
                     }
-                }
                 return _profileProperties;
             }
             set
             {
-                if (_Prim0 != null)
-                {
-                    if (string.IsNullOrEmpty(((Avatar)_Prim0).ProfileProperties.BornOn))
+                lock (HasPrimLock) if (HasPrim)
                     {
-                        ((Avatar)_Prim0).ProfileProperties = value;
+                        if (string.IsNullOrEmpty(theAvatar.ProfileProperties.BornOn))
+                        {
+                            theAvatar.ProfileProperties = value;
+                        }
                     }
-                }
                 _profileProperties = value;
                 AddInfoMap(value, "ProfileProperties");
             }
@@ -51,24 +51,24 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                if (_Prim0 != null)
-                {
-                    if (!string.IsNullOrEmpty(((Avatar)_Prim0).ProfileInterests.LanguagesText))
+                lock (HasPrimLock) if (HasPrim)
                     {
-                        _AvatarInterests = ((Avatar)_Prim0).ProfileInterests;
+                        if (!string.IsNullOrEmpty(theAvatar.ProfileInterests.LanguagesText))
+                        {
+                            _AvatarInterests = theAvatar.ProfileInterests;
+                        }
                     }
-                }
                 return _AvatarInterests;
             }
             set
             {
-                if (_Prim0 != null)
-                {
-                    if (string.IsNullOrEmpty(((Avatar)_Prim0).ProfileInterests.LanguagesText))
+                lock (HasPrimLock) if (HasPrim)
                     {
-                        ((Avatar)_Prim0).ProfileInterests = value;
+                        if (string.IsNullOrEmpty(theAvatar.ProfileInterests.LanguagesText))
+                        {
+                            theAvatar.ProfileInterests = value;
+                        }
                     }
-                }
                 _AvatarInterests = value;
                 AddInfoMap(value, "AvatarInterests");
             }
@@ -78,24 +78,24 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                if (_Prim0 != null)
-                {
-                    if (((Avatar)_Prim0).Groups!=null)
+                lock (HasPrimLock) if (HasPrim)
                     {
-                        _AvatarGroups = ((Avatar)_Prim0).Groups;
+                        if (theAvatar.Groups != null)
+                        {
+                            _AvatarGroups = theAvatar.Groups;
+                        }
                     }
-                }
                 return _AvatarGroups;
             }
             set
             {
-                if (_Prim0 != null)
-                {
-                    if (((Avatar)_Prim0).Groups == null)
+                lock (HasPrimLock) if (HasPrim)
                     {
-                        ((Avatar)_Prim0).Groups = value;
+                        if (theAvatar.Groups == null)
+                        {
+                            theAvatar.Groups = value;
+                        }
                     }
-                }
                 _AvatarGroups = value;
             }
         }
@@ -104,16 +104,16 @@ namespace cogbot.TheOpenSims
             ///  get { return WasKilled; }
             set
             {
-                if (!WasKilled) /// already
-                {
-                    IEnumerable<SimObject> AttachedChildren0 = Children;
-                    lock (AttachedChildren0)
-                        foreach (SimObject C in AttachedChildren0)
-                        {
-                            C.IsKilled = true;
-                        }
-                    ///  RemoveCollisions();
-                }
+                lock (HasPrimLock) if (!WasKilled) /// already
+                    {
+                        IEnumerable<SimObject> AttachedChildren0 = Children;
+                        lock (AttachedChildren0)
+                            foreach (SimObject C in AttachedChildren0)
+                            {
+                                C.IsKilled = true;
+                            }
+                        ///  RemoveCollisions();
+                    }
                 WasKilled = value;
             }
         }
@@ -152,7 +152,7 @@ namespace cogbot.TheOpenSims
                     if (s.UpdateOccupied()) changed = true;
                 }
             //WithAnim(Animations.AFRAID,()=> base.OpenNearbyClosedPassages()).Invoke();
-            return  base.OpenNearbyClosedPassages() || changed;
+            return base.OpenNearbyClosedPassages() || changed;
         }
 
         private SimMoverState old;
@@ -160,8 +160,8 @@ namespace cogbot.TheOpenSims
         {
             return; // todo make sure it doesnt mess up turning animations while moving
             UUID THINK_AMIN = Animations.EXPRESS_TOOTHSMILE;
-            
-            if (old==SimMoverState.THINKING)
+
+            if (old == SimMoverState.THINKING)
             {
                 Client.Self.AnimationStop(THINK_AMIN, true);
             }
@@ -199,13 +199,14 @@ namespace cogbot.TheOpenSims
 
         public SimHeading GetHeading()
         {
-            if (!IsRegionAttached && HasPrim)
-            {
-                Simulator sim = WorldSystem.GetSimulator(RegionHandle);
-                Debug("Requesting object for heading");
-                sim.Client.Objects.RequestObject(sim, _Prim0.LocalID);
-                EnsureParentRequested(sim);
-            }
+            lock (HasPrimLock)
+                if (!IsRegionAttached && HasPrim)
+                {
+                    Simulator sim = WorldSystem.GetSimulator(RegionHandle);
+                    Debug("Requesting object for heading");
+                    sim.Client.Objects.RequestObject(sim, _Prim0.LocalID);
+                    EnsureParentRequested(sim);
+                }
             return new SimHeading(this);
         }
 
@@ -215,13 +216,13 @@ namespace cogbot.TheOpenSims
 
             string s = String.Format("{0} {1} {2}", GetName(), ID, GetHeading());
             lock (ActionEventQueue) foreach (SimObjectEvent s1 in ActionEventQueue)
-            {
-                s += "\n " + s1;
-                
-            }
+                {
+                    s += "\n " + s1;
+
+                }
             return s;
-                
-        }                    
+
+        }
         //public override bool OnEffect(string effectType, object t, object p, float duration, UUID id)
         //{
         //    bool noteable = LogEvent(new SimObjectEvent(effectType, SimEventType.EFFECT, SimEventStatus.Once, this, t, p, duration, id));
@@ -236,7 +237,7 @@ namespace cogbot.TheOpenSims
             string typeUse = SE.Verb;
             object[] args1_N = SE.GetArgs();
             // does this backwards to the first argument is the most reliavant object
-            for (int i = args1_N.Length-1; i >= 0 ; i--)
+            for (int i = args1_N.Length - 1; i >= 0; i--)
             {
                 object o = args1_N[i];
                 if (o == this) continue; //skip self
@@ -245,10 +246,10 @@ namespace cogbot.TheOpenSims
             _knownTypeUsages.AddTo(SimTypeSystem.CreateTypeUsage(typeUse));
             bool noteable = base.LogEvent(SE);
             if (noteable)
-                //if (theAvatar.Name.Contains("rael"))
-                {
-                    Console.WriteLine(SE);
-                }
+            //if (theAvatar.Name.Contains("rael"))
+            {
+                Console.WriteLine(SE);
+            }
             return noteable;
         }
 
@@ -259,7 +260,7 @@ namespace cogbot.TheOpenSims
 
         public Avatar theAvatar
         {
-            get { return (Avatar) Prim; }
+            get { return (Avatar)Prim; }
         }
 
         //public SimAvatar InDialogWith { get; set; }
@@ -280,7 +281,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-       
+
         /// <summary>
         /// things the bot cycles through mentally
         /// </summary>
@@ -354,7 +355,8 @@ namespace cogbot.TheOpenSims
                         if (value != null)
                         {
                             actionThread = makeActionThread(value);
-                        } else
+                        }
+                        else
                         {
                             actionThread = null;
                         }
@@ -380,7 +382,7 @@ namespace cogbot.TheOpenSims
                             {
                                 actionThread.Name = value.ToString();
                                 actionThread.Start();
-                            }                            
+                            }
                         }
                     }
                 }
@@ -465,7 +467,7 @@ namespace cogbot.TheOpenSims
                     if (Client.Self.Movement.SitOnGround) return true;
                 }
                 Dictionary<UUID, int> anims = ExpectedCurrentAnims.Dictionary;
-                if (SimAssetStore.Matches(anims.Keys,"sit").Count>0) return true;
+                if (SimAssetStore.Matches(anims.Keys, "sit").Count > 0) return true;
                 return theAvatar.ParentID != 0;
             }
             set
@@ -492,61 +494,21 @@ namespace cogbot.TheOpenSims
             {
                 if (Client == null) return false;
                 AgentManager ClientSelf = Client.Self;
-                if (!base.HasPrim) return false;
-                return ClientSelf.AgentID == theAvatar.ID; //|| ClientSelf.LocalID == theAvatar.LocalID;
+                lock (HasPrimLock)
+                {
+                    if (!base.HasPrim) return false;
+                    return ClientSelf.AgentID == theAvatar.ID;
+                } //|| ClientSelf.LocalID == theAvatar.LocalID;
             }
         }
 
 
         public override Simulator GetSimulator()
         {
-           // if (Client!=null && Client.Self.AgentID == Prim.ID) return Client.Network.CurrentSim;
+            // if (Client!=null && Client.Self.AgentID == Prim.ID) return Client.Network.CurrentSim;
             return GetSimRegion().TheSimulator;
         }
 
-        public override Vector3 SimPosition
-        {
-            get
-            {
-                //if (Client!=null && Client.Self.AgentID == Prim.ID)
-                //{
-                //    if (Client.Settings.OBJECT_TRACKING)
-                //        return GetSimPosition();
-                //}
-                Primitive thisPrim = this.Prim;
-                if (!HasPrim || thisPrim == null)
-                {
-                    return LastKnownSimPos;
-                }
-                Vector3 thisPos = thisPrim.Position;
-                while (thisPrim.ParentID != 0)
-                {
-                    Primitive outerPrim = GetParentPrim(thisPrim);
-
-                    if (outerPrim == null)
-                    {
-                        if (LastKnownSimPos != default(Vector3)) return LastKnownSimPos;
-                        Debug("Unknown parent");
-                        throw Error("GetSimRotation !IsRegionAttached: " + this);
-                        return thisPrim.Position;
-                    }
-                    if (outerPrim == thisPrim || outerPrim == this.Prim)
-                    {
-                        throw Error("GetSimPosition Loop: " + this);
-                    }
-                    thisPos = outerPrim.Position +
-                              Vector3.Transform(thisPos, Matrix4.CreateFromQuaternion(outerPrim.Rotation));
-                    thisPrim = outerPrim;
-                }
-                if (false && BadLocation(thisPos))
-                {
-                    Debug("-------------------------" + this + " shouldnt be at " + thisPos);
-                    //   WorldSystem.DeletePrim(thePrim);
-                }
-                return LastKnownSimPos = thisPos;
-            }
-      
-        }
 
         public override Vector3d GlobalPosition
         {
@@ -565,7 +527,7 @@ namespace cogbot.TheOpenSims
 
         public override SimRegion GetSimRegion()
         {
-            return base.GetSimRegion();            
+            return base.GetSimRegion();
             //if (Prim == null)
             //{
             //    if (_CurrentRegion == null)
@@ -656,7 +618,7 @@ namespace cogbot.TheOpenSims
         ///     acts.Sort(CompareUsage);
         /// }
 
-      
+
         public void Do(SimTypeUsage use, SimObject someObject)
         {
             CurrentAction = new BotObjectAction(this, new SimObjectUsage(use, someObject));
@@ -784,14 +746,14 @@ namespace cogbot.TheOpenSims
             {
                 string str = String.Format(p, args);
                 Client.WorldSystem.WriteLine(str);
-                if (Client.TheRadegastInstance!=null)
+                if (Client.TheRadegastInstance != null)
                 {
                     Client.TheRadegastInstance.TabConsole.DisplayNotificationInChat(str);
                 }
             }
             else
             {
-                WorldSystem.WriteLine(String.Format(p, args));                
+                WorldSystem.WriteLine(String.Format(p, args));
             }
         }
 
@@ -808,7 +770,7 @@ namespace cogbot.TheOpenSims
                            bool SattedUpon = false;
                            if (CanUseSit)
                            {
-                              SattedUpon = SitOn(obj);
+                               SattedUpon = SitOn(obj);
                            }
 
                            try
@@ -883,17 +845,17 @@ namespace cogbot.TheOpenSims
 
         public void ExecuteLisp(SimObjectUsage botObjectAction, Object lisp)
         {
-            if (lisp==null) return;
+            if (lisp == null) return;
             if (lisp is SimTypeUsage)
             {
-                SimTypeUsage u = (SimTypeUsage) lisp;
-                if (u.LispScript!=null)
+                SimTypeUsage u = (SimTypeUsage)lisp;
+                if (u.LispScript != null)
                 {
                     ExecuteLisp(botObjectAction, u.LispScript);
                 }
                 foreach (SimObjectType ot in botObjectAction.Target.ObjectType.SuperType)
                 {
-                    
+
                 }
                 return;
             }
@@ -951,18 +913,21 @@ namespace cogbot.TheOpenSims
                 }
             }
             base.SetFirstPrim(prim);
-          //  Debug("AVATAR SetFirstPrim " + prim);
+            //  Debug("AVATAR SetFirstPrim " + prim);
         }
         public override string GetName()
         {
             if (!string.IsNullOrEmpty(AspectName)) return AspectName;
-            if (!HasPrim)
+            lock (HasPrimLock)
             {
-                return null;
+                if (!HasPrim)
+                {
+                    return null;
+                }
+                if (!string.IsNullOrEmpty(theAvatar.Name))
+                    return AspectName = theAvatar.Name;
+                return _Prim0.ToString();
             }
-            if (!string.IsNullOrEmpty(theAvatar.Name))
-                return AspectName = theAvatar.Name;
-            return _Prim0.ToString();
         }
 
         public override string ToString()
@@ -992,11 +957,11 @@ namespace cogbot.TheOpenSims
             double myZ = GlobalPosition.Z;
             IList<SimObject> objects = GetKnownObjects();
             lock (objects) foreach (SimObject O in objects)
-            {
-                if (O.Distance(this) > maxXYDistance) continue;
-                if (Math.Abs(O.GlobalPosition.Z - myZ) > maxZDist) continue;
-                if (O.IsTypeOf(pUse) != null) return O;
-            }
+                {
+                    if (O.Distance(this) > maxXYDistance) continue;
+                    if (Math.Abs(O.GlobalPosition.Z - myZ) > maxZDist) continue;
+                    if (O.IsTypeOf(pUse) != null) return O;
+                }
             return null;
         }
 
@@ -1029,7 +994,7 @@ namespace cogbot.TheOpenSims
                 ClientSelf.AnimationStart(Animations.STANDUP, true);
                 ClientSelf.Stand();
                 ClientSelf.AnimationStop(Animations.STANDUP, true);
-               // StopAllAnimations();
+                // StopAllAnimations();
                 return UnPhantom;
             }
             finally
@@ -1221,7 +1186,7 @@ namespace cogbot.TheOpenSims
                             ClientMovement.AtPos = true;
                             SendUpdate(10);
                             ApproachVector3D = targetPosition;
-///                             continue;
+                            ///                             continue;
                         }
                     }
                     else
@@ -1247,7 +1212,7 @@ namespace cogbot.TheOpenSims
                     {
                         if (HasPrim && Prim.Velocity == Vector3.Zero)
                             IsBlocked = true;
-                        if (ApproachPosition!=null)
+                        if (ApproachPosition != null)
                         {
                             // follower should pass by.. but on way point navigation would be ok
                             ClientMovement.Stop = true;
@@ -1314,7 +1279,7 @@ namespace cogbot.TheOpenSims
                     }
 
                     /// //  Little Jumps
-                    if (ZDist*2 > curDist)
+                    if (ZDist * 2 > curDist)
                     {
                         if (!ClientMovement.Fly)
                         {
@@ -1343,7 +1308,7 @@ namespace cogbot.TheOpenSims
                         ClientMovement.FinishAnim = false;
                         TurnToward(targetPosition);
                         ///  getting close though
-                        if (curDist < (ApproachDistance*1.25))
+                        if (curDist < (ApproachDistance * 1.25))
                         {
                             /// ClientMovement.AtPos = true;
                             /// SendUpdate(125);
@@ -1361,7 +1326,7 @@ namespace cogbot.TheOpenSims
                         {
                             TurnToward(targetPosition);
                             ClientMovement.AtPos = true;
-                           // ClientMovement.UpdateInterval = 0;
+                            // ClientMovement.UpdateInterval = 0;
                             SendUpdate(MyRandom.Next(25, 100));
                             ///   TurnToward(targetPosition);
                             /// (int)(25 * (1 + (curDist / followDist)))
@@ -1425,11 +1390,11 @@ namespace cogbot.TheOpenSims
             }
             bool IsKnownMoving = false;
             double lastDistance = currentDist;
-            long endTick = Environment.TickCount + (int) (maxSeconds*1000);
+            long endTick = Environment.TickCount + (int)(maxSeconds * 1000);
             while (Environment.TickCount < endTick)
             {
                 currentDist = Vector3d.Distance(finalTarget, GlobalPosition);
-                if (Prim==null)
+                if (Prim == null)
                 {
                     Debug("Where is my body? ");
                     return false;
@@ -1501,7 +1466,7 @@ namespace cogbot.TheOpenSims
                 throw Error("GotoTarget !Client.Self.AgentID == Prim.ID");
             }
             Client.ExecuteCommand("teleport " + R.RegionName + "/" + local.X + "/" + local.Y + "/" + local.Z);
-          //  Client.Self.Teleport(R.RegionName, local);
+            //  Client.Self.Teleport(R.RegionName, local);
         }
 
         public override void SetMoveTarget(SimPosition target, double maxDist)
@@ -1578,6 +1543,8 @@ namespace cogbot.TheOpenSims
             uint local = someObject.Prim.LocalID;
 
             //already sitting on 
+            Avatar theAvatar = this.theAvatar;
+            if (theAvatar == null) return false;
             if (theAvatar.ParentID == local || Client.Self.SittingOn == local)
             {
                 Debug("todo should we stand once first? " + someObject);
@@ -1600,7 +1567,7 @@ namespace cogbot.TheOpenSims
                 ClientSelf.Sit();
                 if (!are.WaitOne(10000))
                 {
-                   // return false;
+                    // return false;
                 }
                 return local == ClientSelf.SittingOn;
             }
@@ -1618,6 +1585,8 @@ namespace cogbot.TheOpenSims
 
             AgentManager ClientSelf = Client.Self;
             AutoResetEvent are = new AutoResetEvent(false);
+            Avatar theAvatar = this.theAvatar;
+            if (theAvatar == null) return false;
             ObjectManager.AvatarSitChanged OnSitChanged =
                 (simulator, avatar, sittingon, oldseat) =>
                 {
@@ -1628,14 +1597,14 @@ namespace cogbot.TheOpenSims
                 };
             AvatarManager.AvatarAnimationCallback OnAnimsChanged =
                 (UUID avatarID, InternalDictionary<UUID, int> anims) =>
-                    {
-                        if (avatarID == theAvatar.ID)
-                            if (SimAssetStore.IsSitAnim(anims.Dictionary.Keys))
+                {
+                    if (avatarID == theAvatar.ID)
+                        if (SimAssetStore.IsSitAnim(anims.Dictionary.Keys))
                         {
                             //int seq = anims[Animations.SIT_GROUND];
                             are.Set();
                         }
-                    };
+                };
             Client.Objects.OnAvatarSitChanged += OnSitChanged;
             Client.Avatars.OnAvatarAnimation += OnAnimsChanged;
             try
@@ -1675,9 +1644,9 @@ namespace cogbot.TheOpenSims
             bool prev = Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK;
             int time = Client.Self.Movement.UpdateInterval;
             bool uen = Client.Self.Movement.AutoResetControls;
-            if (InTurn>0)
+            if (InTurn > 0)
             {
-               //throw new InvalidActivityException("two TurnTowards?"); 
+                //throw new InvalidActivityException("two TurnTowards?"); 
             }
             try
             {
@@ -1719,7 +1688,7 @@ namespace cogbot.TheOpenSims
                     Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
                     ClientMovement.AutoResetControls = false;
                     ClientMovement.TurnToward(target);
-                    ClientMovement.SendUpdate(true,Client.Network.CurrentSim);
+                    ClientMovement.SendUpdate(true, Client.Network.CurrentSim);
                     //ClientMovement.SendUpdate(true);
                 }
                 finally
@@ -1735,7 +1704,7 @@ namespace cogbot.TheOpenSims
             if (Prim.ParentID != 0)
             {
                 Primitive parent = null;
-                if (_Parent!=null)
+                if (_Parent != null)
                 {
                     parent = _Parent.Prim;
                 }
@@ -1760,11 +1729,11 @@ namespace cogbot.TheOpenSims
                 bool needsTurn = true;
                 while (needsTurn && tries-- > 0)
                 {
-//                    ClientMovement.ResetControlFlags();
+                    //                    ClientMovement.ResetControlFlags();
                     double ZDir = ZHeading;
                     Vector3 dif = target - lp;
                     double Wanted = (Math.Atan2(-dif.X, -dif.Y) + Math.PI); // 2Pi= N, 1/2Pi = E
-                    double lr = (ZDir - Wanted)*SimPathStore.RAD2DEG;
+                    double lr = (ZDir - Wanted) * SimPathStore.RAD2DEG;
                     while (lr > 180) lr -= 360;
                     while (lr < -180) lr += 360;
                     if (lr < -20)
@@ -1780,14 +1749,14 @@ namespace cogbot.TheOpenSims
                         //ClientMovement.YawNeg = true;
                         //ClientMovement.SendUpdate(true);
                         //ClientMovement.TurnRight = true;
-                       // Thread.Sleep(10);
+                        // Thread.Sleep(10);
                         double az = (ZHeading * SimPathStore.RAD2DEG + 30) / SimPathStore.RAD2DEG;
                         float xmul = (float)Math.Cos(az);
                         float ymul = (float)Math.Sin(az);
                         //target = new Vector3(lp.X + xmul, lp.Y - ymul, lp.Z);
-                       // Debug("Need to turn " + lr + " for " + target);
+                        // Debug("Need to turn " + lr + " for " + target);
                     }
-                    else if ( lr > 20)
+                    else if (lr > 20)
                     {
                         //ClientMovement.ResetControlFlags();
                         ClientMovement.YawPos = true;
@@ -1798,21 +1767,22 @@ namespace cogbot.TheOpenSims
                         ClientMovement.TurnLeft = false;
                         ClientMovement.SendUpdate(true);
                         // ClientMovement.YawPos = true;
-                       //// ClientMovement.SendUpdate(true);
-                       // ClientMovement.TurnLeft = true;
-                       //// Thread.Sleep(10);
+                        //// ClientMovement.SendUpdate(true);
+                        // ClientMovement.TurnLeft = true;
+                        //// Thread.Sleep(10);
                         double az = (ZHeading * SimPathStore.RAD2DEG - 30) / SimPathStore.RAD2DEG;
                         float xmul = (float)Math.Cos(az);
                         float ymul = (float)Math.Sin(az);
-                       // target = new Vector3(lp.X + xmul, lp.Y - ymul, lp.Z);
-                       // Debug("Need to turn " + lr + " for " + target);
-                    } else 
+                        // target = new Vector3(lp.X + xmul, lp.Y - ymul, lp.Z);
+                        // Debug("Need to turn " + lr + " for " + target);
+                    }
+                    else
                     {
                         needsTurn = false;
                     }
                     if (lr < -170 || lr > 170)
                     {
-                        if(false && IsDrivingVehical)
+                        if (false && IsDrivingVehical)
                         {
                             bool atPos = ClientMovement.AtPos;
                             bool nudgeAtPos = ClientMovement.NudgeAtPos;
@@ -1863,7 +1833,7 @@ namespace cogbot.TheOpenSims
 
         protected bool IsDrivingVehical
         {
-            get { return Prim.ParentID != 0; }        
+            get { return Prim.ParentID != 0; }
         }
 
         public override bool UpdateOccupied()
@@ -1914,7 +1884,7 @@ namespace cogbot.TheOpenSims
             return ExpectedCurrentAnims.Dictionary.Keys;
         }
 
-        public IDictionary<UUID,int> GetCurrentAnimDict()
+        public IDictionary<UUID, int> GetCurrentAnimDict()
         {
             return ExpectedCurrentAnims.Dictionary;
         }
@@ -1968,7 +1938,7 @@ namespace cogbot.TheOpenSims
                                           int oldAnimNumber;
                                           ExpectedCurrentAnims.TryGetValue(key, out oldAnimNumber);
                                           if (oldAnimNumber == newAnimNumber)
-                                              ///  still the same
+                                          ///  still the same
                                           {
                                               AddedAnims.Remove(key);
                                               RemovedAnims.Remove(key);
@@ -1976,7 +1946,7 @@ namespace cogbot.TheOpenSims
                                           }
                                           if (oldAnimNumber > newAnimNumber)
                                           {
-                                            //  Debug("error oldAnimNumber > newAnimNumber");
+                                              //  Debug("error oldAnimNumber > newAnimNumber");
                                           }
                                           ///      else
                                           {
@@ -2156,7 +2126,7 @@ namespace cogbot.TheOpenSims
             /// SendNewEvent("On-Avatar-Animation", avatar, names);
         }
 
-        private SimObjectEvent AnimEvent(UUID uuid,SimEventStatus status, int serial)
+        private SimObjectEvent AnimEvent(UUID uuid, SimEventStatus status, int serial)
         {
             SimAsset a = SimAssetStore.FindOrCreateAsset(uuid, AssetType.Animation);
 
@@ -2191,7 +2161,7 @@ namespace cogbot.TheOpenSims
 
         private string PostureType;
         private SimObjectEvent LastPostureEvent;
-        readonly private object postureLock  = new object();
+        readonly private object postureLock = new object();
 
 
         private void SetPosture(SimObjectEvent evt)
@@ -2219,7 +2189,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        private static void GetSequenceNumbers(IEnumerable<KeyValuePair<UUID, int>> anims, ref int leastCurrentSequence,ref int mostCurrentSequence)
+        private static void GetSequenceNumbers(IEnumerable<KeyValuePair<UUID, int>> anims, ref int leastCurrentSequence, ref int mostCurrentSequence)
         {
             lock (anims)
             {
@@ -2269,7 +2239,7 @@ namespace cogbot.TheOpenSims
                 }
             }
             if (wasStarted != 0 && wasStopped != 0) return;
-            if (wasStarted!=0)
+            if (wasStarted != 0)
             {
                 SimObjectEvent simEvent = new SimObjectEvent(SimEventStatus.Start, name, SimEventType.ANIM, SimEventClass.REGIONAL,
                                                              WorldObjects.ToParameter("doneBy", this),
@@ -2277,7 +2247,7 @@ namespace cogbot.TheOpenSims
                 simEvent.serial = wasStarted;
                 startStops.Add(simEvent);
             }
-            if (wasStopped!=0)
+            if (wasStopped != 0)
             {
                 SimObjectEvent simEvent = new SimObjectEvent(SimEventStatus.Stop, name, SimEventType.ANIM, SimEventClass.REGIONAL,
                                                              WorldObjects.ToParameter("doneBy", this),
@@ -2328,7 +2298,7 @@ namespace cogbot.TheOpenSims
         ThreadStart WithGrabAt(SimObject obj, ThreadStart closure);
         ThreadStart WithSitOn(SimObject obj, ThreadStart closure);
         //ICollection<BotAction> GetPossibleActions(double maxXYDistance, double maxZDist);
-//        List<BotAction> ScanNewPossibleActions(double maxXYDistance, double maxZDist);
+        //        List<BotAction> ScanNewPossibleActions(double maxXYDistance, double maxZDist);
         void SetClient(BotClient Client);
         //BotClient GetGridClient();
         new bool IsSitting { get; set; }
@@ -2349,7 +2319,7 @@ namespace cogbot.TheOpenSims
         /// </summary>
         /// <returns></returns>
         ListAsSet<SimObject> GetKnownObjects();
-        void ScanNewObjects(int minimum, double sightRange,bool rootOnly);
+        void ScanNewObjects(int minimum, double sightRange, bool rootOnly);
         double SightRange { get; set; }
         SimPosition ApproachPosition { get; }
         //BotNeeds CurrentNeeds { get; }

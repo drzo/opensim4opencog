@@ -196,11 +196,12 @@ namespace cogbot.Listeners
         {
             compPos = pos;
             List<Avatar> avatarList = new List<Avatar>();
+            Avatar self = TheSimAvatar.theAvatar;
             foreach (SimAvatar simavatar in SimAvatars)
             {
                 Avatar avatar = simavatar.theAvatar;
-                if (avatar.Name != client.Self.Name)
-                    avatarList.Add(avatar);
+                if (avatar == self) continue;
+                avatarList.Add(avatar);
             }
 
             if (avatarList.Count > num)

@@ -28,7 +28,7 @@ namespace cogbot.Actions
             Primitive.ObjectProperties Properties = o.Properties;
             if (Properties == null) return "Still waiting on properties for " + o;
             Primitive currentPrim = o.Prim;
-            if (!o.HasPrim) return "Still waiting on Prim for " + o;
+            if (currentPrim == null) return "Still waiting on Prim for " + o;
             GridClient client = TheBotClient;
             client.Objects.BuyObject(o.GetSimulator(), currentPrim.LocalID, Properties.SaleType, Properties.SalePrice, client.Self.ActiveGroup, client.Inventory.FindFolderForType(AssetType.Object));
             return Name + " on " + o;

@@ -25,11 +25,13 @@ namespace cogbot.Actions
             List<Primitive> prims = new List<Primitive>();
             SimObject o = WorldSystem.GetSimObject(args, out used);
             if (o == null) return string.Format("Cant find {0}", string.Join(" ", args));
-            if (!o.HasPrim) return string.Format("No prim for {0}", string.Join(" ", args));
-            prims.Add(o.Prim);
+            Primitive currentPrim = o.Prim;
+            if (currentPrim == null) return "Still waiting on Prim for " + o;
+            prims.Add(currentPrim);
             foreach (var child in o.Children)
             {
-                if (child.HasPrim) prims.Add(child.Prim);
+                currentPrim = child.Prim;
+                if (currentPrim != null) prims.Add(currentPrim);
             }
             TheBotClient.Invoke(() =>
                                     {
