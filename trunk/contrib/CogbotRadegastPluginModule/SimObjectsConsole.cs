@@ -54,8 +54,8 @@ namespace CogbotRadegastPluginModule
         private GridClient client { get { return instance.Client;} }
         private Primitive currentPrim = new Primitive();
         private ListViewItem currentItem = new ListViewItem();
-        private float searchRadius = 40.0f;
-        PropertiesQueue propRequester;
+        private float searchRadius = 15.0f;
+        //PropertiesQueue propRequester;
 
         public SimObjectsConsole(RadegastInstance instance)
         {
@@ -64,8 +64,8 @@ namespace CogbotRadegastPluginModule
 
             this.instance = instance;
 
-            propRequester = new PropertiesQueue(instance);
-            propRequester.OnTick += new PropertiesQueue.TickCallback(propRequester_OnTick);
+            //propRequester = new PropertiesQueue(instance);
+            //propRequester.OnTick += new PropertiesQueue.TickCallback(propRequester_OnTick);
 
             btnPointAt.Text = (this.instance.State.IsPointing ? "Unpoint" : "Point At");
             btnSitOn.Text = (this.instance.State.IsSitting ? "Stand Up" : "Sit On");
@@ -113,7 +113,8 @@ namespace CogbotRadegastPluginModule
 
         void frmObjects_Disposed(object sender, EventArgs e)
         {
-            propRequester.Dispose();
+            //propRequester.Dispose();
+            addObjects.Dispose();
             client.Network.OnDisconnected -= new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
             client.Objects.OnObjectKilled -= new ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
             //client.Objects.OnObjectProperties -= new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
@@ -198,6 +199,7 @@ namespace CogbotRadegastPluginModule
 
         private void Objects_OnUpdateSimObject(SimObject ea, string property, object value, object o)
         {
+            return;
             string id = ea.ID.ToString();
             addObjects.Enqueue(new ThreadStart(() =>
             {
