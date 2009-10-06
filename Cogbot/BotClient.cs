@@ -27,7 +27,7 @@ using Settings=OpenMetaverse.Settings;
 
 namespace cogbot
 {
-    public class BotClient: SimEventSubscriber
+    public class BotClient: SimEventSubscriber,IDisposable
     {
 
         public static implicit operator GridClient(BotClient m)
@@ -117,7 +117,7 @@ namespace cogbot
 
         readonly int thisTcpPort;
         public OpenMetaverse.LoginParams BotLoginParams;// = null;
-        readonly SimEventPublisher botPipeline = new SimEventMulticastPipeline();
+        private readonly SimEventPublisher botPipeline;
         public List<Thread> botCommandThreads = new ListAsSet<Thread>();
         public UUID GroupID = UUID.Zero;
         public Dictionary<UUID, GroupMember> GroupMembers = null; // intialized from a callback
@@ -208,7 +208,6 @@ namespace cogbot
             gridClient = g;
             BotLoginParams = lp;
             manager.LastBotClient = this;
-
             updateTimer = new System.Timers.Timer(500);
             updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(updateTimer_Elapsed);
 
@@ -248,6 +247,7 @@ namespace cogbot
             VoiceManager = new VoiceManager(gridClient);
             //manager.AddBotClientToTextForm(this);
 
+            botPipeline = new SimEventMulticastPipeline(GetName());
             botPipeline.AddSubscriber(new SimEventTextSubscriber(WriteLine, this));
             // SingleInstance = this;
             ///this = this;// new GridClient();
@@ -440,7 +440,12 @@ namespace cogbot
 
         private void updateTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            foreach (var c in Commands.Values)
+            List<Command> actions = new List<Command>();
+            lock (Commands)
+            {
+                actions.AddRange(Commands.Values);   
+            }
+            foreach (var c in actions)
                 if (c.Active)
                     c.Think();
         }
@@ -1214,7 +1219,7 @@ namespace cogbot
             {
                 // Start in the inventory root folder.
                 if (Inventory.Store != null)
-                    CurrentDirectory = Inventory.Store.RootFolder;//.RootFolder;
+                    CurrentDirectory = Inventory.Store.RootFolder; //.RootFolder;
                 else
                 {
                     Logger.Log("Cannot get Inventory.Store.RootFolder", OpenMetaverse.Helpers.LogLevel.Error);
@@ -1245,28 +1250,31 @@ namespace cogbot
 
         }
 
-        public void RegisterAllCommands(Assembly assembly)
+        public void LoadAssembly(Assembly assembly)
         {
+
+            ClientManager.RegisterAssembly(assembly);
+            bool found = false;
+
             foreach (Type t in assembly.GetTypes())
             {
                 try
                 {
-                    if (t.IsSubclassOf(typeof(Command)))
+                    if (t.IsSubclassOf(typeof (WorldObjectsModule)))
                     {
-                        if (typeof(SystemApplicationCommand).IsAssignableFrom(t))
-                        {
-                            ClientManager.RegisterSystemCommand(t);
-                            continue;
-                        }
-                        ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
+                        ConstructorInfo info = t.GetConstructor(new Type[] {typeof (BotClient)});
                         try
                         {
-                            Command command = (Command)info.Invoke(new object[] { this });
-                            RegisterCommand(command);
+                            found = true;
+                            Invoke(() =>
+                                       {
+                                           Listener command = (Listener) info.Invoke(new object[] {this});
+                                           RegisterListener(command);
+                                       });
                         }
                         catch (Exception e)
                         {
-                            WriteLine("RegisterAllCommands: " + e.ToString() + "\n" + e.InnerException + "\n In " + t.Name);
+                            WriteLine("RegisterListener: " + e + "\n In " + t.Name);
                         }
                     }
                 }
@@ -1275,8 +1283,11 @@ namespace cogbot
                     WriteLine(e.ToString());
                 }
             }
+            if (!found)
+            {
+                // throw new Exception("missing entry point " + assembly);
+            }
         }
-
 
         /// <summary>
         /// Initialize everything that needs to be initialized once we're logged in.
@@ -1288,7 +1299,7 @@ namespace cogbot
             string orginalName = name;
             name = name.Replace(" ", "").ToLower();
             while (name.EndsWith(".")) name = name.Substring(0, name.Length - 1);
-
+            Monitor.Enter(Commands);
             if (!Commands.ContainsKey(name))
             {
                 Commands.Add(name, command);
@@ -1299,6 +1310,7 @@ namespace cogbot
             {
                 RegisterCommand("!" + orginalName, command);
             }
+            Monitor.Exit(Commands);
         }
 
         public void RegisterCommand(Command command)
@@ -1326,15 +1338,20 @@ namespace cogbot
         {
             //scriptEventListener.
             logout();
+            updateTimer.Enabled = false;
+            updateTimer.Close();
             //botPipeline.Shut
+            botPipeline.ShuttingDown();
+            lispEventProducer.ShutdownListener();
+            WorldSystem.ShutdownListener();
             //thrJobQueue.Abort();
             //lock (lBotMsgSubscribers)
-            //{
-            //  foreach (BotMessageSubscriber ms in lBotMsgSubscribers)
-            //{
-            //  ms.ShuttingDown();
-            // }
-            // }
+            //{   
+            LispTaskInterperter.Dispose();
+            foreach (var ms in listeners.Values)
+            {
+                ms.ShutdownListener();
+            }
         }
 
         //List<BotMessageSubscriber> lBotMsgSubscribers = new List<BotMessageSubscriber>();
@@ -1508,52 +1525,31 @@ namespace cogbot
         private void RegisterListener(Listener listener)
         {
             // listeners[listener.GetModuleName()] = listener;
-            listener.StartupListener();
+            Invoke(() => listener.StartupListener());
+            
         }
 
         internal void RegisterType(Type t)
         {
+            ClientManager.RegisterType(t);
             if (registeredTypes.Contains(t)) return;
             registeredTypes.Add(t);
             try
             {
                 if (t.IsSubclassOf(typeof(Command)))
                 {
-                    if (typeof(SystemApplicationCommand).IsAssignableFrom(t))
+                    if (!typeof (SystemApplicationCommand).IsAssignableFrom(t))
                     {
-                        ClientManager.RegisterSystemCommand(t);
-                        return;
-                    }
-
-                    ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
-                    try
-                    {
-                        Command command = (Command)info.Invoke(new object[] { this });
-                        RegisterCommand(command);
-                    }
-                    catch (Exception e)
-                    {
-                        WriteLine("RegisterCommand: " + e.ToString() + "\n" + e.InnerException + "\n In " + t.Name);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                WriteLine(e.ToString());
-            }
-            try
-            {
-                if (t.IsSubclassOf(typeof(WorldObjectsModule)))
-                {
-                    ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
-                    try
-                    {
-                        Listener command = (Listener)info.Invoke(new object[] { this });
-                        RegisterListener(command);
-                    }
-                    catch (Exception e)
-                    {
-                        WriteLine("RegisterListener: " + e.ToString() + "\n" + e.InnerException + "\n In " + t.Name);
+                        ConstructorInfo info = t.GetConstructor(new Type[] {typeof (BotClient)});
+                        try
+                        {
+                            Command command = (Command) info.Invoke(new object[] {this});
+                            RegisterCommand(command);
+                        }
+                        catch (Exception e)
+                        {
+                            WriteLine("RegisterCommand: " + e.ToString() + "\n" + e.InnerException + "\n In " + t.Name);
+                        }
                     }
                 }
             }
@@ -1688,6 +1684,11 @@ namespace cogbot
             {
                 TheRadegastInstance.MainForm.Invoke(o); 
             } else o();
+        }
+
+        public void Dispose()
+        {
+            ShutDown();
         }
     }
 

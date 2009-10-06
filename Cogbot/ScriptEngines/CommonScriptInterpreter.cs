@@ -31,6 +31,8 @@ namespace cogbot.ScriptEngines
 
 
         #endregion
+
+        public abstract void Dispose();
     }
 
 }

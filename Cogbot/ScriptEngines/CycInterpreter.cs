@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using DotLisp;
 
 namespace cogbot.ScriptEngines
 {
@@ -11,6 +12,11 @@ namespace cogbot.ScriptEngines
         public override void InternType(Type t)
         {
             dotLispInterpreter.InternType(t);
+        }
+
+        public override void Dispose()
+        {
+            dotLispInterpreter.Dispose();
         }
 
         public override object GetSymbol(string eventName)

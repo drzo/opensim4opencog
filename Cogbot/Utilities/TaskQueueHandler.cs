@@ -17,6 +17,7 @@ namespace cogbot.Utilities
         private bool Busy;
         private ulong LastBusy = 0;
         readonly int WAIT_AFTER;
+        public bool IsDisposing = false;
         readonly object EventQueueLock = new object();
         AutoResetEvent WaitingOn = new AutoResetEvent(false);
         readonly LinkedList<ThreadStart> EventQueue = new LinkedList<ThreadStart>();
@@ -50,9 +51,10 @@ namespace cogbot.Utilities
 
         public void Dispose()
         {
+            IsDisposing = true;
             lock (TaskQueueHandlers)
                 TaskQueueHandlers.Remove(this);
-            EventQueuePing.Abort();
+            if (EventQueuePing!=null) EventQueuePing.Abort();
             EventQueueHandler.Abort();
             WaitingOn.Set();
             WaitingOn.Close();
@@ -65,7 +67,7 @@ namespace cogbot.Utilities
 
         void EventQueue_Handler()
         {
-            while (true)
+            while (!(IsDisposing))
             {
                 Busy = false;
 
@@ -121,25 +123,25 @@ namespace cogbot.Utilities
 
         private void WaitOne()
         {
-            //lock (WaitingOn)
+            if (IsDisposing) return;
             WaitingOn.WaitOne();// Thread.Sleep(100);
         }
 
         private void Reset()
         {
-            //lock (WaitingOn)
+            if (IsDisposing) return;
             WaitingOn.Reset();
         }
         private void Set()
         {
-            //lock (WaitingOn)
+            if (IsDisposing) return;
             WaitingOn.Set();
         }
 
         void EventQueue_Ping()
         {
             bool WaitingOnPing = false;
-            while (true)
+            while (!(IsDisposing))
             {
                 Thread.Sleep(PING_TIME);
                 if (NoQueue) continue;
@@ -188,6 +190,7 @@ namespace cogbot.Utilities
 
         public void Enqueue(ThreadStart evt)
         {
+            if (IsDisposing) return;
             if (NoQueue)
             {
                 try
@@ -210,6 +213,7 @@ namespace cogbot.Utilities
 
         public void AddFirst(ThreadStart evt)
         {
+            if (IsDisposing) return;
             if (NoQueue)
             {
                 try

@@ -78,6 +78,23 @@ namespace cogbot.Listeners
 
         public override void ShutdownListener()
         {
+            foreach (var h in ShutdownHooks)
+            {
+                try
+                {
+                    h();
+                }
+                catch (Exception)
+                {
+                    
+                }
+            }
+            if (false)
+            {
+                EventQueue.Dispose();
+                CatchUpQueue.Dispose();
+                PropertyQueue.Dispose();
+            }
             UnregisterAll();
         }
 
@@ -451,8 +468,13 @@ namespace cogbot.Listeners
         {
             if (prim.Properties != null) return prim;
             EnsureSelected(prim.LocalID, simulator);
+            int maxTimes = 4;
             while (prim.ID == UUID.Zero)
             {
+                if (maxTimes-- <= 0)
+                {
+                    throw new AbandonedMutexException("cant get perent!");
+                }
                 // TODO maybe add a timer
                 Thread.Sleep(1000);
                 Debug("BlockUntilPrimValid " + prim);
@@ -969,7 +991,7 @@ namespace cogbot.Listeners
         public BotMentalAspect GetObject(string name)
         {
             Primitive prim;
-            string[] splitted = Parsing.ParseArguments(name);
+            string[] splitted = Parser.ParseArguments(name);
             int argsUsed;
             if (tryGetPrim(splitted, out prim, out argsUsed))
             {
@@ -981,7 +1003,7 @@ namespace cogbot.Listeners
         public bool tryGetPrim(string str, out Primitive prim)
         {
             int argsUsed;
-            return tryGetPrim(Parsing.ParseArguments(str), out prim, out argsUsed);
+            return tryGetPrim(Parser.ParseArguments(str), out prim, out argsUsed);
         }
 
         public bool tryGetPrim(string[] splitted, out Primitive prim, out int argsUsed)
@@ -1258,7 +1280,7 @@ namespace cogbot.Listeners
         {
             avatar = null;
             Primitive prim;
-            string[] splitted = Parsing.ParseArguments(name);
+            string[] splitted = Parser.ParseArguments(name);
             int argsUsed;
             if (!tryGetPrim(splitted, out prim, out argsUsed)) return false;
             if (prim is Avatar)

@@ -33,6 +33,7 @@ namespace cogbot.Actions
             {
                 Assembly assembly = Assembly.LoadFile(loadfilename);
                 ClientManager.SingleInstance.RegisterAssembly(assembly);
+                Client.LoadAssembly(assembly);
                 return "Assembly " + filename + " loaded.";
             }
             catch (Exception e)

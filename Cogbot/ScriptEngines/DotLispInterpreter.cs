@@ -8,6 +8,11 @@ namespace cogbot.ScriptEngines
     {
         DotLisp.Interpreter dotLispInterpreter;
 
+        public override void Dispose()
+        {
+            dotLispInterpreter.Dispose();
+        }
+
         public override bool IsSubscriberOf(string eventName)
         {
             if (!eventName.Contains(".")) eventName = eventName.ToLower();

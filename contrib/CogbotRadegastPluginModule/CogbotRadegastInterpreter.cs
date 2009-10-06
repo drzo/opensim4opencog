@@ -34,7 +34,7 @@ namespace CogbotRadegastPluginModule
 
         public void Dispose()
         {
-           
+           clientManager.Dispose();
         }
 
         public void StartInterpreter(RadegastInstance inst)
@@ -44,7 +44,7 @@ namespace CogbotRadegastPluginModule
 
         public void StopInterpreter(RadegastInstance inst)
         {
-            //throw new NotImplementedException();
+            Dispose();
         }
     }
 }

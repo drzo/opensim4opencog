@@ -25,5 +25,6 @@ namespace cogbot.Listeners
 
         public abstract void StartupListener();
         public abstract void ShutdownListener();
+
     }
 }

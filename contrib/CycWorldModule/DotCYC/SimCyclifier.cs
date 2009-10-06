@@ -32,6 +32,7 @@ namespace CycWorldModule.DotCYC
         static public CycAccess cycAccess;
         static public CycFort vocabMt;
         static public CycFort assertMt;
+        static public bool ProcessEvent = false;
         static public Dictionary<object, CycFort> simFort
         {
             get
@@ -55,6 +56,7 @@ namespace CycWorldModule.DotCYC
         // ReSharper restore InconsistentNaming
         public void OnEvent(SimObjectEvent evt)
         {
+            if (!ProcessEvent) return;
             if (cycAccess == null)
             {
                 //Console.WriteLine("No Cyc connection");
@@ -195,7 +197,7 @@ namespace CycWorldModule.DotCYC
 
 
             // visit libomv
-            if (cycAccess.find("SimEnumCollection") == null)
+            if (true || cycAccess.find("SimEnumCollection") == null)
             {
                 Debug("Loading SimEnumCollection Collections ");
                 assertIsa(C("SimEnumCollection"), C("Collection"));

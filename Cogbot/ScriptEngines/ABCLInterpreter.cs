@@ -102,17 +102,22 @@ namespace cogbot.ScriptEngines
 
     public class ABCLInterpreter : CommonScriptInterpreter
     {
+        public override void Dispose()
+        {
+            Evaluate("(QUIT)");
+        }
+
         public override object GetSymbol(string eventName)
         {
             eventName = eventName.ToLower();
-            Symbol s = Package.getCurrentPackage().findAccessibleSymbol(eventName); 
+            Symbol s = Lisp.getCurrentPackage().findAccessibleSymbol(eventName); 
             return s;
         }
 
         public override bool IsSubscriberOf(string eventName)
         {
             eventName = eventName.ToUpper();
-            Symbol s = Package.getCurrentPackage().findAccessibleSymbol(eventName);
+            Symbol s = Lisp.getCurrentPackage().findAccessibleSymbol(eventName);
             LispObject fun = s.getSymbolFunction();
             if (fun==null || fun == Lisp.NIL)            
                 return false;        
