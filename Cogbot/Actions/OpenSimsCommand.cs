@@ -22,7 +22,7 @@ namespace cogbot.Actions
             if (args.Length < 2) return Usage;
             SimTypeUsage use = SimTypeSystem.FindObjectUse(args[0]);
             if (use == null) return "Unknown use: " + args[0];
-            args = Parsing.SplitOff(args,1);
+            args = Parser.SplitOff(args,1);
             int argsUsed;
             Primitive p = WorldSystem.GetPrimitive(args, out argsUsed);
             if (argsUsed == 0) argsUsed = args.Length;
