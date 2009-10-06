@@ -621,6 +621,7 @@
      <Reference name="OpenMetaverseTypes" localCopy="false"/>
      <Reference name="OpenMetaverseCore" localCopy="false"/>
      <Reference name="System" localCopy="false"/>
+     <Reference name="Radegast.exe" localCopy="false"/>
      <Reference name="DotLisp" localCopy="false"/>
      <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
