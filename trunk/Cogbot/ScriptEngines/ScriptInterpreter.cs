@@ -4,7 +4,7 @@ using System.Text;
 
 namespace cogbot.ScriptEngines
 {
-    public interface ScriptInterpreter
+    public interface ScriptInterpreter: IDisposable
     {
         bool LoadFile(string filename);
 

@@ -477,6 +477,11 @@ public class Interpreter
 
 	internal HybridDictionary traceList = new HybridDictionary();
 	[ThreadStatic] static Boolean inTrace = false;
+
+    public void Dispose()
+    {
+        
+    }
 	}
 
 

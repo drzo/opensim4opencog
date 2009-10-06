@@ -55,13 +55,13 @@ namespace CogbotRadegastPluginModule
         private Primitive currentPrim = new Primitive();
         private ListViewItem currentItem = new ListViewItem();
         private float searchRadius = 15.0f;
+        public bool IsDisposing;
         //PropertiesQueue propRequester;
 
         public SimObjectsConsole(RadegastInstance instance)
         {
             InitializeComponent();
             Disposed += new EventHandler(frmObjects_Disposed);
-
             this.instance = instance;
 
             //propRequester = new PropertiesQueue(instance);
@@ -113,18 +113,16 @@ namespace CogbotRadegastPluginModule
 
         void frmObjects_Disposed(object sender, EventArgs e)
         {
-            //propRequester.Dispose();
+            IsDisposing = true;
             addObjects.Dispose();
+            ClientManager.SingleInstance.LastBotClient.WorldSystem.OnAddSimObject -= Objects_OnAddSimObject;
+            ClientManager.SingleInstance.LastBotClient.WorldSystem.OnUpdateSimObject -= Objects_OnUpdateSimObject;
             client.Network.OnDisconnected -= new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
             client.Objects.OnObjectKilled -= new ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
             //client.Objects.OnObjectProperties -= new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
             client.Network.OnCurrentSimChanged -= new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
             client.Avatars.OnAvatarNames -= new AvatarManager.AvatarNamesCallback(Avatars_OnAvatarNames);
             instance.State.OnWalkStateCanged -= new StateManager.WalkStateCanged(State_OnWalkStateCanged);
-
-            ClientManager.SingleInstance.LastBotClient.WorldSystem.OnAddSimObject -= Objects_OnAddSimObject;
-            ClientManager.SingleInstance.LastBotClient.WorldSystem.OnUpdateSimObject -= Objects_OnUpdateSimObject;
-
         }
 
         public void RefreshObjectList()
@@ -327,6 +325,7 @@ namespace CogbotRadegastPluginModule
 
         private void AddPrim(SimObject prim)
         {
+            if (IsDisposing) return;
             string pName = prim.ID.ToString();
             Invoke(new MethodInvoker(() =>
                                          {
@@ -368,6 +367,7 @@ namespace CogbotRadegastPluginModule
 
         private void Objects_OnAddSimObject(SimObject prim)
         {
+            if (IsDisposing) return;
             addObjects.Enqueue(() => AddPrim(prim));
             if (currentPrim!=null && prim.ID == currentPrim.ID)
             {
@@ -409,7 +409,7 @@ namespace CogbotRadegastPluginModule
             IsRoot.Checked = false;
             IsRoot.CheckState = System.Windows.Forms.CheckState.Indeterminate;
             IsRoot.Name = "object_" + name;
-            IsRoot.Size = new System.Drawing.Size(58, 22);
+            IsRoot.Size = new System.Drawing.Size(80, 22);
             IsRoot.Text = name.StartsWith("Is") ? name.Substring(2) : name.StartsWith("Has") ? name.Substring(3) : name;
             IsRoot.ThreeState = true;
             IsRoot.Click += new System.EventHandler(this.IsRoot_Click);
@@ -419,6 +419,7 @@ namespace CogbotRadegastPluginModule
 
         private void AddAllObjects()
         {
+            if (IsDisposing) return;
             Vector3d location = client.Self.GlobalPosition;
             List<ListViewItem> items = new List<ListViewItem>();
 
@@ -566,7 +567,8 @@ namespace CogbotRadegastPluginModule
             //    {
             //        prims.Add(kvp.Value);
             //    }
-            //});
+            //});dang cant grab the URL off that page
+
 
             //frmPrimWorkshop pw = new frmPrimWorkshop(instance);
             //pw.loadPrims(prims);
@@ -712,6 +714,16 @@ namespace CogbotRadegastPluginModule
         private void searchOptions_Paint(object sender, PaintEventArgs e)
         {
 
+        }
+
+        private void nudRadius_ValueChanged_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txtDescription_TextChanged(object sender, EventArgs e)
+        {
+            txtDescription.ToString();
         }
 
     }

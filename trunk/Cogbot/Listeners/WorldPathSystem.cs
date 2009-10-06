@@ -11,12 +11,12 @@ using PathSystem3D.Mesher;
 
 namespace cogbot.Listeners
 {
-    public class WorldPathSystem
+    public class WorldPathSystem: IDisposable
     {
        public SimGlobalRoutes GlobalRoutes = SimGlobalRoutes.Instance;
      //   static object GlobalRoutes = new object();
         static Thread TrackPathsThread;
-
+        static bool IsDisposing = false;
 
         public static int MaxMeshes = 18000;
         static public int RealMeshes = 0;
@@ -53,7 +53,7 @@ namespace cogbot.Listeners
         {
             Thread.Sleep(30000);
             int lastCount = 0;
-            while (true)
+            while (!(IsDisposing))
             {
                 Thread.Sleep(10000);
                 if (!WorldObjects.MaintainCollisions) continue;
@@ -112,6 +112,13 @@ namespace cogbot.Listeners
         internal void UpdateFromImage(System.Drawing.Image I)
         {
             throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
+            WorldObjects.MaintainCollisions = false;
+            IsDisposing = true;
+            TrackPathsThread.Abort();
         }
     }
 }

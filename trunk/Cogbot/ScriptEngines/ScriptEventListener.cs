@@ -412,7 +412,7 @@ namespace cogbot.ScriptEngines
 
         void SimEventSubscriber.OnEvent(SimObjectEvent evt)
         {
-            if (taskInterperter.IsSubscriberOf(evt.GetVerb()))
+            if (taskInterperter !=null && taskInterperter.IsSubscriberOf(evt.GetVerb()))
             {
                 object lispCode = lispCodeFromEvent(evt);
                 taskQueue.Enqueue(new KeyValuePair<object, SimObjectEvent>(lispCode, evt));

@@ -14,9 +14,9 @@ namespace cogbot
 {
     public delegate void DescribeDelegate(bool detailed, OutputDelegate WriteLine);
     enum Modes { normal, tutorial };
-    public delegate void OutputDelegate(string str, params object[] args);  
+    public delegate void OutputDelegate(string str, params object[] args);
 
-    public class ClientManager
+    public class ClientManager : IDisposable
     {
 
         public void AddTool(string name, string text, EventHandler threadStart)
@@ -159,24 +159,6 @@ namespace cogbot
             RegisterAssembly(Assembly.GetExecutingAssembly());
         }
 
-        public void RegisterBotSystemCommands(Assembly assembly)
-        {
-            foreach (Type t in assembly.GetTypes())
-            {
-                try
-                {
-                    if (t.IsSubclassOf(typeof(Command)))
-                    {
-                        if (!typeof(SystemApplicationCommand).IsAssignableFrom(t)) continue;
-                        RegisterSystemCommand(t);
-                    }
-                }
-                catch (Exception e)
-                {
-                    WriteLine(e.ToString());
-                }
-            }
-        }
         private LoginDetails GetDetailsFromConfig(Configuration config)
         {
             LoginDetails details = new LoginDetails();
@@ -289,7 +271,7 @@ namespace cogbot
                         text = text.Trim();
                     }
                     if (string.IsNullOrEmpty(text)) return res;
-                   
+
                     string verb = text.Split(null)[0];
                     if (groupActions.ContainsKey(verb))
                     {
@@ -481,9 +463,9 @@ namespace cogbot
                         return;// bc;
                     }
                 }
-                Thread t= new Thread(new ThreadStart(() =>
+                Thread t = new Thread(new ThreadStart(() =>
                                                {
-                                                  // Thread.CurrentThread.SetApartmentState(ApartmentState.STA);
+                                                   // Thread.CurrentThread.SetApartmentState(ApartmentState.STA);
                                                    try
                                                    {
                                                        LoginParams BotLoginParams = DefaultLoginParams();
@@ -509,7 +491,7 @@ namespace cogbot
                                                            location = "last";
                                                        }
                                                        BotLoginParams.Start = location;
-                                                 
+
                                                        lock (_wasFirstGridClientLock)
                                                        {
                                                            GridClient gridClient;
@@ -525,7 +507,7 @@ namespace cogbot
                                                                gridClient = new GridClient();
                                                                inst = new RadegastInstance(gridClient);
                                                            }
-                                                           bc = new BotClient(this, gridClient,BotLoginParams);
+                                                           bc = new BotClient(this, gridClient, BotLoginParams);
                                                            bc.TheRadegastInstance = inst;
                                                        }
                                                        bc.SetRadegastLoginOptions();
@@ -533,24 +515,27 @@ namespace cogbot
                                                        if (bc.TheRadegastInstance.MainForm.InvokeRequired)
                                                        {
                                                            //bc.TheRadegastInstance.MainForm.Visible = false;
-                                                       } else
+                                                       }
+                                                       else
                                                        {
                                                            Application.Run(bc.TheRadegastInstance.MainForm);
                                                        }
-                                                   } catch(Exception e)
+                                                   }
+                                                   catch (Exception e)
                                                    {
-                                                       Console.WriteLine(fullName+" "+e);
+                                                       Console.WriteLine(fullName + " " + e);
                                                    }
                                                }));
                 t.Name = "MainThread " + fullName;
                 try
                 {
                     t.SetApartmentState(ApartmentState.STA);
-                } catch(Exception)
+                }
+                catch (Exception)
                 {
                 }
                 t.Start();
-               // return bc;
+                // return bc;
             }
         }
 
@@ -565,7 +550,7 @@ namespace cogbot
                                              };
             return BotLoginParams;
         }
-       
+
 
         private void EnsureStarting(BotClient client)
         {
@@ -587,16 +572,16 @@ namespace cogbot
 
             BotClient cl = LastBotClient;
             foreach (BotClient bc in BotClients)
+            {
+                if (bc.GetName().Equals(botname))
                 {
-                    if (bc.GetName().Equals(botname))
-                    {
-                        cl = bc;
-                    }
+                    cl = bc;
                 }
+            }
             return new Utilities.BotTcpServer(port, cl);
         }
 
-    //    public Dictionary<UUID, BotClient> Clients = new Dictionary<UUID, BotClient>();
+        //    public Dictionary<UUID, BotClient> Clients = new Dictionary<UUID, BotClient>();
         //public Dictionary<Simulator, Dictionary<uint, Primitive>> SimPrims = new Dictionary<Simulator, Dictionary<uint, Primitive>>();
 
         public bool Running = true;
@@ -633,13 +618,13 @@ namespace cogbot
                     {
                         LastBotClient = new BotClient(this, RadegastInstance.GlobalInstance.Client, DefaultLoginParams());
                         LastBotClient.TheRadegastInstance = RadegastInstance.GlobalInstance;
-                       // LastBotClient.SetRadegastLoginOptions();
+                        // LastBotClient.SetRadegastLoginOptions();
                         AddTypesToBotClient(LastBotClient);
                         LastBotClient.Network.OnLogin += (delegate(LoginStatus login, string message)
                                                               {
-                                                                  if (login==LoginStatus.Success)
+                                                                  if (login == LoginStatus.Success)
                                                                   {
-                                                                      LastBotClient.StartupClientLisp();                
+                                                                      LastBotClient.StartupClientLisp();
                                                                   }
                                                               });
                     }
@@ -656,22 +641,22 @@ namespace cogbot
         {
             // Check if this CurrentClient is already logged in
             foreach (BotClient c in BotClients)
+            {
+                if (c.Self.FirstName == account.FirstName && c.Self.LastName == account.LastName)
                 {
-                    if (c.Self.FirstName == account.FirstName && c.Self.LastName == account.LastName)
-                    {
-                        Logout(c);
-                        break;
-                    }
+                    Logout(c);
+                    break;
                 }
+            }
 
-            GridClient gc =  new GridClient();
+            GridClient gc = new GridClient();
 
             // Optimize the throttle
             gc.Throttle.Wind = 0;
             gc.Throttle.Cloud = 0;
             gc.Throttle.Land = 1000000;
             gc.Throttle.Task = 1000000;
-            
+
             LoginParams loginParams = gc.Network.DefaultLoginParams(account.FirstName, account.LastName, account.Password, "BotClient", version);
 
             if (!String.IsNullOrEmpty(account.StartLocation))
@@ -694,21 +679,21 @@ namespace cogbot
                     UUID query = UUID.Random();
                     DirectoryManager.DirPeopleReplyCallback peopleDirCallback =
                         (queryID, matchedPeople) =>
+                        {
+                            if (queryID == query)
                             {
-                                if (queryID == query)
+                                if (matchedPeople.Count != 1)
                                 {
-                                    if (matchedPeople.Count != 1)
-                                    {
-                                        Logger.Log("Unable to resolve master key from " + client.MasterName,
-                                                   Helpers.LogLevel.Warning);
-                                    }
-                                    else
-                                    {
-                                        client.MasterKey = matchedPeople[0].AgentID;
-                                        Logger.Log("Master key resolved to " + client.MasterKey, Helpers.LogLevel.Info);
-                                    }
+                                    Logger.Log("Unable to resolve master key from " + client.MasterName,
+                                               Helpers.LogLevel.Warning);
                                 }
-                            };
+                                else
+                                {
+                                    client.MasterKey = matchedPeople[0].AgentID;
+                                    Logger.Log("Master key resolved to " + client.MasterKey, Helpers.LogLevel.Info);
+                                }
+                            }
+                        };
 
                     client.Directory.OnDirPeopleReply += peopleDirCallback;
                     client.Directory.StartPeopleSearch(DirectoryManager.DirFindFlags.People, client.MasterName, 0, query);
@@ -762,7 +747,7 @@ namespace cogbot
         /// </summary>
         public void Run()
         {
-         //   WriteLine("Type quit to exit.  Type help for a command list.");
+            //   WriteLine("Type quit to exit.  Type help for a command list.");
 
             while (Running)
             {
@@ -773,10 +758,10 @@ namespace cogbot
             }
 
             foreach (BotClient client in BotClients)
-                {
-                    if (client.Network.Connected)
-                        client.Network.Logout();
-                }
+            {
+                if (client.Network.Connected)
+                    client.Network.Logout();
+            }
         }
 
         private string GetPrompt()
@@ -784,10 +769,10 @@ namespace cogbot
             int online = 0;
             int offline = 0;
             foreach (BotClient client in BotClients)
-                {
-                    if (client.Network.Connected) online++;
-                    else offline++;
-                }
+            {
+                if (client.Network.Connected) online++;
+                else offline++;
+            }
             string result = (online + " avatars online");
             if (offline > 0) result += " " + offline + " avatars offline";
             return result;
@@ -801,7 +786,7 @@ namespace cogbot
         /// <param name="imSessionID"></param>
         public void DoCommandAll(string cmd, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            string[] tokens = cmd.Trim().Split(new char[] { ' ', '\t' });
+            string[] tokens = Parser.ParseArguments(cmd);
             if (tokens.Length == 0)
                 return;
 
@@ -827,10 +812,10 @@ namespace cogbot
                 if (BotClients.Count > 0)
                 {
                     foreach (BotClient client in BotClients)
-                        {
-                            WriteLine(client.Commands["help"].Execute(args, UUID.Zero, WriteLine));
-                            break;
-                        }
+                    {
+                        WriteLine(client.Commands["help"].Execute(args, UUID.Zero, WriteLine));
+                        break;
+                    }
                 }
                 else
                 {
@@ -884,6 +869,10 @@ namespace cogbot
         /// </summary>
         public void Quit()
         {
+            foreach (BotClient client in BotClients)
+            {
+                client.Dispose();
+            }
             Running = false;
             // TODO: It would be really nice if we could figure out a way to abort the ReadLine here in so that Run() will exit.
         }
@@ -891,43 +880,65 @@ namespace cogbot
 
         internal void RegisterAssembly(Assembly assembly)
         {
+            WriteLine("RegisterAssembly: " + assembly);
             lock (registrationTypes)
             {
                 bool newTypes = false;
-                RegisterBotSystemCommands(assembly);
+                WriteLine("Bot RegisterAssembly: " + assembly);
+
                 foreach (Type t in assembly.GetTypes())
                 {
-                    if (registrationTypes.Contains(t)) continue;
-                    registrationTypes.Add(t);
-                    newTypes = true;
+                    try
+                    {
+                        if (RegisterType(t)) newTypes = true;
+                    }
+                    catch (Exception e)
+                    {
+                        WriteLine(e.ToString());
+                    }
                 }
                 if (newTypes)
+                {
                     foreach (BotClient client in BotClients)
                     {
                         AddTypesToBotClient(client);
                     }
+                }
             }
         }
 
 
-        public void RegisterSystemCommand(Type t)
+        public bool RegisterType(Type t)
         {
-            if (!typeof(SystemApplicationCommand).IsAssignableFrom(t)) return;
-            if (registeredSystemApplicationCommandTypes.Contains(t)) return;
-            registeredSystemApplicationCommandTypes.Add(t);
-            ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
-            try
+            bool newType = !registrationTypes.Contains(t);
+            if (newType)
             {
-                Command command = (Command)info.Invoke(new object[] { null });
-                RegisterSystemCommand(command.Name, command);
+                registrationTypes.Add(t);
             }
-            catch (Exception e)
+            if (typeof(SystemApplicationCommand).IsAssignableFrom(t))
             {
-                WriteLine("RegisterBotSystemCommands: " + e.ToString() + "\n" + e.InnerException + "\n In " + t.Name);
+                if (!registeredSystemApplicationCommandTypes.Contains(t))
+                {
+                    registeredSystemApplicationCommandTypes.Add(t);
+                    if (!t.IsInterface)
+                    {
+                        ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
+                        try
+                        {
+                            Command command = (Command)info.Invoke(new object[] { null });
+                            RegisterType(command.Name, command);
+                        }
+                        catch (Exception e)
+                        {
+                            WriteLine("RegisterType: " + e + "\n" + e.InnerException + "\n In " + t.Name);
+                        }
+                    }
+                }
             }
+            return newType;
         }
 
-        public void RegisterSystemCommand(string name, cogbot.Actions.Command command)
+        public void RegisterType(string name, cogbot.Actions.Command command)
         {
             string orginalName = name;
             name = name.Replace(" ", "").ToLower();
@@ -940,8 +951,13 @@ namespace cogbot
             }
             else
             {
-                RegisterSystemCommand("!" + orginalName, command);
+                RegisterType("!" + orginalName, command);
             }
+        }
+
+        public void Dispose()
+        {
+            Quit();
         }
     }
 

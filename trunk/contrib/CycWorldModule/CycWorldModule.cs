@@ -2,26 +2,40 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Windows.Forms;
 using cogbot;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using CycWorldModule.DotCYC;
+using OpenMetaverse;
+using PathSystem3D.Navigation;
+using Radegast;
 
 namespace CycWorldModule
 {
     public class CycWorldModule : WorldObjectsModule
     {
-        readonly private SimCyclifier cyclifier;
-        private static CycWorldModule cycModule;
+        readonly internal SimCyclifier cyclifier;
+        public static CycWorldModule CycModule;
         private CycConnectionForm cycConnectionForm;
         readonly static object oneInstanceLock = new object();
+        private RadegastTab cycTab;
+        private CycBrowser cycBrowser;
+
+        public Radegast.RadegastInstance RadegastInstance
+        {
+            get
+            {
+                return client.TheRadegastInstance;
+            }
+        }
         public CycWorldModule(BotClient _parent)
             : base(_parent)
         {
             lock (oneInstanceLock)
-                if (cycModule == null)
+                if (CycModule == null)
                 {
-                    cycModule = this;
+                    CycModule = this;
                     _parent.ClientManager.AddTool("CycWorldModule","CycWorldModule", ShowCycForm);
                     cyclifier = new SimCyclifier(this);
                     client.WorldSystem.OnAddSimObject += cyclifier.World_OnSimObject;
@@ -54,12 +68,20 @@ namespace CycWorldModule
 
         public override void StartupListener()
         {
-  
+            cycBrowser = new CycBrowser(RadegastInstance);
+            cycTab = client.TheRadegastInstance.TabConsole.AddTab("cyc", "CYC", cycBrowser);
         }
 
         public override void ShutdownListener()
         {
             //TODO throw new NotImplementedException();
+        }
+
+        public void Show(Object position)
+        {
+            object fort = cyclifier.ToFort(position);
+            cyclifier.DataUpdate(position);
+            cycBrowser.Show(fort);
         }
     }
 }

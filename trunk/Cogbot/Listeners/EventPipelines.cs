@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using cogbot.TheOpenSims;
+using cogbot.Utilities;
 using OpenMetaverse;
 using System.Threading;
 
@@ -74,6 +75,7 @@ namespace cogbot.Listeners
         // this object will propogate the event AS-IS 
         void SendEvent(SimObjectEvent evt);
         void AddSubscriber(SimEventSubscriber sub);
+        void ShuttingDown();
     }
 
     public class SimEventMulticastPipeline : SimEventSubscriber, SimEventPublisher
@@ -81,9 +83,10 @@ namespace cogbot.Listeners
         #region SimEventMulticastPipeline Members
 
         List<SimEventSubscriber> subscribers = new List<SimEventSubscriber>();
-
-        public SimEventMulticastPipeline()
+        readonly TaskQueueHandler taskQueue;
+        public SimEventMulticastPipeline(string name)
         {
+            taskQueue = new TaskQueueHandler("SimEventMulticastPipeline " + name, 0);
         }
 
         #endregion
@@ -92,6 +95,7 @@ namespace cogbot.Listeners
 
         public void ShuttingDown()
         {
+            taskQueue.Dispose();
             foreach (SimEventSubscriber subscriber in GetSubscribers())
             {
                 subscriber.ShuttingDown();
@@ -143,7 +147,7 @@ namespace cogbot.Listeners
                 {
                     new Thread(start).Start();
                 }
-                else start.Invoke();
+                else taskQueue.Enqueue(start);                    
                 
                 
                 
