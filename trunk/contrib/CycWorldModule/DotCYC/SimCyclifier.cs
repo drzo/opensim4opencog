@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using System.Xml.Linq;
 using cogbot;
 using cogbot.Listeners;
@@ -42,7 +43,7 @@ namespace CycWorldModule.DotCYC
         }// new Dictionary<string, CycFort>();
         static CycConnectionForm cycConnection;
         static readonly DateTime baseTime = new DateTime(1970, 1, 1, 0, 0, 0);
-        private static readonly TaskQueueHandler cycAccessQueueHandler = new TaskQueueHandler("CycAccess", 0);
+        private static readonly TaskQueueHandler cycAccessQueueHandler = new TaskQueueHandler("CycAssertions", 0);
         private static TaskQueueHandler taskQueueHandler = null;// new TaskQueueHandler("SimCyclifier", 0);
 
         readonly static public Dictionary<object, CycFort> cycTerms = new Dictionary<object, CycFort>();
@@ -156,6 +157,7 @@ namespace CycWorldModule.DotCYC
                                        "UniversalVocabularyMt",
                                        "VocabularyMicrotheory");
 
+            assertIsa(C("TheDefaultSimInstance"), C("Thing"));
 
             if (ClearKBBetweenSessions)
             {
@@ -197,7 +199,7 @@ namespace CycWorldModule.DotCYC
 
 
             // visit libomv
-            if (true || cycAccess.find("SimEnumCollection") == null)
+            if (cycAccess.find("SimEnumCollection") == null)
             {
                 Debug("Loading SimEnumCollection Collections ");
                 assertIsa(C("SimEnumCollection"), C("Collection"));
@@ -463,7 +465,7 @@ namespace CycWorldModule.DotCYC
 
         public void assertGaf(CycFort a, CycFort b, string c)
         {
-            cycAccessQueueHandler.Enqueue(() =>
+           // cycAccessQueueHandler.Enqueue(() =>
                               {
                                   try
                                   {
@@ -474,7 +476,8 @@ namespace CycWorldModule.DotCYC
 
                                       Exception(e);
                                   }
-                              });
+                              }
+            //);
         }
 
 
@@ -1079,7 +1082,7 @@ namespace CycWorldModule.DotCYC
 
                     ForEachEnumValue(delegate(CycFort f)
                                          {
-                                             assertGaf(prop, constant, f);
+                                             defaultAssert(prop, constant, f);
                                          }, fort);
                     docPredicate(prop, info);
                     return prop;
@@ -1098,7 +1101,7 @@ namespace CycWorldModule.DotCYC
                 }
                 if (IsCycEntity(t))
                 {
-                    CycListAssert(makeCycList(prop, constant, ToFort(fort)));
+                    defaultAssert(prop, constant, ToFort(fort));
                     docPredicate(prop, info);
                     return prop;
                 }
@@ -1109,7 +1112,7 @@ namespace CycWorldModule.DotCYC
                     Trace();
                     ///if (t.IsValueType)
                     {
-                        CycListAssert(makeCycList(prop, constant, ToFort(fort)));
+                        defaultAssert(prop, constant, ToFort(fort));
                         docPredicate(prop, info);
                         return prop;
                     }
@@ -1128,6 +1131,49 @@ namespace CycWorldModule.DotCYC
             return prop;
 
         }
+
+        private void defaultAssert(CycFort fort, CycFort constant, object o)
+        {
+            if (o is String || (o is CycNart && ((CycNart)o).getFunctor() != C("TheList")))
+            {
+                CycListAssert(CycList.makeCycList(fort, constant, o));
+                return;
+            }
+            if (o is CycVariable)
+            {
+                return;
+            }
+            if (o is float || o is java.lang.Float || o is double || o is java.lang.Double)
+            {
+                if (o.ToString()!="0.0" && o.ToString()!="1.0")
+                {
+                    CycListAssert(CycList.makeCycList(fort, constant, o));
+                    return;                    
+                }
+            }
+            lock (DefaultNotNeededInAssert)
+            {
+
+                object temp;
+                if (DefaultNotNeededInAssert.TryGetValue(fort, out temp))
+                {
+                    if (temp.Equals(o))
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        CycListAssert(CycList.makeCycList(fort, constant, o));
+                    }
+                    return;
+                }
+                DefaultNotNeededInAssert.Add(fort,o);
+                CycListAssert(CycList.makeCycList(fort, C("TheDefaultSimInstance"), o));
+                return;
+            }
+        }
+
+        Dictionary<object,object> DefaultNotNeededInAssert = new Dictionary<object, object>();
 
         private void docPredicate(CycFort prop, HashSet<MemberInfo> info)
         {
@@ -1260,7 +1306,10 @@ namespace CycWorldModule.DotCYC
 
         public object ToFort(object parameter)
         {
-            if (parameter == null) return CYC_NULL;
+            if (parameter == null)
+            {
+                return CYC_NULL;
+            }
             Type t = parameter.GetType();
             var conv = GetConverter(t);
             if (conv != null)
