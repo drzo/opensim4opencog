@@ -2473,21 +2473,6 @@ namespace OpenMetaverse
                                 sim.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties = props;
                         }
                     }
-                    else if (Client.Settings.AVATAR_TRACKING)
-                    {
-                        findPrim = sim.ObjectsAvatars.Find(
-                        delegate(Avatar prim) { return prim.ID == props.ObjectID; });
-                        if (findPrim != null)
-                        {
-                            FireOnObjectPropertiesUpdated(sim, findPrim, props);
-                            lock (sim.ObjectsAvatars.Dictionary)
-                            {
-                                if (sim.ObjectsAvatars.Dictionary.ContainsKey(findPrim.LocalID))
-                                    sim.ObjectsAvatars.Dictionary[findPrim.LocalID].Properties = props;
-                            }
-                        }
- 
-                    }
                 }
 
                 FireOnObjectProperties(sim, props);
@@ -2533,21 +2518,6 @@ namespace OpenMetaverse
                             sim.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties.SetFamilyProperties(props);
                         }
                     }
-                }
-                else if (Client.Settings.AVATAR_TRACKING)
-                {
-                    findPrim = sim.ObjectsAvatars.Find(
-                    delegate(Avatar prim) { return prim.ID == props.ObjectID; });
-                    if (findPrim != null)
-                    {
-                        FireOnObjectPropertiesUpdated(sim, findPrim, props);
-                        lock (sim.ObjectsAvatars.Dictionary)
-                        {
-                            if (sim.ObjectsAvatars.Dictionary.ContainsKey(findPrim.LocalID))
-                                sim.ObjectsAvatars.Dictionary[findPrim.LocalID].Properties = props;
-                        }
-                    }
-
                 }
             }
 
@@ -2669,8 +2639,13 @@ namespace OpenMetaverse
         /// <param name="oldSeatID"></param>
         protected void SetAvatarSittingOn(Simulator sim, Avatar av, uint localid, uint oldSeatID)
         {
-            if (Client.Network.CurrentSim == sim && av.LocalID == Client.Self.localID) Client.Self.sittingOn = localid;
+            if (Client.Network.CurrentSim == sim && av.LocalID == Client.Self.localID)
+            {
+                Client.Self.sittingOn = localid;
+            }
+            
             av.ParentID = localid;
+
 
             if (OnAvatarSitChanged != null && oldSeatID != localid)
             {
