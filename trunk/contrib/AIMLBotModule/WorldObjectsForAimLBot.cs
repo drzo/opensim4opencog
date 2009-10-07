@@ -846,7 +846,7 @@ namespace AIMLBotModule
             return "AIMLBotModule";
         }
 
-        public override void ShutdownListener()
+        public override void Dispose()
         {
             //todo throw new NotImplementedException();
         }

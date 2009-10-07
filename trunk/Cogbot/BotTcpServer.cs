@@ -520,7 +520,7 @@ namespace cogbot.Utilities
         //#region BotMessageSubscriber Members
 
 
-        //void BotClient.BotMessageSubscriber.ShuttingDown()
+        //void BotClient.BotMessageSubscriber.Dispose()
         //{
         //    ((BotTcpServer)this).closeTcpListener();
         //}
@@ -550,7 +550,7 @@ namespace cogbot.Utilities
             whileClientIsAway.Enqueue("("+evt.GetVerb()+" "+parent.argsListString(evt.GetArgs())+")");
         }
 
-        void SimEventSubscriber.ShuttingDown()
+        void SimEventSubscriber.Dispose()
         {
             ((BotTcpServer)this).closeTcpListener();
         }

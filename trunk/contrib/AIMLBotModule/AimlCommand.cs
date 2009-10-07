@@ -272,7 +272,7 @@ namespace AIMLBotModule
             return "" + arg;
         }
 
-        public void ShuttingDown()
+        public void Dispose()
         {
             //throw new NotImplementedException();
         }

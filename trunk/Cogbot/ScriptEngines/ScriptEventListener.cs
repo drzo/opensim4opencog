@@ -424,7 +424,7 @@ namespace cogbot.ScriptEngines
             return genLispCodeTree("(" + evt.GetVerb().ToLower() + " " + argsListString(evt.GetArgs())+")");
         }
 
-        void SimEventSubscriber.ShuttingDown()
+        void SimEventSubscriber.Dispose()
         {
             taskInterperter = null;
         }
