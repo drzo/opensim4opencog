@@ -227,8 +227,8 @@ namespace cogbot.Utilities
         {
         //    if (ns != null) ns.Close();
           //  if (tcp_client != null) tcp_client.Close();
-            if (tcp_socket != null) tcp_socket.Stop();
             if (thrSvr != null) thrSvr.Abort();
+            if (tcp_socket != null) tcp_socket.Stop();
            // if (parent.thrJobQueue != null) parent.thrJobQueue.Abort();
 
         }
