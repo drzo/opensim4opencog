@@ -9,7 +9,7 @@
           <AllowUnsafe>true</AllowUnsafe>
           <WarningLevel>3</WarningLevel>
           <WarningsAsErrors>false</WarningsAsErrors>
-          <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
+          <SuppressWarnings>1591,1574,0419,0618,0414,0169,0436</SuppressWarnings>
           <OutputPath>bin</OutputPath>
           <DebugInformation>true</DebugInformation>
           <IncrementalBuild>true</IncrementalBuild>
@@ -391,46 +391,54 @@
     </Project>
   -->
     <Project name="Radegast" path="lib/Radegast" type="exe" frameworkVersion="v3_5">
-       <Configuration name="Debug">
-         <Options>
-           <OutputPath>../../bin/</OutputPath>
-         </Options>
-       </Configuration>
-       <Configuration name="Release">
-         <Options>
-           <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
-           <OutputPath>../../bin/</OutputPath>
-           <PlatformTarget>x86</PlatformTarget>
-         </Options>
-       </Configuration>
+        <Configuration name="Debug">
+            <Options>
+                <OutputPath>../../bin/</OutputPath>
+            </Options>
+        </Configuration>
+        <Configuration name="Release">
+            <Options>
+                <SuppressWarnings>1591,1574,0419,0618,0414,0169</SuppressWarnings>
+                <OutputPath>../../bin/</OutputPath>
+                <PlatformTarget>x86</PlatformTarget>
+            </Options>
+        </Configuration>
 
-       <ReferencePath>../../bin/</ReferencePath>
-       <Reference name="PathSystem3D" localCopy="false"/>
-       <Reference name="fmodex-dotnet.dll" localCopy="false"/>
-       <Reference name="System.Drawing" localCopy="false"/>
-       <Reference name="System.Windows.Forms" localCopy="false"/>
-       <Reference name="OpenMetaverse" localCopy="false"/>
-       <Reference name="OpenMetaverseTypes" localCopy="false"/>       
-       <Reference name="OpenMetaverse.StructuredData"/>
-       <Reference name="System.Data" localCopy="false"/>
-       <Reference name="AIMLbot" localCopy="false" />
-       <Reference name="log4net" localCopy="false" />
-       <Reference name="Nini" localCopy="false"/>
-       <Reference name="System" localCopy="false" />
-       <Reference name="System.Core" localCopy="false" />
-       <Reference name="System.Web" localCopy="false" />
-       <Reference name="System.Windows.Forms" localCopy="false" />
-       <Reference name="System.Xml" localCopy="false" />
-       <Reference name="Tao.OpenGl" localCopy="false"/>
-       <Reference name="Tao.Platform.Windows" localCopy="false" />
-       <Reference name="Tools" localCopy="false" />
-       <Files>
-           <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
-           <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="RegionInfo.*"/><Exclude name="AssemblyInfo.cs"/></Match>
-           <Match path="Properties" pattern="*.cs"  recurse="true"  subType="Form"/>
-       </Files>
-  </Project>
+        <ReferencePath>../../bin/</ReferencePath>
 
+        <Reference name="System" localCopy="false" />
+        <Reference name="System.Core" localCopy="false" />
+        <Reference name="System.Data" localCopy="false"/>
+        <Reference name="System.Drawing" localCopy="false"/>
+        <Reference name="System.Web" localCopy="false" />
+        <Reference name="System.Windows.Forms" localCopy="false" />
+        <Reference name="System.Xml" localCopy="false" />
+
+        <Reference name="OpenMetaverse" localCopy="false"/>
+        <Reference name="OpenMetaverseTypes" localCopy="false"/>
+        <Reference name="OpenMetaverse.StructuredData" localCopy="false"/>
+
+        <Reference name="assemblies/fmodex-dotnet.dll" localCopy="true"/>
+        <Reference name="assemblies/Tao.OpenGl.dll" localCopy="true"/>
+        <Reference name="assemblies/Tao.Platform.Windows.dll" localCopy="true" />
+        <Reference name="assemblies/Tools.dll" localCopy="true" />
+        <Reference name="assemblies/log4net.dll" localCopy="true" />
+
+        <Reference name="XMLRPC" localCopy="true" />
+
+        <Files>
+            <Match path="." pattern="*.cs" recurse="true" subType="Code">
+                <Exclude name="AssemblyInfo.cs"/>
+            </Match>
+            <Match path="Properties" pattern="*.cs"  recurse="true"  subType="Form"/>
+            <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
+            <Match path="." pattern="*.config" recurse="true" buildAction="Content" copyToOutput="Always"/>
+            <Match path="." pattern="*.so" recurse="true" buildAction="Content" copyToOutput="Always"/>
+            <Match path="." pattern="*.dylib" recurse="true" buildAction="Content" copyToOutput="Always"/>
+            <Match path="." pattern="fmodex.*" recurse="true" buildAction="Content" copyToOutput="Always"/>
+            <Match path="." pattern="*.html" recurse="true" buildAction="Content" copyToOutput="Always"/>
+        </Files>
+    </Project>
 
 
 
