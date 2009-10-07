@@ -33,7 +33,7 @@ namespace CycWorldModule.DotCYC
         static public CycAccess cycAccess;
         static public CycFort vocabMt;
         static public CycFort assertMt;
-        static public bool ProcessEvent = false;
+        static public bool ProcessEvents = true;
         static public Dictionary<object, CycFort> simFort
         {
             get
@@ -57,7 +57,6 @@ namespace CycWorldModule.DotCYC
         // ReSharper restore InconsistentNaming
         public void OnEvent(SimObjectEvent evt)
         {
-            if (!ProcessEvent) return;
             if (cycAccess == null)
             {
                 //Console.WriteLine("No Cyc connection");
@@ -77,6 +76,7 @@ namespace CycWorldModule.DotCYC
 
         static public void OnEvent0(SimObjectEvent evt)
         {
+            if (!ProcessEvents) return;
             try
             {
                 if (evt.EventType == SimEventType.DATA_UPDATE)
@@ -119,8 +119,11 @@ namespace CycWorldModule.DotCYC
             }
         }
 
-        public void ShuttingDown()
+        public void Dispose()
         {
+            ProcessEvents = false;            
+            taskQueueHandler.Dispose();
+            cycAccessQueueHandler.Dispose();
         }
 
         public SimCyclifier(CycWorldModule tf)
@@ -157,7 +160,6 @@ namespace CycWorldModule.DotCYC
                                        "UniversalVocabularyMt",
                                        "VocabularyMicrotheory");
 
-            assertIsa(C("TheDefaultSimInstance"), C("Thing"));
 
             if (ClearKBBetweenSessions)
             {
@@ -169,6 +171,10 @@ namespace CycWorldModule.DotCYC
                 cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-SOCIALFn\"))");
                 cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-MOVEMENTFn\"))");
             }
+            cycAccess.converseVoid("(fi-kill (find-or-create-constant \"TheDefaultSimInstance\"))");
+
+            assertIsa(C("TheDefaultSimInstance"), C("Thing"));
+
             simFort["SimObject"] = createCollection("SimObject", "#$SpatiallyDisjointObjectType for the simulator",
                                                     "SimVocabMt", "SpatiallyDisjointObjectType", null);
             simFort["SimAsset"] = createCollection("SimAsset",
@@ -1809,7 +1815,7 @@ namespace CycWorldModule.DotCYC
                     catch (Exception e)
                     {
                         Debug("Cannot doc " + typeAssembly + " " + e);
-                        AssmblyXDoics[typeAssembly] = null;
+                        AssmblyXDoics[typeAssembly] = ele = null;
                     }
                 }
             return ele;
@@ -1832,19 +1838,15 @@ namespace CycWorldModule.DotCYC
         private static FileInfo GetXmlDocFile(Assembly assembly)
         {
             string assemblyDirPath = Path.GetDirectoryName(assembly.Location);
-            string fileName = Path.GetFileNameWithoutExtension(assembly.Location);
-            if (File.Exists(fileName + ".XML"))
+            string fileName = String.Format("{0}.xml", Path.GetFileNameWithoutExtension(assembly.Location).ToLower());
+            foreach (string file in Directory.GetFiles(assemblyDirPath))
             {
-                fileName = fileName + ".XML";
+                if (file.ToLower().Equals(fileName))
+                {
+                    return new FileInfo(file);
+                }
             }
-            else if (File.Exists(fileName + ".xml"))
-            {
-                fileName = fileName + ".xml";
-            }
-            else if (File.Exists(fileName + ".Xml"))
-            {
-                fileName = fileName + ".Xml";
-            }
+            Debug("Assebly Doc File not found {0}", fileName);
             return new FileInfo(fileName);
         }
 

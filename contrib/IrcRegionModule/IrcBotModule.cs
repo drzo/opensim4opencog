@@ -56,7 +56,7 @@ namespace IrcRegionModule
            
         }
 
-        public override void ShutdownListener()
+        public override void Dispose()
         {
             //throw new NotImplementedException();
         }

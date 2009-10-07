@@ -298,7 +298,7 @@ namespace cogbot
             logout();
             foreach (BotClient CurrentClient in BotClients)
             {
-                CurrentClient.ShutDown();
+                CurrentClient.Dispose();
             }
             Application.DoEvents();
             Application.Exit();

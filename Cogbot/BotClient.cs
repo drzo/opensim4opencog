@@ -1334,23 +1334,23 @@ namespace cogbot
         }
 
 
-        internal void ShutDown()
+        public void Dispose()
         {
             //scriptEventListener.
             logout();
             updateTimer.Enabled = false;
             updateTimer.Close();
             //botPipeline.Shut
-            botPipeline.ShuttingDown();
-            lispEventProducer.ShutdownListener();
-            WorldSystem.ShutdownListener();
+            botPipeline.Dispose();
+            lispEventProducer.Dispose();
+            WorldSystem.Dispose();
             //thrJobQueue.Abort();
             //lock (lBotMsgSubscribers)
             //{   
             LispTaskInterperter.Dispose();
             foreach (var ms in listeners.Values)
             {
-                ms.ShutdownListener();
+                ms.Dispose();
             }
         }
 
@@ -1500,9 +1500,9 @@ namespace cogbot
             }
         }
 
-        void SimEventSubscriber.ShuttingDown()
+        void SimEventSubscriber.Dispose()
         {
-            ((BotClient)this).ShutDown();
+            ((BotClient)this).Dispose();
         }
 
 
@@ -1684,11 +1684,6 @@ namespace cogbot
             {
                 TheRadegastInstance.MainForm.Invoke(o); 
             } else o();
-        }
-
-        public void Dispose()
-        {
-            ShutDown();
         }
     }
 

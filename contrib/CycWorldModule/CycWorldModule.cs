@@ -1,14 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Windows.Forms;
 using cogbot;
 using cogbot.Listeners;
-using cogbot.TheOpenSims;
 using CycWorldModule.DotCYC;
-using OpenMetaverse;
-using PathSystem3D.Navigation;
 using Radegast;
 
 namespace CycWorldModule
@@ -72,7 +65,7 @@ namespace CycWorldModule
             cycTab = client.TheRadegastInstance.TabConsole.AddTab("cyc", "CYC", cycBrowser);
         }
 
-        public override void ShutdownListener()
+        public override void Dispose()
         {
             //TODO throw new NotImplementedException();
         }

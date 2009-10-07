@@ -54,7 +54,7 @@ namespace cogbot.Listeners
             textForm(msg);
         }
 
-        void SimEventSubscriber.ShuttingDown()
+        void SimEventSubscriber.Dispose()
         {
             textForm("SimEventTextSubscriber shutdown for " + From);
         }
@@ -65,7 +65,7 @@ namespace cogbot.Listeners
     {
         // fired when SendEvent is invoke and this subscriber is downstream in the pipeline
         void OnEvent(SimObjectEvent evt);
-        void ShuttingDown();
+        void Dispose();
     }
 
     public interface SimEventPublisher
@@ -75,7 +75,7 @@ namespace cogbot.Listeners
         // this object will propogate the event AS-IS 
         void SendEvent(SimObjectEvent evt);
         void AddSubscriber(SimEventSubscriber sub);
-        void ShuttingDown();
+        void Dispose();
     }
 
     public class SimEventMulticastPipeline : SimEventSubscriber, SimEventPublisher
@@ -93,12 +93,12 @@ namespace cogbot.Listeners
 
         #region SimEventSubscriber Members
 
-        public void ShuttingDown()
+        public void Dispose()
         {
             taskQueue.Dispose();
             foreach (SimEventSubscriber subscriber in GetSubscribers())
             {
-                subscriber.ShuttingDown();
+                subscriber.Dispose();
             }
         }
 

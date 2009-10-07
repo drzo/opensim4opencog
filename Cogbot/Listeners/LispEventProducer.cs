@@ -33,7 +33,7 @@ namespace cogbot.Listeners
             RegisterAll();
         }
 
-        public override void ShutdownListener()
+        public override void Dispose()
         {
             UnregisterAll();
         }
