@@ -1802,7 +1802,15 @@ namespace CycWorldModule.DotCYC
             lock (AssmblyXDoics)
                 if (!AssmblyXDoics.TryGetValue(typeAssembly, out ele))
                 {
-                    AssmblyXDoics[typeAssembly] = ele = GetXmlDocMembers0(typeAssembly);
+                    try
+                    {
+                        AssmblyXDoics[typeAssembly] = ele = GetXmlDocMembers0(typeAssembly);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug("Cannot doc " + typeAssembly + " " + e);
+                        AssmblyXDoics[typeAssembly] = null;
+                    }
                 }
             return ele;
         }
@@ -1810,7 +1818,9 @@ namespace CycWorldModule.DotCYC
         public static XElement GetXmlDocMembers0(Assembly typeAssembly)
         {
             var file = GetXmlDocFile(typeAssembly);
-            return XDocument.Load(file.FullName).Root.Element("members");
+            XDocument f = XDocument.Load(file.FullName);
+            if (f.Root == null) return null;
+            return f.Root.Element("members");
         }
 
         public static XElement GetXmlDocMembers(Type type)
@@ -1822,8 +1832,19 @@ namespace CycWorldModule.DotCYC
         private static FileInfo GetXmlDocFile(Assembly assembly)
         {
             string assemblyDirPath = Path.GetDirectoryName(assembly.Location);
-            string fileName = Path.GetFileNameWithoutExtension(assembly.Location) + ".xml";
-
+            string fileName = Path.GetFileNameWithoutExtension(assembly.Location);
+            if (File.Exists(fileName + ".XML"))
+            {
+                fileName = fileName + ".XML";
+            }
+            else if (File.Exists(fileName + ".xml"))
+            {
+                fileName = fileName + ".xml";
+            }
+            else if (File.Exists(fileName + ".Xml"))
+            {
+                fileName = fileName + ".Xml";
+            }
             return new FileInfo(fileName);
         }
 
