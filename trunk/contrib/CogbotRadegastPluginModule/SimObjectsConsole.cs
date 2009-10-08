@@ -67,28 +67,17 @@ namespace CogbotRadegastPluginModule
             //propRequester = new PropertiesQueue(instance);
             //propRequester.OnTick += new PropertiesQueue.TickCallback(propRequester_OnTick);
 
-            btnPointAt.Text = (this.instance.State.IsPointing ? "Unpoint" : "Point At");
-            btnSitOn.Text = (this.instance.State.IsSitting ? "Stand Up" : "Sit On");
-            
             nudRadius.Value = (decimal)searchRadius;
             nudRadius.ValueChanged += nudRadius_ValueChanged;
+            nudRadius.KeyUp += nudRadius_KeyUp;
+            nudRadius.KeyDown += nudRadius_KeyDown;
 
-            lstPrims.ListViewItemSorter = new ObjectSorter(client.Self);
+            lstPrims.ListViewItemSorter = new SimObjectSorter(client.Self);
+            lstPrims.MouseUp += lstPrims_MouseUp;
 
-            if (instance.MonoRuntime)
-            {
-                btnView.Visible = false;
-            }
-
-            foreach (var c in typeof(SimObjectImpl).GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
-            {
-                if (!c.CanRead) continue;
-                if (c.PropertyType == typeof(bool))
-                {
-                    AddChecks(c.Name);
-                }
-            }
-
+            AddObjectType(typeof (SimObjectImpl));
+            AddObjectType(typeof(Primitive));
+            AddObjectType(typeof(Primitive.ObjectProperties));
             // Callbacks
             client.Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
             client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
@@ -97,6 +86,25 @@ namespace CogbotRadegastPluginModule
             client.Network.OnCurrentSimChanged += new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
             client.Avatars.OnAvatarNames += new AvatarManager.AvatarNamesCallback(Avatars_OnAvatarNames);
             instance.State.OnWalkStateCanged += new StateManager.WalkStateCanged(State_OnWalkStateCanged);
+        }
+
+        private void AddObjectType(Type type)
+        {
+
+            foreach (var c in type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            {
+                //AddMember(c);
+                if (!c.CanRead) continue;
+                if (c.PropertyType == typeof(bool))
+                {
+                    AddChecks(c.Name);
+                }
+            }
+            foreach (var c in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            {
+                AddMember(c);
+            }
+
         }
 
         private void Network_OnConnected(object sender)
@@ -258,7 +266,7 @@ namespace CogbotRadegastPluginModule
 
             if (InvokeRequired)
             {
-                BeginInvoke(new MethodInvoker(delegate() { UpdateCurrentObject(); }));
+                BeginInvoke(new MethodInvoker(() => UpdateCurrentObject()));
                 return;
             }
 
@@ -279,26 +287,26 @@ namespace CogbotRadegastPluginModule
             cbNextOwnTransfer.Checked = (p.NextOwnerMask & PermissionMask.Transfer) != 0;
 
             txtPrims.Text = GetSimObject(currentPrim).Children.Count.ToString();
+            tabSimObjeks.SelectTab(0);
+            //if ((currentPrim.Flags & PrimFlags.Money) != 0)
+            //{
+            //    btnPay.Enabled = true;
+            //}
+            //else
+            //{
+            //    btnPay.Enabled = false;
+            //}
 
-            if ((currentPrim.Flags & PrimFlags.Money) != 0)
-            {
-                btnPay.Enabled = true;
-            }
-            else
-            {
-                btnPay.Enabled = false;
-            }
-
-            if (currentPrim.Properties.SaleType != SaleType.Not)
-            {
-                btnBuy.Text = string.Format("Buy $L{0}", currentPrim.Properties.SalePrice);
-                btnBuy.Enabled = true;
-            }
-            else
-            {
-                btnBuy.Text = "Buy";
-                btnBuy.Enabled = false;
-            }
+            //if (currentPrim.Properties.SaleType != SaleType.Not)
+            //{
+            //    btnBuy.Text = string.Format("Buy $L{0}", currentPrim.Properties.SalePrice);
+            //    btnBuy.Enabled = true;
+            //}
+            //else
+            //{
+            //    btnBuy.Text = "Buy";
+            //    btnBuy.Enabled = false;
+            //}
         }
 
         static SimObject GetSimObject(Primitive primitive)
@@ -410,7 +418,7 @@ namespace CogbotRadegastPluginModule
             IsRoot.CheckState = System.Windows.Forms.CheckState.Indeterminate;
             IsRoot.Name = "object_" + name;
             IsRoot.Size = new System.Drawing.Size(80, 22);
-            IsRoot.Text = name.StartsWith("Is") ? name.Substring(2) : name.StartsWith("Has") ? name.Substring(3) : name;
+            IsRoot.Text = name.StartsWith("Is") ? name.Substring(2) /*: name.StartsWith("Has") ? name.Substring(3)*/ : name;
             IsRoot.ThreeState = true;
             IsRoot.Click += new System.EventHandler(this.IsRoot_Click);
             this.searchOptions.Controls.Add(IsRoot);
@@ -448,7 +456,9 @@ namespace CogbotRadegastPluginModule
 
             foreach (KeyValuePair<PropertyInfo, Object> box in uBoxs)
             {
-                if (!box.Value.Equals(box.Key.GetValue(prim, null)))
+                object v = GetObjectProp(prim,box.Key.DeclaringType);
+                if (v==null) continue;
+                if (!box.Value.Equals(box.Key.GetValue(v, null)))
                 {
                     return true;
                 }
@@ -456,44 +466,27 @@ namespace CogbotRadegastPluginModule
             return false;
         }
 
-        private void btnPointAt_Click(object sender, EventArgs e)
+        private object GetObjectProp(Object prim, Type type)
         {
-            if (btnPointAt.Text == "Point At")
+            if (type.IsInstanceOfType(prim)) return prim;
+            foreach (PropertyInfo o in prim.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
-                instance.State.SetPointing(currentPrim, 3);
-                btnPointAt.Text = "Unpoint";
+                if (o.CanRead)
+                {
+                    if (type.IsAssignableFrom(o.PropertyType)) return o.GetValue(prim, null);
+                }
             }
-            else if (btnPointAt.Text == "Unpoint")
+            foreach (FieldInfo o in prim.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
-                instance.State.UnSetPointing();
-                btnPointAt.Text = "Point At";
+                if (!o.IsStatic)
+                {
+                    if (type.IsAssignableFrom(o.FieldType)) return o.GetValue(prim);
+                }
             }
+            return null;
+
         }
 
-        private void btnSource_Click(object sender, EventArgs e)
-        {
-            instance.State.EffectSource = currentPrim.ID;
-        }
-
-
-        private void btnSitOn_Click(object sender, EventArgs e)
-        {
-            if (btnSitOn.Text == "Sit On")
-            {
-                instance.State.SetSitting(true, currentPrim.ID);
-                btnSitOn.Text = "Stand Up";
-            }
-            else if (btnSitOn.Text == "Stand Up")
-            {
-                instance.State.SetSitting(false, currentPrim.ID);
-                btnSitOn.Text = "Sit On";
-            }
-        }
-
-        private void btnTouch_Click(object sender, EventArgs e)
-        {
-            client.Self.Touch(currentPrim.LocalID);
-        }
 
         private void txtSearch_TextChanged(object sender, EventArgs e)
         {
@@ -524,7 +517,7 @@ namespace CogbotRadegastPluginModule
         {
             if (lstPrims.SelectedItems.Count == 1)
             {
-                gbxInworld.Enabled = true;
+                //gbxInworld.Enabled = true;
                 currentItem = lstPrims.SelectedItems[0];
                 SimObject currentSim = currentItem.Tag as SimObject;
                 if (currentSim != null)
@@ -537,7 +530,7 @@ namespace CogbotRadegastPluginModule
                     return;
                 }
           
-                btnBuy.Tag = currentPrim;
+                //btnBuy.Tag = currentPrim;
 
                 if (currentPrim.Properties == null)
                 {
@@ -548,7 +541,7 @@ namespace CogbotRadegastPluginModule
             }
             else
             {
-                gbxInworld.Enabled = false;
+                //gbxInworld.Enabled = false;
             }
         }
 
@@ -581,19 +574,13 @@ namespace CogbotRadegastPluginModule
             btnRefresh_Click(null, null);
         }
 
-        private void btnBuy_Click(object sender, EventArgs e)
-        {
-            if (lstPrims.SelectedItems.Count != 1) return;
-            btnBuy.Enabled = false;
-            client.Objects.BuyObject(client.Network.CurrentSim, currentPrim.LocalID, currentPrim.Properties.SaleType, currentPrim.Properties.SalePrice, client.Self.ActiveGroup, client.Inventory.FindFolderForType(AssetType.Object));
-        }
 
         private void rbDistance_CheckedChanged(object sender, EventArgs e)
         {
             if (rbDistance.Checked)
             {
                 lstPrims.BeginUpdate();
-                ((ObjectSorter)lstPrims.ListViewItemSorter).SortByName = false;
+                ((SimObjectSorter)lstPrims.ListViewItemSorter).SortByName = false;
                 lstPrims.Sort();
                 lstPrims.EndUpdate();
             }
@@ -604,7 +591,7 @@ namespace CogbotRadegastPluginModule
             if (rbName.Checked)
             {
                 lstPrims.BeginUpdate();
-                ((ObjectSorter)lstPrims.ListViewItemSorter).SortByName = true;
+                ((SimObjectSorter)lstPrims.ListViewItemSorter).SortByName = true;
                 lstPrims.Sort();
                 lstPrims.EndUpdate();
             }
@@ -636,16 +623,6 @@ namespace CogbotRadegastPluginModule
             {
                 Invoke(new MethodInvoker(delegate() { State_OnWalkStateCanged(walking); }));
                 return;
-            }
-
-            if (walking)
-            {
-                btnWalkTo.Text = "Stop";
-            }
-            else
-            {
-                btnWalkTo.Text = "Walk to";
-                btnRefresh_Click(null, null);
             }
         }
 
@@ -690,7 +667,7 @@ namespace CogbotRadegastPluginModule
                 e.Cancel = true;
                 return;
             }
-            instance.ContextActionManager.AddContributions(ctxMenuObjects, typeof(SimObject), lstPrims.SelectedItems[0].Tag, btnWalkTo.Parent);
+            instance.ContextActionManager.AddContributions(ctxMenuObjects, typeof(SimObject), lstPrims.SelectedItems[0].Tag);//, btnWalkTo.Parent);
         }
 
         public RadegastContextMenuStrip GetContextMenu()
@@ -711,31 +688,42 @@ namespace CogbotRadegastPluginModule
             btnRefresh_Click(null, null);
         }
 
-        private void searchOptions_Paint(object sender, PaintEventArgs e)
-        {
-
-        }
-
-        private void nudRadius_ValueChanged_1(object sender, EventArgs e)
-        {
-
-        }
 
         private void txtDescription_TextChanged(object sender, EventArgs e)
         {
             txtDescription.ToString();
         }
 
+        private void AddMember(MemberInfo info)
+        {
+            if (info.Name.StartsWith("_") || info.Name.StartsWith("<")) return;
+            MemberInfoControl lblPrimType = MemberInfoControl.GetPropertyController(info);
+            if (lblPrimType != null)
+            {
+                this.grpPrimInfo.Controls.Add(lblPrimType.Control);
+            }
+        }
+
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void flowLayoutPanel1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
     }
 
-    public class ObjectSorter : IComparer
+    public class SimObjectSorter : IComparer
     {
         private AgentManager me;
         private bool sortByName = false;
 
         public bool SortByName { get { return sortByName; } set { sortByName = value; } }
 
-        public ObjectSorter(AgentManager me)
+        public SimObjectSorter(AgentManager me)
         {
             this.me = me;
         }
@@ -769,74 +757,6 @@ namespace CogbotRadegastPluginModule
                 return 1;
             }
        }
-    }
-
-    public class PropertiesQueue : IDisposable
-    {
-        Object sync = new Object();
-        RadegastInstance instance;
-        System.Timers.Timer qTimer;
-        Queue<uint> props = new Queue<uint>();
-        List<uint> prims = new List<uint>();
-
-        public delegate void TickCallback(int remaining);
-        public event TickCallback OnTick;
-
-        public PropertiesQueue(RadegastInstance instance)
-        {
-            this.instance = instance;
-            qTimer = new System.Timers.Timer(1500);
-            qTimer.Enabled = true;
-            qTimer.Elapsed += new ElapsedEventHandler(qTimer_Elapsed);
-        }
-
-        public void RequestProps(uint localID)
-        {
-            lock (sync)
-            {
-                if (!props.Contains(localID))
-                {
-                    props.Enqueue(localID);
-                }
-            }
-        }
-
-        void qTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            lock (sync)
-            {
-                if (prims.Count > 0)
-                {
-                    instance.Client.Objects.DeselectObjects(instance.Client.Network.CurrentSim, prims.ToArray());
-                    prims.Clear();
-                }
-
-                for (int i = 0; i < 50 && props.Count > 0; i++)
-                {
-                    prims.Add(props.Dequeue());
-                }
-
-                if (prims.Count > 0)
-                {
-                    instance.Client.Objects.SelectObjects(instance.Client.Network.CurrentSim, prims.ToArray(), false);
-                    prims.Clear();
-                }
-
-                if (OnTick != null)
-                {
-                    OnTick(props.Count);
-                }
-            }
-        }
-
-        public void Dispose()
-        {
-            qTimer.Elapsed -= new ElapsedEventHandler(qTimer_Elapsed);
-            qTimer.Enabled = false;
-            qTimer = null;
-            props = null;
-            instance = null;
-        }
     }
 
 }

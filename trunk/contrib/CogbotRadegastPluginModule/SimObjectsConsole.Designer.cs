@@ -62,22 +62,22 @@ namespace CogbotRadegastPluginModule
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SimObjectsConsole));
-            this.gbxInworld = new System.Windows.Forms.GroupBox();
-            this.btnWalkTo = new System.Windows.Forms.Button();
-            this.btnTurnTo = new System.Windows.Forms.Button();
-            this.btnBuy = new System.Windows.Forms.Button();
-            this.btnView = new System.Windows.Forms.Button();
-            this.btnPay = new System.Windows.Forms.Button();
-            this.btnSource = new System.Windows.Forms.Button();
-            this.btnTouch = new System.Windows.Forms.Button();
-            this.btnSitOn = new System.Windows.Forms.Button();
-            this.btnPointAt = new System.Windows.Forms.Button();
-            this.txtSearch = new System.Windows.Forms.TextBox();
-            this.btnClear = new System.Windows.Forms.Button();
             this.btnRefresh = new System.Windows.Forms.Button();
-            this.nudRadius = new System.Windows.Forms.NumericUpDown();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.gbxInWorld = new System.Windows.Forms.GroupBox();
+            this.txtSearch = new System.Windows.Forms.TextBox();
+            this.rbName = new System.Windows.Forms.RadioButton();
+            this.rbDistance = new System.Windows.Forms.RadioButton();
+            this.nudRadius = new System.Windows.Forms.NumericUpDown();
+            this.btnClear = new System.Windows.Forms.Button();
+            this.lstPrims = new Radegast.ListViewNoFlicker();
+            this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
+            this.ctxMenuObjects = new Radegast.RadegastContextMenuStrip(this.components);
+            this.tabSimObjeks = new System.Windows.Forms.TabControl();
+            this.tabSimOjbectDetail = new System.Windows.Forms.TabPage();
+            this.grpPrimInfo = new System.Windows.Forms.FlowLayoutPanel();
             this.gbxObjectDetails = new System.Windows.Forms.GroupBox();
             this.cbNextOwnTransfer = new System.Windows.Forms.CheckBox();
             this.cbNextOwnCopy = new System.Windows.Forms.CheckBox();
@@ -86,6 +86,8 @@ namespace CogbotRadegastPluginModule
             this.cbOwnerCopy = new System.Windows.Forms.CheckBox();
             this.cbOwnerModify = new System.Windows.Forms.CheckBox();
             this.txtPrims = new System.Windows.Forms.TextBox();
+            this.txtCreator = new Radegast.AgentNameTextBox();
+            this.txtOwner = new Radegast.AgentNameTextBox();
             this.txtHover = new System.Windows.Forms.TextBox();
             this.txtDescription = new System.Windows.Forms.TextBox();
             this.txtObjectName = new System.Windows.Forms.TextBox();
@@ -97,155 +99,26 @@ namespace CogbotRadegastPluginModule
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.lblName = new System.Windows.Forms.Label();
+            this.Filters = new System.Windows.Forms.TabPage();
             this.searchOptions = new System.Windows.Forms.FlowLayoutPanel();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.rbName = new System.Windows.Forms.RadioButton();
-            this.rbDistance = new System.Windows.Forms.RadioButton();
-            this.txtCreator = new Radegast.AgentNameTextBox();
-            this.txtOwner = new Radegast.AgentNameTextBox();
-            this.lstPrims = new Radegast.ListViewNoFlicker();
-            this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
-            this.ctxMenuObjects = new Radegast.RadegastContextMenuStrip(this.components);
-            this.gbxInworld.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudRadius)).BeginInit();
+            this.chkOwnerMove = new System.Windows.Forms.CheckBox();
             this.statusStrip1.SuspendLayout();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
+            this.gbxInWorld.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudRadius)).BeginInit();
+            this.tabSimObjeks.SuspendLayout();
+            this.tabSimOjbectDetail.SuspendLayout();
+            this.grpPrimInfo.SuspendLayout();
             this.gbxObjectDetails.SuspendLayout();
-            this.groupBox1.SuspendLayout();
+            this.Filters.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // gbxInworld
-            // 
-            this.gbxInworld.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.gbxInworld.Controls.Add(this.btnWalkTo);
-            this.gbxInworld.Controls.Add(this.btnTurnTo);
-            this.gbxInworld.Controls.Add(this.btnBuy);
-            this.gbxInworld.Controls.Add(this.btnView);
-            this.gbxInworld.Controls.Add(this.btnPay);
-            this.gbxInworld.Controls.Add(this.btnSource);
-            this.gbxInworld.Controls.Add(this.btnTouch);
-            this.gbxInworld.Controls.Add(this.btnSitOn);
-            this.gbxInworld.Controls.Add(this.btnPointAt);
-            this.gbxInworld.Enabled = false;
-            this.gbxInworld.Location = new System.Drawing.Point(384, 63);
-            this.gbxInworld.Name = "gbxInworld";
-            this.gbxInworld.Size = new System.Drawing.Size(255, 101);
-            this.gbxInworld.TabIndex = 2;
-            this.gbxInworld.TabStop = false;
-            this.gbxInworld.Text = "In-world";
-            // 
-            // btnWalkTo
-            // 
-            this.btnWalkTo.Location = new System.Drawing.Point(89, 78);
-            this.btnWalkTo.Name = "btnWalkTo";
-            this.btnWalkTo.Size = new System.Drawing.Size(75, 23);
-            this.btnWalkTo.TabIndex = 11;
-            this.btnWalkTo.Text = "Walk to";
-            this.btnWalkTo.UseVisualStyleBackColor = true;
-            this.btnWalkTo.Click += new System.EventHandler(this.btnWalkTo_Click);
-            // 
-            // btnTurnTo
-            // 
-            this.btnTurnTo.Location = new System.Drawing.Point(5, 78);
-            this.btnTurnTo.Name = "btnTurnTo";
-            this.btnTurnTo.Size = new System.Drawing.Size(78, 23);
-            this.btnTurnTo.TabIndex = 10;
-            this.btnTurnTo.Text = "Turn to";
-            this.btnTurnTo.UseVisualStyleBackColor = true;
-            this.btnTurnTo.Click += new System.EventHandler(this.btnTurnTo_Click);
-            // 
-            // btnBuy
-            // 
-            this.btnBuy.Enabled = false;
-            this.btnBuy.Location = new System.Drawing.Point(172, 20);
-            this.btnBuy.Name = "btnBuy";
-            this.btnBuy.Size = new System.Drawing.Size(77, 23);
-            this.btnBuy.TabIndex = 6;
-            this.btnBuy.Text = "Buy";
-            this.btnBuy.UseVisualStyleBackColor = true;
-            this.btnBuy.Click += new System.EventHandler(this.btnBuy_Click);
-            // 
-            // btnView
-            // 
-            this.btnView.Location = new System.Drawing.Point(172, 78);
-            this.btnView.Name = "btnView";
-            this.btnView.Size = new System.Drawing.Size(77, 23);
-            this.btnView.TabIndex = 12;
-            this.btnView.Text = "3D Wireframe";
-            this.btnView.UseVisualStyleBackColor = true;
-            this.btnView.Click += new System.EventHandler(this.btnView_Click);
-            // 
-            // btnPay
-            // 
-            this.btnPay.Location = new System.Drawing.Point(89, 20);
-            this.btnPay.Name = "btnPay";
-            this.btnPay.Size = new System.Drawing.Size(77, 23);
-            this.btnPay.TabIndex = 5;
-            this.btnPay.Text = "Pay";
-            this.btnPay.UseVisualStyleBackColor = true;
-            this.btnPay.Click += new System.EventHandler(this.btnPay_Click);
-            // 
-            // btnSource
-            // 
-            this.btnSource.Location = new System.Drawing.Point(172, 49);
-            this.btnSource.Name = "btnSource";
-            this.btnSource.Size = new System.Drawing.Size(77, 23);
-            this.btnSource.TabIndex = 9;
-            this.btnSource.Text = "Set source";
-            this.btnSource.UseVisualStyleBackColor = true;
-            this.btnSource.Click += new System.EventHandler(this.btnSource_Click);
-            // 
-            // btnTouch
-            // 
-            this.btnTouch.Location = new System.Drawing.Point(6, 20);
-            this.btnTouch.Name = "btnTouch";
-            this.btnTouch.Size = new System.Drawing.Size(77, 23);
-            this.btnTouch.TabIndex = 4;
-            this.btnTouch.Text = "Touch/Click";
-            this.btnTouch.UseVisualStyleBackColor = true;
-            this.btnTouch.Click += new System.EventHandler(this.btnTouch_Click);
-            // 
-            // btnSitOn
-            // 
-            this.btnSitOn.Location = new System.Drawing.Point(6, 49);
-            this.btnSitOn.Name = "btnSitOn";
-            this.btnSitOn.Size = new System.Drawing.Size(77, 23);
-            this.btnSitOn.TabIndex = 7;
-            this.btnSitOn.Text = "Sit On";
-            this.btnSitOn.UseVisualStyleBackColor = true;
-            this.btnSitOn.Click += new System.EventHandler(this.btnSitOn_Click);
-            // 
-            // btnPointAt
-            // 
-            this.btnPointAt.Location = new System.Drawing.Point(89, 49);
-            this.btnPointAt.Name = "btnPointAt";
-            this.btnPointAt.Size = new System.Drawing.Size(75, 23);
-            this.btnPointAt.TabIndex = 8;
-            this.btnPointAt.Text = "Point At";
-            this.btnPointAt.UseVisualStyleBackColor = true;
-            this.btnPointAt.Click += new System.EventHandler(this.btnPointAt_Click);
-            // 
-            // txtSearch
-            // 
-            this.txtSearch.Location = new System.Drawing.Point(167, 13);
-            this.txtSearch.Name = "txtSearch";
-            this.txtSearch.Size = new System.Drawing.Size(149, 21);
-            this.txtSearch.TabIndex = 0;
-            this.txtSearch.TextChanged += new System.EventHandler(this.txtSearch_TextChanged);
-            // 
-            // btnClear
-            // 
-            this.btnClear.Location = new System.Drawing.Point(322, 11);
-            this.btnClear.Name = "btnClear";
-            this.btnClear.Size = new System.Drawing.Size(43, 23);
-            this.btnClear.TabIndex = 2;
-            this.btnClear.Text = "Clear";
-            this.btnClear.UseVisualStyleBackColor = true;
-            this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
             // 
             // btnRefresh
             // 
             this.btnRefresh.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnRefresh.Location = new System.Drawing.Point(539, 369);
+            this.btnRefresh.Location = new System.Drawing.Point(721, 442);
             this.btnRefresh.Name = "btnRefresh";
             this.btnRefresh.Size = new System.Drawing.Size(100, 23);
             this.btnRefresh.TabIndex = 11;
@@ -253,37 +126,13 @@ namespace CogbotRadegastPluginModule
             this.btnRefresh.UseVisualStyleBackColor = true;
             this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
-            // nudRadius
-            // 
-            this.nudRadius.Increment = new decimal(new int[] {
-            5,
-            0,
-            0,
-            0});
-            this.nudRadius.Location = new System.Drawing.Point(6, 13);
-            this.nudRadius.Maximum = new decimal(new int[] {
-            1000,
-            0,
-            0,
-            0});
-            this.nudRadius.Name = "nudRadius";
-            this.nudRadius.Size = new System.Drawing.Size(51, 21);
-            this.nudRadius.TabIndex = 3;
-            this.nudRadius.Value = new decimal(new int[] {
-            10,
-            0,
-            0,
-            0});
-            this.nudRadius.KeyUp += new System.Windows.Forms.KeyEventHandler(this.nudRadius_KeyUp);
-            this.nudRadius.KeyDown += new System.Windows.Forms.KeyEventHandler(this.nudRadius_KeyDown);
-            // 
             // statusStrip1
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.lblStatus});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 395);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 468);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(651, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(833, 22);
             this.statusStrip1.TabIndex = 15;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -293,9 +142,173 @@ namespace CogbotRadegastPluginModule
             this.lblStatus.Size = new System.Drawing.Size(59, 17);
             this.lblStatus.Text = "Tracking...";
             // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.gbxInWorld);
+            this.splitContainer1.Panel1.Controls.Add(this.lstPrims);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.tabSimObjeks);
+            this.splitContainer1.Size = new System.Drawing.Size(833, 468);
+            this.splitContainer1.SplitterDistance = 422;
+            this.splitContainer1.TabIndex = 19;
+            // 
+            // gbxInWorld
+            // 
+            this.gbxInWorld.Controls.Add(this.txtSearch);
+            this.gbxInWorld.Controls.Add(this.rbName);
+            this.gbxInWorld.Controls.Add(this.rbDistance);
+            this.gbxInWorld.Controls.Add(this.nudRadius);
+            this.gbxInWorld.Controls.Add(this.btnClear);
+            this.gbxInWorld.Dock = System.Windows.Forms.DockStyle.Top;
+            this.gbxInWorld.Location = new System.Drawing.Point(0, 0);
+            this.gbxInWorld.Name = "gbxInWorld";
+            this.gbxInWorld.Size = new System.Drawing.Size(422, 37);
+            this.gbxInWorld.TabIndex = 19;
+            this.gbxInWorld.TabStop = false;
+            this.gbxInWorld.Text = "Sort by";
+            // 
+            // txtSearch
+            // 
+            this.txtSearch.Location = new System.Drawing.Point(55, 12);
+            this.txtSearch.Name = "txtSearch";
+            this.txtSearch.Size = new System.Drawing.Size(158, 21);
+            this.txtSearch.TabIndex = 0;
+            this.txtSearch.TextChanged += new System.EventHandler(this.txtSearch_TextChanged);
+            // 
+            // rbName
+            // 
+            this.rbName.AutoSize = true;
+            this.rbName.Location = new System.Drawing.Point(3, 16);
+            this.rbName.Name = "rbName";
+            this.rbName.Size = new System.Drawing.Size(52, 17);
+            this.rbName.TabIndex = 0;
+            this.rbName.Text = "Name";
+            this.rbName.UseVisualStyleBackColor = true;
+            this.rbName.CheckedChanged += new System.EventHandler(this.rbName_CheckedChanged);
+            // 
+            // rbDistance
+            // 
+            this.rbDistance.AutoSize = true;
+            this.rbDistance.Checked = true;
+            this.rbDistance.Location = new System.Drawing.Point(325, 12);
+            this.rbDistance.Name = "rbDistance";
+            this.rbDistance.Size = new System.Drawing.Size(58, 17);
+            this.rbDistance.TabIndex = 0;
+            this.rbDistance.TabStop = true;
+            this.rbDistance.Text = "meters";
+            this.rbDistance.UseVisualStyleBackColor = true;
+            this.rbDistance.CheckedChanged += new System.EventHandler(this.rbDistance_CheckedChanged);
+            // 
+            // nudRadius
+            // 
+            this.nudRadius.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.nudRadius.Location = new System.Drawing.Point(268, 12);
+            this.nudRadius.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.nudRadius.Name = "nudRadius";
+            this.nudRadius.Size = new System.Drawing.Size(51, 21);
+            this.nudRadius.TabIndex = 3;
+            this.nudRadius.ThousandsSeparator = true;
+            this.nudRadius.Value = new decimal(new int[] {
+            10,
+            0,
+            0,
+            0});
+            // 
+            // btnClear
+            // 
+            this.btnClear.Location = new System.Drawing.Point(219, 10);
+            this.btnClear.Name = "btnClear";
+            this.btnClear.Size = new System.Drawing.Size(43, 23);
+            this.btnClear.TabIndex = 2;
+            this.btnClear.Text = "Clear";
+            this.btnClear.UseVisualStyleBackColor = true;
+            // 
+            // lstPrims
+            // 
+            this.lstPrims.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.lstPrims.AutoArrange = false;
+            this.lstPrims.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader1});
+            this.lstPrims.ContextMenuStrip = this.ctxMenuObjects;
+            this.lstPrims.FullRowSelect = true;
+            this.lstPrims.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.lstPrims.HideSelection = false;
+            this.lstPrims.LabelWrap = false;
+            this.lstPrims.Location = new System.Drawing.Point(-3, 41);
+            this.lstPrims.MultiSelect = false;
+            this.lstPrims.Name = "lstPrims";
+            this.lstPrims.ShowGroups = false;
+            this.lstPrims.Size = new System.Drawing.Size(422, 429);
+            this.lstPrims.TabIndex = 11;
+            this.lstPrims.UseCompatibleStateImageBehavior = false;
+            this.lstPrims.View = System.Windows.Forms.View.Details;
+            this.lstPrims.SelectedIndexChanged += new System.EventHandler(this.lstPrims_SelectedIndexChanged);
+            // 
+            // columnHeader1
+            // 
+            this.columnHeader1.Width = 340;
+            // 
+            // ctxMenuObjects
+            // 
+            this.ctxMenuObjects.Name = "ctxMenuObjects";
+            this.ctxMenuObjects.Size = new System.Drawing.Size(61, 4);
+            this.ctxMenuObjects.Opening += new System.ComponentModel.CancelEventHandler(this.ctxMenuObjects_Opening);
+            // 
+            // tabSimObjeks
+            // 
+            this.tabSimObjeks.Controls.Add(this.tabSimOjbectDetail);
+            this.tabSimObjeks.Controls.Add(this.Filters);
+            this.tabSimObjeks.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabSimObjeks.Location = new System.Drawing.Point(0, 0);
+            this.tabSimObjeks.Name = "tabSimObjeks";
+            this.tabSimObjeks.SelectedIndex = 0;
+            this.tabSimObjeks.Size = new System.Drawing.Size(407, 468);
+            this.tabSimObjeks.TabIndex = 0;
+            // 
+            // tabSimOjbectDetail
+            // 
+            this.tabSimOjbectDetail.Controls.Add(this.grpPrimInfo);
+            this.tabSimOjbectDetail.Location = new System.Drawing.Point(4, 22);
+            this.tabSimOjbectDetail.Name = "tabSimOjbectDetail";
+            this.tabSimOjbectDetail.Padding = new System.Windows.Forms.Padding(3);
+            this.tabSimOjbectDetail.Size = new System.Drawing.Size(399, 442);
+            this.tabSimOjbectDetail.TabIndex = 0;
+            this.tabSimOjbectDetail.Text = "Object";
+            this.tabSimOjbectDetail.UseVisualStyleBackColor = true;
+            // 
+            // grpPrimInfo
+            // 
+            this.grpPrimInfo.Controls.Add(this.gbxObjectDetails);
+            this.grpPrimInfo.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.grpPrimInfo.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
+            this.grpPrimInfo.Location = new System.Drawing.Point(3, 3);
+            this.grpPrimInfo.Name = "grpPrimInfo";
+            this.grpPrimInfo.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.grpPrimInfo.Size = new System.Drawing.Size(393, 436);
+            this.grpPrimInfo.TabIndex = 20;
+            this.grpPrimInfo.Text = "Object Info";
+            // 
             // gbxObjectDetails
             // 
-            this.gbxObjectDetails.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.gbxObjectDetails.Controls.Add(this.chkOwnerMove);
             this.gbxObjectDetails.Controls.Add(this.cbNextOwnTransfer);
             this.gbxObjectDetails.Controls.Add(this.cbNextOwnCopy);
             this.gbxObjectDetails.Controls.Add(this.cbOwnerTransfer);
@@ -316,10 +329,10 @@ namespace CogbotRadegastPluginModule
             this.gbxObjectDetails.Controls.Add(this.label3);
             this.gbxObjectDetails.Controls.Add(this.label2);
             this.gbxObjectDetails.Controls.Add(this.lblName);
-            this.gbxObjectDetails.Location = new System.Drawing.Point(384, 167);
+            this.gbxObjectDetails.Location = new System.Drawing.Point(3, 3);
             this.gbxObjectDetails.Name = "gbxObjectDetails";
-            this.gbxObjectDetails.Size = new System.Drawing.Size(255, 187);
-            this.gbxObjectDetails.TabIndex = 16;
+            this.gbxObjectDetails.Size = new System.Drawing.Size(310, 187);
+            this.gbxObjectDetails.TabIndex = 18;
             this.gbxObjectDetails.TabStop = false;
             this.gbxObjectDetails.Text = "Object details";
             // 
@@ -392,6 +405,26 @@ namespace CogbotRadegastPluginModule
             this.txtPrims.Size = new System.Drawing.Size(54, 21);
             this.txtPrims.TabIndex = 5;
             // 
+            // txtCreator
+            // 
+            this.txtCreator.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtCreator.AgentID")));
+            this.txtCreator.BackColor = System.Drawing.SystemColors.Window;
+            this.txtCreator.Location = new System.Drawing.Point(61, 116);
+            this.txtCreator.Name = "txtCreator";
+            this.txtCreator.ReadOnly = true;
+            this.txtCreator.Size = new System.Drawing.Size(130, 21);
+            this.txtCreator.TabIndex = 5;
+            // 
+            // txtOwner
+            // 
+            this.txtOwner.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtOwner.AgentID")));
+            this.txtOwner.BackColor = System.Drawing.SystemColors.Window;
+            this.txtOwner.Location = new System.Drawing.Point(61, 91);
+            this.txtOwner.Name = "txtOwner";
+            this.txtOwner.ReadOnly = true;
+            this.txtOwner.Size = new System.Drawing.Size(130, 21);
+            this.txtOwner.TabIndex = 4;
+            // 
             // txtHover
             // 
             this.txtHover.Location = new System.Drawing.Point(61, 66);
@@ -405,7 +438,6 @@ namespace CogbotRadegastPluginModule
             this.txtDescription.Name = "txtDescription";
             this.txtDescription.Size = new System.Drawing.Size(188, 21);
             this.txtDescription.TabIndex = 2;
-            this.txtDescription.TextChanged += new System.EventHandler(this.txtDescription_TextChanged);
             // 
             // txtObjectName
             // 
@@ -486,133 +518,64 @@ namespace CogbotRadegastPluginModule
             this.lblName.TabIndex = 0;
             this.lblName.Text = "Name";
             // 
+            // Filters
+            // 
+            this.Filters.Controls.Add(this.searchOptions);
+            this.Filters.Location = new System.Drawing.Point(4, 22);
+            this.Filters.Name = "Filters";
+            this.Filters.Padding = new System.Windows.Forms.Padding(3);
+            this.Filters.Size = new System.Drawing.Size(399, 442);
+            this.Filters.TabIndex = 1;
+            this.Filters.Text = "Filters";
+            this.Filters.UseVisualStyleBackColor = true;
+            // 
             // searchOptions
             // 
-            this.searchOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Right)));
             this.searchOptions.AutoSize = true;
+            this.searchOptions.Dock = System.Windows.Forms.DockStyle.Fill;
             this.searchOptions.FlowDirection = System.Windows.Forms.FlowDirection.BottomUp;
-            this.searchOptions.Location = new System.Drawing.Point(384, 10);
+            this.searchOptions.Location = new System.Drawing.Point(3, 3);
             this.searchOptions.Name = "searchOptions";
-            this.searchOptions.Size = new System.Drawing.Size(255, 154);
-            this.searchOptions.TabIndex = 17;
-            this.searchOptions.Paint += new System.Windows.Forms.PaintEventHandler(this.searchOptions_Paint);
+            this.searchOptions.Size = new System.Drawing.Size(393, 436);
+            this.searchOptions.TabIndex = 18;
             // 
-            // groupBox1
+            // chkOwnerMove
             // 
-            this.groupBox1.Controls.Add(this.txtSearch);
-            this.groupBox1.Controls.Add(this.rbName);
-            this.groupBox1.Controls.Add(this.rbDistance);
-            this.groupBox1.Controls.Add(this.nudRadius);
-            this.groupBox1.Controls.Add(this.btnClear);
-            this.groupBox1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.groupBox1.Location = new System.Drawing.Point(0, 0);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(651, 37);
-            this.groupBox1.TabIndex = 18;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Sort by";
-            // 
-            // rbName
-            // 
-            this.rbName.AutoSize = true;
-            this.rbName.Location = new System.Drawing.Point(118, 14);
-            this.rbName.Name = "rbName";
-            this.rbName.Size = new System.Drawing.Size(52, 17);
-            this.rbName.TabIndex = 0;
-            this.rbName.Text = "Name";
-            this.rbName.UseVisualStyleBackColor = true;
-            // 
-            // rbDistance
-            // 
-            this.rbDistance.AutoSize = true;
-            this.rbDistance.Checked = true;
-            this.rbDistance.Location = new System.Drawing.Point(63, 14);
-            this.rbDistance.Name = "rbDistance";
-            this.rbDistance.Size = new System.Drawing.Size(58, 17);
-            this.rbDistance.TabIndex = 0;
-            this.rbDistance.TabStop = true;
-            this.rbDistance.Text = "meters";
-            this.rbDistance.UseVisualStyleBackColor = true;
-            // 
-            // txtCreator
-            // 
-            this.txtCreator.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtCreator.AgentID")));
-            this.txtCreator.BackColor = System.Drawing.SystemColors.Window;
-            this.txtCreator.Location = new System.Drawing.Point(61, 116);
-            this.txtCreator.Name = "txtCreator";
-            this.txtCreator.ReadOnly = true;
-            this.txtCreator.Size = new System.Drawing.Size(130, 21);
-            this.txtCreator.TabIndex = 5;
-            // 
-            // txtOwner
-            // 
-            this.txtOwner.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtOwner.AgentID")));
-            this.txtOwner.BackColor = System.Drawing.SystemColors.Window;
-            this.txtOwner.Location = new System.Drawing.Point(61, 91);
-            this.txtOwner.Name = "txtOwner";
-            this.txtOwner.ReadOnly = true;
-            this.txtOwner.Size = new System.Drawing.Size(130, 21);
-            this.txtOwner.TabIndex = 4;
-            // 
-            // lstPrims
-            // 
-            this.lstPrims.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.lstPrims.AutoArrange = false;
-            this.lstPrims.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader1});
-            this.lstPrims.ContextMenuStrip = this.ctxMenuObjects;
-            this.lstPrims.FullRowSelect = true;
-            this.lstPrims.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.lstPrims.HideSelection = false;
-            this.lstPrims.LabelWrap = false;
-            this.lstPrims.Location = new System.Drawing.Point(9, 39);
-            this.lstPrims.MultiSelect = false;
-            this.lstPrims.Name = "lstPrims";
-            this.lstPrims.ShowGroups = false;
-            this.lstPrims.Size = new System.Drawing.Size(369, 353);
-            this.lstPrims.TabIndex = 10;
-            this.lstPrims.UseCompatibleStateImageBehavior = false;
-            this.lstPrims.View = System.Windows.Forms.View.Details;
-            this.lstPrims.SelectedIndexChanged += new System.EventHandler(this.lstPrims_SelectedIndexChanged);
-            this.lstPrims.MouseUp += new System.Windows.Forms.MouseEventHandler(this.lstPrims_MouseUp);
-            // 
-            // columnHeader1
-            // 
-            this.columnHeader1.Width = 340;
-            // 
-            // ctxMenuObjects
-            // 
-            this.ctxMenuObjects.Name = "ctxMenuObjects";
-            this.ctxMenuObjects.Size = new System.Drawing.Size(61, 4);
-            this.ctxMenuObjects.Opening += new System.ComponentModel.CancelEventHandler(this.ctxMenuObjects_Opening);
+            this.chkOwnerMove.AutoSize = true;
+            this.chkOwnerMove.Location = new System.Drawing.Point(250, 143);
+            this.chkOwnerMove.Name = "chkOwnerMove";
+            this.chkOwnerMove.Size = new System.Drawing.Size(52, 17);
+            this.chkOwnerMove.TabIndex = 7;
+            this.chkOwnerMove.Text = "Move";
+            this.chkOwnerMove.UseVisualStyleBackColor = true;
             // 
             // SimObjectsConsole
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.Controls.Add(this.searchOptions);
-            this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.gbxObjectDetails);
+            this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.statusStrip1);
-            this.Controls.Add(this.lstPrims);
             this.Controls.Add(this.btnRefresh);
-            this.Controls.Add(this.gbxInworld);
             this.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.MinimumSize = new System.Drawing.Size(508, 417);
             this.Name = "SimObjectsConsole";
-            this.Size = new System.Drawing.Size(651, 417);
-            this.gbxInworld.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.nudRadius)).EndInit();
+            this.Size = new System.Drawing.Size(833, 490);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            this.splitContainer1.ResumeLayout(false);
+            this.gbxInWorld.ResumeLayout(false);
+            this.gbxInWorld.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudRadius)).EndInit();
+            this.tabSimObjeks.ResumeLayout(false);
+            this.tabSimOjbectDetail.ResumeLayout(false);
+            this.grpPrimInfo.ResumeLayout(false);
             this.gbxObjectDetails.ResumeLayout(false);
             this.gbxObjectDetails.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
+            this.Filters.ResumeLayout(false);
+            this.Filters.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -620,50 +583,46 @@ namespace CogbotRadegastPluginModule
 
         #endregion
 
-        private System.Windows.Forms.GroupBox gbxInworld;
-        private System.Windows.Forms.Button btnSitOn;
-        private System.Windows.Forms.Button btnPointAt;
-        private System.Windows.Forms.Button btnTouch;
-        private System.Windows.Forms.TextBox txtSearch;
-        private System.Windows.Forms.Button btnClear;
-        private Radegast.ListViewNoFlicker lstPrims;
-        private System.Windows.Forms.ColumnHeader columnHeader1;
         private System.Windows.Forms.Button btnRefresh;
-        private System.Windows.Forms.Button btnSource;
-        private System.Windows.Forms.Button btnPay;
-        private System.Windows.Forms.Button btnView;
-        private System.Windows.Forms.NumericUpDown nudRadius;
-        private System.Windows.Forms.Button btnBuy;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel lblStatus;
-        private System.Windows.Forms.Button btnWalkTo;
-        private System.Windows.Forms.Button btnTurnTo;
+        private RadegastContextMenuStrip ctxMenuObjects;
+        private System.Windows.Forms.SplitContainer splitContainer1;
+        private ListViewNoFlicker lstPrims;
+        private System.Windows.Forms.ColumnHeader columnHeader1;
+        private System.Windows.Forms.TabControl tabSimObjeks;
+        private System.Windows.Forms.TabPage tabSimOjbectDetail;
+        private System.Windows.Forms.TabPage Filters;
+        private System.Windows.Forms.FlowLayoutPanel searchOptions;
+        private System.Windows.Forms.GroupBox gbxInWorld;
+        private System.Windows.Forms.TextBox txtSearch;
+        private System.Windows.Forms.RadioButton rbName;
+        private System.Windows.Forms.RadioButton rbDistance;
+        private System.Windows.Forms.NumericUpDown nudRadius;
+        private System.Windows.Forms.Button btnClear;
+        private System.Windows.Forms.FlowLayoutPanel grpPrimInfo;
         private System.Windows.Forms.GroupBox gbxObjectDetails;
-        private System.Windows.Forms.Label lblName;
+        private System.Windows.Forms.CheckBox cbNextOwnTransfer;
+        private System.Windows.Forms.CheckBox cbNextOwnCopy;
+        private System.Windows.Forms.CheckBox cbOwnerTransfer;
+        private System.Windows.Forms.CheckBox cbNextOwnModify;
+        private System.Windows.Forms.CheckBox cbOwnerCopy;
+        private System.Windows.Forms.CheckBox cbOwnerModify;
+        private System.Windows.Forms.TextBox txtPrims;
+        private AgentNameTextBox txtCreator;
+        private AgentNameTextBox txtOwner;
+        private System.Windows.Forms.TextBox txtHover;
         private System.Windows.Forms.TextBox txtDescription;
         private System.Windows.Forms.TextBox txtObjectName;
-        private System.Windows.Forms.TextBox txtHover;
-        private System.Windows.Forms.Label label2;
-        private Radegast.AgentNameTextBox txtCreator;
-        private Radegast.AgentNameTextBox txtOwner;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.CheckBox cbOwnerTransfer;
-        private System.Windows.Forms.CheckBox cbOwnerCopy;
-        private System.Windows.Forms.CheckBox cbOwnerModify;
-        private System.Windows.Forms.CheckBox cbNextOwnTransfer;
-        private System.Windows.Forms.CheckBox cbNextOwnCopy;
-        private System.Windows.Forms.CheckBox cbNextOwnModify;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.TextBox txtPrims;
-        private RadegastContextMenuStrip ctxMenuObjects;
-        private System.Windows.Forms.FlowLayoutPanel searchOptions;
-        private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.RadioButton rbName;
-        private System.Windows.Forms.RadioButton rbDistance;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label lblName;
+        private System.Windows.Forms.CheckBox chkOwnerMove;
     
     }
 }
