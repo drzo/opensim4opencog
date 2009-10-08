@@ -15,7 +15,7 @@ namespace cogbot.Actions
             Name = "searchevents";
             Description = "Searches Events list. Usage: searchevents [search text]";
             Category = CommandCategory.Other;
-            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
+            Parameters = new[] { new NamedParam(typeof(GridClient), null) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -39,22 +39,22 @@ namespace cogbot.Actions
                                                                                               {
                                                                                                   foreach (DirectoryManager.EventsSearchData ev in matchedevents)
                                                                                                   {
-                                                                                                     WriteLine("Event ID: {0} Event Name: {1} Event Date: {2}", ev.ID, ev.Name, ev.Date);
+                                                                                                      WriteLine("Event ID: {0} Event Name: {1} Event Date: {2}", ev.ID, ev.Name, ev.Date);
                                                                                                   }
                                                                                               }
                                                                                               resultCount = matchedevents.Count;
                                                                                               waitQuery.Set();
                                                                                           });
             Client.Directory.OnEventsReply += cb;
-            Client.Directory.StartEventsSearch(searchText, true, "u", 0, DirectoryManager.EventCategories.All, UUID.Random());
+            Client.Directory.StartEventsSearch(searchText, 0);//, "u", 0, DirectoryManager.EventCategories.All, UUID.Random());
             string result;
             if (waitQuery.WaitOne(20000, false) && Client.Network.Connected)
             {
-                result =  "$bot's query '" + searchText + "' matched " + resultCount + " Events. ";
+                result = "$bot's query '" + searchText + "' matched " + resultCount + " Events. ";
             }
             else
             {
-                result =  "Timeout waiting for simulator to respond.";
+                result = "Timeout waiting for simulator to respond.";
             }
             Client.Directory.OnEventsReply -= cb;
             return result;
