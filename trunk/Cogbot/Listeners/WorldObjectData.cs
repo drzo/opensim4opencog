@@ -40,7 +40,7 @@ namespace cogbot.Listeners
 
         public override void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties props)
         {
-            throw new InvalidOperationException("Objects_OnObjectProperties");
+            //throw new InvalidOperationException("Objects_OnObjectProperties");
             CheckConnected(simulator);
             //NeverSelect(props.LocalID, simulator);                
             PropertyQueue.Enqueue(delegate() { Objects_OnObjectProperties11(simulator, null, props); });
@@ -49,6 +49,10 @@ namespace cogbot.Listeners
         public void Objects_OnObjectProperties11(Simulator simulator, Primitive prim, Primitive.ObjectProperties props)
         {
             //Primitive prim = GetPrimitive(props.ObjectID, simulator);
+            if (prim == null)
+            {
+                prim = GetPrimitive(props.ObjectID, simulator);
+            }
             if (prim != null)
             {
                 prim.RegionHandle = simulator.Handle;
