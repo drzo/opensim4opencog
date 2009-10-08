@@ -12,7 +12,7 @@ using OpenMetaverse.Assets;
 
 namespace cogbot.ScriptEngines
 {
-    class ScriptEventListener : SimEventSubscriber
+    class ScriptEventListener : SimEventSubscriber, IDisposable
     {
         readonly Queue<KeyValuePair<object, SimObjectEvent>> taskQueue = new Queue<KeyValuePair<object, SimObjectEvent>>();
         private ScriptInterpreter taskInterperter;
@@ -23,7 +23,7 @@ namespace cogbot.ScriptEngines
             taskInterperter = interp;
             taskInterperter.Intern("Client", client);
             taskInterperter.Intern("thisClient", client);
-            if (client!=null) WorldSystem = client.WorldSystem;
+            if (client != null) WorldSystem = client.WorldSystem;
 
             thrJobQueue = new Thread(jobManager);
             thrJobQueue.Name = string.Format("ScriptEventListener Thread for {0}", (client ?? (Object)"ClientManager"));
@@ -32,7 +32,7 @@ namespace cogbot.ScriptEngines
 
         public void jobManager()
         {
-            while (true)
+            while (taskInterperter != null)
             {
                 while (taskQueue.Count > 0)
                 {
@@ -63,9 +63,9 @@ namespace cogbot.ScriptEngines
                 if (taskInterperter.Eof(codeTree))
                     return null;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                Console.WriteLine(lispCode + " -> "+e);
+                Console.WriteLine(lispCode + " -> " + e);
                 return null;
             }
             return codeTree;
@@ -84,7 +84,7 @@ namespace cogbot.ScriptEngines
             Console.WriteLine(":: " + lispCode);
             try
             {
-               enqueueLispTask(taskInterperter.Read("enqueueLispEvent", new StringReader(lispCode)));
+                enqueueLispTask(taskInterperter.Read("enqueueLispEvent", new StringReader(lispCode)));
             }
             catch (Exception e)
             {
@@ -97,12 +97,12 @@ namespace cogbot.ScriptEngines
 
         private KeyValuePair<object, SimObjectEvent> taskFromCodeTree(object lispObject)
         {
-            SimObjectEvent evt = new SimObjectEvent(SimEventType.UNKNOWN, SimEventClass.PERSONAL, "enqueue", new[] { lispObject }); 
+            SimObjectEvent evt = new SimObjectEvent(SimEventType.UNKNOWN, SimEventClass.PERSONAL, "enqueue", new[] { lispObject });
             return new KeyValuePair<object, SimObjectEvent>(lispObject, evt);
         }
 
 
-        static public string argsListString(IEnumerable args)        
+        static public string argsListString(IEnumerable args)
         {
             if (args == null) return "NiL";
             IEnumerator enumer = args.GetEnumerator();
@@ -125,6 +125,10 @@ namespace cogbot.ScriptEngines
             if (arg is BotClient)
             {
                 arg = ((BotClient)arg).GetAvatar();
+                if (arg is BotClient)
+                {
+                    return ((BotClient)arg).ToString();
+                }
             }
             if (arg is WorldObjects)
             {
@@ -132,10 +136,11 @@ namespace cogbot.ScriptEngines
             }
             if (arg is Simulator)
             {
-                Simulator sim = (Simulator) arg;
+                Simulator sim = (Simulator)arg;
                 uint globalX, globalY;
                 Utils.LongToUInts(sim.Handle, out globalX, out globalY);
-                return "'(simulator " + argString(sim.Name) + " " + globalX / 256 + " " + globalY / 256 + " " + argString(sim.IPEndPoint.ToString()) + ")";
+                return "'(simulator " + argString(sim.Name) + " " + globalX / 256 + " " + globalY / 256 + " " +
+                       argString(sim.IPEndPoint.ToString()) + ")";
             }
             if (arg is Avatar)
             {
@@ -158,7 +163,7 @@ namespace cogbot.ScriptEngines
             {
                 SimAsset prim = (SimAsset)arg;
                 AssetType tyepe = prim.AssetType;
-                arg = "'(Sim"+tyepe+"Fn "; //+ argString(prim.ID.ToString());
+                arg = "'(Sim" + tyepe + "Fn "; //+ argString(prim.ID.ToString());
                 if (prim.Name != null)
                 {
                     arg = arg + " " + argString(prim.Name);
@@ -258,7 +263,7 @@ namespace cogbot.ScriptEngines
 
             if (arg is UUID)
             {
-            //   if (true) return argString(arg.ToString());
+                //   if (true) return argString(arg.ToString());
                 object found = WorldObjects.GridMaster.GetObject((UUID)arg);
                 if (found == null || found is UUID)
                 {
@@ -266,24 +271,24 @@ namespace cogbot.ScriptEngines
                 }
                 return argString(found);
             }
-            else
-                if (arg is Vector3)
-                {
-                    Vector3 vect = (Vector3)arg;
-                    return "'(Vector3 " + vect.X + " " + vect.Y + " " + vect.Z + ")";
-                }
-                else
-                    if (arg is Vector2)
-                    {
-                        Vector2 vect = (Vector2)arg;
-                        return "'(Vector2 " + vect.X + " " + vect.Y + ")";
-                    }
-                    else
-                        if (arg is Vector3d)
-                        {
-                            Vector3d vect = (Vector3d)arg;
-                            return "'(Vector3d " + vect.X + " " + vect.Y + " " + vect.Z + ")";
-                        }
+
+            if (arg is Vector3)
+            {
+                Vector3 vect = (Vector3)arg;
+                return "'(Vector3 " + vect.X + " " + vect.Y + " " + vect.Z + ")";
+            }
+
+            if (arg is Vector2)
+            {
+                Vector2 vect = (Vector2)arg;
+                return "'(Vector2 " + vect.X + " " + vect.Y + ")";
+            }
+
+            if (arg is Vector3d)
+            {
+                Vector3d vect = (Vector3d)arg;
+                return "'(Vector3d " + vect.X + " " + vect.Y + " " + vect.Z + ")";
+            }
 
             if (type.IsArray)
             {
@@ -333,8 +338,15 @@ namespace cogbot.ScriptEngines
             }
             return "" + arg;
         }
+
         public void taskTick()
         {
+            if (taskInterperter == null)
+            {
+                // Abort self
+                Thread.CurrentThread.Abort();
+                return;
+            }
             //   string lastcode = "";
             string codeString = null;
             try
@@ -412,7 +424,7 @@ namespace cogbot.ScriptEngines
 
         void SimEventSubscriber.OnEvent(SimObjectEvent evt)
         {
-            if (taskInterperter !=null && taskInterperter.IsSubscriberOf(evt.GetVerb()))
+            if (taskInterperter != null && taskInterperter.IsSubscriberOf(evt.GetVerb()))
             {
                 object lispCode = lispCodeFromEvent(evt);
                 taskQueue.Enqueue(new KeyValuePair<object, SimObjectEvent>(lispCode, evt));
@@ -421,16 +433,26 @@ namespace cogbot.ScriptEngines
 
         private object lispCodeFromEvent(SimObjectEvent evt)
         {
-            return genLispCodeTree("(" + evt.GetVerb().ToLower() + " " + argsListString(evt.GetArgs())+")");
+            return genLispCodeTree("(" + evt.GetVerb().ToLower() + " " + argsListString(evt.GetArgs()) + ")");
         }
 
         void SimEventSubscriber.Dispose()
         {
-            taskInterperter = null;
+            ((ScriptEventListener) this).Dispose();
         }
 
         #endregion
 
-
+        public void Dispose()
+        {
+            thrJobQueue.Abort();
+            lock (taskQueue)
+            {
+                taskQueue.Clear();
+            }
+            //TODO decide if we should do this here
+            //  taskInterperter.Dispose();
+            taskInterperter = null;
+        }
     }
 }

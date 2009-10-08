@@ -1513,13 +1513,18 @@ namespace cogbot.TheOpenSims
                     return;
                 }
                 uint theLPrimParentID = Prim.ParentID;
+                if (theLPrimParentID == 0 || _Parent != null) return;
+                Primitive outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
+                if (outerPrim != null)
+                {
+                    Parent = WorldSystem.GetSimObject(outerPrim);
+                    return;
+                }
                 WorldObjects.RequestObject(simu, theLPrimParentID);
                 WorldObjects.EnsureSelected(theLPrimParentID, simu);
                 ParentGrabber.AddFirst(() => TaskGetParent(theLPrimParentID, simu));
             }
         }
-
-        private static readonly TaskQueueHandler ParentGrabber = new TaskQueueHandler("ParentGrabber", 10);
 
         private void TaskGetParent(uint theLPrimParentID, Simulator simu)
         {
@@ -1535,6 +1540,11 @@ namespace cogbot.TheOpenSims
                 if (ParentGrabber.NoQueue) return;
                 ParentGrabber.Enqueue(() => TaskGetParent(theLPrimParentID, simu));
             }
+        }
+
+        protected TaskQueueHandler ParentGrabber
+        {
+            get { return WorldObjects.ParentGrabber; }
         }
 
 

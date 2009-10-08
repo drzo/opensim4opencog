@@ -182,6 +182,7 @@ namespace CogbotRadegastPluginModule
 
         void Avatars_OnAvatarNames(Dictionary<UUID, string> names)
         {
+            if (IsDisposing) return;
             if (InvokeRequired)
             {
                 Invoke(new MethodInvoker(delegate() { Avatars_OnAvatarNames(names); }));

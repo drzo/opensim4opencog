@@ -41,6 +41,8 @@ namespace cogbot.Listeners
         private static readonly Dictionary<ulong, List<uint>> primsSelectedOutbox = new Dictionary<ulong, List<uint>>();
 
         private static readonly TaskQueueHandler PropertyQueue = new TaskQueueHandler("NewObjectQueue", 0);
+        public static readonly TaskQueueHandler ParentGrabber = new TaskQueueHandler("ParentGrabber", 10);
+
         private static readonly object SelectObjectsTimerLock = new object();
         private static readonly List<ThreadStart> ShutdownHooks = new List<ThreadStart>();
         private static readonly TaskQueueHandler EventQueue = new TaskQueueHandler("World EventQueue", 0);
@@ -65,6 +67,7 @@ namespace cogbot.Listeners
         public List<SimObjectHeuristic> objectHeuristics;
         public Dictionary<UUID, List<Primitive>> primGroups;
         public int searchStep;
+        public bool IsDisposed = false;
 
         public override string GetModuleName()
         {
@@ -78,6 +81,8 @@ namespace cogbot.Listeners
 
         public override void Dispose()
         {
+            if (IsDisposed) return;
+            IsDisposed = true;
             foreach (var h in ShutdownHooks)
             {
                 try
@@ -89,13 +94,19 @@ namespace cogbot.Listeners
                     
                 }
             }
-            if (false)
+            UnregisterAll();
+            if (IsGridMaster)
             {
+                WriteLine("GridMaster Disposing!");
                 EventQueue.Dispose();
                 CatchUpQueue.Dispose();
                 PropertyQueue.Dispose();
+                MaintainCollisions = false;
+                MaintainActions = false;
+                SimAssetSystem.Dispose();
+                ParentGrabber.Dispose();
+                SimPaths.Dispose();
             }
-            UnregisterAll();
         }
 
 

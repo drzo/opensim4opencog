@@ -1406,6 +1406,11 @@ namespace cogbot.TheOpenSims
             if (animation == null || simAnimation == null) return false;
             return (animation.SameAsset(simAnimation));
         }
+
+        public void Dispose()
+        {
+           taskQueue.Dispose();
+        }
     }
 
 #if PORTIT
