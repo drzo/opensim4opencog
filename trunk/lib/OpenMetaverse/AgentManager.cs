@@ -2540,7 +2540,6 @@ namespace OpenMetaverse
         /// <param name="lookAt"><seealso cref="Vector3"/> direction in destination sim agent will look at</param>
         public void RequestTeleport(ulong regionHandle, Vector3 position, Vector3 lookAt)
         {
-           
             if (Client.Network.CurrentSim != null &&
                 Client.Network.CurrentSim.Caps != null &&
                 Client.Network.CurrentSim.Caps.IsEventQueueRunning)
@@ -2821,7 +2820,7 @@ namespace OpenMetaverse
             pick.Data.ParcelID = parcelID;
             pick.Data.Name = Utils.StringToBytes(name);
             pick.Data.SnapshotID = textureID;
-            pick.Data.PosGlobal = Client.Self.GlobalPosition;
+            pick.Data.PosGlobal = globalPosition;
             pick.Data.SortOrder = 0;
             pick.Data.Enabled = false;
 
