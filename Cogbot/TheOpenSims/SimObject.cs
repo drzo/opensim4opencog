@@ -472,7 +472,7 @@ namespace cogbot.TheOpenSims
             get
             {
                 Primitive Prim = this.Prim;
-                if (Prim.ClickAction == ClickAction.Sit) return true;
+                if (Prim != null && Prim.ClickAction == ClickAction.Sit) return true;
                 if (_propertiesCache != null)
                     return !String.IsNullOrEmpty(_propertiesCache.SitName);
                 return false;
@@ -1301,7 +1301,7 @@ namespace cogbot.TheOpenSims
                     _TOSRTING += "(IsSitDefined)";
                 string simverb = GetSimVerb();
                 if (!String.IsNullOrEmpty(simverb))
-                    _TOSRTING += "(SimVerb " + simverb + ")";
+                    _TOSRTING += string.Format("(SimVerb \"{0}\")", simverb);
                 if (!IsPassable)
                     _TOSRTING += "(!IsPassable)";
                 if (Prim.PrimData.ProfileHollow > 0f)
@@ -1519,7 +1519,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        private static readonly TaskQueueHandler ParentGrabber = new TaskQueueHandler("ParentGrabber", 10000);
+        private static readonly TaskQueueHandler ParentGrabber = new TaskQueueHandler("ParentGrabber", 10);
 
         private void TaskGetParent(uint theLPrimParentID, Simulator simu)
         {
