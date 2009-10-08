@@ -13,6 +13,7 @@ namespace cogbot.Utilities
         static private readonly TimeSpan PING_TIME = new TimeSpan(0, 0, 0, 30); //30 seconds
         private ulong processed = 0;
         ulong sequence = 1;
+        ulong failures = 0;
         private ulong GoodPings = 0;
         private bool Busy;
         private ulong LastBusy = 0;
@@ -45,8 +46,8 @@ namespace cogbot.Utilities
         public override string ToString()
         {
             return String.Format(
-                "{0} {1} Todo={2} Complete={3} {4}",
-                Busy ? "Busy" : "Idle", Name, EventQueue.Count, sequence, NoQueue ? "NoQueue" : "");
+                "{0} {1} Todo={2} Complete={3} {4} {5}",
+                Busy ? "Busy" : "Idle", Name, EventQueue.Count, processed, failures>0? failures+ " failures ":"", NoQueue ? "NoQueue" : "");
         }
 
         public void Dispose()
@@ -87,20 +88,7 @@ namespace cogbot.Utilities
 
                 if (evt != null && evt != NOTHING)
                 {
-                    Busy = true;
-                    BusyStart = DateTime.UtcNow;
-                    sequence++;
-                    try
-                    {
-                        evt();
-                        processed++;
-                        Busy = false;
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine("" + e);
-                    }
-                    Busy = false;
+                    DoNow(evt);
                     if (WAIT_AFTER > 1) Thread.Sleep(WAIT_AFTER);
                 }
                 else
@@ -187,22 +175,36 @@ namespace cogbot.Utilities
             // ReSharper disable FunctionNeverReturns
         }
         // ReSharper restore FunctionNeverReturns
+        private void DoNow(ThreadStart evt)
+        {
+            Busy = true;
+            BusyStart = DateTime.UtcNow;
+            sequence++;
+            try
+            {
+                evt();
+                processed++;
+                Busy = false;
+            }
+            catch (Exception e)
+            {
+                failures++;
+                Console.WriteLine("" + e);
+            }
+            finally
+            {
+                sequence++;
+                Busy = false;
+            }
+        }
 
         public void Enqueue(ThreadStart evt)
         {
             if (IsDisposing) return;
             if (NoQueue)
             {
-                try
-                {
-                    Busy = true;
-                    evt();
-                    return;
-                }
-                finally
-                {
-                    Busy = false;
-                }
+                DoNow(evt);
+                return;
             }
             lock (EventQueueLock)
             {
@@ -216,17 +218,8 @@ namespace cogbot.Utilities
             if (IsDisposing) return;
             if (NoQueue)
             {
-                try
-                {
-                    Busy = true;
-                    evt();
-                    return;
-                }
-                finally
-                {
-                    Busy = false;
-                }
-
+                DoNow(evt);
+                return;
             }
             lock (EventQueueLock)
             {
