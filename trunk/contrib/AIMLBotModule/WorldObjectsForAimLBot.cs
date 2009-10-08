@@ -848,6 +848,7 @@ namespace AIMLBotModule
 
         public override void Dispose()
         {
+            writeLock.Dispose();
             //todo throw new NotImplementedException();
         }
     }

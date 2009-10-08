@@ -300,9 +300,8 @@ namespace cogbot
             {
                 CurrentClient.Dispose();
             }
-            Application.DoEvents();
-            Application.Exit();
-            Application.ExitThread();
+            _scriptEventListener.Dispose();
+            _lispTaskInterperter.Dispose();
         }
 
 
@@ -393,6 +392,7 @@ namespace cogbot
         {
             try
             {
+                if (!Running) return "No running";
                 if (string.IsNullOrEmpty(lispCode)) return null;
                 initTaskInterperter();
                 //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
@@ -874,6 +874,7 @@ namespace cogbot
                 client.Dispose();
             }
             Running = false;
+            ShutDown();
             // TODO: It would be really nice if we could figure out a way to abort the ReadLine here in so that Run() will exit.
         }
 
@@ -957,7 +958,7 @@ namespace cogbot
 
         public void Dispose()
         {
-            Quit();
+            ShutDown();
         }
     }
 

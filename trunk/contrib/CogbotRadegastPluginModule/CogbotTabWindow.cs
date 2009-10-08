@@ -149,6 +149,7 @@ namespace CogbotRadegastPluginModule
           //  this.instance.Config.ConfigApplied -= new EventHandler<ConfigAppliedEventArgs>(Config_ConfigApplied);
             client.Grid.OnCoarseLocationUpdate -= new GridManager.CoarseLocationUpdateCallback(Grid_OnCoarseLocationUpdate);
             client.Avatars.OnAvatarProperties -= new AvatarManager.AvatarPropertiesCallback(Avatars_OnAvatarProperties);
+            writeLock.Dispose();
         }
 
         void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)

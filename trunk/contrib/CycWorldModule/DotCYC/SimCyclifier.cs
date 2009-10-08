@@ -34,6 +34,8 @@ namespace CycWorldModule.DotCYC
         static public CycFort vocabMt;
         static public CycFort assertMt;
         static public bool ProcessEvents = true;
+        private bool IsDisposing;
+
         static public Dictionary<object, CycFort> simFort
         {
             get
@@ -79,6 +81,7 @@ namespace CycWorldModule.DotCYC
             if (!ProcessEvents) return;
             try
             {
+                if (Master.IsDisposing) return;
                 if (evt.EventType == SimEventType.DATA_UPDATE)
                 {
                     foreach (var v in evt.GetArgs())
@@ -106,6 +109,7 @@ namespace CycWorldModule.DotCYC
 
         internal void DataUpdate(object v)
         {
+            if (IsDisposing) return;
             object constant = ToFort(v);
             if (constant is CycFort && v is SimObject)
             {
@@ -121,9 +125,26 @@ namespace CycWorldModule.DotCYC
 
         public void Dispose()
         {
-            ProcessEvents = false;            
+            IsDisposing = true;
+            ProcessEvents = false;   
             taskQueueHandler.Dispose();
             cycAccessQueueHandler.Dispose();
+            if (this == Master && cycAccess!=null)
+            {
+                try
+                {
+                    CycConnectionInterface con = cycAccess.getCycConnection();
+                    con.traceOn();
+                    con.traceOnDetailed();
+                    //cycAccess.persistentConnection = false;
+                    con.close();
+                    cycAccess.close();
+                }
+                catch (Exception)
+                {
+                }
+                //java.lang.Thread.currentThread().getThreadGroup().destroy();
+            }
         }
 
         public SimCyclifier(CycWorldModule tf)
@@ -1803,6 +1824,7 @@ namespace CycWorldModule.DotCYC
         }
 
         static Dictionary<Assembly, XElement> AssmblyXDoics = new Dictionary<Assembly, XElement>();
+
         public static XElement GetXmlDocMembers(Assembly typeAssembly)
         {
             XElement ele;

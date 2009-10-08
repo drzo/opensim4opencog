@@ -52,13 +52,18 @@ namespace cogbot.Utilities
 
         public void Dispose()
         {
+            if (IsDisposing) return;
             IsDisposing = true;
             lock (TaskQueueHandlers)
                 TaskQueueHandlers.Remove(this);
             if (EventQueuePing!=null) EventQueuePing.Abort();
             EventQueueHandler.Abort();
-            WaitingOn.Set();
-            WaitingOn.Close();
+            try
+            {
+                WaitingOn.Set();
+                WaitingOn.Close();
+            }
+            catch (ObjectDisposedException) { }
         }
 
         readonly ThreadStart NOTHING = default(ThreadStart);
@@ -177,6 +182,7 @@ namespace cogbot.Utilities
         // ReSharper restore FunctionNeverReturns
         private void DoNow(ThreadStart evt)
         {
+            if (IsDisposing) return;
             Busy = true;
             BusyStart = DateTime.UtcNow;
             sequence++;
