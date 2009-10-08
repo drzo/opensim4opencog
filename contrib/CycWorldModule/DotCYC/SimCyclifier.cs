@@ -280,7 +280,8 @@ namespace CycWorldModule.DotCYC
             cycAssert("(#$pointInSystem (#$PointInRegionFn ?STR ?X ?Y ?Z) (#$SimRegionCoordinateSystemFn (#$SimRegionFn ?STR)))");
             cycAssert("(#$pointInSystem (#$PointInRegionFn \"Daxlandia\" 128 120 27) (#$SimRegionCoordinateSystemFn (#$SimRegionFn \"Daxlandia\")))");
             ProbeNewAssets();
-            cycAccessQueueHandler.NoQueue = true;
+            // This will be the runtime state
+            cycAccessQueueHandler.NoQueue = false;
         }
 
         static int lastAssetCount = 0;
@@ -1140,7 +1141,7 @@ namespace CycWorldModule.DotCYC
 
         private void defaultAssert(CycFort fort, CycFort constant, object o)
         {
-            if (o is String || (o is CycNart && ((CycNart)o).getFunctor() != C("TheList")))
+            if ((o is String && ((String)o)!=String.Empty)|| (o is CycNart && ((CycNart)o).getFunctor() != C("TheList")))
             {
                 CycListAssert(CycList.makeCycList(fort, constant, o));
                 return;
