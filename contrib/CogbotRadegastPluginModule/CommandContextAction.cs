@@ -111,7 +111,7 @@ namespace CogbotRadegastPluginModule
                                                act = renCmd,
                                                useType = use
                 };
-            instance.TabConsole.AddContextMenu(cca);
+            instance.TabConsole.RegisterContextAction(cca);
 
         }
 

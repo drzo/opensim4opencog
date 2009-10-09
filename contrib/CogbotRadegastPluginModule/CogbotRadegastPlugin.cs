@@ -23,6 +23,8 @@ namespace CogbotRadegastPluginModule
         private ClientManager clientManager;
         private CogbotRadegastInterpreter cogbotRadegastInterpreter;
         private CogbotNotificationListener CogbotNoticeuListener;
+        private CommandContextAction _commandContextAction;
+        private AspectContextAction _aspectContextAction;
 
         public void StartPlugin(RadegastInstance inst)
         {
@@ -56,6 +58,10 @@ namespace CogbotRadegastPluginModule
             }
             cogbotRadegastInterpreter = new CogbotRadegastInterpreter(clientManager);
             RadegastInstance.CommandsManager.LoadInterpreter(cogbotRadegastInterpreter);
+            _commandContextAction = new CommandContextAction(inst);
+            inst.TabConsole.RegisterContextAction(_commandContextAction);
+            _aspectContextAction = new AspectContextAction(inst);
+            inst.TabConsole.RegisterContextAction(_aspectContextAction);
 
             if (ClientManager.UsingRadgastFromCogbot) return;
             inst.Client.Settings.MULTIPLE_SIMS = true;
