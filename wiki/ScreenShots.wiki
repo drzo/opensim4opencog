@@ -33,10 +33,6 @@ lgpreview2.JPG  27-Sep-2009 22:28  42K
 * 
  http://logicmoo.ath.cx/manual/root/development/PathFindingDemo/lgpreview.JPG
 lgpreview.JPG  27-Sep-2009 22:08  60K 
-<tr><td valign="top
-<img src="/icons/unknown.gif" alt="[   ]
-</td><td><a href="SceneExtensions.rar
-SceneExtensions.rar  20-May-2009 20:25  15K 
 
 * 
  http://logicmoo.ath.cx/manual/root/development/PathFindingDemo/triangle-wrong.JPG
