@@ -1515,9 +1515,9 @@ namespace cogbot.TheOpenSims
                 uint theLPrimParentID = Prim.ParentID;
                 if (theLPrimParentID == 0 || _Parent != null) return;
                 Primitive outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
-                if (outerPrim != null)
+                if (outerPrim != null && outerPrim.ID != UUID.Zero)
                 {
-                    Parent = WorldSystem.GetSimObject(outerPrim);
+                    Parent = WorldSystem.GetSimObject(outerPrim, simu);
                     return;
                 }
                 WorldObjects.RequestObject(simu, theLPrimParentID);
@@ -1531,7 +1531,7 @@ namespace cogbot.TheOpenSims
             if (theLPrimParentID == 0 || _Parent != null) return;
 
             Primitive outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
-            if (outerPrim != null)
+            if (outerPrim != null && outerPrim.ID != UUID.Zero)
             {
                 Parent = WorldSystem.GetSimObject(outerPrim);
             }
