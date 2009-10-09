@@ -1,1 +1,3 @@
 #summary Some Screenshots
+
+http://logicmoo.ath.cx/manual/root/development/PathFindingDemo/MazeRunIn10Secs.GIF
