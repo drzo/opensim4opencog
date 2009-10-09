@@ -16,13 +16,12 @@ namespace cogbot.Actions
             Name = "clone";
             Description = "Clone the appearance of a nearby avatar. Usage: clone [name]";
             Category = CommandCategory.Appearance;
-            Parameters = new[] {  new NamedParam(typeof(SimAvatar), typeof(UUID)) };
+            Parameters = new[] { new NamedParam(typeof(SimAvatar), typeof(UUID)) };
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             string targetName = String.Empty;
-            List<DirectoryManager.AgentSearchData> matches;
 
             for (int ct = 0; ct < args.Length; ct++)
                 targetName = targetName + args[ct] + " ";
@@ -30,11 +29,13 @@ namespace cogbot.Actions
 
             if (targetName.Length == 0)
                 return "Usage: clone [name]";
+            UUID target = WorldSystem.GetUserID(targetName);
 
-            if (Client.Directory.PeopleSearch(DirectoryManager.DirFindFlags.People, targetName, 0, 1000 * 10,
-                out matches) && matches.Count > 0)
+            //            if (Client.Directory.PeopleSearch(DirectoryManager.DirFindFlags.People, targetName, 0, 1000 * 10,
+            //                out matches) && matches.Count > 0)
+            if (target != UUID.Zero)
             {
-                UUID target = matches[0].AgentID;
+                //   UUID target = matches[0].AgentID;
                 targetName += String.Format(" ({0})", target);
 
                 if (Client.Appearances.ContainsKey(target))
