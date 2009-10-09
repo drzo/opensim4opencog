@@ -46,13 +46,15 @@ namespace CycWorldModule.DotCYC
         static CycConnectionForm cycConnection;
         static readonly DateTime baseTime = new DateTime(1970, 1, 1, 0, 0, 0);
         private static readonly TaskQueueHandler cycAccessQueueHandler = new TaskQueueHandler("CycAssertions", 0);
+        private static readonly TaskQueueHandler cycInfoMapSaver = new TaskQueueHandler("CycInfoMapSaver", 0);
         private static TaskQueueHandler taskQueueHandler = null;// new TaskQueueHandler("SimCyclifier", 0);
 
         readonly static public Dictionary<object, CycFort> cycTerms = new Dictionary<object, CycFort>();
         readonly static public Dictionary<Object, int> hashChanges = new Dictionary<Object, int>();
         List<UUID> SimObjectsAdded = new List<UUID>();
         internal static readonly Dictionary<Type, CycTypeInfo> typeFort = new Dictionary<Type, CycTypeInfo>();
-
+        private CycFort genlPreds;
+        private CycFort cycIsa;
         //static readonly List<String> SkipVerbs = new List<string>() { "on-log-message", "on-login", "on-event-queue-running", "on-sim-connecting" };
         public static SimCyclifier Master;
         static object SimCyclifierLock = new object();
@@ -113,23 +115,24 @@ namespace CycWorldModule.DotCYC
             object constant = ToFort(v);
             if (constant is CycFort && v is SimObject)
             {
-                SimObject o = (SimObject) v;
+                SimObject o = (SimObject)v;
                 if (WorldObjects.GridMaster != null && WorldObjects.GridMaster.TheSimAvatar.Distance(o) < 30)
                 {
                     SaveInfoMap(constant as CycFort, o);
                 }
                 else
-                    taskQueueHandler.Enqueue(() => SaveInfoMap(constant as CycFort, o));
+                    cycInfoMapSaver.Enqueue(() => SaveInfoMap(constant as CycFort, o));
             }
         }
 
         public void Dispose()
         {
             IsDisposing = true;
-            ProcessEvents = false;   
+            ProcessEvents = false;
             taskQueueHandler.Dispose();
             cycAccessQueueHandler.Dispose();
-            if (this == Master && cycAccess!=null)
+            cycInfoMapSaver.Dispose();
+            if (this == Master && cycAccess != null)
             {
                 try
                 {
@@ -175,6 +178,8 @@ namespace CycWorldModule.DotCYC
                 Console.WriteLine("No Cyc connection");
                 return;
             }
+            genlPreds = C("genlPreds");
+            cycIsa = C("isa");
             assertMt = cycAccess.createIndividual("SimDataMt", "#$DataMicrotheory for the simulator", "UniversalVocabularyMt",
                                         "DataMicrotheory");
             vocabMt = cycAccess.createIndividual("SimVocabMt", "#$VocabularyMicrotheory for the simulator",
@@ -193,8 +198,9 @@ namespace CycWorldModule.DotCYC
                 cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-MOVEMENTFn\"))");
             }
             cycAccess.converseVoid("(fi-kill (find-or-create-constant \"TheDefaultSimInstance\"))");
+            cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimTheDefaultInstance\"))");
 
-            assertIsa(C("TheDefaultSimInstance"), C("Thing"));
+            assertIsa(C("SimTheDefaultInstance"), C("Thing"));
 
             simFort["SimObject"] = createCollection("SimObject", "#$SpatiallyDisjointObjectType for the simulator",
                                                     "SimVocabMt", "SpatiallyDisjointObjectType", null);
@@ -213,13 +219,13 @@ namespace CycWorldModule.DotCYC
             // FunctionToCollection("SimAnimationFn", "SimAnimation", "An animation in the simulator");
 
             assertIsa(C("simEventData"), C("VariableArityPredicate"));
-            assertIsa(C("SimObjectEvent"), C("Collection"));
-            assertIsa(C("SimProperty"), C("Collection"));
-            assertIsa(C("SimPredicate"), C("Collection"));
+            assertIsa(C("SimObjectEvent"), CycAccess.collection);
+            assertIsa(C("SimProperty"), CycAccess.collection);
+            assertIsa(C("SimPredicate"), CycAccess.collection);
             assertGenls(C("SimPredicate"), C("Predicate"));
             assertGenls(C("SimProperty"), C("BinaryPredicate"));
             assertGenls(C("SimProperty"), C("SimPredicate"));
-            assertIsa(C("SimObjectType"), C("Collection"));
+            assertIsa(C("SimObjectType"), CycAccess.collection);
             assertGenls(C("SimObjectEvent"), C("Event"));
             FunctionToCollection("SimAssetFn", "SimAsset", "Simulator assets that denote a feature set");
             assertIsa(C("SimAssetFn"), C("CollectionDenotingFunction"));
@@ -229,10 +235,10 @@ namespace CycWorldModule.DotCYC
             if (cycAccess.find("SimEnumCollection") == null)
             {
                 Debug("Loading SimEnumCollection Collections ");
-                assertIsa(C("SimEnumCollection"), C("Collection"));
-                assertGenls(C("SimEnumCollection"), C("Collection"));
+                assertIsa(C("SimEnumCollection"), CycAccess.collection);
+                assertGenls(C("SimEnumCollection"), CycAccess.collection);
                 assertIsa(C("SimEnumCollection"), C("CollectionType"));
-                assertGaf(C("comment"), C("SimEnumCollection"), "Enums collected from SecondLife");
+                assertGaf(CycAccess.comment, C("SimEnumCollection"), "Enums collected from SecondLife");
                 VisitAssembly(Assembly.GetAssembly(typeof(AssetType)));
                 VisitAssembly(Assembly.GetAssembly(typeof(Vector4)));
                 VisitAssembly(Assembly.GetAssembly(typeof(AgentManager)));
@@ -246,7 +252,7 @@ namespace CycWorldModule.DotCYC
                 VisitAssembly(Assembly.GetAssembly(typeof(SimEventType)));
             }
 
-            simFort["SimRegion"] = cycAccess.createCollection("SimRegion", "A region in the simulator", vocabMt, C("Collection"),
+            simFort["SimRegion"] = cycAccess.createCollection("SimRegion", "A region in the simulator", vocabMt, CycAccess.collection,
                            C("GeographicalPlace-3D"));
             assertGenls(simFort["SimRegion"], C("Polyhedron"));
 
@@ -269,7 +275,7 @@ namespace CycWorldModule.DotCYC
 
 
             cycAccess.createCollection("SimRegionMapCoordinateSystem",
-                                       "instances are secondlife regional coordinate systems", vocabMt, C("Collection"),
+                                       "instances are secondlife regional coordinate systems", vocabMt, CycAccess.collection,
                                        C("ThreeDimensionalCoordinateSystem"));
 
             ResultIsa("SimRegionCoordinateSystemFn", "SimRegionMapCoordinateSystem",
@@ -278,8 +284,8 @@ namespace CycWorldModule.DotCYC
 
             createIndividual("PointInRegionFn", "Creates region 3D #$Point relative to (#$SimRegionFn :ARG1)", "SimVocabMt", "QuaternaryFunction");
             assertIsa(C("PointInRegionFn"), C("TotalFunction"));
-            //assertGaf(C("isa"), simFort["PointInRegionFn"], C(""));
-            assertGaf(C("arg1Isa"), simFort["PointInRegionFn"], C("IDString"));
+            //assertGaf(CycAccess.isa, simFort["PointInRegionFn"], C(""));
+            assertGafNow(C("arg1Isa"), simFort["PointInRegionFn"], C("IDString"));
             assertGaf(C("arg2Isa"), simFort["PointInRegionFn"], C("NumericInterval"));
             assertGaf(C("arg3Isa"), simFort["PointInRegionFn"], C("NumericInterval"));
             assertGaf(C("arg4Isa"), simFort["PointInRegionFn"], C("NumericInterval"));
@@ -296,7 +302,6 @@ namespace CycWorldModule.DotCYC
             assertGaf(C("arg3Isa"), simFort["PointRelativeToFn"], C("NumericInterval"));
             assertGaf(C("arg4Isa"), simFort["PointRelativeToFn"], C("NumericInterval"));
             assertGaf(C("resultIsa"), C("PointRelativeToFn"), C("Point"));
-
 
             cycAssert("(#$pointInSystem (#$PointInRegionFn ?STR ?X ?Y ?Z) (#$SimRegionCoordinateSystemFn (#$SimRegionFn ?STR)))");
             cycAssert("(#$pointInSystem (#$PointInRegionFn \"Daxlandia\" 128 120 27) (#$SimRegionCoordinateSystemFn (#$SimRegionFn \"Daxlandia\")))");
@@ -351,7 +356,7 @@ namespace CycWorldModule.DotCYC
                     type.FullName + " such as #$BlueColor or #$BlowingAKiss animation";
                 fn = string.Format("Sim{0}Fn", fn);
                 FunctionToCollection(fn, col, comment);
-                assertGaf(C("genlFuncs"), simFort[fn], simFort["SimAssetFn"]);
+                assertGafNow(C("genlFuncs"), simFort[fn], simFort["SimAssetFn"]);
                 assertGenls(simFort[col], simFort["SimAsset"]);
             }
             else //if (type.Namespace ==null || type.Namespace.StartsWith("OpenMetaverse"))
@@ -391,8 +396,8 @@ namespace CycWorldModule.DotCYC
         public void ResultIsa(string fn, string col, string comment, CycFort arg1Isa)
         {
             simFort[fn] = createIndividual(fn, comment, "SimVocabMt", "ReifiableFunction");
-            assertGaf(C("resultIsa"), simFort[fn], C(col));
-            assertGaf(C("arg1Isa"), simFort[fn], arg1Isa);
+            assertGafNow(C("resultIsa"), simFort[fn], C(col));
+            assertGafNow(C("arg1Isa"), simFort[fn], arg1Isa);
 
         }
 
@@ -410,19 +415,18 @@ namespace CycWorldModule.DotCYC
             assertIsa(simFort[col], C("PartiallyTangibleTypeByPhysicalFeature"));
             //not true assertIsa(simFort[fn], C("SubcollectionDenotingFunction"));
             //not true assertIsa(simFort[fn], C("TotalFunction"));
-            assertGaf(C("resultIsa"), simFort[fn], C("PartiallyTangibleTypeByPhysicalFeature"));
-            assertGaf(C("resultIsa"), simFort[fn], C("FirstOrderCollection"));
-            assertGaf(C("resultGenl"), simFort[fn], simFort[col]);
+            assertGafNow(C("resultIsa"), simFort[fn], C("PartiallyTangibleTypeByPhysicalFeature"));
+            assertGafNow(C("resultIsa"), simFort[fn], C("FirstOrderCollection"));
+            assertGafNow(C("resultGenl"), simFort[fn], simFort[col]);
         }
 
         private CycFort createCollection(string col, string comment, string simvocabmt, string isa, string genls)
         {
             CycFort fcol = C(col);
-            assertIsa(fcol, C("Collection"));
+            assertIsa(fcol, CycAccess.collection);
             assertIsa(fcol, C(isa));
             if (genls != null) assertGenls(fcol, C(genls));
-            assertGaf(C("comment"), fcol, comment);
-
+            assertGaf(CycAccess.comment, fcol, comment);            
             return fcol;
         }
 
@@ -432,10 +436,10 @@ namespace CycWorldModule.DotCYC
             assertIsa(simFort[fn], C("IndividualDenotingFunction"));
             assertIsa(simFort[fn], C("ReifiableFunction"));
             CycFort fcol = C(col);
-            assertIsa(fcol, C("Collection"));
-            assertGaf(C("comment"), fcol, comment);
+            assertIsa(fcol, CycAccess.collection);
+            assertGaf(CycAccess.comment, fcol, comment);
             // simFort[col] = createIndividual(col, comment, "SimVocabMt", "Collection");
-            assertGaf(C("resultIsa"), simFort[fn], simFort[col]);
+            assertGafNow(C("resultIsa"), simFort[fn], simFort[col]);
         }
 
         public CycFort createIndividual(string term, string comment, string mt, string type)
@@ -445,7 +449,7 @@ namespace CycWorldModule.DotCYC
         }
         public void assertGenls(CycFort a, CycFort b)
         {
-            cycAccessQueueHandler.Enqueue(() =>
+            //cycAccessQueueHandler.Enqueue(() =>
             {
                 try
                 {
@@ -456,11 +460,24 @@ namespace CycWorldModule.DotCYC
 
                     Exception(e);
                 }
-            });
+            }//);
         }
 
         public void assertIsa(CycFort a, CycFort b)
         {
+            if (true)
+            {
+                try
+                {
+                    cycAccess.assertIsa(a, b, vocabMt);
+                }
+                catch (Exception e)
+                {
+
+                    Exception(e);
+                }
+                return;
+            }
             cycAccessQueueHandler.Enqueue(() =>
             {
                 try
@@ -475,9 +492,8 @@ namespace CycWorldModule.DotCYC
             });
         }
 
-        public void assertGaf(CycFort a, CycFort b, CycFort c)
+        public void assertGafNow(CycFort a, CycFort b, CycFort c)
         {
-            cycAccessQueueHandler.Enqueue(() =>
             {
                 try
                 {
@@ -488,12 +504,18 @@ namespace CycWorldModule.DotCYC
 
                     Exception(e);
                 }
-            });
+            };
         }
+
+        public void assertGaf(CycFort a, CycFort b, CycFort c)
+        {
+            cycAccessQueueHandler.Enqueue(() => assertGafNow(a,b,c));
+        }
+
 
         public void assertGaf(CycFort a, CycFort b, string c)
         {
-           // cycAccessQueueHandler.Enqueue(() =>
+           cycAccessQueueHandler.Enqueue(() =>
                               {
                                   try
                                   {
@@ -505,7 +527,7 @@ namespace CycWorldModule.DotCYC
                                       Exception(e);
                                   }
                               }
-            //);
+            );
         }
 
 
@@ -547,29 +569,31 @@ namespace CycWorldModule.DotCYC
 
         public CycFort createIndividual(string term, string comment, string mt, string type, out bool created)
         {
+            CycFort indv;
             lock (simFort)
             {
-                if (simFort.ContainsKey(term))
+                if (simFort.TryGetValue(term, out indv))
                 {
                     created = false;
-                    return simFort[term];
+                    return indv;
                 }
                 created = true;
                 if (type == "Collection")
                 {
                     Trace();
                 }
-                CycFort indv = simFort[term] = C(term);
-                bool NoQueue = cycAccessQueueHandler.NoQueue;
+                indv = simFort[term] = C(term);
+            }
+            {
+                bool noQueue = cycAccessQueueHandler.NoQueue;
                 cycAccessQueueHandler.NoQueue = true;
                 assertIsa(indv, C("Individual"));
                 assertIsa(indv, C(type));
-                cycAccessQueueHandler.NoQueue = true;
-                assertGaf(C("comment"), indv, comment);
-                cycAccessQueueHandler.NoQueue = NoQueue;
-                return indv;// simFort[term] = cycAccess.createIndividual(term, comment, mt, type);
+                cycAccessQueueHandler.NoQueue = false;
+                assertGaf(CycAccess.comment, indv, comment);
+                cycAccessQueueHandler.NoQueue = noQueue;
+                return indv; // simFort[term] = cycAccess.createIndividual(term, comment, mt, type);
             }
-
         }
         public CycFort createIndividual(string term, string comment, string type, out bool created)
         {
@@ -623,11 +647,11 @@ namespace CycWorldModule.DotCYC
             {
                 if (obj is SimAvatar)
                 {
-                    // assertGaf(C("comment"), constant, obj.DebugInfo());
+                    // assertGaf(CycAccess.comment, constant, obj.DebugInfo());
                 }
                 else
                 {
-                    assertGaf(C("comment"), constant, obj.DebugInfo());
+                    assertGaf(CycAccess.comment, constant, obj.DebugInfo());
                 }
                 return constant;
             }
@@ -644,8 +668,12 @@ namespace CycWorldModule.DotCYC
                     {
                         return;
                     }
+                    hashChanges[obj] = im.Count;
                 }
-                hashChanges[obj] = im.Count;
+                else
+                {
+                    hashChanges[obj] = im.Count;
+                }
             }
             ICollection<NamedParam> infomap = im;
             lock (infomap)
@@ -682,7 +710,7 @@ namespace CycWorldModule.DotCYC
                 constant = createIndividualColFn("Sim" + simObj.AssetType, simObj.Name, simObj.DebugInfo(), "SimVocabMt", "Sim" + simObj.AssetType);
                 cycTerms[simObj] = constant;
             }
-            assertGaf(C("comment"), constant, simObj.DebugInfo());
+            assertGaf(CycAccess.comment, constant, simObj.DebugInfo());
             return constant;
         }
         public CycFort FindOrCreateCycFort(Asset simObj)
@@ -1088,9 +1116,9 @@ namespace CycWorldModule.DotCYC
             CycFort fort = null;
             foreach (NamedParam o in args)
             {
-                 fort = assertEventData(constant, ToPropName(o.Key.ToString()), o.Value, newHashSet(o.info));                
+                fort = assertEventData(constant, ToPropName(o.Key.ToString()), o.Value, newHashSet(o.info));
             }
-          //  return fort;
+            //  return fort;
         }
 
         private CycFort assertEventData(CycFort constant, NamedParam o)
@@ -1100,7 +1128,7 @@ namespace CycWorldModule.DotCYC
 
         private CycFort assertEventData(CycFort constant, string name, object fort, HashSet<MemberInfo> info)
         {
-            CheckConstantName(name);
+            //CheckConstantName(name);
             CycFort prop = createSimProperty(name);
             if (fort != null)
             {
@@ -1152,7 +1180,7 @@ namespace CycWorldModule.DotCYC
                     MemberInfo oinfo = o.info;
                     if (oinfo != null) mis.Add(oinfo);
                     CycFort sub = assertEventData(constant, propname, o.Value, mis);
-                    assertGaf(C("genlPreds"), sub, prop);
+                    assertGenlPreds(sub, prop);
                 }
                 return prop;
             }
@@ -1160,9 +1188,22 @@ namespace CycWorldModule.DotCYC
 
         }
 
+        HashSet<CycFort> GenlPredsAsserted = new HashSet<CycFort>();
+        private void assertGenlPreds(CycFort sub, CycFort prop)
+        {
+            lock (GenlPredsAsserted)
+            {
+                if (!GenlPredsAsserted.Add(sub))
+                {
+                    return;
+                }
+            }
+            assertGafNow(genlPreds, sub, prop);
+        }
+
         private void defaultAssert(CycFort fort, CycFort constant, object o)
         {
-            if ((o is String && ((String)o)!=String.Empty)|| (o is CycNart && ((CycNart)o).getFunctor() != C("TheList")))
+            if ((o is String && ((String)o) != String.Empty) || (o is CycNart && ((CycNart)o).getFunctor() != C("TheList")))
             {
                 CycListAssert(CycList.makeCycList(fort, constant, o));
                 return;
@@ -1173,10 +1214,10 @@ namespace CycWorldModule.DotCYC
             }
             if (o is float || o is java.lang.Float || o is double || o is java.lang.Double)
             {
-                if (o.ToString()!="0.0" && o.ToString()!="1.0")
+                if (o.ToString() != "0.0" && o.ToString() != "1.0")
                 {
                     CycListAssert(CycList.makeCycList(fort, constant, o));
-                    return;                    
+                    return;
                 }
             }
             lock (DefaultNotNeededInAssert)
@@ -1195,13 +1236,13 @@ namespace CycWorldModule.DotCYC
                     }
                     return;
                 }
-                DefaultNotNeededInAssert.Add(fort,o);
-                CycListAssert(CycList.makeCycList(fort, C("TheDefaultSimInstance"), o));
+                DefaultNotNeededInAssert.Add(fort, o);
+                CycListAssert(CycList.makeCycList(fort, C("SimTheDefaultInstance"), o));
                 return;
             }
         }
 
-        Dictionary<object,object> DefaultNotNeededInAssert = new Dictionary<object, object>();
+        Dictionary<object, object> DefaultNotNeededInAssert = new Dictionary<object, object>();
 
         private void docPredicate(CycFort prop, HashSet<MemberInfo> info)
         {
@@ -1233,7 +1274,7 @@ namespace CycWorldModule.DotCYC
             if (!string.IsNullOrEmpty(doc))
             {
                 Debug("Docing " + info + " " + prop + " " + doc);
-                assertGaf(C("comment"), prop, doc);
+                assertGaf(CycAccess.comment, prop, doc);
             }
         }
 
@@ -1263,8 +1304,8 @@ namespace CycWorldModule.DotCYC
                                           simvocabmt, "UnaryFunction", out newlyCreated);
             if (newlyCreated)
             {
-                assertGaf(C("isa"), fn, C("ReifiableFunction"));
-                assertGaf(C("resultIsa"), fn, C(simobjecttype));
+                assertGafNow(cycIsa, fn, C("ReifiableFunction"));
+                assertGafNow(C("resultIsa"), fn, C(simobjecttype));
             }
             CycFort indv;
             bool b = typename.StartsWith("SimEvent");
@@ -1280,7 +1321,7 @@ namespace CycWorldModule.DotCYC
                         if (cycTerms.TryGetValue(nv, out indv)) return indv;
                         indv = new CycNart(CycList.list(fn, name));
                         cycTerms[nv] = indv;
-                        assertGaf(C("comment"), indv, comment);
+                        assertGaf(CycAccess.comment, indv, comment);
                     }
                 }
             return indv;
@@ -1293,8 +1334,8 @@ namespace CycWorldModule.DotCYC
                                           simvocabmt, "UnaryFunction", out newlyCreated);
             if (newlyCreated)
             {
-                assertGaf(C("isa"), fn, C("ReifiableFunction"));
-                assertGaf(C("resultGenl"), fn, C(simobjecttype));
+                assertGafNow(cycIsa, fn, C("ReifiableFunction"));
+                assertGafNow(C("resultGenl"), fn, C(simobjecttype));
             }
             CycFort indv;
             bool b = typename.StartsWith("SimEvent");
@@ -1311,7 +1352,7 @@ namespace CycWorldModule.DotCYC
                         indv = new CycNart(CycList.list(fn, name));
                         cycTerms[nv] = indv;
                     }
-                    assertGaf(C("comment"), indv, comment);
+                    assertGaf(CycAccess.comment, indv, comment);
                 }
             return indv;
         }
@@ -1338,6 +1379,27 @@ namespace CycWorldModule.DotCYC
             {
                 return CYC_NULL;
             }
+            if (parameter is string) return parameter;
+
+            CycFort indv;
+            lock (simFort)
+            {
+                if (simFort.TryGetValue(parameter, out indv))
+                {
+                    return indv;
+                }
+            }
+            object o = ToFortReal(parameter);
+            indv = o as CycFort;
+            if (indv != null)
+            {
+                lock (simFort) simFort[parameter] = indv;
+            }
+            return o;
+        }
+
+        private object ToFortReal(object parameter)
+        {
             Type t = parameter.GetType();
             var conv = GetConverter(t);
             if (conv != null)
@@ -1658,14 +1720,15 @@ namespace CycWorldModule.DotCYC
 
         public CycFort C(string p)
         {
+            CycFort c;
             lock (simFort)
             {
-                if (simFort.ContainsKey(p)) return simFort[p];
+                if (simFort.TryGetValue(p, out c)) return c;
                 try
                 {
-                    p = CheckConstantName(p);
-                    CycConstant c = cycAccess.findOrCreate(p);
-                    return simFort[p] = c;
+
+                    string sp = CheckConstantName(p);
+                    return simFort[p] = simFort[sp] = cycAccess.findOrCreate(sp);
                 }
                 catch (Exception e)
                 {
@@ -1682,9 +1745,9 @@ namespace CycWorldModule.DotCYC
             {
                 Trace();
             }
-            if (!cycAccess.isValidConstantName(s))
+            //if (!cycAccess.isValidConstantName(s))
             {
-                Trace();
+                //  Trace();
             }
             CycConstant colided = cycAccess.constantNameCaseCollision(s);
             if (colided != null)
@@ -1712,8 +1775,8 @@ namespace CycWorldModule.DotCYC
             {
                 if (simFort.TryGetValue(region, out obj)) return obj;
 
-                    obj = createIndividualFn("SimRegion", region.RegionName, "SimRegion " + region, vocabMt.ToString(),
-                                             "GeographicalPlace-3D");
+                obj = createIndividualFn("SimRegion", region.RegionName, "SimRegion " + region, vocabMt.ToString(),
+                                         "GeographicalPlace-3D");
             }
             if (region.GridInfo.MapImageID != UUID.Zero)
             {
