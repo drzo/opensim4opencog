@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 using cogbot.TheOpenSims;
-using OpenMetaverse; //using libsecondlife;
+using OpenMetaverse;
+using PathSystem3D.Navigation;
+
+//using libsecondlife;
 
 namespace cogbot.Actions
 {
@@ -18,49 +21,41 @@ namespace cogbot.Actions
 
         public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
-            Primitive prim;
-            Avatar avatar;
-           // base.acceptInput(verb, args);
+            SimPosition position;
+            int argUsed;
 
-            if (args.prepPhrases["is"].Length == 0)
+            if (args.prepPhrases["is"].Length != 0)
             {
-                return("Provide something for which you need to know Where is it.");
+                position = WorldSystem.GetVector(Parser.ParseArguments(args.prepPhrases["is"]), out argUsed);
+            } else
+            {
+                position = WorldSystem.GetVector(args.tokens, out argUsed);
             }
-            else
+
             {
-                if ((WorldSystem).tryGetAvatar(args.prepPhrases["is"], out avatar))
+                if (position != null)
                 {
+                    //avatar = ((SimAvatar)position).theAvatar;
                     //Client.Self.Movement.Camera.AtAxis
                     Vector3 myPos =base.GetSimPosition();
                     Vector3 forward = new Vector3(1, 0, 0);
-                    Vector3 offset = Vector3.Normalize(avatar.Position - myPos);
+                    Vector3 positionVect = position.SimPosition;
+                    Vector3 offset = Vector3.Normalize(positionVect - myPos);
                     Quaternion newRot2 = Vector3.RotationBetween(forward, offset);
 
-                    Quaternion newRot1 = Vector3.RotationBetween(avatar.Position, Client.Self.RelativePosition);
-                    double newDist = Vector3.Distance(avatar.Position, Client.Self.RelativePosition);
+                    Quaternion newRot1 = Vector3.RotationBetween(positionVect, Client.Self.RelativePosition);
+                    double newDist = Vector3.Distance(positionVect, Client.Self.RelativePosition);
                     WriteLine(Client.Self.Movement.Camera.AtAxis + ", " + newRot2 + ", " + newDist);
 
-                    //WriteLine(avatar.Position.X + ", " + avatar.Position.Y + ", " + avatar.Position.Z);
-                    //WriteLine(Client.Self.RelativePosition.X + ", " + Client.Self.RelativePosition.Y + ", " + Client.Self.RelativePosition.Z +"\n");
+                    WriteLine(positionVect.X + ", " + positionVect.Y + ", " + positionVect.Z);
+                    WriteLine(Client.Self.RelativePosition.X + ", " + Client.Self.RelativePosition.Y + ", " + Client.Self.RelativePosition.Z +"\n");
 
                     //WriteLine(avatar.Rotation.X + ", " + avatar.Rotation.Y + ", " + avatar.Rotation.Z);
                     //WriteLine(Client.Self.RelativeRotation.X + ", " + Client.Self.RelativeRotation.Y + ", " + Client.Self.RelativeRotation.Z + "\n");
                 }
-                else if ((WorldSystem).tryGetPrim(args.prepPhrases["is"], out prim))
-                {
-                    Quaternion newRot = Vector3.RotationBetween(prim.Position, Client.Self.RelativePosition);
-                    double newDist = Vector3.Distance(prim.Position, Client.Self.RelativePosition);
-                    WriteLine(newRot + ", " + newDist);
-
-                    //WriteLine(prim.Position.X + ", " + prim.Position.Y + ", " + prim.Position.Z);
-                    //WriteLine(Client.Self.RelativePosition.X + ", " + Client.Self.RelativePosition.Y + ", " + Client.Self.RelativePosition.Z + "\n");
-
-                    //WriteLine(prim.Rotation.X + ", " + prim.Rotation.Y + ", " + prim.Rotation.Z);
-                    //WriteLine(Client.Self.RelativeRotation.X + ", " + Client.Self.RelativeRotation.Y + ", " + Client.Self.RelativeRotation.Z + "\n");
-                }
                 else
                 {
-                    return ("I don't know where is " + args.prepPhrases["is"] + ".");
+                    return ("I don't know where " + args.str + ".");
                 }
             }
             return "";
