@@ -43,11 +43,33 @@ namespace cogbot.Utilities
             }
         }
 
+        private bool _noQueue;
+        public bool NoQueue
+        {
+            get
+            {
+                lock (EventQueue)
+                {
+                    return _noQueue;
+                }
+            }
+            set
+            {
+                lock (EventQueue)
+                {
+                    if (_noQueue == value) return;
+                    _noQueue = value;
+                }
+                // release waiters
+                Set();
+            }
+        }
+
         public override string ToString()
         {
             return String.Format(
                 "{0} {1} Todo={2} Complete={3} {4} {5}",
-                Busy ? "Busy" : "Idle", Name, EventQueue.Count, processed, failures>0? failures+ " failures ":"", NoQueue ? "NoQueue" : "");
+                Busy ? "Busy" : "Idle", Name, EventQueue.Count, processed, failures > 0 ? failures + " failures " : "", _noQueue ? "NoQueue" : "");
         }
 
         public void Dispose()
@@ -56,7 +78,7 @@ namespace cogbot.Utilities
             IsDisposing = true;
             lock (TaskQueueHandlers)
                 TaskQueueHandlers.Remove(this);
-            if (EventQueuePing!=null) EventQueuePing.Abort();
+            if (EventQueuePing != null) EventQueuePing.Abort();
             EventQueueHandler.Abort();
             try
             {
@@ -68,8 +90,6 @@ namespace cogbot.Utilities
 
         readonly ThreadStart NOTHING = default(ThreadStart);
         private DateTime BusyStart;
-        public bool NoQueue = false;
-
 
         void EventQueue_Handler()
         {
@@ -137,7 +157,7 @@ namespace cogbot.Utilities
             while (!(IsDisposing))
             {
                 Thread.Sleep(PING_TIME);
-                if (NoQueue) continue;
+                if (_noQueue) continue;
                 if (Busy || WaitingOnPing)
                 {
                     if (LastBusy == sequence)
@@ -207,7 +227,7 @@ namespace cogbot.Utilities
         public void Enqueue(ThreadStart evt)
         {
             if (IsDisposing) return;
-            if (NoQueue)
+            if (_noQueue)
             {
                 DoNow(evt);
                 return;
