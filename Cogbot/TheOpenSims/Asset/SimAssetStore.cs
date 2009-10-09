@@ -1334,9 +1334,10 @@ namespace cogbot.TheOpenSims
 
         public static SimAsset FindOrCreateAsset(UUID uUID, AssetType type)
         {
+            SimAsset anim;
             lock (uuidAsset)
             {
-                SimAsset anim = FindAsset(uUID);
+                anim = FindAsset(uUID);
                 if (anim == null)
                 {
                     switch (type)
@@ -1345,7 +1346,7 @@ namespace cogbot.TheOpenSims
                             anim = new SimAnimation(uUID, null);
                             break;
                         case AssetType.Sound:
-                        case AssetType.SoundWAV:                         
+                        case AssetType.SoundWAV:
                             anim = new SimSound(uUID, null, type);
                             break;
                         case AssetType.Texture:
@@ -1380,13 +1381,12 @@ namespace cogbot.TheOpenSims
                             throw new NotImplementedException("FindOrCreateAsset " + type);
                             break;
                     }
-                    if (anim != null)
-                    {
-                        uuidAsset[uUID] = anim;
-                    }
-                    WorldObjects.EnqueueRequestAsset(uUID, type, true);
+                    uuidAsset[uUID] = anim;
                 }
-                if (anim != null) anim.AssetType = type;
+                anim.AssetType = type;
+            }
+            {
+                WorldObjects.EnqueueRequestAsset(uUID, type, true);
                 InternAsset(anim);
                 return anim;
             }
