@@ -1,5 +1,7 @@
 using System;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
+using PathSystem3D.Navigation;
 
 namespace cogbot.Actions
 {
@@ -9,19 +11,28 @@ namespace cogbot.Actions
         {
             Name = "wind";
             Description = "Displays current wind data";
+            Usage = "wind [position]";
             Category = CommandCategory.Simulator;
-            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
+            Parameters = new[] {new NamedParam(typeof (SimPosition), typeof (SimPosition))};
         }
 
         public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             // Get the agent's current "patch" position, where each patch of
             // wind data is a 16x16m square
-            Vector3 agentPos = GetSimPosition();
+            int argsUsed;
+            SimPosition aPos = WorldSystem.GetVector(args, out argsUsed);
+            Vector3 agentPos = aPos.SimPosition;
             int xPos = (int)Utils.Clamp(agentPos.X, 0.0f, 255.0f) / 16;
             int yPos = (int)Utils.Clamp(agentPos.Y, 0.0f, 255.0f) / 16;
-
-            Vector2 windSpeed = Client.Terrain.WindSpeeds[yPos * 16 + xPos];
+            Simulator sim = SimRegion.GetRegion(aPos.GlobalPosition).TheSimulator;
+            ulong handle = sim.Handle;
+            if (!Client.Terrain.WindSpeeds.ContainsKey(handle))
+            {
+                return "Unknown wind speed at sim: " + sim;
+            }
+            Vector2[] windSpeeds = Client.Terrain.WindSpeeds[handle];
+            Vector2 windSpeed = windSpeeds[yPos * 16 + xPos];
 
             return "Local wind speed is " + windSpeed.ToString();
         }
