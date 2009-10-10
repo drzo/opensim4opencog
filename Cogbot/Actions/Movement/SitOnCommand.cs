@@ -17,10 +17,10 @@ namespace cogbot.Actions
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };  
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return "Usage: siton UUID";
+                return Failure(Usage);// " siton UUID";
 
             int argsUsed;
             Primitive targetPrim = WorldSystem.GetPrimitive(args, out argsUsed);
@@ -28,11 +28,11 @@ namespace cogbot.Actions
             if (targetPrim != null)
             {
                 WorldSystem.TheSimAvatar.SitOn(WorldSystem.GetSimObject(targetPrim));
-                return "Requested to sit on prim " + targetPrim.ID.ToString() +
-                       " (" + targetPrim.LocalID + ")";
+                return Success("Requested to sit on prim " + targetPrim.ID.ToString() +
+                       " (" + targetPrim.LocalID + ")");
             }
 
-            return "Couldn't find a prim to sit on with UUID " + args[0];
+            return Failure("Couldn't find a prim to sit on with UUID " + args[0]);
         }
 
 

@@ -13,7 +13,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Simulator;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (!registeredCallback)
             {
@@ -22,7 +22,7 @@ namespace cogbot.Actions
             }
             Client.Grid.RequestMapLayer(GridLayerType.Objects);
 
-            return "Sent.";
+            return Success("Sent " + Name);
         }
 
         private void Grid_OnGridLayer(GridLayer layer)

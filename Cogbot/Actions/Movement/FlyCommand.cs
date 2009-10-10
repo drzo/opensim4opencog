@@ -12,7 +12,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             bool start = true;
 
@@ -22,12 +22,12 @@ namespace cogbot.Actions
             if (start)
             {
                 Client.Self.Fly(true);
-                return "Started flying";
+                return Success("Started flying");
             }
             else
             {
                 Client.Self.Fly(false);
-                return "Stopped flying";
+                return Success("Stopped flying");
             }
         }
     }

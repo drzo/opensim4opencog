@@ -14,7 +14,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Other;
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
             System.Threading.AutoResetEvent waitBalance = new System.Threading.AutoResetEvent(false);
             AgentManager.BalanceCallback del = delegate(int balance) { waitBalance.Set(); };
@@ -26,7 +26,7 @@ namespace cogbot.Actions
                 result = Client.ToString() + " has L$: " + Client.Self.Balance;
             }            
             Client.Self.OnBalanceUpdated -= del;
-            return result;
+            return Success(result);
 
 		}
     }

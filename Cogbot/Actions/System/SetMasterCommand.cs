@@ -21,14 +21,14 @@ namespace cogbot.Actions
             Category = CommandCategory.TestClient;
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
 			string masterName = String.Empty;
 			for (int ct = 0; ct < args.Length;ct++)
 				masterName = masterName + args[ct] + " ";
             masterName = masterName.TrimEnd();
             if (masterName.Length == 0)
-                return "Usage: setmaster [name or uuid]";
+                return Failure(Usage);// " setmaster [name or uuid]";
             UUID masterUUID;
             if (UUID.TryParse(masterName, out masterUUID))
             {
@@ -39,7 +39,7 @@ namespace cogbot.Actions
                 }
                 Client.Self.InstantMessage(
                     Client.MasterKey, "You are now my master.  IM me with \"help\" for a command list.");
-                return "Set master UUID with name = " + Client.MasterName;
+                return Success("Set master UUID with name = " + Client.MasterName);
             }
             masterUUID = WorldSystem.GetUserID(masterName);
             //if (String.IsNullOrEmpty(Client.MasterName))                 
@@ -51,7 +51,7 @@ namespace cogbot.Actions
                 Client.Self.InstantMessage(
                     Client.MasterKey, "You are now my master.  IM me with \"help\" for a command list.");
 
-                return "Set master UUID with name = " + Client.MasterName;
+                return Success("Set master UUID with name = " + Client.MasterName);
             }
 
             DirectoryManager.DirPeopleReplyCallback callback = new DirectoryManager.DirPeopleReplyCallback(KeyResolvHandler);
@@ -70,14 +70,14 @@ namespace cogbot.Actions
             {
                 keyResolution.Reset();
                 Client.Directory.OnDirPeopleReply -= callback;
-                return "Unable to obtain UUID for \"" + masterName + "\". Master unchanged.";
+                return Failure("Unable to obtain UUID for \"" + masterName + "\". Master unchanged.");
             }
             
             // Send an Online-only IM to the new master
             Client.Self.InstantMessage(
                 Client.MasterKey, "You are now my master.  IM me with \"help\" for a command list.");
 
-            return String.Format("Master set to {0} ({1})", masterName, Client.MasterKey.ToString());
+            return Success(string.Format("Master set to {0} ({1})", masterName, Client.MasterKey.ToString()));
 		}
 
         private void KeyResolvHandler(UUID queryid, List<DirectoryManager.AgentSearchData> matches)

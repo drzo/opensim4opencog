@@ -16,9 +16,9 @@ namespace cogbot.Actions
             Category = CommandCategory.TestClient;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length < 1) return Usage;
+            if (args.Length < 1) return Failure(Usage);
             var v = WorldObjects.uuidTypeObject;
             UUID uuid;
             string botcmd = String.Join(" ", args, 0, args.Length).Trim();
@@ -37,7 +37,7 @@ namespace cogbot.Actions
             {
                 WriteLine("Object not found for UUID " + uuid);
             }
-            return "Done with UUID " + uuid + " obj= " + obj;
+            return Success("Done with UUID " + uuid + " obj= " + obj);
         }
     }
 }

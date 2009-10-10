@@ -19,7 +19,7 @@ namespace cogbot.Actions
         }
         internal frmMain PanelGUI;
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (PanelGUI == null)
             {
@@ -47,7 +47,7 @@ namespace cogbot.Actions
                 PanelGUI.Invoke(new MethodInvoker(PanelGUI.Show));
                 //PanelGUI.Show();
                 //})).Start();
-                return "radegast shown";
+                return Success("radegast shown");
             }
         }
     }

@@ -15,10 +15,10 @@ namespace cogbot.Actions.Movement
             Category = CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length > 1)
-                return "Usage: back [seconds]";
+                return Failure(Usage);// " back [seconds]";
 
             if (args.Length == 0)
             {
@@ -32,7 +32,7 @@ namespace cogbot.Actions.Movement
                 // Parse the number of seconds
                 int duration;
                 if (!Int32.TryParse(args[0], out duration))
-                    return "Usage: back [seconds]";
+                    return Failure(Usage);// " back [seconds]";
                 // Convert to milliseconds
                 duration *= 1000;
 
@@ -51,7 +51,7 @@ namespace cogbot.Actions.Movement
                 Client.Self.Movement.AtNeg = false;
             }
 
-            return "Moved backward";
+            return Success("Moved backward");
         }
     }
 }

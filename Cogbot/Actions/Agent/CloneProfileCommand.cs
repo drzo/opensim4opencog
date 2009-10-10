@@ -29,10 +29,10 @@ namespace cogbot.Actions
             Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Description;
+                return Failure(Description);
 
             UUID targetID;
             ReceivedProperties = false;
@@ -51,7 +51,7 @@ namespace cogbot.Actions
             }           
 
 			if (!UUIDTryParse(args,0, out targetID))
-				return Description;
+				return Failure(Description);
 
             // Request all of the packets that make up an avatar profile
             Client.Avatars.RequestAvatarProperties(targetID);
@@ -66,7 +66,7 @@ namespace cogbot.Actions
 
             // Check if everything showed up
             if (!ReceivedInterests || !ReceivedProperties || !ReceivedGroups)
-                return "Failed to retrieve a complete profile for that UUID";
+                return Failure("Failed to retrieve a complete profile for that UUID");
 
             // Synchronize our profile
             Client.Self.UpdateInterests(Interests);
@@ -81,7 +81,7 @@ namespace cogbot.Actions
                 Client.Groups.RequestJoinGroup(groupID);
             }
 
-            return "Synchronized our profile to the profile of " + targetID.ToString();
+            return Success("Synchronized our profile to the profile of " + targetID.ToString());
         }
 
         void Avatars_OnAvatarPicks(UUID avatarid, Dictionary<UUID, string> picks)

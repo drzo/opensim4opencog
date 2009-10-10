@@ -13,7 +13,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length == 0)
             {
@@ -30,7 +30,7 @@ namespace cogbot.Actions.Movement
                         WriteLine(R.NetworkInfo());
                 }
             }
-            return "ran " + Name;
+            return Success("Ran " + Name);
         }
     }
 }

@@ -15,13 +15,13 @@ namespace cogbot.Actions
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 
-        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
          //   base.acceptInput(verb, args);
             Client.Self.Fly(false);
 
             TheBotClient.describeNext = true;
-            return "$bot stopped flying";
+            return Success("$bot stopped flying");
         }
     }
 }

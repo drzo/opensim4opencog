@@ -24,10 +24,10 @@ namespace cogbot.Actions
             Category = CommandCategory.Groups;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Description;
+                return Failure(Description);
 
             GroupName = String.Empty;
             for (int i = 0; i < args.Length; i++)
@@ -43,9 +43,9 @@ namespace cogbot.Actions
                 GroupsEvent.WaitOne(30000, false);
                 GroupsEvent.Reset();
                 Client.Groups.OnGroupRoles -= callback;
-                return Client.ToString() + " got group roles";
+                return Success(Client.ToString() + " got group roles");
             }
-            return Client.ToString() + " doesn't seem to have any roles in the group " + GroupName;
+            return Failure(Client.ToString() + " doesn't seem to have any roles in the group " + GroupName);
         }
 
         private void GroupRolesHandler(UUID requestID, UUID groupID, Dictionary<UUID, GroupRole> roles)

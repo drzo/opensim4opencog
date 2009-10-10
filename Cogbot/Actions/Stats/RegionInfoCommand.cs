@@ -14,7 +14,7 @@ namespace cogbot.Actions
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             StringBuilder output = new StringBuilder();
             output.AppendLine(Client.Network.CurrentSim.ToString());
@@ -46,7 +46,7 @@ namespace cogbot.Actions
             output.Append("Water Height: ");
             output.AppendLine(Client.Network.CurrentSim.WaterHeight.ToString());
 
-            return output.ToString();
+            return Success(output.ToString());
         }
     }
 }

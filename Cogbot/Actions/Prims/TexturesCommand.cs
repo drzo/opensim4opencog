@@ -21,10 +21,10 @@ namespace cogbot.Actions
 
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return "Usage: textures [on/off]";
+                return Failure(Usage);// " textures [on/off]";
 
             if (args[0].ToLower() == "on")
             {
@@ -35,16 +35,16 @@ namespace cogbot.Actions
                     Client.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);                    
                 }
                 Client.ClientManager.GetTextures = enabled = true;
-                return "Texture downloading is on";
+                return Success("Texture downloading is on");
             }
             else if (args[0].ToLower() == "off")
             {
                 Client.ClientManager.GetTextures = enabled = false;
-                return "Texture downloading is off";
+                return Success("Texture downloading is off");
             }
             else
             {
-                return "Usage: textures [on/off]";
+                return Failure(Usage);// " textures [on/off]";
             }
         }
 

@@ -14,10 +14,10 @@ namespace cogbot.Actions
             Category = CommandCategory.Other;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return "Usage: showevent [eventID] (use searchevents to get ID)";
+                return Failure(Usage);// " showevent [eventID] (use searchevents to get ID)";
 
             DirectoryManager.EventInfoCallback callback = new DirectoryManager.EventInfoCallback(matchedevent =>
                                                                                                      {
@@ -36,11 +36,11 @@ namespace cogbot.Actions
             if (UInt32.TryParse(args[0], out eventID))
             {
                 Client.Directory.EventInfoRequest(eventID);
-                return "Query Sent";
+                return Success("Query Sent");
             }
             else
             {
-                return "Usage: showevent [eventID] (use searchevents to get ID)";
+                return Failure(Usage);// " showevent [eventID] (use searchevents to get ID)";
             }
         }
     }

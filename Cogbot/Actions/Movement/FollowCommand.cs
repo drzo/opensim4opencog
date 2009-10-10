@@ -21,7 +21,7 @@ namespace cogbot.Actions
             Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };      
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
             // Construct the target name from the passed arguments
 			string target = String.Empty;
@@ -39,14 +39,14 @@ namespace cogbot.Actions
                 Active = false;
                 targetLocalID = 0;
                 Client.Self.AutoPilotCancel();
-                return "Following is off";
+                return Success("Following is off");
             }
             else
             {
                 if (Follow(target))
-                    return "Following " + target;
+                    return Success("Following " + target);
                 else
-                    return "Unable to follow " + target + ".  Client may not be able to see that avatar.";
+                    return Failure("Unable to follow " + target + ".  Client may not be able to see that avatar.");
             }
 		}
 

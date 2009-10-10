@@ -14,14 +14,14 @@ namespace cogbot.Actions
             Category = CommandCategory.Communication;
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
             int channel = 0;
             int startIndex = 0;
             
             if (args.Length < 1)
             {
-                return "usage: me (optional channel) whatever";
+                return Failure(Usage);// " me (optional channel) whatever";
             }
             else if (args.Length > 1)
             {
@@ -39,7 +39,7 @@ namespace cogbot.Actions
 
             Client.Self.Chat("/me " + message.ToString(), channel, ChatType.Normal);
 
-            return "Emoted " + message.ToString();
+            return Success("Emoted " + message.ToString());
 		}
     }
 }

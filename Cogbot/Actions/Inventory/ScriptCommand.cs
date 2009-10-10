@@ -13,15 +13,15 @@ namespace cogbot.Actions
             Category = CommandCategory.TestClient;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length != 1)
-                return "Usage: script [filename]";
+                return Failure(Usage);// " script [filename]";
 
             // Load the file
             string[] lines;
             try { lines = File.ReadAllLines(args[0]); }
-            catch (Exception e) { return e.Message; }
+            catch (Exception e) { return Failure(e.Message); }
 
             // Execute all of the commands
             for (int i = 0; i < lines.Length; i++)
@@ -32,7 +32,7 @@ namespace cogbot.Actions
                     WriteLine(TheBotClient.ExecuteCommand(line, WriteLine));
             }
 
-            return "Finished executing " + lines.Length + " commands";
+            return Success("Finished executing " + lines.Length + " commands");
         }
     }
 }

@@ -27,10 +27,10 @@ namespace cogbot.Actions
         /// <param name="args"></param>
         /// <param name="fromAgentID"></param>
         /// <returns></returns>
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return "Usage: uploadscript filename.lsl";
+                return Failure(Usage);// " uploadscript filename.lsl";
 
             string file = String.Empty;
             for (int ct = 0; ct < args.Length; ct++)
@@ -38,7 +38,7 @@ namespace cogbot.Actions
             file = file.TrimEnd();
 
             if (!File.Exists(file))
-                return String.Format("Filename '{0}' does not exist", file);
+                return Failure( String.Format("Filename '{0}' does not exist", file));
 
             string ret = String.Format("Filename: {0}", file);
 
@@ -61,13 +61,13 @@ namespace cogbot.Actions
                             }));
                     });
                 }
-                return ret;
+                return Success(ret);
 
             }
             catch (System.Exception e)
             {
                 Logger.Log(e.ToString(), Helpers.LogLevel.Error, Client);
-                return String.Format("Error creating script for {0}", ret);
+                return Failure(String.Format("Error creating script for {0}", ret));
             }
         }
         /// <summary>

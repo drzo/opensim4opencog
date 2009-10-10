@@ -16,10 +16,10 @@ namespace cogbot.Actions
             Category = CommandCategory.TestClient;
 		}
 
-		public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+		public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
 			if (args.Length < 1)
-				return "Usage: load AssemblyNameWithoutExtension";
+				return Failure(Usage);// " load AssemblyNameWithoutExtension";
 
             BotClient Client = TheBotClient;
 
@@ -34,11 +34,11 @@ namespace cogbot.Actions
                 Assembly assembly = Assembly.LoadFile(loadfilename);
                 ClientManager.SingleInstance.RegisterAssembly(assembly);
                 Client.LoadAssembly(assembly);
-                return "Assembly " + filename + " loaded.";
+                return Success("Assembly " + filename + " loaded.");
             }
             catch (Exception e)
             {                
-                   return "FAILED: load " + filename + " " +e;
+                   return Failure("failed: load " + filename + " " +e);
             }
 		}
     }

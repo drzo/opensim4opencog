@@ -20,7 +20,7 @@ namespace cogbot.Actions
             currentSession = UUID.Zero;
         }
 
-        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             //base.acceptInput(verb, args);
 
@@ -30,20 +30,20 @@ namespace cogbot.Actions
                 Avatar avatar;
                 if (!WorldSystem.tryGetAvatar(to, out avatar))
                 {
-                    return ("I don't know who " + to + "is.");
+                    return Failure("I don't know who " + to + "is.");
                 }
                 currentAvatar = avatar.ID;
             }
             else if (currentAvatar == UUID.Zero)
             {
-                return ("Please provide a name to whisper to.");
+                return Failure("Please provide a name to whisper to.");
             }
 
             if (currentSession != UUID.Zero)
                 Client.Self.InstantMessage(currentAvatar, args.objectPhrase, currentSession);
             else
                 Client.Self.InstantMessage(currentAvatar, args.objectPhrase);
-            return "sent message";
+            return Success("sent message");
         }
     }
 }

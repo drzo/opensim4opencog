@@ -14,21 +14,21 @@ namespace cogbot.Actions.Appearance
             Name = "avatarinfo";
             Description = "Print out information on a nearby avatar. Usage: avatarinfo [firstname] [lastname]";
             Category = CommandCategory.Appearance;
-            Parameters = new [] {  new NamedParam(typeof(SimAvatar), typeof(UUID)) };
+            Parameters = new[] { new NamedParam(typeof(SimAvatar), typeof(UUID)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length == 0)
             {
-                //return "Usage: avatarinfo [firstname] [lastname]";
+                //return Failure(Usage);// " avatarinfo [firstname] [lastname]";
                 int count = 0;
                 foreach (var s in WorldObjects.SimAvatars)
                 {
-                    WriteLine(" {0}: {1}",s.GetName(), s.DebugInfo());
+                    WriteLine(" {0}: {1}", s.GetName(), s.DebugInfo());
                     count++;
                 }
-                return "Avatars shown: " + count;
+                return Success("Avatars shown: " + count);
             }
 
             string targetName = String.Join(" ", args);
@@ -54,11 +54,11 @@ namespace cogbot.Actions.Appearance
                     }
                 }
 
-                return output.ToString();
+                return Success(output.ToString());
             }
             else
             {
-                return "No nearby avatar with the name " + targetName;
+                return Failure("No nearby avatar with the name " + targetName);
             }
         }
     }

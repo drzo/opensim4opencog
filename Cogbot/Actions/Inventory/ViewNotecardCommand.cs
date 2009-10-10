@@ -16,6 +16,7 @@ namespace cogbot.Actions
         {
             Name = "viewnote";
             Description = "Downloads and displays a notecard asset";
+			Usage = "viewnote [notecard asset uuid]";
             Category = CommandCategory.Inventory;
         }
 
@@ -25,17 +26,17 @@ namespace cogbot.Actions
         /// <param name="args"></param>
         /// <param name="fromAgentID"></param>
         /// <returns></returns>
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
 
             if (args.Length < 1)
             {
-                return "Usage: viewnote [notecard asset uuid]";
+                return Failure(Usage);// " viewnote [notecard asset uuid]";
             }
             UUID note;
-            if (!UUID.TryParse(args[0], out note))
+            if (!UUIDTryParse(args[0], out note))
             {
-                return "First argument expected agent UUID.";
+                return Failure( "First argument expected agent UUID.");
             }
 
             System.Threading.AutoResetEvent waitEvent = new System.Threading.AutoResetEvent(false);
@@ -72,7 +73,7 @@ namespace cogbot.Actions
             }
 
             // return results
-            return result.ToString();
+            return Success(result.ToString());;
         }
     }
 }

@@ -16,12 +16,12 @@ namespace cogbot.Actions
             Category = CommandCategory.Other;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             //BotClient Client = TheBotClient;
             if (args.Length < 1)
             {
-                return "Usage: thread anim 30 crouch";
+                return Failure(Usage);// " thread anim 30 crouch";
             }
             if (args.Length == 1 && args[0]=="list")
             {
@@ -34,7 +34,7 @@ namespace cogbot.Actions
                     //  at System.Threading.Thread.IsBackgroundNative()
                     s+=""+ n + ": " + t.Name + " alive=" + t.IsAlive;
                 }
-                return s;
+                return Success(s);
             }
             String cmd = String.Join(" ", args);
             Thread thread = new Thread(new ThreadStart(delegate()
@@ -65,7 +65,7 @@ namespace cogbot.Actions
             thread.Name = "ThreadCommnand for " + cmd;
             thread.Start();
             lock (Client.botCommandThreads) Client.botCommandThreads.Add(thread);
-            return thread.Name;
+            return Success(thread.Name);
         }
     }
 }

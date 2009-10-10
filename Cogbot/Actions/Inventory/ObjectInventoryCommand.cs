@@ -15,14 +15,14 @@ namespace cogbot.Actions
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return "Usage: objectinventory [objectID]";
+                return Failure(Usage);// " objectinventory [objectID]";
 
             int argsUsed;
             Primitive found = WorldSystem.GetPrimitive(args, out argsUsed);
-            if (found == null) return "Couldn't find object " + String.Join(" ", args);
+            if (found == null) return Failure("Couldn't find object " + String.Join(" ", args));
 
             uint objectLocalID = found.LocalID;
             UUID objectID = found.ID;
@@ -47,11 +47,11 @@ namespace cogbot.Actions
                     }
                 }
 
-                return result;
+                return Success(result);
             }
             else
             {
-                return "Failed to download task inventory for " + objectLocalID;
+                return Failure("failed to download task inventory for " + objectLocalID);
             }
         }
     }

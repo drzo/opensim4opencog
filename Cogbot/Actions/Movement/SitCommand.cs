@@ -15,7 +15,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Movement;
 		}
 			
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
             Primitive closest = null;
 		    double closestDistance = Double.MaxValue;
@@ -43,11 +43,11 @@ namespace cogbot.Actions
                 Client.Self.RequestSit(closest.ID, Vector3.Zero);
                 Client.Self.Sit();
 
-                return "Sat on " + closest.ID + " (" + closest.LocalID + "). Distance: " + closestDistance;
+                return Success("Sat on " + closest.ID + " (" + closest.LocalID + "). Distance: " + closestDistance);
             }
             else
             {
-                return "Couldn't find a nearby prim to sit on";
+                return Failure("Couldn't find a nearby prim to sit on");
             }
 		}
     }

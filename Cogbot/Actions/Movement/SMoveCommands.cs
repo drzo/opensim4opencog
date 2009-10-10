@@ -23,7 +23,7 @@ namespace cogbot.Actions.Movement
     //        Category = cogbot.Actions.CommandCategory.Movement;
     //    }
 
-    //    public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+    //    public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
     //    {
     //        string[] tokens = args;
     //        if (tokens.Length > 0 && !String.IsNullOrEmpty(tokens[0]))
@@ -59,7 +59,7 @@ namespace cogbot.Actions.Movement
     //        th.TrySetApartmentState(ApartmentState.STA);
     //        th.Start();
     //        ///  BaseIdealistViewer.guithread.Start();//.Main(args);
-    //        return "ran " + Name;
+    //        return Success("Ran " + Name);
     //    }
     //}
 
@@ -72,11 +72,11 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             GraphFormer gf = new GraphFormer(SimGlobalRoutes.Instance);
             gf.Show();
-            return "ran " + Name;
+            return Success("Ran " + Name);
         }
     }
     class pfdebug : cogbot.Actions.Command, SystemApplicationCommand
@@ -88,7 +88,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length == 0)
             {
@@ -106,7 +106,7 @@ namespace cogbot.Actions.Movement
                         R.ShowDebugger();
                 }
             }
-            return "ran " + Name;
+            return Success("Ran " + Name);
         }
     }
 
@@ -119,7 +119,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             lock (Client.Network.Simulators)
             {
@@ -128,7 +128,7 @@ namespace cogbot.Actions.Movement
                     WorldSystem.CatchUp(S);
                 }
             }
-            return "ran " + Name;
+            return Success("Ran " + Name);
         }
     }
 
@@ -141,7 +141,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             float Dist;
             if (args.Length > 1 && float.TryParse(args[1], out Dist))
@@ -154,7 +154,7 @@ namespace cogbot.Actions.Movement
                 Vector3d av = WorldSystem.TheSimAvatar.GetGlobalLeftPos(int.Parse(args[0]), 10);
                 WorldSystem.TheSimAvatar.TurnToward(av);
             }
-            return "ran " + Name;
+            return Success("Ran " + Name);
         }
     }
 
@@ -168,7 +168,7 @@ namespace cogbot.Actions.Movement
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length==0)
             {
@@ -180,7 +180,7 @@ namespace cogbot.Actions.Movement
                 WriteLine("MeshInfo: " + o);
                 WriteLine(o.Mesh.DebugString());
             }
-            return "ran " + Name;
+            return Success("Ran " + Name);
         }
     }
 
@@ -194,7 +194,7 @@ namespace cogbot.Actions.Movement
             Parameters = new[] {  new NamedParam(typeof(SimPosition),typeof(SimPosition)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int argcount;
             SimPosition pos = WorldSystem.GetVector(args, out argcount);
@@ -203,7 +203,7 @@ namespace cogbot.Actions.Movement
             WriteLine("SimZInfo: " + pos + " " + R.GetGroundLevel(v3.X, v3.Y));
             SimWaypoint WP = R.GetWaypointOf(v3);
             WriteLine("WaypointInfo: {0}", WP.OccupiedString(R.GetCollisionPlane(v3.Z)));
-            return "ran " + Name;
+            return Success("Ran " + Name);
         }
     }
 
@@ -217,7 +217,7 @@ namespace cogbot.Actions.Movement
             Parameters = new[] {  new NamedParam(typeof(SimPosition),typeof(SimPosition)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int argcount;
             SimPosition pos = WorldSystem.GetVector(args, out argcount);
@@ -229,7 +229,7 @@ namespace cogbot.Actions.Movement
             Vector3 landing = R.CreateAndDropPhysicalCube(v3);
             WriteLine("SimHInfo: {0}", landing);
 #endif
-            return "ran " + Name;
+            return Success("Ran " + Name);
         }
     }
 
@@ -244,7 +244,7 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             Image I = null;// WorldSystem.miniMap.Image;
             if (I == null)
@@ -261,7 +261,7 @@ namespace cogbot.Actions.Movement
             }
 
             WorldSystem.SimPaths.UpdateFromImage(I);
-            return "ran " + Name;
+            return Success("Ran " + Name);
         }
     }
     class srprim : cogbot.Actions.Command
@@ -274,7 +274,7 @@ namespace cogbot.Actions.Movement
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             IEnumerable<SimObject> objs = WorldSystem.GetAllSimObjects(String.Join(" ", args));
             foreach (SimObject o in objs)
@@ -282,7 +282,7 @@ namespace cogbot.Actions.Movement
                 o.UpdateOccupied();
             }
             SimRegion.BakeRegions();
-            return "ran " + Name;
+            return Success("Ran " + Name);
         }
     }
 
@@ -295,7 +295,7 @@ namespace cogbot.Actions.Movement
     //        Category = cogbot.Actions.CommandCategory.Movement;
     //    }
 
-    //    public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+    //    public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
     //    {
     //        int argsused;
     //        SimPosition v3 = WorldSystem.GetVector(args, out argsused);
@@ -331,13 +331,13 @@ namespace cogbot.Actions.Movement
             Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int argcount;
             SimPosition pos = WorldSystem.GetVector(args, out argcount);
             if (pos == null)
             {
-                return "Cannot " + Name + " to " + String.Join(" ", args);
+                return Failure("Cannot " + Name + " to " + String.Join(" ", args));
             }
             int maxSeconds = 6;
             float maxDistance = 1f;
@@ -349,12 +349,12 @@ namespace cogbot.Actions.Movement
             bool MadIt = WorldSystem.TheSimAvatar.MoveTo(pos.GlobalPosition, maxDistance, maxSeconds);
             if (MadIt)
             {
-                return ("SUCCESS " + str);
+                return Success("SUCCESS " + str);
 
             }
             else
             {
-                return ("FAILED " + str);
+                return Success("FAILED " + str);
             }
         }
     }
@@ -370,13 +370,13 @@ namespace cogbot.Actions.Movement
 
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int argcount;
             SimPosition pos = WorldSystem.GetVector(args, out argcount);
             if (pos == null)
             {
-                return String.Format("Cannot {0} to {1}", Name, String.Join(" ", args));
+                return Failure(String.Format("Cannot {0} to {1}", Name, String.Join(" ", args)));
             }
             int maxSeconds = 6;
             float maxDistance = 1f;
@@ -388,12 +388,12 @@ namespace cogbot.Actions.Movement
             bool MadIt = WorldSystem.TheSimAvatar.GotoTarget(pos);
             if (MadIt)
             {
-                return String.Format("SUCCESS {0}", str);
+                return Success(string.Format("SUCCESS {0}", str));
 
             }
             else
             {
-                return ("FAILED " + str);
+                return Success("FAILED " + str);
             }
         }
     }
@@ -408,20 +408,20 @@ namespace cogbot.Actions.Movement
             Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int argcount;
             SimPosition pos = WorldSystem.GetVector(args, out argcount);
             if (pos == null)
             {
-                return "Cannot " + Name + " to " + String.Join(" ", args);
+                return Failure("Cannot " + Name + " to " + String.Join(" ", args));
             }
 
             Vector3d v3d = pos.GlobalPosition;
             Vector3 v3 = pos.SimPosition;
             SimAbstractMover sam = SimCollisionPlaneMover.CreateSimPathMover(WorldSystem.TheSimAvatar, pos, pos.GetSizeDistance());
             sam.BlockTowardsVector(v3);
-            return ("SUCCESS ");
+            return Success("SUCCESS ");
         }
     }
 
@@ -435,17 +435,17 @@ namespace cogbot.Actions.Movement
             Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             float distance = 2.0f;
 
             int argsUsed;
             SimPosition simObject = WorldSystem.GetVector(args, out argsUsed);
 
-            if (simObject==null) return "Cannot find " + string.Join(" ", args); 
+            if (simObject==null) return Failure("Cannot find " + string.Join(" ", args)); 
             if (!simObject.IsRegionAttached)
             {
-                return "Cannot get SimPosition of " + simObject;
+                return Failure("Cannot get SimPosition of " + simObject);
             }
 
             distance = 0.5f + simObject.GetSizeDistance();
@@ -460,7 +460,7 @@ namespace cogbot.Actions.Movement
             WriteLine("gto {0} {1}", simObject, distance);
             WorldSystem.TheSimAvatar.MoveTo(simObject.GlobalPosition, distance, 10);
             WorldSystem.TheSimAvatar.StopMoving();
-            return WorldSystem.TheSimAvatar.DistanceVectorString(simObject);
+            return Success(WorldSystem.TheSimAvatar.DistanceVectorString(simObject));
         }
 
         private void Goto(Vector3 target, float p)

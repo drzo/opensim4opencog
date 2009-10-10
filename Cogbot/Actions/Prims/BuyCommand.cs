@@ -16,22 +16,22 @@ namespace cogbot.Actions
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length==0) {
-                return Usage;
+                return Failure(Usage);
             }
             int used;
             List<Primitive> prims = new List<Primitive>();
             SimObject o = WorldSystem.GetSimObject(args, out used);
-            if (o == null) return string.Format("Cant find {0}", string.Join(" ", args));
+            if (o == null) return Failure(string.Format("Cant find {0}", string.Join(" ", args)));
             Primitive.ObjectProperties Properties = o.Properties;
-            if (Properties == null) return "Still waiting on properties for " + o;
+            if (Properties == null) return Failure("Still waiting on properties for " + o);
             Primitive currentPrim = o.Prim;
-            if (currentPrim == null) return "Still waiting on Prim for " + o;
+            if (currentPrim == null) return Failure("Still waiting on Prim for " + o);
             GridClient client = TheBotClient;
             client.Objects.BuyObject(o.GetSimulator(), currentPrim.LocalID, Properties.SaleType, Properties.SalePrice, client.Self.ActiveGroup, client.Inventory.FindFolderForType(AssetType.Object));
-            return Name + " on " + o;
+            return Success(Name + " on " + o);
         }
     }
 }

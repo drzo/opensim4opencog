@@ -14,7 +14,7 @@ namespace cogbot.Actions
 			Usage = "To cancel a particular action, type \"stop <action>\"";
         }
 
-        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             //base.acceptInput(verb, args);
 
@@ -53,7 +53,7 @@ namespace cogbot.Actions
             }
             WorldSystem.TheSimAvatar.StopMoving();
             Client.describeNext = false;
-            return "stopped " + aborted;
+            return Success("Stopped " + aborted);
         }
     }
 }

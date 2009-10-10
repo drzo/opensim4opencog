@@ -15,12 +15,12 @@ namespace cogbot.Actions
             Category = CommandCategory.Other;
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length == 0)
             {
                 ShowEffects = true;
-                return "Viewer effects will be shown on the console";
+                return Success("Viewer effects will be shown on the console");
             }
             else if (args.Length == 1)
             {
@@ -34,17 +34,17 @@ namespace cogbot.Actions
                         Client.Avatars.OnLookAt += new AvatarManager.LookAtCallback(Avatars_OnLookAt);
                         Client.Avatars.OnPointAt += Avatars_OnPointAt;
                     }
-                    return "Viewer effects will be shown on the console";
+                    return Success("Viewer effects will be shown on the console");
                 }
                 else
                 {
                     ShowEffects = false;
-                    return "Viewer effects will not be shown";
+                    return Success("Viewer effects will not be shown");
                 }
             }
             else
             {
-                return "Usage: showeffects [on/off]";
+                return Failure(Usage);// " showeffects [on/off]";
             }
         }
 

@@ -15,14 +15,14 @@ namespace cogbot.Actions
             Usage = "To Stand up, type \"stand\"";
         }
 
-        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             //base.acceptInput(verb, args);
 
             SimActor sitter = WorldSystem.TheSimAvatar;
             if (!sitter.IsSitting)
             {
-                return ("$bot is already standing.");
+                return Success("$bot is already standing.");
             }
             else
             {
@@ -30,7 +30,7 @@ namespace cogbot.Actions
             }
 
             Client.describeNext = true;
-            return("$bot stood up.");
+            return Success("$bot stood up.");
         }
     }
 }

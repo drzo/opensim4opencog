@@ -15,16 +15,16 @@ namespace cogbot.Actions.Inventory.Shell
             Description = "Gives items from the current working directory to an avatar.";
             Category = CommandCategory.Inventory;
         }
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 2)
             {
-                return "Usage: give <agent uuid> <item1> [item2] [item3] [...]";
+                return Failure(Usage);// " give <agent uuid> <item1> [item2] [item3] [...]";
             }
             UUID dest;
             if (!UUIDTryParse(args[0], out dest))
             {
-                return "First argument expected agent UUID.";
+                return Failure( "First argument expected agent UUID.");
             }
             InventoryManager Manager = Client.Inventory;
             if (Client.CurrentDirectory == null)
@@ -41,7 +41,7 @@ namespace cogbot.Actions.Inventory.Shell
                 if (!string.IsNullOrEmpty(found))
                     ret += "No inventory item named " + inventoryName + " found." + nl;
             }
-            return ret;
+            return Success(ret);
         }
 
         private string GiveMatches(InventoryManager manager, string inventoryName, IEnumerable<InventoryBase> contents, UUID dest)

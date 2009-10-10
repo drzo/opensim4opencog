@@ -16,7 +16,7 @@ namespace AIMLBotModule
         public AimlCommand(BotClient testClient)
         {
             Name = "aiml";
-            Description = "Usage: aiml [...text]..";
+            Description = "Usage: aiml [[on|off|reload|learn]|text]";
             Category = CommandCategory.Communication;
         }
 
@@ -28,39 +28,39 @@ namespace AIMLBotModule
             }
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length == 0) return "Usage: aiml [[on|off|reload|learn]|text]";
+            if (args.Length == 0) return Failure(Usage) ;
             string s = args[0].ToLower();
             if (s == "on")
             {
                 WorldSystemModule.RespondToChatByDefaultAllUsers = true;
                 WorldSystemModule.SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), true);
-                return "WorldObjects.RespondToChatByDefaultAllUsers = true;";
+                return Success("WorldObjects.RespondToChatByDefaultAllUsers = true;");
             }
             else
                 if (s == "off")
                 {
                     WorldSystemModule.RespondToChatByDefaultAllUsers = false;
                     WorldSystemModule.SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), false);
-                    return "WorldObjects.RespondToChatByDefaultAllUsers = false;";
+                    return Success("WorldObjects.RespondToChatByDefaultAllUsers = false;");
                 }
                 else
                     if (s == "reload")
                     {
                         WorldSystemModule.MyBot.ReloadAll();
-                        return "WorldSystemModule.MyBot.ReloadAll();";
+                        return Success("WorldSystemModule.MyBot.ReloadAll();");
                     }
                     else
                         if (s == "load")
                         {
-                            if (args.Length < 2) return Usage;
+                            if (args.Length < 2) return Failure(Usage);
                             string stringJoin = String.Join(" ", args, 1, args.Length - 1);
                             WorldSystemModule.MyBot.loadAIMLFromFiles(stringJoin);
-                            return "aiml loaded " + stringJoin;
+                            return Success("aiml loaded " + stringJoin);
                         }
             string joined = String.Join(" ", args);
-            return WorldSystemModule.AIMLInterp(joined);
+            return Success(WorldSystemModule.AIMLInterp(joined));
         }
     }
 

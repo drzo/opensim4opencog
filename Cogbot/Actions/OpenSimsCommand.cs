@@ -17,18 +17,18 @@ namespace cogbot.Actions
             Description = "Tell a bot to do an action on an object";
             Usage = "Usage: " + Name + " [UseTypeName] [object]";
         }
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length < 2) return Usage;
+            if (args.Length < 2) return Failure(Usage);
             SimTypeUsage use = SimTypeSystem.FindObjectUse(args[0]);
-            if (use == null) return "Unknown use: " + args[0];
+            if (use == null) return Failure("Unknown use: " + args[0]);
             args = Parser.SplitOff(args, 1);
             int argsUsed;
             SimObject O = WorldSystem.GetSimObject(args, out argsUsed);
-            if (O == null) return "cant find simobject " + string.Join(" ", args);
+            if (O == null) return Failure("Cant find simobject " + string.Join(" ", args));
             WriteLine("Doing " + use + " for " + O);
             WorldSystem.TheSimAvatar.Do(use, O);
-            return "Did " + use + " for " + O;
+            return Success("Did " + use + " for " + O);
         }
     }
 
@@ -41,7 +41,7 @@ namespace cogbot.Actions
             Usage = "Usage: " + Name + " [ini|list|objects|uses|instances|load]";
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length > 0)
             {
@@ -49,11 +49,11 @@ namespace cogbot.Actions
                 {
                     SimTypeSystem.LoadDefaultTypes0();
                     WorldSystem.RescanTypes();
-                    return "ReLoaded  ini";
+                    return Success("ReLoaded  ini");
                 }
                 if (args[0] == "list")
                 {
-                    return SimTypeSystem.ListTypes(false, true, true, false);
+                    return Success(SimTypeSystem.ListTypes(false, true, true, false));
                 }
                 if (args[0] == "load")
                 {
@@ -62,22 +62,22 @@ namespace cogbot.Actions
                         SimTypeSystem.LoadConfig(args[1]);
                     }
                     WorldSystem.RescanTypes();
-                    return "(Re)Loaded " + args[1];
+                    return Success("(Re)Loaded " + args[1]);
                 }
                 if (args[0] == "uses")
                 {
-                    return SimTypeSystem.ListTypes(true, true, false, false);
+                    return Success(SimTypeSystem.ListTypes(true, true, false, false));
                 }
                 if (args[0] == "objects")
                 {
-                    return SimTypeSystem.ListTypes(true, false, true, false);
+                    return Success(SimTypeSystem.ListTypes(true, false, true, false));
                 }
                 if (args[0] == "instances")
                 {
-                    return SimTypeSystem.ListTypes(true, false, false, true);
+                    return Success(SimTypeSystem.ListTypes(true, false, false, true));
                 }
             }
-            return Usage;
+            return Failure(Usage);
         }
     }
 }

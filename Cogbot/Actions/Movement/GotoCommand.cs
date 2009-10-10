@@ -18,20 +18,20 @@ namespace cogbot.Actions
             Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
 			if (args.Length < 1)
-                return "Usage: goto sim/x/y/z";
+                return Failure(Usage);// " goto sim/x/y/z";
 
             int argsUsed;
             SimPosition position = WorldSystem.GetVector(args, out argsUsed);
-            if (position == null) return "Teleport - Cannot resolve to a location: " + string.Join(" ", args);
+            if (position == null) return Failure( "Teleport - Cannot resolve to a location: " + string.Join(" ", args));
             SimPathStore ps = position.PathStore;
             ulong handle = SimRegion.GetRegionHandle(ps);
             if (Client.Self.Teleport(handle, position.SimPosition))
-                return "Teleported to " + Client.Network.CurrentSim;
+                return Success("Teleported to " + Client.Network.CurrentSim);
             else
-                return "Teleport failed: " + Client.Self.TeleportMessage;
+                return Failure("Teleport failed: " + Client.Self.TeleportMessage);
 
 		}
     }

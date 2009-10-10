@@ -16,14 +16,14 @@ namespace cogbot.Actions
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length==0) {
-                return Usage;
+                return Failure(Usage);
             }
             int used;
             SimObject o = WorldSystem.GetSimObject(args, out used);
-            if (o == null) return string.Format("Cant find {0}", string.Join(" ", args));
+            if (o == null) return Failure(string.Format("Cant find {0}", string.Join(" ", args)));
 
             bool isObject = !(o is SimAvatar);
             UUID target = o.ID;
@@ -35,7 +35,7 @@ namespace cogbot.Actions
                 string strA = args[used].Replace("$","").Replace("L","");               
                 if (!int.TryParse(strA, out amount))
                 {
-                    return "Cant determine amount from: " + args[used];
+                    return Failure("Cant determine amount from: " + args[used]);
                 }
                 if (!isObject)
                 {
@@ -46,7 +46,7 @@ namespace cogbot.Actions
                     client.Self.GiveObjectMoney(target, amount, o.Properties.Name);
                 }
             }
-            return Name + " on " + o;
+            return Success(Name + " on " + o);
         }
     }
 }

@@ -23,11 +23,11 @@ namespace cogbot.Actions
             Category = CommandCategory.Objects;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             // *** parse arguments ***
             if ((args.Length < 1) || (args.Length > 2))
-                return "Usage: findobjects [radius] <search-string>";
+                return Failure(Usage);// " findobjects [radius] <search-string>";
             float radius = float.Parse(args[0]);
             string searchString = (args.Length > 1)? args[1] : "";
 
@@ -63,7 +63,7 @@ namespace cogbot.Actions
                         WriteLine(uuid.ToString());
                 }
 
-                return "Done searching";
+                return Success("Done searching");
             }
             finally
             {

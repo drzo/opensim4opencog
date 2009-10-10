@@ -36,24 +36,24 @@ namespace cogbot.Actions
             return true;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (!IsVoiceManagerRunning())
-                return String.Format("VoiceManager not running for {0}", Client.Self.Name);
+                return Failure(String.Format("VoiceManager not running for {0}", Client.Self.Name));
 
             if (!TheBotClient.VoiceManager.RequestProvisionAccount())
             {
-                return "RequestProvisionAccount failed. Not available for the current grid?";
+                return Failure( "RequestProvisionAccount failed. Not available for the current grid?");
             }
             ProvisionEvent.WaitOne(30 * 1000, false);
 
             if (String.IsNullOrEmpty(VoiceAccount) && String.IsNullOrEmpty(VoicePassword))
             {
-                return String.Format("Voice account information lookup for {0} failed.", Client.Self.Name);
+                return Failure(String.Format("Voice account information lookup for {0} failed.", Client.Self.Name));
             }
 
-            return String.Format("Voice Account for {0}: user \"{1}\", password \"{2}\"",
-                                 Client.Self.Name, VoiceAccount, VoicePassword);
+            return Success(String.Format("Voice Account for {0}: user \"{1}\", password \"{2}\"",
+                                 Client.Self.Name, VoiceAccount, VoicePassword));
         }
 
         void Voice_OnProvisionAccount(string username, string password)

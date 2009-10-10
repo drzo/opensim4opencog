@@ -15,19 +15,19 @@ namespace cogbot.Actions
             Category = CommandCategory.Communication;
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
 			if (!Active)
 			{
 				Active = true;
                 Client.Self.OnChat += new AgentManager.ChatCallback(Self_OnChat);
-				return "Echoing is now on.";
+				return Success("Echoing is now on.");
 			}
 			else
 			{
 				Active = false;
                 Client.Self.OnChat -= new AgentManager.ChatCallback(Self_OnChat);
-				return "Echoing is now off.";
+				return Success("Echoing is now off.");
 			}
 		}
 

@@ -12,12 +12,12 @@ namespace cogbot.Actions
             Category = CommandCategory.Other;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length == 1)
-                return Utils.MD5(args[0]);
+                return Success(Utils.MD5(args[0]));
             else
-                return "Usage: md5 [password]";
+                return Failure(Usage);// " md5 [password]";
         }
     }
 }

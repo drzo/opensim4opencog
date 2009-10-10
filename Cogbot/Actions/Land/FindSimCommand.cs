@@ -14,10 +14,10 @@ namespace cogbot.Actions
             Description = "Searches for a simulator and returns information about it. Usage: findsim [Simulator Name]";
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return "Usage: findsim [Simulator Name]";
+                return Failure(Usage);// " findsim [Simulator Name]";
 
             // Build the simulator name from the args list
             string simName = string.Empty;
@@ -35,9 +35,12 @@ namespace cogbot.Actions
             GridRegion region;
 
             if (Client.Grid.GetGridRegion(simName, GridLayerType.Objects, out region))
-                return String.Format("{0}: handle={1} ({2},{3})", region.Name, region.RegionHandle, region.X, region.Y);
+                return
+                    Success(string.Format("{0}: handle={1} ({2},{3})", region.Name, region.RegionHandle, region.X,
+                                          region.Y));
+
             else
-                return "Lookup of " + simName + " failed";
+                return Failure("Lookup of " + simName + " failed");
         }
     }
 }

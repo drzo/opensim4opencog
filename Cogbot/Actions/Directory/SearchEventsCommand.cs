@@ -18,10 +18,10 @@ namespace cogbot.Actions
             Parameters = new[] { new NamedParam(typeof(GridClient), null) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return "Usage: searchevents [search text]";
+                return Failure(Usage);// " searchevents [search text]";
 
             string searchText = string.Empty;
             for (int i = 0; i < args.Length; i++)
@@ -48,16 +48,21 @@ namespace cogbot.Actions
             Client.Directory.OnEventsReply += cb;
             Client.Directory.StartEventsSearch(searchText, 0);//, "u", 0, DirectoryManager.EventCategories.All, UUID.Random());
             string result;
-            if (waitQuery.WaitOne(20000, false) && Client.Network.Connected)
+            try
             {
-                result = "$bot's query '" + searchText + "' matched " + resultCount + " Events. ";
+                if (waitQuery.WaitOne(20000, false) && Client.Network.Connected)
+                {
+                    return Success("$bot's query '" + searchText + "' matched " + resultCount + " Events. ");
+                }
+                else
+                {
+                    return Failure("Timeout waiting for simulator to respond.");
+                }
             }
-            else
+            finally
             {
-                result = "Timeout waiting for simulator to respond.";
+                Client.Directory.OnEventsReply -= cb;
             }
-            Client.Directory.OnEventsReply -= cb;
-            return result;
         }
     }
 }

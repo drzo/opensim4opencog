@@ -15,11 +15,11 @@ namespace cogbot.Actions
             Category = CommandCategory.TestClient;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             string name = Client.ToString();
 			TheBotClient.ClientManager.Logout(TheBotClient);
-            return "Logged " + name + " out";
+            return Success("Logged " + name + " out");
         }
     }
 }

@@ -17,7 +17,7 @@ namespace cogbot.Actions
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 
-        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
           //  base.acceptInput(verb, args);
 
@@ -30,7 +30,7 @@ namespace cogbot.Actions
                 Thread.Sleep(1000);
                 Client.Self.Movement.UpPos = false;
                 Client.Self.Movement.SendUpdate(true);
-                return "flew up";
+                return Success("flew up");
             }
             else if (args.str == "down")
             {
@@ -39,12 +39,12 @@ namespace cogbot.Actions
                 Thread.Sleep(1000);
                 Client.Self.Movement.UpNeg = false;
                 Client.Self.Movement.SendUpdate(true);
-                return "flew down";
+                return Success("flew down");
             }
             else
             {
                 Client.Self.Fly(true);
-                return "now flying";
+                return Success("now flying");
             }
 
         }

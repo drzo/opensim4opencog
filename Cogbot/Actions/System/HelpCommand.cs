@@ -16,16 +16,16 @@ namespace cogbot.Actions
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
             BotClient Client = TheBotClient;
 
             if (args.Length > 0)
             {
                 if (Client.Commands.ContainsKey(args[0]))
-                    return Client.Commands[args[0]].GetDescription();
+                    return Success(Client.Commands[args[0]].GetDescription());
                 else
-                    return "Command " + args[0] + " Does not exist. \"help\" to display all available commands.";
+                    return Failure( "Command " + args[0] + " Does not exist. \"help\" to display all available commands.");
             }
 			StringBuilder result = new StringBuilder();
             SortedDictionary<CommandCategory, List<Command>> CommandTree = new SortedDictionary<CommandCategory, List<Command>>();
@@ -67,7 +67,7 @@ namespace cogbot.Actions
             }
             result.AppendLine(System.Environment.NewLine + "Help [command] for usage/information");
             
-            return result.ToString();
+            return Success(result.ToString());;
 		}
     }
 }

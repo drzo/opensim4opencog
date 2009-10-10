@@ -154,7 +154,7 @@ namespace cogbot.Actions.SimExport
                 WriteLine("Texture failed to download: " + id.ToString(), Helpers.LogLevel.Warning);
             }
         }
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length > 1)
             {
@@ -289,7 +289,7 @@ namespace cogbot.Actions.SimExport
             WriteLine("simexport movement - random movement");
             WriteLine("simexport saveterrain [filename] - saves terrain info");
             WriteLine("simexport save [filename] - saves all info except for terrain");
-            return "simexport [queue|prims|parcels|textures|terrain|info] - displays information about items";
+            return Success("simexport [queue|prims|parcels|textures|terrain|info] - displays information about items";
         }
 
         private void SetFilename(string path)

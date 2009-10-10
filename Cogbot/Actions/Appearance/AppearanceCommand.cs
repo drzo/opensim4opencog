@@ -16,7 +16,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Appearance;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             bool success = false;
 
@@ -32,10 +32,10 @@ namespace cogbot.Actions
             if (send)
             {
                 Client.Appearance.SendAgentSetAppearance();
-                return "Sent Appearance";
+                return Success( "Sent Appearance");
             }
             Client.Appearance.RequestSetAppearance(bake);
-            return "Requested SetAppearance bake = " + bake;
+            return Success("Requested SetAppearance bake = " + bake);
             //// Wait for the process to complete or time out
             //if (appearanceEvent.WaitOne(1000 * 120, false))
             //    success = true;
@@ -45,9 +45,9 @@ namespace cogbot.Actions
 
             //// Return success or failure message
             //if (success)
-            //    return "Successfully set appearance";
+            //    return Success("Successfully set appearance";
             //else
-            //    return "Timed out while setting appearance";
+            //    return Success("Timed out while setting appearance";
         }
     }
 }

@@ -23,7 +23,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Objects;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             try
             {
@@ -41,10 +41,10 @@ namespace cogbot.Actions
                 PermCount = 0;
 
                 if (args.Length < 1 || args.Length > 4)
-                    return "Usage prim-uuid [copy] [mod] [xfer]";
+                    return Failure(Usage); //"Usage prim-uuid [copy] [mod] [xfer]";
 
                 if (!UUIDTryParse(args, 0, out rootID))
-                    return "Usage prim-uuid [copy] [mod] [xfer]";
+                    return Failure(Usage); //"Usage prim-uuid [copy] [mod] [xfer]";
 
                 for (int i = 1; i < args.Length; i++)
                 {
@@ -60,7 +60,7 @@ namespace cogbot.Actions
                             Perms |= PermissionMask.Transfer;
                             break;
                         default:
-                            return "Usage prim-uuid [copy] [mod] [xfer]";
+                            return Failure(Usage); //"Usage prim-uuid [copy] [mod] [xfer]";
                     }
                 }
 
@@ -69,7 +69,7 @@ namespace cogbot.Actions
                 // Find the requested prim
                 rootPrim = Client.Network.CurrentSim.ObjectsPrimitives.Find(delegate(Primitive prim) { return prim.ID == rootID; });
                 if (rootPrim == null)
-                    return "Cannot find requested prim " + rootID.ToString();
+                    return Failure("Cannot find requested prim " + rootID.ToString());
                 else
                     Logger.DebugLog("Found requested prim " + rootPrim.ID.ToString(), Client);
 
@@ -77,7 +77,7 @@ namespace cogbot.Actions
                 {
                     // This is not actually a root prim, find the root
                     if (!Client.Network.CurrentSim.ObjectsPrimitives.TryGetValue(rootPrim.ParentID, out rootPrim))
-                        return "Cannot find root prim for requested object";
+                        return Failure("Cannot find root prim for requested object");
                     else
                         Logger.DebugLog("Set root prim to " + rootPrim.ID.ToString(), Client);
                 }
@@ -106,7 +106,7 @@ namespace cogbot.Actions
                 PermsSent = true;
 
                 if (!GotPermissionsEvent.WaitOne(1000 * 30, false))
-                    return "Failed to set the modify bit, permissions in an unknown state";
+                    return Failure("failed to set the modify bit, permissions in an unknown state");
 
                 PermCount = 0;
                 if ((Perms & PermissionMask.Copy) == PermissionMask.Copy)
@@ -116,7 +116,7 @@ namespace cogbot.Actions
                 PermsSent = true;
 
                 if (!GotPermissionsEvent.WaitOne(1000 * 30, false))
-                    return "Failed to set the copy bit, permissions in an unknown state";
+                    return Failure("failed to set the copy bit, permissions in an unknown state");
 
                 PermCount = 0;
                 if ((Perms & PermissionMask.Transfer) == PermissionMask.Transfer)
@@ -126,7 +126,7 @@ namespace cogbot.Actions
                 PermsSent = true;
 
                 if (!GotPermissionsEvent.WaitOne(1000 * 30, false))
-                    return "Failed to set the transfer bit, permissions in an unknown state";
+                    return Failure("failed to set the transfer bit, permissions in an unknown state");
 
                 #endregion Set Linkset Permissions
 
@@ -155,7 +155,7 @@ namespace cogbot.Actions
                     }
                 }
 
-                return "Set permissions to " + Perms.ToString() + " on " + localIDs.Count + " objects and " + taskItems + " inventory items";
+                return Success("Set permissions to " + Perms.ToString() + " on " + localIDs.Count + " objects and " + taskItems + " inventory items");
             }
             finally
             {

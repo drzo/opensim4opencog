@@ -17,10 +17,10 @@ namespace cogbot.Actions
             Category = CommandCategory.Communication;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 3)
-                return "Usage: im [firstname] [lastname] [message]";
+                return Failure(Usage);// " im [firstname] [lastname] [message]";
 
             string ToAvatarName = String.Empty;
         
@@ -33,10 +33,10 @@ namespace cogbot.Actions
                 message += args[ct] + " ";
             message = message.TrimEnd();
             UUID found = WorldSystem.GetUserID(ToAvatarName);
-            if (found==UUID.Zero) return "Name lookup for " + ToAvatarName + " failed";
+            if (found==UUID.Zero) return Failure( "Name lookup for " + ToAvatarName + " failed");
             if (message.Length > 1023) message = message.Remove(1023);
             Client.Self.InstantMessage(found, message);
-            return "Instant Messaged " + found.ToString() + " with message: " + message;
+            return Success("Instant Messaged " + found.ToString() + " with message: " + message);
 
 
         }

@@ -13,10 +13,10 @@ namespace cogbot.Actions
             Name = "eval";
             Description = " eval: Enqueue a lisp task. Eval <lisp expression>";
         }
-       public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+       public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
        {
            //base.acceptInput(verb, args);
-           return (TheBotClient.evalLispString(args.str));
+           return Success(TheBotClient.evalLispString(args.str));
        }
     }
 }

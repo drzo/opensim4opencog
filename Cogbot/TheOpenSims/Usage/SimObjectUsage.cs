@@ -100,6 +100,10 @@ namespace cogbot.TheOpenSims
             Debug(TheBot, ToString());
             //User.ApplyUpdate(use, simObject);
             BotNeeds CurrentNeeds = (BotNeeds)TheBot["CurrentNeeds"];
+            if (CurrentNeeds == null)
+            {
+                TheBot["CurrentNeeds"] = CurrentNeeds = new BotNeeds(90.0f);   
+            }                
             BotNeeds needsBefore = CurrentNeeds.Copy();
             BotNeeds update = Target.GetActualUpdate(TypeUsage.UsageName);
             //TODO rate interaction and update TheBot.Assumptions

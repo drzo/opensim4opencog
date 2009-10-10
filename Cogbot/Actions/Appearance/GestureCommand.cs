@@ -16,7 +16,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Appearance;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
             {
@@ -32,7 +32,7 @@ namespace cogbot.Actions
                     alist += Environment.NewLine;
                 }
                 WriteLine("Currently: {0}", alist);
-                return "Usage: gesture  23423423423-4234234234-234234234-23423423";
+                return base.Failure(Usage);// " gesture  23423423423-4234234234-234234234-23423423";
             }
             string a = args[0];
             UUID gesture = WorldSystem.GetAssetUUID(a, AssetType.Gesture);
@@ -49,10 +49,10 @@ namespace cogbot.Actions
             }
             if (gesture == UUID.Zero)
             {
-                return "unknown gesture " + a;
+                return Failure("Unknown gesture " + a);
             }
             Client.Self.PlayGesture(gesture);
-            return "Started gesture: " + WorldSystem.SimAssetSystem.GetAssetName(gesture);
+            return Success("Started gesture: " + WorldSystem.SimAssetSystem.GetAssetName(gesture));
 ;
         }
     }

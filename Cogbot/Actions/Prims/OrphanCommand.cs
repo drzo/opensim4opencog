@@ -15,7 +15,7 @@ namespace cogbot.Actions
             Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             List<SimObject> objs = WorldSystem.GetAllSimObjects(string.Join(" ", args));
             int detatched = 0;
@@ -47,7 +47,7 @@ namespace cogbot.Actions
                     }
                 }
             }
-            return "object examinined " + objs.Count + " detacted: " + detatched + " orphans: " + orphans + " missingScuplty: " + missingSculpties;
+            return Success("object examinined " + objs.Count + " detacted: " + detatched + " orphans: " + orphans + " missingScuplty: " + missingSculpties);
         }
     }
 }

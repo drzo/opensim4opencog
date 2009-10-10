@@ -15,14 +15,14 @@ namespace cogbot.Actions
             Category = CommandCategory.Communication;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int channel = 0;
             int startIndex = 0;
             string message = String.Empty;
             if (args.Length < 1)
             {
-                return "usage: shout (optional channel) whatever";
+                return Failure(Usage);// " shout (optional channel) whatever";
             }
             else if (args.Length > 1)
             {
@@ -44,7 +44,7 @@ namespace cogbot.Actions
 
             Client.Self.Chat(message, channel, ChatType.Shout);
 
-            return "Shouted " + message;
+            return Success("Shouted " + message);
         }
     }
 }

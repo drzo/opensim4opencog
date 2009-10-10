@@ -24,7 +24,7 @@ namespace cogbot.Actions
         }
 
 
-        public override string acceptInput(string verb, Parser pargs, OutputDelegate WriteLine)
+        public override CmdResult acceptInput(string verb, Parser pargs, OutputDelegate WriteLine)
         {
             TheBotClient.describeNext = true;
             // base.acceptInput(verb, args);
@@ -57,15 +57,15 @@ namespace cogbot.Actions
                     SimActor me = WorldSystem.TheSimAvatar;
                     // The thread that accepts the Client and awaits messages
                     me.CurrentAction = new FollowerAction(me, position);
-                    return "$bot started following " + position;
+                    return Success("$bot started following " + position);
                 }
                 else
                 {
-                    return ("$bot don't know who " + name + " is.");
+                    return Failure("$bot don't know who " + name + " is.");
                 }
             }
             {
-                return "$bot ApproachPosition: " + WorldSystem.TheSimAvatar.ApproachPosition;
+                return Success("$bot ApproachPosition: " + WorldSystem.TheSimAvatar.ApproachPosition);
             }
 
         }

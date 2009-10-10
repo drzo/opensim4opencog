@@ -17,7 +17,7 @@ namespace cogbot.Actions
             Parameters = new[] { new NamedParam(typeof(SimAnimation), typeof(UUID)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
 
             ICollection<SimAsset> list = SimAssetStore.GetAssets(AssetType.Animation);
@@ -40,7 +40,7 @@ namespace cogbot.Actions
             }
             WriteLine("Currently: {0}", alist);
 
-            return "Shown " + count + " amins";
+            return Success("Shown " + count + " amins");
         }
     }
 }

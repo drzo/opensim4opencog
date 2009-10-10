@@ -17,7 +17,7 @@ namespace cogbot.Actions
             Name = "Use..";
         }
 
-        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
        {
         //   base.acceptInput(verb, args);
            string to_op = "";
@@ -28,7 +28,7 @@ namespace cogbot.Actions
            }
            objname = args.objectPhrase;
            if (objname == "") {
-               return ("$bot don't know what object to use.");
+               return Failure("$bot don't know what object to use.");
            }
            if (to_op == "") {
                Primitive prim;
@@ -43,16 +43,16 @@ namespace cogbot.Actions
                    if (usage==null)
                    {
                        //usage = new MoveToLocation(TheSimAvatar, objToUse);
-                       return "$bot don't have a use for " + objToUse + " yet.";
+                       return Failure( "$bot don't have a use for " + objToUse + " yet.");
                    }
                    TheSimAvatar.Do(usage,objToUse);
-                   return "used " + objToUse;
+                   return Success("used " + objToUse);
                }
-               return "$bot don't know what to do with " + objname; 
+               return Failure( "$bot don't know what to do with " + objname); 
            }
            WriteLine("Trying to (" + to_op + ") with (" + objname + ")");
            TheBotClient.UseInventoryItem(to_op, objname);
-           return "completed to (" + to_op + ") with (" + objname + ")";
+           return Success("completed to (" + to_op + ") with (" + objname + ")");
            
        }
     }

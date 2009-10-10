@@ -43,7 +43,7 @@ namespace cogbot.Actions
             }
         }
 
-        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             //base.acceptInput(verb, args);
 
@@ -60,7 +60,9 @@ namespace cogbot.Actions
             if (args.Length == 0)
             {
                 sittingOnGround = WorldSystem.TheSimAvatar.SitOnGround();
-                return !sittingOnGround ? ("$bot did not yet sit on the ground.") : ("$bot sat on the ground.");
+                return !sittingOnGround
+                           ? Failure("$bot did not yet sit on the ground.")
+                           : Success("$bot sat on the ground.");
             }
 
             //if (Client.Self.SittingOn != 0 || sittingOnGround)
@@ -79,7 +81,7 @@ namespace cogbot.Actions
                     var obj = knows[0];
                     if (!WorldSystem.TheSimAvatar.SitOn(obj))
                     {
-                        return ("$bot did not yet sit on " + obj);
+                        return Failure("$bot did not yet sit on " + obj);
                     }
                 }
             }
@@ -95,13 +97,13 @@ namespace cogbot.Actions
                 WriteLine("Trying to sit on {0}.", obj);
                 if (!WorldSystem.TheSimAvatar.SitOn(obj))
                 {
-                    return ("$bot did not yet sit on " + obj);
+                    return Failure("$bot did not yet sit on " + obj);
                 }
                 sittingOnGround = false;
-                return ("$bot did sit on " + obj);
+                return Success("$bot did sit on " + obj);
             }
 
-            return ("I don't know what " + on + " is.");
+            return Failure("I don't know what " + on + " is.");
         }
     }
 }

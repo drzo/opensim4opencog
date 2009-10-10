@@ -15,11 +15,11 @@ namespace cogbot.Actions
             Category = CommandCategory.TestClient;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int seconds;
             if (args.Length != 1 || !Int32.TryParse(args[0], out seconds))
-                return "Usage: sleep [seconds]";
+                return Failure(Usage);// " sleep [seconds]";
 
             AgentPausePacket pause = new AgentPausePacket();
             pause.AgentData.AgentID = Client.Self.AgentID;
@@ -38,7 +38,7 @@ namespace cogbot.Actions
 
             Client.Network.SendPacket(resume);
 
-            return "Paused, slept for " + seconds + " second(s), and resumed";
+            return Success("Paused, slept for " + seconds + " second(s), and resumed");
         }
     }
 }

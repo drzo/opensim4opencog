@@ -12,11 +12,11 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Objects;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
 
             if (args.Length < 3)
-                return "Usage: moveprim prim [x y [z]]";
+                return Failure(Usage);// " moveprim prim [x y [z]]";
 
             int used;
             Primitive P = WorldSystem.GetPrimitive(args, out used);
@@ -40,7 +40,7 @@ namespace cogbot.Actions.Movement
             }
             local += prev;
             O.MoveTo(local,1f,10);
-            return WorldSystem.TheSimAvatar.DistanceVectorString(O);
+            return Success(WorldSystem.TheSimAvatar.DistanceVectorString(O));
         }
     }
 
@@ -54,11 +54,11 @@ namespace cogbot.Actions.Movement
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
 
             if (args.Length < 3)
-                return "Usage: mvprim [rel] prim [[+/-]x y [z]]";
+                return Failure(Usage);// " mvprim [rel] prim [[+/-]x y [z]]";
 
             if (args[0] == "rel")
             {
@@ -85,7 +85,7 @@ namespace cogbot.Actions.Movement
             }
             local += prev;
             O.SetObjectPosition(local);
-            return WorldSystem.TheSimAvatar.DistanceVectorString(O);
+            return Success(WorldSystem.TheSimAvatar.DistanceVectorString(O));
         }
     }
 }

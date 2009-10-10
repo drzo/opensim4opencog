@@ -14,22 +14,22 @@ namespace cogbot.Actions
             Category = CommandCategory.Inventory;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length != 1)
-                return "Usage: taskrunning objectID [[scriptName] true|false]";
+                return Failure(Usage);// " taskrunning objectID [[scriptName] true|false]";
 
             uint objectLocalID;
             UUID objectID;
 
             if (!UUID.TryParse(args[0], out objectID))
-                return "Usage: taskrunning objectID [[scriptName] true|false]";
+                return Failure(Usage);// " taskrunning objectID [[scriptName] true|false]";
 
             Primitive found = Client.Network.CurrentSim.ObjectsPrimitives.Find(delegate(Primitive prim) { return prim.ID == objectID; });
             if (found != null)
                 objectLocalID = found.LocalID;
             else
-                return String.Format("Couldn't find prim {0}", objectID);
+                return Success( String.Format("Couldn't find prim {0}", objectID));
 
             List<InventoryBase> items = Client.Inventory.GetTaskInventory(objectID, objectLocalID, 1000 * 30);
 
@@ -123,11 +123,11 @@ namespace cogbot.Actions
                     }
                 }
                 Client.Inventory.OnScriptRunning -= callback;
-                return result;
+                return Success(result);
             }
             else
             {
-                return "Failed to download task inventory for " + objectLocalID;
+                return Failure("failed to download task inventory for " + objectLocalID);
             }
         }
     }

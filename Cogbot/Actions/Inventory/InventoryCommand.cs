@@ -22,7 +22,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Inventory;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             Manager = Client.Inventory;
             Inventory = Manager.Store;
@@ -32,7 +32,7 @@ namespace cogbot.Actions
             InventoryFolder rootFolder = Inventory.RootFolder;
             PrintFolder(rootFolder, result, 0);
 
-            return result.ToString();
+            return Success(result.ToString());;
         }
 
         void PrintFolder(InventoryFolder f, StringBuilder result, int indent)

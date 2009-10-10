@@ -21,7 +21,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Inventory;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             UUID embedItemID = UUID.Zero, notecardItemID = UUID.Zero, notecardAssetID = UUID.Zero;
             string filename, fileData;
@@ -40,14 +40,14 @@ namespace cogbot.Actions
             }
             else
             {
-                return "Usage: createnotecard filename.txt";
+                return Failure(Usage);// " createnotecard filename.txt";
             }
 
             if (!File.Exists(filename))
-                return "File \"" + filename + "\" does not exist";
+                return Failure( "File \"" + filename + "\" does not exist");
 
             try { fileData = File.ReadAllText(filename); }
-            catch (Exception ex) { return "Failed to open " + filename + ": " + ex.Message; }
+            catch (Exception ex) { return Failure("failed to open " + filename + ": " + ex.Message); }
 
             #region Notecard asset data
 
@@ -66,7 +66,7 @@ namespace cogbot.Actions
                 }
                 else
                 {
-                    return "Failed to fetch inventory item " + embedItemID;
+                    return Failure("failed to fetch inventory item " + embedItemID);
                 }
             }
 
@@ -132,11 +132,11 @@ namespace cogbot.Actions
 
             if (finalUploadSuccess)
             {
-                Logger.Log("Notecard successfully created, ItemID " + notecardItemID + " AssetID " + notecardAssetID, Helpers.LogLevel.Info);
+                WriteLine("Notecard successfully created, ItemID " + notecardItemID + " AssetID " + notecardAssetID, Helpers.LogLevel.Info);
                 return DownloadNotecard(notecardItemID, notecardAssetID);
             }
             else
-                return "Notecard creation failed: " + message;
+                return Failure( "Notecard creation failed: " + message);
         }
 
         InventoryItem FetchItem(UUID itemID)
@@ -165,7 +165,7 @@ namespace cogbot.Actions
             return fetchItem;
         }
 
-        string DownloadNotecard(UUID itemID, UUID assetID)
+        CmdResult DownloadNotecard(UUID itemID, UUID assetID)
         {
             UUID transferID = UUID.Zero;
             AutoResetEvent assetDownloadEvent = new AutoResetEvent(false);
@@ -186,9 +186,9 @@ namespace cogbot.Actions
             assetDownloadEvent.WaitOne(NOTECARD_FETCH_TIMEOUT, false);
 
             if (notecardData != null)
-                return Utils.EncodingUTF8.GetString(notecardData);
+                return Success(Utils.EncodingUTF8.GetString(notecardData));
             else
-                return "Error downloading notecard asset: " + error;
+                return Failure("Error downloading notecard asset: " + error);
         }
     }
 }

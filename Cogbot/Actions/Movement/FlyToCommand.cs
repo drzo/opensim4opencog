@@ -27,16 +27,16 @@ namespace cogbot.Actions.Movement
             callback = new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length > 4 || args.Length < 3)
-                return "Usage: FlyTo x y z [seconds]";
+                return Failure(Usage);// " FlyTo x y z [seconds]";
 
             if (!float.TryParse(args[0], out target.X) ||
                 !float.TryParse(args[1], out target.Y) ||
                 !float.TryParse(args[2], out target.Z))
             {
-                return "Usage: FlyTo x y z [seconds]";
+                return Failure(Usage);// " FlyTo x y z [seconds]";
             }
             target0.X = target.X;
             target0.Y = target.Y;
@@ -57,7 +57,7 @@ namespace cogbot.Actions.Movement
             //ZMovement();
             //Client.Self.Movement.SendUpdate(false);
 
-            return string.Format("flying to {0} in {1} seconds", target.ToString(), duration / 1000);
+            return Success(string.Format("flying to {0} in {1} seconds", target.ToString(), duration/1000));
         }
 
         private void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)

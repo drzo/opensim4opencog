@@ -15,7 +15,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Objects;
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
 		    if (args.Length == 1)
 		    {
@@ -30,11 +30,11 @@ namespace cogbot.Actions
 		            Client.Objects.AddTree(Client.Network.CurrentSim, new Vector3(0.5f, 0.5f, 0.5f),
 		                Quaternion.Identity, treePosition, tree, TheBotClient.GroupID, false);
 
-		            return "Attempted to rez a " + treeName + " tree";
+		            return Success("Attempted to rez a " + treeName + " tree");
 		        }
 		        catch (Exception)
 		        {
-		         //   return "Type !tree for usage";
+		         //   return Success("Type !tree for usage";
 		        }
 		    }
 
@@ -45,7 +45,7 @@ namespace cogbot.Actions
 		    }
 		    usage = usage.TrimEnd(new char[] { ',' });
 		    usage += "]";
-		    return usage;
+		    return Failure(Usage);
 		}
     }
 }

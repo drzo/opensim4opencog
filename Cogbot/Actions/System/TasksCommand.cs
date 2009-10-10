@@ -14,7 +14,7 @@ namespace cogbot.Actions
             Category = CommandCategory.TestClient;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID1, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID1, OutputDelegate WriteLine)
         {
             int n = 0;
             lock (Client.botCommandThreads) foreach (Thread t in Client.botCommandThreads)
@@ -31,7 +31,7 @@ namespace cogbot.Actions
                     found++;
                     WriteLine(queueHandler.ToString());
                 }
-            return "TaskQueueHandlers: " + found + ", threads: " + n;
+            return Success("TaskQueueHandlers: " + found + ", threads: " + n);
         }
     }
 }

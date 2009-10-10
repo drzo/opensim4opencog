@@ -22,37 +22,38 @@ namespace cogbot.Actions
             Category = CommandCategory.Inventory;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             string inventoryName;
             uint timeout;
             string fileName;
 
             if (args.Length != 3)
-                return "Usage: uploadimage [inventoryname] [timeout] [filename]";
+                return Failure(Usage);// " uploadimage [inventoryname] [timeout] [filename]";
 
             TextureID = UUID.Zero;
             inventoryName = args[0];
             fileName = args[2];
             if (!UInt32.TryParse(args[1], out timeout))
-                return "Usage: uploadimage [inventoryname] [timeout] [filename]";
+                return Failure(Usage);// " uploadimage [inventoryname] [timeout] [filename]";
 
             Console.WriteLine("Loading image " + fileName);
             byte[] jpeg2k = LoadImage(fileName);
             if (jpeg2k == null)
-                return "Failed to compress image to JPEG2000";
+                return Failure("failed to compress image to JPEG2000");
             Console.WriteLine("Finished compressing image to JPEG2000, uploading...");
             start = DateTime.Now;
             DoUpload(jpeg2k, inventoryName);
 
             if (UploadCompleteEvent.WaitOne((int)timeout, false))
             {
-                return String.Format("Texture upload {0}: {1}", (TextureID != UUID.Zero) ? "succeeded" : "failed",
-                    TextureID);
+                return
+                    Success(string.Format("Texture upload {0}: {1}", (TextureID != UUID.Zero) ? "succeeded" : "failed",
+                                          TextureID));
             }
             else
             {
-                return "Texture upload timed out";
+                return Failure( "Texture upload timed out");
             }
         }
 

@@ -12,10 +12,10 @@ namespace cogbot.Actions
             Category = CommandCategory.Movement;
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
             Client.Self.Jump(true);
-            return "Jumped";
+            return Success("Jumped");
 		}
     }
 }

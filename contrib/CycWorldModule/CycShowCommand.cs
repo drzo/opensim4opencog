@@ -14,12 +14,12 @@ namespace CycWorldModule
             Name = "CycShow";
             Parameters = new []{ new NamedParam(typeof(SimObject), typeof(UUID))};
         }
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int argsUsed;
             SimPosition target = WorldSystem.GetVector(args, out argsUsed);
             CycWorldModule.CycModule.Show(target);
-            return "CycShow " + target;
+            return Success("CycShow " + target);
         }
     }
 }

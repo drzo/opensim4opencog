@@ -16,19 +16,19 @@ namespace cogbot.Actions
             Category = CommandCategory.Simulator;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             string fileName = String.Empty;
 
             if (args.Length != 1)
-                return "Usage: uploadterrain filename";
+                return Failure(Usage);// " uploadterrain filename";
 
 
             fileName = args[0];
 
             if (!System.IO.File.Exists(fileName))
             {
-                return String.Format("File {0} Does not exist", fileName);
+                return Failure(String.Format("File {0} Does not exist", fileName));
             }
 
             // Setup callbacks for upload request reply and progress indicator 
@@ -43,12 +43,12 @@ namespace cogbot.Actions
             if (!WaitForUploadComplete.WaitOne(120000, false))
             {
                 Cleanup();
-                return "Timeout waiting for terrain file upload";
+                return Failure("Timeout waiting for terrain file upload");
             }
             else
             {
                 Cleanup();
-                return "Terrain raw file uploaded and applied";
+                return Success("Terrain raw file uploaded and applied");
             }
         }
 
