@@ -113,17 +113,17 @@ namespace cogbot.Actions
             Description = "Backup inventory to a folder on your hard drive. Usage: " + Name + " [to <directory>] | [abort] | [status]";
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
 
             if (args.Length == 1 && args[0] == "status")
             {
-                return BackgroundBackupStatus;
+                return Success(BackgroundBackupStatus);
             }
             else if (args.Length == 1 && args[0] == "abort")
             {
                 if (!BackgroundBackupRunning)
-                    return BackgroundBackupStatus;
+                    return Success(BackgroundBackupStatus);
 
                 BackupWorker.CancelAsync();
                 QueueWorker.CancelAsync();
@@ -131,15 +131,15 @@ namespace cogbot.Actions
                 Thread.Sleep(500);
 
                 // check status
-                return BackgroundBackupStatus;
+                return Success(BackgroundBackupStatus);
             }
             else if (args.Length != 2)
             {
-                return "Usage: " + Name + " [to <directory>] | [abort] | [status]";
+                return Failure(Usage);// " " + Name + " [to <directory>] | [abort] | [status]";
             }
             else if (BackgroundBackupRunning)
             {
-                return BackgroundBackupStatus;
+                return Success(BackgroundBackupStatus);
             }
 
             QueueWorker = new BackgroundWorker();
@@ -155,7 +155,7 @@ namespace cogbot.Actions
             BackupWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bwBackup_RunWorkerCompleted);
 
             BackupWorker.RunWorkerAsync(args);
-            return "Started background operations.";
+            return Success("Started background operations.");
         }
 
         void bwQueueRunner_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)

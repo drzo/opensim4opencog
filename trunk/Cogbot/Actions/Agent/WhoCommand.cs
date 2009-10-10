@@ -16,7 +16,7 @@ namespace cogbot.Actions
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
 			StringBuilder result = new StringBuilder();
 
@@ -42,7 +42,7 @@ namespace cogbot.Actions
                 }
             }
 
-            return result.ToString();
+            return Success(result.ToString());;
 		}
     }
 }

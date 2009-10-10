@@ -16,14 +16,14 @@ namespace cogbot.Actions
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             //if (args.Length < 1)
-            //    return "";
+            //    return Success("";
 
             Client.Grid.RequestMainlandSims(GridLayerType.Objects);
             
-            return "Sent.";
+            return Success("Sent " + Name);
         }
     }
 }

@@ -13,13 +13,13 @@ namespace cogbot.Actions
             Category = CommandCategory.Objects;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int faceIndex;
             UUID textureID;
 
             if (args.Length < 2)
-                return "Usage: findtexture [face-index] [texture-uuid]";
+                return Failure(Usage);// " findtexture [face-index] [texture-uuid]";
 
             if (Int32.TryParse(args[0], out faceIndex) &&
                 UUIDTryParse(args,1, out textureID))
@@ -39,11 +39,11 @@ namespace cogbot.Actions
                     }
                 );
 
-                return "Done searching";
+                return Success("Done searching");
             }
             else
             {
-                return "Usage: findtexture [face-index] [texture-uuid]";
+                return Failure(Usage);// " findtexture [face-index] [texture-uuid]";
             }
         }
     }

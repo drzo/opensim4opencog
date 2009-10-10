@@ -15,10 +15,10 @@ namespace cogbot.Actions
             Category = CommandCategory.Parcel;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return "Usage: parceldetails parcelID (use parcelinfo to get ID)";
+                return Failure(Usage);// " parceldetails parcelID (use parcelinfo to get ID)";
 
             int parcelID;
             Parcel parcel;
@@ -38,11 +38,11 @@ namespace cogbot.Actions
                 {
                     sb.AppendFormat("{0} = {1}" + System.Environment.NewLine, field.Name, field.GetValue(parcel));
                 }
-                return sb.ToString();
+                return Success(sb.ToString());
             }
             else
             {
-                return String.Format("Unable to find Parcel {0} in Parcels Dictionary, Did you run parcelinfo to populate the dictionary first?", args[0]);
+                return Failure(string.Format("Unable to find Parcel {0} in Parcels Dictionary, Did you run parcelinfo to populate the dictionary first?", args[0]));
             }
         }
     }

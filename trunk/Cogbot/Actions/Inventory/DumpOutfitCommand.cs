@@ -21,15 +21,15 @@ namespace cogbot.Actions
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return "Usage: dumpoutfit [avatar-uuid]";
+                return Failure(Usage);// " dumpoutfit [avatar-uuid]";
 
             //UUID target;
 
             //if (!UUIDTryParse(args, 0 , out target))
-            //    return "Usage: dumpoutfit [avatar-uuid]";
+            //    return Failure(Usage);// " dumpoutfit [avatar-uuid]";
 
             //lock (Client.Network.Simulators)
             {
@@ -70,12 +70,12 @@ namespace cogbot.Actions
                             }
                         }
 
-                        return output.ToString();
+                        return Success(output.ToString());
                     }
                 }
             }
 
-            return "Couldn't find avatar " + String.Join(" ", args);
+            return Failure("Couldn't find avatar " + String.Join(" ", args));
         }
 
         private void Assets_OnImageReceived(TextureRequestState state, AssetTexture assetTexture)

@@ -15,10 +15,10 @@ namespace cogbot.Actions.Inventory.Shell
             Description = "Lists the contents of the current working inventory folder.";
             Category = CommandCategory.Inventory;
         }
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length > 1)
-                return "Usage: ls [-l]";
+                return Failure(Usage);// " ls [-l]";
             bool longDisplay = false;
             if (args.Length > 0 && args[0] == "-l")
                 longDisplay = true;
@@ -66,7 +66,7 @@ namespace cogbot.Actions.Inventory.Shell
                 }
                 displayString += nl;
             }
-            return displayString;
+            return Success(displayString);
         }
 
         /// <summary>

@@ -14,12 +14,12 @@ namespace cogbot.Actions
             Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
 		}
 		
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
             UUID target;
 
             if (args.Length < 1)
-                return "Usage: touch UUID";
+                return Failure(Usage);// " touch UUID";
             
             if (UUIDTryParse(args,0, out target))
             {
@@ -28,11 +28,11 @@ namespace cogbot.Actions
                 if (targetPrim != null)
                 {
                     Client.Self.Touch(targetPrim.LocalID);
-                    return "Touched prim " + targetPrim.LocalID;
+                    return Success("Touched prim " + targetPrim.LocalID);
                 }
             }
 
-            return "Couldn't find a prim to touch with UUID " + args[0];
+            return Failure("Couldn't find a prim to touch with UUID " + args[0]);
 		}
     }
 }

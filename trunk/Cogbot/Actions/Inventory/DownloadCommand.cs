@@ -19,9 +19,9 @@ namespace cogbot.Actions
             Category = CommandCategory.Inventory;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length < 2) return Usage;
+            if (args.Length < 2) return Failure(Usage);
             AssetType assetType;
 
             FieldInfo fi = typeof(AssetType).GetField(args[1]);
@@ -35,7 +35,7 @@ namespace cogbot.Actions
                 else
                 {
                     WriteLine(typeof(AssetType).GetFields().ToString());
-                    return "unknown asset type";
+                    return Failure("Unknown asset type");
                 }
             }
             else
@@ -72,7 +72,7 @@ namespace cogbot.Actions
                 DownloadHandle.Set();
             });
             DownloadHandle.WaitOne(30000);
-            return "Done RequestAsset " + AssetID;
+            return Success("Done RequestAsset " + AssetID);
         }
     }
 }

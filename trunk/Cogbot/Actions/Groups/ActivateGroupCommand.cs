@@ -21,10 +21,10 @@ namespace cogbot.Actions
             Description = "Set a group as active. Usage: activategroup GroupName";
             Category = CommandCategory.Groups;
         }
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Description;
+                return Failure(Description);
 
             activeGroup = string.Empty;
 
@@ -34,7 +34,8 @@ namespace cogbot.Actions
             groupName = groupName.Trim();
 
             UUID groupUUID = Client.GroupName2UUID(groupName);
-            if (UUID.Zero != groupUUID) {
+            if (UUID.Zero != groupUUID)
+            {
                 NetworkManager.PacketCallback pcallback = new NetworkManager.PacketCallback(AgentDataUpdateHandler);
                 Client.Network.RegisterCallback(PacketType.AgentDataUpdate, pcallback);
 
@@ -50,11 +51,11 @@ namespace cogbot.Actions
                  */
 
                 if (String.IsNullOrEmpty(activeGroup))
-                    return Client.ToString() + " failed to activate the group " + groupName;
+                    return Failure(Client.ToString() + " failed to activate the group " + groupName);
 
-                return "Active group is now " + activeGroup;
+                return Success("Active group is now " + activeGroup);
             }
-            return Client.ToString() + " doesn't seem to be member of the group " + groupName;
+            return Failure(Client.ToString() + " doesn't seem to be member of the group " + groupName);
         }
 
         private void AgentDataUpdateHandler(Packet packet, Simulator sim)

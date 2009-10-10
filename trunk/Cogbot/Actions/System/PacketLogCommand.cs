@@ -12,12 +12,12 @@ namespace cogbot.Actions
             Category = CommandCategory.TestClient;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length != 2)
-                return "Usage: packetlog 10 tenpackets.xml";
+                return Failure(Usage);// " packetlog 10 tenpackets.xml";
 
-            return "This function is currently unimplemented";
+            return Success("This function is currently unimplemented");
         }
     }
 }

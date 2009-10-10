@@ -20,10 +20,10 @@ namespace cogbot.Actions
             Category = CommandCategory.Other;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return "Usage: searchplaces [search text]";
+                return Failure(Usage);// " searchplaces [search text]";
 
             string searchText = string.Empty;
             for (int i = 0; i < args.Length; i++)
@@ -56,7 +56,7 @@ namespace cogbot.Actions
 
             Client.Directory.OnDirPlacesReply -= callback;
 
-            return result.ToString();
+            return Success(result.ToString());;
         }
     }
 }

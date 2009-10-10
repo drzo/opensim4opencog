@@ -16,13 +16,13 @@ namespace cogbot.Actions.Inventory.Shell
             Description = "Changes the current working inventory folder.";
             Category = CommandCategory.Inventory;
         }
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             Manager = Client.Inventory;
             Inventory = Client.Inventory.Store;
 
             if (args.Length > 1)
-                return "Usage: cd [path-to-folder]";
+                return Failure(Usage);// " cd [path-to-folder]";
             string pathStr = "";
             string[] path = null;
             if (args.Length == 0)
@@ -41,7 +41,7 @@ namespace cogbot.Actions.Inventory.Shell
                 currentFolder = Inventory.RootFolder;
 
             if (currentFolder == null) // We need this to be set to something. 
-                return "Error: Client not logged in.";
+                return Failure("Error: Client not logged in.");
 
             // Traverse the path, looking for the 
             for (int i = 0; i < path.Length; ++i)
@@ -71,16 +71,16 @@ namespace cogbot.Actions.Inventory.Shell
                             }
                             else
                             {
-                                return item.Name + " is not a folder.";
+                                return Failure(item.Name + " is not a folder.");
                             }
                         }
                     }
                     if (!found)
-                        return nextName + " not found in " + currentFolder.Name;
+                        return Failure(nextName + " not found in " + currentFolder.Name);
                 }
             }
             Client.CurrentDirectory = currentFolder;
-            return "Current folder: " + currentFolder.Name;
+            return Success("Current folder: " + currentFolder.Name);
         }
     }
 }

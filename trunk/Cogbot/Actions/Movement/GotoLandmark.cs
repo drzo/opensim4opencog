@@ -17,17 +17,17 @@ namespace cogbot.Actions
             Parameters = new[] { new NamedParam(typeof(InventoryLandmark), typeof(UUID)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
             {
-                return "Usage: goto_landmark [UUID]";
+                return Failure(Usage);// " goto_landmark [UUID]";
             }
 
             UUID landmark = new UUID();
-            if (!UUIDTryParse(args,0, out landmark))
+            if (!UUIDTryParse(args, 0, out landmark))
             {
-                return "Invalid LLUID";
+                return Failure("Invalid LLUID");
             }
             else
             {
@@ -35,11 +35,11 @@ namespace cogbot.Actions
             }
             if (Client.Self.Teleport(landmark))
             {
-                return "Teleport Succesful";
+                return Success("Teleport Succesful");
             }
             else
             {
-                return "Teleport Failed";
+                return Failure("Teleport Failed");
             }
         }
     }

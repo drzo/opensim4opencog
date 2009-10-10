@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Windows.Forms;
+using cogbot.Listeners;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 using Radegast;
 
 namespace CogbotRadegastPluginModule
 {
-    public class AspectContextAction : ContextAction
+    public class SimUsageContextAction : ContextAction
     {
         public Object lastObject;
         public readonly CogbotRadegastPlugin Plugin;
@@ -19,37 +21,14 @@ namespace CogbotRadegastPluginModule
         {
             get { return console.PluginExtraContextMenu; }
         }
-        public AspectContextAction(RadegastInstance radegastInstance, CogbotRadegastPlugin plugin)
+        public SimUsageContextAction(RadegastInstance radegastInstance, CogbotRadegastPlugin plugin)
             : base(radegastInstance)
         {
-            ContextType = typeof (Object);
-            Label = "cogbot...";
-            Client.Network.OnLogin += aspectLogin;
+            ContextType = typeof(Object);
+            Label = "SimUsageContextAction...";
             Plugin = plugin;
         }
 
-        public Dictionary<string, List<ToolStripMenuItem>> MenuItems = new Dictionary<string, List<ToolStripMenuItem>>();
-        private void aspectLogin(LoginStatus login, string message)
-        {
-            if (login!=LoginStatus.Success) return;
-            ScanCogbotMenu();
-        }
-
-        private void ScanCogbotMenu()
-        {
-            foreach (var c in ExtraContextMenu.Items)
-            {
-                ToolStripMenuItem t = (ToolStripMenuItem) c;
-                List<ToolStripMenuItem> lst = new List<ToolStripMenuItem>();
-                if (!t.HasDropDownItems) continue;
-                foreach (ToolStripMenuItem item in t.DropDownItems)
-                {
-                    HookItem(item);
-                    lst.Add(item);
-                }
-                MenuItems[t.Text] = lst;
-            }
-        }
 
         private void HookItem(ToolStripDropDownItem t)
         {
@@ -128,76 +107,50 @@ namespace CogbotRadegastPluginModule
         public override IEnumerable<ToolStripMenuItem> GetToolItems(object target, Type type)
         {
             List<ToolStripMenuItem> lst = new List<ToolStripMenuItem>();
-            HashSet<Type> types = new HashSet<Type>();
-            AddTypes(type, types);
-            lastObject = target;
-            if (target!=null)
+            SimObject O = GetSimObject(target);
+            if (O == null) return lst;
+            foreach (var c in O.GetTypeUsages())
             {
-                target = DeRef(lastObject);
+                string name = "Do " + c;
+                lst.Add(new ToolStripMenuItem(name, null, (sender, e) => InvokeThis(c, sender, e, O, target, type))
+                            {
+                                ToolTipText = name + " oo " + target
+                            });
 
-                AddTypes(lastObject.GetType(), types);
-                if (target != null && target != lastObject)
+            }
+            return ListOfOne("Do..", lst);
+
+        }
+
+        public SimObject GetSimObject(object target)
+        {
+            SimObject O = null;
+            UUID id = ToUUID(target);
+            if (id != UUID.Zero)
+                O = WorldObjects.GetSimObjectFromUUID(id);
+            else
+            {
+                if (target is SimObject)
                 {
-                    AddTypes(target.GetType(), types);
+                    O = (target as SimObject);
                 }
             }
-            foreach (Type e in types)
+            return O;
+        }
+
+        private IEnumerable<ToolStripMenuItem> ListOfOne(string name, List<ToolStripMenuItem> items)
+        {
+            List<ToolStripMenuItem> lst = new List<ToolStripMenuItem>();
+            lst.Add(new ToolStripMenuItem(name, null, items.ToArray())
             {
-                IEnumerable<ToolStripMenuItem> v = GetToolItemsType(e);
-                if (v!=null)lst.AddRange(GetToolItemsType(e));
-            }
-            UUID uuid = ToUUID(target);
-            if (uuid != UUID.Zero)
-            {
-                lst.Add(new ToolStripMenuItem("Copy UUID", null,
-                                                (sender, e) =>
-                                                {
-                                                    DebugLog("UUID=" + uuid);
-                                                })
-                {
-                    ToolTipText = "UUID=" + uuid
-                });
- 
-            }
+            });
             return lst;
-             
         }
 
-        private bool AddTypes(Type type, HashSet<Type> types)
+        private void InvokeThis(SimTypeUsage name, object sender, EventArgs args, SimObject O, object target, Type type)
         {
-            if (type == null || type == typeof(Object)|| !types.Add(type)) return false;
-            bool changed = AddTypes(type.BaseType, types);
-            foreach (Type t in type.GetInterfaces())
-            {
-                if (AddTypes(t, types)) changed = true;
-            }
-            return changed;
-        }
 
-        private IEnumerable<ToolStripMenuItem> GetToolItemsType(Type typ)
-        {
-            String type = typ.Name;
-            //target = DeRef(target);
-            List<ToolStripMenuItem> found = null;
-            foreach (var c in MenuItems)
-            {
-                if (type.EndsWith(c.Key))
-                {
-                    found = c.Value;
-                    break;
-                }                
-            }
-            if (found == null)
-            {
-                //return base.GetToolItems(target);
-                return null;
-            }
-            //foreach (ToolStripMenuItem item in found)
-            //{
-            //    AddCallback(target, item);
-            //    //item.Closing += ((sender, args) => items.ForEach((o) => strip.Items.Remove(o)));
-            //}
-            return found;
+            Plugin.TheBot.WorldSystem.TheSimAvatar.Do(name, O ?? GetSimObject(target));
         }
 
         //private void AddCallback(object target, ToolStripMenuItem item)
@@ -216,7 +169,7 @@ namespace CogbotRadegastPluginModule
 
         //    EventHandler reg = (sender, e) =>
         //                             {
-                                         
+
         //                             };
         //    EventHandler ureg = (sender, e) =>
         //    {
@@ -224,7 +177,7 @@ namespace CogbotRadegastPluginModule
         //    };
         //    //item.OwnerChanged += reg;
 
-                
+
         //    EventHandler dereg = (sender, e) =>
         //                             {
         //                                 item.Click -= act;

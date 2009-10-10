@@ -26,7 +26,7 @@ namespace cogbot.Actions
             Usage = "Usage: deed group-spec prim-uuid [copy] [mod] [xfer] [deed]";
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             try
             {
@@ -48,10 +48,10 @@ namespace cogbot.Actions
                 bool doIncr = false;
 
                 if (args.Length < 3)
-                    return Usage;
+                    return Failure(Usage);
 
                 if (!UUIDTryParse(args, 0, out groupID))
-                    return Usage;
+                    return Failure(Usage);
 
 
                 bool deed = false;
@@ -84,7 +84,7 @@ namespace cogbot.Actions
                             doIncr = true;
                             break;
                         default:
-                            return Usage;
+                            return Failure(Usage);
                     }
                 }
 
@@ -94,7 +94,7 @@ namespace cogbot.Actions
                    Primitive rootPrim = CurrentSim.ObjectsPrimitives.Find(delegate(Primitive prim) { return prim.ID == rootID; });
 
                     if (rootPrim == null)
-                        return "Cannot find requested prim " + rootID.ToString();
+                        return Failure("Cannot find requested prim " + rootID.ToString());
                     else
                         WriteLine("Found requested prim " + rootPrim.ID.ToString(), Client);
 
@@ -102,7 +102,7 @@ namespace cogbot.Actions
                     {
                         // This is not actually a root prim, find the root
                         if (!CurrentSim.ObjectsPrimitives.TryGetValue(rootPrim.ParentID, out rootPrim))
-                            return "Cannot find root prim for requested object";
+                            return Failure("Cannot find root prim for requested object");
                         else
                             WriteLine("Set root prim to " + rootPrim.ID.ToString(), Client);
                     }
@@ -215,7 +215,7 @@ namespace cogbot.Actions
                     }
                 }
 
-                return "Set permissions to " + Perms.ToString() + " on " + Objects.Count + " objects and " + taskItems + " inventory items";
+                return Success("Set permissions to " + Perms.ToString() + " on " + Objects.Count + " objects and " + taskItems + " inventory items");
             }
             finally
             {
@@ -241,7 +241,7 @@ namespace cogbot.Actions
                     PermsSent = true;
 
                     //  if (!GotPermissionsEvent.WaitOne(1000 * 30, false))
-                    //     return "Failed to set the modify bit, permissions in an unknown state";
+                    //     return Failure("failed to set the modify bit, permissions in an unknown state";
 
                     PermCount = 0;
                     if ((Perms & PermissionMask.Copy) == PermissionMask.Copy)
@@ -253,7 +253,7 @@ namespace cogbot.Actions
                     PermsSent = true;
 
                     //  if (!GotPermissionsEvent.WaitOne(1000 * 30, false))
-                    //   return "Failed to set the copy bit, permissions in an unknown state";
+                    //   return Failure("failed to set the copy bit, permissions in an unknown state";
 
                     PermCount = 0;
                     if ((Perms & PermissionMask.Transfer) == PermissionMask.Transfer)
@@ -279,7 +279,7 @@ namespace cogbot.Actions
                     Client.Objects.SetPermissions(CurrentSim, localIDs, PermissionWho.Group, PermissionMask.All,true);
                 }
                 //  if (!GotPermissionsEvent.WaitOne(1000 * 30, false))
-                //    return "Failed to set the transfer bit, permissions in an unknown state";
+                //    return Failure("failed to set the transfer bit, permissions in an unknown state";
 
                 Client.Objects.SetObjectsGroup(CurrentSim, localIDs, groupID);
                 if (deed) Client.Objects.DeedObjects(CurrentSim, localIDs, groupID);

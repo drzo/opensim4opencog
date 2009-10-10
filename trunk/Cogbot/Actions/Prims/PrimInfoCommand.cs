@@ -14,7 +14,7 @@ namespace cogbot.Actions
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             UUID primID;
 
@@ -24,7 +24,7 @@ namespace cogbot.Actions
                 {
                     WriteLine("\n {0}", WorldSystem.describePrim(O.Prim, false));
                 }
-                return "Done.";
+                return Success("Done.");
             }
 
             int argsUsed;
@@ -32,9 +32,9 @@ namespace cogbot.Actions
             if (target != null)
             {
                 WriteLine("\n {0}", WorldSystem.describePrim(target, true));
-                return "Done.";
+                return Success("Done.");
             }
-            return "Could not find prim " + String.Join(" ", args);
+            return Failure("Could not find prim " + String.Join(" ", args));
         }
     }
 }

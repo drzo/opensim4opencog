@@ -16,9 +16,9 @@ namespace cogbot.Actions
             Parameters = new [] { new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (Client.Network.CurrentSim == null) return "not yet connected";
+            if (Client.Network.CurrentSim == null) return Failure("not yet connected");
             int argsUsed;
             SimObject O = WorldSystem.GetSimObject(args, out argsUsed);
             if (O ==null)
@@ -39,7 +39,7 @@ namespace cogbot.Actions
                 // TODO: Done? Fetch properties for the objects with missing property sets so we can show names
                 WriteLine("[Attachment @ {0}] {1}", point, s);
             }
-            return "Found " + count + " attachments";
+            return Success("Found " + count + " attachments");
         }
     }
 }

@@ -13,7 +13,7 @@ namespace cogbot.Actions
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             bool start = true;
 
@@ -23,12 +23,12 @@ namespace cogbot.Actions
             if (start)
             {
                 Client.Self.Crouch(true);
-                return "Started crouching";
+                return Success("Started crouching");
             }
             else
             {
                 Client.Self.Crouch(false);
-                return "Stopped crouching";
+                return Success("Stopped crouching");
             }
         }
     }

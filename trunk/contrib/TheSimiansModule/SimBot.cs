@@ -32,37 +32,38 @@ namespace TheSimiansModule
            //set { _thinker = value; }
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (_thinker==null)
             {
-                if (Client.Self.AgentID == UUID.Zero) return "waiting for Agent ID";
+                if (Client.Self.AgentID == UUID.Zero) return Failure("waiting for Agent ID");
             }
             if (args.Length > 0)
             {
                 if (args[0] == "debug")
                 {
                     SimThinker avatar = GetSimAvatar();
-                    avatar.ShowDebug();                    
+                    avatar.ShowDebug();
+                    return Success("Debug on " + avatar);
                 }
 
                 if (args[0] == "on")
                 {
                     SimThinker avatar = GetSimAvatar();
-                    return "Turned on " + avatar;
+                    return Success("Turned on " + avatar);
                 }
 
                 if (args[0] == "start")
                 {
                     SimThinker avatar = GetSimAvatar();
                     avatar.StartThinking();
-                    return "Started Thinking " + avatar;
+                    return Success("Started Thinking " + avatar);
                 }
 
                 if (args[0] == "needs")
                 {
                     SimThinker avatar = GetSimAvatar();
-                    return avatar.CurrentNeeds.ToString();
+                    return Success(avatar.CurrentNeeds.ToString());
                 }
 
                 if (args[0] == "think")
@@ -73,13 +74,13 @@ namespace TheSimiansModule
                         avatar.PauseThinking();
                     }
                     avatar.ThinkOnce();
-                    return "Think once " + avatar;
+                    return Success("Think once " + avatar);
                 }
 
                 if (args[0] == "info")
                 {
                     SimThinker avatar = GetSimAvatar();
-                    return "List " + avatar.DebugInfo();
+                    return Success("List " + avatar.DebugInfo());
                 }
 
 
@@ -89,7 +90,7 @@ namespace TheSimiansModule
                 {
                     SimThinker avatar = GetSimAvatar();
                     avatar.PauseThinking();
-                    return "Stopped " + avatar;
+                    return Success("Stopped " + avatar);
                 }
                 else if (args[0] == "off")
                 {
@@ -97,17 +98,17 @@ namespace TheSimiansModule
                     SimThinker avatar = GetSimAvatar();
                     avatar.PauseThinking();
                     //   BRM = null;
-                    return "Stopped " + avatar;
+                    return Success("Stopped " + avatar);
                 }
 
                 if (args[0] == "load")
                 {
                     SimTypeSystem.LoadConfig(args[1]);
                     WorldSystem.RescanTypes();
-                    return "(Re)Loaded " + args[1];
+                    return Success("(Re)Loaded " + args[1]);
                 }
             }
-            return Usage;
+            return Failure(Usage);
         }
 
         private SimThinker GetSimAvatar()

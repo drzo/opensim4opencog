@@ -20,14 +20,14 @@ namespace cogbot.Actions
 
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             ulong regionHandle;
 
             if (args.Length == 0)
                 regionHandle = Client.Network.CurrentSim.Handle;
             else if (!(args.Length == 1 && UInt64.TryParse(args[0], out regionHandle)))
-                return "Usage: agentlocations [regionhandle]";
+                return Failure(Usage);// " agentlocations [regionhandle]";
 
             List<GridItem> items = Client.Grid.MapItems(regionHandle, GridItemType.AgentLocations, 
                 GridLayerType.Objects, 1000 * 20);
@@ -45,11 +45,11 @@ namespace cogbot.Actions
                         location.LocalY));
                 }
 
-                return ret.ToString();
+                return Success(ret.ToString());
             }
             else
             {
-                return "Failed to fetch agent locations";
+                return Failure("failed to fetch agent locations");
             }
         }
     }

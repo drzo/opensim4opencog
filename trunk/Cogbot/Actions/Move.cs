@@ -22,10 +22,10 @@ namespace cogbot.Actions
             Usage = "Type \"west/east/north/south\" to move 5 meters in a direction. Or Type \"west distance/east distance/north distance/south distance\" to move a specific distance in that direction.";// Client.RM.GetString("umove");
         }
 
-        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             acceptInput0(verb, args, WriteLine);
-            return verb + " complete";
+            return Success(verb + " complete");
         }
 
         void acceptInput0(string verb, Parser args, OutputDelegate WriteLine)

@@ -14,10 +14,10 @@ namespace cogbot.Actions
             Category = CommandCategory.Objects;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return "Usage: primregex [text predicat]";
+                return Failure(Usage);// " primregex [text predicat]";
 
             try
             {
@@ -58,10 +58,10 @@ namespace cogbot.Actions
             catch (System.Exception e)
             {
                 Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e);
-                return "Error searching";
+                return Failure("Error searching");
             }
 
-            return "Done searching";
+            return Success("Done searching");
         }
     }
 }

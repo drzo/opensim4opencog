@@ -13,12 +13,12 @@ namespace cogbot.Actions
             Category = CommandCategory.TestClient;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length < 1) return Description;
+            if (args.Length < 1) return Failure(Description);
             string botcmd = String.Join(" ", args, 0, args.Length).Trim();
             TheSimAvatar.CurrentAction = new CommandAction(TheSimAvatar, botcmd);
-            return string.Format("{0} CurrentAction = {1}", TheSimAvatar, botcmd);
+            return Success(string.Format("{0} CurrentAction = {1}", TheSimAvatar, botcmd));
         }
     }
 }

@@ -24,10 +24,10 @@ namespace cogbot.Actions
         /// <param name="args"></param>
         /// <param name="fromAgentID"></param>
         /// <returns></returns>
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             Client.Inventory.EmptyTrash();
-            return "Trash Emptied";
+            return Success("Trash Emptied");
         }
     }
 }

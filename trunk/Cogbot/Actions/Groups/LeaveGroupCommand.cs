@@ -18,10 +18,10 @@ namespace cogbot.Actions
             Description = "Leave a group. Usage: leavegroup GroupName";
             Category = CommandCategory.Groups;
         }
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Description;
+                return Failure(Description);
 
             string groupName = String.Empty;
             for (int i = 0; i < args.Length; i++)
@@ -41,10 +41,10 @@ namespace cogbot.Actions
                 Client.ReloadGroupsCache();
 
                 if (leftGroup)
-                    return Client.ToString() + " has left the group " + groupName;
-                return "failed to leave the group " + groupName;
+                    return Success(Client.ToString() + " has left the group " + groupName);
+                return Failure("failed to leave the group " + groupName);
             }
-            return Client.ToString() + " doesn't seem to be member of the group " + groupName;
+            return Failure(Client.ToString() + " doesn't seem to be member of the group " + groupName);
         }
 
 

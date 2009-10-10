@@ -459,6 +459,11 @@ namespace CogbotRadegastPluginModule
             get { return chatManager; }
         }
 
+        public BotClient TheBot
+        {
+            get { throw new NotImplementedException(); }
+        }
+
         private void tbtnStartIM_Click(object sender, EventArgs e)
         {
             if (lvwObjects.SelectedItems.Count == 0) return;

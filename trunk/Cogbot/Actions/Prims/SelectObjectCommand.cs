@@ -14,16 +14,16 @@ namespace cogbot.Actions
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length==0) {
                 WorldObjects.ResetSelectedObjects();
-                return "ResetSelectedObjects";
+                return Success("ResetSelectedObjects");
             }
             int used;
             Primitive P = WorldSystem.GetPrimitive(args, out used);
             WorldSystem.ReSelectObject(P);
-            return "object selected " + P;
+            return Success("object selected " + P);
         }
     }
 }

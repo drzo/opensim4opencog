@@ -18,10 +18,10 @@ namespace cogbot.Actions
             Category = CommandCategory.Communication;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 2)
-                return "Usage: imgroup [group_uuid] [message]";
+                return Failure(Usage);// " imgroup [group_uuid] [message]";
 
 
 
@@ -50,15 +50,15 @@ namespace cogbot.Actions
                 }
                 else
                 {
-                    return "Timeout waiting for group session start";
+                    return Failure( "Timeout waiting for group session start");
                 }
                 
                 Client.Self.OnGroupChatJoin -= new AgentManager.GroupChatJoinedCallback(Self_OnGroupChatJoin);
-                return "Instant Messaged group " + ToGroupID.ToString() + " with message: " + message;
+                return Success("Instant Messaged group " + ToGroupID.ToString() + " with message: " + message);
             }
             else
             {
-                return "failed to instant message group";
+                return Failure("failed to instant message group");
             }
         }
 

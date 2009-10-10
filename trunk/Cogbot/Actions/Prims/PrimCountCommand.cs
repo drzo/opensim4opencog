@@ -13,7 +13,7 @@ namespace cogbot.Actions
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
             int count = 0;
 
@@ -34,7 +34,7 @@ namespace cogbot.Actions
             WriteLine("{0} (Avatars: {1} Primitives: {2})",
                         "WorldSystem", WorldSystem.numAvatars(), cogbot.Listeners.WorldObjects.SimObjects.Count);
 
-			return "Tracking a total of " + count + " objects";
+            return Success("Tracking a total of " + count + " objects");
 		}
     }
 }

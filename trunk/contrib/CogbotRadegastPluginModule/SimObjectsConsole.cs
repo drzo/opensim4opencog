@@ -51,6 +51,8 @@ namespace CogbotRadegastPluginModule
     {
         private TaskQueueHandler addObjects = new TaskQueueHandler("SimObjectsConsole", 0);
         private RadegastInstance instance;
+        public readonly CogbotRadegastPlugin Plugin;
+
         private GridClient client { get { return instance.Client;} }
         private Primitive currentPrim = new Primitive();
         private ListViewItem currentItem = new ListViewItem();
@@ -58,9 +60,10 @@ namespace CogbotRadegastPluginModule
         public bool IsDisposing;
         //PropertiesQueue propRequester;
 
-        public SimObjectsConsole(RadegastInstance instance)
+        public SimObjectsConsole(RadegastInstance instance, CogbotRadegastPlugin plugin)
         {
             InitializeComponent();
+            Plugin = plugin;
             Disposed += new EventHandler(frmObjects_Disposed);
             this.instance = instance;
 

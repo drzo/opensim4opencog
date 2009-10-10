@@ -15,10 +15,10 @@ namespace cogbot.Actions
             Category = CommandCategory.TestClient;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             // This is a dummy command. Calls to it should be intercepted and handled specially
-            return "This command should not be executed directly";            
+            return Success("This command should not be executed directly");            
         }
     }
 }

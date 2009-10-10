@@ -14,10 +14,10 @@ namespace cogbot.Actions
             Category = CommandCategory.Inventory;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return "Usage: createscript filename.lsl";
+                return Failure(Usage);// " createscript filename.lsl";
 
             string file = String.Empty;
             for (int ct = 0; ct < args.Length; ct++)
@@ -26,7 +26,7 @@ namespace cogbot.Actions
 
             WriteLine("Filename: {0}", file);
             if (!File.Exists(file))
-                return String.Format("Filename '{0}' does not exist", file);
+                return Failure( String.Format("Filename '{0}' does not exist", file));
 
 
             // FIXME: Upload the script asset first. When that completes, call RequestCreateItem
@@ -49,13 +49,13 @@ namespace cogbot.Actions
                             }));
                     });
                 }
-                return "Done";
+                return Success("Done");
 
             }
             catch (System.Exception e)
             {
                 Logger.Log(e.ToString(), Helpers.LogLevel.Error, Client);
-                return "Error creating script.";
+                return Failure("Error creating script.");
             }
         }
         /// <summary>

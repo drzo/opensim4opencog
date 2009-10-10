@@ -17,14 +17,14 @@ namespace cogbot.Actions
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return "Usage: exportparticles [prim-uuid]";
+                return Failure(Usage);// " exportparticles [prim-uuid]";
 
             int argsUsed;
             Primitive exportPrim = WorldSystem.GetPrimitive(args, out argsUsed);
-            if (exportPrim == null) return "Couldn't find object " + String.Join(" ", args);
+            if (exportPrim == null) return Failure("Couldn't find object " + String.Join(" ", args));
             if (exportPrim.ParticleSys.CRC != 0)
             {
                 StringBuilder lsl = new StringBuilder();
@@ -100,11 +100,11 @@ namespace cogbot.Actions
 
                 #endregion Particle System to LSL
 
-                return lsl.ToString();
+                return Success(lsl.ToString());
             }
             else
             {
-                return "Prim " + exportPrim.LocalID + " does not have a particle system";
+                return Failure( "Prim " + exportPrim.LocalID + " does not have a particle system");
             }
         }
     }

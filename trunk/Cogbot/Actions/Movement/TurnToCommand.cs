@@ -14,13 +14,13 @@ namespace cogbot.Actions.Movement
             Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int argsUsed;
             SimPosition simObject = WorldSystem.GetVector(args, out argsUsed);
             WriteLine("turnto {0}", simObject);
             WorldSystem.TheSimAvatar.TurnToward(simObject);
-            return WorldSystem.TheSimAvatar.DistanceVectorString(simObject);
+            return Success(WorldSystem.TheSimAvatar.DistanceVectorString(simObject));
         }
     }
 }

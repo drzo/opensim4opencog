@@ -39,25 +39,25 @@ namespace cogbot.Actions
         }
 
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             BotClient Client = TheBotClient;
             if (!IsVoiceManagerRunning()) 
-                return String.Format("VoiceManager not running for {0}", fromAgentID);
+                return Failure(String.Format("VoiceManager not running for {0}", fromAgentID));
 
             if (!Client.VoiceManager.RequestParcelVoiceInfo()) 
             {
-                return "RequestParcelVoiceInfo failed. Not available for the current grid?";
+                return Failure( "RequestParcelVoiceInfo failed. Not available for the current grid?");
             }
             ParcelVoiceInfoEvent.WaitOne(30 * 1000, false);
 
             if (String.IsNullOrEmpty(VoiceRegionName) && -1 == VoiceLocalID)
             {
-                return String.Format("Parcel Voice Info request for {0} failed.", Client.Self.Name);
+                return Failure(String.Format("Parcel Voice Info request for {0} failed.", Client.Self.Name));
             }
 
-            return String.Format("Parcel Voice Info request for {0}: region name \"{1}\", parcel local id {2}, channel URI {3}",
-                                 Client.Self.Name, VoiceRegionName, VoiceLocalID, VoiceChannelURI);
+            return Success(string.Format("Parcel Voice Info request for {0}: region name \"{1}\", parcel local id {2}, channel URI {3}",
+                                 Client.Self.Name, VoiceRegionName, VoiceLocalID, VoiceChannelURI));
         }
 
         void Voice_OnParcelVoiceInfo(string regionName, int localID, string channelURI)

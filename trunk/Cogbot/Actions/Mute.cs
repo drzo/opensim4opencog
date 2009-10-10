@@ -14,39 +14,40 @@ namespace cogbot.Actions
             Description = "Toggle Mute or unmute a user";
             Usage = "To Mute an avatar, type \"Mute <avatar name>\"; to Mute all, type \"mute all\" \r\n" +
                           "To Unmute an avatar, type \"Mute <avatar name>\" again; to Unmute all, type \"mute all\" again";
-            Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
-           // base.acceptInput(verb, args);
+            // base.acceptInput(verb, args);
 
             Avatar avatar;
 
             BotClient chat = TheBotClient;//.WorldSystem;
-			
-			if (args.str=="all") {
-                chat.muted = !chat.muted;  // inverse mute
-				if (chat.muted) return("All conversation muted");
-				else return("All conversation unmuted");
-			} 
-			else if ((WorldSystem).tryGetAvatar(args.str, out avatar))
+
+            if (args.str == "all")
             {
-               // Listeners.Chat chat = (Listeners.Chat)Client.registrationTypes["chat"];
+                chat.muted = !chat.muted;  // inverse mute
+                if (chat.muted) return Success("All conversation muted");
+                else return Success("All conversation unmuted");
+            }
+            else if ((WorldSystem).tryGetAvatar(args.str, out avatar))
+            {
+                // Listeners.Chat chat = (Listeners.Chat)Client.registrationTypes["chat"];
                 if (chat.muteList.Contains(avatar.Name))
                 {
                     chat.muteList.Remove(avatar.Name);
-                    return("Unmuted " + avatar.Name + ".");
+                    return Success("Unmuted " + avatar.Name + ".");
                 }
                 else
                 {
                     chat.muteList.Add(avatar.Name);
-                    return("Muted " + avatar.Name + ".");
+                    return Success("Muted " + avatar.Name + ".");
                 }
             }
             else
             {
-                return("I don't know who " + args.str + " is.");
+                return Failure("I don't know who " + args.str + " is.");
             }
         }
     }

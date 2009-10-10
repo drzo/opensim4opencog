@@ -15,7 +15,7 @@ namespace cogbot.Actions
             Usage = "login <first name> <last name> <password> [<simurl>] [<location>]";
         }
 
-        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             //base.acceptInput(verb, args);
             string[] tokens = args.objectPhrase.Split(null);
@@ -56,9 +56,9 @@ namespace cogbot.Actions
                     WriteLine("$bot completed login");
                 }
                 else
-                    return ("$bot is already logged in.");
+                    return Success("$bot is already logged in.");
             }
-            return "loging in...";
+            return Success("loging in...");
         }
     }
 }

@@ -3,6 +3,8 @@ using System.ComponentModel;
 using System.Threading;
 using System.Windows.Forms;
 using cogbot;
+using cogbot.Listeners;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 using Radegast;
 //using RadegastTab = Radegast.SleekTab;
@@ -11,9 +13,10 @@ namespace CogbotRadegastPluginModule
 {
     public class CogbotRadegastPlugin : IRadegastPlugin
     {
-        public CogbotRadegastPlugin()
+        public CogbotRadegastPlugin(RadegastInstance instance)
         {
-        }
+            RadegastInstance = instance;
+        }       
 
         public RadegastInstance RadegastInstance;
         public CogbotContextMenuListener CogbotContextMenuListener;
@@ -21,10 +24,26 @@ namespace CogbotRadegastPluginModule
         private SimObjectsConsole _simObjectsConsole;
         private RadegastTab tab;
         private ClientManager clientManager;
+        private BotClient _theBot;
         private CogbotRadegastInterpreter cogbotRadegastInterpreter;
         private CogbotNotificationListener CogbotNoticeuListener;
         private CommandContextAction _commandContextAction;
+        private SimUsageContextAction _simUsageContextAction;
         private AspectContextAction _aspectContextAction;
+
+        public BotClient TheBot
+        {
+            get
+            {
+                if (_theBot != null) return _theBot;
+                return clientManager.LastBotClient;
+            }
+            set
+            {
+                //   clientManager.LastBotClient = value;
+                _theBot = value;
+            }
+        }
 
         public void StartPlugin(RadegastInstance inst)
         {
@@ -50,6 +69,7 @@ namespace CogbotRadegastPluginModule
                 // just unregister events for now
                 inst.Netcom.Dispose();
                 clientManager = ClientManager.SingleInstance;
+                _theBot = clientManager.LastBotClient;
             }
             else
             {
@@ -58,10 +78,12 @@ namespace CogbotRadegastPluginModule
             }
             cogbotRadegastInterpreter = new CogbotRadegastInterpreter(clientManager);
             RadegastInstance.CommandsManager.LoadInterpreter(cogbotRadegastInterpreter);
-            _commandContextAction = new CommandContextAction(inst);
+            _commandContextAction = new CommandContextAction(inst, this);
             inst.TabConsole.RegisterContextAction(_commandContextAction);
-            _aspectContextAction = new AspectContextAction(inst);
+            _aspectContextAction = new AspectContextAction(inst, this);
             inst.TabConsole.RegisterContextAction(_aspectContextAction);
+            _simUsageContextAction = new SimUsageContextAction(inst, this);
+            inst.TabConsole.RegisterContextAction(_simUsageContextAction);
 
             if (ClientManager.UsingRadgastFromCogbot) return;
             inst.Client.Settings.MULTIPLE_SIMS = true;
@@ -76,11 +98,11 @@ namespace CogbotRadegastPluginModule
             tab.AllowClose = false;
             tab.AllowDetach = true;
 
-            _simObjectsConsole = new SimObjectsConsole(inst)
-            {
-                Dock = DockStyle.Fill,
-               // Visible = false
-            };
+            _simObjectsConsole = new SimObjectsConsole(inst, this)
+                                     {
+                                         Dock = DockStyle.Fill,
+                                         // Visible = false
+                                     };
             tab = inst.TabConsole.AddTab("simobjects", "SimObjects", _simObjectsConsole);
             tab.AllowClose = false;
             tab.AllowDetach = true;

@@ -14,7 +14,7 @@ namespace cogbot.Actions
             Category = CommandCategory.TestClient;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             foreach (var bot in ClientManager.SingleInstance.BotClients)
             {
@@ -29,7 +29,7 @@ namespace cogbot.Actions
                 }
             }
 
-            return "All pending logins have completed, currently tracking " + ClientManager.SingleInstance.BotClients.Count + " bots";
+            return Success("All pending logins have completed, currently tracking " + ClientManager.SingleInstance.BotClients.Count + " bots");
         }
     }
 }

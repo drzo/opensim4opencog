@@ -22,7 +22,7 @@ namespace cogbot.Utilities
             Name = "tcpserver";
             Description = "";
         }
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
            // BotTcpServer btp = TheBotClient.TheTcpServer;
             throw new NotImplementedException();

@@ -13,13 +13,13 @@ namespace cogbot.Actions
             Category = CommandCategory.Objects;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             UUID primID;
 
             if (args.Length < 1)
             {
-                return Description;
+                return Failure(Description);
             }
 
             int argsUsed;
@@ -28,9 +28,9 @@ namespace cogbot.Actions
             {
                 WorldSystem.DeletePrim(target);
                 WriteLine("\n {0}", target);
-                return "Done.";
+                return Success("Done.");
             }
-            return "Could not find prim " + String.Join(" ", args);
+            return Failure("Could not find prim " + String.Join(" ", args));
         }
     }
 }

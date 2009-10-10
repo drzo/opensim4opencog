@@ -813,7 +813,7 @@ namespace cogbot
                 {
                     foreach (BotClient client in BotClients)
                     {
-                        WriteLine(client.Commands["help"].Execute(args, UUID.Zero, WriteLine));
+                        WriteLine(client.Commands["help"].Execute(args, UUID.Zero, WriteLine).ToString());
                         break;
                     }
                 }

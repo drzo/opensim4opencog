@@ -231,7 +231,7 @@ namespace NDesk.Options {
 
 		public override string ToString ()
 		{
-			return string.Join (", ", values.ToArray ());
+		    return string.Join(", ", values.ToArray());
 		}
 	}
 
@@ -1003,8 +1003,8 @@ namespace NDesk.Options {
 
 		private static string GetDescription (string description)
 		{
-			if (description == null)
-				return string.Empty;
+            if (description == null)
+                return string.Empty;
 			StringBuilder sb = new StringBuilder (description.Length);
 			int start = -1;
 			for (int i = 0; i < description.Length; ++i) {

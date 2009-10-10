@@ -14,6 +14,29 @@ namespace cogbot.TheOpenSims
     //TheSims-like object
     public class SimObjectImpl : SimPosition, BotMentalAspect, SimMover, SimObject, MeshableObject
     {
+        public float ZHeading
+        {
+            get
+            {
+                Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(SimRotation));
+                return (float)(Math.Atan2(-v3.X, -v3.Y) + Math.PI); // 2Pi= N, 1/2Pi = E
+            }
+        }
+
+        public SimHeading GetHeading()
+        {
+            lock (HasPrimLock)
+                if (!IsRegionAttached && HasPrim)
+                {
+                    Simulator sim = WorldSystem.GetSimulator(RegionHandle);
+                    Debug("Requesting object for heading");
+                    sim.Client.Objects.RequestObject(sim, _Prim0.LocalID);
+                    EnsureParentRequested(sim);
+                }
+            return new SimHeading(this);
+        }
+
+
         public bool CanShoot(SimPosition position)
         {
             if (!IsRegionAttached || !position.IsRegionAttached) return false;

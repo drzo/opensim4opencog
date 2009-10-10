@@ -16,9 +16,9 @@ namespace cogbot.Actions
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            return "Dilation is " + Client.Network.CurrentSim.Stats.Dilation.ToString();
+            return Success("Dilation is " + Client.Network.CurrentSim.Stats.Dilation.ToString());
         }
     }
 }

@@ -20,12 +20,12 @@ namespace cogbot.Actions
             Description = "Downloads the specified asset using the Xfer system. Usage: xfer [uuid]";
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             UUID assetID;
 
             if (args.Length != 1 || !UUID.TryParse(args[0], out assetID))
-                return "Usage: xfer [uuid]";
+                return Failure(Usage);// " xfer [uuid]";
 
             string filename;
             byte[] assetData = RequestXferPrim(assetID, out filename);
@@ -35,16 +35,16 @@ namespace cogbot.Actions
                 try
                 {
                     File.WriteAllBytes(filename, assetData);
-                    return "Saved asset " + filename;
+                    return Success("Saved asset " + filename);
                 }
                 catch (Exception ex)
                 {
-                    return "Failed to save asset " + filename + ": " + ex.Message;
+                    return Failure("failed to save asset " + filename + ": " + ex.Message);
                 }
             }
             else
             {
-                return "Failed to xfer asset " + assetID;
+                return Failure("failed to xfer asset " + assetID);
             }
         }
 

@@ -41,13 +41,13 @@ namespace cogbot.Actions
         /// <param name="args">arguments passed to this module</param>
         /// <param name="fromAgentID">The ID of the avatar sending the request</param>
         /// <returns></returns>
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int timeout = 120000; // default the timeout to 2 minutes
             fileName = Client.Network.CurrentSim.Name + ".raw";
             
             if(args.Length > 0 && int.TryParse(args[0], out timeout) != true)
-                return "Usage: downloadterrain [timeout]";
+                return Failure(Usage);// " downloadterrain [timeout]";
             
             // Create a delegate which will be fired when the simulator receives our download request
             // Starts the actual transfer request
@@ -79,7 +79,7 @@ namespace cogbot.Actions
             Client.Assets.OnXferReceived -= new AssetManager.XferReceivedCallback(Assets_OnXferReceived);
 
             // return the result
-            return result.ToString();
+            return Success(result.ToString());;
         }
 
         /// <summary>

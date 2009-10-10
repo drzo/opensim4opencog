@@ -17,7 +17,7 @@ namespace cogbot.Actions
             Category = CommandCategory.TestClient;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             TheBotClient.MasterKey = UUIDParse(args[0]);
 
@@ -41,7 +41,7 @@ namespace cogbot.Actions
                 }
             }
 
-            return "Master set to " + TheBotClient.MasterKey.ToString();
+            return Success("Master set to " + TheBotClient.MasterKey.ToString());
         }
 
     }

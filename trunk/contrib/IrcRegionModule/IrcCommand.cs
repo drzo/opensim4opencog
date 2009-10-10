@@ -114,7 +114,7 @@ namespace IrcRegionModule
             IrcRegionModule.IrcBotModule.IrcCommand = this;
             
         }
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length > 0)
             {
@@ -122,7 +122,7 @@ namespace IrcRegionModule
                 {
                     string putsrv = String.Join(" ", args);
                     ircClient.WriteLine(putsrv);
-                    return "IRC SERVER: " + putsrv;
+                    return Success("IRC SERVER: " + putsrv);
 
                 }
                 RegionChannel = args[0];
@@ -135,7 +135,7 @@ namespace IrcRegionModule
             {
                 IrcServer = args[2];
             }
-            return "irc connected as " + ircClient.Nickname + " on " + RegionChannel;
+            return Success("irc connected as " + ircClient.Nickname + " on " + RegionChannel);
         }
 
         public void IrcSend(string msg)

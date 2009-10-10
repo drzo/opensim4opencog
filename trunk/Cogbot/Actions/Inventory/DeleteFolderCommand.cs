@@ -21,7 +21,7 @@ namespace cogbot.Actions
             Category = CommandCategory.Inventory;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             // parse the command line
             string target = String.Empty;
@@ -39,14 +39,14 @@ namespace cogbot.Actions
                 {
                     // move the folder to the trash folder
                     Client.Inventory.MoveFolder(found[0].UUID, Client.Inventory.FindFolderForType(AssetType.TrashFolder));
-                    return String.Format("Moved folder {0} to Trash", found[0].Name);
+                    return Success(string.Format("Moved folder {0} to Trash", found[0].Name));
                 }
+                return Success(string.Empty);
             }
             catch (Exception ex)
             {
-                return "Folder Not Found: (" + ex.Message + ")";
+                return Failure("Folder Not Found: (" + ex.Message + ")");
             }
-            return string.Empty;
         }
     }
 }

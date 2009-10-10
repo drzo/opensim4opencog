@@ -33,7 +33,7 @@ namespace cogbot.Actions
         /// <param name="fromAgentID">The <seealso cref="OpenMetaverse.UUID"/> 
         /// of the agent making the request</param>
         /// <returns></returns>
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             // initialize a StringBuilder object used to return the results
             StringBuilder sb = new StringBuilder();
@@ -56,7 +56,7 @@ namespace cogbot.Actions
             }
 
             // return the result
-            return sb.ToString();
+            return Success(sb.ToString());            
         }
     }
 }

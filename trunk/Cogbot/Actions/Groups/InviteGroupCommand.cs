@@ -16,10 +16,10 @@ namespace cogbot.Actions
             Category = CommandCategory.Groups;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 2)
-                return Description;
+                return Failure(Description);
 
             UUID avatar = UUID.Zero;
             UUID group = UUID.Zero;
@@ -27,16 +27,16 @@ namespace cogbot.Actions
             List<UUID> roles = new List<UUID>();
 
             if (!UUIDTryParse(args[0], out avatar))
-                    return "parse error avatar UUID";
+                    return Failure( "parse error avatar UUID");
             if (!UUIDTryParse(args[1], out group))
-                    return "parse error group UUID";
+                    return Failure( "parse error group UUID");
             for (int i = 2; i < args.Length; i++)
                 if (UUID.TryParse(args[i], out role))
                     roles.Add(role);
                 
             Client.Groups.Invite(group, roles, avatar);
 
-            return "invited "+avatar+" to "+group;
+            return Success("invited "+avatar+" to "+group);
         }
     }
 }

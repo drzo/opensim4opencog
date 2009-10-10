@@ -15,14 +15,14 @@ namespace cogbot.Actions
             Category = CommandCategory.Other;
 		}
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
 			if (fromAgentID == UUID.Zero)
-				return "Unable to send money to console.  This command only works when IMed.";
+				return Failure("Unable to send money to console.  This command only works when IMed.");
 
 		    int amount = Client.Self.Balance;
 		    Client.Self.GiveAvatarMoney(fromAgentID, Client.Self.Balance, "BotClient.GiveAll");
-		    return "Gave $" + amount + " to " + fromAgentID;
+		    return Success("Gave $" + amount + " to " + fromAgentID);
 		}
     }
 }

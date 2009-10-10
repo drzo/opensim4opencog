@@ -19,7 +19,7 @@ namespace cogbot.Actions
             Parameters = new[] { new NamedParam(typeof(SimAvatar), typeof(UUID)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             string targetName = String.Empty;
 
@@ -28,7 +28,7 @@ namespace cogbot.Actions
             targetName = targetName.TrimEnd();
 
             if (targetName.Length == 0)
-                return "Usage: clone [name]";
+                return Failure(Usage);// " clone [name]";
             UUID target = WorldSystem.GetUserID(targetName);
 
             //            if (Client.Directory.PeopleSearch(DirectoryManager.DirFindFlags.People, targetName, 0, 1000 * 10,
@@ -69,16 +69,16 @@ namespace cogbot.Actions
                     // Send the new appearance packet
                     Client.Network.SendPacket(set);
 
-                    return "Cloned " + targetName;
+                    return Success("Cloned " + targetName);
                 }
                 else
                 {
-                    return "Don't know the appearance of avatar " + targetName;
+                    return Failure("Don't know the appearance of avatar " + targetName);
                 }
             }
             else
             {
-                return "Couldn't find avatar " + targetName;
+                return Failure("Couldn't find avatar " + targetName);
             }
         }
     }

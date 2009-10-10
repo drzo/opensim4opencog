@@ -39,11 +39,11 @@ namespace cogbot.Actions
 
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             RegisterCallbacks();
             if (args.Length != 2 && !(args.Length == 1 && SelectedObject != UUID.Zero))
-                return "Usage: export uuid outputfile.xml";
+                return Failure(Usage);// " export uuid outputfile.xml";
 
             UUID id;
             uint localid;
@@ -53,7 +53,7 @@ namespace cogbot.Actions
             {
                 file = args[1];
                 if (!UUIDTryParse(args, 0, out id))
-                    return "Usage: export uuid outputfile.xml";
+                    return Failure(Usage);// " export uuid outputfile.xml";
             }
             else
             {
@@ -80,7 +80,7 @@ namespace cogbot.Actions
 
                 if (!GotPermissions)
                 {
-                    return "Couldn't fetch permissions for the requested object, try again";
+                    return Failure("Couldn't fetch permissions for the requested object, try again");
                 }
                 else
                 {
@@ -89,8 +89,8 @@ namespace cogbot.Actions
                         Properties.OwnerID != Client.MasterKey &&
                         Client.Self.AgentID != Client.Self.AgentID)
                     {
-                        return "That object is owned by " + Properties.OwnerID + ", we don't have permission " +
-                            "to export it";
+                        return Failure( "That object is owned by " + Properties.OwnerID + ", we don't have permission " +
+                            "to export it");
                     }
                 }
 
@@ -112,7 +112,7 @@ namespace cogbot.Actions
 
                 string output = OSDParser.SerializeLLSDXmlString(ClientHelpers.PrimListToOSD(prims));
                 try { File.WriteAllText(file, output); }
-                catch (Exception e) { return e.Message; }
+                catch (Exception e) { return Failure(e.Message); }
 
                 Logger.Log("Exported " + prims.Count + " prims to " + file, Helpers.LogLevel.Info, Client);
 
@@ -158,13 +158,13 @@ namespace cogbot.Actions
                     Client.Assets.RequestImage(request.ImageID, request.Type, Assets_OnImageReceived);
                 }
 
-                return "XML exported, began downloading " + Textures.Count + " textures";
+                return Success("XML exported, began downloading " + Textures.Count + " textures");
             }
             else
             {
-                return "Couldn't find UUID " + id.ToString() + " in the " +
+                return Failure("Couldn't find UUID " + id.ToString() + " in the " +
                     Client.Network.CurrentSim.ObjectsPrimitives.Count +
-                    "objects currently indexed in the current simulator";
+                    "objects currently indexed in the current simulator");
             }
         }
 

@@ -15,16 +15,16 @@ namespace cogbot.Actions.Movement
 
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int argsUsed;
             if (args.Length < 1)
-                return "Usage: moveto x y z";
+                return Failure(Usage);// " moveto x y z";
             SimPosition position = WorldSystem.GetVector(args, out argsUsed);
             Vector3d g = position.GlobalPosition;
             Client.Self.AutoPilot(g.X, g.Y, g.Z);
 
-            return String.Format("Attempting to move to (AutoPilot) <{0},{1},{2}>", g.X, g.Y, g.Z);
+            return Success(string.Format("Attempting to move to (AutoPilot) <{0},{1},{2}>", g.X, g.Y, g.Z));
         }
     }
 }

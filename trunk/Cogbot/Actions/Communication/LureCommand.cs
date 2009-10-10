@@ -17,13 +17,13 @@ namespace cogbot.Actions.Communication
         }
 
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             string user = string.Join(" ", args);
             UUID id = WorldSystem.GetUserID(user);
-            if (id==UUID.Zero) return "cannot find " + user;
+            if (id==UUID.Zero) return Failure("Cannot find " + user);
             Client.Self.SendTeleportLure(id);
-            return "teleport Lure sent to " + user;
+            return Success("teleport Lure sent to " + user);
         }
     }
 }

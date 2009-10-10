@@ -17,17 +17,17 @@ namespace cogbot.Actions
             Name = "mapfriend";
             Description = "Show a friends location. Usage: mapfriend UUID";
             Category = CommandCategory.Friends;
-            Parameters = new[] {  new NamedParam(typeof(SimAvatar), typeof(UUID)) };
+            Parameters = new[] { new NamedParam(typeof(SimAvatar), typeof(UUID)) };
         }
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Description;
+                return Failure(Description);
 
             UUID targetID;
 
             if (!UUIDTryParse(args, 0, out targetID))
-                return Description;
+                return Failure(Description);
 
             StringBuilder sb = new StringBuilder();
 
@@ -43,14 +43,20 @@ namespace cogbot.Actions
                 };
 
             Client.Friends.OnFriendFound += del;
-            WaitforFriend.Reset();
-            Client.Friends.MapFriend(targetID);
-            if (!WaitforFriend.WaitOne(10000, false))
+            try
             {
-                sb.AppendFormat("Timeout waiting for reply, Do you have mapping rights on {0}?", targetID);
+                WaitforFriend.Reset();
+                Client.Friends.MapFriend(targetID);
+                if (!WaitforFriend.WaitOne(10000, false))
+                {
+                    return Failure(string.Format("Timeout waiting for reply, Do you have mapping rights on {0}?", targetID));
+                }
             }
-            Client.Friends.OnFriendFound -= del;
-            return sb.ToString();
+            finally
+            {
+                Client.Friends.OnFriendFound -= del;                
+            }
+            return Success(sb.ToString());
         }
     }
 }

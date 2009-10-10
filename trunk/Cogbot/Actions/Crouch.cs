@@ -18,7 +18,7 @@ namespace cogbot.Actions
             Parameters = new[] {new NamedParam(typeof (GridClient),typeof(string), null, "on", "off", typeof (int))};
         }
 
-        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             Client.describeNext = true;
             string[] tokens = args.tokens;
@@ -29,21 +29,21 @@ namespace cogbot.Actions
                 System.Threading.Thread.Sleep(500);
                // isCrouching = false;
                 Client.Self.Crouch(false);
-                return ("$bot crouched.");
+                return Success("$bot crouched.");
             }
             else
                 if (tokens[0].Equals("on"))
                 {
                     Client.Self.Crouch(true);
                  //   isCrouching = true;
-                    return ("$bot started crouching.");
+                    return Success("$bot started crouching.");
                 }
                 else
                 {
                     Client.Self.Crouch(true);
                  //   isCrouching = false;
                     Client.Self.Crouch(false);
-                    return ("$bot done crouching.");
+                    return Success("$bot done crouching.");
                 }
         }
 

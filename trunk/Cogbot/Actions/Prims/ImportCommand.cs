@@ -49,10 +49,10 @@ namespace cogbot.Actions
             Category = CommandCategory.Objects;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return "Usage: import inputfile.xml [usegroup]";
+                return Failure(Usage);// " import inputfile.xml [usegroup]";
 
             if (callback == null)
             {
@@ -67,10 +67,10 @@ namespace cogbot.Actions
                 List<Primitive> prims;
 
                 try { xml = File.ReadAllText(filename); }
-                catch (Exception e) { return e.Message; }
+                catch (Exception e) { return Failure(e.Message); }
 
                 try { prims = ClientHelpers.OSDToPrimList(OSDParser.DeserializeLLSDXml(xml)); }
-                catch (Exception e) { return "Failed to deserialize " + filename + ": " + e.Message; }
+                catch (Exception e) { return Failure("failed to deserialize " + filename + ": " + e.Message); }
 
                 // Build an organized structure from the imported prims
                 Dictionary<uint, Linkset> linksets = new Dictionary<uint, Linkset>();
@@ -117,7 +117,7 @@ namespace cogbot.Actions
                             linkset.RootPrim.Position, linkset.RootPrim.Scale, linkset.RootPrim.Rotation);
 
                         if (!primDone.WaitOne(10000, false))
-                            return "Rez failed, timed out while creating the root prim.";
+                            return Failure( "Rez failed, timed out while creating the root prim.");
 
                         Client.Objects.SetPosition(Client.Network.CurrentSim, primsCreated[primsCreated.Count - 1].LocalID, linkset.RootPrim.Position);
 
@@ -133,7 +133,7 @@ namespace cogbot.Actions
                                 prim.Scale, prim.Rotation);
 
                             if (!primDone.WaitOne(10000, false))
-                                return "Rez failed, timed out while creating child prim.";
+                                return Failure( "Rez failed, timed out while creating child prim.");
                             Client.Objects.SetPosition(Client.Network.CurrentSim, primsCreated[primsCreated.Count - 1].LocalID, currentPosition);
 
                         }
@@ -184,7 +184,7 @@ namespace cogbot.Actions
                     // Reset everything for the next linkset
                     primsCreated.Clear();
                 }
-                return "Import complete.";
+                return Success("Import complete.");
             }
             finally
             {

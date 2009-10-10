@@ -23,10 +23,10 @@ namespace cogbot.Actions
             Category = CommandCategory.Groups;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Description;
+                return Failure(Description);
 
             groupName = String.Empty;
             resolvedGroupID = UUID.Zero;
@@ -35,10 +35,10 @@ namespace cogbot.Actions
             if (args[0].ToLower() == "uuid")
             {
                 if (args.Length < 2)
-                    return Description;
+                    return Failure(Description);
 
-                if (!UUID.TryParse((resolvedGroupName = groupName = args[1]), out resolvedGroupID))
-                    return resolvedGroupName + " doesn't seem a valid UUID";
+                if (!UUIDTryParse((resolvedGroupName = groupName = args[1]), out resolvedGroupID))
+                    return Failure(resolvedGroupName + " doesn't seem a valid UUID");
             }
             else
             {
@@ -58,9 +58,9 @@ namespace cogbot.Actions
             if (resolvedGroupID == UUID.Zero)
             {
                 if (string.IsNullOrEmpty(resolvedGroupName))
-                    return "Unable to obtain UUID for group " + groupName;
+                    return Failure("Unable to obtain UUID for group " + groupName);
                 else
-                    return resolvedGroupName;
+                    return Success(resolvedGroupName);
             }
 
             GroupManager.GroupJoinedCallback gcallback = new GroupManager.GroupJoinedCallback(Groups_OnGroupJoined);
@@ -78,8 +78,8 @@ namespace cogbot.Actions
             Client.ReloadGroupsCache();
 
             if (joinedGroup)
-                return "Joined the group " + resolvedGroupName;
-            return "Unable to join the group " + resolvedGroupName;
+                return Success("Joined the group " + resolvedGroupName);
+            return Failure("Unable to join the group " + resolvedGroupName);
         }
 
         void Groups_OnGroupJoined(UUID groupID, bool success)

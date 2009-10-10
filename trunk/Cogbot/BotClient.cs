@@ -319,8 +319,7 @@ namespace cogbot
 
             Commands["fly"] = new Actions.Fly(this);
             Commands["stop-flying"] = new Actions.StopFlying(this);
-            Commands["where"] = new Actions.Where(this);
-            Commands["locate"] = new Actions.Locate(this);
+            Commands["locate"] = Commands["location"] = Commands["where"] = new Actions.LocationCommand(this);
             Actions.Follow follow = new Actions.Follow(this);
             Commands["follow"] = follow;
             Commands["wear"] = new Actions.Wear(this);
@@ -1132,7 +1131,7 @@ namespace cogbot
                 WriteLine("XML2Lisp =>'" + lispCodeString + "'");
                 //string results = evalLispString(lispCodeString);
                 //string results = "'(enqueued)";
-                return evalLispString(lispCodeString);
+                return evalLispString(lispCodeString).ToString();
                 //return results;
             } //try
             catch (Exception e)
@@ -1431,7 +1430,7 @@ namespace cogbot
             {
                 if (text.StartsWith("("))
                 {
-                    return evalLispString(text);
+                    return evalLispString(text).ToString();
                 }
                 //            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
                 //text = text.Replace("\"", "");
@@ -1455,9 +1454,9 @@ namespace cogbot
                     }
                     string res;
                     if (text.Length > verb.Length)
-                        res = act.acceptInputWrapper(verb, text.Substring(verb.Length + 1), WriteLine);
+                        res = act.acceptInputWrapper(verb, text.Substring(verb.Length + 1), WriteLine).ToString();
                     else
-                        res = act.acceptInputWrapper(verb, "", WriteLine);
+                        res = act.acceptInputWrapper(verb, "", WriteLine).ToString();
                     if (String.IsNullOrEmpty(res))
                     {
                         return string.Format("{0} Completed: {1}", GetName(), text);

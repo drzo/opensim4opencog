@@ -16,18 +16,18 @@ namespace cogbot.Actions
             Category = CommandCategory.Groups;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             Client.ReloadGroupsCache();
             return getGroupsString();
         }
 
-        string getGroupsString()
+        CmdResult getGroupsString()
         {
             if (null == Client.GroupsCache)
-                    return "Groups cache failed.";
+                    return Failure( "Groups cache failed.");
             if (0 == Client.GroupsCache.Count)
-                    return "No groups";
+                    return Success("No groups");
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("got "+Client.GroupsCache.Count +" groups:");
             foreach (Group group in Client.GroupsCache.Values)
@@ -36,7 +36,7 @@ namespace cogbot.Actions
                 
             }
             
-            return sb.ToString();
+            return Success(sb.ToString());
         }
     }
 }

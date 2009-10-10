@@ -12,13 +12,13 @@ namespace cogbot.Actions
             Category = CommandCategory.TestClient;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length < 2) return Description;
+            if (args.Length < 2) return Failure(Description);
             BotClient oBotClient = ClientManager.GetBotByName(args[0]);
-            if (oBotClient == null) return "not for me";
+            if (oBotClient == null) return Success("not for me");
             string botcmd = String.Join(" ", args, 1, args.Length - 1).Trim();
-            return "tobot " + oBotClient + " " + oBotClient.ExecuteCommand(botcmd, WriteLine);
+            return Success("tobot " + oBotClient + " " + oBotClient.ExecuteCommand(botcmd, WriteLine));
         }
     }
 }

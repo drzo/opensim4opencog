@@ -519,7 +519,7 @@ namespace cogbot.Listeners
         public void EnsureSimulator(Simulator simulator)
         {
             if (simulator == null) return;
-            lock (_AllSimulators)
+            if (!Monitor.TryEnter(_AllSimulators)) return;
             {
 
                 foreach (Simulator set in _AllSimulators)
@@ -528,6 +528,7 @@ namespace cogbot.Listeners
                 }
                 _AllSimulators.Add(simulator);
             }
+            Monitor.Exit(_AllSimulators);
             SimRegion.GetRegion(simulator);
         }
 

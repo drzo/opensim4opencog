@@ -15,10 +15,10 @@ namespace cogbot.Actions
             Category = CommandCategory.Movement;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
 			Client.Self.SetHome();
-            return "Home Set";
+            return Success("Home Set");
         }
     }
 }

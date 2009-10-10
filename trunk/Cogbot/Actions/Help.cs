@@ -16,7 +16,7 @@ namespace cogbot.Actions
             Name = "help";
         }
 
-        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             // base.acceptInput(verb, args);
 
@@ -44,7 +44,7 @@ namespace cogbot.Actions
             }
 
             Client.describeNext = false;
-            return "Help complete";
+            return Success("Help complete");
         }
     }
 }

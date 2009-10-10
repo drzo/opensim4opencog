@@ -16,7 +16,7 @@ namespace cogbot.Actions
             Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             //   base.acceptInput(verb, args);
 
@@ -24,7 +24,7 @@ namespace cogbot.Actions
             string subject = String.Join(" ", args);
             if (subject.Length == 0)
             {
-                return TheSimAvatar.DebugInfo();
+                return Success(TheSimAvatar.DebugInfo());
             }
             Client.describeNext = false;
             float range;
@@ -41,7 +41,7 @@ namespace cogbot.Actions
                             string s = DebugInfo(o);
                             WriteLine(s);
                         }
-                        return "simEventComplete";
+                        return Success("simEventComplete");
                     }
                 }
             }
@@ -83,7 +83,7 @@ namespace cogbot.Actions
                     }
                 }
             }
-            return "simEventComplete";
+            return Success("simEventComplete");
         }
 
         private string DebugInfo(SimObject o)

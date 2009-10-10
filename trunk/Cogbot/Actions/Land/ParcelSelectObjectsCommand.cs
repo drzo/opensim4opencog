@@ -15,10 +15,10 @@ namespace cogbot.Actions
             Category = CommandCategory.Parcel;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 2)
-                return "Usage: selectobjects parcelID OwnerUUID (use parcelinfo to get ID, use parcelprimowners to get ownerUUID)";
+                return Failure(Usage);// " selectobjects parcelID OwnerUUID (use parcelinfo to get ID, use parcelprimowners to get ownerUUID)";
 
             int parcelID;
             UUID ownerUUID;
@@ -55,11 +55,11 @@ namespace cogbot.Actions
                 
                 Client.Parcels.OnParcelSelectedObjects -= callback;
                 result.AppendLine("Found a total of " + counter + " Objects");
-                return result.ToString();
+                return Success(result.ToString());;
             }
             else
             {
-                return String.Format("Unable to find Parcel {0} in Parcels Dictionary, Did you run parcelinfo to populate the dictionary first?", args[0]);
+                return Failure(string.Format("Unable to find Parcel {0} in Parcels Dictionary, Did you run parcelinfo to populate the dictionary first?", args[0]));
             }
         }
     }

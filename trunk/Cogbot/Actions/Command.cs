@@ -55,6 +55,22 @@ namespace cogbot.Actions
     {
     }
 
+    public class CmdResult
+    {
+        private String message;
+        private bool success;
+        public CmdResult(string usage, bool b)
+        {
+            message = usage;
+            success = b;
+        }
+        public override string ToString()
+        {
+            if (!success) return string.Format("ERROR: {0}", message);
+            return message;
+        }
+    }
+
     public abstract class Command : IComparable
     {
         protected OutputDelegate WriteLine;
@@ -79,7 +95,7 @@ namespace cogbot.Actions
         /// </summary>
         /// <param name="verb"></param>
         /// <param name="args"></param>
-        public virtual string acceptInput(string verb, cogbot.Actions.Parser args, OutputDelegate WriteLine)
+        public virtual CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             this.WriteLine = WriteLine;
             return Execute(args.tokens, UUID.Zero, WriteLine);
@@ -192,13 +208,13 @@ namespace cogbot.Actions
             }
         }
 
-        public string acceptInputWrapper(string verb, string args, OutputDelegate WriteLine)
+        public CmdResult acceptInputWrapper(string verb, string args, OutputDelegate WriteLine)
         {
             this.WriteLine = WriteLine;
             return acceptInput(verb, Parser.ParseArgs(args), WriteLine);
         }
 
-        public virtual string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public virtual CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             this.WriteLine = WriteLine;
             Parser p = Parser.ParseArgs(String.Join(" ", args));
@@ -270,6 +286,21 @@ namespace cogbot.Actions
             target = WorldSystem.GetAssetUUID(p, AssetType.Unknown);
             if (target != UUID.Zero) return true;
             return false;
+        }
+
+        protected CmdResult Failure(string usage)
+        {
+            return new CmdResult(usage, false);
+        }
+
+        protected CmdResult Success(string usage)
+        {
+            return new CmdResult(usage, true);
+        }
+
+        protected CmdResult Result(string usage, bool tf)
+        {
+            return new CmdResult(usage, tf);
         }
     }
 }

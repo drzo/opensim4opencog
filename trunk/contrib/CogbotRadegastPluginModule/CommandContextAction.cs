@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Threading;
 using System.Windows.Forms;
 using cogbot;
 using cogbot.Actions;
@@ -9,7 +7,6 @@ using cogbot.TheOpenSims;
 using OpenMetaverse;
 using Radegast;
 using PathSystem3D.Navigation;
-using Action=System.Action;
 
 namespace CogbotRadegastPluginModule
 {
@@ -18,6 +15,7 @@ namespace CogbotRadegastPluginModule
         public Object lastObject;
         public Command act;
         public Type useType;
+        public readonly CogbotRadegastPlugin Plugin;
         CogbotTabWindow console
         {
             get { return (CogbotTabWindow)instance.TabConsole.GetTab("cogbot").Control; }
@@ -26,24 +24,25 @@ namespace CogbotRadegastPluginModule
         {
             get { return console.PluginExtraContextMenu; }
         }
-        public CommandContextAction(RadegastInstance radegastInstance)
+        public CommandContextAction(RadegastInstance radegastInstance, CogbotRadegastPlugin plugin)
             : base(radegastInstance)
         {
-            ContextType = typeof (Object);
+            ContextType = typeof(Object);
             Label = "commands...";
             Client.Network.OnLogin += aspectLogin;
+            Plugin = plugin;
         }
 
         public Dictionary<string, List<ToolStripMenuItem>> MenuItems = new Dictionary<string, List<ToolStripMenuItem>>();
         private void aspectLogin(LoginStatus login, string message)
         {
-            if (login!=LoginStatus.Success) return;
+            if (login != LoginStatus.Success) return;
             ScanCogbotMenu();
         }
 
         private void ScanCogbotMenu()
         {
-            if (act!=null) return;
+            if (act != null) return;
             int groupCommands = 0, botCommands = 0;
 
             if (ClientManager.SingleInstance.groupActions != null)
@@ -54,7 +53,7 @@ namespace CogbotRadegastPluginModule
                         if (AddCommand(c)) groupCommands++;
                     }
             }
-            if (ClientManager.SingleInstance.LastBotClient != null && ClientManager.SingleInstance.LastBotClient.Commands !=null)
+            if (ClientManager.SingleInstance.LastBotClient != null && ClientManager.SingleInstance.LastBotClient.Commands != null)
             {
                 lock (ClientManager.SingleInstance.LastBotClient.Commands)
                     foreach (var c in ClientManager.SingleInstance.LastBotClient.Commands.Values)
@@ -85,14 +84,14 @@ namespace CogbotRadegastPluginModule
             }
             if (c.Parameters == null)
             {
-               // DebugLog("WARNING: Skipping non-paramerized command " + cName);
+                // DebugLog("WARNING: Skipping non-paramerized command " + cName);
                 return false;
             }
             int i = 0;
             while (i < c.Parameters.Length)
             {
-                Type from =(Type) c.Parameters[i].Key;
-                Type use = (Type) c.Parameters[i].Value;
+                Type from = (Type)c.Parameters[i].Key;
+                Type use = (Type)c.Parameters[i].Value;
                 AddCommand(c, from, use);
                 i++;
             }
@@ -103,14 +102,14 @@ namespace CogbotRadegastPluginModule
         private void AddCommand(Command renCmd, Type type, Type use)
         {
             lock (Actions) if (!Actions.Add(renCmd)) return;
-            CommandContextAction cca = new CommandContextAction(instance)
+            CommandContextAction cca = new CommandContextAction(instance,Plugin)
                                            {
                                                Label = renCmd.Name,
                                                Handler = SubHook,
                                                ContextType = type,
                                                act = renCmd,
                                                useType = use
-                };
+                                           };
             instance.TabConsole.RegisterContextAction(cca);
 
         }
@@ -153,15 +152,18 @@ namespace CogbotRadegastPluginModule
 
         public string ActName
         {
-            get { string name= act.Name.Replace(" ", "").ToLower();
-            while (name.EndsWith(".")) name = name.Substring(0, name.Length - 1);
-                return name;}
+            get
+            {
+                string name = act.Name.Replace(" ", "").ToLower();
+                while (name.EndsWith(".")) name = name.Substring(0, name.Length - 1);
+                return name;
+            }
         }
 
         public override bool Contributes(object o, Type type)
         {
-            if (type == useType) return true;           
-            if (base.ContextType == typeof(SimPosition) || base.ContextType == typeof(SimObject))
+            if (type == useType) return true;
+            if (base.ContextType == typeof(SimPosition) || base.ContextType == typeof(SimObject) || base.ContextType == typeof(SimAvatar))
             {
                 if (type == typeof(UUID))
                 {
@@ -189,7 +191,12 @@ namespace CogbotRadegastPluginModule
                             });
 
             }
-            return lst;
+            return ListOfOne("Commands...", lst);
+        }
+
+        static public IEnumerable<ToolStripMenuItem> ListOfOne(string commands, List<ToolStripMenuItem> items)
+        {
+            return items;
         }
 
         public object GetValue(Type type)
@@ -238,6 +245,11 @@ namespace CogbotRadegastPluginModule
         public override void Dispose()
         {
             if (act == null) lock (Actions) Actions.Clear();
+        }
+
+        public void DebugLog(string s)
+        {
+            instance.TabConsole.DisplayNotificationInChat(string.Format("ContextAction {0}: {1}", Label, s));
         }
     }
 }

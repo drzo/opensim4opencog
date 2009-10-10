@@ -20,7 +20,7 @@ namespace cogbot.Actions
         }
 
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int len = args.Length;
             Simulator sim = Client.Network.CurrentSim;
@@ -37,7 +37,7 @@ namespace cogbot.Actions
                     Client.Objects.RequestObject(sim,u);
                     Client.Objects.SelectObject(sim,u);
                 }
-                return Usage;
+                return Failure(Usage);
 
             }
             if (len>1)
@@ -66,7 +66,7 @@ namespace cogbot.Actions
                     Client.Objects.SetPosition(sim,prim.LocalID,primPosition-offset);
                 }
             }
-            return "moved " + moved + " on sim " + sim;
+            return Success("moved " + moved + " on sim " + sim);
         }
     }
 }

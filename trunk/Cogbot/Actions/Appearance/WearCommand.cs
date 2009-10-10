@@ -14,10 +14,10 @@ namespace cogbot.Actions
             Category = CommandCategory.Appearance;
         }
 
-        public override string Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return "Usage: wear [outfit name] eg: 'wear /My Outfit/Dance Party";
+                return Failure(Usage);// " wear [outfit name] eg: 'wear /My Outfit/Dance Party";
 
             string target = String.Empty;
             bool bake = true;
@@ -39,10 +39,10 @@ namespace cogbot.Actions
             }
             catch (Exception ex)
             {
-                return "Invalid outfit (" + ex.Message + ")";
+                return Failure( "Invalid outfit (" + ex.Message + ")");
             }
 
-            return String.Empty;
+            return Success(string.Empty);
         }
     }
 }

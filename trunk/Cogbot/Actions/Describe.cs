@@ -41,10 +41,10 @@ namespace cogbot.Actions
             return str;
         }
 
-        public override string acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             acceptInput0(verb, args, WriteLine);
-            return verb + " complete";
+            return Success(verb + " complete");
         }
 
         void acceptInput0(string verb, Parser args, OutputDelegate WriteLine)
