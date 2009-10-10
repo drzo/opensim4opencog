@@ -334,16 +334,17 @@ namespace cogbot.Listeners
 
         private void DeclareGroup(UUID uuid)
         {
-            lock (uuidTypeObject)
+            //lock (uuidTypeObject)
             {
                 object g;
                 if (uuidTypeObject.TryGetValue(uuid, out g))
                 {
                   if (g is Group)
                   {
-                      SimGroup sg = new SimGroup(uuid) {Group = (Group) g};
+                     // SimGroup sg = new SimGroup(uuid) {Group = (Group) g};
                   }   
                 }
+
             }
         }
 
