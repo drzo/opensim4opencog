@@ -45,6 +45,7 @@ namespace cogbot.Actions
 
                     Quaternion newRot1 = Vector3.RotationBetween(positionVect, Client.Self.RelativePosition);
                     double newDist = Vector3.Distance(positionVect, Client.Self.RelativePosition);
+                    WriteLine("Where Found: {0}", position);
                     WriteLine(Client.Self.Movement.Camera.AtAxis + ", " + newRot2 + ", " + newDist);
 
                     WriteLine(positionVect.X + ", " + positionVect.Y + ", " + positionVect.Z);

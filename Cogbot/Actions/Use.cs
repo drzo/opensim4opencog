@@ -28,21 +28,27 @@ namespace cogbot.Actions
            }
            objname = args.objectPhrase;
            if (objname == "") {
-               return ("I don't know what object to use."); }
+               return ("$bot don't know what object to use.");
+           }
            if (to_op == "") {
                Primitive prim;
                if (WorldSystem.tryGetPrim(objname, out prim))
                {
                    SimObject objToUse = WorldSystem.GetSimObject(prim);
-                   if ((BotNeeds)WorldSystem.TheSimAvatar["CurrentNeeds"]==null)
+                   if ((BotNeeds)TheSimAvatar["CurrentNeeds"]==null)
                    {
-                       WorldSystem.TheSimAvatar["CurrentNeeds"] = new BotNeeds(90.0f);
+                       TheSimAvatar["CurrentNeeds"] = new BotNeeds(90.0f);
                    }
-                   SimTypeUsage usage = objToUse.GetBestUse((BotNeeds)WorldSystem.TheSimAvatar["CurrentNeeds"]);
-                   WorldSystem.TheSimAvatar.Do(usage,objToUse);
+                   SimTypeUsage usage = objToUse.GetBestUse((BotNeeds)TheSimAvatar["CurrentNeeds"]);
+                   if (usage==null)
+                   {
+                       //usage = new MoveToLocation(TheSimAvatar, objToUse);
+                       return "$bot don't have a use for " + objToUse + " yet.";
+                   }
+                   TheSimAvatar.Do(usage,objToUse);
                    return "used " + objToUse;
                }
-               return "I don't know what to do with "+objname; 
+               return "$bot don't know what to do with " + objname; 
            }
            WriteLine("Trying to (" + to_op + ") with (" + objname + ")");
            TheBotClient.UseInventoryItem(to_op, objname);
