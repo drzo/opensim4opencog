@@ -689,7 +689,7 @@ namespace OpenMetaverse
                     String.Format("Beginning asset upload [Single Packet], ID: {0}, AssetID: {1}, Size: {2}",
                     upload.ID.ToString(), upload.AssetID.ToString(), upload.Size), Helpers.LogLevel.Info, Client);
 
-                    Transfers[upload.ID]=upload;         
+                lock (Transfers) Transfers[upload.ID] = upload;         
                 
                 // The whole asset will fit in this packet, makes things easy
                 request.AssetBlock.AssetData = data;
@@ -1104,8 +1104,9 @@ namespace OpenMetaverse
             TransferInfoPacket info = (TransferInfoPacket)packet;
             Transfer transfer;
             AssetDownload download;
-
-            if (Transfers.TryGetValue(info.TransferInfo.TransferID, out transfer))
+            bool found = false;
+            lock (Transfers) found = Transfers.TryGetValue(info.TransferInfo.TransferID, out transfer);
+            if (found)
             {
                 download = (AssetDownload)transfer;
 
@@ -1179,8 +1180,9 @@ namespace OpenMetaverse
             TransferPacketPacket asset = (TransferPacketPacket)packet;
             Transfer transfer;
             AssetDownload download;
-
-            if (Transfers.TryGetValue(asset.TransferData.TransferID, out transfer))
+            bool found = false;
+            lock (Transfers) found = Transfers.TryGetValue(asset.TransferData.TransferID, out transfer);
+            if (found)
             {
                 download = (AssetDownload)transfer;
 
@@ -1295,7 +1297,7 @@ namespace OpenMetaverse
                 upload.Type = (AssetType)request.XferID.VFileType;
 
                 UUID transferID = new UUID(upload.XferID);
-                Transfers[transferID] = upload;
+                lock (Transfers) Transfers[transferID] = upload;
 
                 // Send the first packet containing actual asset data
                 SendNextUploadPacket(upload);
@@ -1312,22 +1314,27 @@ namespace OpenMetaverse
             Transfer transfer;
             AssetUpload upload = null;
 
-            if (Transfers.TryGetValue(transferID, out transfer))
-            {
-                upload = (AssetUpload)transfer;
-
-                //Client.DebugLog(String.Format("ACK for upload {0} of asset type {1} ({2}/{3})",
-                //    upload.AssetID.ToString(), upload.Type, upload.Transferred, upload.Size));
-
-                if (OnUploadProgress != null)
+            lock (Transfers) if (Transfers.TryGetValue(transferID, out transfer))
                 {
-                    try { OnUploadProgress(upload); }
-                    catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                    upload = (AssetUpload)transfer;
+                }
+                else
+                {
+                    return;
                 }
 
-                if (upload.Transferred < upload.Size)
-                    SendNextUploadPacket(upload);
+            //Client.DebugLog(String.Format("ACK for upload {0} of asset type {1} ({2}/{3})",
+            //    upload.AssetID.ToString(), upload.Type, upload.Transferred, upload.Size));
+
+            if (OnUploadProgress != null)
+            {
+                try { OnUploadProgress(upload); }
+                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
             }
+
+            if (upload.Transferred < upload.Size)
+                SendNextUploadPacket(upload);
+
         }
 
         private void AssetUploadCompleteHandler(Packet packet, Simulator simulator)

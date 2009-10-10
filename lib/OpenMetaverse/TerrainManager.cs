@@ -46,7 +46,7 @@ namespace OpenMetaverse
         public event LandPatchCallback OnLandPatch;
 
         public InternalDictionary<ulong, TerrainPatch[]> SimPatches = new InternalDictionary<ulong, TerrainPatch[]>();
-        public new InternalDictionary<ulong,Vector2[]> WindSpeeds = new InternalDictionary<ulong,Vector2[]>();
+        public InternalDictionary<ulong,Vector2[]> WindSpeeds = new InternalDictionary<ulong,Vector2[]>();
 
         private GridClient Client;
 
