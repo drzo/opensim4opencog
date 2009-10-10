@@ -1255,7 +1255,7 @@ namespace cogbot.TheOpenSims
                 object anim;
                 if (!uuidAsset.TryGetValue(uUID, out anim))
                 {
-                    lock (SimAssets)
+                    if (false)lock (SimAssets)
                         foreach (var A in SimAssets)
                         {
                             if (A.AssetIDs.Contains(uUID))
