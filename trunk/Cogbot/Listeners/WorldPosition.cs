@@ -223,35 +223,66 @@ namespace cogbot.Listeners
                 return avatarList;
             }
         }
+
+        private bool RelTryParse(string s, out float f, float f1)
+        {
+            char c = s.ToCharArray()[0];
+            if (c == '+')
+            {
+                s = s.Substring(1);
+                if (!float.TryParse(s, out f)) return false;
+                f = f1 + f;
+                return true;
+            }
+            if (c == '-')
+            {
+                s = s.Substring(1);
+                if (!float.TryParse(s, out f)) return false;
+                f = f1 - f;
+                return true;
+            }
+            return float.TryParse(s, out f);
+        }
+
+
+        private SimPosition GetSimV(string[] tokens, int start, out int argsUsed, SimPosition offset)
+        {
+            Vector3 rel = offset.SimPosition;
+            Vector3 target;
+            if (RelTryParse(tokens[start], out target.X, rel.X) &&
+                RelTryParse(tokens[start + 1], out target.Y, rel.Y))
+            {
+                argsUsed = 2;
+                target.Z = rel.Z;
+                if (tokens.Length > start + 1)
+                {
+                    RelTryParse(tokens[start + 2], out target.Z, rel.Z);
+                    argsUsed = 3;
+                }
+                if (target.X > 512 || target.Y > 512)
+                {
+                    // Globals
+                    return SimWaypointImpl.CreateGlobal(target.X, target.Y, target.Z);
+                }
+                return SimWaypointImpl.CreateLocal(target, offset.PathStore);
+            }
+            argsUsed = 0;
+            return null;
+        }
+
         public SimPosition GetVector(string[] args, out int argsUsed)
         {
             argsUsed = 0;
             if (args.Length == 0) return TheSimAvatar;
             if (args.Length >= 2)
             {
-                Vector3 target;
-                if (float.TryParse(args[0], out target.X) &&
-                    float.TryParse(args[1], out target.Y))
-                {
-                    argsUsed = 2;
-                    target.Z = TheSimAvatar.SimPosition.Z;
-                    if (args.Length == 3)
-                    {
-                        Single.TryParse(args[2], out target.Z);
-                        argsUsed = 3;
-                    }
-                    if (target.X > 512 || target.Y > 512)
-                    {
-                        // Globals
-                        return SimWaypointImpl.CreateGlobal(target.X, target.Y, target.Z);
-                    }
-                    return SimWaypointImpl.CreateLocal(target, TheSimAvatar.PathStore);
-                }
+                SimPosition R = GetSimV(args, 0, out argsUsed, TheSimAvatar);
+                if (R != null) return R;
             }
-            SimObject O = null;
             UUID uuid;
-            if (UUID.TryParse(args[0],out uuid))
+            if (UUID.TryParse(args[0], out uuid))
             {
+                SimObject O = null;
                 O = GetSimObjectFromUUID(uuid);
                 if (O != null)
                 {
@@ -259,6 +290,7 @@ namespace cogbot.Listeners
                     return O;
                 }
             }
+
             Primitive prim = GetPrimitive(args, out argsUsed);
             if (prim != null) return GetSimObject(prim);
 
@@ -286,12 +318,14 @@ namespace cogbot.Listeners
             string sim = tokens[argsUsed];
             SimRegion region = SimRegion.GetRegion(sim,client);
             if (region==null) return null;
+
+            //TODO use the GetSimV code 
             argsUsed += 1;
             float z = region.AverageHieght;
-            if (tokens.Length > argsUsed+1)
+            if (tokens.Length > argsUsed + 1)
             {
                 if (!float.TryParse(tokens[argsUsed], out x) ||
-                    !float.TryParse(tokens[argsUsed+1], out y))
+                    !float.TryParse(tokens[argsUsed + 1], out y))
                 {
                     return null;
                 }
@@ -304,14 +338,16 @@ namespace cogbot.Listeners
                     }
                 }
                 // test for global
-                if (x>512 && y<512)
+                if (x > 512 || y > 512)
                 {
-                    return SimWaypointImpl.CreateGlobal(x, y, z); 
+                    return SimWaypointImpl.CreateGlobal(x, y, z);
                 }
             }
             Vector3 v3 = new Vector3(x, y, z);
             return SimWaypointImpl.CreateLocal(v3, region.GetPathStore(v3));
         }
+
+
 
         public List<SimObject> GetNearByObjects(Vector3d here, object except, float maxDistance, bool rootOnly)
         {
