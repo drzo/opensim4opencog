@@ -22,14 +22,10 @@ namespace cogbot.Actions
             if (args.Length < 2) return Usage;
             SimTypeUsage use = SimTypeSystem.FindObjectUse(args[0]);
             if (use == null) return "Unknown use: " + args[0];
-            args = Parser.SplitOff(args,1);
+            args = Parser.SplitOff(args, 1);
             int argsUsed;
-            Primitive p = WorldSystem.GetPrimitive(args, out argsUsed);
-            if (argsUsed == 0) argsUsed = args.Length;
-            string objname = String.Join("", args,0, argsUsed);
-            if (p == null) return "cant find primitive " + objname;
-            SimObject O = WorldSystem.GetSimObject(p, null);
-            if (O == null) return "cant find simobject " + objname + " for " + p;
+            SimObject O = WorldSystem.GetSimObject(args, out argsUsed);
+            if (O == null) return "cant find simobject " + string.Join(" ", args);
             WriteLine("Doing " + use + " for " + O);
             WorldSystem.TheSimAvatar.Do(use, O);
             return "Did " + use + " for " + O;
