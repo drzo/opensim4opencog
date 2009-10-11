@@ -669,7 +669,7 @@ namespace OpenMetaverse
                 // Only insert if we haven't seen this packet before
                 lock (task.Transfer)
                 {
-                    if (!task.Transfer.PacketsSeen.ContainsKey(image.ImageID.Packet))
+                    if (task.Transfer.PacketsSeen != null && !task.Transfer.PacketsSeen.ContainsKey(image.ImageID.Packet))
                     {
                         task.Transfer.PacketsSeen[image.ImageID.Packet] = image.ImageID.Packet;
                         Buffer.BlockCopy(image.ImageData.Data, 0, task.Transfer.AssetData,
