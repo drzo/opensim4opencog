@@ -25,12 +25,12 @@ namespace DebugStartup
         }
         static void HandleThreadException(object sender, ThreadExceptionEventArgs e)
         {
-            Console.WriteLine("" + e.Exception);
+            Console.WriteLine("!!HandleThreadException!! " + e.Exception);
         }
 
         static void HandleUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            Console.WriteLine("" + e.ExceptionObject);
+            Console.WriteLine("!!HandleUnhandledException!! " + e.ExceptionObject);
         }
     }
 }
