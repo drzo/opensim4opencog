@@ -22,7 +22,8 @@ namespace cogbot.Actions
         Friends,
         Groups,
         Other,
-        Unknown
+        Unknown,
+        Search
     }
     /// <summary>
     /// An interface for commands is only invoked on Region mastering bots
@@ -301,6 +302,16 @@ namespace cogbot.Actions
         protected CmdResult Result(string usage, bool tf)
         {
             return new CmdResult(usage, tf);
+        }
+
+
+        /// <summary>
+        /// Show commandusage
+        /// </summary>
+        /// <returns>CmdResult Failure with a string containing the parameter usage instructions</returns>
+        public virtual CmdResult ShowUsage()
+        {
+            return Failure(Usage);
         }
     }
 }

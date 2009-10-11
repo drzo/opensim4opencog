@@ -538,37 +538,37 @@ namespace cogbot.Listeners
         static public readonly string[] paramNamesOnClassifiedReply = new string[] { "classifieds" };
         static public readonly Type[] paramTypesOnClassifiedReply = new Type[] { typeof(List<DirectoryManager.Classified>) };
 
-        public virtual void Directory_OnClassifiedReply(List<DirectoryManager.Classified> classifieds) { OnEvent("On-Classified-Reply", paramNamesOnClassifiedReply, paramTypesOnClassifiedReply, classifieds); }
+        public virtual void Directory_OnClassifiedReply(Object sender, DirClassifiedsReplyEventArgs e) { OnEvent("On-Classified-Reply", paramNamesOnClassifiedReply, paramTypesOnClassifiedReply, e.Classifieds); }
 
         static public readonly string[] paramNamesOnDirLandReply = new string[] { "dirParcels" };
         static public readonly Type[] paramTypesOnDirLandReply = new Type[] { typeof(List<DirectoryManager.DirectoryParcel>) };
 
-        public virtual void Directory_OnDirLandReply(List<DirectoryManager.DirectoryParcel> dirParcels) { OnEvent("On-Dir-Land-Reply", paramNamesOnDirLandReply, paramTypesOnDirLandReply, dirParcels); }
+        public virtual void Directory_OnDirLandReply(Object sender, DirLandReplyEventArgs e) { OnEvent("On-Dir-Land-Reply", paramNamesOnDirLandReply, paramTypesOnDirLandReply, e.DirParcels); }
 
         static public readonly string[] paramNamesOnDirPeopleReply = new string[] { "queryID", "matchedPeople" };
         static public readonly Type[] paramTypesOnDirPeopleReply = new Type[] { typeof(UUID), typeof(List<DirectoryManager.AgentSearchData>) };
 
-        public virtual void Directory_OnDirPeopleReply(UUID queryID, List<DirectoryManager.AgentSearchData> matchedPeople) { OnEvent("On-Dir-People-Reply", paramNamesOnDirPeopleReply, paramTypesOnDirPeopleReply, queryID, matchedPeople); }
+        public virtual void Directory_OnDirPeopleReply(Object sender, DirPeopleReplyEventArgs e) { OnEvent("On-Dir-People-Reply", paramNamesOnDirPeopleReply, paramTypesOnDirPeopleReply, e.QueryID, e.MatchedPeople); }
 
         static public readonly string[] paramNamesOnDirGroupsReply = new string[] { "queryID", "matchedGroups" };
         static public readonly Type[] paramTypesOnDirGroupsReply = new Type[] { typeof(UUID), typeof(List<DirectoryManager.GroupSearchData>) };
 
-        public virtual void Directory_OnDirGroupsReply(UUID queryID, List<DirectoryManager.GroupSearchData> matchedGroups) { OnEvent("On-Dir-Groups-Reply", paramNamesOnDirGroupsReply, paramTypesOnDirGroupsReply, queryID, matchedGroups); }
+        public virtual void Directory_OnDirGroupsReply(Object sender, DirGroupsReplyEventArgs e) { OnEvent("On-Dir-Groups-Reply", paramNamesOnDirGroupsReply, paramTypesOnDirGroupsReply, e.QueryID, e.MatchedGroups); }
 
         static public readonly string[] paramNamesOnPlacesReply = new string[] { "queryID", "matchedPlaces" };
         static public readonly Type[] paramTypesOnPlacesReply = new Type[] { typeof(UUID), typeof(List<DirectoryManager.PlacesSearchData>) };
 
-        public virtual void Directory_OnPlacesReply(UUID queryID, List<DirectoryManager.PlacesSearchData> matchedPlaces) { OnEvent("On-Places-Reply", paramNamesOnPlacesReply, paramTypesOnPlacesReply, queryID, matchedPlaces); }
+        public virtual void Directory_OnPlacesReply(Object sender, DirPlacesReplyEventArgs e) { OnEvent("On-Places-Reply", paramNamesOnPlacesReply, paramTypesOnPlacesReply, e.QueryID, e.MatchedParcels); }
 
         static public readonly string[] paramNamesOnEventsReply = new string[] { "queryID", "matchedEvents" };
         static public readonly Type[] paramTypesOnEventsReply = new Type[] { typeof(UUID), typeof(List<DirectoryManager.EventsSearchData>) };
 
-        public virtual void Directory_OnEventsReply(UUID queryID, List<DirectoryManager.EventsSearchData> matchedEvents) { OnEvent("On-Events-Reply", paramNamesOnEventsReply, paramTypesOnEventsReply, queryID, matchedEvents); }
+        public virtual void Directory_OnEventsReply(Object sender, DirEventsReplyEventArgs e) { OnEvent("On-Events-Reply", paramNamesOnEventsReply, paramTypesOnEventsReply, e.QueryID, e.MatchedEvents); }
 
         static public readonly string[] paramNamesOnEventInfo = new string[] { "matchedEvent" };
         static public readonly Type[] paramTypesOnEventInfo = new Type[] { typeof(DirectoryManager.EventInfo) };
 
-        public virtual void Directory_OnEventInfo(DirectoryManager.EventInfo matchedEvent) { OnEvent("On-Event-Info", paramNamesOnEventInfo, paramTypesOnEventInfo, matchedEvent); }
+        public virtual void Directory_OnEventInfo(Object sender, EventInfoReplyEventArgs e) { OnEvent("On-Event-Info", paramNamesOnEventInfo, paramTypesOnEventInfo, e.MatchedEvent); }
 
         static public readonly string[] paramNamesOnLandPatch = new string[] { "simulator", "x", "y", "width", "data" };
         static public readonly Type[] paramTypesOnLandPatch = new Type[] { typeof(Simulator), typeof(int), typeof(int), typeof(int), typeof(float[]) };
@@ -701,13 +701,13 @@ namespace cogbot.Listeners
             client.Inventory.OnFindObjectByPath += Inventory_OnFindObjectByPath;
             client.Inventory.OnTaskItemReceived += Inventory_OnTaskItemReceived;
             client.Inventory.OnTaskInventoryReply += Inventory_OnTaskInventoryReply;
-            client.Directory.OnClassifiedReply += Directory_OnClassifiedReply;
-            client.Directory.OnDirLandReply += Directory_OnDirLandReply;
-            client.Directory.OnDirPeopleReply += Directory_OnDirPeopleReply;
-            client.Directory.OnDirGroupsReply += Directory_OnDirGroupsReply;
-            client.Directory.OnPlacesReply += Directory_OnPlacesReply;
-            client.Directory.OnEventsReply += Directory_OnEventsReply;
-            client.Directory.OnEventInfo += Directory_OnEventInfo;
+            client.Directory.DirClassifiedsReply += Directory_OnClassifiedReply;
+            client.Directory.DirLandReply += Directory_OnDirLandReply;
+            client.Directory.DirPeopleReply += Directory_OnDirPeopleReply;
+            client.Directory.DirGroupsReply += Directory_OnDirGroupsReply;
+            client.Directory.DirPlacesReply += Directory_OnPlacesReply;
+            client.Directory.DirEventsReply += Directory_OnEventsReply;
+            client.Directory.EventInfoReply += Directory_OnEventInfo;
             client.Terrain.OnLandPatch += Terrain_OnLandPatch;
             client.Sound.OnAttachSound += Sound_OnAttachSound;
             client.Sound.OnAttachSoundGainChange += Sound_OnAttachSoundGainChange;
@@ -817,13 +817,13 @@ namespace cogbot.Listeners
             client.Inventory.OnFindObjectByPath -= Inventory_OnFindObjectByPath;
             client.Inventory.OnTaskItemReceived -= Inventory_OnTaskItemReceived;
             client.Inventory.OnTaskInventoryReply -= Inventory_OnTaskInventoryReply;
-            client.Directory.OnClassifiedReply -= Directory_OnClassifiedReply;
-            client.Directory.OnDirLandReply -= Directory_OnDirLandReply;
-            client.Directory.OnDirPeopleReply -= Directory_OnDirPeopleReply;
-            client.Directory.OnDirGroupsReply -= Directory_OnDirGroupsReply;
-            client.Directory.OnPlacesReply -= Directory_OnPlacesReply;
-            client.Directory.OnEventsReply -= Directory_OnEventsReply;
-            client.Directory.OnEventInfo -= Directory_OnEventInfo;
+            client.Directory.DirClassifiedsReply -= Directory_OnClassifiedReply;
+            client.Directory.DirLandReply -= Directory_OnDirLandReply;
+            client.Directory.DirPeopleReply -= Directory_OnDirPeopleReply;
+            client.Directory.DirGroupsReply -= Directory_OnDirGroupsReply;
+            client.Directory.DirPlacesReply -= Directory_OnPlacesReply;
+            client.Directory.DirEventsReply -= Directory_OnEventsReply;
+            client.Directory.EventInfoReply -= Directory_OnEventInfo;
             client.Terrain.OnLandPatch -= Terrain_OnLandPatch;
             client.Sound.OnAttachSound -= Sound_OnAttachSound;
             client.Sound.OnAttachSoundGainChange -= Sound_OnAttachSoundGainChange;

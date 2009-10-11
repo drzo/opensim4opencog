@@ -19,18 +19,7 @@ namespace cogbot.Actions
             if (args.Length < 1)
                 return Failure(Usage);// " showevent [eventID] (use searchevents to get ID)";
 
-            DirectoryManager.EventInfoCallback callback = new DirectoryManager.EventInfoCallback(matchedevent =>
-                                                                                                     {
-                                                                                                         float x,y;
-                                                                                                         Helpers.GlobalPosToRegionHandle((float)matchedevent.GlobalPos.X, (float)matchedevent.GlobalPos.Y, out x, out y);
-                                                                                                         StringBuilder sb = new StringBuilder();
-                                                                                                         sb.AppendFormat("       Name: {0} ({1})" + System.Environment.NewLine, matchedevent.Name, matchedevent.ID);
-                                                                                                         sb.AppendFormat("   Location: {0}/{1}/{2}" + System.Environment.NewLine, matchedevent.SimName, x, y);
-                                                                                                         sb.AppendFormat("       Date: {0}" + System.Environment.NewLine, matchedevent.Date);
-                                                                                                         sb.AppendFormat("Description: {0}" + System.Environment.NewLine, matchedevent.Desc);
-                                                                                                         WriteLine(sb.ToString());
-                                                                                                     });
-            Client.Directory.OnEventInfo += callback;
+            Client.Directory.EventInfoReply += Directory_EventDetails;
             uint eventID;
 
             if (UInt32.TryParse(args[0], out eventID))
@@ -42,6 +31,21 @@ namespace cogbot.Actions
             {
                 return Failure(Usage);// " showevent [eventID] (use searchevents to get ID)";
             }
+        }
+
+        void Directory_EventDetails(object sender, EventInfoReplyEventArgs e)
+        {
+            float x, y;
+            Helpers.GlobalPosToRegionHandle((float)e.MatchedEvent.GlobalPos.X, (float)e.MatchedEvent.GlobalPos.Y, out x, out y);
+            StringBuilder sb = new StringBuilder("secondlife://" + e.MatchedEvent.SimName + "/" + x + "/" + y + "/0" + System.Environment.NewLine);
+            sb.AppendLine(e.MatchedEvent.ToString());
+            
+            //sb.AppendFormat("       Name: {0} ({1})" + System.Environment.NewLine, e.MatchedEvent.Name, e.MatchedEvent.ID);
+            //sb.AppendFormat("   Location: {0}/{1}/{2}" + System.Environment.NewLine, e.MatchedEvent.SimName, x, y);
+            //sb.AppendFormat("       Date: {0}" + System.Environment.NewLine, e.MatchedEvent.Date);
+            //sb.AppendFormat("Description: {0}" + System.Environment.NewLine, e.MatchedEvent.Desc);
+            Console.WriteLine(sb.ToString());
+            Client.Directory.EventInfoReply -= Directory_EventDetails;
         }
     }
 }
