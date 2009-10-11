@@ -1,27 +1,28 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 
+// the Namespace used for all BotClient commands
 namespace cogbot.Actions
 {
-    class SearchEventsCommand : Command
+    class SearchPeopleCommand : Command
     {
         System.Threading.AutoResetEvent waitQuery = new System.Threading.AutoResetEvent(false);
-        int resultCount;
+        int resultCount = 0;
 
-        public SearchEventsCommand(BotClient testClient)
+        public SearchPeopleCommand(BotClient testClient)
         {
-            Name = "searchevents";
-            Description = "Searches Events list. Usage: searchevents [search text]";
-            Category = CommandCategory.Other;
-            Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+            Name = "searchpeople";
+            Description = "Searches for other avatars. Usage: searchpeople [search text]";
+            Category = CommandCategory.Friends;
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            // process command line arguments
             if (args.Length < 1)
-                return Failure(Usage);// " searchevents [search text]";
+                return ShowUsage();
 
             string searchText = string.Empty;
             for (int i = 0; i < args.Length; i++)
@@ -30,10 +31,11 @@ namespace cogbot.Actions
 
             waitQuery.Reset();
 
-            Client.Directory.DirEventsReply += Directory_DirEvents;
+            
+            Client.Directory.DirPeopleReply += Directory_DirPeople;
 
             // send the request to the directory manager
-            Client.Directory.StartEventsSearch(searchText, 0);
+            Client.Directory.StartPeopleSearch(searchText, 0);
 
             try
             {
@@ -49,24 +51,23 @@ namespace cogbot.Actions
             }
             finally
             {
-                Client.Directory.DirEventsReply -= Directory_DirEvents;
+                Client.Directory.DirPeopleReply -= Directory_DirPeople;
             }
         }
 
-        void Directory_DirEvents(object sender, DirEventsReplyEventArgs e)
+        void Directory_DirPeople(object sender, DirPeopleReplyEventArgs e)
         {
-            if (e.MatchedEvents[0].ID == 0 && e.MatchedEvents.Count == 1)
+            if (e.MatchedPeople.Count > 0)
             {
-                Console.WriteLine("No Results matched your search string");
+                foreach (DirectoryManager.AgentSearchData agent in e.MatchedPeople)
+                {
+                    Console.WriteLine("{0} {1} ({2})", agent.FirstName, agent.LastName, agent.AgentID);                   
+                }
             }
             else
             {
-                foreach (DirectoryManager.EventsSearchData ev in e.MatchedEvents)
-                {
-                    Console.WriteLine("Event ID: {0} Event Name: {1} Event Date: {2}", ev.ID, ev.Name, ev.Date);
-                }
+                Console.WriteLine("Didn't find any people that matched your query :(");
             }
-            resultCount = e.MatchedEvents.Count;
             waitQuery.Set();
         }
     }

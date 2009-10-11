@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using cogbot.Actions;
@@ -36,7 +37,9 @@ namespace cogbot.Listeners
                 List<Simulator> sims = null;
 
                 lock (_AllSimulators)
+                {
                     sims = new List<Simulator>(_AllSimulators);
+                }
 
                 return sims;
             }
@@ -226,6 +229,7 @@ namespace cogbot.Listeners
 
         private void FindNewMaster(ulong handle)
         {
+            IEnumerable<Simulator> _AllSimulators = AllSimulators;
             SimRegion R = SimRegion.GetRegion(handle);
             lock (_AllSimulators)
             {
@@ -279,12 +283,10 @@ namespace cogbot.Listeners
         public override void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
         {
             base.Network_OnSimDisconnected(simulator, reason);
-            lock (_AllSimulators)
-            {
-                _AllSimulators.Remove(simulator);
-                SimRegion.GetRegion(simulator).RemoveSim(simulator);
-                LeaveSimulator(simulator);
-            }
+            RemoveSim(simulator);
+            SimRegion.GetRegion(simulator).RemoveSim(simulator);            
+            LeaveSimulator(simulator);
+            
             if (simulator == client.Network.CurrentSim)
                 PropertyQueue.AddFirst(() =>
                                            {
@@ -294,11 +296,23 @@ namespace cogbot.Listeners
                     );
         }
 
-        public override void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
+        private static Exception WhoIsIn;
+
+
+
+        private void RemoveSim(Simulator simulator)
         {
             lock (_AllSimulators)
             {
-                foreach (var simulator in _AllSimulators)
+                _AllSimulators.Remove(simulator);
+
+            }
+        }
+
+        public override void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
+        {            
+            {
+                foreach (var simulator in AllSimulators)
                 {
                     if (simulator.Client!=client.gridClient)
                     {
@@ -309,7 +323,7 @@ namespace cogbot.Listeners
                         }
                         continue;
                     }
-                    _AllSimulators.Remove(simulator);
+                    RemoveSim(simulator);
                     SimRegion.GetRegion(simulator).RemoveSim(simulator);
                     LeaveSimulator(simulator);
                 }
@@ -520,16 +534,22 @@ namespace cogbot.Listeners
         {
             if (simulator == null) return;
             if (!Monitor.TryEnter(_AllSimulators)) return;
+            try
             {
-
-                foreach (Simulator set in _AllSimulators)
                 {
-                    if (set.Handle==simulator.Handle && set.Client==simulator.Client) return;
+
+                    foreach (Simulator set in _AllSimulators)
+                    {
+                        if (set.Handle == simulator.Handle && set.Client == simulator.Client) return;
+                    }
+                    _AllSimulators.Add(simulator);
                 }
-                _AllSimulators.Add(simulator);
+                SimRegion.GetRegion(simulator);
             }
-            Monitor.Exit(_AllSimulators);
-            SimRegion.GetRegion(simulator);
+            finally
+            {
+                Monitor.Exit(_AllSimulators);
+            }
         }
 
         internal Simulator GetSimulator(ulong handle)

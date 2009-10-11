@@ -469,17 +469,17 @@ namespace cogbot.Listeners
             }
         }
 
-        public override void Directory_OnDirPeopleReply(UUID queryID, List<DirectoryManager.AgentSearchData> matchedPeople)
+        public override void Directory_OnDirPeopleReply(object sender, DirPeopleReplyEventArgs e)
         {
-            matchedPeople.ForEach(data =>
+            e.MatchedPeople.ForEach(data =>
             {
                 AddName2Key(data.FirstName + " " + data.LastName, data.AgentID);
             });
         }
 
-        public override void Directory_OnDirGroupsReply(UUID queryID, List<DirectoryManager.GroupSearchData> matchedGroups)
+        public override void Directory_OnDirGroupsReply(object sender, DirGroupsReplyEventArgs e)
         {
-            matchedGroups.ForEach(data =>
+            e.MatchedGroups.ForEach(data =>
             {
                 AddGroup2Key(data.GroupName, data.GroupID);
             });
@@ -508,7 +508,7 @@ namespace cogbot.Listeners
                 }
             if (UUID.TryParse(ToAvatarName, out found)) return found;
             {
-                client.Directory.StartPeopleSearch(DirectoryManager.DirFindFlags.People, ToAvatarName, 0, UUID.Random());
+                client.Directory.StartPeopleSearch(/*DirectoryManager.DirFindFlags.People,*/ ToAvatarName, 0/*, UUID.Random()*/);
 
                 ManualResetEvent NameSearchEvent = new ManualResetEvent(false);
                 AvatarManager.AvatarNameSearchCallback callback =

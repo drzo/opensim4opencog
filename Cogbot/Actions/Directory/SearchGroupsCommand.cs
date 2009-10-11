@@ -1,27 +1,28 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 
+// the Namespace used for all BotClient commands
 namespace cogbot.Actions
 {
-    class SearchEventsCommand : Command
+    class SearchGroupsCommand : Command
     {
         System.Threading.AutoResetEvent waitQuery = new System.Threading.AutoResetEvent(false);
-        int resultCount;
+        int resultCount = 0;
 
-        public SearchEventsCommand(BotClient testClient)
+        public SearchGroupsCommand(BotClient testClient)
         {
-            Name = "searchevents";
-            Description = "Searches Events list. Usage: searchevents [search text]";
-            Category = CommandCategory.Other;
-            Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+            Name = "searchgroups";
+            Description = "Searches groups. Usage: searchgroups [search text]";
+            Category = CommandCategory.Groups;
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            // process command line arguments
             if (args.Length < 1)
-                return Failure(Usage);// " searchevents [search text]";
+                return ShowUsage();
 
             string searchText = string.Empty;
             for (int i = 0; i < args.Length; i++)
@@ -30,10 +31,10 @@ namespace cogbot.Actions
 
             waitQuery.Reset();
 
-            Client.Directory.DirEventsReply += Directory_DirEvents;
-
+            Client.Directory.DirGroupsReply += Directory_DirGroups;
+            
             // send the request to the directory manager
-            Client.Directory.StartEventsSearch(searchText, 0);
+            Client.Directory.StartGroupSearch(searchText, 0);
 
             try
             {
@@ -49,25 +50,24 @@ namespace cogbot.Actions
             }
             finally
             {
-                Client.Directory.DirEventsReply -= Directory_DirEvents;
+                Client.Directory.DirGroupsReply -= Directory_DirGroups;
             }
         }
 
-        void Directory_DirEvents(object sender, DirEventsReplyEventArgs e)
+        void Directory_DirGroups(object sender, DirGroupsReplyEventArgs e)
         {
-            if (e.MatchedEvents[0].ID == 0 && e.MatchedEvents.Count == 1)
+            if (e.MatchedGroups.Count > 0)
             {
-                Console.WriteLine("No Results matched your search string");
+                foreach (DirectoryManager.GroupSearchData group in e.MatchedGroups)
+                {
+                    Console.WriteLine("Group {1} ({0}) has {2} members", group.GroupID, group.GroupName, group.Members);
+                }
             }
             else
             {
-                foreach (DirectoryManager.EventsSearchData ev in e.MatchedEvents)
-                {
-                    Console.WriteLine("Event ID: {0} Event Name: {1} Event Date: {2}", ev.ID, ev.Name, ev.Date);
-                }
+                Console.WriteLine("Didn't find any groups that matched your query :(");
             }
-            resultCount = e.MatchedEvents.Count;
             waitQuery.Set();
-        }
+        }        
     }
 }
