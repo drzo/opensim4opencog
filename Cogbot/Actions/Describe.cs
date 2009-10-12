@@ -90,18 +90,23 @@ namespace cogbot.Actions
                 else
                 {
                     {
-                        Primitive prim;
-                        if (WorldSystem.tryGetPrim(args.str, out prim))
+                        int found = 0;
+                        int argsUsed;
+                        List<Primitive> PS = WorldSystem.GetPrimitives(args.tokens, out argsUsed);
+                        bool detailed = true;
+                        if (PS.Count > 1) detailed = false;
+                        if (!IsEmpty(PS)) 
+                        foreach (var prim in PS)
                         {
+                            found++;
                             if (prim is Avatar)
                                 WriteLine(WorldSystem.describeAvatar((Avatar) prim));
                             else
-                                WriteLine(WorldSystem.describePrim(prim, true));
+                                WriteLine(WorldSystem.describePrim(prim, detailed));
+                            if (found > 30) break;
                         }
                         else
                         {
-
-                            int found = 0;
                             foreach (var o in WorldSystem.GetAllSimObjects(args.str))
                             {
                                 found++;
@@ -111,8 +116,9 @@ namespace cogbot.Actions
                                     WriteLine(WorldSystem.describePrim(o.Prim, false));
                                 if (found > 30) break;
                             }
-                            if (found == 0) WriteLine("I don't know about " + subject + ".");
                         }
+                        if (found == 0) WriteLine("I don't know about " + subject + ".");
+                        WriteLine("PS.Count==" + PS.Count);
                     }
                 }
             }

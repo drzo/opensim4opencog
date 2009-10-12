@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using cogbot.TheOpenSims;
@@ -76,7 +77,7 @@ namespace cogbot.Actions
     public abstract class Command : IComparable
     {
         protected OutputDelegate WriteLine;
-
+        private int success = 0, failure = 0;
 
         public Command()
             : this(null)
@@ -99,6 +100,7 @@ namespace cogbot.Actions
         /// <param name="args"></param>
         public virtual CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
+            success = failure = 0;
             this.WriteLine = WriteLine;
             return Execute(args.tokens, UUID.Zero, WriteLine);
         } // method: acceptInput
@@ -212,17 +214,29 @@ namespace cogbot.Actions
 
         public CmdResult acceptInputWrapper(string verb, string args, OutputDelegate WriteLine)
         {
+            success = failure = 0;
             this.WriteLine = WriteLine;
             return acceptInput(verb, Parser.ParseArgs(args), WriteLine);
         }
 
         public virtual CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            success = failure = 0;
             this.WriteLine = WriteLine;
             Parser p = Parser.ParseArgs(String.Join(" ", args));
             p.tokens = args;
             return acceptInput(Name, p, WriteLine);
         }
+
+        public virtual CmdResult ExecuteCmd(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        {
+            success = failure = 0;
+            this.WriteLine = WriteLine;
+            Parser p = Parser.ParseArgs(String.Join(" ", args));
+            p.tokens = args;
+            return acceptInput(Name, p, WriteLine);
+        }
+
 
         public int CompareTo(object obj)
         {
@@ -292,17 +306,31 @@ namespace cogbot.Actions
 
         protected CmdResult Failure(string usage)
         {
-            return new CmdResult(usage, false);
+            failure++;
+            return Result(usage, false);
         }
 
         protected CmdResult Success(string usage)
         {
-            return new CmdResult(usage, true);
+            success++;
+            return Result(usage, true);
         }
 
         protected CmdResult Result(string usage, bool tf)
         {
             return new CmdResult(usage, tf);
+        }
+        protected CmdResult SuccessOrFailure()
+        {
+            if (success==0)
+            {
+                return Result(Name + " " + failure + " failures ", false);
+            }
+            if (failure>0)
+            {
+                return Result(Name + " " + failure + " failures and " + success + " successes", false);
+            }
+            return Result(Name + " " + success + " successes", true);
         }
 
 
@@ -337,6 +365,11 @@ namespace cogbot.Actions
                 
             }
             return e;
+        }
+
+        static public bool IsEmpty(IList enumerable)
+        {
+            return enumerable == null || enumerable.Count == 0;
         }
     }
 }

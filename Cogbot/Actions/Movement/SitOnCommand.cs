@@ -23,16 +23,15 @@ namespace cogbot.Actions
                 return Failure(Usage);// " siton UUID";
 
             int argsUsed;
-            Primitive targetPrim = WorldSystem.GetPrimitive(args, out argsUsed);
-
-            if (targetPrim != null)
+            List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
+            foreach (var targetPrim in PS)
             {
                 WorldSystem.TheSimAvatar.SitOn(WorldSystem.GetSimObject(targetPrim));
-                return Success("Requested to sit on prim " + targetPrim.ID.ToString() +
+                Success("Requested to sit on prim " + targetPrim.ID.ToString() +
                        " (" + targetPrim.LocalID + ")");
             }
-
-            return Failure("Couldn't find a prim to sit on with UUID " + args[0]);
+            return SuccessOrFailure();
         }
 
 

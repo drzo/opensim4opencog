@@ -639,7 +639,7 @@ namespace cogbot.Listeners
 
         public SimObject AsObject(string fromName, UUID id, PCode isAvatar)
         {
-            Primitive p;
+            Primitive p = null;
             if (id != UUID.Zero)
             {
                 SimObject obj = GetSimObjectFromUUID(id);
@@ -650,7 +650,8 @@ namespace cogbot.Listeners
             {
                 if (string.IsNullOrEmpty(fromName)) return null;
                 int au;
-                p = GetPrimitive(new string[] { fromName }, out au);
+                List<Primitive> ps = GetPrimitives(new string[] { fromName }, out au);
+                if (ps.Count==1) p = ps[0];
             }
             if (p != null) return GetSimObject(p);
             Object o = null;

@@ -320,8 +320,8 @@ namespace cogbot.Listeners
                 }
             }
 
-            Primitive prim = GetPrimitive(args, out argsUsed);
-            if (prim != null) return GetSimObject(prim);
+            List<Primitive> prim = GetPrimitives(args, out argsUsed);
+            if (prim.Count==1) return GetSimObject(prim[0]);
 
 
             argsUsed = 0;
@@ -379,7 +379,7 @@ namespace cogbot.Listeners
 
 
 
-        public List<SimObject> GetNearByObjects(Vector3d here, object except, float maxDistance, bool rootOnly)
+        public List<SimObject> GetNearByObjects(Vector3d here, object except, double maxDistance, bool rootOnly)
         {
             if (here.X < 256f)
             {

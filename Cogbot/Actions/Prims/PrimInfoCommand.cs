@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
@@ -11,7 +12,7 @@ namespace cogbot.Actions
             Name = "priminfo";
             Description = "Dumps information about a specified prim. " + "Usage: priminfo [prim-uuid]";
             Category = CommandCategory.Objects;
-            Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -28,13 +29,14 @@ namespace cogbot.Actions
             }
 
             int argsUsed;
-            Primitive target = WorldSystem.GetPrimitive(args, out argsUsed);
-            if (target != null)
+            List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
+            foreach (var target in PS)
             {
                 WriteLine("\n {0}", WorldSystem.describePrim(target, true));
-                return Success("Done.");
+                Success("Done.");
             }
-            return Failure("Could not find prim " + String.Join(" ", args));
+            return SuccessOrFailure();
         }
     }
 }

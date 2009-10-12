@@ -52,7 +52,7 @@ namespace cogbot.Actions
 
         bool Follow(string name)
         {
-            Primitive target = WorldSystem.GetPrimitive(name);
+            Primitive target = WorldSystem.GetPrimitives(name);
             if (target != null)
             {
                 targetLocalID = target.LocalID;

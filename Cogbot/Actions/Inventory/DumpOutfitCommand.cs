@@ -24,7 +24,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Failure(Usage);// " dumpoutfit [avatar-uuid]";
+                return Failure(Usage); // " dumpoutfit [avatar-uuid]";
 
             //UUID target;
 
@@ -35,10 +35,12 @@ namespace cogbot.Actions
             {
                 //for (int i = 0; i < Client.Network.Simulators.Count; i++)
                 {
-                    int i;
-                    Primitive targetAv = WorldSystem.GetPrimitive(args, out i);
 
-                    if (targetAv != null)
+
+                    int argsUsed;
+                    List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+                    if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
+                    foreach (var targetAv in PS)
                     {
                         StringBuilder output = new StringBuilder("Downloading ");
 
@@ -52,7 +54,7 @@ namespace cogbot.Actions
                             {
                                 ImageType type = ImageType.Normal;
 
-                                switch ((AvatarTextureIndex)j)
+                                switch ((AvatarTextureIndex) j)
                                 {
                                     case AvatarTextureIndex.HeadBaked:
                                     case AvatarTextureIndex.EyesBaked:
@@ -65,17 +67,16 @@ namespace cogbot.Actions
 
                                 OutfitAssets.Add(face.TextureID);
                                 Client.Assets.RequestImage(face.TextureID, type, Assets_OnImageReceived);
-                                output.Append(((AvatarTextureIndex)j).ToString());
+                                output.Append(((AvatarTextureIndex) j).ToString());
                                 output.Append(" ");
                             }
                         }
 
-                        return Success(output.ToString());
+                        Success(output.ToString());
                     }
                 }
             }
-
-            return Failure("Couldn't find avatar " + String.Join(" ", args));
+            return SuccessOrFailure();
         }
 
         private void Assets_OnImageReceived(TextureRequestState state, AssetTexture assetTexture)

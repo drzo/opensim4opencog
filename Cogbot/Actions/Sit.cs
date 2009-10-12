@@ -55,8 +55,6 @@ namespace cogbot.Actions
 
             TheBotClient.describeNext = true;
 
-            string on = args.prepPhrases["on"];
-
             if (args.Length == 0)
             {
                 sittingOnGround = WorldSystem.TheSimAvatar.SitOnGround();
@@ -68,24 +66,7 @@ namespace cogbot.Actions
             //if (Client.Self.SittingOn != 0 || sittingOnGround)
             // return ("$bot is already sitting.");
 
-            if (on == "it")
-            {
-                int argsUsed;
-                SimAvatar master =
-                    (SimAvatar)
-                    WorldSystem.GetSimObject(WorldSystem.GetPrimitive(Client.MasterName.Split(new char[] { ' ' }),
-                                                                      out argsUsed));
-                List<SimObject> knows = master.GetKnownObjects();
-                if (knows.Count > 0)
-                {
-                    var obj = knows[0];
-                    if (!WorldSystem.TheSimAvatar.SitOn(obj))
-                    {
-                        return Failure("$bot did not yet sit on " + obj);
-                    }
-                }
-            }
-
+            string on = args.prepPhrases["on"];
             if (on.Length == 0)
             {
                 on = String.Join(" ", args.tokens);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
@@ -16,23 +17,19 @@ namespace cogbot.Actions
 		
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
-            UUID target;
-
             if (args.Length < 1)
                 return Failure(Usage);// " touch UUID";
-            
-            if (UUIDTryParse(args,0, out target))
+
+            int argsUsed;
+            List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
+            GridClient client = TheBotClient;
+            foreach (var targetPrim in PS)
             {
-                Primitive targetPrim = WorldSystem.GetPrimitive(target, null);
-
-                if (targetPrim != null)
-                {
-                    Client.Self.Touch(targetPrim.LocalID);
-                    return Success("Touched prim " + targetPrim.LocalID);
-                }
+                Success(Name + " on " + WorldSystem.GetSimObject(targetPrim));
+                Client.Self.Touch(targetPrim.LocalID);
             }
-
-            return Failure("Couldn't find a prim to touch with UUID " + args[0]);
-		}
+            return SuccessOrFailure();
+        }
     }
 }

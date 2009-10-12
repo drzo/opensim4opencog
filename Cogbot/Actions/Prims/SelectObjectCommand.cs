@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
@@ -21,9 +22,13 @@ namespace cogbot.Actions
                 return Success("ResetSelectedObjects");
             }
             int used;
-            Primitive P = WorldSystem.GetPrimitive(args, out used);
-            WorldSystem.ReSelectObject(P);
-            return Success("object selected " + P);
+            List<Primitive> PS = WorldSystem.GetPrimitives(args, out used);
+            if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
+            foreach (var P in PS)
+            {               
+                WorldSystem.ReSelectObject(P);                
+            }
+            return Success("objects selected " + PS.Count);
         }
     }
 }
