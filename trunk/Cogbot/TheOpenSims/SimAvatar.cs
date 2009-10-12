@@ -967,7 +967,12 @@ namespace cogbot.TheOpenSims
 
         public override string ToString()
         {
-            return GetName();
+            string s = GetName();
+            if (s==null)
+            {
+                if (ID != UUID.Zero) return "Avatar " + ID;
+            }
+            return s;
         }
 
         private BotClient Client;
@@ -1520,7 +1525,6 @@ namespace cogbot.TheOpenSims
                 ApproachDistance = maxDist;
             }
         }
-
 
         public void SetMoveTarget(Vector3d target)
         {

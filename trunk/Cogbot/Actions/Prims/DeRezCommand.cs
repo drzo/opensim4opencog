@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
@@ -23,14 +24,15 @@ namespace cogbot.Actions
             }
 
             int argsUsed;
-            Primitive target = WorldSystem.GetPrimitive(args, out argsUsed);
-            if (target != null)
+            List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
+            foreach (var target in PS)
             {
                 WorldSystem.DeletePrim(target);
                 WriteLine("\n {0}", target);
-                return Success("Done.");
+                Success("Done.");
             }
-            return Failure("Could not find prim " + String.Join(" ", args));
+            return SuccessOrFailure();
         }
     }
 }

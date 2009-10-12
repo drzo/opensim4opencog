@@ -5,12 +5,12 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.Actions
 {
-    public class MovePrimCommand : cogbot.Actions.Command, RegionMasterCommand
+    public class RotatePrimCommand : cogbot.Actions.Command, RegionMasterCommand
     {
-        public MovePrimCommand(BotClient client)
+        public RotatePrimCommand(BotClient client)
         {
-            Name = "moveprim";
-            Description = "move prim to the relative specified position. Usage: moveprim <prim> <position>";
+            Name = "Rotateprim";
+            Description = "Rotate prim to the relative specified position. Usage: Rotateprim <prim> <position>";
             Category = cogbot.Actions.CommandCategory.Objects;
         }
 
@@ -18,15 +18,18 @@ namespace cogbot.Actions
         {
 
             if (args.Length < 2)
-                return Failure(Usage);// " moveprim prim [x y [z]]";
+                return Failure(Usage);// " Rotateprim prim [x y [z]]";
 
             int used;
             List<Primitive> PS = WorldSystem.GetPrimitives(args, out used);
             if (IsEmpty(PS)) return Failure("Cannot find prim: " + string.Join(" ", args));
             string[] to = Parser.SplitOff(args, used);
-            SimPosition aPos = WorldSystem.GetVector(to, out used, TheSimAvatar);
-            if (aPos == null) return Failure("Cannot find position: " + string.Join(" ", to));
-            if (!aPos.IsRegionAttached) return Failure("!IsRegionAttached: " + aPos);
+
+            Quaternion aPos;
+            if (!Quaternion.TryParse(string.Join(" ",to),out aPos))
+            {
+                return Failure("Cannot find position: " + string.Join(" ", to));
+            }
             List<SimObject> TODO = new List<SimObject>();
             foreach (var P in PS)
             {
@@ -34,11 +37,21 @@ namespace cogbot.Actions
                 if (!O.IsRegionAttached) return Failure("!IsRegionAttached: " + O);
                 TODO.Add(O);
             }
+
+            List<SimObject> RTODO = new List<SimObject>();
             foreach (var O in TODO)
             {
-                SimPosition localPos = WorldSystem.GetVector(to, out used, O);
-                Vector3d local = localPos.GlobalPosition;
-                O.MoveTo(local, 1f, 10);
+                if (!O.IsRoot && TODO.Contains(O.Parent))
+                {
+                    WriteLine("Already rotating parent of " + O);
+                    continue;
+                }
+                RTODO.Add(O);
+            }
+
+            foreach (var O in RTODO)
+            {
+                O.SetObjectRotation(aPos);
             }
             return Success("acted on " + PS.Count);
         }

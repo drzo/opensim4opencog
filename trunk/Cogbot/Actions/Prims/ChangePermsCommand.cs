@@ -7,17 +7,8 @@ namespace cogbot.Actions
 {
     public class ChangePermsCommand : Command, RegionMasterCommand
     {
-        AutoResetEvent GotPermissionsEvent = new AutoResetEvent(false);
-        UUID SelectedObject = UUID.Zero;
-        Dictionary<UUID, Primitive> Objects = new Dictionary<UUID, Primitive>();
-        PermissionMask Perms = PermissionMask.None;
-        bool PermsSent = false;
-        int PermCount = 0;
-        ObjectManager.ObjectPropertiesCallback callback;
         public ChangePermsCommand(BotClient testClient)
         {
-            callback = new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
-
             Name = "changeperms";
             Description = "Recursively changes all of the permissions for child and task inventory objects. Usage prim-uuid [copy] [mod] [xfer]";
             Category = CommandCategory.Objects;
@@ -25,157 +16,176 @@ namespace cogbot.Actions
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            bool permsSent = false;
+            int permCount = 0;
+            AutoResetEvent GotPermissionsEvent = new AutoResetEvent(false);
+            UUID selectedObject = UUID.Zero;
+            Dictionary<UUID, Primitive> objects = new Dictionary<UUID, Primitive>();
+            PermissionMask perms = PermissionMask.None;
+
+            ObjectManager.ObjectPropertiesCallback callback = new ObjectManager.ObjectPropertiesCallback((simulator, properties) =>
+                                                                                                             {
+                                                                                                                 if (permsSent)
+                                                                                                                 {
+                                                                                                                     if (objects.ContainsKey(properties.ObjectID))
+                                                                                                                     {
+                                                                                                                         // FIXME: Confirm the current operation against properties.Permissions.NextOwnerMask
+
+                                                                                                                         ++permCount;
+                                                                                                                         if (permCount >= objects.Count)
+                                                                                                                             GotPermissionsEvent.Set();
+                                                                                                                     }
+                                                                                                                 }
+                                                                                                             });
             try
             {
-               Client.Objects.OnObjectProperties += callback;
-
-                UUID rootID;
-                Primitive rootPrim;
-                List<Primitive> childPrims;
-                List<uint> localIDs = new List<uint>();
+                Client.Objects.OnObjectProperties += callback;
 
                 // Reset class-wide variables
-                PermsSent = false;
-                Objects.Clear();
-                Perms = PermissionMask.None;
-                PermCount = 0;
+                permsSent = false;
+                objects.Clear();
+                perms = PermissionMask.None;
+                permCount = 0;
 
                 if (args.Length < 1 || args.Length > 4)
                     return Failure(Usage); //"Usage prim-uuid [copy] [mod] [xfer]";
 
-                if (!UUIDTryParse(args, 0, out rootID))
-                    return Failure(Usage); //"Usage prim-uuid [copy] [mod] [xfer]";
+                int argsUsed;
+                List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+                if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
 
-                for (int i = 1; i < args.Length; i++)
+                for (int i = argsUsed; i < args.Length; i++)
                 {
                     switch (args[i].ToLower())
                     {
                         case "copy":
-                            Perms |= PermissionMask.Copy;
+                            perms |= PermissionMask.Copy;
                             break;
                         case "mod":
-                            Perms |= PermissionMask.Modify;
+                            perms |= PermissionMask.Modify;
                             break;
                         case "xfer":
-                            Perms |= PermissionMask.Transfer;
+                            perms |= PermissionMask.Transfer;
                             break;
                         default:
                             return Failure(Usage); //"Usage prim-uuid [copy] [mod] [xfer]";
                     }
                 }
 
-                Logger.DebugLog("Using PermissionMask: " + Perms.ToString(), Client);
+                WriteLine("Using PermissionMask: " + perms.ToString());
 
                 // Find the requested prim
-                rootPrim = Client.Network.CurrentSim.ObjectsPrimitives.Find(delegate(Primitive prim) { return prim.ID == rootID; });
-                if (rootPrim == null)
-                    return Failure("Cannot find requested prim " + rootID.ToString());
-                else
-                    Logger.DebugLog("Found requested prim " + rootPrim.ID.ToString(), Client);
 
-                if (rootPrim.ParentID != 0)
+                foreach (var rPrim in PS)
                 {
-                    // This is not actually a root prim, find the root
-                    if (!Client.Network.CurrentSim.ObjectsPrimitives.TryGetValue(rootPrim.ParentID, out rootPrim))
-                        return Failure("Cannot find root prim for requested object");
-                    else
-                        Logger.DebugLog("Set root prim to " + rootPrim.ID.ToString(), Client);
-                }
+                    Primitive rootPrim = rPrim;
 
-                // Find all of the child objects linked to this root
-                childPrims = Client.Network.CurrentSim.ObjectsPrimitives.FindAll(delegate(Primitive prim) { return prim.ParentID == rootPrim.LocalID; });
+                    Simulator curSim = WorldSystem.GetSimulator(rootPrim);
 
-                // Build a dictionary of primitives for referencing later
-                Objects[rootPrim.ID] = rootPrim;
-                for (int i = 0; i < childPrims.Count; i++)
-                    Objects[childPrims[i].ID] = childPrims[i];
+                    WriteLine("Found requested prim " + rootPrim.ID.ToString());
 
-                // Build a list of all the localIDs to set permissions for
-                localIDs.Add(rootPrim.LocalID);
-                for (int i = 0; i < childPrims.Count; i++)
-                    localIDs.Add(childPrims[i].LocalID);
-
-                // Go through each of the three main permissions and enable or disable them
-                #region Set Linkset Permissions
-
-                PermCount = 0;
-                if ((Perms & PermissionMask.Modify) == PermissionMask.Modify)
-                    Client.Objects.SetPermissions(Client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Modify, true);
-                else
-                    Client.Objects.SetPermissions(Client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Modify, false);
-                PermsSent = true;
-
-                if (!GotPermissionsEvent.WaitOne(1000 * 30, false))
-                    return Failure("failed to set the modify bit, permissions in an unknown state");
-
-                PermCount = 0;
-                if ((Perms & PermissionMask.Copy) == PermissionMask.Copy)
-                    Client.Objects.SetPermissions(Client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Copy, true);
-                else
-                    Client.Objects.SetPermissions(Client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Copy, false);
-                PermsSent = true;
-
-                if (!GotPermissionsEvent.WaitOne(1000 * 30, false))
-                    return Failure("failed to set the copy bit, permissions in an unknown state");
-
-                PermCount = 0;
-                if ((Perms & PermissionMask.Transfer) == PermissionMask.Transfer)
-                    Client.Objects.SetPermissions(Client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Transfer, true);
-                else
-                    Client.Objects.SetPermissions(Client.Network.CurrentSim, localIDs, PermissionWho.NextOwner, PermissionMask.Transfer, false);
-                PermsSent = true;
-
-                if (!GotPermissionsEvent.WaitOne(1000 * 30, false))
-                    return Failure("failed to set the transfer bit, permissions in an unknown state");
-
-                #endregion Set Linkset Permissions
-
-                // Check each prim for task inventory and set permissions on the task inventory
-                int taskItems = 0;
-                foreach (Primitive prim in Objects.Values)
-                {
-                    if ((prim.Flags & PrimFlags.InventoryEmpty) == 0)
+                    if (rootPrim.ParentID != 0)
                     {
-                        List<InventoryBase> items = Client.Inventory.GetTaskInventory(prim.ID, prim.LocalID, 1000 * 30);
+                        // This is not actually a root prim, find the root
+                        if (!curSim.ObjectsPrimitives.TryGetValue(rootPrim.ParentID, out rootPrim))
+                            Failure("Cannot find root prim for requested object");
+                        else
+                            Logger.DebugLog("Set root prim to " + rootPrim.ID.ToString(), Client);
+                    }
 
-                        if (items != null)
+                    List<Primitive> childPrims;
+                    // Find all of the child objects linked to this root
+                    childPrims =
+                        curSim.ObjectsPrimitives.FindAll(
+                            delegate(Primitive prim) { return prim.ParentID == rootPrim.LocalID; });
+
+                    // Build a dictionary of primitives for referencing later
+                    objects[rootPrim.ID] = rootPrim;
+                    for (int i = 0; i < childPrims.Count; i++)
+                        objects[childPrims[i].ID] = childPrims[i];
+
+                    List<uint> localIDs = new List<uint>();
+                    // Build a list of all the localIDs to set permissions for
+                    localIDs.Add(rootPrim.LocalID);
+                    for (int i = 0; i < childPrims.Count; i++)
+                        localIDs.Add(childPrims[i].LocalID);
+
+                    // Go through each of the three main permissions and enable or disable them
+
+                    #region Set Linkset Permissions
+
+                    permCount = 0;
+                    if ((perms & PermissionMask.Modify) == PermissionMask.Modify)
+                        Client.Objects.SetPermissions(curSim, localIDs, PermissionWho.NextOwner,
+                                                      PermissionMask.Modify, true);
+                    else
+                        Client.Objects.SetPermissions(curSim, localIDs, PermissionWho.NextOwner,
+                                                      PermissionMask.Modify, false);
+                    permsSent = true;
+
+                    if (!GotPermissionsEvent.WaitOne(1000*30, false))
+                        Failure("failed to set the modify bit, permissions in an unknown state");
+
+                    permCount = 0;
+                    if ((perms & PermissionMask.Copy) == PermissionMask.Copy)
+                        Client.Objects.SetPermissions(curSim, localIDs, PermissionWho.NextOwner,
+                                                      PermissionMask.Copy, true);
+                    else
+                        Client.Objects.SetPermissions(curSim, localIDs, PermissionWho.NextOwner,
+                                                      PermissionMask.Copy, false);
+                    permsSent = true;
+
+                    if (!GotPermissionsEvent.WaitOne(1000*30, false))
+                        Failure("failed to set the copy bit, permissions in an unknown state");
+
+                    permCount = 0;
+                    if ((perms & PermissionMask.Transfer) == PermissionMask.Transfer)
+                        Client.Objects.SetPermissions(curSim, localIDs, PermissionWho.NextOwner,
+                                                      PermissionMask.Transfer, true);
+                    else
+                        Client.Objects.SetPermissions(curSim, localIDs, PermissionWho.NextOwner,
+                                                      PermissionMask.Transfer, false);
+                    permsSent = true;
+
+                    if (!GotPermissionsEvent.WaitOne(1000*30, false))
+                        Failure("failed to set the transfer bit, permissions in an unknown state");
+
+                    #endregion Set Linkset Permissions
+
+                    // Check each prim for task inventory and set permissions on the task inventory
+                    int taskItems = 0;
+                    foreach (Primitive prim in objects.Values)
+                    {
+                        if ((prim.Flags & PrimFlags.InventoryEmpty) == 0)
                         {
-                            for (int i = 0; i < items.Count; i++)
-                            {
-                                if (!(items[i] is InventoryFolder))
-                                {
-                                    InventoryItem item = (InventoryItem)items[i];
-                                    item.Permissions.NextOwnerMask = Perms;
+                            List<InventoryBase> items = Client.Inventory.GetTaskInventory(prim.ID, prim.LocalID, 1000*30);
 
-                                    Client.Inventory.UpdateTaskInventory(prim.LocalID, item);
-                                    ++taskItems;
+                            if (items != null)
+                            {
+                                for (int i = 0; i < items.Count; i++)
+                                {
+                                    if (!(items[i] is InventoryFolder))
+                                    {
+                                        InventoryItem item = (InventoryItem) items[i];
+                                        item.Permissions.NextOwnerMask = perms;
+
+                                        Client.Inventory.UpdateTaskInventory(prim.LocalID, item);
+                                        ++taskItems;
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                return Success("Set permissions to " + Perms.ToString() + " on " + localIDs.Count + " objects and " + taskItems + " inventory items");
+                    Success("Set permissions to " + perms.ToString() + " on " + localIDs.Count + " objects and " +
+                                taskItems + " inventory items");
+                }
             }
             finally
             {
                 Client.Objects.OnObjectProperties -= callback;
             }
-        }
-
-        void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties properties)
-        {
-            if (PermsSent)
-            {
-                if (Objects.ContainsKey(properties.ObjectID))
-                {
-                    // FIXME: Confirm the current operation against properties.Permissions.NextOwnerMask
-
-                    ++PermCount;
-                    if (PermCount >= Objects.Count)
-                        GotPermissionsEvent.Set();
-                }
-            }
+            return SuccessOrFailure();
         }
     }
 }

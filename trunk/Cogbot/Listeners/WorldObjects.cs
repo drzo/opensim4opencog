@@ -1,10 +1,12 @@
     using System;
-using System.Collections.Generic;
+    using System.Collections;
+    using System.Collections.Generic;
 using System.Threading;
 using cogbot.Actions;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 using cogbot.Utilities;
+    using PathSystem3D.Navigation;
 
 namespace cogbot.Listeners
 {
@@ -716,7 +718,9 @@ namespace cogbot.Listeners
         }
         public SimObject GetSimObject(string[] args, out int argsUsed)
         {
-            Primitive prim = GetPrimitive(args, out argsUsed);
+            List<Primitive> primitives = GetPrimitives(args, out argsUsed);
+            if (primitives.Count!=1) return null;
+            Primitive prim = primitives[0];
             if (prim != null) return GetSimObject(prim);
             foreach (SimAvatar avatar in SimAvatars)
             {
@@ -930,10 +934,12 @@ namespace cogbot.Listeners
             return null;
         }
 
-        public Primitive GetPrimitive(String str)
+        public Primitive GetPrimitives(String str)
         {
             int argsUsed;
-            return GetPrimitive(new [] {str}, out argsUsed);
+            List<Primitive> primitives = GetPrimitives(new [] {str}, out argsUsed);
+            if (primitives.Count==1) return primitives[0];
+            return null;
         }
 
         public Primitive GetPrimitive(uint id, Simulator simulator)
@@ -1067,6 +1073,14 @@ namespace cogbot.Listeners
                 }
             }
 
+            prim = null;
+            argsUsed = 0;
+            return false;
+            //return GetPrimMatches(splitted, name, out prim, pickNum, out argsUsed);
+        }
+
+        private bool GetPrimMatches(string[] splitted, string name, out Primitive prim, uint pickNum, out int argsUsed)
+        {
             if (splitted.Length >= 2)
             {
                 if (UInt32.TryParse(splitted[splitted.Length - 1], out pickNum))
@@ -1104,7 +1118,7 @@ namespace cogbot.Listeners
                 prim = null;
                 return false;
             }
-            if (splitted.Length>1 && uint.TryParse(splitted[1], out pickNum))
+            if (splitted.Length > 1 && uint.TryParse(splitted[1], out pickNum))
             {
             }
             if (matches.Count == 1)
@@ -1119,7 +1133,7 @@ namespace cogbot.Listeners
                     argsUsed = 2;
                 }
                 prim = matches[0].Prim;
-                return pickNum== 1 && prim != null;
+                return pickNum == 1 && prim != null;
             }
             bool retVal = false;
 
@@ -1489,13 +1503,261 @@ namespace cogbot.Listeners
             return SimAssetSystem.GetAssetUUID(a, type);
         }
 
-        public Primitive GetPrimitive(string[] args, out int argsUsed)
+        public List<SimObject> GetRelations(List<SimObject> re)
         {
-            argsUsed = 0;
+            ListAsSet<SimObject> more = new ListAsSet<SimObject>();
+            foreach (var O in re)
+            {
+                more.Add(O);
+                AsPrimitives(more, O.Children);
+                SimObject P = O.Parent;
+                if (P != O)
+                {
+                    AsPrimitives(more, P.Children);
+                }
+            }
+            return more;
+        }
+
+        private List<SimObject> GetParents(List<SimObject> primitives)
+        {
+            ListAsSet<SimObject> more = new ListAsSet<SimObject>();
+            foreach (var O in primitives)
+            {
+                SimObject P = O.Parent;
+                if (P != O)
+                {
+                    more.AddTo(P);
+                }
+            }
+            return more;
+        }
+
+        private List<SimObject> GetChildren(List<SimObject> primitives)
+        {
+            ListAsSet<SimObject> more = new ListAsSet<SimObject>();
+            foreach (var O in primitives)
+            {
+                AsPrimitives(more, O.Children);
+            }
+            return more;
+        }
+
+        public void AsPrimitives(List<Primitive> prims, IEnumerable positions)
+        {
+            foreach (var o in positions)
+            {
+                Primitive p = o as Primitive;
+                if (p != null)
+                {
+                    prims.Add(p);
+                    continue;
+                }
+                SimObject oo = o as SimObject;
+                if (oo != null)
+                {
+                    p = oo.Prim;
+                    if (p != null) prims.Add(p);
+                }
+            }
+        }
+        public void AsPrimitives(List<SimObject> prims, IEnumerable positions)
+        {
+            foreach (var o in positions)
+            {
+                Primitive p = o as Primitive;
+                if (p != null)
+                {
+                    prims.Add(GetSimObject(p));
+                    continue;
+                }
+                SimObject oo = o as SimObject;
+                if (oo != null)
+                    prims.Add(oo);
+            }
+        }
+
+        public List<Primitive> GetPrimitives(string[] args, out int argsUsed)
+        {
+            if (args.Length==0)
+            {
+                argsUsed = 0;
+                return new List<Primitive>();
+            }
+            List<Primitive> prims = new List<Primitive>();
+
+            AsPrimitives(prims, GetPrimitives(args, out argsUsed, SimObjects.CopyOf()));
+
+            if (argsUsed >= args.Length) return prims;
+            String arg0Lower = args[argsUsed].ToLower();
+
+            if (arg0Lower=="AND")
+            {
+                
+            }
+            return prims;
+                            }
+
+        public List<SimObject> GetPrimitives(string[] args, out int argsUsed, List<SimObject> prims)
+        {
             int consume = args.Length;
-            if (consume == 0) return TheSimAvatar.theAvatar;
-            Primitive prim;
-            return tryGetPrim(args, out prim ,out argsUsed) ? prim : null;
+            if (consume == 0)
+            {
+                argsUsed = 0;
+                return prims;
+            }
+            string arg0Lower = args[0].ToLower();
+            if (arg0Lower == "all")
+            {
+                argsUsed = 1;
+                return SimObjects.CopyOf();
+            }
+            if (arg0Lower == "self")
+            {
+                argsUsed = 1;
+                prims.Add(TheSimAvatar);
+                return prims;
+            }
+            if (arg0Lower == "known")
+            {
+                argsUsed = 1;
+                return TheSimAvatar.GetKnownObjects().CopyOf();
+            }
+            if (arg0Lower == "selected")
+            {
+                argsUsed = 1;
+                List<SimObject> objs = new List<SimObject>();
+                AsPrimitives(objs, TheSimAvatar.GetSelectedObjects());
+                return objs;
+
+            }
+            if (arg0Lower == "dist")
+            {
+                double dist = TheSimAvatar.SightRange;
+                int used = 1;
+                if (double.TryParse(args[1], out dist))
+                {
+                    used++;
+                }
+                prims = GetNearByObjects(TheSimAvatar.GlobalPosition, TheSimAvatar, dist, false);
+                argsUsed = used;
+                return prims;
+            }
+
+            if (arg0Lower == "family")
+            {
+                prims = GetPrimitives(Parser.SplitOff(args, 1), out argsUsed, prims);
+                argsUsed++;
+                prims = GetRelations(prims);
+            }
+            else if (arg0Lower == "parentof")
+            {
+                prims = GetPrimitives(Parser.SplitOff(args, 1), out argsUsed, prims);
+                argsUsed++;
+                prims = GetParents(prims);
+            }
+            else if (arg0Lower == "maxdist")
+            {
+                double dist = TheSimAvatar.SightRange;
+                int used = 1;
+                if (double.TryParse(args[1], out dist))
+                {
+                    used++;
+                }
+                prims = GetPrimitives(Parser.SplitOff(args, used), out argsUsed, prims);
+                int i = prims.RemoveAll(p => p.Distance(TheSimAvatar) > dist);
+                argsUsed += used;
+            }
+            else if (arg0Lower == "mindist")
+            {
+                double dist = TheSimAvatar.SightRange;
+                int used = 1;
+                if (double.TryParse(args[1], out dist))
+                {
+                    used++;
+                }
+                prims = GetPrimitives(Parser.SplitOff(args, used), out argsUsed, prims);
+                prims.RemoveAll(p => p.Distance(TheSimAvatar) < dist);
+                argsUsed += used;
+            }
+            else if (arg0Lower == "max")
+            {
+                int nth = 30;
+                int used = 1;
+                if (int.TryParse(args[1], out nth))
+                {
+                    used++;
+                }
+                prims = GetPrimitives(Parser.SplitOff(args, used), out argsUsed, prims);
+                if (prims.Count > nth)
+                {
+                    prims.RemoveRange(nth, prims.Count - nth);
+                }
+                argsUsed += used;
+            }
+            else if (arg0Lower == "nth")
+            {
+                int nth = 0;
+                int used = 1;
+                if (int.TryParse(args[1], out nth))
+                {
+                    used++;
+                }
+                prims = GetPrimitives(Parser.SplitOff(args, used), out argsUsed, prims);
+                List<SimObject> prims0 = new List<SimObject>();
+                if (prims.Count >= nth)
+                {
+                    prims0.Add(prims[nth - 1]);
+                }
+                prims = prims0;
+                argsUsed += used;
+            }
+            else if (arg0Lower == "matches")
+            {
+                string nth = args[1].ToLower();
+                prims = GetPrimitives(Parser.SplitOff(args, 2), out argsUsed, prims);
+                argsUsed += 1;
+                prims.RemoveAll(p => !SMatches(p, nth));
+            }
+            else if (arg0Lower == "!matches")
+            {
+                string nth = args[1].ToLower();
+                prims = GetPrimitives(Parser.SplitOff(args, 2), out argsUsed, prims);
+                argsUsed += 1;
+                prims.RemoveAll(p => SMatches(p,nth));
+            }
+            else if (arg0Lower == "childsof")
+            {
+                prims = GetPrimitives(Parser.SplitOff(args, 1), out argsUsed, prims);
+                argsUsed++;
+                prims = GetChildren(prims);
+            }
+            else if (arg0Lower == "bydistance")
+            {
+                prims = GetPrimitives(Parser.SplitOff(args, 1), out argsUsed, prims);
+                argsUsed++;
+                List<SimObject> objs = new List<SimObject>();
+                AsPrimitives(objs, prims);
+                objs.Sort(TheSimAvatar.CompareDistance);
+                prims = objs;
+            }
+            else
+            {
+                Primitive prim;
+                if (tryGetPrim(args, out prim, out argsUsed))
+                {
+                    prims = new List<SimObject>();
+                    prims.Add(GetSimObject(prim));
+                }
+                else
+                {
+                    string nth = args[0].ToLower();
+                    prims = GetPrimitives(Parser.SplitOff(args, 1), out argsUsed, prims);
+                    argsUsed += 1;
+                    prims.RemoveAll(p => !SMatches(p, nth));
+                }
+            }
+            return prims;
         }
 
         public List<SimObject> GetAllSimObjects(string name)
@@ -1503,13 +1765,28 @@ namespace cogbot.Listeners
             List<SimObject> matches = new List<SimObject>();
             foreach (SimObject obj in GetAllSimObjects())
             {
-                if (obj.Matches(name))
+                if (SMatches(obj, name))
                 {
                     matches.Add(obj);
                 }
             }
             matches.Sort(TheSimAvatar.CompareDistance);
             return matches;
+        }
+
+        private bool SMatches(object o, string name)
+        {
+            if (o == null || name==null)
+            {
+                
+            }
+            String s = o.ToString();
+            if (s==null)
+            {
+                return false;
+            }
+            s = s.ToLower();
+            return s.Contains(name) || name.Contains(s);
         }
 
         public SimObject GetSimObject(Primitive prim)

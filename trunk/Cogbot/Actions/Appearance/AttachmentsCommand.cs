@@ -13,33 +13,38 @@ namespace cogbot.Actions
             Name = "attachments";
             Description = "Prints a list of the currently known agent attachments. Usage: attachments [prim-uuid]";
             Category = CommandCategory.Appearance;
-            Parameters = new [] { new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (Client.Network.CurrentSim == null) return Failure("not yet connected");
             int argsUsed;
-            SimObject O = WorldSystem.GetSimObject(args, out argsUsed);
-            if (O ==null)
+            List<Primitive> OS = WorldSystem.GetPrimitives(args, out argsUsed);
+            if (OS.Count == 0)
             {
-                O = TheSimAvatar;
+                OS.Add(TheSimAvatar.theAvatar);
             }
-            WriteLine("Attachments for " + O);
-            int count = O.Children.Count;
-            foreach (var s in O.Children)
+            foreach (var P in OS)
             {
-                String point = "Unknown";
-                Primitive prim = s.Prim;
-                if (prim!=null)
+                SimObject O = WorldSystem.GetSimObject(P);
+                WriteLine("Attachments for " + O);
+                int count = O.Children.Count;
+                foreach (var s in O.Children)
                 {
-                    point = prim.PrimData.AttachmentPoint.ToString() + " Offset: " + prim.Position;
-                }
+                    String point = "Unknown";
+                    Primitive prim = s.Prim;
+                    if (prim != null)
+                    {
+                        point = prim.PrimData.AttachmentPoint.ToString() + " Offset: " + prim.Position;
+                    }
 
-                // TODO: Done? Fetch properties for the objects with missing property sets so we can show names
-                WriteLine("[Attachment @ {0}] {1}", point, s);
+                    // TODO: Done? Fetch properties for the objects with missing property sets so we can show names
+                    WriteLine("[Attachment @ {0}] {1}", point, s);
+                }
+                Success("Found " + count + " attachments");
             }
-            return Success("Found " + count + " attachments");
+            return Success("Found " + OS.Count + " attachments");
         }
     }
 }

@@ -34,9 +34,9 @@ namespace cogbot.Actions.Appearance
             string targetName = String.Join(" ", args);
 
             int argsUsed;
-            SimObject foundObject = WorldSystem.GetSimObject(args, out argsUsed);
-            Primitive foundAv = foundObject.Prim;
-            if (foundAv != null)
+            List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
+            foreach (var foundAv in PS)
             {
                 StringBuilder output = new StringBuilder();
                 targetName = String.Join(" ", args, 0, argsUsed);
@@ -53,13 +53,9 @@ namespace cogbot.Actions.Appearance
                         output.AppendLine();
                     }
                 }
-
-                return Success(output.ToString());
+                Success(output.ToString());
             }
-            else
-            {
-                return Failure("No nearby avatar with the name " + targetName);
-            }
+            return SuccessOrFailure();
         }
     }
 }

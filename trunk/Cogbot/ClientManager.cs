@@ -813,7 +813,7 @@ namespace cogbot
                 {
                     foreach (BotClient client in BotClients)
                     {
-                        WriteLine(client.Commands["help"].Execute(args, UUID.Zero, WriteLine).ToString());
+                        WriteLine(client.Commands["help"].ExecuteCmd(args, UUID.Zero, WriteLine).ToString());
                         break;
                     }
                 }
@@ -826,7 +826,7 @@ namespace cogbot
             {
                 // No reason to pass this to all bots, and we also want to allow it when there are no bots
                 ScriptCommand command = new ScriptCommand(null);
-                Logger.Log(command.Execute(args, UUID.Zero, WriteLine), Helpers.LogLevel.Info);
+                Logger.Log(command.ExecuteCmd(args, UUID.Zero, WriteLine), Helpers.LogLevel.Info);
             }
             else
             {
@@ -840,7 +840,7 @@ namespace cogbot
                         {
                             BotClient testClient = (BotClient)state;
                             if (testClient.Commands.ContainsKey(firstToken))
-                                Logger.Log(testClient.Commands[firstToken].Execute(args, fromAgentID, WriteLine),
+                                Logger.Log(testClient.Commands[firstToken].ExecuteCmd(args, fromAgentID, WriteLine),
                                     Helpers.LogLevel.Info, testClient.gridClient);
                             else
                                 Logger.Log("Unknown command " + firstToken, Helpers.LogLevel.Warning);

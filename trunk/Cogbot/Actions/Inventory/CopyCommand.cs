@@ -18,19 +18,21 @@ namespace cogbot.Actions
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length==0) {
+            if (args.Length == 0)
+            {
                 return Failure(Usage);
             }
-            int used;
-            List<Primitive> prims = new List<Primitive>();
-            SimObject o = WorldSystem.GetSimObject(args, out used);
-            if (o == null) return Failure(string.Format("Cant find {0}", string.Join(" ", args)));
-            Primitive currentPrim = o.Prim;
-            if (currentPrim == null) return Failure("Still waiting on Prim for " + o);
+            int argsUsed;
+            List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
             GridClient client = TheBotClient;
-            client.Inventory.RequestDeRezToInventory(currentPrim.LocalID, DeRezDestination.AgentInventoryCopy,
-                                                     client.Inventory.FindFolderForType(AssetType.Object), UUID.Zero);
-            return Success(Name + " on " + o);
+            foreach (var currentPrim in PS)
+            {
+                Success(Name + " on " + WorldSystem.GetSimObject(currentPrim));
+                client.Inventory.RequestDeRezToInventory(currentPrim.LocalID, DeRezDestination.AgentInventoryCopy,
+                                                         client.Inventory.FindFolderForType(AssetType.Object), UUID.Zero);
+            }
+            return SuccessOrFailure();
         }
     }
 }

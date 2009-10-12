@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using cogbot.Utilities;
@@ -52,30 +53,34 @@ namespace cogbot.Actions
                         remove = false;
                         s = s.Substring(1);
                     }
-                    if (s.Length<0)
+                    if (s.Length < 0)
                     {
                         used = 1;
                         continue;
                     }
                     args[0] = s;
-                    SimPosition P = WorldSystem.GetSimObject(args, out used);
-                    if (P==null)
+                    List<Primitive> PS = WorldSystem.GetPrimitives(args, out used);
+                    foreach (var primitive in PS)
                     {
-                        WriteLine("Cannot find " + s);
-                        used = 1;
-                        continue;
+                        SimObject P = WorldSystem.GetSimObject(primitive);
+                        if (P == null)
+                        {
+                            WriteLine("Cannot find " + s);
+                            used = 1;
+                            continue;
+                        }
+                        if (remove)
+                        {
+                            WriteLine("Removing " + P);
+                            TheSimAvatar.SelectedRemove(P);
+                        }
+                        else
+                        {
+                            WriteLine("Adding " + P);
+                            TheSimAvatar.SelectedAdd(P);
+                        }
                     }
-                    if (remove)
-                    {
-                        WriteLine("Removing " + P);
-                        TheSimAvatar.SelectedRemove(P);
-                    }
-                    else
-                    {
-                        WriteLine("Adding " + P);
-                        TheSimAvatar.SelectedAdd(P);
-                    }
-                    if (used==0) break;
+                    if (used == 0) break;
                 }
             }
             return Success("selected objects count=" + objs.Count);
