@@ -1036,6 +1036,7 @@ namespace cogbot.Listeners
                 return prim != null;
             }
             var resolve =  name.ToLower();
+            /*
             if (resolve.Equals("pointing") || resolve.Equals("it"))
             {
                 argsUsed = 1;
@@ -1047,6 +1048,7 @@ namespace cogbot.Listeners
                 prim = GetPrimitive(client.TheRadegastInstance.State.TargetID, null);
                 return prim != null;
             }
+             */
             if (resolve.StartsWith("primid"))
             {
                 if (name.Length > 6)
