@@ -2,7 +2,7 @@ using cogbot.TheOpenSims;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
-namespace cogbot.Actions.Movement
+namespace cogbot.Actions
 {
     public class MovePrimCommand : cogbot.Actions.Command, RegionMasterCommand
     {

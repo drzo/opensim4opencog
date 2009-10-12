@@ -18,6 +18,63 @@ namespace cogbot.TheOpenSims
 {
     public partial class SimAvatarImpl : SimObjectImpl, SimMover, SimAvatar, SimActor
     {
+
+        ListAsSet<EffectBeamInfo> BeamInfos = new ListAsSet<EffectBeamInfo>();
+        ListAsSet<SimPosition> SelectedObjects = new ListAsSet<SimPosition>();
+        private bool _SelectedBeam;
+        public bool SelectedBeam
+        {
+            get
+            {
+                return _SelectedBeam;
+            }
+            set
+            {
+                if (_SelectedBeam==value) return;
+                foreach (var set in BeamInfos)
+                {
+                    set.UnSetPointing();
+                }
+                BeamInfos.Clear();
+                if (value)
+                {
+                    GridClient grc = GetGridClient();
+                    foreach (var o in SelectedObjects)
+                    {
+                        EffectBeamInfo info = new EffectBeamInfo(grc);
+                        info.SetPointing(o, 3);
+                        BeamInfos.AddTo(info);
+                    }
+                }
+                _SelectedBeam = value;
+            }
+        }
+        ListAsSet<SimPosition> SimActor.GetSelectedObjects()
+        {
+            return SelectedObjects;
+        }
+
+        public void SelectedRemove(SimPosition o)
+        {
+            if (!SelectedObjects.Remove(o) || !_SelectedBeam) return;
+            _SelectedBeam = false;
+            SelectedBeam = true;
+        }
+
+        public void SelectedAdd(SimPosition o)
+        {
+            if (!SelectedObjects.AddTo(o) || !_SelectedBeam) return;
+            if (true)
+            {
+                _SelectedBeam = false;
+                SelectedBeam = true;
+                return;
+            }
+            EffectBeamInfo info = new EffectBeamInfo(GetGridClient());
+            info.SetPointing(o, 3);
+            BeamInfos.AddTo(info);
+        }
+
         private Avatar.AvatarProperties _profileProperties;
         public Avatar.AvatarProperties ProfileProperties
         {
@@ -2281,10 +2338,14 @@ namespace cogbot.TheOpenSims
         //BotClient GetGridClient();
         new bool IsSitting { get; set; }
         BotAction LastAction { get; set; }
+        bool SelectedBeam { get; set; }
         //IEnumerable<SimTypeUsage> KnownTypeUsages { get; }
         bool SitOn(SimObject o);
 
         BotMentalAspect GetObject(string name);
+        ListAsSet<SimPosition> GetSelectedObjects();
+        void SelectedRemove(SimPosition position);
+        void SelectedAdd(SimPosition position);
     }
 
 
