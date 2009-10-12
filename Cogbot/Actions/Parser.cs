@@ -87,6 +87,7 @@ namespace cogbot.Actions
 
         public static string[] SplitOff(string[] args, int p)
         {
+            if (p >= args.Length) return new string[0];
             string[] newstring = new string[args.Length - p];
             int ci = 0;
             while (p < args.Length)
