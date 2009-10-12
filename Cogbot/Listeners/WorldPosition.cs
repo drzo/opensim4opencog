@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Threading;
 using cogbot.TheOpenSims;
@@ -53,13 +54,13 @@ namespace cogbot.Listeners
             {
                 if (r == null)
                 {
-                    if (pos != null && pos.IsRegionAttached) return new SimHeading(pos); 
+                    if (pos != null && pos.IsRegionAttached) return new SimHeading(pos);
                     return SimHeading.UNKNOWN;
                 }
                 return r;
             }
             Quaternion rot = Quaternion.Identity;
-            if (pos!=null && pos.IsRegionAttached)
+            if (pos != null && pos.IsRegionAttached)
             {
                 rot = pos.SimRotation;
             }
@@ -104,7 +105,7 @@ namespace cogbot.Listeners
         internal SimRegion GetRegion(ulong RegionHandle)
         {
             if (RegionHandle == 0) return null;
-            return SimRegion.GetRegion(RegionHandle,client);
+            return SimRegion.GetRegion(RegionHandle, client);
         }
 
         public SimRegion GetRegion(UUID uuid)
@@ -247,6 +248,22 @@ namespace cogbot.Listeners
 
         private SimPosition GetSimV(string[] tokens, int start, out int argsUsed, SimPosition offset)
         {
+            int maxArgs = 0;
+            bool relative = false;
+            for (int st = start; st < tokens.Length; st++)
+            {
+                if (maxArgs > 2) break;
+                string str = tokens[st];
+                double doublke;
+                if (double.TryParse(str, out doublke))
+                {
+                    maxArgs++;
+                }
+                else
+                {
+                    break;
+                }
+            }
             Vector3 rel = offset.SimPosition;
             Vector3 target;
             if (RelTryParse(tokens[start], out target.X, rel.X) &&
@@ -270,13 +287,25 @@ namespace cogbot.Listeners
             return null;
         }
 
+
+        /// <summary>
+        /// Get a Vector relative to TheSimAvatar
+        /// </summary>
+        /// <param name="args"></param>
+        /// <param name="argsUsed"></param>
+        /// <returns></returns>
         public SimPosition GetVector(string[] args, out int argsUsed)
+        {
+            return GetVector(args, out argsUsed, TheSimAvatar);
+        }
+
+        public SimPosition GetVector(string[] args, out int argsUsed, SimPosition offset)
         {
             argsUsed = 0;
             if (args.Length == 0) return TheSimAvatar;
             if (args.Length >= 2)
             {
-                SimPosition R = GetSimV(args, 0, out argsUsed, TheSimAvatar);
+                SimPosition R = GetSimV(args, 0, out argsUsed, offset);
                 if (R != null) return R;
             }
             UUID uuid;
@@ -286,7 +315,7 @@ namespace cogbot.Listeners
                 O = GetSimObjectFromUUID(uuid);
                 if (O != null)
                 {
-                    argsUsed = 1; 
+                    argsUsed = 1;
                     return O;
                 }
             }
@@ -311,13 +340,14 @@ namespace cogbot.Listeners
             if (!float.TryParse(tokens[0], out x))
             {
                 x = 128;
-            } else
+            }
+            else
             {
                 argsUsed++;
             }
             string sim = tokens[argsUsed];
-            SimRegion region = SimRegion.GetRegion(sim,client);
-            if (region==null) return null;
+            SimRegion region = SimRegion.GetRegion(sim, client);
+            if (region == null) return null;
 
             //TODO use the GetSimV code 
             argsUsed += 1;
