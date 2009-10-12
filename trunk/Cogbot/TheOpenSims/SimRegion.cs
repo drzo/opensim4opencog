@@ -1513,12 +1513,13 @@ namespace cogbot.TheOpenSims
 
         public static ulong GetRegionHandle(SimPathStore store)
         {
+            if (store == null) return 0;
             foreach (var of in CurrentRegions)
             {
                 if (of.PathStore == store)
                     return of.RegionHandle;
             }
-           
+            
             Vector2 loc = store.RegionLocation;
             uint regionX = (uint) loc.X*256;
             uint regionY = (uint)loc.Y * 256;

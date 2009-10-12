@@ -5,6 +5,7 @@ using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using Radegast;
+using System.Reflection;
 
 namespace cogbot.Actions
 {
@@ -312,6 +313,30 @@ namespace cogbot.Actions
         public virtual CmdResult ShowUsage()
         {
             return Failure(Usage);
+        }
+
+        protected object EnumParse(Type type, string name)
+        {
+            Object e = Enum.Parse(type, name);
+            if (e != null) return e;
+            e = Enum.Parse(type, name, true);
+            Enum firstEnum = (Enum) Enum.GetValues(type).GetValue(0);
+            if (e != null) return e;
+            Type etype = Enum.GetUnderlyingType(type);
+            ulong num;
+            int firstInt = firstEnum.GetHashCode();
+            if (UInt64.TryParse(name,out num))
+            {
+               
+            }
+            if (typeof(IConvertible).IsAssignableFrom(etype))
+            {
+            }
+            foreach (var f in type.GetFields(BindingFlags.Static))
+            {
+                
+            }
+            return e;
         }
     }
 }

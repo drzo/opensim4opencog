@@ -11,18 +11,26 @@ namespace cogbot.Actions
         public TreeCommand(BotClient testClient)
 		{
 			Name = "tree";
-			Description = "Rez a tree.";
+			Description = "Rez a tree 3 meters overhead.";
+            string usage = "Usage: !tree [";
+            foreach (string value in Enum.GetNames(typeof(Tree)))
+            {
+                usage += value + ",";
+            }
+            usage = usage.TrimEnd(new char[] { ',' });
+            usage += "]";
+            Usage = usage;
             Category = CommandCategory.Objects;
 		}
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
-		    if (args.Length == 1)
+		    if (args.Length > 0)
 		    {
 		        try
 		        {
 		            string treeName = args[0].Trim(new char[] { ' ' });
-		            Tree tree = (Tree)Enum.Parse(typeof(Tree), treeName);
+		            Tree tree = (Tree)EnumParse(typeof(Tree), treeName);
 
 		            Vector3 treePosition = GetSimPosition();
 		            treePosition.Z += 3.0f;
@@ -32,20 +40,12 @@ namespace cogbot.Actions
 
 		            return Success("Attempted to rez a " + treeName + " tree");
 		        }
-		        catch (Exception)
+		        catch (Exception e)
 		        {
-		         //   return Success("Type !tree for usage";
+		            return Failure("" + e);
 		        }
 		    }
-
-		    string usage = "Usage: !tree [";
-		    foreach (string value in Enum.GetNames(typeof(Tree)))
-		    {
-		        usage += value + ",";
-		    }
-		    usage = usage.TrimEnd(new char[] { ',' });
-		    usage += "]";
-		    return Failure(Usage);
+            return Failure(Usage);
 		}
     }
 }

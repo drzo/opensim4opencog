@@ -1014,14 +1014,15 @@ namespace cogbot.Listeners
         public bool tryGetPrim(string str, out Primitive prim)
         {
             int argsUsed;
+
             return tryGetPrim(Parser.ParseArguments(str), out prim, out argsUsed);
         }
 
         public bool tryGetPrim(string[] splitted, out Primitive prim, out int argsUsed)
         {
-            prim = null;
             if (splitted == null || splitted.Length == 0)
             {
+                prim = null;
                 argsUsed = 0;
                 return false;
             }
@@ -1031,14 +1032,22 @@ namespace cogbot.Listeners
             if (name.Contains("-") && UUID.TryParse(name, out uuid))
             {
                 prim = GetPrimitive(uuid, null);
-                if (prim != null)
-                {
-                    argsUsed = 1;
-                    return true;
-                }
-                prim = GetPrimitive(uuid, null);
+                argsUsed = 1;
+                return prim != null;
             }
-            if (name.ToLower().StartsWith("primid"))
+            var resolve =  name.ToLower();
+            if (resolve.Equals("pointing") || resolve.Equals("it"))
+            {
+                argsUsed = 1;
+                if (!client.TheRadegastInstance.State.IsPointing)
+                {
+                    prim = null;
+                    return false;
+                }
+                prim = GetPrimitive(client.TheRadegastInstance.State.TargetID, null);
+                return prim != null;
+            }
+            if (resolve.StartsWith("primid"))
             {
                 if (name.Length > 6)
                 {
@@ -1067,12 +1076,12 @@ namespace cogbot.Listeners
             List<SimObject> matches = new List<SimObject>();
             if (m_TheSimAvatar != null)
             {
-                List<SimObject> set = TheSimAvatar.GetKnownObjects();
+                List<SimObject> set = TheSimAvatar.GetKnownObjects().CopyOf();
                 lock (set)
                     if (set.Count == 0)
                     {
                         TheSimAvatar.ScanNewObjects(5, 100, false);
-                        set = TheSimAvatar.GetKnownObjects();
+                        set = TheSimAvatar.GetKnownObjects().CopyOf();
                     }
                 lock (set)
                     foreach (SimObject obj in set)
@@ -1090,25 +1099,38 @@ namespace cogbot.Listeners
             if (matches.Count == 0)
             {
                 argsUsed = 0;
+                prim = null;
                 return false;
+            }
+            if (splitted.Length>1 && uint.TryParse(splitted[1], out pickNum))
+            {
             }
             if (matches.Count == 1)
             {
+                if (pickNum == 0)
+                {
+                    argsUsed = 1;
+                    pickNum = 1;
+                }
+                else
+                {
+                    argsUsed = 2;
+                }
                 prim = matches[0].Prim;
-                argsUsed = splitted.Length;
-                return true;
+                return pickNum== 1 && prim != null;
             }
             bool retVal = false;
 
             if (m_TheSimAvatar != null) TheSimAvatar.SortByDistance(matches);
-            if (pickNum != 0 && pickNum <= matches.Count)
+            if (pickNum != 0)
             {
-                prim = matches[(int)pickNum - 1].Prim;
-                argsUsed = splitted.Length;
-                return true;
+                argsUsed = 2;
+                prim = pickNum <= matches.Count ? matches[(int)pickNum - 1].Prim : null;
+                return prim != null;
             }
             WriteLine("Found " + matches.Count + " matches: ");
             int num = 0;
+            prim = null;
             foreach (SimObject obj in matches)
             {
                 num++;
