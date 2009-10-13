@@ -501,6 +501,13 @@ namespace cogbot.TheOpenSims
             {
                 return GetRegion(handle,gc);
             }
+            foreach (var s in gc.Network.Simulators)
+            {
+                if (!string.IsNullOrEmpty(s.Name) && s.Name.Contains(simname))
+                {
+                    return GetRegion(s);
+                }
+            }
             UUID rid;
             if (UUID.TryParse(simname, out rid))
             {

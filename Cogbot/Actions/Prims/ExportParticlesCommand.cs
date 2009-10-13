@@ -20,7 +20,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Failure(Usage); // " exportparticles [prim-uuid]";
+                return ShowUsage(); // " exportparticles [prim-uuid]";
 
 
             int argsUsed;

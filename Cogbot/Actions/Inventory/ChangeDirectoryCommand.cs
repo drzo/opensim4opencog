@@ -22,7 +22,7 @@ namespace cogbot.Actions.Inventory.Shell
             Inventory = Client.Inventory.Store;
 
             if (args.Length > 1)
-                return Failure(Usage);// " cd [path-to-folder]";
+                return ShowUsage();// " cd [path-to-folder]";
             string pathStr = "";
             string[] path = null;
             if (args.Length == 0)

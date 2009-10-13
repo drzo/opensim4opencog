@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 
 namespace cogbot.Actions
@@ -16,35 +17,38 @@ namespace cogbot.Actions
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            int argsUsed;
+            Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
+
             StringBuilder output = new StringBuilder();
-            output.AppendLine(Client.Network.CurrentSim.ToString());
+            output.AppendLine(CurSim.ToString());
             output.Append("UUID: ");
-            output.AppendLine(Client.Network.CurrentSim.ID.ToString());
+            output.AppendLine(CurSim.ID.ToString());
             uint x, y;
-            Utils.LongToUInts(Client.Network.CurrentSim.Handle, out x, out y);
-            output.AppendLine(String.Format("Handle: {0} (X: {1} Y: {2})", Client.Network.CurrentSim.Handle, x, y));
+            Utils.LongToUInts(CurSim.Handle, out x, out y);
+            output.AppendLine(String.Format("Handle: {0} (X: {1} Y: {2})", CurSim.Handle, x, y));
             output.Append("Access: ");
-            output.AppendLine(Client.Network.CurrentSim.Access.ToString());
+            output.AppendLine(CurSim.Access.ToString());
             output.Append("Flags: ");
-            output.AppendLine(Client.Network.CurrentSim.Flags.ToString());
+            output.AppendLine(CurSim.Flags.ToString());
             output.Append("TerrainBase0: ");
-            output.AppendLine(Client.Network.CurrentSim.TerrainBase0.ToString());
+            output.AppendLine(CurSim.TerrainBase0.ToString());
             output.Append("TerrainBase1: ");
-            output.AppendLine(Client.Network.CurrentSim.TerrainBase1.ToString());
+            output.AppendLine(CurSim.TerrainBase1.ToString());
             output.Append("TerrainBase2: ");
-            output.AppendLine(Client.Network.CurrentSim.TerrainBase2.ToString());
+            output.AppendLine(CurSim.TerrainBase2.ToString());
             output.Append("TerrainBase3: ");
-            output.AppendLine(Client.Network.CurrentSim.TerrainBase3.ToString());
+            output.AppendLine(CurSim.TerrainBase3.ToString());
             output.Append("TerrainDetail0: ");
-            output.AppendLine(Client.Network.CurrentSim.TerrainDetail0.ToString());
+            output.AppendLine(CurSim.TerrainDetail0.ToString());
             output.Append("TerrainDetail1: ");
-            output.AppendLine(Client.Network.CurrentSim.TerrainDetail1.ToString());
+            output.AppendLine(CurSim.TerrainDetail1.ToString());
             output.Append("TerrainDetail2: ");
-            output.AppendLine(Client.Network.CurrentSim.TerrainDetail2.ToString());
+            output.AppendLine(CurSim.TerrainDetail2.ToString());
             output.Append("TerrainDetail3: ");
-            output.AppendLine(Client.Network.CurrentSim.TerrainDetail3.ToString());
+            output.AppendLine(CurSim.TerrainDetail3.ToString());
             output.Append("Water Height: ");
-            output.AppendLine(Client.Network.CurrentSim.WaterHeight.ToString());
+            output.AppendLine(CurSim.WaterHeight.ToString());
 
             return Success(output.ToString());
         }

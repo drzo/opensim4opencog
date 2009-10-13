@@ -18,7 +18,7 @@ namespace cogbot.Actions.Inventory.Shell
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length > 1)
-                return Failure(Usage);// " ls [-l]";
+                return ShowUsage();// " ls [-l]";
             bool longDisplay = false;
             if (args.Length > 0 && args[0] == "-l")
                 longDisplay = true;

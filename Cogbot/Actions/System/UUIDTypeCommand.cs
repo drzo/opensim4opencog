@@ -18,11 +18,12 @@ namespace cogbot.Actions
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length < 1) return Failure(Usage);
+            if (args.Length < 1) return ShowUsage();
             var v = WorldObjects.uuidTypeObject;
             UUID uuid;
             string botcmd = String.Join(" ", args, 0, args.Length).Trim();
-            UUIDTryParse(botcmd, out uuid);
+            int argsUsed;
+            UUIDTryParse(args,0, out uuid, out argsUsed);
 
             object obj = null;
             lock (v)

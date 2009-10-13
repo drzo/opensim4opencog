@@ -18,13 +18,15 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Failure(Usage);// " primowners parcelID (use parcelinfo to get ID)";
+                return ShowUsage();// " primowners parcelID (use parcelinfo to get ID)";
 
+            int argsUsed;
+            Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
             int parcelID;
             Parcel parcel;
             StringBuilder result = new StringBuilder();
             // test argument that is is a valid integer, then verify we have that parcel data stored in the dictionary
-            if (Int32.TryParse(args[0], out parcelID) && Client.Network.CurrentSim.Parcels.TryGetValue(parcelID, out parcel))
+            if (Int32.TryParse(args[0], out parcelID) && CurSim.Parcels.TryGetValue(parcelID, out parcel))
             {
                 AutoResetEvent wait = new AutoResetEvent(false);
                 ParcelManager.ParcelObjectOwnersListReplyCallback callback = delegate(Simulator simulator, List<ParcelManager.ParcelPrimOwners> primOwners)
@@ -39,7 +41,7 @@ namespace cogbot.Actions
                 Client.Parcels.OnPrimOwnersListReply += callback;
                 try
                 {
-                    Client.Parcels.ObjectOwnersRequest(Client.Network.CurrentSim, parcelID);
+                    Client.Parcels.ObjectOwnersRequest(CurSim, parcelID);
                     if (!wait.WaitOne(10000, false))
                     {
                         return Failure("Timed out waiting for packet.");

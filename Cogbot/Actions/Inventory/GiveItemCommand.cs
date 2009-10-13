@@ -19,10 +19,11 @@ namespace cogbot.Actions.Inventory.Shell
         {
             if (args.Length < 2)
             {
-                return Failure(Usage);// " give <agent uuid> <item1> [item2] [item3] [...]";
+                return ShowUsage();// " give <agent uuid> <item1> [item2] [item3] [...]";
             }
             UUID dest;
-            if (!UUIDTryParse(args[0], out dest))
+            int argsUsed;
+            if (!UUIDTryParse(args, 0, out dest, out argsUsed))
             {
                 return Failure( "First argument expected agent UUID.");
             }
@@ -32,7 +33,7 @@ namespace cogbot.Actions.Inventory.Shell
                 Client.CurrentDirectory = Manager.Store.RootFolder;
             }
             string ret = "";
-            for (int i = 1; i < args.Length; ++i)
+            for (int i = argsUsed; i < args.Length; ++i)
             {
                 string inventoryName = args[i];
                 // WARNING: Uses local copy of inventory contents, need to download them first.

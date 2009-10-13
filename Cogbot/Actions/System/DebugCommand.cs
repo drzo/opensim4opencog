@@ -28,7 +28,7 @@ namespace cogbot.Actions
                     return Success("Logging is set to " + Settings.LOG_LEVEL);
                 }
             }
-            return Failure(Usage);// " debug [level] where level is one of None, Debug, Error, Info, Warn";
+            return ShowUsage();// " debug [level] where level is one of None, Debug, Error, Info, Warn";
         }
     }
 }

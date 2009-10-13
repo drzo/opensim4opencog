@@ -17,7 +17,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Failure(Usage);// " findsim [Simulator Name]";
+                return ShowUsage();// " findsim [Simulator Name]";
 
             // Build the simulator name from the args list
             string simName = string.Empty;

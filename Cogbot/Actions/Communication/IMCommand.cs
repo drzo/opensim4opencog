@@ -20,7 +20,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 3)
-                return Failure(Usage);// " im [firstname] [lastname] [message]";
+                return ShowUsage();// " im [firstname] [lastname] [message]";
 
             string ToAvatarName = String.Empty;
         

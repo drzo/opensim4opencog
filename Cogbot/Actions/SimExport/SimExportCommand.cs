@@ -182,7 +182,7 @@ namespace cogbot.Actions.SimExport
                     case "move":
                         Vector3 destination = RandomPosition();
                         WriteLine("Teleporting to " + destination.ToString());
-                        client.Self.Teleport(Client.Network.CurrentSim.Handle, destination, RandomPosition());
+                        client.Self.Teleport(CurSim.Handle, destination, RandomPosition());
                         return ("Done " + "Teleporting to " + destination.ToString());
                     case "info":
                         DoCommand("prims");
@@ -198,10 +198,10 @@ namespace cogbot.Actions.SimExport
                         return (String.Format("Current texture requests: {0}, queued texture requests: {1}, completed textures: {2}",
                             texturePipeline.CurrentCount, texturePipeline.QueuedCount, texturesFinished.Count));
                     case "parcels":
-                        if (!client.Network.CurrentSim.IsParcelMapFull())
+                        if (!CurSim.IsParcelMapFull())
                         {
                             WriteLine("Downloading sim parcel information and prim totals");
-                            client.Parcels.RequestAllSimParcels(client.Network.CurrentSim, false, 10);
+                            client.Parcels.RequestAllSimParcels(CurSim, false, 10);
                             return ("Done RequestAllSimParcels");
                         }
                         else
@@ -210,7 +210,7 @@ namespace cogbot.Actions.SimExport
                         }
                     case "terrain":
                         TerrainPatch[] patches;
-                        if (client.Terrain.SimPatches.TryGetValue(client.Network.CurrentSim.Handle, out patches))
+                        if (client.Terrain.SimPatches.TryGetValue(CurSim.Handle, out patches))
                         {
                             int count = 0;
                             for (int i = 0; i < patches.Length; i++)
@@ -226,7 +226,7 @@ namespace cogbot.Actions.SimExport
                             return ("No terrain information received for the current simulator");
                         }
                     case "saveterrain":
-                        if (client.Terrain.SimPatches.TryGetValue(client.Network.CurrentSim.Handle, out patches))
+                        if (client.Terrain.SimPatches.TryGetValue(CurSim.Handle, out patches))
                         {
                             try
                             {
@@ -386,7 +386,7 @@ namespace cogbot.Actions.SimExport
 
                         if (!prims.ContainsKey(prim.LocalID) && prim != null)
                         {
-                            Client.Objects.SelectObject(Client.Network.CurrentSim, prim.LocalID);
+                            Client.Objects.SelectObject(CurSim, prim.LocalID);
                             Thread.Sleep(20); // Hacky rate limiting
                         }
                     }
@@ -401,7 +401,7 @@ namespace cogbot.Actions.SimExport
         void Network_OnCurrentSimChanged(Simulator PreviousSimulator)
         {
             if (Program.Verbosity > 0)
-                WriteLine("Moved into simulator " + Client.Network.CurrentSim.ToString());
+                WriteLine("Moved into simulator " + CurSim.ToString());
         }
 
         void Parcels_OnSimParcelsDownloaded(Simulator simulator, InternalDictionary<int, Parcel> simParcels, int[,] parcelMap)

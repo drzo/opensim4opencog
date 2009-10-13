@@ -20,7 +20,7 @@ namespace cogbot.Actions
         {
             if (args.Length == 0)
             {
-                return Failure(Usage);
+                return ShowUsage();
             }
             int argsUsed;
             List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);

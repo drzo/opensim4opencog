@@ -26,7 +26,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Failure(Description);
+                return ShowUsage();
 
             groupName = String.Empty;
             resolvedGroupID = UUID.Zero;
@@ -35,9 +35,11 @@ namespace cogbot.Actions
             if (args[0].ToLower() == "uuid")
             {
                 if (args.Length < 2)
-                    return Failure(Description);
+                    return ShowUsage();
 
-                if (!UUIDTryParse((resolvedGroupName = groupName = args[1]), out resolvedGroupID))
+                resolvedGroupName = groupName = args[1];
+                int argsUsed;
+                if (!UUIDTryParse(args,1, out resolvedGroupID,out argsUsed))
                     return Failure(resolvedGroupName + " doesn't seem a valid UUID");
             }
             else

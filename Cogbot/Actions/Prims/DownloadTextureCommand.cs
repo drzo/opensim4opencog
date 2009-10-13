@@ -26,7 +26,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Failure(Usage);// " downloadtexture [texture-uuid] [discardlevel]";
+                return ShowUsage();// " downloadtexture [texture-uuid] [discardlevel]";
 
             TextureID = UUID.Zero;
             DownloadHandle.Reset();
@@ -39,7 +39,7 @@ namespace cogbot.Actions
                 if (args.Length > 1)
                 {
                     if (!Int32.TryParse(args[1], out discardLevel))
-                        return Failure(Usage);// " downloadtexture [texture-uuid] [discardlevel]";
+                        return ShowUsage();// " downloadtexture [texture-uuid] [discardlevel]";
                 }
 
                 Client.Assets.RequestImage(TextureID, ImageType.Normal, Assets_OnImageReceived);
@@ -76,7 +76,7 @@ namespace cogbot.Actions
             }
             else
             {
-                return Failure(Usage);// " downloadtexture [texture-uuid]";
+                return ShowUsage();// " downloadtexture [texture-uuid]";
             }
         }
 

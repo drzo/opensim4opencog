@@ -17,7 +17,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Failure(Usage);// " primregex [text predicat]";
+                return ShowUsage();// " primregex [text predicat]";
 
             try
             {
@@ -29,12 +29,13 @@ namespace cogbot.Actions
 
                 // Build Regex
                 Regex regexPrimName = new Regex(predicatPrim.ToLower());
-
+                int argsUsed;
+                Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
                 // Print result
                 Logger.Log(string.Format("Searching prim for [{0}] ({1} prims loaded in simulator)\n", predicatPrim,
-                    Client.Network.CurrentSim.ObjectsPrimitives.Count), Helpers.LogLevel.Info, Client);
+                    CurSim.ObjectsPrimitives.Count), Helpers.LogLevel.Info, Client);
 
-                Client.Network.CurrentSim.ObjectsPrimitives.ForEach(
+                CurSim.ObjectsPrimitives.ForEach(
                     delegate(Primitive prim)
                     {
                         if (prim.Text != null && regexPrimName.IsMatch(prim.Text.ToLower()))

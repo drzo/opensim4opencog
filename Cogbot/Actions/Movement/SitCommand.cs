@@ -22,6 +22,7 @@ namespace cogbot.Actions
             Simulator sim = Client.Network.CurrentSim;
             if (sim == null)
             {
+                WriteLine("Client Current Sim== null!");                
                 sim = Client.Network.Simulators[0];
                 Client.Network.CurrentSim = sim;
             }

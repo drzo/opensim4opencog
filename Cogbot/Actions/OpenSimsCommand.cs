@@ -19,12 +19,12 @@ namespace cogbot.Actions
         }
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length < 2) return Failure(Usage);
+            if (args.Length < 2) return ShowUsage();
             SimTypeUsage use = SimTypeSystem.FindObjectUse(args[0]);
             if (use == null) return Failure("Unknown use: " + args[0]);
             args = Parser.SplitOff(args, 1);
             int argsUsed;
-            SimObject O = WorldSystem.GetSimObject(args, out argsUsed);
+            SimObject O = WorldSystem.GetSimObjectS(args, out argsUsed);
             if (O == null) return Failure("Cant find simobject " + string.Join(" ", args));
             WriteLine("Doing " + use + " for " + O);
             WorldSystem.TheSimAvatar.Do(use, O);
@@ -77,7 +77,7 @@ namespace cogbot.Actions
                     return Success(SimTypeSystem.ListTypes(true, false, false, true));
                 }
             }
-            return Failure(Usage);
+            return ShowUsage();
         }
     }
 }

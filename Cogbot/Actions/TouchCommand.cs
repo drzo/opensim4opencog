@@ -18,7 +18,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
             if (args.Length < 1)
-                return Failure(Usage);// " touch UUID";
+                return ShowUsage();// " touch UUID";
 
             int argsUsed;
             List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);

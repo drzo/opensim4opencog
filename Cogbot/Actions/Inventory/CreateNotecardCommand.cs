@@ -40,7 +40,7 @@ namespace cogbot.Actions
             }
             else
             {
-                return Failure(Usage);// " createnotecard filename.txt";
+                return ShowUsage();// " createnotecard filename.txt";
             }
 
             if (!File.Exists(filename))

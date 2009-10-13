@@ -18,7 +18,7 @@ namespace cogbot.Actions.Movement
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length > 1)
-                return Failure(Usage);// " back [seconds]";
+                return ShowUsage();// " back [seconds]";
 
             if (args.Length == 0)
             {
@@ -32,7 +32,7 @@ namespace cogbot.Actions.Movement
                 // Parse the number of seconds
                 int duration;
                 if (!Int32.TryParse(args[0], out duration))
-                    return Failure(Usage);// " back [seconds]";
+                    return ShowUsage();// " back [seconds]";
                 // Convert to milliseconds
                 duration *= 1000;
 

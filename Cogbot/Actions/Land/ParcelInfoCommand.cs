@@ -36,18 +36,20 @@ namespace cogbot.Actions
             Client.Parcels.OnSimParcelsDownloaded += del;
             try
             {
+                int argsUsed;
+                Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
 
-                Client.Parcels.RequestAllSimParcels(Client.Network.CurrentSim);
+                Client.Parcels.RequestAllSimParcels(CurSim);
 
-                if (Client.Network.CurrentSim.IsParcelMapFull())
+                if (CurSim.IsParcelMapFull())
                     ParcelsDownloaded.Set();
 
                 if (ParcelsDownloaded.WaitOne(30000, false) && Client.Network.Connected)
                 {
                     sb.AppendFormat("Downloaded {0} Parcels in {1} " + System.Environment.NewLine,
-                                    Client.Network.CurrentSim.Parcels.Count, Client.Network.CurrentSim.Name);
+                                    CurSim.Parcels.Count, CurSim.Name);
 
-                    Client.Network.CurrentSim.Parcels.ForEach(delegate(Parcel parcel)
+                    CurSim.Parcels.ForEach(delegate(Parcel parcel)
                                                                   {
                                                                       sb.AppendFormat(
                                                                           "Parcel[{0}]: Name: \"{1}\", Description: \"{2}\" ACLBlacklist Count: {3}, ACLWhiteList Count: {5} Traffic: {4}" +

@@ -19,12 +19,14 @@ namespace cogbot.Actions
             UUID textureID;
 
             if (args.Length < 2)
-                return Failure(Usage);// " findtexture [face-index] [texture-uuid]";
+                return ShowUsage();// " findtexture [face-index] [texture-uuid]";
+            int argsUsed;
+            Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
 
-            if (Int32.TryParse(args[0], out faceIndex) &&
-                UUIDTryParse(args,1, out textureID))
+            if (Int32.TryParse(args[argsUsed], out faceIndex) &&
+                UUIDTryParse(args, argsUsed+1, out textureID, out argsUsed))
             {
-                Client.Network.CurrentSim.ObjectsPrimitives.ForEach(
+                CurSim.ObjectsPrimitives.ForEach(
                     delegate(Primitive prim)
                     {
                         if (prim.Textures != null && prim.Textures.FaceTextures[faceIndex] != null)
@@ -43,7 +45,7 @@ namespace cogbot.Actions
             }
             else
             {
-                return Failure(Usage);// " findtexture [face-index] [texture-uuid]";
+                return ShowUsage();// " findtexture [face-index] [texture-uuid]";
             }
         }
     }

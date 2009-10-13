@@ -18,6 +18,11 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        public override string ToString()
+        {
+            if (!string.IsNullOrEmpty(group.Name)) return group.Name;
+            return "Group-" + ID;
+        }
         public UUID ID;
         private Group group;
             

@@ -2316,5 +2316,6 @@ namespace cogbot.TheOpenSims
 
         bool CanShoot(SimPosition position);
         //void SetInfoMap(string key,Type type, Object value);
+        SimHeading GetHeading();
     }
 }

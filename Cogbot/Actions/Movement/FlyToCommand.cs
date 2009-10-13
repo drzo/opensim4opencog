@@ -30,13 +30,13 @@ namespace cogbot.Actions.Movement
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length > 4 || args.Length < 3)
-                return Failure(Usage);// " FlyTo x y z [seconds]";
+                return ShowUsage();// " FlyTo x y z [seconds]";
 
             if (!float.TryParse(args[0], out target.X) ||
                 !float.TryParse(args[1], out target.Y) ||
                 !float.TryParse(args[2], out target.Z))
             {
-                return Failure(Usage);// " FlyTo x y z [seconds]";
+                return ShowUsage();// " FlyTo x y z [seconds]";
             }
             target0.X = target.X;
             target0.Y = target.Y;

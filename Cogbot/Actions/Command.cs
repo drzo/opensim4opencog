@@ -277,30 +277,39 @@ namespace cogbot.Actions
         public UUID UUIDParse(string p)
         {
             UUID uuid;
-            if (UUIDTryParse(p, out uuid)) return uuid;
+            int argsUsed;
+            if (UUIDTryParse(new[] { p }, 0, out uuid,out argsUsed)) return uuid;
             return UUID.Parse(p);
         }
 
-        public bool UUIDTryParse(string[] p, int start, out UUID target)
+        public bool UUIDTryParse(string[] args, int start, out UUID target, out int argsUsed)
         {
-            return UUIDTryParse(String.Join(" ", p, start, p.Length - start), out target);
-        }
-        public bool UUIDTryParse(string p, out UUID target)
-        {
-            if (p.Contains("-") && UUID.TryParse(p, out target)) return true;
-            if (p.Contains("-") && UUID.TryParse(p.Split(new char[] { ' ' })[0], out target)) return true;
-            Primitive prim;
-            int argsUsed;
-            if (WorldSystem.tryGetPrim(Parser.ParseArguments(p), out prim, out argsUsed))
+            if (args==null|| args.Length==0)
             {
-                if (prim != null)
-                {
-                    target = prim.ID;
-                    if (target != UUID.Zero) return true;
-                }
+                target = UUID.Zero;
+                argsUsed = 0;
+                return false;
+            }
+            string p = args[0];
+            if (p.Contains("-") && UUID.TryParse(p, out target))
+            {
+                argsUsed = 1;
+                return true;
+            }
+            List<Primitive> OS = WorldSystem.GetPrimitives(args, out argsUsed);
+            if (OS.Count == 1)
+            {
+                target = OS[0].ID;
+                argsUsed = 1;
+                return true;
             }
             target = WorldSystem.GetAssetUUID(p, AssetType.Unknown);
-            if (target != UUID.Zero) return true;
+            if (target != UUID.Zero)
+            {
+                argsUsed = 1;
+                return true;
+            }
+            argsUsed = 0;
             return false;
         }
 
@@ -370,6 +379,28 @@ namespace cogbot.Actions
         static public bool IsEmpty(IList enumerable)
         {
             return enumerable == null || enumerable.Count == 0;
+        }
+
+        protected Simulator TryGetSim(string[] args, out int argsUsed)
+        {
+            if (args.Length > 0)
+            {
+                string s = String.Join(" ", args);
+                SimRegion R = SimRegion.GetRegion(s, Client);
+                if (R == null)
+                {
+                    argsUsed = 0;
+                    WriteLine("cant find sim " + s);
+                    return null;
+                }
+
+                Simulator sim = R.TheSimulator;
+                if (sim == null) WriteLine("not connect to sim" + R);
+                argsUsed = args.Length;
+                return sim;
+            }
+            argsUsed = 0;
+            return Client.Network.CurrentSim;
         }
     }
 }

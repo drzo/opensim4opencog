@@ -24,7 +24,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Failure(Usage);// " textures [on/off]";
+                return ShowUsage();// " textures [on/off]";
 
             if (args[0].ToLower() == "on")
             {
@@ -44,7 +44,7 @@ namespace cogbot.Actions
             }
             else
             {
-                return Failure(Usage);// " textures [on/off]";
+                return ShowUsage();// " textures [on/off]";
             }
         }
 

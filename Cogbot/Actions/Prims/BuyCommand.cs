@@ -19,19 +19,28 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length==0) {
-                return Failure(Usage);
+                return ShowUsage();
             }
             int used;
-            List<Primitive> prims = new List<Primitive>();
-            SimObject o = WorldSystem.GetSimObject(args, out used);
-            if (o == null) return Failure(string.Format("Cant find {0}", string.Join(" ", args)));
-            Primitive.ObjectProperties Properties = o.Properties;
-            if (Properties == null) return Failure("Still waiting on properties for " + o);
-            Primitive currentPrim = o.Prim;
-            if (currentPrim == null) return Failure("Still waiting on Prim for " + o);
-            GridClient client = TheBotClient;
-            client.Objects.BuyObject(o.GetSimulator(), currentPrim.LocalID, Properties.SaleType, Properties.SalePrice, client.Self.ActiveGroup, client.Inventory.FindFolderForType(AssetType.Object));
-            return Success(Name + " on " + o);
+            int argsUsed;
+            List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
+            foreach (var currentPrim in PS)
+            {
+                SimObject o = WorldSystem.GetSimObject(currentPrim);
+                Primitive.ObjectProperties Properties = o.Properties;
+                if (Properties == null)
+                {
+                    Failure("Still waiting on properties for " + o);
+                    continue;
+                }
+                GridClient client = TheBotClient;
+                client.Objects.BuyObject(o.GetSimulator(), currentPrim.LocalID, Properties.SaleType,
+                                         Properties.SalePrice, client.Self.ActiveGroup,
+                                         client.Inventory.FindFolderForType(AssetType.Object));
+                Success(Name + " on " + o);
+            }
+            return SuccessOrFailure();
         }
     }
 }

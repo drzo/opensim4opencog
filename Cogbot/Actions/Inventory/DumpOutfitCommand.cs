@@ -24,12 +24,12 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Failure(Usage); // " dumpoutfit [avatar-uuid]";
+                return ShowUsage(); // " dumpoutfit [avatar-uuid]";
 
             //UUID target;
 
             //if (!UUIDTryParse(args, 0 , out target))
-            //    return Failure(Usage);// " dumpoutfit [avatar-uuid]";
+            //    return ShowUsage();// " dumpoutfit [avatar-uuid]";
 
             //lock (Client.Network.Simulators)
             {

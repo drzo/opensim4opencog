@@ -28,7 +28,7 @@ namespace cogbot.Actions
             targetName = targetName.TrimEnd();
 
             if (targetName.Length == 0)
-                return Failure(Usage);// " clone [name]";
+                return ShowUsage();// " clone [name]";
             UUID target = WorldSystem.GetUserID(targetName);
 
             //            if (Client.Directory.PeopleSearch(DirectoryManager.DirFindFlags.People, targetName, 0, 1000 * 10,

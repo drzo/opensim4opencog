@@ -52,7 +52,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Failure(Usage);// " import inputfile.xml [usegroup]";
+                return ShowUsage();// " import inputfile.xml [usegroup]";
 
             if (callback == null)
             {
@@ -101,6 +101,7 @@ namespace cogbot.Actions
                 {
                     if (linkset.RootPrim.LocalID != 0)
                     {
+                        Simulator CurSim = WorldSystem.GetSimulator(linkset.RootPrim);
                         state = ImporterState.RezzingParent;
                         currentPrim = linkset.RootPrim;
                         // HACK: Import the structure just above our head
@@ -113,13 +114,13 @@ namespace cogbot.Actions
                         Quaternion rootRotation = linkset.RootPrim.Rotation;
                         linkset.RootPrim.Rotation = Quaternion.Identity;
 
-                        Client.Objects.AddPrim(Client.Network.CurrentSim, linkset.RootPrim.PrimData, GroupID,
+                        Client.Objects.AddPrim(CurSim, linkset.RootPrim.PrimData, GroupID,
                             linkset.RootPrim.Position, linkset.RootPrim.Scale, linkset.RootPrim.Rotation);
 
                         if (!primDone.WaitOne(10000, false))
                             return Failure( "Rez failed, timed out while creating the root prim.");
 
-                        Client.Objects.SetPosition(Client.Network.CurrentSim, primsCreated[primsCreated.Count - 1].LocalID, linkset.RootPrim.Position);
+                        Client.Objects.SetPosition(CurSim, primsCreated[primsCreated.Count - 1].LocalID, linkset.RootPrim.Position);
 
                         state = ImporterState.RezzingChildren;
 
@@ -129,12 +130,12 @@ namespace cogbot.Actions
                             currentPrim = prim;
                             currentPosition = prim.Position + linkset.RootPrim.Position;
 
-                            Client.Objects.AddPrim(Client.Network.CurrentSim, prim.PrimData, GroupID, currentPosition,
+                            Client.Objects.AddPrim(CurSim, prim.PrimData, GroupID, currentPosition,
                                 prim.Scale, prim.Rotation);
 
                             if (!primDone.WaitOne(10000, false))
                                 return Failure( "Rez failed, timed out while creating child prim.");
-                            Client.Objects.SetPosition(Client.Network.CurrentSim, primsCreated[primsCreated.Count - 1].LocalID, currentPosition);
+                            Client.Objects.SetPosition(CurSim, primsCreated[primsCreated.Count - 1].LocalID, currentPosition);
 
                         }
 
@@ -155,21 +156,21 @@ namespace cogbot.Actions
 
                             // Link and set the permissions + rotation
                             state = ImporterState.Linking;
-                            Client.Objects.LinkPrims(Client.Network.CurrentSim, linkQueue);
+                            Client.Objects.LinkPrims(CurSim, linkQueue);
 
                             if (primDone.WaitOne(1000 * linkset.Children.Count, false))
-                                Client.Objects.SetRotation(Client.Network.CurrentSim, rootLocalID, rootRotation);
+                                Client.Objects.SetRotation(CurSim, rootLocalID, rootRotation);
                             else
                                 WriteLine("Warning: Failed to link {0} prims", linkQueue.Count);
 
                         }
                         else
                         {
-                            Client.Objects.SetRotation(Client.Network.CurrentSim, rootLocalID, rootRotation);
+                            Client.Objects.SetRotation(CurSim, rootLocalID, rootRotation);
                         }
 
                         // Set permissions on newly created prims
-                        Client.Objects.SetPermissions(Client.Network.CurrentSim, primIDs,
+                        Client.Objects.SetPermissions(CurSim, primIDs,
                             PermissionWho.Everyone | PermissionWho.Group | PermissionWho.NextOwner,
                             PermissionMask.All, true);
 

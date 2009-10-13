@@ -21,7 +21,7 @@ namespace cogbot.Actions.Appearance
         {
             if (args.Length == 0)
             {
-                //return Failure(Usage);// " avatarinfo [firstname] [lastname]";
+                //return ShowUsage();// " avatarinfo [firstname] [lastname]";
                 int count = 0;
                 foreach (var s in WorldObjects.SimAvatars)
                 {

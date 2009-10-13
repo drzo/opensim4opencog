@@ -20,7 +20,7 @@ namespace cogbot.Actions
 
             if (args.Length < 1)
             {
-                return Failure(Description);
+                return ShowUsage();
             }
 
             int argsUsed;

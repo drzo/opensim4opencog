@@ -33,7 +33,7 @@ namespace cogbot.Actions
                     alist += Environment.NewLine;
                 }
                 WriteLine("Currently: {0}", alist);
-                return Failure(Usage);// " anim [seconds] HOVER [seconds] 23423423423-4234234234-234234234-23423423  +CLAP -JUMP STAND";
+                return ShowUsage();// " anim [seconds] HOVER [seconds] 23423423423-4234234234-234234234-23423423  +CLAP -JUMP STAND";
            }
             int time = 1300; //should be long enough for most animations
             List<KeyValuePair<UUID, int>> amins = new List<KeyValuePair<UUID, int>>();

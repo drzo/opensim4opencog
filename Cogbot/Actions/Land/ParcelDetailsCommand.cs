@@ -18,16 +18,18 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Failure(Usage);// " parceldetails parcelID (use parcelinfo to get ID)";
+                return ShowUsage();// " parceldetails parcelID (use parcelinfo to get ID)";
 
             int parcelID;
             Parcel parcel;
+            int argsUsed;
+            Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
 
             // test argument that is is a valid integer, then verify we have that parcel data stored in the dictionary
-            if (Int32.TryParse(args[0], out parcelID) && Client.Network.CurrentSim.Parcels.TryGetValue(parcelID, out parcel))
+            if (Int32.TryParse(args[argsUsed], out parcelID) && CurSim.Parcels.TryGetValue(parcelID, out parcel))
             {
                 // this request will update the parcels dictionary
-                Client.Parcels.PropertiesRequest(Client.Network.CurrentSim, parcelID, 0);
+                Client.Parcels.PropertiesRequest(CurSim, parcelID, 0);
                 
                 // Use reflection to dynamically get the fields from the Parcel struct
                 Type t = parcel.GetType();
@@ -42,7 +44,7 @@ namespace cogbot.Actions
             }
             else
             {
-                return Failure(string.Format("Unable to find Parcel {0} in Parcels Dictionary, Did you run parcelinfo to populate the dictionary first?", args[0]));
+                return Failure(string.Format("Unable to find Parcel {0} in Parcels Dictionary, Did you run parcelinfo to populate the dictionary first?", args[argsUsed]));
             }
         }
     }

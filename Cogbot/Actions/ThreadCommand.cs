@@ -21,7 +21,7 @@ namespace cogbot.Actions
             //BotClient Client = TheBotClient;
             if (args.Length < 1)
             {
-                return Failure(Usage);// " thread anim 30 crouch";
+                return ShowUsage();// " thread anim 30 crouch";
             }
             if (args.Length == 1 && args[0]=="list")
             {

@@ -21,14 +21,14 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 2)
-                return Failure(Usage);// " imgroup [group_uuid] [message]";
+                return ShowUsage(); // " imgroup [group_uuid] [message]";
 
 
-
-            if (UUIDTryParse(args,0, out ToGroupID))
+            int argsUsed;
+            if (UUIDTryParse(args, 0, out ToGroupID, out argsUsed))
             {
                 string message = String.Empty;
-                for (int ct = 1; ct < args.Length; ct++)
+                for (int ct = argsUsed; ct < args.Length; ct++)
                     message += args[ct] + " ";
                 message = message.TrimEnd();
                 if (message.Length > 1023) message = message.Remove(1023);
@@ -43,16 +43,16 @@ namespace cogbot.Actions
                 {
                     WaitForSessionStart.Set();
                 }
-                
+
                 if (WaitForSessionStart.WaitOne(20000, false))
                 {
                     Client.Self.InstantMessageGroup(ToGroupID, message);
                 }
                 else
                 {
-                    return Failure( "Timeout waiting for group session start");
+                    return Failure("Timeout waiting for group session start");
                 }
-                
+
                 Client.Self.OnGroupChatJoin -= new AgentManager.GroupChatJoinedCallback(Self_OnGroupChatJoin);
                 return Success("Instant Messaged group " + ToGroupID.ToString() + " with message: " + message);
             }

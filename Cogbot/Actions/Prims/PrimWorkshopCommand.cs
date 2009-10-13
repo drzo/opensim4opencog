@@ -13,33 +13,28 @@ namespace cogbot.Actions
             Name = "Prim Workshop";
             Description = "Runs PrimWorkshop on a prim. Usage: PrimWorkshop [prim]";
             Category = cogbot.Actions.CommandCategory.Objects;
-            Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length==0) {
-                return Failure(Usage);
-            }
-            int used;
-            List<Primitive> prims = new List<Primitive>();
-            SimObject o = WorldSystem.GetSimObject(args, out used);
-            if (o == null) return Failure(string.Format("Cant find {0}", string.Join(" ", args)));
-            Primitive currentPrim = o.Prim;
-            if (currentPrim == null) return Failure("Still waiting on Prim for " + o);
-            prims.Add(currentPrim);
-            foreach (var child in o.Children)
+            if (args.Length == 0)
             {
-                currentPrim = child.Prim;
-                if (currentPrim != null) prims.Add(currentPrim);
+                return ShowUsage();
             }
+
+            int argsUsed;
+            List<string> searchArgs = new List<string> {"family"};
+            searchArgs.AddRange(args);
+            List<Primitive> PS = WorldSystem.GetPrimitives(searchArgs.ToArray(), out argsUsed);
+            if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
             TheBotClient.Invoke(() =>
                                     {
                                         frmPrimWorkshop pw = new frmPrimWorkshop(TheBotClient.TheRadegastInstance);
-                                        pw.loadPrims(prims);
+                                        pw.loadPrims(PS);
                                         pw.Show();
                                     });
-            return Success(Name + " on " + o);
+            return Success(Name + " on " + PS.Count);
         }
     }
 }

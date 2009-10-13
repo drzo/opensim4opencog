@@ -18,7 +18,7 @@ namespace cogbot.Actions
         {
 
             if (args.Length < 2)
-                return Failure(Usage);// " Rotateprim prim [x y [z]]";
+                return ShowUsage();// " Rotateprim prim [x y [z]]";
 
             int used;
             List<Primitive> PS = WorldSystem.GetPrimitives(args, out used);

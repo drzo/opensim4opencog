@@ -66,7 +66,7 @@ namespace cogbot.Actions
             else
             {
                 Vector3 coords = new Vector3(128, 128, 40);
-                string simName = "";//Client.Network.CurrentSim.Name;
+                string simName = "";//CurSim.Name;
 
                 bool ifCoordinates = false;
 

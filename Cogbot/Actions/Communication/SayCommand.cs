@@ -21,7 +21,7 @@ namespace cogbot.Actions
             
             if (args.Length < 1)
             {
-                return Failure(Usage);// " say (optional channel) whatever";
+                return ShowUsage();// " say (optional channel) whatever";
             }
             else if (args.Length > 1)
             {

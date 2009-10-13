@@ -19,7 +19,7 @@ namespace cogbot.Actions
         {
             int seconds;
             if (args.Length != 1 || !Int32.TryParse(args[0], out seconds))
-                return Failure(Usage);// " sleep [seconds]";
+                return ShowUsage();// " sleep [seconds]";
 
             AgentPausePacket pause = new AgentPausePacket();
             pause.AgentData.AgentID = Client.Self.AgentID;

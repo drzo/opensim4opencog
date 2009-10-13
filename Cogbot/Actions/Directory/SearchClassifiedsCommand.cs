@@ -21,7 +21,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Failure(Usage);// " searchclassifieds [search text]";
+                return ShowUsage();// " searchclassifieds [search text]";
 
             string searchText = string.Empty;
             for (int i = 0; i < args.Length; i++)

@@ -28,20 +28,17 @@ namespace cogbot.Actions
                 TheSimAvatar.SelectedBeam = !TheSimAvatar.SelectedBeam;
                 return Success("SelectedBeam = " + TheSimAvatar.SelectedBeam);
             }
-            SimObject o = WorldSystem.GetSimObject(args, out used);
+            SimObject o = WorldSystem.GetSimObjectS(args, out used);
             if (o == null) return Failure(string.Format("Cant find {0}", string.Join(" ", args)));
             Primitive currentPrim = o.Prim;
             if (pointing != null)
             {
-                TheSimAvatar.GetSelectedObjects().Remove(pointing);
                 pointing = null;
             }
             else
             {
                 pointing = o;
                 instance.State.SetPointing(currentPrim, 3);
-                TheSimAvatar.SelectedAdd(o);
-                TheSimAvatar.SelectedBeam = true;
             }
             return Success(Name + " on " + o);
         }

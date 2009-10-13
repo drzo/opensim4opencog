@@ -96,6 +96,10 @@ namespace cogbot.Listeners
             }
             bool Conference = false;
             bool GroupIM = im.GroupIM || client.Groups.GroupName2KeyCache.ContainsKey(im.IMSessionID);
+            if (GroupIM)
+            {
+                DeclareGroup(im.IMSessionID);
+            }
             if (im.Dialog == InstantMessageDialog.SessionSend)
             {
                 if (!GroupIM) Conference = true;
@@ -334,15 +338,20 @@ namespace cogbot.Listeners
 
         private void DeclareGroup(UUID uuid)
         {
-            //lock (uuidTypeObject)
+            lock (uuidTypeObject)
             {
                 object g;
                 if (uuidTypeObject.TryGetValue(uuid, out g))
                 {
-                  if (g is Group)
-                  {
-                     // SimGroup sg = new SimGroup(uuid) {Group = (Group) g};
-                  }   
+                    if (g is SimGroup) return;
+                    if (g is Group)
+                    {
+                        uuidTypeObject[uuid] = new SimGroup(uuid) {Group = (Group) g};
+                    }
+                }
+                else
+                {
+                    uuidTypeObject[uuid] = new SimGroup(uuid);
                 }
 
             }

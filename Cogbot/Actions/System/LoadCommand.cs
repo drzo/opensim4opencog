@@ -19,7 +19,7 @@ namespace cogbot.Actions
 		public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
 			if (args.Length < 1)
-				return Failure(Usage);// " load AssemblyNameWithoutExtension";
+				return ShowUsage();// " load AssemblyNameWithoutExtension";
 
             BotClient Client = TheBotClient;
 

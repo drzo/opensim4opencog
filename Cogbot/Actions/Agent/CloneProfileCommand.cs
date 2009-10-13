@@ -32,7 +32,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Failure(Description);
+                return ShowUsage();
 
             UUID targetID;
             ReceivedProperties = false;
@@ -48,10 +48,11 @@ namespace cogbot.Actions
                 Client.Groups.OnGroupJoined += new GroupManager.GroupJoinedCallback(Groups_OnGroupJoined);
                 Client.Avatars.OnAvatarPicks += new AvatarManager.AvatarPicksCallback(Avatars_OnAvatarPicks);
                 Client.Avatars.OnPickInfo += new AvatarManager.PickInfoCallback(Avatars_OnPickInfo);
-            }           
+            }
 
-			if (!UUIDTryParse(args,0, out targetID))
-				return Failure(Description);
+            int argsUsed;
+            if (!UUIDTryParse(args,0, out targetID, out argsUsed))
+				return ShowUsage();
 
             // Request all of the packets that make up an avatar profile
             Client.Avatars.RequestAvatarProperties(targetID);
