@@ -468,23 +468,10 @@ namespace cogbot.TheOpenSims
         }
 
         internal string AspectName;
-        string created;
-        public void DumpCreate()
-        {
-            Console.WriteLine("" + created);
-            Debug(created);
-        }
 
         public SimAvatarImpl(UUID id, WorldObjects objectSystem, Simulator reg)
             : base(id, objectSystem, reg)
         {
-            try
-            {
-                actionThread.ToString();
-            } catch(Exception e)
-            {
-                created = e.ToString();
-            }
             _knownTypeUsages = new ListAsSet<SimTypeUsage>();
             WorldObjects.SimAvatars.Add(this);
             ObjectType.SuperType.Add(SimTypeSystem.GetObjectType("Avatar"));

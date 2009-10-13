@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using cogbot.Listeners;
 using cogbot.ScriptEngines;
 using cogbot.Utilities;
 using DotLisp;
@@ -18,6 +19,11 @@ namespace cogbot.TheOpenSims
         public FirstOrderTerm GetTerm()
         {
             throw new NotImplementedException();
+        }
+
+        public ICollection<NamedParam> GetInfoMap()
+        {
+            return WorldObjects.GetMemberValues("", this);
         }
 
         // Attachments

@@ -49,6 +49,11 @@ namespace cogbot.TheOpenSims
 
     public class SimObjectEvent : BotMentalAspect
     {
+        public ICollection<NamedParam> GetInfoMap()
+        {
+            return WorldObjects.GetMemberValues("", this);
+        }
+
         private static long serialCount = DateTime.UtcNow.Ticks;
         private long _serial = serialCount++;
         public long serial

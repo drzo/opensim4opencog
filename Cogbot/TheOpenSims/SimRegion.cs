@@ -28,7 +28,7 @@ namespace cogbot.TheOpenSims
     /// <summary>
     /// Denotes a Simulator region and can help with bot navigation
     /// </summary>
-    public class SimRegion
+    public class SimRegion : BotMentalAspect
     {
         private static Dictionary<ulong, SimRegion> _CurrentRegions = new Dictionary<ulong, SimRegion>();
         readonly private static Vector2 vC = new Vector2(0, 0); // NW
@@ -1532,6 +1532,16 @@ namespace cogbot.TheOpenSims
             uint regionY = (uint)loc.Y * 256;
             return Utils.UIntsToLong(regionX, regionY);
             //_GridLoc = new Vector2((float)(regionX / 256), (float)(regionY / 256));           
+        }
+
+        public FirstOrderTerm GetTerm()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ICollection<NamedParam> GetInfoMap()
+        {
+            return WorldObjects.GetMemberValues("", this);
         }
     }
 }

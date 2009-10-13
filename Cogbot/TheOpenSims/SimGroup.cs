@@ -1,11 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using cogbot.Listeners;
 using OpenMetaverse;
 
 namespace cogbot.TheOpenSims
 {
     public class SimGroup : BotMentalAspect
     {
+        public ICollection<NamedParam> GetInfoMap()
+        {
+            return WorldObjects.GetMemberValues("", this);
+        }
+
         public Group Group
         {
             get
