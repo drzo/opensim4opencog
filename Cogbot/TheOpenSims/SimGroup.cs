@@ -4,7 +4,7 @@ using OpenMetaverse;
 
 namespace cogbot.TheOpenSims
 {
-    class SimGroup : BotMentalAspect
+    public class SimGroup : BotMentalAspect
     {
         public Group Group
         {

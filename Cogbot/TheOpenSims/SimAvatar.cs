@@ -9,6 +9,12 @@ using PathSystem3D.Navigation;
 using Random=System.Random;
 using UUID=OpenMetaverse.UUID;
 using System.Drawing;
+using Boolean=System.Boolean;
+using Exception=System.Exception;
+using Math=System.Math;
+using Object=System.Object;
+using String=System.String;
+using Thread=System.Threading.Thread;
 
 /// Complex outcomes may be a result of simple causes, or they may just be complex by nature. 
 /// Those complexities that turn out to have simple causes can be simulated and studied, 
@@ -462,10 +468,23 @@ namespace cogbot.TheOpenSims
         }
 
         internal string AspectName;
+        string created;
+        public void DumpCreate()
+        {
+            Console.WriteLine("" + created);
+            Debug(created);
+        }
 
         public SimAvatarImpl(UUID id, WorldObjects objectSystem, Simulator reg)
             : base(id, objectSystem, reg)
         {
+            try
+            {
+                actionThread.ToString();
+            } catch(Exception e)
+            {
+                created = e.ToString();
+            }
             _knownTypeUsages = new ListAsSet<SimTypeUsage>();
             WorldObjects.SimAvatars.Add(this);
             ObjectType.SuperType.Add(SimTypeSystem.GetObjectType("Avatar"));
@@ -2315,6 +2334,7 @@ namespace cogbot.TheOpenSims
         }
 
         #endregion
+
     }
 
 
