@@ -1314,6 +1314,7 @@ namespace CycWorldModule.DotCYC
                 indv = new CycNart(CycList.list(fn, name));
             }
             else
+            {
                 lock (cycTerms)
                 {
                     {
@@ -1321,9 +1322,11 @@ namespace CycWorldModule.DotCYC
                         if (cycTerms.TryGetValue(nv, out indv)) return indv;
                         indv = new CycNart(CycList.list(fn, name));
                         cycTerms[nv] = indv;
-                        assertGaf(CycAccess.comment, indv, comment);
                     }
                 }
+                assertGaf(CycAccess.comment, indv, comment);
+            }
+
             return indv;
         }
 
@@ -1721,13 +1724,13 @@ namespace CycWorldModule.DotCYC
         public CycFort C(string p)
         {
             CycFort c;
+            lock (simFort) if (simFort.TryGetValue(p, out c)) return c;
+            string sp = CheckConstantName(p);
             lock (simFort)
             {
                 if (simFort.TryGetValue(p, out c)) return c;
                 try
                 {
-
-                    string sp = CheckConstantName(p);
                     return simFort[p] = simFort[sp] = cycAccess.findOrCreate(sp);
                 }
                 catch (Exception e)
@@ -1765,6 +1768,27 @@ namespace CycWorldModule.DotCYC
             if (!(o is UUID)) return ToFort(o);
             return "" + region;
             //return createIndividualFn("SimRegion", region.RegionName, vocabMt.ToString(), "SimRegion " + region, "GeographicalPlace-3D");
+        }
+
+
+        public CycObject FindOrCreateCycFort(SimGroup region)
+        {
+            if (region == null) return CYC_NULL;
+            CycFort obj;
+            lock (simFort)
+            {
+                if (simFort.TryGetValue(region, out obj)) return obj;
+
+                obj = createIndividualFn("SimGroup", region.ID.ToString(), "SimGroup " + region, vocabMt.ToString(),
+                                         "SimGroup");
+            }
+            if (!string.IsNullOrEmpty(region.Group.Name))
+            {
+                simFort[region] =
+                    obj;
+                assertEventData(obj, WorldObjects.GetMemberValues("GroupInfo-", region.Group));
+            }
+            return obj;
         }
 
         public CycObject FindOrCreateCycFort(SimRegion region)
