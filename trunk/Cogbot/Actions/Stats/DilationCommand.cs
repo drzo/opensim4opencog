@@ -18,7 +18,9 @@ namespace cogbot.Actions
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            return Success("Dilation is " + Client.Network.CurrentSim.Stats.Dilation.ToString());
+            int argsUsed;
+            Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
+            return Success("Dilation is " + CurSim.Stats.Dilation.ToString());
         }
     }
 }

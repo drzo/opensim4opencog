@@ -25,7 +25,7 @@ namespace cogbot.Actions
             UUID assetID;
 
             if (args.Length != 1 || !UUID.TryParse(args[0], out assetID))
-                return Failure(Usage);// " xfer [uuid]";
+                return ShowUsage();// " xfer [uuid]";
 
             string filename;
             byte[] assetData = RequestXferPrim(assetID, out filename);

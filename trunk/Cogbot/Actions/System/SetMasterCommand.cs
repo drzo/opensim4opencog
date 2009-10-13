@@ -29,7 +29,7 @@ namespace cogbot.Actions
             masterName = masterName.TrimEnd();
 
             if (masterName.Length == 0)
-                return Failure(Usage);// " setmaster [name or uuid]";
+                return ShowUsage();// " setmaster [name or uuid]";
             UUID masterUUID;
             if (UUID.TryParse(masterName, out masterUUID))
             {

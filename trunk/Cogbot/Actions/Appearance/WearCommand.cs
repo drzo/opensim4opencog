@@ -17,7 +17,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Failure(Usage);// " wear [outfit name] eg: 'wear /My Outfit/Dance Party";
+                return ShowUsage();// " wear [outfit name] eg: 'wear /My Outfit/Dance Party";
 
             string target = String.Empty;
             bool bake = true;

@@ -43,11 +43,13 @@ namespace cogbot.Actions
         /// <returns></returns>
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            int argsUsed;
+            Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
             int timeout = 120000; // default the timeout to 2 minutes
-            fileName = Client.Network.CurrentSim.Name + ".raw";
+            fileName = CurSim.Name + ".raw";
             
             if(args.Length > 0 && int.TryParse(args[0], out timeout) != true)
-                return Failure(Usage);// " downloadterrain [timeout]";
+                return ShowUsage();// " downloadterrain [timeout]";
             
             // Create a delegate which will be fired when the simulator receives our download request
             // Starts the actual transfer request

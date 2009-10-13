@@ -24,7 +24,7 @@ namespace cogbot.Actions
                 //Client.Appearance.OnAppearanceUpdated += callback;
                 // base.acceptInput(verb, args);
                 string target = String.Empty;
-                if (args.Length == 0) return Failure(Usage);
+                if (args.Length == 0) return ShowUsage();
                 bool bake = true;
                 string wear = args.str.Trim();
                 if (args[0] == "nobake")

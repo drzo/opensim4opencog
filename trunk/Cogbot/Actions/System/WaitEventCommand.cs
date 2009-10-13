@@ -15,7 +15,7 @@ namespace cogbot.Actions
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length < 1) return Failure(Description);
+            if (args.Length < 1) return ShowUsage();
             string botcmd = String.Join(" ", args, 0, args.Length).Trim();
             Client.ExecuteCommand(botcmd, WriteNothing);
             return Success(string.Empty);

@@ -29,13 +29,13 @@ namespace cogbot.Actions
             string fileName;
 
             if (args.Length != 3)
-                return Failure(Usage);// " uploadimage [inventoryname] [timeout] [filename]";
+                return ShowUsage();// " uploadimage [inventoryname] [timeout] [filename]";
 
             TextureID = UUID.Zero;
             inventoryName = args[0];
             fileName = args[2];
             if (!UInt32.TryParse(args[1], out timeout))
-                return Failure(Usage);// " uploadimage [inventoryname] [timeout] [filename]";
+                return ShowUsage();// " uploadimage [inventoryname] [timeout] [filename]";
 
             Console.WriteLine("Loading image " + fileName);
             byte[] jpeg2k = LoadImage(fileName);

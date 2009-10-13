@@ -19,17 +19,18 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 2)
-                return Failure(Description);
+                return ShowUsage();
 
             UUID avatar = UUID.Zero;
             UUID group = UUID.Zero;
             UUID role = UUID.Zero;
             List<UUID> roles = new List<UUID>();
 
-            if (!UUIDTryParse(args[0], out avatar))
-                    return Failure( "parse error avatar UUID");
-            if (!UUIDTryParse(args[1], out group))
-                    return Failure( "parse error group UUID");
+            int argUsed;
+            if (!UUIDTryParse(args, 0, out avatar, out argUsed))
+                return Failure("parse error avatar UUID");
+            if (!UUIDTryParse(args, argUsed, out group, out argUsed))
+                return Failure("parse error group UUID");
             for (int i = 2; i < args.Length; i++)
                 if (UUID.TryParse(args[i], out role))
                     roles.Add(role);

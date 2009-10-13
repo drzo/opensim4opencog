@@ -17,7 +17,7 @@ namespace cogbot.Actions
             if (args.Length == 1)
                 return Success(Utils.MD5(args[0]));
             else
-                return Failure(Usage);// " md5 [password]";
+                return ShowUsage();// " md5 [password]";
         }
     }
 }

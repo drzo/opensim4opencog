@@ -48,7 +48,7 @@ namespace cogbot.Actions
                 permCount = 0;
 
                 if (args.Length < 1 || args.Length > 4)
-                    return Failure(Usage); //"Usage prim-uuid [copy] [mod] [xfer]";
+                    return ShowUsage(); //"Usage prim-uuid [copy] [mod] [xfer]";
 
                 int argsUsed;
                 List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
@@ -68,7 +68,7 @@ namespace cogbot.Actions
                             perms |= PermissionMask.Transfer;
                             break;
                         default:
-                            return Failure(Usage); //"Usage prim-uuid [copy] [mod] [xfer]";
+                            return ShowUsage(); //"Usage prim-uuid [copy] [mod] [xfer]";
                     }
                 }
 

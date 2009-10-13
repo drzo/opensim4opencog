@@ -23,11 +23,13 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             ulong regionHandle;
-
+                        
+            int argsUsed;
+            Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
             if (args.Length == 0)
-                regionHandle = Client.Network.CurrentSim.Handle;
+                regionHandle = CurSim.Handle;
             else if (!(args.Length == 1 && UInt64.TryParse(args[0], out regionHandle)))
-                return Failure(Usage);// " agentlocations [regionhandle]";
+                return ShowUsage();// " agentlocations [regionhandle]";
 
             List<GridItem> items = Client.Grid.MapItems(regionHandle, GridItemType.AgentLocations, 
                 GridLayerType.Objects, 1000 * 20);

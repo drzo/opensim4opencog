@@ -17,7 +17,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Failure(Usage);// " showevent [eventID] (use searchevents to get ID)";
+                return ShowUsage();// " showevent [eventID] (use searchevents to get ID)";
 
             Client.Directory.EventInfoReply += Directory_EventDetails;
             uint eventID;
@@ -29,7 +29,7 @@ namespace cogbot.Actions
             }
             else
             {
-                return Failure(Usage);// " showevent [eventID] (use searchevents to get ID)";
+                return ShowUsage();// " showevent [eventID] (use searchevents to get ID)";
             }
         }
 

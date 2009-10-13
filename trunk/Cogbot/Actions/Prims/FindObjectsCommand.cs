@@ -27,18 +27,19 @@ namespace cogbot.Actions
         {
             // *** parse arguments ***
             if ((args.Length < 1) || (args.Length > 2))
-                return Failure(Usage);// " findobjects [radius] <search-string>";
+                return ShowUsage();// " findobjects [radius] <search-string>";
             float radius = float.Parse(args[0]);
             string searchString = (args.Length > 1)? args[1] : "";
 
             // *** get current location ***
+            Simulator CurSim = Client.Network.CurrentSim;
             Vector3 location = GetSimPosition();
 
             try
             {
                 Client.Objects.OnObjectProperties += callback;
                 // *** find all objects in radius ***
-                List<Primitive> prims = Client.Network.CurrentSim.ObjectsPrimitives.FindAll(
+                List<Primitive> prims = CurSim.ObjectsPrimitives.FindAll(
                     delegate(Primitive prim)
                     {
                         Vector3 pos = prim.Position;
@@ -47,7 +48,7 @@ namespace cogbot.Actions
                 );
 
                 // *** request properties of these objects ***
-                bool complete = RequestObjectProperties(prims, 250);
+                bool complete = RequestObjectProperties(CurSim,prims, 250);
 
                 foreach (Primitive p in prims)
                 {
@@ -71,7 +72,7 @@ namespace cogbot.Actions
             }
         }
 
-        private bool RequestObjectProperties(List<Primitive> objects, int msPerRequest)
+        private bool RequestObjectProperties(Simulator CurSim, List<Primitive> objects, int msPerRequest)
         {
             // Create an array of the local IDs of all the prims we are requesting properties for
             uint[] localids = new uint[objects.Count];
@@ -85,7 +86,7 @@ namespace cogbot.Actions
                 }
             }
 
-            Client.Objects.SelectObjects(Client.Network.CurrentSim, localids);
+            Client.Objects.SelectObjects(CurSim, localids);
 
             return AllPropertiesReceived.WaitOne(2000 + msPerRequest * objects.Count, false);
         }

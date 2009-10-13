@@ -32,7 +32,7 @@ namespace cogbot.Actions
                     alist += Environment.NewLine;
                 }
                 WriteLine("Currently: {0}", alist);
-                return base.Failure(Usage);// " gesture  23423423423-4234234234-234234234-23423423";
+                return base.ShowUsage();// " gesture  23423423423-4234234234-234234234-23423423";
             }
             string a = args[0];
             UUID gesture = WorldSystem.GetAssetUUID(a, AssetType.Gesture);

@@ -21,7 +21,7 @@ namespace cogbot.Actions
             string fileName = String.Empty;
 
             if (args.Length != 1)
-                return Failure(Usage);// " uploadterrain filename";
+                return ShowUsage();// " uploadterrain filename";
 
 
             fileName = args[0];

@@ -19,7 +19,7 @@ namespace cogbot.Actions.Movement
         {
             int argsUsed;
             if (args.Length < 1)
-                return Failure(Usage);// " moveto x y z";
+                return ShowUsage();// " moveto x y z";
             SimPosition position = WorldSystem.GetVector(args, out argsUsed);
             Vector3d g = position.GlobalPosition;
             Client.Self.AutoPilot(g.X, g.Y, g.Z);

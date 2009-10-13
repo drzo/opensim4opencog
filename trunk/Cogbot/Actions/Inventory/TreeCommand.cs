@@ -45,7 +45,7 @@ namespace cogbot.Actions
 		            return Failure("" + e);
 		        }
 		    }
-            return Failure(Usage);
+            return ShowUsage();
 		}
     }
 }

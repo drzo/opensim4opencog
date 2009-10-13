@@ -43,17 +43,18 @@ namespace cogbot.Actions
         {
             RegisterCallbacks();
             if (args.Length != 2 && !(args.Length == 1 && SelectedObject != UUID.Zero))
-                return Failure(Usage);// " export uuid outputfile.xml";
+                return ShowUsage();// " export uuid outputfile.xml";
 
             UUID id;
             uint localid;
             string file;
+            int argsUsed;
 
             if (args.Length == 2)
             {
                 file = args[1];
-                if (!UUIDTryParse(args, 0, out id))
-                    return Failure(Usage);// " export uuid outputfile.xml";
+                if (!UUIDTryParse(args, 0, out id, out argsUsed))
+                    return ShowUsage();// " export uuid outputfile.xml";
             }
             else
             {
@@ -61,21 +62,20 @@ namespace cogbot.Actions
                 id = SelectedObject;
             }
 
-            Primitive exportPrim;
+            List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
 
-            exportPrim = Client.Network.CurrentSim.ObjectsPrimitives.Find(
-                delegate(Primitive prim) { return prim.ID == id; }
-            );
-
-            if (exportPrim != null)
+            foreach (var exportPrim in PS)
             {
+                Simulator CurSim = WorldSystem.GetSimulator(exportPrim);
+
                 if (exportPrim.ParentID != 0)
                     localid = exportPrim.ParentID;
                 else
                     localid = exportPrim.LocalID;
 
                 // Check for export permission first
-                Client.Objects.RequestObjectPropertiesFamily(Client.Network.CurrentSim, id);
+                Client.Objects.RequestObjectPropertiesFamily(CurSim, id);
                 GotPermissionsEvent.WaitOne(1000 * 10, false);
 
                 if (!GotPermissions)
@@ -94,14 +94,14 @@ namespace cogbot.Actions
                     }
                 }
 
-                List<Primitive> prims = Client.Network.CurrentSim.ObjectsPrimitives.FindAll(
+                List<Primitive> prims = CurSim.ObjectsPrimitives.FindAll(
                     delegate(Primitive prim)
                     {
                         return (prim.LocalID == localid || prim.ParentID == localid);
                     }
                 );
 
-                bool complete = RequestObjectProperties(prims, 250);
+                bool complete = RequestObjectProperties(CurSim,prims, 250);
 
                 if (!complete)
                 {
@@ -158,17 +158,12 @@ namespace cogbot.Actions
                     Client.Assets.RequestImage(request.ImageID, request.Type, Assets_OnImageReceived);
                 }
 
-                return Success("XML exported, began downloading " + Textures.Count + " textures");
-            }
-            else
-            {
-                return Failure("Couldn't find UUID " + id.ToString() + " in the " +
-                    Client.Network.CurrentSim.ObjectsPrimitives.Count +
-                    "objects currently indexed in the current simulator");
-            }
+                Success("XML exported, began downloading " + Textures.Count + " textures");
+            }         
+            return SuccessOrFailure();
         }
 
-        private bool RequestObjectProperties(List<Primitive> objects, int msPerRequest)
+        private bool RequestObjectProperties(Simulator CurSim, List<Primitive> objects, int msPerRequest)
         {
             // Create an array of the local IDs of all the prims we are requesting properties for
             uint[] localids = new uint[objects.Count];
@@ -184,7 +179,7 @@ namespace cogbot.Actions
                 }
             }
 
-            Client.Objects.SelectObjects(Client.Network.CurrentSim, localids);
+            Client.Objects.SelectObjects(CurSim, localids);
 
             return AllPropertiesReceived.WaitOne(2000 + msPerRequest * objects.Count, false);
         }

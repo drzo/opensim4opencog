@@ -19,10 +19,10 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length==0) {
-                return Failure(Usage);
+                return ShowUsage();
             }
             int used;
-            SimObject o = WorldSystem.GetSimObject(args, out used);
+            SimObject o = WorldSystem.GetSimObjectS(args, out used);
             if (o == null) return Failure(string.Format("Cant find {0}", string.Join(" ", args)));
 
             bool isObject = !(o is SimAvatar);

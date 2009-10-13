@@ -21,11 +21,12 @@ namespace cogbot.Actions
         {
             if (args.Length < 1)
             {
-                return Failure(Usage);// " goto_landmark [UUID]";
+                return ShowUsage();// " goto_landmark [UUID]";
             }
 
             UUID landmark = new UUID();
-            if (!UUIDTryParse(args, 0, out landmark))
+            int argsUsed;
+            if (!UUIDTryParse(args, 0, out landmark, out argsUsed))
             {
                 return Failure("Invalid LLUID");
             }

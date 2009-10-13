@@ -21,7 +21,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
 			if (args.Length < 1)
-                return Failure(Usage);// " goto sim/x/y/z";
+                return ShowUsage();// " goto sim/x/y/z";
 
             int argsUsed;
             SimPosition position = WorldSystem.GetVector(args, out argsUsed);

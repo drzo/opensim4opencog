@@ -44,7 +44,7 @@ namespace cogbot.Actions
             }
             else
             {
-                return Failure(Usage);// " showeffects [on/off]";
+                return ShowUsage();// " showeffects [on/off]";
             }
         }
 

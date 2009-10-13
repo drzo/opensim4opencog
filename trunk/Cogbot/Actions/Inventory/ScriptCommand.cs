@@ -16,7 +16,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length != 1)
-                return Failure(Usage);// " script [filename]";
+                return ShowUsage();// " script [filename]";
 
             // Load the file
             string[] lines;

@@ -42,7 +42,7 @@ namespace cogbot.Actions.Movement
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length > 1)
-                return Failure(Usage);// " rotate [angle]";
+                return ShowUsage();// " rotate [angle]";
 
             if (args.Length == 0)
             {
@@ -54,7 +54,7 @@ namespace cogbot.Actions.Movement
                 // Parse the number             
                 float angle;
                 if (!float.TryParse(args[0], out angle)) // rotate help
-                    return Failure(Usage);// " rotate [angle]";
+                    return ShowUsage();// " rotate [angle]";
                 float newAngle = WorldSystem.TheSimAvatar.ZHeading + (angle / DEG_TO_RAD);
                 cur.X += (float)Math.Cos(newAngle) * 2;
                 cur.Y -= (float)Math.Sin(newAngle) * 2;            

@@ -21,7 +21,7 @@ namespace cogbot.Actions
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length < 2) return Failure(Usage);
+            if (args.Length < 2) return ShowUsage();
             AssetType assetType;
 
             FieldInfo fi = typeof(AssetType).GetField(args[1]);
@@ -44,8 +44,8 @@ namespace cogbot.Actions
             }
             //var v = WorldObjects.uuidTypeObject;
             UUID AssetID;
-            string botcmd = String.Join(" ", args, 0, args.Length - 1).Trim();
-            UUIDTryParse(botcmd, out AssetID);
+            int argsUsed;
+            UUIDTryParse(args, 0, out AssetID, out argsUsed);
             AutoResetEvent DownloadHandle = new AutoResetEvent(false);
             Client.Assets.RequestAsset(AssetID, assetType, true, delegate(AssetDownload transfer, Asset asset)
             {

@@ -23,7 +23,9 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int len = args.Length;
-            Simulator sim = Client.Network.CurrentSim;
+            int argsUsed;
+            Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
+            Simulator sim = CurSim;
             if (len==0)
             {
                 //prep
@@ -37,7 +39,7 @@ namespace cogbot.Actions
                     Client.Objects.RequestObject(sim,u);
                     Client.Objects.SelectObject(sim,u);
                 }
-                return Failure(Usage);
+                return ShowUsage();
 
             }
             if (len>1)

@@ -27,7 +27,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Failure(Description);
+                return ShowUsage();
 
             GroupName = String.Empty;
             for (int i = 0; i < args.Length; i++)

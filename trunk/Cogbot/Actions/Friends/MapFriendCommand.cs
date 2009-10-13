@@ -22,12 +22,13 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return Failure(Description);
+                return ShowUsage();
 
             UUID targetID;
 
-            if (!UUIDTryParse(args, 0, out targetID))
-                return Failure(Description);
+            int argsUsed;
+            if (!UUIDTryParse(args, 0, out targetID, out argsUsed)) 
+                return ShowUsage();
 
             StringBuilder sb = new StringBuilder();
 

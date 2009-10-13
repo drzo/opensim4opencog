@@ -28,13 +28,15 @@ namespace cogbot.Actions
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            //opensim drew this line because of clients might be hardcoded to only support 255? or was this trying to copy linden?
             try
             {
                 //Client.Objects.OnObjectProperties += callback;
-
+                int argsUsed;
+                Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
                 UUID rootID;
                 UUID groupID;
-                Simulator CurrentSim = Client.Network.CurrentSim;
+                Simulator CurrentSim = CurSim;
 
                 bool doTaskInv = false;
                 List<Primitive> TaskPrims = new List<Primitive>();
@@ -48,10 +50,10 @@ namespace cogbot.Actions
                 bool doIncr = false;
 
                 if (args.Length < 3)
-                    return Failure(Usage);
+                    return ShowUsage();
 
-                if (!UUIDTryParse(args, 0, out groupID))
-                    return Failure(Usage);
+                if (!UUIDTryParse(args, 0, out groupID, out argsUsed))
+                    return ShowUsage();
 
 
                 bool deed = false;
@@ -84,11 +86,12 @@ namespace cogbot.Actions
                             doIncr = true;
                             break;
                         default:
-                            return Failure(Usage);
+                            return ShowUsage();
                     }
                 }
 
-                if (args[1]!="*" && UUIDTryParse(args, 1, out rootID))
+                int argsUsed2;
+                if (args[1]!="*" && UUIDTryParse(args, 1, out rootID, out argsUsed2))
                 {
                     // Find the requested prim
                    Primitive rootPrim = CurrentSim.ObjectsPrimitives.Find(delegate(Primitive prim) { return prim.ID == rootID; });

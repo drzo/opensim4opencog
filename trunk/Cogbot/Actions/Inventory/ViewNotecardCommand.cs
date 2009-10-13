@@ -31,12 +31,12 @@ namespace cogbot.Actions
 
             if (args.Length < 1)
             {
-                return Failure(Usage);// " viewnote [notecard asset uuid]";
+                return ShowUsage();// " viewnote [notecard asset uuid]";
             }
             UUID note;
-            if (!UUIDTryParse(args[0], out note))
+            if (!UUID.TryParse(args[0], out note))
             {
-                return Failure( "First argument expected agent UUID.");
+                return Failure( "First argument expected UUID.");
             }
 
             System.Threading.AutoResetEvent waitEvent = new System.Threading.AutoResetEvent(false);

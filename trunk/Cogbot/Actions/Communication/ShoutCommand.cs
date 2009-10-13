@@ -22,7 +22,7 @@ namespace cogbot.Actions
             string message = String.Empty;
             if (args.Length < 1)
             {
-                return Failure(Usage);// " shout (optional channel) whatever";
+                return ShowUsage();// " shout (optional channel) whatever";
             }
             else if (args.Length > 1)
             {

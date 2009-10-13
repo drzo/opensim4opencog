@@ -135,7 +135,7 @@ namespace cogbot.Actions
             }
             else if (args.Length != 2)
             {
-                return Failure(Usage);// " " + Name + " [to <directory>] | [abort] | [status]";
+                return ShowUsage();// " " + Name + " [to <directory>] | [abort] | [status]";
             }
             else if (BackgroundBackupRunning)
             {
