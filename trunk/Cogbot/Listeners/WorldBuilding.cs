@@ -74,6 +74,7 @@ namespace cogbot.Listeners
         private static Dictionary<string, Action<UUID>> UUID2Type = new Dictionary<string, Action<UUID>>();
         static void GetUUIDType(string p, UUID id)
         {
+            if (id == UUID.Zero) return;
             lock (UUID2Type) if (UUID2Type.Count == 0)
             {
                 Action<UUID> texture = ((UUID obj) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Texture); });
@@ -82,22 +83,24 @@ namespace cogbot.Listeners
                 UUID2Type[""] = nothing;
                 UUID2Type["ID"] = nothing;
                 UUID2Type["Sound"] = ((UUID obj) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Sound); });
-                UUID2Type["Image"] = UUID2Type["SculptTexture"] = UUID2Type["Photo"] = UUID2Type["Picture"] = UUID2Type["Texture"] = UUID2Type["Sculpt"] = UUID2Type["ProfileImage"] = texture;
-                UUID2Type["Partner"] = UUID2Type["Owner"] = UUID2Type["Creator"] = avatar;
+                UUID2Type["Image"]
+                    = UUID2Type["SculptTexture"]
+                      = UUID2Type["Photo"]
+                        = UUID2Type["Picture"]
+                          = UUID2Type["Texture"]
+                            = UUID2Type["Sculpt"]
+                              = UUID2Type["ProfileImage"] = texture;
+                UUID2Type["Partner"] = UUID2Type["Creator"] = avatar;
                 UUID2Type["Group"] = ((UUID obj) => { GridMaster.DeclareGroup(obj); });
                 UUID2Type["Object"] = ((UUID obj) => { GridMaster.CreateSimObject(obj, GridMaster, null); });
                 // todo inventory item 
                 UUID2Type["ItemID"] = nothing;
+                UUID2Type["OwnerID"] = nothing;
+                UUID2Type["Owner"] = nothing;
             }
             Action<UUID> o;
             if (!UUID2Type.TryGetValue(p, out o))
             {
-  
-                if (p.EndsWith("ID"))
-                {
-                    GetUUIDType(p.Substring(0, p.Length - 2), id);
-                    return;
-                }
                 if (p.StartsWith("Next"))
                 {
                     GetUUIDType(p.Substring(4), id);
@@ -121,6 +124,11 @@ namespace cogbot.Listeners
                 if (p.StartsWith("Second"))
                 {
                     GetUUIDType(p.Substring(6), id);
+                    return;
+                }
+                if (p.EndsWith("ID"))
+                {
+                    GetUUIDType(p.Substring(0, p.Length - 2), id);
                     return;
                 }
                 Debug("Dont know what UUID means in " + p);

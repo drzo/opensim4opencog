@@ -338,7 +338,8 @@ namespace cogbot.Listeners
 
         private void DeclareGroup(UUID uuid)
         {
-            lock (uuidTypeObject)
+            if (uuid == UUID.Zero) return;
+            lock (uuidTypeObject) 
             {
                 object g;
                 if (uuidTypeObject.TryGetValue(uuid, out g))
@@ -347,14 +348,29 @@ namespace cogbot.Listeners
                     if (g is Group)
                     {
                         uuidTypeObject[uuid] = new SimGroup(uuid) {Group = (Group) g};
+                        return;
                     }
-                }
-                else
-                {
-                    uuidTypeObject[uuid] = new SimGroup(uuid);
-                }
-
+                    if (g is SimAvatarImpl)
+                    {
+                        ((SimAvatarImpl) g).DumpCreate();
+                        return;
+                    }
+                    if (g is Avatar)
+                    {
+                        ((SimAvatarImpl)g).DumpCreate();
+                        return;
+                    }
+                    return;
+                }            
+                uuidTypeObject[uuid] = new SimGroup(uuid);
             }
+            RequestGroupInfo(uuid);
+        }
+
+        private void RequestGroupInfo(UUID uuid)
+        {
+            GridMaster.client.Groups.RequestGroupProfile(uuid);
+            WriteLine("Requesting groupInfo " + uuid);
         }
 
         // like avatar picks or role names
