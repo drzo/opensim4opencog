@@ -30,7 +30,7 @@ namespace cogbot.Listeners
         public static bool MaintainObjectProperties = true;
         public static bool MaintainSounds = true;
         static public bool MaintainAvatarMetaData = true;
-        static public bool MaintainGroupMetaData = true;
+        static public bool MaintainGroupMetaData = false;
         public static bool MaintainSimObjectInfoMap = true;
         public static bool UseNewEventSystem = true;
         public static bool SimplifyBoxes = true; // true takes longer startup but speeds up runtime path finding

@@ -100,6 +100,9 @@ namespace cogbot.Listeners
                 UUID2Type["ItemID"] = nothing;
                 UUID2Type["OwnerID"] = nothing;
                 UUID2Type["Owner"] = nothing;
+                // ussualyl objects but need to confirm: The Key of the specified target object or avatar particles will follow" 
+                UUID2Type["Target"] = nothing;
+                UUID2Type["Asset"] = nothing;
             }
             Action<UUID> o;
             if (!UUID2Type.TryGetValue(p, out o))

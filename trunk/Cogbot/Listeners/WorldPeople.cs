@@ -454,9 +454,12 @@ namespace cogbot.Listeners
         private void RequestGroupInfo(UUID uuid)
         {
             GridMaster.client.Groups.RequestGroupProfile(uuid);
-            GridMaster.client.Groups.RequestGroupRoles(uuid);
-            GridMaster.client.Groups.RequestGroupMembers(uuid);
-            GridMaster.client.Groups.RequestGroupRoleMembers(uuid);
+            if (MaintainGroupMetaData)
+            {
+                GridMaster.client.Groups.RequestGroupRoles(uuid);
+                GridMaster.client.Groups.RequestGroupMembers(uuid);
+                GridMaster.client.Groups.RequestGroupRoleMembers(uuid);
+            }
             WriteLine("Requesting groupInfo " + uuid);
         }
 
