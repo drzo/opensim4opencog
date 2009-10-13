@@ -895,7 +895,7 @@ namespace CycWorldModule.DotCYC
             return set;
         }
 
-        static System.Collections.IEnumerable Unfold(object value)
+        static System.Collections.IEnumerable Unfold(object value,out bool unFolded)
         {
             IList<object> results = new List<object>();
             var type = value.GetType();
@@ -903,6 +903,7 @@ namespace CycWorldModule.DotCYC
             var values = Enum.GetValues(type);
             if (utype == typeof(byte) || utype == typeof(sbyte) || utype == typeof(Int16) || utype == typeof(UInt16) || utype == typeof(Int32))
             {
+                unFolded = true;
                 var num = (Int32)Convert.ChangeType(value, typeof(Int32));
                 foreach (var val in values)
                 {
@@ -912,6 +913,7 @@ namespace CycWorldModule.DotCYC
             }
             else if (utype == typeof(UInt32))
             {
+                unFolded = true;
                 var num = (UInt32)value;
                 foreach (var val in values)
                 {
@@ -921,6 +923,7 @@ namespace CycWorldModule.DotCYC
             }
             else if (utype == typeof(Int64))
             {
+                unFolded = true;
                 var num = (Int64)value;
                 foreach (var val in values)
                 {
@@ -930,6 +933,7 @@ namespace CycWorldModule.DotCYC
             }
             else if (utype == typeof(UInt64))
             {
+                unFolded = true;
                 var num = (UInt64)value;
                 foreach (var val in values)
                 {
@@ -1102,11 +1106,13 @@ namespace CycWorldModule.DotCYC
                 return;
             }
             string s = p.ToString();
-            foreach (var unfold in Unfold(p))
+            bool unfolded;
+            foreach (var unfold in Unfold(p, out unfolded))
             {
                 withValue((CycFort)ToFort(unfold));
-                return;
+                //return;
             }
+            if (unfolded) return;
 
             if (p is IConvertible)
             {
