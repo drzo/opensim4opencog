@@ -12,6 +12,10 @@ namespace cogbot.TheOpenSims
     abstract public class SimUsage : BotMentalAspect
     {
         public abstract FirstOrderTerm GetTerm();
+        public virtual ICollection<NamedParam> GetInfoMap()
+        {
+            return WorldObjects.GetMemberValues("", this);
+        }
 
         public String UsageName;
 

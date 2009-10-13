@@ -55,7 +55,7 @@ namespace cogbot.TheOpenSims
             {
                 AddInfoMap(o);
             }
-            WorldSystem.SendOnUpdateSimObject(this, name, null, properties);
+            WorldSystem.SendOnUpdateDataAspect(this, name, null, properties);
             WorldSystem.SendNewRegionEvent(SimEventType.DATA_UPDATE, "On" + name + "Update", this);
         }
 
@@ -394,7 +394,7 @@ namespace cogbot.TheOpenSims
         }
 
         readonly List<NamedParam> _infoMap = new List<NamedParam>();
-        public List<NamedParam> GetInfoMap()
+        public ICollection<NamedParam> GetInfoMap()
         {
             return _infoMap;
         }
@@ -2312,7 +2312,7 @@ namespace cogbot.TheOpenSims
         bool HasPrim { get; }
         bool KilledPrim(Primitive primitive, Simulator simulator);
 
-        List<NamedParam> GetInfoMap();
+        ICollection<NamedParam> GetInfoMap();
 
         bool CanShoot(SimPosition position);
         //void SetInfoMap(string key,Type type, Object value);

@@ -45,19 +45,20 @@ namespace cogbot.Listeners
 
 
 
-        #region OnUpdateSimObject
+        #region OnUpdateDataAspect
         /// <summary>
-        /// Triggers the OnUpdateSimObject event.
+        /// Triggers the OnUpdateDataAspect event.
         /// </summary>
-        public virtual void SendOnUpdateSimObject(SimObject ea, string property, object oldValue, object newValue)
+        public virtual void SendOnUpdateDataAspect(BotMentalAspect ea, string property, object oldValue, object newValue)
         {
-            if (OnUpdateSimObject != null)
-                OnUpdateSimObject(ea, property, oldValue, newValue);
+            if (OnUpdateDataAspect != null)
+                OnUpdateDataAspect(ea, property, oldValue, newValue);
+            SendNewRegionEvent(SimEventType.DATA_UPDATE, property, ea);
         }
 
-        public delegate void OnUpdateSimObjectCallback(SimObject ea, string property, object value, object o);
+        public delegate void OnUpdateDataAspectCallback(BotMentalAspect ea, string property, object value, object o);
 
-        public event OnUpdateSimObjectCallback OnUpdateSimObject;
+        public event OnUpdateDataAspectCallback OnUpdateDataAspect;
         #endregion
 
 

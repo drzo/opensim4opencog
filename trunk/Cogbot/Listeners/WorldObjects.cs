@@ -1852,7 +1852,12 @@ namespace cogbot.Listeners
                             //client.Avatars.RequestAvatarPicks(uuid);
                             SimObjects.AddTo(obj0);
                             RegisterUUID(uuid, obj0);
-                            if (MaintainAvatarMetaData) client.Avatars.RequestAvatarProperties(uuid);
+                            client.Avatars.RequestAvatarName(uuid);
+                            if (MaintainAvatarMetaData)
+                            {
+                                client.Avatars.RequestAvatarProperties(uuid);
+                             //   client.Avatars.RequestAvatarClassified(uuid);
+                            }
                             return (SimAvatarImpl)obj0;
                         }
         }

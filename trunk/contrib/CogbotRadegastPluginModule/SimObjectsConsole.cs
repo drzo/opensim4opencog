@@ -113,13 +113,13 @@ namespace CogbotRadegastPluginModule
         private void Network_OnConnected(object sender)
         {
             ClientManager.SingleInstance.LastBotClient.WorldSystem.OnAddSimObject += Objects_OnAddSimObject;
-            ClientManager.SingleInstance.LastBotClient.WorldSystem.OnUpdateSimObject += Objects_OnUpdateSimObject;
+            ClientManager.SingleInstance.LastBotClient.WorldSystem.OnUpdateDataAspect += Objects_OnUpdateSimObject;
         }
 
         private void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
         {
             ClientManager.SingleInstance.LastBotClient.WorldSystem.OnAddSimObject -= Objects_OnAddSimObject;
-            ClientManager.SingleInstance.LastBotClient.WorldSystem.OnUpdateSimObject -= Objects_OnUpdateSimObject;
+            ClientManager.SingleInstance.LastBotClient.WorldSystem.OnUpdateDataAspect -= Objects_OnUpdateSimObject;
         }
 
         void frmObjects_Disposed(object sender, EventArgs e)
@@ -127,7 +127,7 @@ namespace CogbotRadegastPluginModule
             IsDisposing = true;
             addObjects.Dispose();
             ClientManager.SingleInstance.LastBotClient.WorldSystem.OnAddSimObject -= Objects_OnAddSimObject;
-            ClientManager.SingleInstance.LastBotClient.WorldSystem.OnUpdateSimObject -= Objects_OnUpdateSimObject;
+            ClientManager.SingleInstance.LastBotClient.WorldSystem.OnUpdateDataAspect -= Objects_OnUpdateSimObject;
             client.Network.OnDisconnected -= new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
             client.Objects.OnObjectKilled -= new ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
             //client.Objects.OnObjectProperties -= new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
@@ -207,9 +207,11 @@ namespace CogbotRadegastPluginModule
             lstPrims.EndUpdate();
         }
 
-        private void Objects_OnUpdateSimObject(SimObject ea, string property, object value, object o)
+        private void Objects_OnUpdateSimObject(BotMentalAspect bma, string property, object value, object o)
         {
             return;
+            SimObject ea = bma as SimObject;
+            if (ea==null) return;
             string id = ea.ID.ToString();
             addObjects.Enqueue(new ThreadStart(() =>
             {

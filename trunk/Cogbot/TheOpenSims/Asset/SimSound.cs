@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
@@ -59,15 +60,21 @@ namespace cogbot.TheOpenSims
 
         public override float Length
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                AssetSound S = (AssetSound)ServerAsset;
+                WriteLine("Notimplemented " + MethodInfo.GetCurrentMethod());
+                return float.MaxValue;
+            }
         }
 
         public override bool IsLoop
         {
             get
             {
-                AssetSound S = (AssetSound)ServerAsset;         
-                throw new NotImplementedException();
+                AssetSound S = (AssetSound)ServerAsset;
+                WriteLine("Notimplemented " + MethodInfo.GetCurrentMethod());
+                return false;
             }
         }
 

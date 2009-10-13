@@ -19,6 +19,7 @@ namespace cogbot.TheOpenSims
         //{
         //    return GetType().Name + "::" + AspectName;
         //}
+        ICollection<NamedParam> GetInfoMap();
     }
 
     // See SimTypeSystem.cs for information on SimObjectType:BotMentalAspect

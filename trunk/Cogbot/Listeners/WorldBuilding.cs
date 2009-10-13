@@ -80,20 +80,23 @@ namespace cogbot.Listeners
                 Action<UUID> texture = ((UUID obj) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Texture); });
                 Action<UUID> avatar = ((UUID obj) => { GridMaster.CreateSimAvatar(obj, GridMaster, null); });
                 Action<UUID> nothing = ((UUID obj) => { });
+                Action<UUID> role = ((UUID obj) =>  DeclareGeneric("GroupRole", obj));
                 UUID2Type[""] = nothing;
                 UUID2Type["ID"] = nothing;
                 UUID2Type["Sound"] = ((UUID obj) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Sound); });
                 UUID2Type["Image"]
                     = UUID2Type["SculptTexture"]
                       = UUID2Type["Photo"]
+                      = UUID2Type["Insignia"]
                         = UUID2Type["Picture"]
                           = UUID2Type["Texture"]
                             = UUID2Type["Sculpt"]
                               = UUID2Type["ProfileImage"] = texture;
-                UUID2Type["Partner"] = UUID2Type["Creator"] = avatar;
+                UUID2Type["Partner"] = UUID2Type["Creator"] = UUID2Type["Founder"] = avatar;
                 UUID2Type["Group"] = ((UUID obj) => { GridMaster.DeclareGroup(obj); });
                 UUID2Type["Object"] = ((UUID obj) => { GridMaster.CreateSimObject(obj, GridMaster, null); });
                 // todo inventory item 
+                UUID2Type["OwnerRole"] = role;
                 UUID2Type["ItemID"] = nothing;
                 UUID2Type["OwnerID"] = nothing;
                 UUID2Type["Owner"] = nothing;

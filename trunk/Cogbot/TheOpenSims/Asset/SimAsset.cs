@@ -229,6 +229,11 @@ namespace cogbot.TheOpenSims
             throw new NotImplementedException();
         }
 
+        public ICollection<NamedParam> GetInfoMap()
+        {
+            return WorldObjects.GetMemberValues("", this);
+        }
+
         internal bool IsIncomplete()
         {
             return !HasData() || AssetIDs.Count == 0 || _Name.Count == 0;

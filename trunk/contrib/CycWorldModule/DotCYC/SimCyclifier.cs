@@ -113,15 +113,22 @@ namespace CycWorldModule.DotCYC
         {
             if (IsDisposing) return;
             object constant = ToFort(v);
-            if (constant is CycFort && v is SimObject)
+            if (constant is CycFort)
             {
-                SimObject o = (SimObject)v;
-                if (WorldObjects.GridMaster != null && WorldObjects.GridMaster.TheSimAvatar.Distance(o) < 30)
+                if (v is SimObject)
                 {
-                    SaveInfoMap(constant as CycFort, o);
+                    SimObject o = (SimObject) v;
+                    if (WorldObjects.GridMaster != null && WorldObjects.GridMaster.TheSimAvatar.Distance(o) < 30)
+                    {
+                        SaveInfoMap(constant as CycFort, o);
+                    }
+                    else
+                        cycInfoMapSaver.Enqueue(() => SaveInfoMap(constant as CycFort, o));
                 }
-                else
-                    cycInfoMapSaver.Enqueue(() => SaveInfoMap(constant as CycFort, o));
+                else if (v is BotMentalAspect)
+                {
+                    cycInfoMapSaver.AddFirst(() => SaveInfoMap(constant as CycFort, v as BotMentalAspect));
+                }
             }
         }
 
@@ -230,6 +237,9 @@ namespace CycWorldModule.DotCYC
             FunctionToCollection("SimAssetFn", "SimAsset", "Simulator assets that denote a feature set");
             assertIsa(C("SimAssetFn"), C("CollectionDenotingFunction"));
 
+            simFort["SimGroup"] = createCollection("SimGroup", "#$SocialGroup for the simulator",
+                                        "SimVocabMt", "Collection", "SocialGroup");
+            FunctionToIndividual("SimGroupFn", "SimGroup", "A group in the simulator");
 
             // visit libomv
             if (cycAccess.find("SimEnumCollection") == null)
@@ -515,6 +525,7 @@ namespace CycWorldModule.DotCYC
 
         public void assertGaf(CycFort a, CycFort b, string c)
         {
+            if (c == null) return;
            cycAccessQueueHandler.Enqueue(() =>
                               {
                                   try
@@ -570,6 +581,7 @@ namespace CycWorldModule.DotCYC
         public CycFort createIndividual(string term, string comment, string mt, string type, out bool created)
         {
             CycFort indv;
+            bool noQueue = cycAccessQueueHandler.NoQueue;
             lock (simFort)
             {
                 if (simFort.TryGetValue(term, out indv))
@@ -583,12 +595,11 @@ namespace CycWorldModule.DotCYC
                     Trace();
                 }
                 indv = simFort[term] = C(term);
-            }
-            {
-                bool noQueue = cycAccessQueueHandler.NoQueue;
                 cycAccessQueueHandler.NoQueue = true;
                 assertIsa(indv, C("Individual"));
                 assertIsa(indv, C(type));
+            }
+            {
                 cycAccessQueueHandler.NoQueue = false;
                 assertGaf(CycAccess.comment, indv, comment);
                 cycAccessQueueHandler.NoQueue = noQueue;
@@ -616,7 +627,7 @@ namespace CycWorldModule.DotCYC
                 if (obj is SimAvatar)
                 {
                     type = "SimAvatar";
-                    name = obj.GetName();
+                    name = obj.ID.ToString(); //obj.GetName();
                     if (name == null)
                     {
                         name = WorldObjects.GridMaster.GetUserName(obj.ID);
@@ -647,7 +658,8 @@ namespace CycWorldModule.DotCYC
             {
                 if (obj is SimAvatar)
                 {
-                    // assertGaf(CycAccess.comment, constant, obj.DebugInfo());
+                    string avName = obj.GetName();
+                    if (!string.IsNullOrEmpty(avName)) assertGaf(CycAccess.comment, constant,  avName);
                 }
                 else
                 {
@@ -657,7 +669,7 @@ namespace CycWorldModule.DotCYC
             }
         }
 
-        private void SaveInfoMap(CycFort constant, SimObject obj)
+        private void SaveInfoMap(CycFort constant, BotMentalAspect obj)
         {
             var im = obj.GetInfoMap();
             lock (hashChanges)
@@ -854,7 +866,7 @@ namespace CycWorldModule.DotCYC
                                 o = new CycNart(C("SimAvatarFn"), o.ToString());
                             }
                         }
-                        assertEventData(constant, list.Key.ToString(), o, newHashSet(args[i].info));
+                        assertEventData(constant, k, o, newHashSet(args[i].info));
                     }
                     else
                     {
@@ -1770,6 +1782,40 @@ namespace CycWorldModule.DotCYC
             //return createIndividualFn("SimRegion", region.RegionName, vocabMt.ToString(), "SimRegion " + region, "GeographicalPlace-3D");
         }
 
+        CycFort DeclareGeneric(string name)
+        {
+            string gname = name;
+            CycFort fort;
+            lock (simFort)
+            {
+                if (simFort.TryGetValue(gname, out fort)) return fort;
+
+                fort = simFort[gname] = createCollection(gname, "#$Thing for the simulator",
+                                                  "SimVocabMt", "Collection", null);
+            }
+            FunctionToIndividual(gname + "Fn", gname, "A " + name + " in the simulator");
+            return fort;
+        }
+
+        public CycObject FindOrCreateCycFort(SimGeneric region)
+        {
+            if (region == null) return CYC_NULL;
+            string gname = region.GetGenericName();
+            CycFort gtype = DeclareGeneric(gname);           
+            CycFort obj;
+            lock (simFort)
+            {
+                if (simFort.TryGetValue(region, out obj)) return obj;
+
+                obj = simFort[region] = createIndividualFn(gname, region.ID.ToString(), gname + " " + region, vocabMt.ToString(),
+                                         gname);
+            }
+            if (region.Value!=null)
+            {
+                SaveInfoMap(obj, region);
+            }
+            return obj;
+        }
 
         public CycObject FindOrCreateCycFort(SimGroup region)
         {
@@ -1779,14 +1825,13 @@ namespace CycWorldModule.DotCYC
             {
                 if (simFort.TryGetValue(region, out obj)) return obj;
 
-                obj = createIndividualFn("SimGroup", region.ID.ToString(), "SimGroup " + region, vocabMt.ToString(),
+                obj = simFort[region] = createIndividualFn("SimGroup", region.ID.ToString(), "SimGroup " + region, vocabMt.ToString(),
                                          "SimGroup");
             }
             if (!string.IsNullOrEmpty(region.Group.Name))
             {
-                simFort[region] =
-                    obj;
-                assertEventData(obj, WorldObjects.GetMemberValues("GroupInfo-", region.Group));
+                
+                assertEventData(obj, WorldObjects.GetMemberValues("", region));
             }
             return obj;
         }
@@ -1799,14 +1844,12 @@ namespace CycWorldModule.DotCYC
             {
                 if (simFort.TryGetValue(region, out obj)) return obj;
 
-                obj = createIndividualFn("SimRegion", region.RegionName, "SimRegion " + region, vocabMt.ToString(),
+                simFort[region] = obj = createIndividualFn("SimRegion", region.RegionName, "SimRegion " + region, vocabMt.ToString(),
                                          "GeographicalPlace-3D");
             }
             if (region.GridInfo.MapImageID != UUID.Zero)
             {
-                simFort[region] =
-                    obj;
-                assertEventData(obj, WorldObjects.GetMemberValues("GridInfo-", region.GridInfo));
+                SaveInfoMap(obj, region);
             }
             return obj;
         }
@@ -1993,8 +2036,8 @@ namespace CycWorldModule.DotCYC
 
         public static string GetDocString(XElement docMembers, MemberInfo info)
         {
-
             string memberId = GetMemberId(info);
+            if (docMembers == null) return null;
             foreach (XElement e in docMembers.Elements("member"))
             {
                 var anme = e.Attribute("name");
@@ -2034,7 +2077,7 @@ namespace CycWorldModule.DotCYC
             Trace();
         }
 
-        private static void Trace()
+        private static void Trace()        
         {
 
         }
