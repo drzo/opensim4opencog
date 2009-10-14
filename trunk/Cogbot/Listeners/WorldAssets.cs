@@ -21,7 +21,7 @@ namespace cogbot.Listeners
 
         public Asset GetAsset(UUID id)
         {
-            lock (uuidTypeObject)
+           // lock (uuidTypeObject)
             {
                 Object assetObject;
                 uuidTypeObject.TryGetValue(id, out assetObject);
