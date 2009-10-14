@@ -53,7 +53,7 @@ namespace cogbot.Listeners
         {
             if (OnUpdateDataAspect != null)
                 OnUpdateDataAspect(ea, property, oldValue, newValue);
-            SendNewRegionEvent(SimEventType.DATA_UPDATE, property, ea);
+            MetaDataQueue.Enqueue(()=>SendNewRegionEvent(SimEventType.DATA_UPDATE, property, ea));
         }
 
         public delegate void OnUpdateDataAspectCallback(BotMentalAspect ea, string property, object value, object o);
