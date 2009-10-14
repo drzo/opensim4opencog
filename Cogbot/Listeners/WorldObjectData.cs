@@ -5,6 +5,7 @@ using System.Threading;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using System.Drawing;
 
 namespace cogbot.Listeners
 {
@@ -68,7 +69,6 @@ namespace cogbot.Listeners
                     updateMe.Properties = (props);
                 }
                 //Debug("UpdateProperties: {0}", updateMe.DebugInfo());
-                SendNewRegionEvent(SimEventType.DATA_UPDATE,"on-properties-updated",prim);
             }
             describePrimToAI(prim, simulator);
         }
@@ -305,7 +305,9 @@ namespace cogbot.Listeners
                                 if (dist > 30 && !update.Avatar) return;
                             }                            
                             // Make a "diff" from previous
-                            Object diffO = notifyUpdate(simObject, LastObjectUpdate[simObject], update,
+                            ObjectUpdate up;
+                            lock (LastObjectUpdate) up = LastObjectUpdate[simObject];
+                            Object diffO = notifyUpdate(simObject, up, update,
                                                         InformUpdate);
                             if (diffO != null)
                             {
