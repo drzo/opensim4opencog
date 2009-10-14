@@ -40,7 +40,11 @@ namespace AIMLBotModule
         /// <summary>
         /// Respond to group chat
         /// </summary>
-        public static bool RespondToGroup = true;
+        public static bool RespondToGroup = false;
+        /// <summary>
+        /// Respond to personal IM chat
+        /// </summary>
+        public static bool RespondToIM = false;
         /// <summary>
         /// Accept all friendship requests
         /// </summary>
@@ -364,6 +368,10 @@ namespace AIMLBotModule
             }
             if (im.FromAgentName == GetName()) return;
             if (im.FromAgentName == "System" || im.FromAgentName == "Second Life") return;
+            if (im.FromAgentID==UUID.Zero)
+            {
+                return;
+            }
             User myUser = GetMyUser(im.FromAgentName);
             myUser.Predicates.addSetting("host", im.FromAgentID.ToString());
             // myUser.Predicates.addObjectFields(im);
@@ -400,8 +408,8 @@ namespace AIMLBotModule
 
 
             string message = im.Message;
+            if (string.IsNullOrEmpty(message)) return;
             if (message == "typing") return;
-            if (message == "") return;
             RunTask(() => // this can be long running
                         {
                             string resp = AIMLInterp(message, myUser);
@@ -428,15 +436,19 @@ namespace AIMLBotModule
                                 if (im.GroupIM)
                                 {
                                     if (!myUser.RespondToChat) return;
-                                    if (!RespondToGroup) return;
 
-                                    WriteLine("InstantMessageGroup {0} {1} {2}",
-                                              im.FromAgentName + "/" + groupName, im.FromAgentID,
+                                    WriteLine("InstantMessageGroup={0} {1} {2} {3}",
+                                              RespondToGroup, im.FromAgentName + "/" + groupName, im.FromAgentID,
                                               ting.Trim());
+                                    if (!RespondToGroup) return;
                                     client.Self.InstantMessageGroup(GetName(), im.FromAgentID, tsing);
                                 }
                                 else
                                 {
+                                    WriteLine("InstantMessage={0} {1} {2} {3}", RespondToIM,
+                                              im.FromAgentName, im.FromAgentID, ting.Trim());
+
+                                    if (!RespondToIM) return;
                                     // todo maybe send a typing message for the UseRealism
                                     if (UseRealism)
                                     {
@@ -456,8 +468,6 @@ namespace AIMLBotModule
 
                                     }
 
-                                    WriteLine("InstantMessage {0} {1} {2}", im.FromAgentName,
-                                              im.FromAgentID, ting.Trim());
                                     client.Self.InstantMessage(im.FromAgentID, tsing, im.IMSessionID);
                                 }
                                 UseRealism = false;
