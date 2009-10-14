@@ -156,6 +156,7 @@ namespace cogbot.Listeners
 
         public static Dictionary<string, UUID> Name2Key = new Dictionary<string, UUID>();
         public static Dictionary<UUID, UUID> AvatarRegion = new Dictionary<UUID, UUID>();
+        private Dictionary<UUID, object> uuid2Group = new Dictionary<UUID, object>();
 
 
         public override void Groups_OnCurrentGroups(Dictionary<UUID, Group> groups)
@@ -164,7 +165,7 @@ namespace cogbot.Listeners
             {
                 Group g = groups[key];
                 AddGroup2Key(g.Name, key);
-                RegisterUUID(key, g);
+                RegisterGroup(key, g);
             }
             //base.Groups_OnCurrentGroups(groups);
             //OnEvent("On-Current-Groups", paramNamesOnCurrentGroups, paramTypesOnCurrentGroups, groups);
@@ -276,6 +277,17 @@ namespace cogbot.Listeners
             A.AvatarInterests = properties;
         }
 
+
+        private void RegisterGroup(UUID uuid, Group g)
+        {
+            lock (uuid2Group)
+            {
+                SimGroup v = DeclareGroup(uuid);
+                v.Group = g;
+            }
+        }
+
+
         public override void Avatars_OnAvatarGroups(UUID avatarID, List<AvatarGroup> avatarGroups)
         {
             SimAvatar A = CreateSimAvatar(avatarID, this, null);
@@ -289,16 +301,19 @@ namespace cogbot.Listeners
         public override void Groups_OnGroupRoles(UUID requestID, UUID groupID, Dictionary<UUID, GroupRole> roles)
         {
             DeclareGroup(groupID);
-            if (MaintainGroupMetaData)
-                foreach (var list in roles)
-                {
-                    GroupRole value = list.Value;
-                    SimGeneric declareGeneric = DeclareGroupRole(groupID, list.Key);
-                    declareGeneric.Value = value;
-                    SendOnUpdateDataAspect(declareGeneric, "GroupRole", null, value);
-                    //a.AddInfoMap(new NamedParam("memberRole"))
-                }
-            base.Groups_OnGroupRoles(requestID, groupID, roles);
+            if (!MaintainGroupMetaData) return;
+            MetaDataQueue.Enqueue(() =>
+                                      {
+                                          foreach (var list in roles)
+                                          {
+                                              GroupRole value = list.Value;
+                                              SimGeneric declareGeneric = DeclareGroupRole(groupID, list.Key);
+                                              declareGeneric.Value = value;
+                                              SendOnUpdateDataAspect(declareGeneric, "GroupRole", null, value);
+                                              //a.AddInfoMap(new NamedParam("memberRole"))
+                                          }
+                                      });
+
         }
 
         private SimGeneric DeclareGroupRole(UUID groupID, UUID key)
@@ -321,31 +336,42 @@ namespace cogbot.Listeners
             SimGroup g = DeclareGroup(groupID);
             if (MaintainGroupMetaData)
             {
-                foreach (var list in rolesMembers)
-                {
-                    SimAvatarImpl a = CreateSimAvatar(list.Value, this, null);
-                    SimGeneric declareGeneric = DeclareGroupRole(groupID, list.Key);
-                    a.AddInfoMap(new NamedParam("simMemberRole", declareGeneric));
-                    SendOnUpdateDataAspect(a, "MemberRole", null, null);
-                }
-                SendOnUpdateDataAspect(g, "Members", null, null);
+                MetaDataQueue.Enqueue(() =>
+                                          {
+                                              foreach (var list in rolesMembers)
+                                              {
+                                                  SimGeneric declareGeneric = DeclareGroupRole(groupID, list.Key);
+                                                  if (list.Value != UUID.Zero)
+                                                  {
+                                                      SimAvatarImpl a = CreateSimAvatar(list.Value, this,
+                                                                                        null);
+
+                                                      a.AddInfoMap(new NamedParam("simMemberRole",
+                                                                                  declareGeneric));
+                                                      SendOnUpdateDataAspect(a, "MemberRole", null, null);
+                                                  }
+                                              }
+                                              if (g != null) SendOnUpdateDataAspect(g, "Members", null, null);
+                                          });
             }
-            base.Groups_OnGroupRolesMembers(requestID, groupID, rolesMembers);
+           // base.Groups_OnGroupRolesMembers(requestID, groupID, rolesMembers);
         }
 
         public override void Groups_OnGroupMembers(UUID requestID, UUID groupID, Dictionary<UUID, GroupMember> members)
         {
             SimGroup g = DeclareGroup(groupID);
             if (MaintainGroupMetaData)
-            {
-                foreach (var member in members)
-                {
-                    var v = member.Value;
-                    SimAvatarImpl A = CreateSimAvatar(member.Key, this, null);
-                    //A.AddInfoMap(new NamedParam("GroupMember",groupID));               
-                }
-                SendOnUpdateDataAspect(g, "Members", null, null);
-            }
+                MetaDataQueue.Enqueue(() =>
+                                          {
+                                              foreach (var member in members)
+                                              {
+                                                  var v = member.Value;
+                                                  if (member.Key == UUID.Zero) continue;
+                                                  SimAvatarImpl A = CreateSimAvatar(member.Key, this, null);
+                                                  //A.AddInfoMap(new NamedParam("GroupMember",groupID));               
+                                              }
+                                              if (g != null) SendOnUpdateDataAspect(g, "Members", null, null);
+                                          });
             // base.Groups_OnGroupMembers(requestID, totalCount, members);
         }
 
@@ -366,10 +392,14 @@ namespace cogbot.Listeners
 
         public override void Groups_OnGroupProfile(Group group)
         {
-            RegisterUUIDMaybe(group.ID,group);
+            if (group.ID == UUID.Zero) return;
             SimGroup v = DeclareGroup(group.ID);
             v.Group = group;
-            SendOnUpdateDataAspect(v, "Group", null, group);            
+            MetaDataQueue.Enqueue(() =>
+                                      {
+                                          //RegisterUUIDMaybe(group.ID, v);
+                                          SendOnUpdateDataAspect(v, "Group", null, group);
+                                      });
         }
 
         public override void Avatars_OnAvatarNameSearch(UUID queryID, Dictionary<UUID, string> avatars)
@@ -401,36 +431,41 @@ namespace cogbot.Listeners
         private static SimGeneric DeclareGeneric(string genericName, UUID uuid)
         {
             if (uuid == UUID.Zero) return null;
+            object g;
+            if (uuidTypeObject.TryGetValue(uuid, out g))
+                if (g is SimGeneric) return g as SimGeneric;
+
             lock (uuidTypeObject)
             {
-                object g;
                 if (uuidTypeObject.TryGetValue(uuid, out g))
                 {
                     if (g is SimGeneric) return g as SimGeneric;
-                   
+
                     if (g is BotMentalAspect)
                     {
-                        throw new AbandonedMutexException(""+genericName + " for " + g);
+                        throw new AbandonedMutexException("" + genericName + " for " + g);
                         return null;
                     }
-                    return (SimGeneric)(uuidTypeObject[uuid] = new SimGeneric(genericName, uuid) {Value = g});
+                    return (SimGeneric) (uuidTypeObject[uuid] = new SimGeneric(genericName, uuid) {Value = g});
                 }
-                return (SimGeneric)(uuidTypeObject[uuid] = new SimGeneric(genericName, uuid));
+                return (SimGeneric) (uuidTypeObject[uuid] = new SimGeneric(genericName, uuid));
             }
         }
 
         private SimGroup DeclareGroup(UUID uuid)
         {
             if (uuid == UUID.Zero) return null;
-            lock (uuidTypeObject)
+            object g;
+            if (uuid2Group.TryGetValue(uuid, out g))
+                if (g is SimGroup) return g as SimGroup;
+            lock (uuid2Group)
             {
-                object g;
-                if (uuidTypeObject.TryGetValue(uuid, out g))
+                if (uuid2Group.TryGetValue(uuid, out g))
                 {
                     if (g is SimGroup) return g as SimGroup;
                     if (g is Group)
                     {
-                        return (SimGroup) (uuidTypeObject[uuid] = new SimGroup(uuid) {Group = (Group) g});
+                        return (SimGroup)(uuid2Group[uuid] = new SimGroup(uuid) { Group = (Group)g });
                     }
                     if (g is BotMentalAspect)
                     {
@@ -441,7 +476,7 @@ namespace cogbot.Listeners
                 }
                 try
                 {
-                    return (SimGroup) (uuidTypeObject[uuid] = new SimGroup(uuid));
+                    return (SimGroup)(uuid2Group[uuid] = new SimGroup(uuid));
                 }
                 finally
                 {
@@ -451,16 +486,17 @@ namespace cogbot.Listeners
             }
         }
 
+        static HashSet<UUID> GroupsRequested = new HashSet<UUID>();
+        static HashSet<UUID> GroupsRequested2 = new HashSet<UUID>();
         private void RequestGroupInfo(UUID uuid)
         {
+            lock (GroupsRequested) if (!GroupsRequested.Add(uuid)) return;
             GridMaster.client.Groups.RequestGroupProfile(uuid);
-            if (MaintainGroupMetaData)
-            {
-                GridMaster.client.Groups.RequestGroupRoles(uuid);
-                GridMaster.client.Groups.RequestGroupMembers(uuid);
-                GridMaster.client.Groups.RequestGroupRoleMembers(uuid);
-            }
-            WriteLine("Requesting groupInfo " + uuid);
+            if (!MaintainGroupMetaData) return;
+            // WriteLine("Requesting groupInfo " + uuid);
+            GridMaster.client.Groups.RequestGroupRoles(uuid);
+            GridMaster.client.Groups.RequestGroupMembers(uuid);
+            GridMaster.client.Groups.RequestGroupRoleMembers(uuid);
         }
 
         // like avatar picks or role names
