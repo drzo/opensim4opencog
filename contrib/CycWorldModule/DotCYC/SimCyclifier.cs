@@ -388,9 +388,10 @@ namespace CycWorldModule.DotCYC
 
         private CycFort VisitEnumType(Type type)
         {
+            CycTypeInfo ctype;
+            if (typeFort.TryGetValue(type, out ctype)) return ctype.cycFort;
             lock (typeFort)
-            {
-                CycTypeInfo ctype;
+            {               
                 if (typeFort.TryGetValue(type, out ctype)) return ctype.cycFort;
                 string name = string.Format("Sim{0}", type.Name);
                 if (name.StartsWith("SimSim"))
@@ -582,6 +583,11 @@ namespace CycWorldModule.DotCYC
         {
             CycFort indv;
             bool noQueue = cycAccessQueueHandler.NoQueue;
+            if (simFort.TryGetValue(term, out indv))
+            {
+                created = false;
+                return indv;
+            }
             lock (simFort)
             {
                 if (simFort.TryGetValue(term, out indv))
@@ -1146,8 +1152,14 @@ namespace CycWorldModule.DotCYC
 
         private CycFort assertEventData(CycFort constant, string name, object fort, HashSet<MemberInfo> info)
         {
-            //CheckConstantName(name);
             CycFort prop = createSimProperty(name);
+            //CheckConstantName(name);
+            if (name.Length>100)
+            {
+                Trace();
+                return prop;
+            }
+
             if (fort != null)
             {
                 Type t = fort.GetType();
@@ -1221,7 +1233,8 @@ namespace CycWorldModule.DotCYC
 
         private void defaultAssert(CycFort fort, CycFort constant, object o)
         {
-            if ((o is String && ((String)o) != String.Empty) || (o is CycNart && ((CycNart)o).getFunctor() != C("TheList")))
+            if ((o is String && ((String) o) != String.Empty) ||
+                (o is CycNart && ((CycNart) o).getFunctor() != C("TheList")))
             {
                 CycListAssert(CycList.makeCycList(fort, constant, o));
                 return;
@@ -1238,26 +1251,32 @@ namespace CycWorldModule.DotCYC
                     return;
                 }
             }
+
+            object temp;
+            bool added = false;
             lock (DefaultNotNeededInAssert)
             {
-
-                object temp;
-                if (DefaultNotNeededInAssert.TryGetValue(fort, out temp))
+                if (!DefaultNotNeededInAssert.TryGetValue(fort, out temp))
                 {
-                    if (temp.Equals(o))
-                    {
-                        return;
-                    }
-                    else
-                    {
-                        CycListAssert(CycList.makeCycList(fort, constant, o));
-                    }
-                    return;
+                    DefaultNotNeededInAssert.Add(fort, o);
+                    added = true;
                 }
-                DefaultNotNeededInAssert.Add(fort, o);
+            }
+            if (added)
+            {
                 CycListAssert(CycList.makeCycList(fort, C("SimTheDefaultInstance"), o));
                 return;
             }
+            if (temp.Equals(o))
+            {
+                return;
+            }
+            else
+            {
+                CycListAssert(CycList.makeCycList(fort, constant, o));
+            }
+            return;
+
         }
 
         Dictionary<object, object> DefaultNotNeededInAssert = new Dictionary<object, object>();
@@ -1288,12 +1307,15 @@ namespace CycWorldModule.DotCYC
 
         private void docIt(MemberInfo info, CycFort prop)
         {
-            var doc = GetDocString(info);
-            if (!string.IsNullOrEmpty(doc))
-            {
-                Debug("Docing " + info + " " + prop + " " + doc);
-                assertGaf(CycAccess.comment, prop, doc);
-            }
+            DocQueue.Enqueue(() =>
+                                              {
+                                                  var doc = GetDocString(info);
+                                                  if (!string.IsNullOrEmpty(doc))
+                                                  {
+                                                      Debug("Docing " + info + " " + prop + " " + doc);
+                                                      assertGaf(CycAccess.comment, prop, doc);
+                                                  }
+                                              });
         }
 
 
@@ -1403,7 +1425,7 @@ namespace CycWorldModule.DotCYC
             if (parameter is string) return parameter;
 
             CycFort indv;
-            lock (simFort)
+            //lock (simFort)
             {
                 if (simFort.TryGetValue(parameter, out indv))
                 {
@@ -1960,6 +1982,7 @@ namespace CycWorldModule.DotCYC
         }
 
         static Dictionary<Assembly, XElement> AssmblyXDoics = new Dictionary<Assembly, XElement>();
+        public TaskQueueHandler DocQueue = new TaskQueueHandler("Cyc Doc Queue", 0);
 
         public static XElement GetXmlDocMembers(Assembly typeAssembly)
         {
@@ -1973,6 +1996,7 @@ namespace CycWorldModule.DotCYC
                     }
                     catch (Exception e)
                     {
+                        Trace();
                         Debug("Cannot doc " + typeAssembly + " " + e);
                         AssmblyXDoics[typeAssembly] = ele = null;
                     }
@@ -1983,6 +2007,7 @@ namespace CycWorldModule.DotCYC
         public static XElement GetXmlDocMembers0(Assembly typeAssembly)
         {
             var file = GetXmlDocFile(typeAssembly);
+            if (file == null) return null;
             XDocument f = XDocument.Load(file.FullName);
             if (f.Root == null) return null;
             return f.Root.Element("members");
@@ -2000,13 +2025,14 @@ namespace CycWorldModule.DotCYC
             string fileName = String.Format("{0}.xml", Path.GetFileNameWithoutExtension(assembly.Location).ToLower());
             foreach (string file in Directory.GetFiles(assemblyDirPath))
             {
-                if (file.ToLower().Equals(fileName))
+                if (Path.GetFileName(file).ToLower().Equals(fileName))
                 {
                     return new FileInfo(file);
                 }
             }
+            Trace();
             Debug("Assebly Doc File not found {0}", fileName);
-            return new FileInfo(fileName);
+            return null;
         }
 
         static string GetMemberId(MemberInfo member)
@@ -2042,8 +2068,8 @@ namespace CycWorldModule.DotCYC
 
         public static string GetDocString(XElement docMembers, MemberInfo info)
         {
+            if (docMembers == null) return null;            
             string memberId = GetMemberId(info);
-            if (docMembers == null) return null;
             foreach (XElement e in docMembers.Elements("member"))
             {
                 var anme = e.Attribute("name");
