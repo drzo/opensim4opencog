@@ -1249,10 +1249,11 @@ namespace cogbot.TheOpenSims
 
         public static SimAsset FindAsset(UUID uUID)
         {
-            lock (uuidAsset)
+            object anim;
+            //if (uuidAsset.TryGetValue(uUID, out anim)) return (SimAsset)anim;
+            //lock (uuidAsset)
             {
                 FillAssetNames();
-                object anim;
                 if (!uuidAsset.TryGetValue(uUID, out anim))
                 {
                     if (false)lock (SimAssets)
@@ -1334,7 +1335,11 @@ namespace cogbot.TheOpenSims
 
         public static SimAsset FindOrCreateAsset(UUID uUID, AssetType type)
         {
-            SimAsset anim;
+            SimAsset anim = FindAsset(uUID);  
+            if (anim!=null)
+            {
+                return anim;
+            }
             lock (uuidAsset)
             {
                 anim = FindAsset(uUID);
