@@ -49,6 +49,7 @@ namespace cogbot.Listeners
         private static readonly List<ThreadStart> ShutdownHooks = new List<ThreadStart>();
         private static readonly TaskQueueHandler EventQueue = new TaskQueueHandler("World EventQueue", 0);
         private static readonly TaskQueueHandler CatchUpQueue = new TaskQueueHandler("Simulator catchup", 30000);
+        private static readonly TaskQueueHandler MetaDataQueue = new TaskQueueHandler("MetaData Getter", 0);
         internal static readonly Dictionary<UUID, object> uuidTypeObject = new Dictionary<UUID, object>();
         private static readonly object WorldObjectsMasterLock = new object();
 
@@ -108,6 +109,7 @@ namespace cogbot.Listeners
                 SimAssetSystem.Dispose();
                 ParentGrabber.Dispose();
                 SimPaths.Dispose();
+                MetaDataQueue.Dispose();
             }
         }
 
@@ -551,9 +553,10 @@ namespace cogbot.Listeners
 
         public static void RegisterUUIDMaybe(UUID id, object type)
         {
+            object before;
+            if (uuidTypeObject.TryGetValue(id, out before)) return;
             lock (uuidTypeObject)
             {
-                object before;
                 if (!uuidTypeObject.TryGetValue(id, out before))
                 {
                     uuidTypeObject[id] = type;
@@ -643,7 +646,7 @@ namespace cogbot.Listeners
             O.ResetPrim(prim, client, simulator);
             DeclareRequested(simulator, prim.LocalID);
             if (MaintainObjectUpdates)
-                LastObjectUpdate[O] = updatFromPrim0(prim);
+                lock (LastObjectUpdate) LastObjectUpdate[O] = updatFromPrim0(prim);
         }
 
 
@@ -808,7 +811,13 @@ namespace cogbot.Listeners
                 //if (found != null)
                 return found;
             }
-
+            //lock (uuidTypeObject)
+            if (uuid2Group.TryGetValue(id, out found))
+            {
+                //object found = uuidTypeObject[id];
+                //if (found != null)
+                return found;
+            }
             object ret = GetPrimitive(id, null);
             if (ret != null) return ret;
             //ret = GetAvatar(id);
@@ -1832,34 +1841,36 @@ namespace cogbot.Listeners
 
         private SimAvatarImpl CreateSimAvatar(UUID uuid, WorldObjects objects, Simulator simulator)
         {
-            if (uuid==UUID.Zero)
+            if (uuid == UUID.Zero)
             {
                 throw new NullReferenceException("UUID.Zero!");
             }
             // Request all of the packets that make up an avatar profile
             // lock (GetSimObjectLock)
             SimObject obj0 = GetSimObjectFromUUID(uuid);
-            if (obj0 != null) return (SimAvatarImpl)obj0;
+            if (obj0 != null) return (SimAvatarImpl) obj0;
             lock (GetSimLock(simulator ?? client.Network.CurrentSim))
+            {
                 lock (uuidTypeObject)
                     //lock (SimObjects)
-                      //  lock (SimAvatars)
-                        {
-                            obj0 = GetSimObjectFromUUID(uuid);
-                            if (obj0 != null) return (SimAvatarImpl)obj0;
-                            obj0 = new SimAvatarImpl(uuid, objects, simulator);
-                            SimAvatars.Add((SimAvatar)obj0);
-                            //client.Avatars.RequestAvatarPicks(uuid);
-                            SimObjects.AddTo(obj0);
-                            RegisterUUID(uuid, obj0);
-                            client.Avatars.RequestAvatarName(uuid);
-                            if (MaintainAvatarMetaData)
-                            {
-                                client.Avatars.RequestAvatarProperties(uuid);
-                             //   client.Avatars.RequestAvatarClassified(uuid);
-                            }
-                            return (SimAvatarImpl)obj0;
-                        }
+                    //  lock (SimAvatars)
+                {
+                    obj0 = GetSimObjectFromUUID(uuid);
+                    if (obj0 != null) return (SimAvatarImpl) obj0;
+                    obj0 = new SimAvatarImpl(uuid, objects, simulator);
+                    SimAvatars.Add((SimAvatar) obj0);
+                    //client.Avatars.RequestAvatarPicks(uuid);
+                    SimObjects.AddTo(obj0);
+                    RegisterUUID(uuid, obj0);
+                    client.Avatars.RequestAvatarName(uuid);
+                    if (MaintainAvatarMetaData)
+                    {
+                        client.Avatars.RequestAvatarProperties(uuid);
+                        //   client.Avatars.RequestAvatarClassified(uuid);
+                    }
+                    return (SimAvatarImpl) obj0;
+                }
+            }
         }
 
         private SimObject CreateSimObject(UUID uuid, WorldObjects WO, Simulator simulator)
