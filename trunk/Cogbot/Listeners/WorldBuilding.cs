@@ -30,7 +30,8 @@ namespace cogbot.Listeners
                 {
                     try
                     {
-                        if (o.DeclaringType == typeof(Object)) continue;
+                        if (o.Name.StartsWith("_")) continue;
+                        if (o.DeclaringType == typeof (Object)) continue;
                         if (!lowerProps.Add(o.Name.ToLower())) continue;
                         var v = o.GetValue(properties, null);
                         if (v == null) v = new NullType(o.PropertyType);
@@ -46,11 +47,12 @@ namespace cogbot.Listeners
             {
                 try
                 {
-                    if (o.DeclaringType == typeof(Object)) continue;
+                    if (o.Name.StartsWith("_")) continue;
+                    if (o.DeclaringType == typeof (Object)) continue;
                     if (!lowerProps.Add(o.Name.ToLower())) continue;
                     var v = o.GetValue(properties);
                     if (v == null) v = new NullType(o.FieldType);
-                    dict.Add(new NamedParam(o,prefix + o.Name, o.FieldType, v));
+                    dict.Add(new NamedParam(o, prefix + o.Name, o.FieldType, v));
                 }
                 catch (Exception e)
                 {
