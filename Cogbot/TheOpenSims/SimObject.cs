@@ -1378,13 +1378,10 @@ namespace cogbot.TheOpenSims
                             Parent = WorldSystem.GetSimObject(pUse);
                     }
                 }
-                if (_Parent == this)
+                lock (HasPrimLock)
                 {
-                    return true;
+                    return _Parent == this || (_Parent != null && _Parent.IsRegionAttached);                    
                 }
-                bool at = _Parent != null && _Parent.IsRegionAttached;
-                if (at) return true;
-                return false;
             }
         }
 
