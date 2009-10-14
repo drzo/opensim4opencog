@@ -156,6 +156,10 @@ namespace cogbot.Utilities
             bool WaitingOnPing = false;
             while (!(IsDisposing))
             {
+                if (!EventQueueHandler.IsAlive)
+                {
+                    Console.WriteLine("Dead " + this); 
+                }
                 Thread.Sleep(PING_TIME);
                 if (_noQueue) continue;
                 if (Busy || WaitingOnPing)
