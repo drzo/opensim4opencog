@@ -6,16 +6,86 @@ namespace cogbot.Utilities
 {
     public class ListAsSet<T> : List<T>
     {
+        public event Action<T> OnAdd;
+        public event Action<T> OnRemove;
+        public event Action OnModified;
+
         public void Clear()
         {
             lock (this)
-                base.Clear();
+            {
+                if (Count == 0) return;
+                foreach (var set in this)
+                {
+                    Remove(set);
+                }
+                //  base.Clear();
+            }
+            if (OnModified != null) OnModified();
         }
+
+        public void RemoveAt(int index)
+        {
+            T t = this[index];
+            if (OnRemove != null) OnRemove(t);
+            base.RemoveAt(index);
+            if (OnModified != null) OnModified();
+        }
+
+        public void RemoveRange(int index, int count)
+        {
+            int rcount = count;
+            int rindex = index;
+            while (rcount-->0)
+            {
+                T t = this[rindex++];
+                if (OnRemove != null) OnRemove(t);
+            }
+            base.RemoveRange(index, count);
+            if (OnModified != null) OnModified();
+        }
+
+        public void AddRange(System.Collections.Generic.IEnumerable<T> collection)
+        {
+            bool b = false;
+
+            foreach (var e in collection)
+            {
+                if (AddToNoNotify(e))
+                {
+                    b = true;
+                    if (OnAdd != null) OnAdd(e);
+                }
+            }   
+            if (b)
+            {
+                if (OnModified != null) OnModified();
+            }
+        }
+
+        //TODO 
+        public int RemoveAll(Predicate<T> match)
+        {
+            int c = 0;
+            foreach (var set in CopyOf())
+            {
+                if (match(set))
+                {
+                    c++;
+                    Remove(set);
+                }
+            }
+            return c;
+        }
+
         // synchronization
         public bool Remove(T item)
         {
             lock (this)
+            {
+                if (OnRemove != null) OnRemove(item);
                 return base.Remove(item);
+            }
         }
 
         // synchronization
@@ -49,6 +119,17 @@ namespace cogbot.Utilities
 
         public bool AddTo(T item)
         {
+            bool b = AddToNoNotify(item);
+            if (b)
+            {
+                if (OnAdd != null) OnAdd(item);
+                if (OnModified != null) OnModified();
+            }
+            return b;
+        }
+
+        public bool AddToNoNotify(T item)
+        {
             lock (this)
             {
                 if (false)
@@ -65,7 +146,9 @@ namespace cogbot.Utilities
                 {
                     if (base.Contains(item)) return false;
                 }
-                base.Add(item);
+                {
+                    base.Add(item);
+                }
                 return true;
             }
         }
