@@ -243,22 +243,32 @@ namespace cogbot.Listeners
                     {
                         throw new ArgumentException("" + client);
                     }
-                    m_TheSimAvatar = (SimActor)GetSimObjectFromUUID(id);
+                    TheSimAvatar = (SimActor)GetSimObjectFromUUID(id);
                     if (m_TheSimAvatar == null)
                     {
                         Avatar av = GetAvatar(id, client.Network.CurrentSim);
-                        if (av != null) m_TheSimAvatar = (SimActor) GetSimObject(av, client.Network.CurrentSim);
+                        if (av != null) TheSimAvatar = (SimActor)GetSimObject(av, client.Network.CurrentSim);
                         if (m_TheSimAvatar == null)
                         {
                             SimAvatarImpl impl;
-                            m_TheSimAvatar = impl = CreateSimAvatar(id, this, client.Network.CurrentSim);
+                            TheSimAvatar = impl = CreateSimAvatar(id, this, client.Network.CurrentSim);
                             impl.AspectName = client.GetName();
                         }
                     }
-                    m_TheSimAvatar.SetClient(client);
+                    TheSimAvatar.SetClient(client);
                 }
                 return m_TheSimAvatar;
             }
+            set
+            {
+                if (value == m_TheSimAvatar) return;                
+            	m_TheSimAvatar = value;
+                AddObjectGroup("selected", () => m_TheSimAvatar.GetSelectedObjects());
+                AddObjectGroup("avatars", () => SimAvatars.CopyOf());
+                AddObjectGroup("all", () => SimObjects.CopyOf());
+                AddObjectGroup("known", () => m_TheSimAvatar.GetKnownObjects());
+            }
+
         }
 
 
@@ -1608,6 +1618,16 @@ namespace cogbot.Listeners
             return prims;
                             }
 
+
+        Dictionary<string, Func<IList>> ObjectGroups = new Dictionary<string, Func<IList>>();
+        public void AddObjectGroup(string selecteditems, Func<IList> func)
+        {
+            lock (ObjectGroups)
+            {
+                ObjectGroups[selecteditems.ToLower()] = func;
+            }
+        }
+
         public List<SimObject> FilterSimObjects(string[] args, out int argsUsed, List<SimObject> prims)
         {
             int consume = args.Length;
@@ -1618,6 +1638,17 @@ namespace cogbot.Listeners
             }
             string arg0Lower = args[0].ToLower();
             // Terminals
+            lock (ObjectGroups)
+            {
+                Func<IList> func;
+                if (ObjectGroups.TryGetValue(arg0Lower, out func))
+                {
+                    argsUsed = 1;
+                    prims.Clear();
+                    AsPrimitives(prims,func());
+                    return prims;
+                }
+            }
             if (arg0Lower == "all")
             {
                 prims.Clear();

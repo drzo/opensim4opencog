@@ -40,6 +40,7 @@ using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using cogbot.Utilities;
 using OpenMetaverse;
+using PathSystem3D.Navigation;
 using Radegast;
 using System.Reflection;
 //MAYBE: Radegast.ToolStripCheckBox?
@@ -114,6 +115,8 @@ namespace CogbotRadegastPluginModule
         {
             ClientManager.SingleInstance.LastBotClient.WorldSystem.OnAddSimObject += Objects_OnAddSimObject;
             ClientManager.SingleInstance.LastBotClient.WorldSystem.OnUpdateDataAspect += Objects_OnUpdateSimObject;
+            Plugin.TheBot.WorldSystem.AddObjectGroup("SelectedObjects", () => SelectedItems);
+
         }
 
         private void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
@@ -418,6 +421,8 @@ namespace CogbotRadegastPluginModule
 
         private Dictionary<GenericSearchFilter, PropertyInfo> Boxs = new Dictionary<GenericSearchFilter, PropertyInfo>();
         Dictionary<PropertyInfo, Object> uBoxs = new Dictionary<PropertyInfo, Object>();
+        public List<SimObject> SelectedItems = new List<SimObject>();
+
         void AddChecks(string name)
         {
             GenericSearchFilter IsRoot = new GenericSearchFilter();
@@ -719,6 +724,29 @@ namespace CogbotRadegastPluginModule
         private void flowLayoutPanel1_Paint(object sender, PaintEventArgs e)
         {
 
+        }
+
+        private void lstPrims_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            UpdateCurrentObject();
+            lock (SelectedItems)
+                lock (lstPrims.SelectedItems)
+                {
+                    SelectedItems.Clear();
+                    foreach (var v in lstPrims.SelectedItems)
+                    {
+                        ListViewItem item = v as ListViewItem;
+                        if (item != null)
+                        {
+                            SimObject o = item.Tag as SimObject;
+                            if (o != null)
+                            {
+                                SelectedItems.Add(o);
+                            }
+
+                        }
+                    }
+                }
         }
 
     }

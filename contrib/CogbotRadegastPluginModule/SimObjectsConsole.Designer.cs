@@ -79,6 +79,7 @@ namespace CogbotRadegastPluginModule
             this.tabSimOjbectDetail = new System.Windows.Forms.TabPage();
             this.grpPrimInfo = new System.Windows.Forms.FlowLayoutPanel();
             this.gbxObjectDetails = new System.Windows.Forms.GroupBox();
+            this.chkOwnerMove = new System.Windows.Forms.CheckBox();
             this.cbNextOwnTransfer = new System.Windows.Forms.CheckBox();
             this.cbNextOwnCopy = new System.Windows.Forms.CheckBox();
             this.cbOwnerTransfer = new System.Windows.Forms.CheckBox();
@@ -101,7 +102,6 @@ namespace CogbotRadegastPluginModule
             this.lblName = new System.Windows.Forms.Label();
             this.Filters = new System.Windows.Forms.TabPage();
             this.searchOptions = new System.Windows.Forms.FlowLayoutPanel();
-            this.chkOwnerMove = new System.Windows.Forms.CheckBox();
             this.statusStrip1.SuspendLayout();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -253,7 +253,6 @@ namespace CogbotRadegastPluginModule
             this.lstPrims.HideSelection = false;
             this.lstPrims.LabelWrap = false;
             this.lstPrims.Location = new System.Drawing.Point(-3, 41);
-            this.lstPrims.MultiSelect = false;
             this.lstPrims.Name = "lstPrims";
             this.lstPrims.ShowGroups = false;
             this.lstPrims.Size = new System.Drawing.Size(422, 429);
@@ -261,6 +260,7 @@ namespace CogbotRadegastPluginModule
             this.lstPrims.UseCompatibleStateImageBehavior = false;
             this.lstPrims.View = System.Windows.Forms.View.Details;
             this.lstPrims.SelectedIndexChanged += new System.EventHandler(this.lstPrims_SelectedIndexChanged);
+            this.lstPrims.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.lstPrims_ItemSelectionChanged);
             // 
             // columnHeader1
             // 
@@ -335,6 +335,16 @@ namespace CogbotRadegastPluginModule
             this.gbxObjectDetails.TabIndex = 18;
             this.gbxObjectDetails.TabStop = false;
             this.gbxObjectDetails.Text = "Object details";
+            // 
+            // chkOwnerMove
+            // 
+            this.chkOwnerMove.AutoSize = true;
+            this.chkOwnerMove.Location = new System.Drawing.Point(250, 143);
+            this.chkOwnerMove.Name = "chkOwnerMove";
+            this.chkOwnerMove.Size = new System.Drawing.Size(52, 17);
+            this.chkOwnerMove.TabIndex = 7;
+            this.chkOwnerMove.Text = "Move";
+            this.chkOwnerMove.UseVisualStyleBackColor = true;
             // 
             // cbNextOwnTransfer
             // 
@@ -538,16 +548,6 @@ namespace CogbotRadegastPluginModule
             this.searchOptions.Name = "searchOptions";
             this.searchOptions.Size = new System.Drawing.Size(393, 436);
             this.searchOptions.TabIndex = 18;
-            // 
-            // chkOwnerMove
-            // 
-            this.chkOwnerMove.AutoSize = true;
-            this.chkOwnerMove.Location = new System.Drawing.Point(250, 143);
-            this.chkOwnerMove.Name = "chkOwnerMove";
-            this.chkOwnerMove.Size = new System.Drawing.Size(52, 17);
-            this.chkOwnerMove.TabIndex = 7;
-            this.chkOwnerMove.Text = "Move";
-            this.chkOwnerMove.UseVisualStyleBackColor = true;
             // 
             // SimObjectsConsole
             // 
