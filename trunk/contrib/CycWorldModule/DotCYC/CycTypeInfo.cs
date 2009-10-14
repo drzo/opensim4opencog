@@ -51,12 +51,15 @@ namespace CycWorldModule.DotCYC
                     simCyclifier.assertIsa(cv, C("Collection"));
                     simCyclifier.assertGafNow(C("genls"), cv, cycFort);
                     simCyclifier.assertGaf(CycAccess.comment, cv, "The sim enum value for: " + fort);
-                    ele = SimCyclifier.GetDocString(docMembers, fort);
-                    if (!String.IsNullOrEmpty(ele))
-                    {
-                        simCyclifier.assertGaf(CycAccess.comment, cv, ele);
-                        continue;
-                    }
+                    MemberInfo mi = fort;
+                    simCyclifier.DocQueue.Enqueue(() =>
+                                                      {
+                                                          ele = SimCyclifier.GetDocString(docMembers, mi);
+                                                          if (!String.IsNullOrEmpty(ele))
+                                                          {
+                                                              simCyclifier.assertGaf(CycAccess.comment, cv, ele);
+                                                          }
+                                                      });
                 }
             }
         }
