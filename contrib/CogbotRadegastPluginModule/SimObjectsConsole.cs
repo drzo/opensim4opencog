@@ -343,6 +343,7 @@ namespace CogbotRadegastPluginModule
             string pName = prim.ID.ToString();
             Invoke(new MethodInvoker(() =>
                                          {
+                                             if (!Focused) return;
                                              ListViewItem item = null;
 
                                              lock (lstPrims.Items)
@@ -381,7 +382,7 @@ namespace CogbotRadegastPluginModule
 
         private void Objects_OnAddSimObject(SimObject prim)
         {
-            if (IsDisposing) return;
+            if (IsDisposing || !IsHandleCreated) return;
             addObjects.Enqueue(() => AddPrim(prim));
             if (currentPrim!=null && prim.ID == currentPrim.ID)
             {
