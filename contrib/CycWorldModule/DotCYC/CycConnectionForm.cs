@@ -77,6 +77,11 @@ namespace CycWorldModule.DotCYC
             try
             {
                 m_cycAccess = new CycAccess(cycServerAddress.Text, Int16.Parse(cycBasePort.Text));
+                m_cycAccess.getCycConnection().traceOn();
+                m_cycAccess.find("isa");
+             //   m_cycAccess.getCycConnection().converse("()");
+                m_cycAccess.getCycConnection().traceOff();
+              //  CycAccess.genls.ToString();
             }
             catch (Exception ee)
             {
