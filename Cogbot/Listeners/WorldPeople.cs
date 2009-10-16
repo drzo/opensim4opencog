@@ -428,7 +428,7 @@ namespace cogbot.Listeners
             }
         }
 
-        private static SimGeneric DeclareGeneric(string genericName, UUID uuid)
+        public static SimGeneric DeclareGeneric(string genericName, UUID uuid)
         {
             if (uuid == UUID.Zero) return null;
             object g;

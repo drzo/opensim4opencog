@@ -4,6 +4,7 @@ using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using PathSystem3D.Navigation;
+using System.Reflection;
 
 namespace cogbot.Listeners
 {
@@ -25,14 +26,18 @@ namespace cogbot.Listeners
             // Avatars_OnAvatarAnimation(client.Self.AgentID, agentAnimations);
         }
 
-        private object AsType(Object te, Type type)
-        {
-            if (type.IsInstanceOfType(te)) return te;
-            return new NullType(type);
-        }
+        //private object AsType(Object te, Type type, MemberInfo info)
+        //{
+        //    if (type.IsInstanceOfType(te)) return te;
+        //    return new NullType(type);
+        //}
         public override void Appearance_OnAppearanceUpdated(Primitive.TextureEntry te)
         {
-            client.SendNetworkEvent("On-Appearance-Updated", AsType(te, typeof(Primitive.TextureEntry)));
+            if (te!=null)
+            {
+                client.SendNetworkEvent("On-Appearance-Updated", te);                
+            }
+            //client.SendNetworkEvent("On-Appearance-Updated", AsType(te, typeof(Primitive.TextureEntry)));
         }
 
         /// <summary>
